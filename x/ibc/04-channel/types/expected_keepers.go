@@ -9,6 +9,7 @@ import (
 
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
+	GetClientState(ctx sdk.Context, clientID string) (clientexported.ClientState, bool)
 	GetConsensusState(ctx sdk.Context, clientID string) (clientexported.ConsensusState, bool)
 }
 
@@ -23,6 +24,48 @@ type ConnectionKeeper interface {
 		portID,
 		channelID string,
 		channel Channel,
+		consensusState clientexported.ConsensusState,
+	) error
+	VerifyPacketCommitment(
+		ctx sdk.Context,
+		connection connectionexported.ConnectionI,
+		height uint64,
+		proof commitment.ProofI,
+		portID,
+		channelID string,
+		sequence uint64,
+		commitmentBytes []byte,
+		consensusState clientexported.ConsensusState,
+	) error
+	VerifyPacketAcknowledgement(
+		ctx sdk.Context,
+		connection connectionexported.ConnectionI,
+		height uint64,
+		proof commitment.ProofI,
+		portID,
+		channelID string,
+		sequence uint64,
+		acknowledgement []byte,
+		consensusState clientexported.ConsensusState,
+	) error
+	VerifyPacketAcknowledgementAbsence(
+		ctx sdk.Context,
+		connection connectionexported.ConnectionI,
+		height uint64,
+		proof commitment.ProofI,
+		portID,
+		channelID string,
+		sequence uint64,
+		consensusState clientexported.ConsensusState,
+	) error
+	VerifyNextSequenceRecv(
+		ctx sdk.Context,
+		connection connectionexported.ConnectionI,
+		height uint64,
+		proof commitment.ProofI,
+		portID,
+		channelID string,
+		nextSequenceRecv uint64,
 		consensusState clientexported.ConsensusState,
 	) error
 }

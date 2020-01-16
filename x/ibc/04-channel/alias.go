@@ -12,21 +12,6 @@ import (
 )
 
 const (
-	UNINITIALIZED            = types.UNINITIALIZED
-	UNORDERED                = types.UNORDERED
-	ORDERED                  = types.ORDERED
-	OrderNone                = types.OrderNone
-	OrderUnordered           = types.OrderUnordered
-	OrderOrdered             = types.OrderOrdered
-	CLOSED                   = types.CLOSED
-	INIT                     = types.INIT
-	TRYOPEN                  = types.TRYOPEN
-	OPEN                     = types.OPEN
-	StateUninitialized       = types.StateUninitialized
-	StateInit                = types.StateInit
-	StateTryOpen             = types.StateTryOpen
-	StateOpen                = types.StateOpen
-	StateClosed              = types.StateClosed
 	AttributeKeySenderPort   = types.AttributeKeySenderPort
 	AttributeKeyReceiverPort = types.AttributeKeyReceiverPort
 	AttributeKeyChannelID    = types.AttributeKeyChannelID
@@ -46,8 +31,6 @@ var (
 	QuerierChannel               = keeper.QuerierChannel
 	NewChannel                   = types.NewChannel
 	NewCounterparty              = types.NewCounterparty
-	OrderFromString              = types.OrderFromString
-	StateFromString              = types.StateFromString
 	RegisterCodec                = types.RegisterCodec
 	ErrChannelExists             = types.ErrChannelExists
 	ErrChannelNotFound           = types.ErrChannelNotFound
@@ -87,8 +70,6 @@ type (
 	Keeper                 = keeper.Keeper
 	Channel                = types.Channel
 	Counterparty           = types.Counterparty
-	Order                  = types.Order
-	State                  = types.State
 	ClientKeeper           = types.ClientKeeper
 	ConnectionKeeper       = types.ConnectionKeeper
 	PortKeeper             = types.PortKeeper

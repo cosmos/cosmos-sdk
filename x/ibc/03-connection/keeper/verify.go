@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -52,7 +53,7 @@ func (k Keeper) VerifyConnectionState(
 // channel end, under the specified port, stored on the target machine.
 func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
@@ -66,7 +67,8 @@ func (k Keeper) VerifyChannelState(
 	}
 
 	return clientState.VerifyChannelState(
-		k.cdc, height, connection.Counterparty.Prefix, proof, portID, channelID, channel, consensusState,
+		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof,
+		portID, channelID, channel, consensusState,
 	)
 }
 
@@ -74,9 +76,8 @@ func (k Keeper) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
-	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
@@ -84,13 +85,14 @@ func (k Keeper) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienterrors.ErrClientNotFound
 	}
 
 	return clientState.VerifyPacketCommitment(
-		height, prefix, proof, portID, channelID, sequence, commitmentBytes, consensusState,
+		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		sequence, commitmentBytes, consensusState,
 	)
 }
 
@@ -98,9 +100,8 @@ func (k Keeper) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
-	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
@@ -108,13 +109,14 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienterrors.ErrClientNotFound
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
-		height, prefix, proof, portID, channelID, sequence, acknowledgement, consensusState,
+		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		sequence, acknowledgement, consensusState,
 	)
 }
 
@@ -123,22 +125,22 @@ func (k Keeper) VerifyPacketAcknowledgement(
 // specified sequence.
 func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
-	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienterrors.ErrClientNotFound
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
-		height, prefix, proof, portID, channelID, sequence, consensusState,
+		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		sequence, consensusState,
 	)
 }
 
@@ -146,21 +148,21 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
-	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienterrors.ErrClientNotFound
 	}
 
 	return clientState.VerifyNextSequenceRecv(
-		height, prefix, proof, portID, channelID, nextSequenceRecv, consensusState,
+		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		nextSequenceRecv, consensusState,
 	)
 }

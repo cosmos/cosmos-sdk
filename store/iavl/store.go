@@ -271,11 +271,11 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			if value != nil {
 				// value was found
 				res.Value = value
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewValueOp(key, proof).ProofOp()}}
 			} else {
 				// value wasn't found
 				res.Value = nil
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLAbsenceOp(key, proof).ProofOp()}}
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewAbsenceOp(key, proof).ProofOp()}}
 			}
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)

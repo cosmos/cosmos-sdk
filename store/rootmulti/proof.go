@@ -129,8 +129,8 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
 	prt.RegisterOpDecoder(merkle.ProofOpSimpleValue, merkle.SimpleValueOpDecoder)
-	prt.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.IAVLValueOpDecoder)
-	prt.RegisterOpDecoder(iavl.ProofOpIAVLAbsence, iavl.IAVLAbsenceOpDecoder)
+	prt.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
+	prt.RegisterOpDecoder(iavl.ProofOpIAVLAbsence, iavl.AbsenceOpDecoder)
 	prt.RegisterOpDecoder(ProofOpMultiStore, MultiStoreProofOpDecoder)
 	return
 }

@@ -20,6 +20,26 @@ type Config struct {
 	sealed              bool
 }
 
+// NewConfig returns a new unsealed Config.
+func NewConfig(fullFundraiserPath, keyringServiceName string, bech32AddressPrefix map[string]string, coinType uint32) *Config {
+	return &Config{
+		fullFundraiserPath:  fullFundraiserPath,
+		keyringServiceName:  keyringServiceName,
+		bech32AddressPrefix: bech32AddressPrefix,
+		coinType:            coinType,
+		sealed:              false,
+		txEncoder:           nil,
+	}
+}
+
+// NewDefaultConfig returns a new Config with default values.
+func NewDefaultConfig() *Config {
+	addressPrefixMap := NewBech32PrefixMap(
+		Bech32PrefixAccAddr, Bech32PrefixValAddr, Bech32PrefixConsAddr,
+		Bech32PrefixAccPub, Bech32PrefixValPub, Bech32PrefixConsPub)
+	return NewConfig(FullFundraiserPath, DefaultKeyringServiceName, addressPrefixMap, CoinType)
+}
+
 // cosmos-sdk wide global singleton
 var sdkConfig *Config
 
@@ -28,22 +48,30 @@ func GetConfig() *Config {
 	if sdkConfig != nil {
 		return sdkConfig
 	}
-	sdkConfig = &Config{
-		sealed: false,
-		bech32AddressPrefix: map[string]string{
-			"account_addr":   Bech32PrefixAccAddr,
-			"validator_addr": Bech32PrefixValAddr,
-			"consensus_addr": Bech32PrefixConsAddr,
-			"account_pub":    Bech32PrefixAccPub,
-			"validator_pub":  Bech32PrefixValPub,
-			"consensus_pub":  Bech32PrefixConsPub,
-		},
-		coinType:           CoinType,
-		fullFundraiserPath: FullFundraiserPath,
-		txEncoder:          nil,
-		keyringServiceName: DefaultKeyringServiceName,
-	}
+	sdkConfig = NewDefaultConfig()
 	return sdkConfig
+}
+
+// NewBech32PrefixMap returns a new prefix map to be used for addresses bech32 representations.
+func NewBech32PrefixMap(accAddr, valAddr, consAddr, accPub, valPub, consPub string) map[string]string {
+	return map[string]string{
+		"account_addr":   accAddr,
+		"validator_addr": valAddr,
+		"consensus_addr": consAddr,
+		"account_pub":    accPub,
+		"validator_pub":  valPub,
+		"consensus_pub":  consPub,
+	}
+}
+
+// NewDefaultBech32PrefixMap returns the SDK's default prefix map for addresses bech32
+// representations.
+func NewDefaultBech32PrefixMap() map[string]string {
+	return NewBech32PrefixMap(
+		Bech32PrefixAccAddr, Bech32PrefixValAddr,
+		Bech32PrefixConsAddr, Bech32PrefixAccPub,
+		Bech32PrefixValPub, Bech32PrefixConsPub,
+	)
 }
 
 func (config *Config) assertNotSealed() {

@@ -5,7 +5,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -54,20 +54,19 @@ func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
-	channel channeltypes.Channel,
+	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienterrors.ErrClientNotFound
 	}
 
 	return clientState.VerifyChannelState(
-		k.cdc, height, prefix, proof, portID, channelID, channel, consensusState,
+		k.cdc, height, connection.Counterparty.Prefix, proof, portID, channelID, channel, consensusState,
 	)
 }
 
@@ -91,7 +90,7 @@ func (k Keeper) VerifyPacketCommitment(
 	}
 
 	return clientState.VerifyPacketCommitment(
-	 height, prefix, proof, portID, channelID, sequence, commitmentBytes, consensusState,
+		height, prefix, proof, portID, channelID, sequence, commitmentBytes, consensusState,
 	)
 }
 

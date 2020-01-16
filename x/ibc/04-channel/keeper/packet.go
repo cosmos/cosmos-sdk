@@ -8,10 +8,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // CleanupPacket is called by a module to remove a received packet commitment
@@ -38,7 +40,7 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State != types.OPEN {
+	if channel.State != exported.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -83,16 +85,16 @@ func (k Keeper) CleanupPacket(
 
 	var ok bool
 	switch channel.Ordering {
-	case types.ORDERED:
+	case exported.ORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connectionEnd, proofHeight, proof,
-			types.NextSequenceRecvPath(packet.GetDestPort(), packet.GetDestChannel()),
+			ibctypes.NextSequenceRecvPath(packet.GetDestPort(), packet.GetDestChannel()),
 			sdk.Uint64ToBigEndian(nextSequenceRecv),
 		)
-	case types.UNORDERED:
+	case exported.UNORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connectionEnd, proofHeight, proof,
-			types.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
+			ibctypes.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
 			acknowledgement,
 		)
 	default:
@@ -124,7 +126,7 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State == types.CLOSED {
+	if channel.State == exported.CLOSED {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel is CLOSED (got %s)", channel.State.String(),
@@ -154,14 +156,14 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State == connection.UNINITIALIZED {
+	if connectionEnd.GetState() == connectionexported.UNINITIALIZED {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection is closed (i.e NONE)",
 		)
 	}
 
-	_, found = k.clientKeeper.GetConsensusState(ctx, connectionEnd.ClientID)
+	_, found = k.clientKeeper.GetConsensusState(ctx, connectionEnd.GetClientID())
 	if !found {
 		return client.ErrConsensusStateNotFound
 	}
@@ -203,7 +205,7 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
 
-	if channel.State != types.OPEN {
+	if channel.State != exported.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -233,14 +235,14 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
-	if channel.Ordering == types.ORDERED {
+	if channel.Ordering == exported.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return nil, types.ErrSequenceReceiveNotFound
@@ -260,7 +262,7 @@ func (k Keeper) RecvPacket(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
-		types.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
+		ibctypes.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
 		types.CommitPacket(packet.GetData()),
 	) {
 		return nil, errors.New("couldn't verify counterparty packet commitment")
@@ -282,21 +284,21 @@ func (k Keeper) PacketExecuted(
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
 
-	if channel.State != types.OPEN {
+	if channel.State != exported.OPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
+	if acknowledgement != nil || channel.Ordering == exported.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 
-	if channel.Ordering == types.ORDERED {
+	if channel.Ordering == exported.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return types.ErrSequenceReceiveNotFound
@@ -334,7 +336,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State != types.OPEN {
+	if channel.State != exported.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -364,10 +366,10 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
@@ -378,7 +380,7 @@ func (k Keeper) AcknowledgePacket(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
-		types.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
+		ibctypes.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
 		acknowledgement.GetBytes(),
 	) {
 		return nil, errors.New("invalid acknowledgement on counterparty chain")

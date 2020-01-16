@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -63,7 +64,7 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 
 	counterparty := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	expConn := types.ConnectionEnd{
-		State:        types.INIT,
+		State:        exported.INIT,
 		ClientID:     testClientID1,
 		Counterparty: counterparty,
 		Versions:     types.GetCompatibleVersions(),
@@ -91,21 +92,21 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 
 	conn1 := types.ConnectionEnd{
-		State:        types.INIT,
+		State:        exported.INIT,
 		ClientID:     testClientID1,
 		Counterparty: counterparty3,
 		Versions:     types.GetCompatibleVersions(),
 	}
 
 	conn2 := types.ConnectionEnd{
-		State:        types.INIT,
+		State:        exported.INIT,
 		ClientID:     testClientID2,
 		Counterparty: counterparty1,
 		Versions:     types.GetCompatibleVersions(),
 	}
 
 	conn3 := types.ConnectionEnd{
-		State:        types.UNINITIALIZED,
+		State:        exported.UNINITIALIZED,
 		ClientID:     testClientID3,
 		Counterparty: counterparty2,
 		Versions:     types.GetCompatibleVersions(),

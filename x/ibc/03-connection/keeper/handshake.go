@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -26,7 +27,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleVersions())
+	connection := types.NewConnectionEnd(exported.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
 	err := k.addConnectionToClient(ctx, clientID, connectionID)
@@ -69,14 +70,14 @@ func (k Keeper) ConnOpenTry(
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
-	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(exported.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
 	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(exported.UNINITIALIZED, clientID, counterparty, []string{version})
 
 	err := k.VerifyConnectionState(
 		ctx, proofHeight, proofInit, counterparty.ConnectionID,
@@ -94,13 +95,12 @@ func (k Keeper) ConnOpenTry(
 	// 	return err
 	// }
 
-
 	_, found = k.GetConnection(ctx, connectionID)
 	if found {
 		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot relay connection attempt")
 	}
 
-	connection.State = types.TRYOPEN
+	connection.State = exported.TRYOPEN
 	err = k.addConnectionToClient(ctx, clientID, connectionID)
 	if err != nil {
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
@@ -134,7 +134,7 @@ func (k Keeper) ConnOpenAck(
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
-	if connection.State != types.INIT {
+	if connection.State != exported.INIT {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not INIT (got %s)", connection.State.String(),
@@ -155,7 +155,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
+	expectedConnection := types.NewConnectionEnd(exported.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	err := k.VerifyConnectionState(
 		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
@@ -172,8 +172,8 @@ func (k Keeper) ConnOpenAck(
 	// if err != nil {
 	// 	return err
 	// }
-	
-	connection.State = types.OPEN
+
+	connection.State = exported.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
@@ -195,7 +195,7 @@ func (k Keeper) ConnOpenConfirm(
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
-	if connection.State != types.TRYOPEN {
+	if connection.State != exported.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not TRYOPEN (got %s)", connection.State.String(),
@@ -209,7 +209,7 @@ func (k Keeper) ConnOpenConfirm(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
+	expectedConnection := types.NewConnectionEnd(exported.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	err := k.VerifyConnectionState(
 		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
@@ -219,7 +219,7 @@ func (k Keeper) ConnOpenConfirm(
 		return err
 	}
 
-	connection.State = types.OPEN
+	connection.State = exported.OPEN
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
 	return nil

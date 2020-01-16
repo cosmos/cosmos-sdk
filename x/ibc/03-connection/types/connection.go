@@ -1,10 +1,8 @@
 package types
 
 import (
-	"encoding/json"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	exported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -18,8 +16,8 @@ var _ exported.ConnectionI = ConnectionEnd{}
 // NOTE: there must only be 2 defined ConnectionEnds to stablish a connection
 // between two chains.
 type ConnectionEnd struct {
-	State    State  `json:"state" yaml:"state"`
-	ClientID string `json:"client_id" yaml:"client_id"`
+	State    exported.State `json:"state" yaml:"state"`
+	ClientID string         `json:"client_id" yaml:"client_id"`
 
 	// Counterparty chain associated with this connection.
 	Counterparty Counterparty `json:"counterparty" yaml:"counterparty"`
@@ -29,7 +27,7 @@ type ConnectionEnd struct {
 }
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state exported.State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,
@@ -39,8 +37,8 @@ func NewConnectionEnd(state State, clientID string, counterparty Counterparty, v
 }
 
 // GetState implements the Connection interface
-func (c ConnectionEnd) GetState() exported.StateI {
-	return &c.State
+func (c ConnectionEnd) GetState() exported.State {
+	return c.State
 }
 
 // GetClientID implements the Connection interface
@@ -60,7 +58,7 @@ func (c ConnectionEnd) GetVersions() []string {
 
 // ValidateBasic implements the Connection interface
 func (c ConnectionEnd) ValidateBasic() error {
-	// TODO:
+	// TODO: move validations from msg.ValidateBasic()
 	return c.Counterparty.ValidateBasic()
 }
 
@@ -92,6 +90,11 @@ func (c Counterparty) GetConnectionID() string {
 	return c.ConnectionID
 }
 
+// GetPrefix implements the CounterpartyI interface
+func (c Counterparty) GetPrefix() commitment.PrefixI {
+	return c.Prefix
+}
+
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(c.ConnectionID); err != nil {
@@ -113,73 +116,5 @@ func (c Counterparty) ValidateBasic() error {
 	if c.Prefix == nil || len(c.Prefix.Bytes()) == 0 {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "invalid counterparty prefix")
 	}
-	return nil
-}
-
-var s = State(0)
-var _ exported.StateI = &s
-
-// State defines the state of a connection between two disctinct
-// chains
-type State byte
-
-// available connection states
-const (
-	UNINITIALIZED State = iota // default State
-	INIT
-	TRYOPEN
-	OPEN
-)
-
-// string representation of the connection states
-const (
-	StateUninitialized string = "UNINITIALIZED"
-	StateInit          string = "INIT"
-	StateTryOpen       string = "TRYOPEN"
-	StateOpen          string = "OPEN"
-)
-
-// String implements the Stringer interface
-func (s State) String() string {
-	switch s {
-	case INIT:
-		return StateInit
-	case TRYOPEN:
-		return StateTryOpen
-	case OPEN:
-		return StateOpen
-	default:
-		return StateUninitialized
-	}
-}
-
-// StateFromString parses a string into a connection state
-func StateFromString(state string) State {
-	switch state {
-	case StateInit:
-		return INIT
-	case StateTryOpen:
-		return TRYOPEN
-	case StateOpen:
-		return OPEN
-	default:
-		return UNINITIALIZED
-	}
-}
-
-// MarshalJSON marshal to JSON using string.
-func (s State) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.String())
-}
-
-// UnmarshalJSON decodes from JSON assuming Bech32 encoding.
-func (s *State) UnmarshalJSON(data []byte) error {
-	var str string
-	err := json.Unmarshal(data, &str)
-	if err != nil {
-		return err
-	}
-
-	*s = StateFromString(str)
 	return nil
 }

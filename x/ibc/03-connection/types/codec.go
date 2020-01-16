@@ -12,7 +12,6 @@ var SubModuleCdc *codec.Codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.ConnectionI)(nil), nil)
 	cdc.RegisterInterface((*exported.CounterpartyI)(nil), nil)
-	cdc.RegisterInterface((*exported.StateI)(nil), nil)
 	cdc.RegisterConcrete(ConnectionEnd{}, "ibc/connection/ConnectionEnd", nil)
 
 	cdc.RegisterConcrete(MsgConnectionOpenInit{}, "ibc/connection/MsgConnectionOpenInit", nil)

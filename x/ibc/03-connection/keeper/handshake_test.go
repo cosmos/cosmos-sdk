@@ -5,10 +5,10 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func (suite *KeeperTestSuite) TestConnOpenInit() {
@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	suite.createClient(testClientID1)
 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.INIT)
 
-	connectionKey := connection.KeyConnection(testConnectionID2)
-	consensusKey := client.KeyConsensusState(testClientID2)
+	connectionKey := ibctypes.KeyConnection(testConnectionID2)
+	consensusKey := ibctypes.KeyConsensusState(testClientID2)
 
 	invalidProof := func() error {
 		proofInit, proofHeight := suite.queryProof(connectionKey)
@@ -119,8 +119,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	suite.createClient(testClientID1)
 
 	suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connection.TRYOPEN)
-	connectionKey := connection.KeyConnection(testConnectionID1)
-	consensusKey := client.KeyConsensusState(testClientID1)
+	connectionKey := ibctypes.KeyConnection(testConnectionID1)
+	consensusKey := ibctypes.KeyConsensusState(testClientID1)
 
 	connectionNotFound := func() error {
 		//suite.updateClient(testClientID2)
@@ -196,7 +196,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	suite.createClient(testClientID1)
 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.OPEN)
 
-	connKey := connection.KeyConnection(testConnectionID2)
+	connKey := ibctypes.KeyConnection(testConnectionID2)
 	proof, h := suite.queryProof(connKey)
 
 	connectionNotFound := func() error {
@@ -267,10 +267,8 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		ChainID:      chainID,
-		Height:       uint64(commitID.Version),
-		Root:         commitment.NewRoot(commitID.Hash),
-		ValidatorSet: suite.valSet,
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)
@@ -286,13 +284,10 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	state := tendermint.ConsensusState{
-		ChainID: chainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		Root: commitment.NewRoot(commitID.Hash),
 	}
 
 	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, clientID, state)
-	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, clientID, state.GetHeight(), state.GetRoot())
 }
 
 func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string, clientID, counterpartyClientID string, state connection.State) {

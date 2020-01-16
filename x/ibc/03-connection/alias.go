@@ -12,14 +12,6 @@ import (
 )
 
 const (
-	UNINITIALIZED                    = types.UNINITIALIZED
-	INIT                             = types.INIT
-	TRYOPEN                          = types.TRYOPEN
-	OPEN                             = types.OPEN
-	StateUninitialized               = types.StateUninitialized
-	StateInit                        = types.StateInit
-	StateTryOpen                     = types.StateTryOpen
-	StateOpen                        = types.StateOpen
 	AttributeKeyConnectionID         = types.AttributeKeyConnectionID
 	AttributeKeyCounterpartyClientID = types.AttributeKeyCounterpartyClientID
 	SubModuleName                    = types.SubModuleName
@@ -40,7 +32,6 @@ var (
 	RegisterCodec                    = types.RegisterCodec
 	NewConnectionEnd                 = types.NewConnectionEnd
 	NewCounterparty                  = types.NewCounterparty
-	StateFromString                  = types.StateFromString
 	ErrConnectionExists              = types.ErrConnectionExists
 	ErrConnectionNotFound            = types.ErrConnectionNotFound
 	ErrClientConnectionPathsNotFound = types.ErrClientConnectionPathsNotFound
@@ -72,7 +63,6 @@ type (
 	Keeper                       = keeper.Keeper
 	ConnectionEnd                = types.ConnectionEnd
 	Counterparty                 = types.Counterparty
-	State                        = types.State
 	ClientKeeper                 = types.ClientKeeper
 	MsgConnectionOpenInit        = types.MsgConnectionOpenInit
 	MsgConnectionOpenTry         = types.MsgConnectionOpenTry

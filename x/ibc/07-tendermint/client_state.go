@@ -6,7 +6,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -127,7 +127,7 @@ func (cs ClientState) VerifyChannelState(
 	proof commitment.ProofI,
 	portID,
 	channelID string,
-	channelEnd channeltypes.Channel,
+	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
@@ -143,7 +143,7 @@ func (cs ClientState) VerifyChannelState(
 		return clienterrors.ErrClientFrozen
 	}
 
-	bz, err := cdc.MarshalBinaryBare(channelEnd)
+	bz, err := cdc.MarshalBinaryBare(channel)
 	if err != nil {
 		return err
 	}

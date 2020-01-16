@@ -104,6 +104,11 @@ func KeyConnection(connectionID string) []byte {
 // ICS04
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#store-paths
 
+// GetChannelPortsKeysPrefix returns the prefix bytes for ICS04 and ICS05 iterators
+func GetChannelPortsKeysPrefix(prefix int) []byte {
+	return []byte(fmt.Sprintf("%d/ports/", prefix))
+}
+
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {
 	return fmt.Sprintf("%d/", KeyChannelPrefix) + channelPath(portID, channelID)

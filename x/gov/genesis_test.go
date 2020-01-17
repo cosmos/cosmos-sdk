@@ -3,8 +3,9 @@ package gov
 import (
 	"testing"
 
-	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/stretchr/testify/require"
+
+	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

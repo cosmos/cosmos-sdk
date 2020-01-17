@@ -7,7 +7,7 @@ import (
 
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/common"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -59,12 +59,12 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 	server.UpgradeOldPrivValFile(config)
 
 	pvKeyFile := config.PrivValidatorKeyFile()
-	if err := common.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
+	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
 		return nodeID, valPubKey, nil
 	}
 
 	pvStateFile := config.PrivValidatorStateFile()
-	if err := common.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
+	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
 		return nodeID, valPubKey, nil
 	}
 

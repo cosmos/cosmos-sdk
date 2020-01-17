@@ -2,8 +2,9 @@ package cachekv
 
 import (
 	"container/list"
+	"errors"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -12,15 +13,15 @@ import (
 // Implements Iterator.
 type memIterator struct {
 	start, end []byte
-	items      []*cmn.KVPair
+	items      []*tmkv.Pair
 	ascending  bool
 }
 
 func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
-	itemsInDomain := make([]*cmn.KVPair, 0)
+	itemsInDomain := make([]*tmkv.Pair, 0)
 	var entered bool
 	for e := items.Front(); e != nil; e = e.Next() {
-		item := e.Value.(*cmn.KVPair)
+		item := e.Value.(*tmkv.Pair)
 		if !dbm.IsKeyInDomain(item.Key, start, end) {
 			if entered {
 				break
@@ -48,8 +49,8 @@ func (mi *memIterator) Valid() bool {
 }
 
 func (mi *memIterator) assertValid() {
-	if !mi.Valid() {
-		panic("memIterator is invalid")
+	if err := mi.Error(); err != nil {
+		panic(err)
 	}
 }
 
@@ -82,4 +83,14 @@ func (mi *memIterator) Close() {
 	mi.start = nil
 	mi.end = nil
 	mi.items = nil
+}
+
+// Error returns an error if the memIterator is invalid defined by the Valid
+// method.
+func (mi *memIterator) Error() error {
+	if !mi.Valid() {
+		return errors.New("invalid memIterator")
+	}
+
+	return nil
 }

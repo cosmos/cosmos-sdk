@@ -63,6 +63,7 @@ aside: false
 ## Get Started
 
 - **[SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
+- **[Quick Start Guide](./using-the-sdk/quick-start.md)**: Scaffold a standard Cosmos SDK app and run a node. 
 - **[SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial that showcases how to build an SDK-based blockchain from scratch and explains the basic principles of the SDK in the process.
 
 ## Reference

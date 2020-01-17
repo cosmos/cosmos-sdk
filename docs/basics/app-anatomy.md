@@ -5,8 +5,6 @@ synopsis: "This document describes the core parts of a Cosmos SDK application. T
 
 # Anatomy of an SDK Application 
 
-
-
 ## Node Client
 
 The Daemon, or [Full-Node Client](../core/node.md), is the core process of an SDK-based blockchain. Participants in the network run this process to initialize their state-machine, connect with other full-nodes and update their state-machine as new blocks come in.

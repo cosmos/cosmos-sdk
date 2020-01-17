@@ -118,7 +118,10 @@ func NewCLIContextIBC(input io.Reader, from string, chainID string, nodeURI stri
 
 	if !genOnly {
 		if nodeURI != "" {
-			rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
+			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 

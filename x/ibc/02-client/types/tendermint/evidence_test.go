@@ -94,7 +94,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 				// voteSet contains only altVal which is less than 2/3 of total power (4/14)
 				wrongVoteSet := tmtypes.NewVoteSet("gaia", ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
 				var err error
-				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round(), wrongVoteSet, altSigners)
+				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners)
 				if err != nil {
 					panic(err)
 				}

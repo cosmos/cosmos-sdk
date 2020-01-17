@@ -68,8 +68,6 @@ const (
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 	FlagProve              = "prove"
-	FlagPage               = "page"
-	FlagLimit              = "limit"
 	FlagKeyringBackend     = "keyring-backend"
 	FlagPage               = "page"
 	FlagLimit              = "limit"

@@ -178,7 +178,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 // or an error if the query fails. In addition, it will verify the returned
 // proof if TrustNode is disabled. If proof verification fails or the query
 // height is invalid, an error will be returned.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
+func (ctx CLIContext) query(path string, key tmbytes.HexBytes) (res []byte, height int64, err error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path: path,
 		Data: key,

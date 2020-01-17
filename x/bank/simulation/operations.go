@@ -170,7 +170,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(simAccount.Address, coins)
-			totalSentCoins = totalSentCoins.Add(coins)
+			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
 		for o := range outputs {

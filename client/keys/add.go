@@ -32,6 +32,8 @@ const (
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
+	flagHDPath      = "hd-path"
+	flagKeyAlgo     = "algo"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
@@ -71,9 +73,11 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
+	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().String(flagKeyAlgo, string(keys.Secp256k1), "Key signing algorithm to generate keys for")
 	return cmd
 }
 
@@ -111,6 +115,14 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
+
+	algo := keys.SigningAlgo(viper.GetString(flagKeyAlgo))
+	if algo == keys.SigningAlgo("") {
+		algo = keys.Secp256k1
+	}
+	if !keys.IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
+		return keys.ErrUnsupportedSigningAlgo
+	}
 
 	if !viper.GetBool(flagDryRun) {
 		_, err = kb.Get(name)
@@ -160,11 +172,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	}
 
 	if viper.GetString(FlagPublicKey) != "" {
-		pk, err := sdk.GetAccPubKeyBech32(viper.GetString(FlagPublicKey))
+		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, viper.GetString(FlagPublicKey))
 		if err != nil {
 			return err
 		}
-		_, err = kb.CreateOffline(name, pk)
+		_, err = kb.CreateOffline(name, pk, algo)
 		if err != nil {
 			return err
 		}
@@ -174,8 +186,26 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
 
+	useBIP44 := !viper.IsSet(flagHDPath)
+	var hdPath string
+
+	if useBIP44 {
+		hdPath = keys.CreateHDPath(account, index).String()
+	} else {
+		hdPath = viper.GetString(flagHDPath)
+	}
+
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if viper.GetBool(flags.FlagUseLedger) {
+
+		if !useBIP44 {
+			return errors.New("cannot set custom bip32 path with ledger")
+		}
+
+		if !keys.IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
+			return keys.ErrUnsupportedSigningAlgo
+		}
+
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		info, err := kb.CreateLedger(name, keys.Secp256k1, bech32PrefixAccAddr, account, index)
 		if err != nil {
@@ -240,7 +270,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, hdPath, algo)
 	if err != nil {
 		return err
 	}

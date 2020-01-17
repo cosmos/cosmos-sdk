@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,9 +26,9 @@ func TestDecodeStore(t *testing.T) {
 
 	totalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
 
-	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: keeper.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(totalSupply)},
-		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := tmkv.Pairs{
+		tmkv.Pair{Key: keeper.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(totalSupply)},
+		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

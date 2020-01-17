@@ -17,7 +17,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", 0, 0)
+	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", crkeys.CreateHDPath(0, 0).String(), crkeys.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -39,7 +39,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", 0, 0)
+	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", crkeys.CreateHDPath(0, 0).String(), crkeys.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }

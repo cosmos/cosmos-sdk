@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestEquivocation_Valid(t *testing.T) {

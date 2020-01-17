@@ -91,7 +91,7 @@ func TestAddDecCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Add(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo...)
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
@@ -172,7 +172,7 @@ func TestSubDecCoins(t *testing.T) {
 		msg        string
 	}{
 		{
-			NewDecCoins(Coins{NewCoin("mytoken", NewInt(10)), NewCoin("btc", NewInt(20)), NewCoin("eth", NewInt(30))}),
+			NewDecCoinsFromCoins(NewCoin("mytoken", NewInt(10)), NewCoin("btc", NewInt(20)), NewCoin("eth", NewInt(30))),
 			true,
 			"sorted coins should have passed",
 		},
@@ -188,7 +188,7 @@ func TestSubDecCoins(t *testing.T) {
 		},
 	}
 
-	decCoins := NewDecCoins(Coins{NewCoin("btc", NewInt(10)), NewCoin("eth", NewInt(15)), NewCoin("mytoken", NewInt(5))})
+	decCoins := NewDecCoinsFromCoins(NewCoin("btc", NewInt(10)), NewCoin("eth", NewInt(15)), NewCoin("mytoken", NewInt(5)))
 
 	for _, tc := range tests {
 		tc := tc
@@ -418,6 +418,78 @@ func TestDecCoinsQuoDecTruncate(t *testing.T) {
 		} else {
 			res := tc.coins.QuoDecTruncate(tc.input)
 			require.Equal(t, tc.result, res, "unexpected result; tc #%d, coins: %s, input: %s", i, tc.coins, tc.input)
+		}
+	}
+}
+
+func TestNewDecCoinsWithIsValid(t *testing.T) {
+	fake1 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "BTC", Amount: NewDec(10)})
+	fake2 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "BTC", Amount: NewDec(-10)})
+
+	tests := []struct {
+		coin       DecCoins
+		expectPass bool
+		msg        string
+	}{
+		{
+			NewDecCoins(NewDecCoin("mytoken", NewInt(10))),
+			true,
+			"valid coins should have passed",
+		},
+		{
+			fake1,
+			false,
+			"invalid denoms",
+		},
+		{
+			fake2,
+			false,
+			"negative amount",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		if tc.expectPass {
+			require.True(t, tc.coin.IsValid(), tc.msg)
+		} else {
+			require.False(t, tc.coin.IsValid(), tc.msg)
+		}
+	}
+}
+
+func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
+	lengthTestDecCoins := NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(10)})
+	require.Equal(t, 2, len(lengthTestDecCoins), "should be 2")
+
+	tests := []struct {
+		coin       DecCoins
+		expectPass bool
+		msg        string
+	}{
+		{
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))),
+			true,
+			"valid coins should have passed",
+		},
+		{
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(10)}),
+			false,
+			"invalid denoms",
+		},
+		{
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(-10)}),
+			false,
+			"negative amount",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		if tc.expectPass {
+			require.True(t, tc.coin.IsValid(), tc.msg)
+		} else {
+			require.False(t, tc.coin.IsValid(), tc.msg)
 		}
 	}
 }

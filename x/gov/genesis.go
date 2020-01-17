@@ -24,7 +24,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, supplyKeeper types.SupplyKeeper, dat
 	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
 		k.SetDeposit(ctx, deposit)
-		totalDeposits = totalDeposits.Add(deposit.Amount)
+		totalDeposits = totalDeposits.Add(deposit.Amount...)
 	}
 
 	for _, vote := range data.Votes {

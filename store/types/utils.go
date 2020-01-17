@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 )
 
 // Iterator over all the keys with a certain prefix in ascending order
@@ -18,7 +18,7 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []cmn.KVPair) {
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []tmkv.Pair) {
 	iterA := a.Iterator(nil, nil)
 	iterB := b.Iterator(nil, nil)
 
@@ -26,13 +26,13 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []c
 		if !iterA.Valid() && !iterB.Valid() {
 			break
 		}
-		var kvA, kvB cmn.KVPair
+		var kvA, kvB tmkv.Pair
 		if iterA.Valid() {
-			kvA = cmn.KVPair{Key: iterA.Key(), Value: iterA.Value()}
+			kvA = tmkv.Pair{Key: iterA.Key(), Value: iterA.Value()}
 			iterA.Next()
 		}
 		if iterB.Valid() {
-			kvB = cmn.KVPair{Key: iterB.Key(), Value: iterB.Value()}
+			kvB = tmkv.Pair{Key: iterB.Key(), Value: iterB.Value()}
 			iterB.Next()
 		}
 		if !bytes.Equal(kvA.Key, kvB.Key) {

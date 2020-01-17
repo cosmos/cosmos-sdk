@@ -31,7 +31,7 @@ func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAd
 		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fromAcc.GetCoins().String())
 	}
 
-	newToCoins := moduleAcc.GetCoins().Add(amt)
+	newToCoins := moduleAcc.GetCoins().Add(amt...)
 
 	if err := fromAcc.SetCoins(newFromCoins); err != nil {
 		return err

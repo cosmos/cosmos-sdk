@@ -4,12 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/tendermint/tendermint/libs/common"
-
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -18,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	keep "github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func TestKeeper(t *testing.T) {
@@ -168,21 +166,21 @@ func TestMsgSendEvents(t *testing.T) {
 	require.Equal(t, 2, len(events))
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []common.KVPair{},
+		Attributes: []tmkv.Pair{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		common.KVPair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())})
+		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())})
 	event1.Attributes = append(
 		event1.Attributes,
-		common.KVPair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []common.KVPair{},
+		Attributes: []tmkv.Pair{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		common.KVPair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())})
+		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())})
 	require.Equal(t, event1, events[0])
 	require.Equal(t, event2, events[1])
 
@@ -240,7 +238,7 @@ func TestVestingAccountSend(t *testing.T) {
 	require.Error(t, err)
 
 	// receive some coins
-	vacc.SetCoins(origCoins.Add(sendCoins))
+	vacc.SetCoins(origCoins.Add(sendCoins...))
 	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that all vested coins are spendable plus any received
@@ -275,7 +273,7 @@ func TestPeriodicVestingAccountSend(t *testing.T) {
 	require.Error(t, err)
 
 	// receive some coins
-	vacc.SetCoins(origCoins.Add(sendCoins))
+	vacc.SetCoins(origCoins.Add(sendCoins...))
 	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that all vested coins are spendable plus any received
@@ -311,7 +309,7 @@ func TestVestingAccountReceive(t *testing.T) {
 
 	// require the coins are spendable
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
-	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
+	require.Equal(t, origCoins.Add(sendCoins...), vacc.GetCoins())
 	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
 
 	// require coins are spendable plus any that have vested
@@ -347,7 +345,7 @@ func TestPeriodicVestingAccountReceive(t *testing.T) {
 
 	// require the coins are spendable
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
-	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
+	require.Equal(t, origCoins.Add(sendCoins...), vacc.GetCoins())
 	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
 
 	// require coins are spendable plus any that have vested

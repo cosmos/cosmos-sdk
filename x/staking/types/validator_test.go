@@ -278,7 +278,7 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 
 func TestValidatorMarshalYAML(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
-	bechifiedPub, err := sdk.Bech32ifyConsPub(validator.ConsPubKey)
+	bechifiedPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, validator.ConsPubKey)
 	require.NoError(t, err)
 	bs, err := yaml.Marshal(validator)
 	require.NoError(t, err)

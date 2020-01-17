@@ -96,7 +96,7 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 
 	// receive some coins
 	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	cva.SetCoins(cva.GetCoins().Add(recvAmt))
+	cva.SetCoins(cva.GetCoins().Add(recvAmt...))
 
 	// require that all vested coins (50%) are spendable plus any received
 	spendableCoins = cva.SpendableCoins(now.Add(12 * time.Hour))
@@ -268,7 +268,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 
 	// receive some coins
 	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	dva.SetCoins(dva.GetCoins().Add(recvAmt))
+	dva.SetCoins(dva.GetCoins().Add(recvAmt...))
 
 	// require that only received coins are spendable since the account is still
 	// vesting
@@ -497,7 +497,7 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 
 	// receive some coins
 	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	pva.SetCoins(pva.GetCoins().Add(recvAmt))
+	pva.SetCoins(pva.GetCoins().Add(recvAmt...))
 
 	// require that all vested coins (50%) are spendable plus any received
 	spendableCoins = pva.SpendableCoins(now.Add(12 * time.Hour))
@@ -549,7 +549,7 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 	// delegate 75% of coins, split between vested and vesting
 	bacc.SetCoins(origCoins)
 	pva = NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
-	pva.TrackDelegation(now.Add(12*time.Hour), periods[0].Amount.Add(periods[1].Amount))
+	pva.TrackDelegation(now.Add(12*time.Hour), periods[0].Amount.Add(periods[1].Amount...))
 	// require that the maximum possible amount of vesting coins are chosen for delegation.
 	require.Equal(t, pva.DelegatedFree, periods[1].Amount)
 	require.Equal(t, pva.DelegatedVesting, periods[0].Amount)

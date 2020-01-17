@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -27,7 +27,7 @@ type mockEvidence struct{}
 func (me mockEvidence) Route() string        { return mockStr }
 func (me mockEvidence) Type() string         { return mockStr }
 func (me mockEvidence) String() string       { return mockStr }
-func (me mockEvidence) Hash() cmn.HexBytes   { return cmn.HexBytes([]byte(mockStr)) }
+func (me mockEvidence) Hash() tmbytes.HexBytes   { return tmbytes.HexBytes([]byte(mockStr)) }
 func (me mockEvidence) ValidateBasic() error { return nil }
 func (me mockEvidence) GetHeight() int64     { return 3 }
 

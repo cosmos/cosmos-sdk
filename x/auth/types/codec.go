@@ -34,7 +34,9 @@ func NewCodec(amino *codec.Codec) *Codec {
 // MarshalAccount marshals an AccountI interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalAccount(acc exported.AccountI) ([]byte, error) {
+func (c *Codec) MarshalAccount(accI exported.AccountI) ([]byte, error) {
+	acc := &Account{}
+	acc.SetAccountI(accI)
 	return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
 }
 
@@ -45,7 +47,6 @@ func (c *Codec) UnmarshalAccount(bz []byte) (exported.AccountI, error) {
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
 		return nil, err
 	}
-
 	return acc.GetAccountI(), nil
 }
 

@@ -43,9 +43,10 @@ type BaseVestingAccount struct {
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
 func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) (*BaseVestingAccount, error) {
-	if (baseAccount.Coins.IsZero() && !originalVesting.IsZero()) || originalVesting.IsAnyGT(baseAccount.Coins) {
-		return &BaseVestingAccount{}, errors.New("vesting amount cannot be greater than total amount")
-	}
+	// TODO:  Move this check to bank
+	// if (baseAccount.Coins.IsZero() && !originalVesting.IsZero()) || originalVesting.IsAnyGT(baseAccount.Coins) {
+	// 	return &BaseVestingAccount{}, errors.New("vesting amount cannot be greater than total amount")
+	// }
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
@@ -55,30 +56,29 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 	}, nil
 }
 
-// SpendableCoinsVestingAccount returns all the spendable coins for a vesting account given a
+// UnspendableCoinsVestingAccount returns all the unspendable coins for a vesting account given a
 // set of vesting coins.
 //
-// CONTRACT: The account's coins, delegated vesting coins, vestingCoins must be
+// CONTRACT: Delegated vesting coins and vestingCoins must be
 // sorted.
-func (bva BaseVestingAccount) SpendableCoinsVestingAccount(vestingCoins sdk.Coins) sdk.Coins {
-	var spendableCoins sdk.Coins
-	bc := bva.GetCoins()
+func (bva BaseVestingAccount) UnspendableCoinsVestingAccount(currentVestingDenomsBalance sdk.Coins, vestingCoins sdk.Coins) sdk.Coins {
+	var unspendableCoins sdk.Coins
 
-	for _, coin := range bc {
-		baseAmt := coin.Amount
-		vestingAmt := vestingCoins.AmountOf(coin.Denom)
-		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
+	for _, vestingCoin := range vestingCoins {
+		vestingAmt := vestingCoins.AmountOf(vestingCoin.Denom)
+		delVestingAmt := bva.DelegatedVesting.AmountOf(vestingCoin.Denom)
+		baseAmt := currentVestingDenomsBalance.AmountOf(vestingCoin.Denom)
 
 		// compute min((BC + DV) - V, BC) per the specification
 		min := sdk.MinInt(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)
-		spendableCoin := sdk.NewCoin(coin.Denom, min)
+		unspendableCoin := sdk.NewCoin(vestingCoin.Denom, baseAmt.Sub(min))
 
-		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Add(spendableCoin)
+		if !unspendableCoin.IsZero() {
+			unspendableCoins = unspendableCoins.Add(unspendableCoin)
 		}
 	}
 
-	return spendableCoins
+	return unspendableCoins
 }
 
 // TrackDelegation tracks a delegation amount for any given vesting account type
@@ -87,16 +87,13 @@ func (bva BaseVestingAccount) SpendableCoinsVestingAccount(vestingCoins sdk.Coin
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
 func (bva *BaseVestingAccount) TrackDelegation(vestingCoins, amount sdk.Coins) {
-	bc := bva.GetCoins()
-
 	for _, coin := range amount {
-		baseAmt := bc.AmountOf(coin.Denom)
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
 		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
 
 		// Panic if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
+		if coin.Amount.IsZero() {
 			panic("delegation attempt with zero coins or insufficient funds")
 		}
 
@@ -187,7 +184,6 @@ func (bva BaseVestingAccount) Validate() error {
 
 type vestingAccountPretty struct {
 	Address          sdk.AccAddress `json:"address" yaml:"address"`
-	Coins            sdk.Coins      `json:"coins" yaml:"coins"`
 	PubKey           string         `json:"public_key" yaml:"public_key"`
 	AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
 	Sequence         uint64         `json:"sequence" yaml:"sequence"`
@@ -210,7 +206,6 @@ func (bva BaseVestingAccount) String() string {
 func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
 		Address:          bva.Address,
-		Coins:            bva.Coins,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
@@ -240,7 +235,6 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          bva.Address,
-		Coins:            bva.Coins,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
@@ -280,7 +274,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 		}
 	}
 
-	bva.BaseAccount = authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence)
+	bva.BaseAccount = authtypes.NewBaseAccount(alias.Address, pk, alias.AccountNumber, alias.Sequence)
 	bva.OriginalVesting = alias.OriginalVesting
 	bva.DelegatedFree = alias.DelegatedFree
 	bva.DelegatedVesting = alias.DelegatedVesting
@@ -312,10 +306,10 @@ func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *C
 }
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
-func NewContinuousVestingAccount(baseAcc *authtypes.BaseAccount, startTime, endTime int64) *ContinuousVestingAccount {
+func NewContinuousVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime, endTime int64) *ContinuousVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		OriginalVesting: baseAcc.Coins,
+		OriginalVesting: originalVesting,
 		EndTime:         endTime,
 	}
 
@@ -358,10 +352,10 @@ func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coi
 	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
 }
 
-// SpendableCoins returns the total number of spendable coins per denom for a
+// UnspendableCoins returns the total number of unspendable coins per denom for a
 // continuous vesting account.
-func (cva ContinuousVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return cva.BaseVestingAccount.SpendableCoinsVestingAccount(cva.GetVestingCoins(blockTime))
+func (cva ContinuousVestingAccount) UnspendableCoins(currentVestingDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins {
+	return cva.BaseVestingAccount.UnspendableCoinsVestingAccount(currentVestingDenomsBalance, cva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -395,7 +389,6 @@ func (cva ContinuousVestingAccount) String() string {
 func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
 		Address:          cva.Address,
-		Coins:            cva.Coins,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -426,7 +419,6 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          cva.Address,
-		Coins:            cva.Coins,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -468,7 +460,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	cva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
+		BaseAccount:      authtypes.NewBaseAccount(alias.Address, pk, alias.AccountNumber, alias.Sequence),
 		OriginalVesting:  alias.OriginalVesting,
 		DelegatedFree:    alias.DelegatedFree,
 		DelegatedVesting: alias.DelegatedVesting,
@@ -503,14 +495,14 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, peri
 }
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
-func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
+func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, startTime int64, periods Periods) *PeriodicVestingAccount {
 	endTime := startTime
 	for _, p := range periods {
 		endTime += p.Length
 	}
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		OriginalVesting: baseAcc.Coins,
+		OriginalVesting: originalVesting,
 		EndTime:         endTime,
 	}
 
@@ -556,10 +548,10 @@ func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins
 	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime))
 }
 
-// SpendableCoins returns the total number of spendable coins per denom for a
+// UnspendableCoins returns the total number of unspendable coins per denom for a
 // periodic vesting account.
-func (pva PeriodicVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return pva.BaseVestingAccount.SpendableCoinsVestingAccount(pva.GetVestingCoins(blockTime))
+func (pva PeriodicVestingAccount) UnspendableCoins(currentVestingDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins {
+	return pva.BaseVestingAccount.UnspendableCoinsVestingAccount(currentVestingDenomsBalance, pva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -610,7 +602,6 @@ func (pva PeriodicVestingAccount) String() string {
 func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
 		Address:          pva.Address,
-		Coins:            pva.Coins,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
@@ -642,7 +633,6 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          pva.Address,
-		Coins:            pva.Coins,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
@@ -685,7 +675,7 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	pva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
+		BaseAccount:      authtypes.NewBaseAccount(alias.Address, pk, alias.AccountNumber, alias.Sequence),
 		OriginalVesting:  alias.OriginalVesting,
 		DelegatedFree:    alias.DelegatedFree,
 		DelegatedVesting: alias.DelegatedVesting,
@@ -718,10 +708,10 @@ func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount
-func NewDelayedVestingAccount(baseAcc *authtypes.BaseAccount, endTime int64) *DelayedVestingAccount {
+func NewDelayedVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) *DelayedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		OriginalVesting: baseAcc.Coins,
+		OriginalVesting: originalVesting,
 		EndTime:         endTime,
 	}
 
@@ -744,10 +734,10 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
 }
 
-// SpendableCoins returns the total number of spendable coins for a delayed
+// UnspendableCoins returns the total number of unspendable coins for a delayed
 // vesting account.
-func (dva DelayedVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return dva.BaseVestingAccount.SpendableCoinsVestingAccount(dva.GetVestingCoins(blockTime))
+func (dva DelayedVestingAccount) UnspendableCoins(currentVestingDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins {
+	return dva.BaseVestingAccount.UnspendableCoinsVestingAccount(currentVestingDenomsBalance, dva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -771,7 +761,6 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          dva.Address,
-		Coins:            dva.Coins,
 		AccountNumber:    dva.AccountNumber,
 		Sequence:         dva.Sequence,
 		OriginalVesting:  dva.OriginalVesting,
@@ -812,7 +801,7 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	dva.BaseVestingAccount = &BaseVestingAccount{
-		BaseAccount:      authtypes.NewBaseAccount(alias.Address, alias.Coins, pk, alias.AccountNumber, alias.Sequence),
+		BaseAccount:      authtypes.NewBaseAccount(alias.Address, pk, alias.AccountNumber, alias.Sequence),
 		OriginalVesting:  alias.OriginalVesting,
 		DelegatedFree:    alias.DelegatedFree,
 		DelegatedVesting: alias.DelegatedVesting,

@@ -12,6 +12,7 @@ const (
 	ModuleName         = types.ModuleName
 	QuerierRoute       = types.QuerierRoute
 	RouterKey          = types.RouterKey
+	StoreKey           = types.StoreKey
 	DefaultParamspace  = types.DefaultParamspace
 	DefaultSendEnabled = types.DefaultSendEnabled
 
@@ -36,6 +37,7 @@ var (
 	NewGenesisState             = types.NewGenesisState
 	DefaultGenesisState         = types.DefaultGenesisState
 	ValidateGenesis             = types.ValidateGenesis
+	SanitizeGenesisBalances     = types.SanitizeGenesisBalances
 	NewMsgSend                  = types.NewMsgSend
 	NewMsgMultiSend             = types.NewMsgMultiSend
 	NewInput                    = types.NewInput
@@ -55,6 +57,7 @@ type (
 	ViewKeeper         = keeper.ViewKeeper
 	BaseViewKeeper     = keeper.BaseViewKeeper
 	GenesisState       = types.GenesisState
+	GenesisBalance     = types.GenesisBalance
 	MsgSend            = types.MsgSend
 	MsgMultiSend       = types.MsgMultiSend
 	Input              = types.Input

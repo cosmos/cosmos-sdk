@@ -11,6 +11,8 @@ import (
 type VestingAccount interface {
 	authexported.Account
 
+	UnspendableCoins(currVestDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins
+
 	// Delegation and undelegation accounting that returns the resulting base
 	// coins amount.
 	TrackDelegation(blockTime time.Time, amount sdk.Coins)

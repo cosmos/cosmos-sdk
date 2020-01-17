@@ -6,15 +6,18 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
+
+var balancesPrefix = []byte("balances")
 
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
@@ -29,18 +32,20 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
+	storeKey sdk.StoreKey
+
 	ak         types.AccountKeeper
 	paramSpace params.Subspace
 }
 
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(
-	ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
+	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(ak, ps, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, ps, blacklistedAddrs),
 		ak:             ak,
 		paramSpace:     ps,
 	}
@@ -52,11 +57,6 @@ func NewBaseKeeper(
 // The coins are then transferred from the delegator address to a ModuleAccount address.
 // If any of the delegation amounts are negative, an error is returned.
 func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error {
-	delegatorAcc := keeper.ak.GetAccount(ctx, delegatorAddr)
-	if delegatorAcc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", delegatorAddr)
-	}
-
 	moduleAcc := keeper.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
@@ -66,20 +66,20 @@ func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAcc
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	oldCoins := delegatorAcc.GetCoins()
-
-	_, hasNeg := oldCoins.SafeSub(amt)
-	if hasNeg {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds, "insufficient account funds; %s < %s", oldCoins, amt,
-		)
+	for _, coin := range amt {
+		// Need to manually do this as SubtractCoins will check for unspendable coins
+		oldBalance := keeper.GetBalance(ctx, delegatorAddr, coin.Denom)
+		if oldBalance.IsLT(coin) {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds, "insufficient account funds; %s < %s", oldBalance, amt,
+			)
+		}
+		keeper.SetBalance(ctx, delegatorAddr, oldBalance.Sub(coin))
 	}
 
-	if err := trackDelegation(delegatorAcc, ctx.BlockHeader().Time, amt); err != nil {
+	if err := keeper.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}
-
-	keeper.ak.SetAccount(ctx, delegatorAcc)
 
 	_, err := keeper.AddCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -94,12 +94,8 @@ func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAcc
 // vesting and vested coins.
 // The coins are then transferred from a ModuleAccount address to the delegator address.
 // If any of the undelegation amounts are negative, an error is returned.
+// CONTRACT:  ModuleAccAddr is not for a vestion account
 func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error {
-	delegatorAcc := keeper.ak.GetAccount(ctx, delegatorAddr)
-	if delegatorAcc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", delegatorAddr)
-	}
-
 	moduleAcc := keeper.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
@@ -109,25 +105,21 @@ func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegat
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	oldCoins := moduleAcc.GetCoins()
-
-	newCoins, hasNeg := oldCoins.SafeSub(amt)
-	if hasNeg {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds, "insufficient account funds; %s < %s", oldCoins, amt,
-		)
-	}
-
-	err := keeper.SetCoins(ctx, moduleAccAddr, newCoins)
+	// Safe to use Substract coins because a moduleAcc shouldn't be vesting
+	_, err := keeper.SubtractCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	if err := trackUndelegation(delegatorAcc, amt); err != nil {
+	if err := keeper.trackUndelegation(ctx, delegatorAddr, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track undelegation")
 	}
 
-	keeper.ak.SetAccount(ctx, delegatorAcc)
+	_, err = keeper.AddCoins(ctx, delegatorAddr, amt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -141,6 +133,8 @@ type SendKeeper interface {
 
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error)
+
+	SetBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) error
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
 
 	GetSendEnabled(ctx sdk.Context) bool
@@ -156,7 +150,10 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
+	cdc *codec.Codec
+
 	ak         types.AccountKeeper
+	storeKey   sdk.StoreKey
 	paramSpace params.Subspace
 
 	// list of addresses that are restricted from receiving transactions
@@ -165,12 +162,14 @@ type BaseSendKeeper struct {
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
 func NewBaseSendKeeper(
-	ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
+	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper:   NewBaseViewKeeper(ak),
+		BaseViewKeeper:   NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:              cdc,
 		ak:               ak,
+		storeKey:         storeKey,
 		paramSpace:       paramSpace,
 		blacklistedAddrs: blacklistedAddrs,
 	}
@@ -250,27 +249,23 @@ func (keeper BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	oldCoins, spendableCoins := sdk.NewCoins(), sdk.NewCoins()
+	resultCoins := sdk.NewCoins()
 
-	acc := keeper.ak.GetAccount(ctx, addr)
-	if acc != nil {
-		oldCoins = acc.GetCoins()
-		spendableCoins = acc.SpendableCoins(ctx.BlockHeader().Time)
+	unspendableCoins := keeper.GetUnspendableCoins(ctx, addr)
+
+	for _, coin := range amt {
+		oldBalance := keeper.GetBalance(ctx, addr, coin.Denom)
+		newBalance := oldBalance.Sub(coin)
+		if newBalance.Amount.LT(unspendableCoins.AmountOf(coin.Denom)) {
+			return nil, sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds, "insufficient account funds; resulting balance %s is below spendable limit", newBalance,
+			)
+		}
+		keeper.SetBalance(ctx, addr, newBalance)
+		resultCoins = resultCoins.Add(newBalance)
 	}
 
-	// For non-vesting accounts, spendable coins will simply be the original coins.
-	// So the check here is sufficient instead of subtracting from oldCoins.
-	_, hasNeg := spendableCoins.SafeSub(amt)
-	if hasNeg {
-		return amt, sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds, "insufficient account funds; %s < %s", spendableCoins, amt,
-		)
-	}
-
-	newCoins := oldCoins.Sub(amt) // should not panic as spendable coins was already checked
-	err := keeper.SetCoins(ctx, addr, newCoins)
-
-	return newCoins, err
+	return resultCoins, nil
 }
 
 // AddCoins adds amt to the coins at the addr.
@@ -279,36 +274,47 @@ func (keeper BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	oldCoins := keeper.GetCoins(ctx, addr)
-	newCoins := oldCoins.Add(amt...)
+	var resultCoins sdk.Coins
 
-	if newCoins.IsAnyNegative() {
-		return amt, sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds, "insufficient account funds; %s < %s", oldCoins, amt,
-		)
+	for _, coin := range amt {
+		oldBalance := keeper.GetBalance(ctx, addr, coin.Denom)
+		newBalance := oldBalance.Add(coin)
+		if newBalance.IsNegative() {
+			return nil, sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds, "insufficient account funds; resulting balance %s is negative", newBalance,
+			)
+		}
+		keeper.SetBalance(ctx, addr, newBalance)
+		resultCoins = resultCoins.Add(newBalance)
 	}
 
-	err := keeper.SetCoins(ctx, addr, newCoins)
-	return newCoins, err
+	return resultCoins, nil
 }
 
-// SetCoins sets the coins at the addr.
+// SetCoins sets the balances for multiple denoms at the addr.
 func (keeper BaseSendKeeper) SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	for _, coin := range amt {
+		err := keeper.SetBalance(ctx, addr, coin)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SetBalance sets the coin balance for a specific denom at the addr.
+func (keeper BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) error {
 	if !amt.IsValid() {
 		sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	acc := keeper.ak.GetAccount(ctx, addr)
-	if acc == nil {
-		acc = keeper.ak.NewAccountWithAddress(ctx, addr)
-	}
+	store := ctx.KVStore(keeper.storeKey)
+	balancesStore := prefix.NewStore(store, balancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	err := acc.SetCoins(amt)
-	if err != nil {
-		panic(err)
-	}
+	bz := keeper.cdc.MustMarshalBinaryBare(amt)
+	accountStore.Set([]byte(amt.Denom), bz)
 
-	keeper.ak.SetAccount(ctx, acc)
 	return nil
 }
 
@@ -335,18 +341,31 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 // ViewKeeper defines a module interface that facilitates read only access to
 // account balances.
 type ViewKeeper interface {
-	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+
+	GetUnspendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+
+	IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
+	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
 }
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	ak types.AccountKeeper
+	ak       types.AccountKeeper
+	storeKey sdk.StoreKey
+
+	// The codec codec for binary encoding/decoding of balances.
+	cdc *codec.Codec
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(ak types.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{ak: ak}
+func NewBaseViewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
+	return BaseViewKeeper{
+		cdc:      cdc,
+		storeKey: storeKey,
+		ak:       ak,
+	}
 }
 
 // Logger returns a module-specific logger.
@@ -354,38 +373,108 @@ func (keeper BaseViewKeeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetCoins returns the coins at the addr.
-func (keeper BaseViewKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	acc := keeper.ak.GetAccount(ctx, addr)
-	if acc == nil {
-		return sdk.NewCoins()
+// GetBalance returns the balance of a specific denom at the addr.
+func (keeper BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	store := ctx.KVStore(keeper.storeKey)
+	balancesStore := prefix.NewStore(store, balancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+
+	bz := accountStore.Get([]byte(denom))
+	if bz == nil {
+		return sdk.NewCoin(denom, sdk.ZeroInt())
 	}
-	return acc.GetCoins()
+	var balance sdk.Coin
+	keeper.cdc.MustUnmarshalBinaryBare(bz, &balance)
+	return balance
 }
 
-// HasCoins returns whether or not an account has at least amt coins.
-func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return keeper.GetCoins(ctx, addr).IsAllGTE(amt)
+// HasBalance returns whether or not an account has at least amt coins.
+func (keeper BaseViewKeeper) HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool {
+	return keeper.GetBalance(ctx, addr, amt.Denom).IsGTE(amt)
+}
+
+// IterateAccountBalances iterates over the balances of a single account and performs a callback function
+func (keeper BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	balancesStore := prefix.NewStore(store, balancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	iterator := accountStore.Iterator(nil, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var coin sdk.Coin
+		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &coin)
+
+		if cb(coin) {
+			break
+		}
+	}
+}
+
+// IterateAllBalances iterates over all the balances of all accounts and denoms and performs a callback function
+func (keeper BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	balancesStore := prefix.NewStore(store, balancesPrefix)
+	iterator := balancesStore.Iterator(nil, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		address := decodeAddressFromBalanceKey(iterator.Key())
+		var coin sdk.Coin
+		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &coin)
+
+		if cb(address, coin) {
+			break
+		}
+	}
+}
+
+func decodeAddressFromBalanceKey(key []byte) sdk.AccAddress {
+	return sdk.AccAddress(key[len(balancesPrefix) : len(balancesPrefix)+sdk.AddrLen])
+}
+
+// GetUnspendableCoins returns a list of unspendable coins due to vesting
+func (keeper BaseViewKeeper) GetUnspendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	acc := keeper.ak.GetAccount(ctx, addr)
+	if acc != nil {
+		vacc, ok := acc.(vestexported.VestingAccount)
+		if ok {
+			vestingDenoms := vacc.GetVestingCoins(ctx.BlockTime())
+			currVestingDenomBalances := sdk.NewCoins()
+			for _, denom := range vestingDenoms {
+				currDenomBalance := keeper.GetBalance(ctx, acc.GetAddress(), denom.Denom)
+				currVestingDenomBalances.Add(currDenomBalance)
+			}
+			return vacc.UnspendableCoins(currVestingDenomBalances, ctx.BlockTime())
+		}
+	}
+	return sdk.NewCoins()
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackDelegation(acc authexported.Account, blockTime time.Time, amt sdk.Coins) error {
+func (keeper BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, amt sdk.Coins) error {
+	acc := keeper.ak.GetAccount(ctx, addr)
+	if acc == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+	}
 	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		vacc.TrackDelegation(blockTime, amt)
 	}
-
-	return acc.SetCoins(acc.GetCoins().Sub(amt))
+	return nil
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackUndelegation(acc authexported.Account, amt sdk.Coins) error {
+func (keeper BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	acc := keeper.ak.GetAccount(ctx, addr)
+	if acc == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+	}
 	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackUndelegation
 		vacc.TrackUndelegation(amt)
 	}
-
-	return acc.SetCoins(acc.GetCoins().Add(amt...))
+	return nil
 }

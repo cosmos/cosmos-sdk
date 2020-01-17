@@ -46,17 +46,6 @@ func TestBaseAddressPubKey(t *testing.T) {
 	require.EqualValues(t, addr2, acc2.GetAddress())
 }
 
-func TestBaseAccountCoins(t *testing.T) {
-	_, _, addr := KeyTestPubAddr()
-	acc := NewBaseAccountWithAddress(addr)
-
-	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
-
-	err := acc.SetCoins(someCoins)
-	require.Nil(t, err)
-	require.Equal(t, someCoins, acc.GetCoins())
-}
-
 func TestBaseAccountSequence(t *testing.T) {
 	_, _, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
@@ -72,15 +61,12 @@ func TestBaseAccountMarshal(t *testing.T) {
 	_, pub, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
 	seq := uint64(7)
 
 	// set everything on the account
 	err := acc.SetPubKey(pub)
 	require.Nil(t, err)
 	err = acc.SetSequence(seq)
-	require.Nil(t, err)
-	err = acc.SetCoins(someCoins)
 	require.Nil(t, err)
 
 	// need a codec for marshaling
@@ -104,7 +90,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
-	baseAcc := NewBaseAccount(addr, nil, pubkey, 0, 0)
+	baseAcc := NewBaseAccount(addr, pubkey, 0, 0)
 	tests := []struct {
 		name   string
 		acc    exported.GenesisAccount
@@ -117,7 +103,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"invalid base valid account",
-			NewBaseAccount(addr, sdk.NewCoins(), secp256k1.GenPrivKey().PubKey(), 0, 0),
+			NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
 			errors.New("pubkey and address pair is invalid"),
 		},
 	}
@@ -133,8 +119,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 func TestBaseAccountJSON(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
-	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
-	baseAcc := NewBaseAccount(addr, coins, pubkey, 10, 50)
+	baseAcc := NewBaseAccount(addr, pubkey, 10, 50)
 
 	bz, err := json.Marshal(baseAcc)
 	require.NoError(t, err)

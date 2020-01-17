@@ -18,6 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
+const foocoin = "foocoin"
+const barcoin = "barcoin"
+
+func foo(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(foocoin, amt)
+}
+
+func bar(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(barcoin, amt)
+}
+
 func TestKeeper(t *testing.T) {
 	app, ctx := createTestApp(false)
 
@@ -28,56 +39,64 @@ func TestKeeper(t *testing.T) {
 
 	// Test GetCoins/SetCoins
 	app.AccountKeeper.SetAccount(ctx, acc)
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins()))
 
-	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
+	app.BankKeeper.SetBalance(ctx, addr, foo(10))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(10)))
 
 	// Test HasCoins
-	require.True(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
-	require.True(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
-	require.False(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
-	require.False(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5))))
+	require.True(t, app.BankKeeper.HasBalance(ctx, addr, foo(10)))
+	require.True(t, app.BankKeeper.HasBalance(ctx, addr, foo(5)))
+	require.False(t, app.BankKeeper.HasBalance(ctx, addr, foo(15)))
+	require.False(t, app.BankKeeper.HasBalance(ctx, addr, bar(5)))
 
 	// Test AddCoins
-	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 25))))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(foo(15)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(25)))
 
-	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 15)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 15), sdk.NewInt64Coin("foocoin", 25))))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(bar(15)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(25)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, barcoin).IsEqual(bar(15)))
 
 	// Test SubtractCoins
-	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
-	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 15))))
+	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(foo(10)))
+	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(bar(5)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(15)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, barcoin).IsEqual(bar(10)))
 
-	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 11)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 15))))
+	_, err := app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(bar(11)))
+	require.NotNil(t, err)
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(15)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, barcoin).IsEqual(bar(10)))
 
 	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
-	require.False(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(15)))
+	require.False(t, app.BankKeeper.HasBalance(ctx, addr, bar(1)))
 
 	// Test SendCoins
-	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
+	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(foo(5)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(10)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, foocoin).IsEqual(foo(5)))
 
-	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
+	err = app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	require.NotNil(t, err)
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(10)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, foocoin).IsEqual(foo(5)))
 
-	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 30)))
-	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 5)))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 5))))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 10))))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(bar(30)))
+	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(bar(10), foo(5)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(5)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, barcoin).IsEqual(bar(20)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, foocoin).IsEqual(foo(10)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, barcoin).IsEqual(bar(10)))
 
 	// Test InputOutputCoins
-	input1 := types.NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
-	output1 := types.NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
+	input1 := types.NewInput(addr2, sdk.NewCoins(foo(2)))
+	output1 := types.NewOutput(addr, sdk.NewCoins(foo(2)))
 	app.BankKeeper.InputOutputCoins(ctx, []types.Input{input1}, []types.Output{output1})
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 7))))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 8))))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(7)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, barcoin).IsEqual(bar(20)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, foocoin).IsEqual(foo(8)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, barcoin).IsEqual(bar(10)))
 
 	inputs := []types.Input{
 		types.NewInput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 3))),
@@ -89,9 +108,12 @@ func TestKeeper(t *testing.T) {
 		types.NewOutput(addr3, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))),
 	}
 	app.BankKeeper.InputOutputCoins(ctx, inputs, outputs)
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 21), sdk.NewInt64Coin("foocoin", 4))))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 7), sdk.NewInt64Coin("foocoin", 6))))
-	require.True(t, app.BankKeeper.GetCoins(ctx, addr3).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, foocoin).IsEqual(foo(4)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr, barcoin).IsEqual(bar(21)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, foocoin).IsEqual(foo(6)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr2, barcoin).IsEqual(bar(7)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr3, foocoin).IsEqual(foo(5)))
+	require.True(t, app.BankKeeper.GetBalance(ctx, addr3, barcoin).IsEqual(bar(2)))
 
 	// Test retrieving black listed accounts
 	for acc := range simapp.GetMaccPerms() {
@@ -103,10 +125,11 @@ func TestKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	app, ctx := createTestApp(false)
 
+	storeKey := sdk.NewKVStoreKey("testbank")
 	blacklistedAddrs := make(map[string]bool)
-
 	paramSpace := app.ParamsKeeper.Subspace("newspace")
-	sendKeeper := keep.NewBaseSendKeeper(app.AccountKeeper, paramSpace, blacklistedAddrs)
+
+	sendKeeper := keep.NewBaseSendKeeper(app.Codec(), app.AccountKeeper, storeKey, paramSpace, blacklistedAddrs)
 	app.BankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -115,7 +138,6 @@ func TestSendKeeper(t *testing.T) {
 
 	// Test GetCoins/SetCoins
 	app.AccountKeeper.SetAccount(ctx, acc)
-	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins()))
 
 	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))

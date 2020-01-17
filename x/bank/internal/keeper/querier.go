@@ -36,10 +36,11 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	coins := k.GetCoins(ctx, params.Address)
-	if coins == nil {
-		coins = sdk.NewCoins()
-	}
+	coins := sdk.NewCoins()
+	k.IterateAccountBalances(ctx, params.Address, func(balance sdk.Coin) bool {
+		coins = coins.Add(balance)
+		return false
+	})
 
 	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, coins)
 	if err != nil {

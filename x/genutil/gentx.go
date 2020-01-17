@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -38,7 +38,7 @@ func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]jso
 // ValidateAccountInGenesis checks that the provided key has sufficient
 // coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
-	genAccIterator types.GenesisAccountsIterator,
+	genBalIterator types.GenesisBalancesIterator,
 	key sdk.Address, coins sdk.Coins, cdc *codec.Codec) error {
 
 	accountIsInGenesis := false
@@ -54,10 +54,10 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	cdc.MustUnmarshalJSON(genUtilDataBz, &genesisState)
 
 	var err error
-	genAccIterator.IterateGenesisAccounts(cdc, appGenesisState,
-		func(acc authexported.Account) (stop bool) {
-			accAddress := acc.GetAddress()
-			accCoins := acc.GetCoins()
+	genBalIterator.IterateGenesisBalances(cdc, appGenesisState,
+		func(bal bankexported.GenesisBalance) (stop bool) {
+			accAddress := bal.GetAddress()
+			accCoins := bal.GetCoins()
 
 			// Ensure that account is in genesis
 			if accAddress.Equals(key) {
@@ -65,7 +65,7 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 				// Ensure account contains enough funds of default bond denom
 				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
 					err = fmt.Errorf(
-						"account %v is in genesis, but it only has %v%v available to stake, not %v%v",
+						"account %v has a balance in genesis, but it only has %v%v available to stake, not %v%v",
 						key.String(), accCoins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
 					)
 					return true
@@ -81,7 +81,7 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	}
 
 	if !accountIsInGenesis {
-		return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
+		return fmt.Errorf("account %s does not have a balance in the app_state.genesis_balances array of genesis.json", key)
 	}
 
 	return nil

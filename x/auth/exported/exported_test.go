@@ -14,7 +14,7 @@ import (
 func TestGenesisAccountsContains(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
-	acc := authtypes.NewBaseAccount(addr, nil, secp256k1.GenPrivKey().PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
 
 	genAccounts := exported.GenesisAccounts{}
 	require.False(t, genAccounts.Contains(acc.GetAddress()))

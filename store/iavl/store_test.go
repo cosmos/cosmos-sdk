@@ -58,7 +58,7 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 func TestGetImmutable(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
-	store := UnsafeNewStore(tree, 10, 10)
+	store := UnsafeNewStore(tree)
 
 	require.True(t, tree.Set([]byte("hello"), []byte("adios")))
 	hash, ver, err := tree.SaveVersion()
@@ -88,7 +88,7 @@ func TestGetImmutable(t *testing.T) {
 func TestTestGetImmutableIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
-	store := UnsafeNewStore(tree, 10, 10)
+	store := UnsafeNewStore(tree)
 
 	newStore, err := store.GetImmutable(cID.Version)
 	require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestTestGetImmutableIterator(t *testing.T) {
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 
 	key := "hello"
 
@@ -136,14 +136,14 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 func TestIAVLStoreNoNilSet(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 	require.Panics(t, func() { iavlStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
 func TestIAVLIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
 	var i int
@@ -219,7 +219,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 
 	iavlStore.Set([]byte{0x00}, []byte("0"))
 	iavlStore.Set([]byte{0x00, 0x00}, []byte("0 0"))
@@ -252,7 +252,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -316,7 +316,7 @@ func TestIAVLReversePrefixIterator(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -437,7 +437,7 @@ func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []prune
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 
 	for step, state := range states {
 		for _, ver := range state.stored {
@@ -461,7 +461,7 @@ func TestIAVLNoPrune(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, numRecent, int64(1))
+	iavlStore := UnsafeNewStore(tree)
 	nextVersion(iavlStore)
 
 	for i := 1; i < 100; i++ {
@@ -480,7 +480,7 @@ func TestIAVLPruneEverything(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, int64(0), int64(0))
+	iavlStore := UnsafeNewStore(tree)
 	nextVersion(iavlStore)
 
 	for i := 1; i < 100; i++ {
@@ -503,7 +503,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 
 	k1, v1 := []byte("key1"), []byte("val1")
 	k2, v2 := []byte("key2"), []byte("val2")
@@ -602,7 +602,7 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		tree.Set(key, value)
 	}
 
-	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+	iavlStore := UnsafeNewStore(tree)
 	iterators := make([]types.Iterator, b.N/treeSize)
 
 	for i := 0; i < len(iterators); i++ {

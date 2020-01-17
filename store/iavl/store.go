@@ -48,7 +48,6 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 		defaultIAVLCacheSize,
 		iavlOpts,
 	)
-	iavl.DefaultOptions()
 	if err != nil {
 		return nil, err
 	}

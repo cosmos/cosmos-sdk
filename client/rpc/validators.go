@@ -160,23 +160,16 @@ func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (R
 // Validator Set at a height REST handler
 func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse pagination parameters")
+			return
+		}
+
 		vars := mux.Vars(r)
-
-		page, err := strconv.ParseInt(vars["page"], 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse page")
-			return
-		}
-
-		limit, err := strconv.ParseInt(vars["limit"], 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse limit")
-			return
-		}
-
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse block height; assumed format is '/validatorsets/{height}'")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse block height")
 			return
 		}
 
@@ -190,7 +183,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(cliCtx, &height, int(page), int(limit))
+		output, err := GetValidators(cliCtx, &height, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -202,21 +195,13 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // Latest Validator Set REST handler
 func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		page, err := strconv.ParseInt(vars["page"], 10, 64)
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse page")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse pagination parameters")
 			return
 		}
 
-		limit, err := strconv.ParseInt(vars["limit"], 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse limit")
-			return
-		}
-
-		output, err := GetValidators(cliCtx, nil, int(page), int(limit))
+		output, err := GetValidators(cliCtx, nil, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -60,9 +60,6 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 		{"validatorHash incorrect", func() {
 			suite.header = tendermint.MakeHeader("gaia", 4, altValSet, suite.valSet, altSigners)
 		}, true},
-		{"nextHash incorrect", func() {
-			suite.header.NextValidatorSet = altValSet
-		}, true},
 		{"header fails validateBasic", func() {
 			suite.header.ChainID = "test"
 		}, true},

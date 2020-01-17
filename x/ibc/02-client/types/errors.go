@@ -22,5 +22,5 @@ var (
 	ErrFailedPacketCommitmentVerification     = sdkerrors.Register(SubModuleName, 16, "packet commitment verification failed")
 	ErrFailedPacketAckVerification            = sdkerrors.Register(SubModuleName, 17, "packet acknowledgement verification failed")
 	ErrFailedPacketAckAbsenceVerification     = sdkerrors.Register(SubModuleName, 18, "packet acknowledgement absence verification failed")
-	ErrFailedNextSeqRecvVerification          = sdkerrors.Register(SubModuleName, 18, "next sequence receive verification failed")
+	ErrFailedNextSeqRecvVerification          = sdkerrors.Register(SubModuleName, 19, "next sequence receive verification failed")
 )

@@ -38,13 +38,17 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		return suite.app.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.ctx, testConnectionID1, testClientID1, counterparty)
 	}
 
-	var testCases = []TestCase{
+	var testCases = []testCase{
 		{success, true, "success"},
 		{connectionExists, false, "connection already exists"},
 	}
 
 	for _, tc := range testCases {
-		suite.Require().Nil(tc.expected, tc.fun(), tc.errMsg)
+		if tc.expectPass {
+			suite.Require().NoError(tc.fun(), tc.msg)
+		} else {
+			suite.Require().Error(tc.fun(), tc.msg)
+		}
 	}
 }
 
@@ -96,14 +100,18 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			uint64(proofHeight), uint64(consensusHeight))
 	}
 
-	var testCases = []TestCase{
+	var testCases = []testCase{
 		{invalidProof, false, "invalid proof"},
 		{connectionExists, false, "connection already exists"},
 		{success, true, "success"},
 	}
 
 	for _, tc := range testCases {
-		suite.Require().Nil(tc.expected, tc.fun(), tc.errMsg)
+		if tc.expectPass {
+			suite.Require().NoError(tc.fun(), tc.msg)
+		} else {
+			suite.Require().Error(tc.fun(), tc.msg)
+		}
 	}
 
 }
@@ -151,7 +159,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		return nil
 	}
 
-	var testCases = []TestCase{
+	var testCases = []testCase{
 		{connectionNotFound, false, "connection not exists"},
 		{invalidConnectionState, false, "invalid connection state"},
 		{invalidVersion, false, "invalid version"},
@@ -160,9 +168,12 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	}
 
 	for _, tc := range testCases {
-		suite.Require().Nil(tc.expected, tc.fun(), tc.errMsg)
+		if tc.expectPass {
+			suite.Require().NoError(tc.fun(), tc.msg)
+		} else {
+			suite.Require().Error(tc.fun(), tc.msg)
+		}
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestConnOpenConfirm() {
@@ -200,7 +211,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 		return nil
 	}
 
-	var testCases = []TestCase{
+	var testCases = []testCase{
 		{connectionNotFound, false, "connection not exists"},
 		{invalidConnectionState, false, "invalid connection state"},
 		{invalidProof, false, "invalid proof"},
@@ -208,7 +219,11 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	}
 
 	for _, tc := range testCases {
-		suite.Require().Nil(tc.expected, tc.fun(), tc.errMsg)
+		if tc.expectPass {
+			suite.Require().NoError(tc.fun(), tc.msg)
+		} else {
+			suite.Require().Error(tc.fun(), tc.msg)
+		}
 	}
 }
 
@@ -270,8 +285,8 @@ func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, connID, connection)
 }
 
-type TestCase = struct {
-	fun      func() error
-	expected bool
-	errMsg   string
+type testCase = struct {
+	fun        func() error
+	expectPass bool
+	msg        string
 }

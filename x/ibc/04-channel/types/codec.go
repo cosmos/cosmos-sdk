@@ -2,7 +2,9 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // SubModuleCdc defines the IBC channel codec.
@@ -10,6 +12,8 @@ var SubModuleCdc *codec.Codec
 
 func init() {
 	SubModuleCdc = codec.New()
+	commitment.RegisterCodec(SubModuleCdc)
+	client.RegisterCodec(SubModuleCdc)
 	RegisterCodec(SubModuleCdc)
 }
 
@@ -31,6 +35,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	SetSubModuleCodec(cdc)
 }
 
+// SetSubModuleCodec sets the ibc channel codec
 func SetSubModuleCodec(cdc *codec.Codec) {
 	SubModuleCdc = cdc
 }

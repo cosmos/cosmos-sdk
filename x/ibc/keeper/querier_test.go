@@ -44,12 +44,6 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			"",
 		},
 		{
-			"client - QuerierVerifiedRoot",
-			[]string{client.SubModuleName, client.QueryVerifiedRoot},
-			false,
-			"",
-		},
-		{
 			"client - invalid query",
 			[]string{client.SubModuleName, "foo"},
 			true,

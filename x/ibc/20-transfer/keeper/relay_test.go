@@ -7,7 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -23,11 +25,8 @@ func (suite *KeeperTestSuite) createClient() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		ChainID:          testChainID,
-		Height:           uint64(commitID.Version),
 		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
@@ -43,16 +42,13 @@ func (suite *KeeperTestSuite) updateClient() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	state := tendermint.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		Root: commitment.NewRoot(commitID.Hash),
 	}
 
 	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
-	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
 }
 
-func (suite *KeeperTestSuite) createConnection(state connection.State) {
+func (suite *KeeperTestSuite) createConnection(state connectionexported.State) {
 	connection := connection.ConnectionEnd{
 		State:    state,
 		ClientID: testClient,
@@ -67,7 +63,7 @@ func (suite *KeeperTestSuite) createConnection(state connection.State) {
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnection, connection)
 }
 
-func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channel.State) {
+func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channelexported.State) {
 	ch := channel.Channel{
 		State:    state,
 		Ordering: testChannelOrder,
@@ -104,7 +100,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	err := suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // channel does not exist
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // next send sequence not found
 

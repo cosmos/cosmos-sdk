@@ -389,16 +389,16 @@ func TestIAVLDefaultPruning(t *testing.T) {
 		{[]int64{1, 2, 3}, []int64{}},
 		{[]int64{1, 2, 3, 4}, []int64{}},
 		{[]int64{1, 2, 3, 4, 5}, []int64{}},
-		{[]int64{1, 2, 3, 4, 5, 6}, []int64{}},
-		{[]int64{2, 3, 4, 5, 6, 7}, []int64{1}},
+		{[]int64{2, 3, 4, 5, 6}, []int64{1}},
+		{[]int64{3, 4, 5, 6, 7}, []int64{1, 2}},
 		{[]int64{3, 4, 5, 6, 7, 8}, []int64{1, 2}},
-		{[]int64{3, 4, 5, 6, 7, 8, 9}, []int64{1, 2}},
-		{[]int64{3, 5, 6, 7, 8, 9, 10}, []int64{1, 2, 4}},
+		{[]int64{3, 5, 6, 7, 8, 9}, []int64{1, 2, 4}},
+		{[]int64{3, 6, 7, 8, 9, 10}, []int64{1, 2, 4, 5}},
 		{[]int64{3, 6, 7, 8, 9, 10, 11}, []int64{1, 2, 4, 5}},
-		{[]int64{3, 6, 7, 8, 9, 10, 11, 12}, []int64{1, 2, 4, 5}},
-		{[]int64{3, 6, 8, 9, 10, 11, 12, 13}, []int64{1, 2, 4, 5, 7}},
+		{[]int64{3, 6, 8, 9, 10, 11, 12}, []int64{1, 2, 4, 5, 7}},
+		{[]int64{3, 6, 9, 10, 11, 12, 13}, []int64{1, 2, 4, 5, 7, 8}},
 		{[]int64{3, 6, 9, 10, 11, 12, 13, 14}, []int64{1, 2, 4, 5, 7, 8}},
-		{[]int64{3, 6, 9, 10, 11, 12, 13, 14, 15}, []int64{1, 2, 4, 5, 7, 8}},
+		{[]int64{3, 6, 9, 11, 12, 13, 14, 15}, []int64{1, 2, 4, 5, 7, 8, 10}},
 	}
 	testPruning(t, int64(5), int64(3), states)
 }
@@ -411,18 +411,18 @@ func TestIAVLAlternativePruning(t *testing.T) {
 		{[]int64{1}, []int64{}},
 		{[]int64{1, 2}, []int64{}},
 		{[]int64{1, 2, 3}, []int64{}},
-		{[]int64{1, 2, 3, 4}, []int64{}},
-		{[]int64{2, 3, 4, 5}, []int64{1}},
-		{[]int64{3, 4, 5, 6}, []int64{1, 2}},
-		{[]int64{4, 5, 6, 7}, []int64{1, 2, 3}},
+		{[]int64{2, 3, 4}, []int64{1}},
+		{[]int64{3, 4, 5}, []int64{1, 2}},
+		{[]int64{4, 5, 6}, []int64{1, 2, 3}},
+		{[]int64{5, 6, 7}, []int64{1, 2, 3, 4}},
 		{[]int64{5, 6, 7, 8}, []int64{1, 2, 3, 4}},
-		{[]int64{5, 6, 7, 8, 9}, []int64{1, 2, 3, 4}},
-		{[]int64{5, 7, 8, 9, 10}, []int64{1, 2, 3, 4, 6}},
-		{[]int64{5, 8, 9, 10, 11}, []int64{1, 2, 3, 4, 6, 7}},
-		{[]int64{5, 9, 10, 11, 12}, []int64{1, 2, 3, 4, 6, 7, 8}},
+		{[]int64{5, 7, 8, 9}, []int64{1, 2, 3, 4, 6}},
+		{[]int64{5, 8, 9, 10}, []int64{1, 2, 3, 4, 6, 7}},
+		{[]int64{5, 9, 10, 11}, []int64{1, 2, 3, 4, 6, 7, 8}},
+		{[]int64{5, 10, 11, 12}, []int64{1, 2, 3, 4, 6, 7, 8, 9}},
 		{[]int64{5, 10, 11, 12, 13}, []int64{1, 2, 3, 4, 6, 7, 8, 9}},
-		{[]int64{5, 10, 11, 12, 13, 14}, []int64{1, 2, 3, 4, 6, 7, 8, 9}},
-		{[]int64{5, 10, 12, 13, 14, 15}, []int64{1, 2, 3, 4, 6, 7, 8, 9, 11}},
+		{[]int64{5, 10, 12, 13, 14}, []int64{1, 2, 3, 4, 6, 7, 8, 9, 11}},
+		{[]int64{5, 10, 13, 14, 15}, []int64{1, 2, 3, 4, 6, 7, 8, 9, 11, 12}},
 	}
 	testPruning(t, int64(3), int64(5), states)
 }
@@ -434,9 +434,13 @@ type pruneState struct {
 
 func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []pruneState) {
 	db := dbm.NewMemDB()
-	tree, err := iavl.NewMutableTree(db, cacheSize)
-	require.NoError(t, err)
-
+	var iavlOpts *iavl.Options
+	if numRecent == 0 && storeEvery == 0 {
+		iavlOpts = iavl.DefaultOptions()
+	} else {
+		iavlOpts = iavl.PruningOptions(storeEvery, numRecent)
+	}
+	tree, _ := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
 	iavlStore := UnsafeNewStore(tree)
 
 	for step, state := range states {
@@ -477,7 +481,9 @@ func TestIAVLNoPrune(t *testing.T) {
 
 func TestIAVLPruneEverything(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, err := iavl.NewMutableTree(db, cacheSize)
+	var iavlOpts *iavl.Options
+	iavlOpts = iavl.PruningOptions(0, 1) // only store latest version in memory
+	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
 	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)

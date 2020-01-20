@@ -1,14 +1,13 @@
 package iavl
 
 import (
+	crand "crypto/rand"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -28,19 +27,31 @@ var (
 	nMoreData = 0
 )
 
+func randBytes(numBytes int) []byte {
+	b := make([]byte, numBytes)
+	_, _ = crand.Read(b)
+
+	return b
+}
+
 // make a tree with data from above and save it
 func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	for k, v := range treeData {
 		tree.Set([]byte(k), []byte(v))
 	}
+
 	for i := 0; i < nMoreData; i++ {
-		key := cmn.RandBytes(12)
-		value := cmn.RandBytes(50)
+		key := randBytes(12)
+		value := randBytes(50)
 		tree.Set(key, value)
 	}
+
 	hash, ver, err := tree.SaveVersion()
 	require.Nil(t, err)
+
 	return tree, types.CommitID{Version: ver, Hash: hash}
 }
 
@@ -204,7 +215,10 @@ func TestIAVLIterator(t *testing.T) {
 
 func TestIAVLReverseIterator(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte{0x00}, []byte("0"))
@@ -235,7 +249,9 @@ func TestIAVLReverseIterator(t *testing.T) {
 
 func TestIAVLPrefixIterator(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
@@ -297,7 +313,9 @@ func TestIAVLPrefixIterator(t *testing.T) {
 
 func TestIAVLReversePrefixIterator(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
@@ -416,59 +434,75 @@ type pruneState struct {
 
 func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []pruneState) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
+
 	for step, state := range states {
 		for _, ver := range state.stored {
 			require.True(t, iavlStore.VersionExists(ver),
 				"Missing version %d with latest version %d. Should save last %d and every %d",
 				ver, step, numRecent, storeEvery)
 		}
+
 		for _, ver := range state.deleted {
 			require.False(t, iavlStore.VersionExists(ver),
 				"Unpruned version %d with latest version %d. Should prune all but last %d and every %d",
 				ver, step, numRecent, storeEvery)
 		}
+
 		nextVersion(iavlStore)
 	}
 }
 
 func TestIAVLNoPrune(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, numRecent, int64(1))
 	nextVersion(iavlStore)
+
 	for i := 1; i < 100; i++ {
 		for j := 1; j <= i; j++ {
 			require.True(t, iavlStore.VersionExists(int64(j)),
 				"Missing version %d with latest version %d. Should be storing all versions",
 				j, i)
 		}
+
 		nextVersion(iavlStore)
 	}
 }
 
 func TestIAVLPruneEverything(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, int64(0), int64(0))
 	nextVersion(iavlStore)
+
 	for i := 1; i < 100; i++ {
 		for j := 1; j < i; j++ {
 			require.False(t, iavlStore.VersionExists(int64(j)),
 				"Unpruned version %d with latest version %d. Should prune all old versions",
 				j, i)
 		}
+
 		require.True(t, iavlStore.VersionExists(int64(i)),
 			"Missing current version on step %d, should not prune current state tree",
 			i)
+
 		nextVersion(iavlStore)
 	}
 }
 
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
 
 	k1, v1 := []byte("key1"), []byte("val1")
@@ -559,17 +593,22 @@ func TestIAVLStoreQuery(t *testing.T) {
 func BenchmarkIAVLIteratorNext(b *testing.B) {
 	db := dbm.NewMemDB()
 	treeSize := 1000
-	tree := iavl.NewMutableTree(db, cacheSize)
+	tree, err := iavl.NewMutableTree(db, cacheSize)
+	require.NoError(b, err)
+
 	for i := 0; i < treeSize; i++ {
-		key := cmn.RandBytes(4)
-		value := cmn.RandBytes(50)
+		key := randBytes(4)
+		value := randBytes(50)
 		tree.Set(key, value)
 	}
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
 	iterators := make([]types.Iterator, b.N/treeSize)
+
 	for i := 0; i < len(iterators); i++ {
 		iterators[i] = iavlStore.Iterator([]byte{0}, []byte{255, 255, 255, 255, 255})
 	}
+
 	b.ResetTimer()
 	for i := 0; i < len(iterators); i++ {
 		iter := iterators[i]

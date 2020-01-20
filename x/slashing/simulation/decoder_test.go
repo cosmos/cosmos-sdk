@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,11 +38,11 @@ func TestDecodeStore(t *testing.T) {
 	bechPK := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, delPk1)
 	missed := true
 
-	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		cmn.KVPair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
-		cmn.KVPair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
-		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := tmkv.Pairs{
+		tmkv.Pair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
+		tmkv.Pair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
+		tmkv.Pair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
+		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

@@ -4,7 +4,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,7 +59,7 @@ func (ev Evidence) String() string {
 }
 
 // Hash implements Evidence interface
-func (ev Evidence) Hash() cmn.HexBytes {
+func (ev Evidence) Hash() tmbytes.HexBytes {
 	return tmhash.Sum(SubModuleCdc.MustMarshalBinaryBare(ev))
 }
 

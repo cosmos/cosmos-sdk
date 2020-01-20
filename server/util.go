@@ -91,7 +91,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
-		conf.TxIndex.IndexAllTags = true
+		conf.TxIndex.IndexAllKeys = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.

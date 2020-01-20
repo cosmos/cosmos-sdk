@@ -7,11 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -43,17 +42,17 @@ func TestDecodeDistributionStore(t *testing.T) {
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 5)
 	slashEvent := types.NewValidatorSlashEvent(10, sdk.OneDec())
 
-	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
-		cmn.KVPair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
-		cmn.KVPair{Key: keeper.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
-		cmn.KVPair{Key: keeper.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
-		cmn.KVPair{Key: keeper.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		cmn.KVPair{Key: keeper.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryLengthPrefixed(historicalRewards)},
-		cmn.KVPair{Key: keeper.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(currentRewards)},
-		cmn.KVPair{Key: keeper.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(commission)},
-		cmn.KVPair{Key: keeper.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
-		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := tmkv.Pairs{
+		tmkv.Pair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
+		tmkv.Pair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
+		tmkv.Pair{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
+		tmkv.Pair{Key: types.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
+		tmkv.Pair{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
+		tmkv.Pair{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryLengthPrefixed(historicalRewards)},
+		tmkv.Pair{Key: types.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(currentRewards)},
+		tmkv.Pair{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(commission)},
+		tmkv.Pair{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
+		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

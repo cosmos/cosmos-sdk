@@ -30,8 +30,6 @@ func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, next
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,
-		NumTxs:             100,
-		TotalTxs:           1000,
 		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),

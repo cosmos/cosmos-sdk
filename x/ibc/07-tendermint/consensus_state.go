@@ -23,10 +23,10 @@ func (cs ConsensusState) GetRoot() commitment.RootI {
 	return cs.Root
 }
 
-// ValidateBasic
+// ValidateBasic defines a basic validation for the tendermint consensus state.
 func (cs ConsensusState) ValidateBasic() error {
-	if cs.Root == nil {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be nil")
+	if cs.Root.IsEmpty() {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be empty")
 	}
 	if len(cs.ValidatorSetHash) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set hash cannot be empty")

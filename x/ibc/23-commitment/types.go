@@ -14,6 +14,7 @@ package commitment
 type RootI interface {
 	GetCommitmentType() Type
 	GetHash() []byte
+	IsEmpty() bool
 }
 
 // PrefixI implements spec:CommitmentPrefix.

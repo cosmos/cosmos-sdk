@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -77,6 +79,10 @@ func (cs ClientState) VerifyClientConsensusState(
 	bz, err := cdc.MarshalBinaryBare(consensusState)
 	if err != nil {
 		return err
+	}
+
+	if consensusState.GetRoot() == nil {
+		return errors.New("root cannot be empty")
 	}
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {

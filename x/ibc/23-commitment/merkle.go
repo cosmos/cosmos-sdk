@@ -41,6 +41,11 @@ func (r Root) GetHash() []byte {
 	return r.Hash
 }
 
+// IsEmpty returns true if the root is empty
+func (r Root) IsEmpty() bool {
+	return &r == nil || len(r.GetHash()) == 0
+}
+
 var _ PrefixI = Prefix{}
 
 // Prefix is merkle path prefixed to the key.

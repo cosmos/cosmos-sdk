@@ -15,7 +15,6 @@ const (
 	AttributeKeyClientID  = types.AttributeKeyClientID
 	AttrbuteKeyClientType = types.AttributeKeyClientType
 	SubModuleName         = types.SubModuleName
-	StoreKey              = types.StoreKey
 	RouterKey             = types.RouterKey
 	QuerierRoute          = types.QuerierRoute
 	QueryAllClients       = types.QueryAllClients

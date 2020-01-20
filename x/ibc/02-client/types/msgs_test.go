@@ -11,30 +11,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func TestMsgCreateClientValidateBasic(t *testing.T) {
-	cs := tendermint.ConsensusState{}
+	cs := tendermint.ConsensusState{
+		Root:             commitment.NewRoot([]byte("root")),
+		ValidatorSetHash: []byte("hash"),
+	}
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
-	testMsgs := []types.MsgCreateClient{
-		types.NewMsgCreateClient(exported.ClientTypeTendermint, exported.ClientTypeTendermint, cs, signer), // valid msg
-		types.NewMsgCreateClient("badClient", exported.ClientTypeTendermint, cs, signer),                   // invalid client id
-		types.NewMsgCreateClient("goodChain", "bad_type", cs, signer),                                      // invalid client type
-		types.NewMsgCreateClient("goodChain", exported.ClientTypeTendermint, nil, signer),                  // nil Consensus State
-		types.NewMsgCreateClient("goodChain", exported.ClientTypeTendermint, cs, sdk.AccAddress{}),         // empty signer
-	}
 
 	cases := []struct {
 		msg     types.MsgCreateClient
 		expPass bool
 		errMsg  string
 	}{
-		{testMsgs[0], true, ""},
-		{testMsgs[1], false, "invalid client id passed"},
-		{testMsgs[2], false, "unregistered client type passed"},
-		{testMsgs[3], false, "Nil Consensus State in msg passed"},
-		{testMsgs[4], false, "Empty address passed"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, exported.ClientTypeTendermint, cs, signer), true, "success msg should pass"},
+		{types.NewMsgCreateClient("BADCHAIN", exported.ClientTypeTendermint, cs, signer), false, "invalid client id passed"},
+		{types.NewMsgCreateClient("goodchain", "invalid_client_type", cs, signer), false, "unregistered client type passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, nil, signer), false, "nil Consensus State in msg passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, tendermint.ConsensusState{}, signer), false, "invalid Consensus State in msg passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, cs, nil), false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {
@@ -50,22 +48,16 @@ func TestMsgCreateClientValidateBasic(t *testing.T) {
 func TestMsgUpdateClient(t *testing.T) {
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
-	testMsgs := []types.MsgUpdateClient{
-		types.NewMsgUpdateClient(exported.ClientTypeTendermint, tendermint.Header{}, signer),           // valid msg
-		types.NewMsgUpdateClient("badClient", tendermint.Header{}, signer),                             // bad client id
-		types.NewMsgUpdateClient(exported.ClientTypeTendermint, nil, signer),                           // nil Header
-		types.NewMsgUpdateClient(exported.ClientTypeTendermint, tendermint.Header{}, sdk.AccAddress{}), // empty address
-	}
 
 	cases := []struct {
 		msg     types.MsgUpdateClient
 		expPass bool
 		errMsg  string
 	}{
-		{testMsgs[0], true, ""},
-		{testMsgs[1], false, "invalid client id passed"},
-		{testMsgs[2], false, "Nil Header passed"},
-		{testMsgs[3], false, "Empty address passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, tendermint.Header{}, signer), true, "success msg should pass"},
+		{types.NewMsgUpdateClient("badClient", tendermint.Header{}, signer), false, "invalid client id passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, nil, signer), false, "Nil Header passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, tendermint.Header{}, nil), false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {

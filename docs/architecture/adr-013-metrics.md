@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 14-10-2019: Initial Draft
+- 20-01-2020: Initial Draft
 
 ## Status
 
@@ -12,7 +12,7 @@ Proposed
 
 ### A
 
-There has been discussion around exposing more metrics to users and node operators about the application. Currently there is only a way to expose metrics from Tendermint and not the application itself.To bring more visibility into applications, I would like to propose reporting of metrics through [Prometheus](https://prometheus.io/). 
+There has been discussion around exposing more metrics to users and node operators about the application. Currently there is only a way to expose metrics from Tendermint and not the application itself.To bring more visibility into applications, I would like to propose reporting of metrics through [Prometheus](https://prometheus.io/).
 
 #### List Of Metrics
 
@@ -30,7 +30,7 @@ There has been discussion around exposing more metrics to users and node operato
 
 ### B
 
-Part B of this ADR is geared more towards modules. Extending `AppModuleBasic` to support registering of metrics would enable developers to see more information about the module.
+Part B of this ADR is geared more towards modules. Extending `AppModuleBasic` to support registering of metrics would enable developers to see more information about individual modules.
 
 ```go
 type AppModuleBasic interface {

@@ -39,16 +39,17 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return types.ErrChannelCapabilityNotFound
-	}
+	// TODO: uncomment when channel capability key is set to store
+	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	// if !found {
+	// 	return types.ErrChannelCapabilityNotFound
+	// }
 
-	portCapabilityKey := sdk.NewKVStoreKey(capKey)
+	// portCapabilityKey := sdk.NewKVStoreKey(capKey)
 
-	if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
-		return sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
-	}
+	// if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
+	// 	return sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
+	// }
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return sdkerrors.Wrapf(
@@ -169,12 +170,11 @@ func (k Keeper) RecvPacket(
 		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
-	err := k.connectionKeeper.VerifyPacketCommitment(
+	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
 		types.CommitPacket(packet.GetData()), consensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return nil, sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
@@ -300,11 +300,10 @@ func (k Keeper) AcknowledgePacket(
 		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
-	err := k.connectionKeeper.VerifyPacketAcknowledgement(
+	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
 		packet.GetSequence(), acknowledgement.GetBytes(), consensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
 

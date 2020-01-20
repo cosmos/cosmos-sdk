@@ -4,7 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var SubModuleCdc = codec.New()
+// SubModuleCdc defines the IBC tendermint client codec.
+var SubModuleCdc *codec.Codec
 
 // RegisterCodec registers the Tendermint types
 func RegisterCodec(cdc *codec.Codec) {
@@ -16,6 +17,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	SetSubModuleCodec(cdc)
 }
 
+// SetSubModuleCodec sets the ibc tendermint client codec
 func SetSubModuleCodec(cdc *codec.Codec) {
 	SubModuleCdc = cdc
 }

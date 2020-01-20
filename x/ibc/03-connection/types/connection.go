@@ -1,10 +1,13 @@
 package types
 
 import (
+	"strings"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var _ exported.ConnectionI = ConnectionEnd{}
@@ -58,7 +61,19 @@ func (c ConnectionEnd) GetVersions() []string {
 
 // ValidateBasic implements the Connection interface
 func (c ConnectionEnd) ValidateBasic() error {
-	// TODO: move validations from msg.ValidateBasic()
+	// NOTE: invalid state is considered "UNINITIALIZED"
+
+	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
+		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
+	}
+	if len(c.Versions) == 0 {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "missing connection versions")
+	}
+	for _, version := range c.Versions {
+		if strings.TrimSpace(version) == "" {
+			return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
+		}
+	}
 	return c.Counterparty.ValidateBasic()
 }
 

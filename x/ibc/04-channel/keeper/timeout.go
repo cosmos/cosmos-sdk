@@ -9,7 +9,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -124,10 +123,11 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 	}
 
 	// check if the packet is linked to a capability key
-	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return types.ErrChannelCapabilityNotFound
-	}
+	// TODO: uncomment
+	// _, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	// if !found {
+	// 	return types.ErrChannelCapabilityNotFound
+	// }
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
@@ -155,16 +155,17 @@ func (k Keeper) TimeoutOnClose(
 		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return nil, types.ErrChannelCapabilityNotFound
-	}
+	// TODO: uncomment
+	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	// if !found {
+	// 	return nil, types.ErrChannelCapabilityNotFound
+	// }
 
-	portCapabilityKey := sdk.NewKVStoreKey(capKey)
+	// portCapabilityKey := sdk.NewKVStoreKey(capKey)
 
-	if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
-		return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
-	}
+	// if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
+	// 	return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
+	// }
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
@@ -211,15 +212,15 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	// check that the opposing channel end has closed
-	err := k.connectionKeeper.VerifyChannelState(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return nil, sdkerrors.Wrap(err, "channel membership verification failed")
 	}
 
+	var err error
 	switch channel.Ordering {
 	case exported.ORDERED:
 		// check that the recv sequence is as claimed

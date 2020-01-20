@@ -143,5 +143,4 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	)
 
 	return nil
-
 }

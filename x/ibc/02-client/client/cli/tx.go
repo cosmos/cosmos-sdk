@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -135,7 +134,6 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 
 			var ev evidenceexported.Evidence
 			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {

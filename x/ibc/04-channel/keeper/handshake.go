@@ -139,11 +139,10 @@ func (k Keeper) ChanOpenTry(
 		return clienttypes.ErrConsensusStateNotFound
 	}
 
-	err := k.connectionKeeper.VerifyChannelState(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
 		counterparty.PortID, counterparty.ChannelID, expectedChannel, consensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return sdkerrors.Wrap(err, "channel membership verification failed")
 	}
 
@@ -218,13 +217,11 @@ func (k Keeper) ChanOpenAck(
 		return clienttypes.ErrConsensusStateNotFound
 	}
 
-	err := k.connectionKeeper.VerifyChannelState(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
-	)
-
-	if err != nil {
+	); err != nil {
 		return sdkerrors.Wrap(err, "channel membership verification failed")
 	}
 
@@ -298,13 +295,11 @@ func (k Keeper) ChanOpenConfirm(
 		return clienttypes.ErrConsensusStateNotFound
 	}
 
-	err := k.connectionKeeper.VerifyChannelState(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofAck,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
-	)
-
-	if err != nil {
+	); err != nil {
 		return sdkerrors.Wrap(err, "channel membership verification failed")
 	}
 
@@ -424,13 +419,11 @@ func (k Keeper) ChanCloseConfirm(
 		return clienttypes.ErrConsensusStateNotFound
 	}
 
-	err := k.connectionKeeper.VerifyChannelState(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
-	)
-
-	if err != nil {
+	); err != nil {
 		return sdkerrors.Wrap(err, "channel membership verification failed")
 	}
 

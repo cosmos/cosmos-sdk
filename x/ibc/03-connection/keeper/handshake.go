@@ -30,8 +30,7 @@ func (k Keeper) ConnOpenInit(
 	connection := types.NewConnectionEnd(exported.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
-	err := k.addConnectionToClient(ctx, clientID, connectionID)
-	if err != nil {
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot initialize connection")
 	}
 
@@ -79,11 +78,10 @@ func (k Keeper) ConnOpenTry(
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(exported.UNINITIALIZED, clientID, counterparty, []string{version})
 
-	err := k.VerifyConnectionState(
+	if err := k.VerifyConnectionState(
 		ctx, proofHeight, proofInit, counterparty.ConnectionID,
 		expectedConnection, expectedConsensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
@@ -95,14 +93,20 @@ func (k Keeper) ConnOpenTry(
 	// 	return err
 	// }
 
-	_, found = k.GetConnection(ctx, connectionID)
+	previousConnection, found := k.GetConnection(ctx, connectionID)
 	if found {
 		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot relay connection attempt")
+	} else if !(previousConnection.State == exported.INIT &&
+		previousConnection.Counterparty.ConnectionID == counterparty.ConnectionID &&
+		previousConnection.Counterparty.Prefix == counterparty.Prefix &&
+		previousConnection.ClientID == clientID &&
+		previousConnection.Counterparty.ClientID == counterparty.ClientID &&
+		previousConnection.Versions[0] == version) {
+		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
 	}
 
 	connection.State = exported.TRYOPEN
-	err = k.addConnectionToClient(ctx, clientID, connectionID)
-	if err != nil {
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
 
@@ -157,11 +161,10 @@ func (k Keeper) ConnOpenAck(
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
-	err := k.VerifyConnectionState(
+	if err := k.VerifyConnectionState(
 		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
 		expectedConnection, expectedConsensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
@@ -213,11 +216,10 @@ func (k Keeper) ConnOpenConfirm(
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
-	err := k.VerifyConnectionState(
+	if err := k.VerifyConnectionState(
 		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
 		expectedConnection, expectedConsensusState,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 

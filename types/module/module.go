@@ -59,20 +59,23 @@ type AppModuleBasic interface {
 }
 
 // BasicManager is a collection of AppModuleBasic
-type BasicManager map[string]AppModuleBasic
+type BasicManager struct {
+	appName string
+	modules map[string]AppModuleBasic
+}
 
 // NewBasicManager creates a new BasicManager object
-func NewBasicManager(modules ...AppModuleBasic) BasicManager {
+func NewBasicManager(appName string, modules ...AppModuleBasic) BasicManager {
 	moduleMap := make(map[string]AppModuleBasic)
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 	}
-	return moduleMap
+	return BasicManager{appName, moduleMap}
 }
 
 // RegisterCodec registers all module codecs
 func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
-	for _, b := range bm {
+	for _, b := range bm.modules {
 		b.RegisterCodec(cdc)
 	}
 }
@@ -80,7 +83,7 @@ func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis provides default genesis information for all modules
 func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
-	for _, b := range bm {
+	for _, b := range bm.modules {
 		genesis[b.Name()] = b.DefaultGenesis()
 	}
 	return genesis
@@ -88,7 +91,7 @@ func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
-	for _, b := range bm {
+	for _, b := range bm.modules {
 		if err := b.ValidateGenesis(genesis[b.Name()]); err != nil {
 			return err
 		}
@@ -98,7 +101,7 @@ func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error
 
 // RegisterRESTRoutes registers all module rest routes
 func (bm BasicManager) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	for _, b := range bm {
+	for _, b := range bm.modules {
 		b.RegisterRESTRoutes(ctx, rtr)
 	}
 }

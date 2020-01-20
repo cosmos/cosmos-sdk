@@ -36,7 +36,7 @@ Part B of this ADR is geared more towards modules. Extending `AppModuleBasic` to
 type AppModuleBasic interface {
   Name() string
   RegisterCodec(*codec.Codec)
-  + RegisterMetrics(moduleName string, labelsAndValues ...string) *Metrics
+  + RegisterMetrics(namespace string, labelsAndValues ...string) *Metrics
 
   // genesis
   DefaultGenesis() json.RawMessage
@@ -47,7 +47,36 @@ type AppModuleBasic interface {
   GetTxCmd(*codec.Codec) *cobra.Command
   GetQueryCmd(*codec.Codec) *cobra.Command
 }
+// .....
 
+func (bm BasicManager) RegisterMetrics(appName) MetricsProvider{
+	for _, b := range bm {
+		b.RegisterMetrics(appName, labelsAndValues)
+	}
+}
+```
+
+Each module will could define its own `PrometheusMetrics` function:
+
+```go
+func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
+  labels := []string{}
+	for i := 0; i < len(labelsAndValues); i += 2 {
+		labels = append(labels, labelsAndValues[i])
+  }
+  return &Metrics{
+    ....
+  }
+
+```
+
+To get the correct namespace for the modules changing `BasicManager` to consist of the app name is needed. 
+
+```go
+type BasicManager struct {
+	appName string
+	modules map[string]AppModuleBasic
+}
 ```
 
 ## Decision

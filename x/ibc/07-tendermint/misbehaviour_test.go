@@ -38,8 +38,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ClientState{},
 			ConsensusState{},
 			Evidence{
-				Header1:  MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
-				Header2:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header1:  CreateTestHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
+				Header2:  CreateTestHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
@@ -51,8 +51,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ClientState{},
 			ConsensusState{},
 			Evidence{
-				Header1:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				Header2:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header1:  CreateTestHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header2:  CreateTestHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
@@ -64,8 +64,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ClientState{},
 			ConsensusState{},
 			Evidence{
-				Header1:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				Header2:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header1:  CreateTestHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header2:  CreateTestHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
@@ -77,8 +77,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ClientState{},
 			ConsensusState{},
 			Evidence{
-				Header1:  MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
-				Header2:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header1:  CreateTestHeader("gaia", 5, altValSet, altValSet, altSigners),
+				Header2:  CreateTestHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},

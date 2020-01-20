@@ -20,7 +20,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.privVal = tmtypes.NewMockPV()
 	val := tmtypes.NewValidator(suite.privVal.GetPubKey(), 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	suite.header = MakeHeader("gaia", 4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = CreateTestHeader("gaia", 4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 }
 
 func TestTendermintTestSuite(t *testing.T) {

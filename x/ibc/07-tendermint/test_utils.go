@@ -18,10 +18,10 @@ func makeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.Block
 			Hash:  partSetHash,
 		},
 	}
-
 }
 
-func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, nextValSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+// CreateTestHeader creates a mock header for testing only.
+func CreateTestHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, nextValSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
 	vsetHash := valSet.Hash()
 	nextHash := nextValSet.Hash()
 	timestamp := time.Date(math.MaxInt64, 0, 0, 0, 0, 0, math.MaxInt64, time.UTC)

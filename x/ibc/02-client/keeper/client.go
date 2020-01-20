@@ -23,7 +23,7 @@ func (k Keeper) CreateClient(
 
 	_, found = k.GetClientType(ctx, clientID)
 	if found {
-		panic(fmt.Sprintf("consensus type is already defined for client %s", clientID))
+		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
 	}
 
 	clientState, err := k.initialize(ctx, clientID, clientType, consensusState)
@@ -121,7 +121,9 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	var err error
 	switch e := misbehaviour.(type) {
 	case tendermint.Evidence:
-		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()))
+		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
+			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()),
+		)
 
 	default:
 		err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)

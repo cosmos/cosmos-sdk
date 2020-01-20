@@ -22,6 +22,8 @@ const (
 	testClientID  = "gaia"
 	testClientID2 = "ethbridge"
 	testClientID3 = "ethermint"
+
+	testClientHeight = 5
 )
 
 type KeeperTestSuite struct {
@@ -41,7 +43,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 
 	suite.privVal = tmtypes.NewMockPV()
@@ -49,7 +51,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
-	suite.header = tendermint.MakeHeader("gaia", 4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = tendermint.CreateTestHeader(testClientID, testClientHeight, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	suite.consensusState = tendermint.ConsensusState{
 		Root:             commitment.NewRoot([]byte("hash")),
@@ -62,40 +64,37 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := tendermint.NewClientState(testClientID)
+	clientState := tendermint.NewClientState(testClientID, testClientHeight)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
-	retrievedState, ok := suite.keeper.GetClientState(suite.ctx, testClientID)
-	require.True(suite.T(), ok, "GetClientState failed")
-	require.Equal(suite.T(), clientState, retrievedState, "Client states are not equal")
+	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
+	suite.Require().True(found, "GetClientState failed")
+	suite.Require().Equal(clientState, retrievedState, "Client states are not equal")
 }
 
 func (suite *KeeperTestSuite) TestSetClientType() {
 	suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
-	clientType, ok := suite.keeper.GetClientType(suite.ctx, testClientID)
+	clientType, found := suite.keeper.GetClientType(suite.ctx, testClientID)
 
-	require.True(suite.T(), ok, "GetClientType failed")
-	require.Equal(suite.T(), exported.Tendermint, clientType, "ClientTypes not stored correctly")
+	suite.Require().True(found, "GetClientType failed")
+	suite.Require().Equal(exported.Tendermint, clientType, "ClientTypes not stored correctly")
 }
 
 func (suite *KeeperTestSuite) TestSetConsensusState() {
-	suite.keeper.SetConsensusState(suite.ctx, testClientID, suite.consensusState)
+	suite.keeper.SetConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
-	retrievedConsState, ok := suite.keeper.GetConsensusState(suite.ctx, testClientID)
+	retrievedConsState, found := suite.keeper.GetConsensusState(suite.ctx, testClientID, testClientHeight)
 
-	require.True(suite.T(), ok, "GetConsensusState failed")
+	suite.Require().True(found, "GetConsensusState failed")
 	tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
-	// force recalculation of unexported totalVotingPower so we can compare consensusState
-	tmConsState.ValidatorSet.TotalVotingPower()
-	tmConsState.NextValidatorSet.TotalVotingPower()
 	require.Equal(suite.T(), suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		tendermint.NewClientState(testClientID2),
-		tendermint.NewClientState(testClientID3),
-		tendermint.NewClientState(testClientID),
+		tendermint.NewClientState(testClientID2, testClientHeight),
+		tendermint.NewClientState(testClientID3, testClientHeight),
+		tendermint.NewClientState(testClientID, testClientHeight),
 	}
 
 	for i := range expClients {

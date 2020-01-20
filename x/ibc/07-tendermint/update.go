@@ -8,7 +8,11 @@ import (
 )
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates
-// the consensus state if appropriate
+// the consensus state if appropriate. It returns an error if:
+// - the client or header provided are not parseable to tendermint types
+// - the header is invalid
+// - header height is lower than the latest client height
+// - header valset commit verification fails
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, header clientexported.Header, chainID string,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {

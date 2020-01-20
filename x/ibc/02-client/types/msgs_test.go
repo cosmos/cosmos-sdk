@@ -38,9 +38,9 @@ func TestMsgCreateClientValidateBasic(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			require.NoError(t, err, "Msg %d failed: %v", i, err)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
@@ -63,9 +63,9 @@ func TestMsgUpdateClient(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			require.NoError(t, err, "Msg %d failed: %v", i, err)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }

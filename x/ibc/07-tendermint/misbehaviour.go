@@ -2,6 +2,8 @@ package tendermint
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -43,7 +45,7 @@ func CheckMisbehaviourAndUpdateState(
 
 	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
 
-	return clientState, nil
+	return tmClientState, nil
 }
 
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
@@ -62,8 +64,7 @@ func checkMisbehaviour(
 	}
 
 	if !bytes.Equal(consensusState.ValidatorSetHash, evidence.FromValidatorSet.Hash()) {
-		return sdkerrors.Wrap(
-			clienttypes.ErrInvalidEvidence,
+		return errors.New(
 			"the consensus state's validator set hash doesn't match the evidence's one",
 		)
 	}
@@ -75,14 +76,14 @@ func checkMisbehaviour(
 		evidence.Header1.ValidatorSet, evidence.ChainID,
 		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
+		return fmt.Errorf("validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := evidence.FromValidatorSet.VerifyFutureCommit(
 		evidence.Header2.ValidatorSet, evidence.ChainID,
 		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
+		return fmt.Errorf("validator set in header 2 has too much change from last known validator set: %v", err)
 	}
 
 	return nil

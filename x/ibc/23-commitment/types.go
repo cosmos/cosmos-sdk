@@ -22,6 +22,7 @@ type RootI interface {
 type PrefixI interface {
 	GetCommitmentType() Type
 	Bytes() []byte
+	IsEmpty() bool
 }
 
 // PathI implements spec:CommitmentPath.
@@ -29,6 +30,7 @@ type PrefixI interface {
 type PathI interface {
 	GetCommitmentType() Type
 	String() string
+	IsEmpty() bool
 }
 
 // ProofI implements spec:CommitmentProof.
@@ -39,6 +41,7 @@ type ProofI interface {
 	GetCommitmentType() Type
 	VerifyMembership(RootI, PathI, []byte) bool
 	VerifyNonMembership(RootI, PathI) bool
+	IsEmpty() bool
 
 	ValidateBasic() error
 }

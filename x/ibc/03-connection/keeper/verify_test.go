@@ -20,11 +20,11 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		malleate   func() error
 		expPass    bool
 	}{
-		// {"client state not found", connection1, func() error { return nil }, false},
-		// {"verification failed", connection1, func() error {
-		// 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-		// 	return err
-		// }, false},
+		{"client state not found", connection1, func() error { return nil }, false},
+		{"verification failed", connection1, func() error {
+			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
+			return err
+		}, false},
 		{"verification success", connection1, func() error {
 			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
 			return err

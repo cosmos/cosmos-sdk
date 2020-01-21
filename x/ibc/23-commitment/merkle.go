@@ -43,7 +43,7 @@ func (r Root) GetHash() []byte {
 
 // IsEmpty returns true if the root is empty
 func (r Root) IsEmpty() bool {
-	return &r == nil || len(r.GetHash()) == 0
+	return len(r.GetHash()) == 0
 }
 
 var _ PrefixI = Prefix{}
@@ -69,6 +69,11 @@ func (Prefix) GetCommitmentType() Type {
 // Bytes returns the key prefix bytes
 func (p Prefix) Bytes() []byte {
 	return p.KeyPrefix
+}
+
+// IsEmpty returns true if the prefix is empty
+func (p Prefix) IsEmpty() bool {
+	return len(p.Bytes()) == 0
 }
 
 var _ PathI = Path{}
@@ -110,6 +115,11 @@ func (p Path) Pretty() string {
 	return path
 }
 
+// IsEmpty returns true if the path is empty
+func (p Path) IsEmpty() bool {
+	return len(p.KeyPath) == 0
+}
+
 // ApplyPrefix constructs a new commitment path from the arguments. It interprets
 // the path argument in the context of the prefix argument.
 //
@@ -121,7 +131,7 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 		return Path{}, err
 	}
 
-	if prefix == nil || len(prefix.Bytes()) == 0 {
+	if prefix == nil || prefix.IsEmpty() {
 		return Path{}, errors.New("prefix can't be empty")
 	}
 
@@ -157,9 +167,14 @@ func (proof Proof) VerifyNonMembership(root RootI, path PathI) bool {
 	return err == nil
 }
 
+// IsEmpty returns true if the root is empty
+func (proof Proof) IsEmpty() bool {
+	return (proof == Proof{}) || proof.Proof == nil
+}
+
 // ValidateBasic checks if the proof is empty.
 func (proof Proof) ValidateBasic() error {
-	if (proof == Proof{}) || proof.Proof == nil {
+	if proof.IsEmpty() {
 		return ErrInvalidProof
 	}
 	return nil

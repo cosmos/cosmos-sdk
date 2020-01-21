@@ -11,7 +11,7 @@ type (
 	// Marshaler defines the interface module codecs must implement in order to support
 	// backwards compatibility with Amino while allowing custom Protobuf-based
 	// serialization. Note, Amino can still be used without any dependency on
-	// Protobuf. There are three typical implementations that fullfill this contract:
+	// Protobuf. There are three typical implementations that fulfill this contract:
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.

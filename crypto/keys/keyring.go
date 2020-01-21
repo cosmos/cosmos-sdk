@@ -61,6 +61,30 @@ func NewKeyring(
 	return newKeyringKeybase(db, opts...), nil
 }
 
+func NewKeyringWithBackend(
+	svcName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
+) (Keybase, error) {
+
+	var db keyring.Keyring
+	var err error
+
+	switch backend {
+	case "test":
+		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, nil, true))
+	case "file":
+		db, err = keyring.Open(newFileBackendKeyringConfig(svcName, rootDir, userInput))
+	case "os":
+		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, userInput, false))
+	default:
+		return nil, fmt.Errorf("unknown keyring backend %v", backend)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return newKeyringKeybase(db, opts...), nil
+}
+
 // NewKeyringFile creates a new instance of an encrypted file-backed keyring.
 func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...KeybaseOption) (Keybase, error) {
 	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))

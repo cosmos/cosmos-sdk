@@ -37,6 +37,22 @@ is used for business logic in the state-machine where they may converted back-n-
 Note, the Amino-based types may slowly be phased-out in the future so developers
 should take note to use the protobuf message definitions where possible.
 
+In the `codec` package, there exists two core interfaces, `Marshaler` and `ProtoMarshaler`,
+where the former encapsulates the current Amino interface except it operates on
+types implementing the latter instead of generic `interface{}` types.
+
+In addition, there exists three implementations of `Marshaler`. The first being
+`AminoCodec`, where both binary and JSON serialization is handled via Amino. The
+second being `ProtoCodec`, where both binary and JSON serialization is handled
+via Protobuf. Finally, `HybridCodec`, a codec that utilizes Protobuf for binary
+serialization and Amino for JSON serialization. The `HybridCodec` is typically
+the codec that used in majority in situations as it's easier to use for client
+and state serialization.
+
+This means that modules may use Amino or Protobuf encoding but the types must
+implement `ProtoMarshaler`. If modules wish to avoid implementing this interface
+for their types, they may use an Amino codec directly.
+
 ### Amino
 
 Every module uses an Amino codec to serialize types and interfaces. This codec typically
@@ -45,8 +61,8 @@ but there are exceptions like `x/gov`. Each module exposes a `RegisterCodec` fun
 that allows a user to provide a codec and have all the types registered. An application
 will call this method for each necessary module.
 
-Where there is no protobuf-based type definition for a module, Amino is used to encode
-and decode raw wire bytes to the concrete type or interface:
+Where there is no protobuf-based type definition for a module (see below), Amino
+is used to encode and decode raw wire bytes to the concrete type or interface:
 
 ```go
 bz := keeper.cdc.MustMarshalBinaryBare(typeOrInterface)
@@ -72,7 +88,15 @@ A standard implementation of both these objects can be found in the [`auth` modu
 
 ### Gogoproto
 
-> TODO: Add section on gogoproto semantics and design decisions that are used in the SDK.
+Modules are encouraged to utilize Protobuf encoding for their respective types.
+If modules do not contain any interfaces (e.g. `Account` or `Content`), then they
+may simply accept a `Marshaler` as the codec which is implemented via the `HybridCodec`
+without any further customization.
+
+However, if modules are to handle type interfaces, they should seek to extend the
+`Marshaler` interface contract for these types (e.g. `MarshalAccount`). Note, they
+should still use a `HybridCodec` internally. These extended contracts will typically
+use concrete types with unique `oneof` messages.
 
 ## Next {hide}
 

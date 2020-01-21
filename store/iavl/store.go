@@ -37,11 +37,7 @@ type Store struct {
 // fails to load.
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
 	var iavlOpts *iavl.Options
-	if pruning.KeepEvery() == 0 && pruning.KeepRecent() == 0 {
-		iavlOpts = iavl.DefaultOptions()
-	} else {
-		iavlOpts = iavl.PruningOptions(pruning.KeepEvery(), pruning.KeepRecent())
-	}
+	iavlOpts = iavl.PruningOptions(pruning.KeepEvery(), pruning.KeepRecent())
 	tree, err := iavl.NewMutableTreeWithOpts(
 		db,
 		dbm.NewMemDB(),

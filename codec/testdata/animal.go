@@ -12,7 +12,7 @@ type Animal interface {
 }
 
 func (c Cat) Greet() string {
-	return fmt.Sprintf("Meow, my name is %s", c.Name)
+	return fmt.Sprintf("Meow, my name is %s", c.Moniker)
 }
 
 func (d Dog) Greet() string {

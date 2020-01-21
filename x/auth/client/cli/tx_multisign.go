@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -67,7 +68,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		}
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		keybase, err := keys.NewKeyringFromDir(viper.GetString(cli.HomeFlag), inBuf)
+		keybase, err := keys.NewKeyringFromDir(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(cli.HomeFlag), inBuf)
 		if err != nil {
 			return
 		}

@@ -94,7 +94,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			kb, err := keys.NewKeyringFromDir(viper.GetString(flagClientHome), inBuf)
+			kb, err := keys.NewKeyringFromDir(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flagClientHome), inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}

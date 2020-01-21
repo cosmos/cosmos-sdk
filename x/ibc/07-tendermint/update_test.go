@@ -1,47 +1,59 @@
 package tendermint_test
 
+import (
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+)
+
 func (suite *TendermintTestSuite) TestCheckValidity() {
-	// 	// valid header
-	// 	err := checkValidity(suite.header)
-	// 	suite.NoError(err, "validity failed")
+	testCases := []struct {
+		name        string
+		clientState tendermint.ClientState
+		header      tendermint.Header
+		chainID     string
+		expPass     bool
+	}{
+		{
+			name:        "successful update",
+			clientState: tendermint.NewClientState(chainID, height),
+			header:      suite.header,
+			chainID:     chainID,
+			expPass:     true,
+		},
+		{
+			name:        "header basic validation failed",
+			clientState: tendermint.NewClientState(chainID, height),
+			header:      suite.header,
+			chainID:     "cosmoshub",
+			expPass:     false,
+		},
+		{
+			name:        "header height < latest client height",
+			clientState: tendermint.NewClientState(chainID, height+1),
+			header:      suite.header,
+			chainID:     chainID,
+			expPass:     false,
+		},
+	}
 
-	// 	// switch out header ValidatorsHash
-	// 	suite.header.ValidatorsHash = tmhash.Sum([]byte("hello"))
-	// 	err = checkValidity(suite.header)
-	// 	suite.Error(err, "validator hash is wrong")
+	for i, tc := range testCases {
+		tc := tc
 
-	// 	// reset suite and make header.NextValidatorSet different
-	// 	// from NextValidatorSetHash
-	// 	suite.SetupTest()
-	// 	privVal := tmtypes.NewMockPV()
-	// 	val := tmtypes.NewValidator(privVal.GetPubKey(), 5)
-	// 	suite.header.NextValidatorSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	// 	err = checkValidity(suite.header)
-	// 	suite.Error(err, "header's next validator set is not consistent with hash")
+		expectedConsensus := tendermint.ConsensusState{
+			Root:             commitment.NewRoot(tc.header.AppHash),
+			ValidatorSetHash: tc.header.ValidatorSet.Hash(),
+		}
 
-	// 	// reset and make header fail validatebasic
-	// 	suite.SetupTest()
-	// 	suite.header.ChainID = "not_gaia"
-	// 	err = checkValidity(suite.header)
-	// 	suite.Error(err, "invalid header should fail ValidateBasic")
-	// }
+		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, tc.header, tc.chainID)
 
-	// func (suite *TendermintTestSuite) TestCheckUpdate() {
-	// 	// valid header should successfully update consensus state
-	// 	cs, err := CheckValidityAndUpdateState(suite.header)
-
-	// 	require.Nil(suite.T(), err, "valid update failed")
-	// 	require.Equal(suite.T(), suite.header.GetHeight(), cs.GetHeight(), "height not updated")
-	// 	require.Equal(suite.T(), suite.header.AppHash.Bytes(), cs.GetRoot().GetHash(), "root not updated")
-	// 	tmCS, _ := cs.(ConsensusState)
-	// 	require.Equal(suite.T(), suite.header.ValidatorSet, tmCS.ValidatorSet, "validator set did not update")
-	// 	require.Equal(suite.T(), suite.header.NextValidatorSet, tmCS.NextValidatorSet, "next validator set did not update")
-
-	// 	// make header invalid so update should be unsuccessful
-	// 	suite.SetupTest()
-	// 	suite.header.ChainID = "not_gaia"
-
-	// 	cs, err = CheckValidityAndUpdateState(suite.header)
-	// 	suite.Error(err)
-	// 	require.Nil(suite.T(), cs)
+		if tc.expPass {
+			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
+			suite.Require().Equal(tc.header.GetHeight(), clientState.GetLatestHeight(), "valid test case %d failed: %s", i, tc.name)
+			suite.Require().Equal(expectedConsensus, consensusState, "valid test case %d failed: %s", i, tc.name)
+		} else {
+			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
+			suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)
+			suite.Require().Nil(consensusState, "invalid test case %d passed: %s", i, tc.name)
+		}
+	}
 }

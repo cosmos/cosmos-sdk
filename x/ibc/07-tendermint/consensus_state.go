@@ -2,7 +2,7 @@ package tendermint
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -14,8 +14,8 @@ type ConsensusState struct {
 }
 
 // ClientType returns Tendermint
-func (ConsensusState) ClientType() exported.ClientType {
-	return exported.Tendermint
+func (ConsensusState) ClientType() clientexported.ClientType {
+	return clientexported.Tendermint
 }
 
 // GetRoot returns the commitment Root for the specific

@@ -5,11 +5,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
-var _ exported.Header = Header{}
+var _ clientexported.Header = Header{}
 
 // Header defines the Tendermint consensus Header
 type Header struct {
@@ -18,8 +18,8 @@ type Header struct {
 }
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
-func (h Header) ClientType() exported.ClientType {
-	return exported.Tendermint
+func (h Header) ClientType() clientexported.ClientType {
+	return clientexported.Tendermint
 }
 
 // GetHeight returns the current height

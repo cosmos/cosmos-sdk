@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"math"
+
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -51,6 +53,7 @@ func (ev Evidence) Type() string {
 
 // String implements Evidence interface
 func (ev Evidence) String() string {
+	// FIXME: implement custom marshaller
 	bz, err := yaml.Marshal(ev)
 	if err != nil {
 		panic(err)
@@ -68,7 +71,7 @@ func (ev Evidence) Hash() tmbytes.HexBytes {
 //
 // NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
-	return ev.Header1.Height
+	return int64(math.Min(float64(ev.Header1.Height), float64(ev.Header2.Height)))
 }
 
 // ValidateBasic implements Evidence interface

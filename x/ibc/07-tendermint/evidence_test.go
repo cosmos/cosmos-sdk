@@ -4,13 +4,18 @@ import (
 	"bytes"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 )
 
 func (suite *TendermintTestSuite) TestEvidence() {
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
+	tendermint.RegisterCodec(cdc)
 	signers := []tmtypes.PrivValidator{suite.privVal}
 
 	ev := tendermint.Evidence{
@@ -23,9 +28,10 @@ func (suite *TendermintTestSuite) TestEvidence() {
 
 	suite.Require().Equal(ev.ClientType(), clientexported.Tendermint)
 	suite.Require().Equal(ev.GetClientID(), "gaiamainnet")
+	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
-	// suite.Require().Equal(ev.Hash(), tmhash.Sum(tendermint.SubModuleCdc.MustMarshalBinaryBare(ev))) // FIXME:
-
+	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(tendermint.SubModuleCdc.MustMarshalBinaryBare(ev))))
+	suite.Require().Equal(ev.GetHeight(), int64(height))
 }
 
 func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {

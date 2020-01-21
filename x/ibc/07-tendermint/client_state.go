@@ -45,8 +45,8 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
 }
 
-// GetSequence returns latest block height.
-func (cs ClientState) GetSequence() uint64 {
+// GetLatestHeight returns latest block height.
+func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.LatestHeight
 }
 

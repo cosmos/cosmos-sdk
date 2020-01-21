@@ -15,7 +15,7 @@ import (
 type ClientState interface {
 	GetID() string
 	ClientType() ClientType
-	GetSequence() uint64
+	GetLatestHeight() uint64
 	IsFrozen() bool
 
 	// State verification functions

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	invalidClientType exported.ClientType = iota + 5
+	invalidClientType exported.ClientType = 0
 )
 
 func (suite *KeeperTestSuite) TestCreateClient() {
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(suite.header.GetHeight(), clientState.GetSequence(), "client state height not updated correctly")
+				suite.Require().Equal(suite.header.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly")
 				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated")
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)

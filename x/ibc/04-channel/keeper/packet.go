@@ -84,7 +84,7 @@ func (k Keeper) SendPacket(
 	}
 
 	// check if packet timeouted on the receiving chain
-	if clientState.GetSequence() >= packet.GetTimeoutHeight() {
+	if clientState.GetLatestHeight() >= packet.GetTimeoutHeight() {
 		return sdkerrors.Wrap(types.ErrPacketTimeout, "timeout already passed ond the receiving chain")
 	}
 

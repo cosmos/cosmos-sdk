@@ -55,7 +55,7 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// XXX: blocked by #5078
+	// XXX: blocked by #5475
 	// if consensusHeight > uint64(ctx.BlockHeight()) {
 	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
 	// }
@@ -85,7 +85,7 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
-	// XXX: blocked by #5078
+	// XXX: blocked by #5475
 	// err = k.VerifyClientConsensusState(
 	// 	ctx, proofHeight, proofInit, expectedConsensusState,
 	// )
@@ -128,7 +128,7 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// XXX: blocked by #5078
+	// XXX: blocked by #5475
 	// if consensusHeight > uint64(ctx.BlockHeight()) {
 	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
 	// }
@@ -168,7 +168,7 @@ func (k Keeper) ConnOpenAck(
 		return err
 	}
 
-	// XXX: blocked by #5078
+	// XXX: blocked by #5475
 	// err = k.VerifyClientConsensusState(
 	// 	ctx, connection, proofHeight, proofInit, expectedConsensusState,
 	// )
@@ -206,7 +206,6 @@ func (k Keeper) ConnOpenConfirm(
 	}
 
 	// NOTE: should be safe to use proofHeight here
-	// TODO: Update spec
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, proofHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound

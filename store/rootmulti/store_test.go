@@ -175,6 +175,8 @@ func TestMultistoreCommitLoad(t *testing.T) {
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := newMultiStoreWithMounts(db)
+	// switch pruningOpts to pruneNothing
+	store.pruningOpts = types.PruneNothing
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -207,6 +209,8 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	// Load without changes and make sure it is sensible
 	store = newMultiStoreWithMounts(db)
+	// switch pruningOpts to pruneNothing
+	store.pruningOpts = types.PruneNothing
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, 1)
@@ -219,6 +223,8 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	// now, let's load with upgrades...
 	restore, upgrades := newMultiStoreWithModifiedMounts(db)
+	// switch pruningOpts to pruneNothing
+	restore.pruningOpts = types.PruneNothing
 	err = restore.LoadLatestVersionAndUpgrade(upgrades)
 	require.Nil(t, err)
 
@@ -246,6 +252,8 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, migratedID.Version, int64(2))
 
 	reload, _ := newMultiStoreWithModifiedMounts(db)
+	// switch pruningOpts to pruneNothing
+	reload.pruningOpts = types.PruneNothing
 	err = reload.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, migratedID, reload.LastCommitID())
@@ -291,6 +299,7 @@ func TestParsePath(t *testing.T) {
 func TestMultiStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db)
+	multi.pruningOpts = types.PruneNothing
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -318,6 +327,7 @@ func TestMultiStoreQuery(t *testing.T) {
 
 	// Reload multistore from database
 	multi = newMultiStoreWithMounts(db)
+	multi.pruningOpts = types.PruneNothing
 	err = multi.LoadLatestVersion()
 	require.Nil(t, err)
 

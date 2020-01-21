@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -38,4 +39,34 @@ func (h Header) ValidateBasic(chainID string) error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
 	return nil
+}
+
+// ToABCIHeader parses the header to an ABCI header type.
+// NOTE: only for testing use.
+func (h Header) ToABCIHeader() abci.Header {
+	return abci.Header{
+		Version: abci.Version{
+			App:   h.Version.App.Uint64(),
+			Block: h.Version.Block.Uint64(),
+		},
+		ChainID: h.ChainID,
+		Height:  h.Height,
+		Time:    h.Time,
+		LastBlockId: abci.BlockID{
+			Hash: h.LastBlockID.Hash,
+			PartsHeader: abci.PartSetHeader{
+				Total: int32(h.LastBlockID.PartsHeader.Total),
+				Hash:  h.LastBlockID.PartsHeader.Hash,
+			},
+		},
+		LastCommitHash:     h.LastCommitHash,
+		DataHash:           h.DataHash,
+		ValidatorsHash:     h.ValidatorsHash,
+		NextValidatorsHash: h.NextValidatorsHash,
+		ConsensusHash:      h.ConsensusHash,
+		AppHash:            h.AppHash,
+		LastResultsHash:    h.LastResultsHash,
+		EvidenceHash:       h.EvidenceHash,
+		ProposerAddress:    h.ProposerAddress,
+	}
 }

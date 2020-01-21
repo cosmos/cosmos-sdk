@@ -1,4 +1,4 @@
-package tendermint
+package tendermint_test
 
 func (suite *TendermintTestSuite) TestCheckValidity() {
 	// 	// valid header

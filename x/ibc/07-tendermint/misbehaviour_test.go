@@ -1,9 +1,13 @@
-package tendermint
+package tendermint_test
 
 import (
 	"bytes"
 
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
@@ -27,75 +31,110 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 
 	testCases := []struct {
 		name           string
-		clientState    ClientState
-		consensusState ConsensusState
-		evidence       Evidence
+		clientState    tendermint.ClientState
+		consensusState tendermint.ConsensusState
+		evidence       tendermint.Evidence
 		height         uint64
-		expErr         bool
+		expPass        bool
 	}{
 		{
-			"trusting period misbehavior should pass",
-			ClientState{},
-			ConsensusState{},
-			Evidence{
-				Header1:  CreateTestHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
-				Header2:  CreateTestHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			"valid misbehavior evidence",
+			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
+			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, suite.valSet, bothSigners),
+				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         chainID,
 			},
-			5,
+			height,
+			true,
+		},
+		{
+			"height doesn't match provided evidence",
+			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
+			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, suite.valSet, bothSigners),
+				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         chainID,
+			},
+			0,
+			false,
+		},
+		{
+			"consensus state's valset hash different from evidence",
+			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
+			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: suite.valSet.Hash()},
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, suite.valSet, bothSigners),
+				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         chainID,
+			},
+			height,
 			false,
 		},
 		{
 			"first valset has too much change",
-			ClientState{},
-			ConsensusState{},
-			Evidence{
-				Header1:  CreateTestHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				Header2:  CreateTestHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
+			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, altValSet, bothValSet, altSigners),
+				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         chainID,
 			},
-			5,
-			true,
+			height,
+			false,
 		},
 		{
 			"second valset has too much change",
-			ClientState{},
-			ConsensusState{},
-			Evidence{
-				Header1:  CreateTestHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				Header2:  CreateTestHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
+			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				Header2:          tendermint.CreateTestHeader(chainID, height, altValSet, bothValSet, altSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         chainID,
 			},
-			5,
-			true,
+			height,
+			false,
 		},
 		{
 			"both valsets have too much change",
-			ClientState{},
-			ConsensusState{},
-			Evidence{
-				Header1:  CreateTestHeader("gaia", 5, altValSet, altValSet, altSigners),
-				Header2:  CreateTestHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
+			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, altValSet, altValSet, altSigners),
+				Header2:          tendermint.CreateTestHeader(chainID, height, altValSet, bothValSet, altSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         chainID,
 			},
-			5,
-			true,
+			height,
+			false,
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc // pin for scopelint
-		suite.Run(tc.name, func() {
-			err := checkMisbehaviour(tc.clientState, tc.consensusState, tc.evidence, tc.height)
-			if tc.expErr {
-				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
-			} else {
-				suite.NoError(err, "CheckMisbehaviour failed unexpectedly: %v", err)
-			}
-		})
+	for i, tc := range testCases {
+		tc := tc
+
+		clientState, err := tendermint.CheckMisbehaviourAndUpdateState(tc.clientState, tc.consensusState, tc.evidence, tc.height)
+
+		if tc.expPass {
+			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
+			suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.name)
+			suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
+		} else {
+			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
+			suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)
+		}
 	}
 }

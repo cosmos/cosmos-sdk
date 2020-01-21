@@ -1,15 +1,36 @@
-package tendermint
+package tendermint_test
 
 import (
 	"bytes"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 )
+
+func (suite *TendermintTestSuite) TestEvidence() {
+	signers := []tmtypes.PrivValidator{suite.privVal}
+
+	ev := tendermint.Evidence{
+		Header1:          suite.header,
+		Header2:          tendermint.CreateTestHeader(chainID, height, suite.valSet, suite.valSet, signers),
+		FromValidatorSet: suite.valSet,
+		ChainID:          chainID,
+		ClientID:         "gaiamainnet",
+	}
+
+	suite.Require().Equal(ev.ClientType(), clientexported.Tendermint)
+	suite.Require().Equal(ev.GetClientID(), "gaiamainnet")
+	suite.Require().Equal(ev.Type(), "client_misbehaviour")
+	// suite.Require().Equal(ev.Hash(), tmhash.Sum(tendermint.SubModuleCdc.MustMarshalBinaryBare(ev))) // FIXME:
+
+}
 
 func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altPrivVal := tmtypes.NewMockPV()
-	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
+	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), height)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -29,125 +50,145 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 
 	testCases := []struct {
 		name             string
-		evidence         Evidence
-		malleateEvidence func(ev *Evidence)
-		expErr           bool
+		evidence         tendermint.Evidence
+		malleateEvidence func(ev *tendermint.Evidence) error
+		expPass          bool
 	}{
 		{
 			"valid evidence",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  CreateTestHeader("gaia", 4, suite.valSet, bothValSet, signers),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader(chainID, height, suite.valSet, bothValSet, signers),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {},
+			func(ev *tendermint.Evidence) error { return nil },
+			true,
+		},
+		{
+			"invalid client ID ",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader(chainID, height, suite.valSet, bothValSet, signers),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "GAIA",
+			},
+			func(ev *tendermint.Evidence) error { return nil },
 			false,
 		},
 		{
 			"wrong chainID on header1",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  CreateTestHeader("ethermint", 4, suite.valSet, bothValSet, signers),
-				ChainID:  "ethermint",
-				ClientID: "gaiamainnet",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader("ethermint", height, suite.valSet, bothValSet, signers),
+				FromValidatorSet: bothValSet,
+				ChainID:          "ethermint",
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {},
-			true,
+			func(ev *tendermint.Evidence) error { return nil },
+			false,
 		},
 		{
 			"wrong chainID on header2",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  CreateTestHeader("ethermint", 4, suite.valSet, bothValSet, signers),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader("ethermint", height, suite.valSet, bothValSet, signers),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {},
-			true,
+			func(ev *tendermint.Evidence) error { return nil },
+			false,
 		},
 		{
 			"mismatched heights",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  CreateTestHeader("gaia", 6, suite.valSet, bothValSet, signers),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader(chainID, 6, suite.valSet, bothValSet, signers),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {},
-			true,
+			func(ev *tendermint.Evidence) error { return nil },
+			false,
 		},
 		{
 			"same block id",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  suite.header,
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          suite.header,
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {},
-			true,
+			func(ev *tendermint.Evidence) error { return nil },
+			false,
 		},
 		{
-			"header doesn't have 2/3 majority",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  CreateTestHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			"header 1 doesn't have 2/3 majority",
+			tendermint.Evidence{
+				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				Header2:          suite.header,
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {
-				// voteSet contains only altVal which is less than 2/3 of total power (4/14)
-				wrongVoteSet := tmtypes.NewVoteSet("gaia", ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
+			func(ev *tendermint.Evidence) error {
+				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.Height, 1, tmtypes.PrecommitType, altValSet)
+				var err error
+				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, ev.Header2.Height, ev.Header1.Commit.Round, wrongVoteSet, altSigners)
+				return err
+			},
+			false,
+		},
+		{
+			"header 2 doesn't have 2/3 majority",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
+			},
+			func(ev *tendermint.Evidence) error {
+				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
 				var err error
 				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners)
-				if err != nil {
-					panic(err)
-				}
+				return err
 			},
-			true,
+			false,
 		},
 		{
 			"validators sign off on wrong commit",
-			Evidence{
-				Header1:  suite.header,
-				Header2:  CreateTestHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
+			tendermint.Evidence{
+				Header1:          suite.header,
+				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
+				FromValidatorSet: bothValSet,
+				ChainID:          chainID,
+				ClientID:         "gaiamainnet",
 			},
-			func(ev *Evidence) {
-				ev.Header2.Commit.BlockID = makeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+			func(ev *tendermint.Evidence) error {
+				ev.Header2.Commit.BlockID = tendermint.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				return nil
 			},
-			true,
-		},
-		{
-			"invalid ClientID",
-			Evidence{
-				Header1:  CreateTestHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
-				Header2:  CreateTestHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
-				ChainID:  "gaia123?",
-				ClientID: "gaia123?",
-			},
-			func(ev *Evidence) {},
-			true,
+			false,
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc // pin for scopelint
-		suite.Run(tc.name, func() {
-			// reset suite for each subtest
-			suite.SetupTest()
+	for i, tc := range testCases {
+		tc := tc
 
-			tc.malleateEvidence(&tc.evidence)
+		err := tc.malleateEvidence(&tc.evidence)
+		suite.Require().NoError(err)
 
-			err := tc.evidence.ValidateBasic()
-
-			if tc.expErr {
-				suite.Error(err, "ValidateBasic did not throw error for invalid evidence")
-			} else {
-				suite.NoError(err, "ValidateBasic returned error on valid evidence: %s", err)
-			}
-		})
+		if tc.expPass {
+			suite.Require().NoError(tc.evidence.ValidateBasic(), "valid test case %d failed: %s", i, tc.name)
+		} else {
+			suite.Require().Error(tc.evidence.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
+		}
 	}
 }

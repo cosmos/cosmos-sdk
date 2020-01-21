@@ -41,7 +41,7 @@ func (ev Evidence) GetClientID() string {
 
 // Route implements Evidence interface
 func (ev Evidence) Route() string {
-	return "client"
+	return clienttypes.SubModuleName
 }
 
 // Type implements Evidence interface
@@ -60,7 +60,8 @@ func (ev Evidence) String() string {
 
 // Hash implements Evidence interface
 func (ev Evidence) Hash() tmbytes.HexBytes {
-	return tmhash.Sum(SubModuleCdc.MustMarshalBinaryBare(ev))
+	bz := SubModuleCdc.MustMarshalBinaryBare(ev)
+	return tmhash.Sum(bz)
 }
 
 // GetHeight returns the height at which misbehaviour occurred

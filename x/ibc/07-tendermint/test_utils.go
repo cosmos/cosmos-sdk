@@ -10,7 +10,7 @@ import (
 )
 
 // Copied unimported test functions from tmtypes to use them here
-func makeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
+func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
 		PartsHeader: tmtypes.PartSetHeader{
@@ -30,7 +30,7 @@ func CreateTestHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,
-		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,
@@ -42,7 +42,7 @@ func CreateTestHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet
 		ProposerAddress:    valSet.Proposer.Address,
 	}
 	hhash := tmHeader.Hash()
-	blockID := makeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
+	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers)
 	if err != nil {

@@ -14,13 +14,8 @@ import (
 )
 
 var (
-	cacheSize        = 100
-	numRecent  int64 = 5
-	storeEvery int64 = 3
-)
-
-var (
-	treeData = map[string]string{
+	cacheSize = 100
+	treeData  = map[string]string{
 		"hello": "goodbye",
 		"aloha": "shalom",
 	}
@@ -30,7 +25,6 @@ var (
 func randBytes(numBytes int) []byte {
 	b := make([]byte, numBytes)
 	_, _ = crand.Read(b)
-
 	return b
 }
 

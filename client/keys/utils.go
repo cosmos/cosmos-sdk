@@ -38,16 +38,7 @@ func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 // NewKeyBaseFromHomeFlag initializes a keyring based on configuration. Keybase
 // options can be applied when generating this new Keybase.
 func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	return NewKeyringFromDir(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagHome), input, opts...)
-}
-
-// NewKeyBaseFromDir initializes a keyring at the given directory.
-// If the viper flag flags.FlagKeyringBackend is set to file, it returns an on-disk keyring with
-// CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
-// password-less keyring that could be used for testing purposes.
-func NewKeyringFromDir(keyringServiceName string, rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
-	return keys.NewKeyring(keyringServiceName, keyringBackend, rootDir, input, opts...)
+	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input, opts...)
 }
 
 func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {

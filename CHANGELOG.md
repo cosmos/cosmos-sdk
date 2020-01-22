@@ -100,7 +100,7 @@ if the provided arguments are invalid.
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 * (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
   and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
-* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Keybase concrete types constructors such as `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromDir`, or `NewInMemory`
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Keybase concrete types constructors such as `NewKeyringFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory`
   now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands
   functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior.
   Furthermore, the `NewKeyBaseFromHomeFlag` constructor has been removed [\#5547](https://github.com/cosmos/cosmos-sdk/pull/5547)

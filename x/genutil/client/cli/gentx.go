@@ -21,9 +21,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -94,7 +93,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			kb, err := keys.NewKeyringFromDir(viper.GetString(flagClientHome), inBuf)
+			kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(),
+				viper.GetString(flags.FlagKeyringBackend), viper.GetString(flagClientHome), inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
@@ -137,7 +137,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
 
-			if key.GetType() == kbkeys.TypeOffline || key.GetType() == kbkeys.TypeMulti {
+			if key.GetType() == keys.TypeOffline || key.GetType() == keys.TypeMulti {
 				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}

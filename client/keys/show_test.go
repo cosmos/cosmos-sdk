@@ -49,7 +49,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	defer func() {
 		kb.Delete("runShowCmd_Key1", "", false)

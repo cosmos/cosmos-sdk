@@ -61,8 +61,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
-	serr := store.LoadVersion(0)
-	require.Nil(t, serr)
+	require.NoError(t, store.LoadVersion(0))
 
 	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))

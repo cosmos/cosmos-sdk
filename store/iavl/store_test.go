@@ -434,25 +434,23 @@ type pruneState struct {
 
 func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []pruneState) {
 	db := dbm.NewMemDB()
-	var iavlOpts *iavl.Options
-	if numRecent == 0 && storeEvery == 0 {
-		iavlOpts = iavl.DefaultOptions()
-	} else {
-		iavlOpts = iavl.PruningOptions(storeEvery, numRecent)
-	}
-	tree, _ := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
+	iavlOpts := iavl.PruningOptions(storeEvery, numRecent)
+
+	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
+	require.NoError(t, err)
+
 	iavlStore := UnsafeNewStore(tree)
 
 	for step, state := range states {
 		for _, ver := range state.stored {
 			require.True(t, iavlStore.VersionExists(ver),
-				"Missing version %d with latest version %d. Should save last %d and every %d",
+				"missing version %d with latest version %d; should save last %d and every %d",
 				ver, step, numRecent, storeEvery)
 		}
 
 		for _, ver := range state.deleted {
 			require.False(t, iavlStore.VersionExists(ver),
-				"Unpruned version %d with latest version %d. Should prune all but last %d and every %d",
+				"not pruned version %d with latest version %d; should prune all but last %d and every %d",
 				ver, step, numRecent, storeEvery)
 		}
 
@@ -481,8 +479,8 @@ func TestIAVLNoPrune(t *testing.T) {
 
 func TestIAVLPruneEverything(t *testing.T) {
 	db := dbm.NewMemDB()
-	var iavlOpts *iavl.Options
-	iavlOpts = iavl.PruningOptions(0, 1) // only store latest version in memory
+	iavlOpts := iavl.PruningOptions(0, 1) // only store latest version in memory
+
 	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
 	require.NoError(t, err)
 
@@ -492,12 +490,12 @@ func TestIAVLPruneEverything(t *testing.T) {
 	for i := 1; i < 100; i++ {
 		for j := 1; j < i; j++ {
 			require.False(t, iavlStore.VersionExists(int64(j)),
-				"Unpruned version %d with latest version %d. Should prune all old versions",
+				"not pruned version %d with latest version %d; should prune all old versions",
 				j, i)
 		}
 
 		require.True(t, iavlStore.VersionExists(int64(i)),
-			"Missing current version on step %d, should not prune current state tree",
+			"missing current version on step %d; should not prune current state tree",
 			i)
 
 		nextVersion(iavlStore)

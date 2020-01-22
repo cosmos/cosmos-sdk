@@ -86,7 +86,7 @@ func getKeybase(transient bool, buf io.Reader) (keys.Keybase, error) {
 		return keys.NewInMemory(), nil
 	}
 
-	return NewKeyringFromHomeFlag(buf)
+	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {

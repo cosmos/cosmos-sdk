@@ -26,8 +26,14 @@ import (
 )
 
 const (
-	keyringDirName     = "keyring"
-	testKeyringDirName = "keyring-test"
+	BackendFile = "file"
+	BackendOS   = "os"
+	BackendTest = "test"
+)
+
+const (
+	keyringDirNameFmt     = "keyring-%s"
+	testKeyringDirNameFmt = "keyring-test-%s"
 )
 
 var _ Keybase = keyringKeybase{}
@@ -50,31 +56,24 @@ func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
+// Available backends are "os", "file", "test".
 func NewKeyring(
-	name string, dir string, userInput io.Reader, opts ...KeybaseOption,
+	svcName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {
-	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
-	if err != nil {
-		return nil, err
+
+	var db keyring.Keyring
+	var err error
+
+	switch backend {
+	case BackendTest:
+		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, nil, true))
+	case BackendFile:
+		db, err = keyring.Open(newFileBackendKeyringConfig(svcName, rootDir, userInput))
+	case BackendOS:
+		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, userInput, false))
+	default:
+		return nil, fmt.Errorf("unknown keyring backend %v", backend)
 	}
-
-	return newKeyringKeybase(db, opts...), nil
-}
-
-// NewKeyringFile creates a new instance of an encrypted file-backed keyring.
-func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...KeybaseOption) (Keybase, error) {
-	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
-	if err != nil {
-		return nil, err
-	}
-
-	return newKeyringKeybase(db, opts...), nil
-}
-
-// NewTestKeyring creates a new instance of an on-disk keyring for
-// testing purposes that does not prompt users for password.
-func NewTestKeyring(name string, dir string, opts ...KeybaseOption) (Keybase, error) {
-	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {
 		return nil, err
 	}
@@ -488,7 +487,7 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 		return keyring.Config{
 			AllowedBackends: []keyring.BackendType{"file"},
 			ServiceName:     name,
-			FileDir:         filepath.Join(dir, testKeyringDirName),
+			FileDir:         filepath.Join(dir, fmt.Sprintf(testKeyringDirNameFmt, name)),
 			FilePasswordFunc: func(_ string) (string, error) {
 				return "test", nil
 			},
@@ -503,7 +502,7 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 }
 
 func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
-	fileDir := filepath.Join(dir, keyringDirName)
+	fileDir := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, name))
 	return keyring.Config{
 		AllowedBackends:  []keyring.BackendType{"file"},
 		ServiceName:      name,

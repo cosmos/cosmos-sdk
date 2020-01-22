@@ -49,7 +49,7 @@ NOTE: This is insecure and only meant to be used during testing!!!! HERE BE DRAG
 `,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			kb, err := NewKeyBaseFromHomeFlag()
+			kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
 			if err != nil {
 				return err
 			}

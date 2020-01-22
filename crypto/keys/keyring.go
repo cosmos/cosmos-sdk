@@ -51,17 +51,6 @@ func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
 func NewKeyring(
-	name string, dir string, userInput io.Reader, opts ...KeybaseOption,
-) (Keybase, error) {
-	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
-	if err != nil {
-		return nil, err
-	}
-
-	return newKeyringKeybase(db, opts...), nil
-}
-
-func NewKeyringWithBackend(
 	svcName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {
 
@@ -78,27 +67,6 @@ func NewKeyringWithBackend(
 	default:
 		return nil, fmt.Errorf("unknown keyring backend %v", backend)
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	return newKeyringKeybase(db, opts...), nil
-}
-
-// NewKeyringFile creates a new instance of an encrypted file-backed keyring.
-func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...KeybaseOption) (Keybase, error) {
-	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
-	if err != nil {
-		return nil, err
-	}
-
-	return newKeyringKeybase(db, opts...), nil
-}
-
-// NewTestKeyring creates a new instance of an on-disk keyring for
-// testing purposes that does not prompt users for password.
-func NewTestKeyring(name string, dir string, opts ...KeybaseOption) (Keybase, error) {
-	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {
 		return nil, err
 	}

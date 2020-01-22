@@ -54,15 +54,7 @@ func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.K
 // password-less keyring that could be used for testing purposes.
 func NewKeyringFromDir(keyringServiceName string, rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
-	switch keyringBackend {
-	case flags.KeyringBackendTest:
-		return keys.NewTestKeyring(keyringServiceName, rootDir, opts...)
-	case flags.KeyringBackendFile:
-		return keys.NewKeyringFile(keyringServiceName, rootDir, input, opts...)
-	case flags.KeyringBackendOS:
-		return keys.NewKeyring(keyringServiceName, rootDir, input, opts...)
-	}
-	return nil, fmt.Errorf("unknown keyring backend %q", keyringBackend)
+	return keys.NewKeyring(keyringServiceName, keyringBackend, rootDir, input, opts...)
 }
 
 func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {

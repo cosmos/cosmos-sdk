@@ -9,28 +9,24 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	testCases := []struct {
 		name        string
 		clientState tendermint.ClientState
-		header      tendermint.Header
 		chainID     string
 		expPass     bool
 	}{
 		{
 			name:        "successful update",
 			clientState: tendermint.NewClientState(chainID, height),
-			header:      suite.header,
 			chainID:     chainID,
 			expPass:     true,
 		},
 		{
 			name:        "header basic validation failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			header:      suite.header,
 			chainID:     "cosmoshub",
 			expPass:     false,
 		},
 		{
 			name:        "header height < latest client height",
 			clientState: tendermint.NewClientState(chainID, height+1),
-			header:      suite.header,
 			chainID:     chainID,
 			expPass:     false,
 		},
@@ -40,15 +36,15 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		tc := tc
 
 		expectedConsensus := tendermint.ConsensusState{
-			Root:             commitment.NewRoot(tc.header.AppHash),
-			ValidatorSetHash: tc.header.ValidatorSet.Hash(),
+			Root:             commitment.NewRoot(suite.header.AppHash),
+			ValidatorSetHash: suite.header.ValidatorSet.Hash(),
 		}
 
-		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, tc.header, tc.chainID)
+		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, suite.header, tc.chainID)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().Equal(tc.header.GetHeight(), clientState.GetLatestHeight(), "valid test case %d failed: %s", i, tc.name)
+			suite.Require().Equal(suite.header.GetHeight(), clientState.GetLatestHeight(), "valid test case %d failed: %s", i, tc.name)
 			suite.Require().Equal(expectedConsensus, consensusState, "valid test case %d failed: %s", i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)

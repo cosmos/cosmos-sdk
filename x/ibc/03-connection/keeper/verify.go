@@ -24,7 +24,7 @@ func (k Keeper) VerifyClientConsensusState(
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.cdc, height, connection.Counterparty.Prefix, proof, clientState.GetID(), consensusState,
+		k.cdc, height, connection.Counterparty.Prefix, proof, consensusState,
 	)
 }
 

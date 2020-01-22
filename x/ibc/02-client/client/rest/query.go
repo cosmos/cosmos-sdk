@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
@@ -19,7 +18,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/ibc/path", queryPathHandlerFn(cliCtx)).Methods("GET")
 }
 
 // queryAllClientStatesFn queries all available light clients
@@ -168,22 +166,6 @@ func queryNodeConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFun
 
 		res := cliCtx.Codec.MustMarshalJSON(state)
 		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
-	}
-}
-
-// queryPathHandlerFn implements a node consensus path querying route
-//
-// @Summary Query IBC path
-// @Tags IBC
-// @Produce  json
-// @Success 200 {object} QueryPath "OK"
-// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/path [get]
-func queryPathHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		path := commitment.NewPrefix([]byte("ibc"))
-		res := cliCtx.Codec.MustMarshalJSON(path)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

@@ -1,8 +1,6 @@
 package tendermint
 
 import (
-	"errors"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -60,12 +58,11 @@ func (cs ClientState) VerifyClientConsensusState(
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
-	clientID string,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(clientID, height))
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), height))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -81,11 +78,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if consensusState.GetRoot() == nil {
-		return errors.New("root cannot be empty")
-	}
-
-	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
+	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
 		return clienttypes.ErrFailedClientConsensusStateVerification
 	}
 
@@ -103,7 +96,7 @@ func (cs ClientState) VerifyConnectionState(
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -119,7 +112,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
+	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
 		return clienttypes.ErrFailedConnectionStateVerification
 	}
 
@@ -138,7 +131,7 @@ func (cs ClientState) VerifyChannelState(
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -154,7 +147,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
+	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
 		return clienttypes.ErrFailedChannelStateVerification
 	}
 
@@ -173,7 +166,7 @@ func (cs ClientState) VerifyPacketCommitment(
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -184,7 +177,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return clienttypes.ErrClientFrozen
 	}
 
-	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); !ok {
+	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); !ok {
 		return clienttypes.ErrFailedPacketCommitmentVerification
 	}
 
@@ -203,7 +196,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -214,7 +207,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return clienttypes.ErrClientFrozen
 	}
 
-	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); !ok {
+	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); !ok {
 		return clienttypes.ErrFailedPacketAckVerification
 	}
 
@@ -229,7 +222,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -240,7 +233,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return clienttypes.ErrClientFrozen
 	}
 
-	if ok := proof.VerifyNonMembership(consensusState.GetRoot(), path); !ok {
+	if ok := proof != nil && proof.VerifyNonMembership(consensusState.GetRoot(), path); !ok {
 		return clienttypes.ErrFailedPacketAckAbsenceVerification
 	}
 
@@ -258,7 +251,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if cs.LatestHeight < height {
@@ -271,7 +264,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
+	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
 		return clienttypes.ErrFailedNextSeqRecvVerification
 	}
 

@@ -25,7 +25,6 @@ type ClientState interface {
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
-		clientID string,
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(

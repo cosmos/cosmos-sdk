@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // nolint
@@ -21,10 +23,7 @@ const (
 	GasFlagAuto          = "auto"
 
 	// DefaultKeyringBackend
-	DefaultKeyringBackend = KeyringBackendOS
-	KeyringBackendFile    = "file"
-	KeyringBackendOS      = "os"
-	KeyringBackendTest    = "test"
+	DefaultKeyringBackend = keys.BackendOS
 
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.

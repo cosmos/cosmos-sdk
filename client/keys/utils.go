@@ -2,7 +2,6 @@ package keys
 
 import (
 	"fmt"
-	"io"
 	"path/filepath"
 
 	"github.com/99designs/keyring"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -34,12 +32,6 @@ func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
-
-// NewKeyBaseFromHomeFlag initializes a keyring based on configuration. Keybase
-// options can be applied when generating this new Keybase.
-func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input, opts...)
-}
 
 func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil

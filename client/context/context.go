@@ -14,9 +14,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +25,7 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	Keybase       cryptokeys.Keybase
+	Keybase       keys.Keybase
 	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
@@ -275,12 +274,13 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyringFromHomeFlag(input)
+	keybase, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(),
+		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err
 	}
 
-	var info cryptokeys.Info
+	var info keys.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {

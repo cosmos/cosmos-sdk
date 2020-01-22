@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runListCmd(t *testing.T) {
@@ -31,7 +32,7 @@ func Test_runListCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome2)
 
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")

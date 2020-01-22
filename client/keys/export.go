@@ -4,8 +4,12 @@ import (
 	"bufio"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ExportKeyCommand exports private keys from the key store.
@@ -21,7 +25,7 @@ func ExportKeyCommand() *cobra.Command {
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := NewKeyringFromHomeFlag(buf)
+	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 	if err != nil {
 		return err
 	}

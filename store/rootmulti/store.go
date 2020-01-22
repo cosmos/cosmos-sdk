@@ -45,7 +45,10 @@ type Store struct {
 var _ types.CommitMultiStore = (*Store)(nil)
 var _ types.Queryable = (*Store)(nil)
 
-// nolint
+// NewStore returns a reference to a new Store object with the provided DB. The
+// store will be created with a PruneNothing pruning strategy by default. After
+// a store is created, KVStores must be mounted and finally LoadLatestVersion or
+// LoadVersion must be called.
 func NewStore(db dbm.DB) *Store {
 	return &Store{
 		db:           db,
@@ -56,7 +59,12 @@ func NewStore(db dbm.DB) *Store {
 	}
 }
 
-// Implements CommitMultiStore
+// SetPruning sets the pruning strategy on the root store and all the sub-stores.
+// Note, calling SetPruning on the root store prior to LoadVersion or
+// LoadLatestVersion performs a no-op as the stores aren't mounted yet.
+//
+// TODO: Consider removing this API altogether on sub-stores as a pruning
+// strategy should only be provided on initialization.
 func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 	rs.pruningOpts = pruningOpts
 	for _, substore := range rs.stores {

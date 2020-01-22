@@ -26,6 +26,12 @@ import (
 )
 
 const (
+	BackendFile = "file"
+	BackendOS   = "os"
+	BackendTest = "test"
+)
+
+const (
 	keyringDirNameFmt     = "keyring-%s"
 	testKeyringDirNameFmt = "keyring-test-%s"
 )
@@ -59,11 +65,11 @@ func NewKeyring(
 	var err error
 
 	switch backend {
-	case "test":
+	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, nil, true))
-	case "file":
+	case BackendFile:
 		db, err = keyring.Open(newFileBackendKeyringConfig(svcName, rootDir, userInput))
-	case "os":
+	case BackendOS:
 		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, userInput, false))
 	default:
 		return nil, fmt.Errorf("unknown keyring backend %v", backend)

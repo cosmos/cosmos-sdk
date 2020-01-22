@@ -26,13 +26,6 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration. Keybase
-// options can be applied when generating this new Keybase.
-func NewKeyBaseFromHomeFlag(opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	rootDir := viper.GetString(flags.FlagHome)
-	return NewKeyBaseFromDir(rootDir, opts...)
-}
-
 // NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
 func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {

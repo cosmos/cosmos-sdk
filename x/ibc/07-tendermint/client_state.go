@@ -216,9 +216,12 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	height uint64,
-	prefix commitment.PrefixI, proof commitment.ProofI,
-	portID, channelID string,
-	sequence uint64, consensusState clientexported.ConsensusState,
+	prefix commitment.PrefixI,
+	proof commitment.ProofI,
+	portID,
+	channelID string,
+	sequence uint64,
+	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {

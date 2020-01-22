@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"fmt"
 	"io"
 	"sync"
 
@@ -38,12 +39,14 @@ type Store struct {
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
 	var iavlOpts *iavl.Options
 	iavlOpts = iavl.PruningOptions(pruning.KeepEvery(), pruning.KeepRecent())
+	fmt.Printf("iavlOpts: %v\n", iavlOpts)
 	tree, err := iavl.NewMutableTreeWithOpts(
 		db,
 		dbm.NewMemDB(),
 		defaultIAVLCacheSize,
 		iavlOpts,
 	)
+	fmt.Printf("IAVL ERR: %v\n", err)
 	if err != nil {
 		return nil, err
 	}

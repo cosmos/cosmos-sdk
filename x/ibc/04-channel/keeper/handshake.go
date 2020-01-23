@@ -59,7 +59,7 @@ func (k Keeper) ChanOpenInit(
 	channel := types.NewChannel(exported.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	// TODO: generate channel capability key and set it to store
+	// TODO: blocked by #5542
 	// key := ""
 	// k.SetChannelCapability(ctx, portID, channelID, key)
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
@@ -96,7 +96,7 @@ func (k Keeper) ChanOpenTry(
 		sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
 	}
 
-	// TODO: use key authentication
+	// TODO: blocked by #5542
 	// key := sdk.NewKVStoreKey(portID)
 	// if !k.portKeeper.Authenticate(key, portID) {
 	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
@@ -148,7 +148,7 @@ func (k Keeper) ChanOpenTry(
 
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	// TODO: generate channel capability key and set it to store
+	// TODO: blocked by #5542
 	// key := ""
 	// k.SetChannelCapability(ctx, portID, channelID, key)
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
@@ -179,7 +179,7 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	// TODO: use key authentication
+	// TODO: blocked by #5542
 	// key := sdk.NewKVStoreKey(portID)
 	// if !k.portKeeper.Authenticate(key, portID) {
 	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
@@ -253,7 +253,7 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	// TODO: use key authentication
+	// TODO: blocked by #5542
 	// capkey, found := k.GetChannelCapability(ctx, portID, channelID)
 	// if !found {
 	// 	return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, channelID)
@@ -321,7 +321,7 @@ func (k Keeper) ChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	// TODO: use key authentication
+	// TODO: blocked by #5542
 	// capkey, found := k.GetChannelCapability(ctx, portID, channelID)
 	// if !found {
 	// 	return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, channelID)
@@ -368,7 +368,7 @@ func (k Keeper) ChanCloseConfirm(
 	proofInit commitment.ProofI,
 	proofHeight uint64,
 ) error {
-	// TODO: use key authentication
+	// TODO: blocked by #5542
 	// capkey, found := k.GetChannelCapability(ctx, portID, channelID)
 	// if !found {
 	// 	return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, channelID)

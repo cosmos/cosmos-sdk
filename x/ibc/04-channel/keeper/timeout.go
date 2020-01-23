@@ -122,8 +122,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	// check if the packet is linked to a capability key
-	// TODO: uncomment
+	// TODO: blocked by #5542
 	// _, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	// if !found {
 	// 	return types.ErrChannelCapabilityNotFound
@@ -155,7 +154,7 @@ func (k Keeper) TimeoutOnClose(
 		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	// TODO: uncomment
+	// TODO: blocked by #5542
 	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	// if !found {
 	// 	return nil, types.ErrChannelCapabilityNotFound

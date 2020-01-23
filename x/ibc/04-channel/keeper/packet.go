@@ -12,7 +12,6 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -39,7 +38,7 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	// TODO: uncomment when channel capability key is set to store
+	// TODO: blocked by #5542
 	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	// if !found {
 	// 	return types.ErrChannelCapabilityNotFound
@@ -346,16 +345,17 @@ func (k Keeper) CleanupPacket(
 		)
 	}
 
-	capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if !found {
-		return nil, types.ErrChannelCapabilityNotFound
-	}
+	// TODO: blocked by #5542
+	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	// if !found {
+	// 	return nil, types.ErrChannelCapabilityNotFound
+	// }
 
-	portCapabilityKey := sdk.NewKVStoreKey(capKey)
+	// portCapabilityKey := sdk.NewKVStoreKey(capKey)
 
-	if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
-		return nil, sdkerrors.Wrapf(port.ErrInvalidPort, "invalid source port: %s", packet.GetSourcePort())
-	}
+	// if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
+	// 	return nil, sdkerrors.Wrapf(port.ErrInvalidPort, "invalid source port: %s", packet.GetSourcePort())
+	// }
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidPacket,

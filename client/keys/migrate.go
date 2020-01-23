@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -55,7 +55,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	buf := bufio.NewReader(cmd.InOrStdin())
-	keyringServiceName := types.GetConfig().GetKeyringServiceName()
+	keyringServiceName := sdk.KeyringServiceName()
 
 	var (
 		tmpDir  string

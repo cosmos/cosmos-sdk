@@ -26,9 +26,11 @@ import (
 )
 
 const (
-	BackendFile = "file"
-	BackendOS   = "os"
-	BackendTest = "test"
+	BackendFile    = "file"
+	BackendOS      = "os"
+	BackendKWallet = "kwallet"
+	BackendPass    = "pass"
+	BackendTest    = "test"
 )
 
 const (
@@ -71,6 +73,10 @@ func NewKeyring(
 		db, err = keyring.Open(newFileBackendKeyringConfig(svcName, rootDir, userInput))
 	case BackendOS:
 		db, err = keyring.Open(lkbToKeyringConfig(svcName, rootDir, userInput, false))
+	case BackendKWallet:
+		db, err = keyring.Open(newKWalletBackendKeyringConfig(svcName, rootDir, userInput))
+	case BackendPass:
+		db, err = keyring.Open(newPassBackendKeyringConfig(svcName, rootDir, userInput))
 	default:
 		return nil, fmt.Errorf("unknown keyring backend %v", backend)
 	}
@@ -498,6 +504,24 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 		ServiceName:      name,
 		FileDir:          dir,
 		FilePasswordFunc: newRealPrompt(dir, buf),
+	}
+}
+
+func newKWalletBackendKeyringConfig(name, _ string, _ io.Reader) keyring.Config {
+	return keyring.Config{
+		AllowedBackends: []keyring.BackendType{"kwallet"},
+		ServiceName:     "kdewallet",
+		KWalletAppID:    name,
+		KWalletFolder:   "",
+	}
+}
+
+func newPassBackendKeyringConfig(name, dir string, _ io.Reader) keyring.Config {
+	prefix := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, name))
+	return keyring.Config{
+		AllowedBackends: []keyring.BackendType{"pass"},
+		ServiceName:     name,
+		PassPrefix:      prefix,
 	}
 }
 

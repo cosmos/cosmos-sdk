@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -39,13 +38,10 @@ func (k Keeper) VerifyConnectionState(
 	connection types.ConnectionEnd,
 	consensusState clientexported.ConsensusState,
 ) error {
-	fmt.Println("context height", ctx.BlockHeight())
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
 		return clienttypes.ErrClientNotFound
 	}
-	fmt.Println("client state height", clientState.GetLatestHeight())
-	fmt.Println("passed height", height)
 
 	return clientState.VerifyConnectionState(
 		k.cdc, clientState.GetLatestHeight(), connection.Counterparty.Prefix, proof, connectionID, connection, consensusState,

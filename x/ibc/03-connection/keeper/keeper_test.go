@@ -70,13 +70,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 	res := suite.app.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", storeKey),
-		Height: suite.app.LastBlockHeight(),
-		Data:   key,
-		Prove:  true,
+		Path:  fmt.Sprintf("store/%s/key", storeKey),
+		Data:  key,
+		Prove: true,
 	})
-
-	fmt.Printf("Block: %v, Res: %#v\n", suite.app.LastBlockHeight(), res)
 
 	proof := commitment.Proof{
 		Proof: res.Proof,

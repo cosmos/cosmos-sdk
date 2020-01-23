@@ -134,7 +134,6 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 	if prefix == nil || prefix.IsEmpty() {
 		return Path{}, errors.New("prefix can't be empty")
 	}
-
 	return NewPath([]string{string(prefix.Bytes()), path}), nil
 }
 

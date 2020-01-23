@@ -83,6 +83,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			fmt.Println("In case", tc.msg)
 			suite.SetupTest() // reset
 
 			tc.malleate()
@@ -90,7 +91,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			suite.updateClient(testClientID1)
 
 			proof, proofHeight := suite.queryProof(connectionKey)
-			fmt.Println(proof)
+			fmt.Println(tc.msg, proof, proofHeight)
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.ctx, uint64(proofHeight), proof, testConnectionID1, connection, suite.consensusState,

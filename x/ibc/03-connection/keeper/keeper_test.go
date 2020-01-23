@@ -70,17 +70,19 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 	res := suite.app.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", storeKey),
-		Data:  key,
-		Prove: true,
+		Path:   fmt.Sprintf("store/%s/key", storeKey),
+		Height: suite.app.LastBlockHeight(),
+		Data:   key,
+		Prove:  true,
 	})
 
-	height := res.Height
+	fmt.Printf("Block: %v, Res: %#v\n", suite.app.LastBlockHeight(), res)
+
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
 
-	return proof, height
+	return proof, res.Height
 }
 
 func (suite *KeeperTestSuite) createClient(clientID string) {
@@ -104,8 +106,7 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	suite.app.Commit()
 	commitID := suite.app.LastCommitID()
 
-	height := suite.app.LastBlockHeight() + 1
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	state := tendermint.ConsensusState{

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
@@ -26,7 +27,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 	if !runningUnattended {
-		kb, err := NewKeyringFromHomeFlag(mockIn)
+		kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 		require.NoError(t, err)
 		defer func() {
 			kb.Delete("runDeleteCmd_Key1", "", false)
@@ -40,7 +41,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")

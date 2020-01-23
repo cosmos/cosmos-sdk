@@ -100,7 +100,10 @@ if the provided arguments are invalid.
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 * (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
   and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
-* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior.
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Keybase concrete types constructors such as `NewKeyBaseFromDir` and `NewInMemory`
+  now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands
+  functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior.
+* [\#5547](https://github.com/cosmos/cosmos-sdk/pull/5547) `NewKeyBaseFromHomeFlag` constructor has been removed.
 * [\#5439](https://github.com/cosmos/cosmos-sdk/pull/5439) Further modularization was done to the `keybase`
   package to make it more suitable for use with different key formats and algorithms:
   * The `WithKeygenFunc` function added as a `KeybaseOption` which allows a custom bytes to key
@@ -198,6 +201,7 @@ that allows for arbitrary vesting periods.
 
 ### Improvements
 
+* (iavl) [\#5538](https://github.com/cosmos/cosmos-sdk/pull/5538) Remove manual IAVL pruning in favor of IAVL's internal pruning strategy.
 * (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
 has been moved to the configuration file, to allow easier node configuration.
 * (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers

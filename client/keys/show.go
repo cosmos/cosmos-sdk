@@ -57,7 +57,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
-	kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin())
+	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

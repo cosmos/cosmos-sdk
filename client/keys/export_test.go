@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runExportCmd(t *testing.T) {
@@ -22,7 +23,7 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	if !runningUnattended {
 		defer func() {

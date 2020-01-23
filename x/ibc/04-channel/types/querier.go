@@ -36,21 +36,6 @@ func NewChannelResponse(
 	}
 }
 
-// QueryChannelParams defines the params for the following queries:
-// - 'custom/ibc/channel'
-type QueryChannelParams struct {
-	PortID    string
-	ChannelID string
-}
-
-// NewQueryChannelParams creates a new QueryChannelParams instance
-func NewQueryChannelParams(portID, channelID string) QueryChannelParams {
-	return QueryChannelParams{
-		PortID:    portID,
-		ChannelID: channelID,
-	}
-}
-
 // QueryAllChannelsParams defines the parameters necessary for querying for all
 // channels.
 type QueryAllChannelsParams struct {

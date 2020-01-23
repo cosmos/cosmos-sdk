@@ -10,27 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-// QuerierConnection defines the sdk.Querier to query a connection end
-func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryConnectionParams
-
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	connection, found := k.GetConnection(ctx, params.ConnectionID)
-	if !found {
-		return nil, sdkerrors.Wrap(types.ErrConnectionNotFound, params.ConnectionID)
-	}
-
-	bz, err := types.SubModuleCdc.MarshalJSON(connection)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return bz, nil
-}
-
 // QuerierConnections defines the sdk.Querier to query all the connections.
 func QuerierConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllConnectionsParams

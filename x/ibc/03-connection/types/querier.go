@@ -12,7 +12,6 @@ import (
 // query routes supported by the IBC connection Querier
 const (
 	QueryAllConnections    = "connections"
-	QueryConnection        = "connection"
 	QueryClientConnections = "client_connections"
 )
 
@@ -34,19 +33,6 @@ func NewConnectionResponse(
 		Proof:       commitment.Proof{Proof: proof},
 		ProofPath:   commitment.NewPath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
-	}
-}
-
-// QueryConnectionParams defines the params for the following queries:
-// - 'custom/ibc/connections/<connectionID>'
-type QueryConnectionParams struct {
-	ConnectionID string
-}
-
-// NewQueryConnectionParams creates a new QueryConnectionParams instance
-func NewQueryConnectionParams(clientID string) QueryConnectionParams {
-	return QueryConnectionParams{
-		ConnectionID: clientID,
 	}
 }
 

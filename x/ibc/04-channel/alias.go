@@ -28,7 +28,6 @@ var (
 	// functions aliases
 	NewKeeper                    = keeper.NewKeeper
 	QuerierChannels              = keeper.QuerierChannels
-	QuerierChannel               = keeper.QuerierChannel
 	NewChannel                   = types.NewChannel
 	NewCounterparty              = types.NewCounterparty
 	RegisterCodec                = types.RegisterCodec
@@ -53,7 +52,6 @@ var (
 	NewMsgAcknowledgement        = types.NewMsgAcknowledgement
 	NewPacket                    = types.NewPacket
 	NewChannelResponse           = types.NewChannelResponse
-	NewQueryChannelParams        = types.NewQueryChannelParams
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc
@@ -84,5 +82,4 @@ type (
 	MsgTimeout             = types.MsgTimeout
 	Packet                 = types.Packet
 	ChannelResponse        = types.ChannelResponse
-	QueryChannelParams     = types.QueryChannelParams
 )

@@ -200,6 +200,7 @@ that allows for arbitrary vesting periods.
   HD path and secp256k1 keys, so is non-breaking.
 * (types) [\#5447](https://github.com/cosmos/cosmos-sdk/pull/5447) Added `ApproxRoot` function to sdk.Decimal type in order to get the nth root for a decimal number, where n is a positive integer.
   * An `ApproxSqrt` function was also added for convenience around the common case of n=2.
+* [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added amount event to MsgMultiSend, emitted for each output.
 
 ### Improvements
 

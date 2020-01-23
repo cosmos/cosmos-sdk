@@ -101,6 +101,16 @@ type (
 		Name        string   `json:"name" yaml:"name"`
 		Permissions []string `json:"permissions" yaml:"permissions"`
 	}
+
+	moduleAccountPretty struct {
+		Address       sdk.AccAddress `json:"address" yaml:"address"`
+		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		PubKey        string         `json:"public_key" yaml:"public_key"`
+		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+		Sequence      uint64         `json:"sequence" yaml:"sequence"`
+		Name          string         `json:"name" yaml:"name"`
+		Permissions   []string       `json:"permissions" yaml:"permissions"`
+	}
 )
 
 func NewGenesisState(params v034auth.Params, accounts GenesisAccounts) GenesisState {
@@ -423,16 +433,6 @@ func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...stri
 	}
 }
 
-func validatePermissions(permissions ...string) error {
-	for _, perm := range permissions {
-		if strings.TrimSpace(perm) == "" {
-			return fmt.Errorf("module permission is empty")
-		}
-	}
-
-	return nil
-}
-
 func (ma ModuleAccount) Validate() error {
 	if err := validatePermissions(ma.Permissions...); err != nil {
 		return err
@@ -447,6 +447,43 @@ func (ma ModuleAccount) Validate() error {
 	}
 
 	return ma.BaseAccount.Validate()
+}
+
+// MarshalJSON returns the JSON representation of a ModuleAccount.
+func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
+	return json.Marshal(moduleAccountPretty{
+		Address:       ma.Address,
+		Coins:         ma.Coins,
+		PubKey:        "",
+		AccountNumber: ma.AccountNumber,
+		Sequence:      ma.Sequence,
+		Name:          ma.Name,
+		Permissions:   ma.Permissions,
+	})
+}
+
+// UnmarshalJSON unmarshals raw JSON bytes into a ModuleAccount.
+func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
+	var alias moduleAccountPretty
+	if err := json.Unmarshal(bz, &alias); err != nil {
+		return err
+	}
+
+	ma.BaseAccount = NewBaseAccount(alias.Address, alias.Coins, nil, alias.AccountNumber, alias.Sequence)
+	ma.Name = alias.Name
+	ma.Permissions = alias.Permissions
+
+	return nil
+}
+
+func validatePermissions(permissions ...string) error {
+	for _, perm := range permissions {
+		if strings.TrimSpace(perm) == "" {
+			return fmt.Errorf("module permission is empty")
+		}
+	}
+
+	return nil
 }
 
 func sanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {

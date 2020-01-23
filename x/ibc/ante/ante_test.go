@@ -209,7 +209,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 	var packet channeltypes.Packet
 	for i := 0; i < 5; i++ {
 		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
-		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet.Data))
+		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(i), channeltypes.CommitPacket(packet.Data))
 	}
 
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(10))

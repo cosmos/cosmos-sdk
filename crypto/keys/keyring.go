@@ -491,7 +491,7 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Config {
 	if test {
 		return keyring.Config{
-			AllowedBackends: []keyring.BackendType{"file"},
+			AllowedBackends: []keyring.BackendType{keyring.FileBackend},
 			ServiceName:     name,
 			FileDir:         filepath.Join(dir, fmt.Sprintf(testKeyringDirNameFmt, name)),
 			FilePasswordFunc: func(_ string) (string, error) {
@@ -509,7 +509,7 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 
 func newKWalletBackendKeyringConfig(name, _ string, _ io.Reader) keyring.Config {
 	return keyring.Config{
-		AllowedBackends: []keyring.BackendType{"kwallet"},
+		AllowedBackends: []keyring.BackendType{keyring.KWalletBackend},
 		ServiceName:     "kdewallet",
 		KWalletAppID:    name,
 		KWalletFolder:   "",
@@ -519,7 +519,7 @@ func newKWalletBackendKeyringConfig(name, _ string, _ io.Reader) keyring.Config 
 func newPassBackendKeyringConfig(name, dir string, _ io.Reader) keyring.Config {
 	prefix := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, name))
 	return keyring.Config{
-		AllowedBackends: []keyring.BackendType{"pass"},
+		AllowedBackends: []keyring.BackendType{keyring.PassBackend},
 		ServiceName:     name,
 		PassPrefix:      prefix,
 	}
@@ -528,7 +528,7 @@ func newPassBackendKeyringConfig(name, dir string, _ io.Reader) keyring.Config {
 func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
 	fileDir := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, name))
 	return keyring.Config{
-		AllowedBackends:  []keyring.BackendType{"file"},
+		AllowedBackends:  []keyring.BackendType{keyring.FileBackend},
 		ServiceName:      name,
 		FileDir:          fileDir,
 		FilePasswordFunc: newRealPrompt(fileDir, buf),

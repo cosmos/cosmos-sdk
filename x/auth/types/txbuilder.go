@@ -53,7 +53,7 @@ func NewTxBuilder(
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		panic(err)
 	}
@@ -276,7 +276,7 @@ func MakeSignature(keybase keys.Keybase, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 
 	if keybase == nil {
-		keybase, err = keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
+		keybase, err = keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
 		if err != nil {
 			return
 		}

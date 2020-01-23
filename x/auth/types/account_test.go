@@ -146,4 +146,11 @@ func TestBaseAccountJSON(t *testing.T) {
 	var a BaseAccount
 	require.NoError(t, json.Unmarshal(bz, &a))
 	require.Equal(t, baseAcc.String(), a.String())
+
+	bz, err = ModuleCdc.MarshalJSON(baseAcc)
+	require.NoError(t, err)
+
+	var b BaseAccount
+	require.NoError(t, ModuleCdc.UnmarshalJSON(bz, &b))
+	require.Equal(t, baseAcc.String(), b.String())
 }

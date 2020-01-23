@@ -3,10 +3,9 @@ package keeper_test
 import (
 	"fmt"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -43,8 +42,9 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
+			suite.updateClient(testClientID1)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(suite.ctx.BlockHeight()))
+			consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(suite.ctx.BlockHeight()-1))
 
 			proof, proofHeight := suite.queryProof(consensusKey)
 
@@ -57,35 +57,26 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestVerifyConnectionState() {
-	counterparty := types.NewCounterparty(
-		testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-	)
-	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterparty}
 
 	connectionKey := ibctypes.KeyConnection(testConnectionID1)
 
 	cases := []struct {
-		msg          string
-		connectionID string
-		connection   types.ConnectionEnd
-		malleate     func() error
-		expPass      bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", testConnectionID2, connection1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"verification success", func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", testConnectionID2, connection1, func() error { return nil }, false},
-		{"verification failed", testConnectionID2, connection1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", func() {}, false},
+		{"verification failed", func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -94,56 +85,40 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			suite.updateClient(testClientID1)
 
 			proof, proofHeight := suite.queryProof(connectionKey)
+			fmt.Println(proof)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-				suite.ctx, uint64(proofHeight), proof, tc.connectionID, tc.connection, suite.consensusState,
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
+				suite.ctx, uint64(proofHeight), proof, testConnectionID1, connection, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestVerifyChannelState() {
-	counterpartyConn := types.NewCounterparty(
-		testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-	)
-	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterpartyConn}
-
-	counterparty := channeltypes.NewCounterparty(testPort2, testChannel2)
-	channel := channeltypes.NewChannel(
-		channelexported.OPEN, channelexported.ORDERED, counterparty,
-		[]string{testConnectionID1}, "1.0",
-	)
-
 	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
 	cases := []struct {
-		msg       string
-		portID    string
-		channelID string
-		channel   channeltypes.Channel
-		malleate  func() error
-		expPass   bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", testPort1, testChannel1, channel, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"verification success", func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", testPort1, testChannel1, channel, func() error { return nil }, false},
-		{"verification failed", testPort1, testChannel1, channel, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", func() {}, false},
+		{"verification failed", func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -152,52 +127,46 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			channel := suite.createChannel(
+				testPort1, testChannel1, testPort2, testChannel2,
+				channelexported.OPEN, channelexported.ORDERED, testConnectionID1,
+			)
+			suite.updateClient(testClientID1)
 
 			proof, proofHeight := suite.queryProof(channelKey)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-				suite.ctx, connection1, uint64(proofHeight), proof, tc.portID,
-				tc.channelID, tc.channel, suite.consensusState,
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
+				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
+				testChannel1, channel, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
-	counterpartyConn := types.NewCounterparty(
-		testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-	)
-	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterpartyConn}
+
 	commitmentKey := ibctypes.KeyPacketCommitment(testPort1, testChannel1, 1)
-	commitmentBz := []byte{1}
+	commitmentBz := []byte("commitment")
 
 	cases := []struct {
-		msg           string
-		portID        string
-		channelID     string
-		sequence      uint64
-		commitementBz []byte
-		malleate      func() error
-		expPass       bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", testPort1, testChannel1, 1, commitmentBz, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"verification success", func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", testPort1, testChannel1, 1, commitmentBz, func() error { return nil }, false},
-		{"verification failed", testPort1, testChannel1, 1, commitmentBz, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", func() {}, false},
+		{"verification failed", func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -206,53 +175,42 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, 1, commitmentBz)
+			suite.updateClient(testClientID1)
 
 			proof, proofHeight := suite.queryProof(commitmentKey)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
-				suite.ctx, connection1, uint64(proofHeight), proof, tc.portID,
-				tc.channelID, tc.sequence, tc.commitementBz, suite.consensusState,
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
+				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
+				testChannel1, 1, commitmentBz, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
-	counterpartyConn := types.NewCounterparty(
-		testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-	)
-	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterpartyConn}
-
 	packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
-	ack := []byte("hello")
+	ack := []byte("acknowledgement")
 
 	cases := []struct {
-		msg       string
-		portID    string
-		channelID string
-		sequence  uint64
-		ack       []byte
-		malleate  func() error
-		expPass   bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", testPort1, testChannel1, 1, ack, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"verification success", func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", testPort1, testChannel1, 1, ack, func() error { return nil }, false},
-		{"verification failed", testPort1, testChannel1, 1, ack, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", func() {}, false},
+		{"verification failed", func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -261,51 +219,41 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			suite.app.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, 1, ack)
+			suite.updateClient(testClientID1)
 
 			proof, proofHeight := suite.queryProof(packetAckKey)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-				suite.ctx, connection1, uint64(proofHeight), proof, tc.portID,
-				tc.channelID, tc.sequence, tc.ack, suite.consensusState,
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
+				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
+				testChannel1, 1, ack, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	counterpartyConn := types.NewCounterparty(
-		testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-	)
-	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterpartyConn}
-
-	channelKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
+	packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
 
 	cases := []struct {
-		msg       string
-		portID    string
-		channelID string
-		sequence  uint64
-		malleate  func() error
-		expPass   bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", testPort1, testChannel1, 1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"verification success", func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", testPort1, testChannel1, 1, func() error { return nil }, false},
-		{"verification failed", testPort1, testChannel1, 1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", func() {}, false},
+		{"verification failed", func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -314,51 +262,40 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			suite.updateClient(testClientID1)
 
-			proof, proofHeight := suite.queryProof(channelKey)
+			proof, proofHeight := suite.queryProof(packetAckKey)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-				suite.ctx, connection1, uint64(proofHeight), proof, tc.portID,
-				tc.channelID, tc.sequence, suite.consensusState,
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
+				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
+				testChannel1, 1, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
-	counterpartyConn := types.NewCounterparty(
-		testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-	)
-	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterpartyConn}
-
 	nextSeqRcvKey := ibctypes.KeyNextSequenceRecv(testPort1, testChannel1)
 
 	cases := []struct {
-		msg         string
-		portID      string
-		channelID   string
-		nextSeqRecv uint64
-		malleate    func() error
-		expPass     bool
+		msg      string
+		malleate func()
+		expPass  bool
 	}{
-		{"verification success", testPort1, testChannel1, 1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"verification success", func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", testPort1, testChannel1, 1, func() error { return nil }, false},
-		{"verification failed", testPort1, testChannel1, 1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", func() {}, false},
+		{"verification failed", func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -367,22 +304,22 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, testPort1, testChannel1, 1)
+			suite.updateClient(testClientID1)
 
 			proof, proofHeight := suite.queryProof(nextSeqRcvKey)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-				suite.ctx, connection1, uint64(proofHeight), proof, tc.portID,
-				tc.channelID, tc.nextSeqRecv, suite.consensusState,
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
+				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
+				testChannel1, 1, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().True(proof.IsEmpty())
 			}
 		})
 	}

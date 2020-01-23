@@ -15,6 +15,8 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -86,7 +88,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	commitID := suite.app.LastCommitID()
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	consensusState := tendermint.ConsensusState{
 		Root:             commitment.NewRoot(commitID.Hash),
@@ -104,7 +106,7 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 
 	height := suite.app.LastBlockHeight() + 1
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	state := tendermint.ConsensusState{
 		Root: commitment.NewRoot(commitID.Hash),
@@ -113,7 +115,10 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), state)
 }
 
-func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string, clientID, counterpartyClientID string, state exported.State) {
+func (suite *KeeperTestSuite) createConnection(
+	connID, counterpartyConnID, clientID, counterpartyClientID string,
+	state exported.State,
+) types.ConnectionEnd {
 	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	connection := types.ConnectionEnd{
 		State:        state,
@@ -122,6 +127,19 @@ func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string
 		Versions:     types.GetCompatibleVersions(),
 	}
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, connID, connection)
+	return connection
+}
+
+func (suite *KeeperTestSuite) createChannel(
+	portID, channelID, counterpartyPortID, counterpartyChannelID string,
+	state channelexported.State, order channelexported.Order, connectionID string,
+) channeltypes.Channel {
+	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	channel := channeltypes.NewChannel(state, order, counterparty,
+		[]string{connectionID}, "1.0",
+	)
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, channelID, channel)
+	return channel
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -28,8 +28,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			}
 		case connection.SubModuleName:
 			switch path[1] {
-			case connection.QueryConnection:
-				res, err = connection.QuerierConnection(ctx, req, k.ConnectionKeeper)
 			case connection.QueryAllConnections:
 				res, err = connection.QuerierConnections(ctx, req, k.ConnectionKeeper)
 			case connection.QueryClientConnections:
@@ -39,8 +37,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			}
 		case channel.SubModuleName:
 			switch path[1] {
-			case channel.QueryChannel:
-				res, err = channel.QuerierChannel(ctx, req, k.ChannelKeeper)
 			case channel.QueryAllChannels:
 				res, err = channel.QuerierChannels(ctx, req, k.ChannelKeeper)
 			default:

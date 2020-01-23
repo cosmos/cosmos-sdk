@@ -176,7 +176,6 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	suite.updateClient()
 
 	proof, proofHeight = suite.queryProof(packetCommitmentPath)
-	fmt.Printf("proof height: %v\n", proofHeight)
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, cpportid, cpchanid, 1)
 	cctx, write := suite.ctx.CacheContext()

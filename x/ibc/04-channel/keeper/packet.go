@@ -163,7 +163,6 @@ func (k Keeper) RecvPacket(
 		return nil, types.ErrPacketTimeout
 	}
 
-	fmt.Printf("fetching consensus state for id %v and height %v\n", connectionEnd.GetClientID(), proofHeight)
 	consensusState, found := k.clientKeeper.GetConsensusState(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)

@@ -66,7 +66,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		}
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(),
+		kb, err := keys.NewKeyring(sdk.KeyringServiceName(),
 			viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), inBuf)
 		if err != nil {
 			return

@@ -274,7 +274,7 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(),
+	keybase, err := keys.NewKeyring(sdk.KeyringServiceName(),
 		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err

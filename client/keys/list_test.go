@@ -32,7 +32,7 @@ func Test_runListCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome2)
 
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
-	kb, err := keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")

@@ -152,6 +152,8 @@ correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 by the new key store:
   - `os`: use OS default credentials storage (default).
   - `file`: use encrypted file-based store.
+  - `kwallet`: use [KDE Wallet](https://utils.kde.org/projects/kwalletmanager/) service.
+  - `pass`: use the [pass](https://www.passwordstore.org/) command line password manager.
   - `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.

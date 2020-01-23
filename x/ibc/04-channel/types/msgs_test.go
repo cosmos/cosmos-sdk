@@ -486,6 +486,8 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 		NewMsgTimeout(packet, 0, proof, 0, addr),
 		NewMsgTimeout(packet, 0, proof, 1, emptyAddr),
 		NewMsgTimeout(packet, 0, emptyProof, 1, addr),
+		NewMsgTimeout(invalidPacket, 0, proof, 1, addr),
+		NewMsgTimeout(packet, 0, invalidProofs1, 1, addr),
 	}
 
 	testCases := []struct {
@@ -497,6 +499,8 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 		{testMsgs[1], false, "proof height must be > 0"},
 		{testMsgs[2], false, "missing signer address"},
 		{testMsgs[3], false, "cannot submit an empty proof"},
+		{testMsgs[4], false, "invalid packet"},
+		{testMsgs[5], false, "cannot submit an invalid proof"},
 	}
 
 	for i, tc := range testCases {
@@ -516,6 +520,9 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		NewMsgAcknowledgement(packet, packet.GetData(), proof, 0, addr),
 		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, emptyAddr),
 		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
+		NewMsgAcknowledgement(invalidPacket, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, invalidPacket.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), invalidProofs1, 1, addr),
 	}
 
 	testCases := []struct {
@@ -527,6 +534,9 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		{testMsgs[1], false, "proof height must be > 0"},
 		{testMsgs[2], false, "missing signer address"},
 		{testMsgs[3], false, "cannot submit an empty proof"},
+		{testMsgs[4], false, "invalid packet"},
+		{testMsgs[5], false, "invalid acknowledgement"},
+		{testMsgs[6], false, "cannot submit an invalid proof"},
 	}
 
 	for i, tc := range testCases {

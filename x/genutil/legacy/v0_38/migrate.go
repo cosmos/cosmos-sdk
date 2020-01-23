@@ -29,14 +29,14 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		var genAccountsGenState v036genaccounts.GenesisState
 		v036Codec.MustUnmarshalJSON(appState[v036genaccounts.ModuleName], &genAccountsGenState)
 
+		// delete deprecated genaccounts genesis state
+		delete(appState, v036genaccounts.ModuleName)
+
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
 		appState[v038auth.ModuleName] = v038Codec.MustMarshalJSON(
 			v038auth.Migrate(authGenState, genAccountsGenState),
 		)
-
-		// delete deprecated genaccounts genesis state
-		delete(appState, v036genaccounts.ModuleName)
 	}
 
 	// migrate staking state

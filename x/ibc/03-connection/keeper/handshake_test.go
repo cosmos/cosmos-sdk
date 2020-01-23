@@ -227,49 +227,6 @@ package keeper_test
 // 	}
 // }
 
-// func (suite *KeeperTestSuite) createClient(clientID string) {
-// 	suite.app.Commit()
-// 	commitID := suite.app.LastCommitID()
-
-// 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-// 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
-
-// 	consensusState := tendermint.ConsensusState{
-// 		Root:             commitment.NewRoot(commitID.Hash),
-// 		ValidatorSetHash: suite.valSet.Hash(),
-// 	}
-
-// 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)
-// 	suite.NoError(err)
-// }
-
-// func (suite *KeeperTestSuite) updateClient(clientID string) {
-// 	// always commit when updateClient and begin a new block
-// 	suite.app.Commit()
-// 	commitID := suite.app.LastCommitID()
-
-// 	height := suite.app.LastBlockHeight() + 1
-// 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
-// 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
-
-// 	state := tendermint.ConsensusState{
-// 		Root: commitment.NewRoot(commitID.Hash),
-// 	}
-
-// 	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, clientID, uint64(height), state)
-// }
-
-// func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string, clientID, counterpartyClientID string, state exported.State) {
-// 	counterparty := connection.NewCounterparty(counterpartyClientID, counterpartyConnID, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-// 	connection := connection.ConnectionEnd{
-// 		State:        state,
-// 		ClientID:     clientID,
-// 		Counterparty: counterparty,
-// 		Versions:     connection.GetCompatibleVersions(),
-// 	}
-// 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, connID, connection)
-// }
-
 // type testCase = struct {
 // 	fun        func() error
 // 	expectPass bool

@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) createClient() {
 	commitID := suite.app.LastCommitID()
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
 	consensusState := tendermint.ConsensusState{
 		Root:             commitment.NewRoot(commitID.Hash),
@@ -28,7 +28,6 @@ func (suite *KeeperTestSuite) createClient() {
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
 	suite.NoError(err)
 }
 
@@ -39,7 +38,7 @@ func (suite *KeeperTestSuite) updateClient() {
 
 	height := suite.app.LastBlockHeight() + 1
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
 	state := tendermint.ConsensusState{
 		Root: commitment.NewRoot(commitID.Hash),

@@ -22,23 +22,18 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	counterparty := types.Counterparty{Prefix: suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix()}
 	connection1 := types.ConnectionEnd{ClientID: testClientID1, Counterparty: counterparty}
 
-	consensusKey := ibctypes.KeyConsensusState(testClientID1, testHeight)
-
 	cases := []struct {
 		msg        string
 		connection types.ConnectionEnd
-		malleate   func() error
+		malleate   func()
 		expPass    bool
 	}{
-		{"verification success", connection1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID1, clientexported.Tendermint, suite.consensusState)
-			suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testChannel1, testHeight, suite.consensusState)
-			return err
+		{"verification success", connection1, func() {
+			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", connection1, func() error { return nil }, false},
-		{"verification failed", connection1, func() error {
-			_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClientID2, clientexported.Tendermint, suite.consensusState)
-			return err
+		{"client state not found", connection1, func() {}, false},
+		{"verification failed", connection1, func() {
+			suite.createClient(testClientID2)
 		}, false},
 	}
 
@@ -47,22 +42,21 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			err := tc.malleate()
-			suite.Require().NoError(err)
+			tc.malleate()
+
+			consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(suite.ctx.BlockHeight()))
 
 			proof, proofHeight := suite.queryProof(consensusKey)
 
-			err = suite.app.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
 				suite.ctx, tc.connection, uint64(proofHeight), proof, suite.consensusState,
 			)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})
@@ -111,11 +105,9 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})
@@ -172,11 +164,9 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})
@@ -228,11 +218,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})
@@ -285,11 +273,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})
@@ -340,11 +326,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})
@@ -395,11 +379,9 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotZero(proofHeight)
 				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Zero(proofHeight)
 				suite.Require().True(proof.IsEmpty())
 			}
 		})

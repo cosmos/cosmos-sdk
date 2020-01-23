@@ -78,54 +78,6 @@ func TestMsgTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgTestSuite))
 }
 
-// TestMsgTimeout tests ValidateBasic for MsgTimeout
-func (suite *MsgTestSuite) TestMsgTimeout() {
-	testMsgs := []MsgTimeout{
-		NewMsgTimeout(nil, 0, proof, 0, addr),
-	}
-
-	testCases := []struct {
-		msg     MsgTimeout
-		expPass bool
-		errMsg  string
-	}{
-		{testMsgs[0], true, ""},
-	}
-
-	for i, tc := range testCases {
-		err := tc.msg.ValidateBasic()
-		if tc.expPass {
-			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
-		} else {
-			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
-		}
-	}
-}
-
-// TestMsgAcknowledgement tests ValidateBasic for MsgAcknowledgement
-func (suite *MsgTestSuite) TestMsgAcknowledgement() {
-	testMsgs := []MsgAcknowledgement{
-		NewMsgAcknowledgement(nil, nil, proof, 0, addr),
-	}
-
-	testCases := []struct {
-		msg     MsgAcknowledgement
-		expPass bool
-		errMsg  string
-	}{
-		{testMsgs[0], true, ""},
-	}
-
-	for i, tc := range testCases {
-		err := tc.msg.ValidateBasic()
-		if tc.expPass {
-			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
-		} else {
-			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
-		}
-	}
-}
-
 // TestMsgChannelOpenInit tests ValidateBasic for MsgChannelOpenInit
 func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 	testMsgs := []MsgChannelOpenInit{
@@ -525,4 +477,52 @@ func TestMsgPacketGetSigners(t *testing.T) {
 
 	expected := "[746573746164647231]"
 	require.Equal(t, expected, fmt.Sprintf("%v", res))
+}
+
+// TestMsgTimeout tests ValidateBasic for MsgTimeout
+func (suite *MsgTestSuite) TestMsgTimeout() {
+	testMsgs := []MsgTimeout{
+		NewMsgTimeout(packet, 0, proof, 1, addr),
+	}
+
+	testCases := []struct {
+		msg     MsgTimeout
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
+}
+
+// TestMsgAcknowledgement tests ValidateBasic for MsgAcknowledgement
+func (suite *MsgTestSuite) TestMsgAcknowledgement() {
+	testMsgs := []MsgAcknowledgement{
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, addr),
+	}
+
+	testCases := []struct {
+		msg     MsgAcknowledgement
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
 }

@@ -478,3 +478,73 @@ func TestMsgPacketGetSigners(t *testing.T) {
 	expected := "[746573746164647231]"
 	require.Equal(t, expected, fmt.Sprintf("%v", res))
 }
+
+// TestMsgTimeout tests ValidateBasic for MsgTimeout
+func (suite *MsgTestSuite) TestMsgTimeout() {
+	testMsgs := []MsgTimeout{
+		NewMsgTimeout(packet, 0, proof, 1, addr),
+		NewMsgTimeout(packet, 0, proof, 0, addr),
+		NewMsgTimeout(packet, 0, proof, 1, emptyAddr),
+		NewMsgTimeout(packet, 0, emptyProof, 1, addr),
+		NewMsgTimeout(invalidPacket, 0, proof, 1, addr),
+		NewMsgTimeout(packet, 0, invalidProofs1, 1, addr),
+	}
+
+	testCases := []struct {
+		msg     MsgTimeout
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height must be > 0"},
+		{testMsgs[2], false, "missing signer address"},
+		{testMsgs[3], false, "cannot submit an empty proof"},
+		{testMsgs[4], false, "invalid packet"},
+		{testMsgs[5], false, "cannot submit an invalid proof"},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
+}
+
+// TestMsgAcknowledgement tests ValidateBasic for MsgAcknowledgement
+func (suite *MsgTestSuite) TestMsgAcknowledgement() {
+	testMsgs := []MsgAcknowledgement{
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 0, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, emptyAddr),
+		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
+		NewMsgAcknowledgement(invalidPacket, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, invalidPacket.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), invalidProofs1, 1, addr),
+	}
+
+	testCases := []struct {
+		msg     MsgAcknowledgement
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height must be > 0"},
+		{testMsgs[2], false, "missing signer address"},
+		{testMsgs[3], false, "cannot submit an empty proof"},
+		{testMsgs[4], false, "invalid packet"},
+		{testMsgs[5], false, "invalid acknowledgement"},
+		{testMsgs[6], false, "cannot submit an invalid proof"},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
+}

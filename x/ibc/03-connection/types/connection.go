@@ -16,7 +16,7 @@ var _ exported.ConnectionI = ConnectionEnd{}
 
 // ConnectionEnd defines a stateful object on a chain connected to another separate
 // one.
-// NOTE: there must only be 2 defined ConnectionEnds to stablish a connection
+// NOTE: there must only be 2 defined ConnectionEnds to establish a connection
 // between two chains.
 type ConnectionEnd struct {
 	State    exported.State `json:"state" yaml:"state"`

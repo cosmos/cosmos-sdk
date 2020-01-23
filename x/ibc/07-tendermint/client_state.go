@@ -1,8 +1,6 @@
 package tendermint
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -171,8 +169,6 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	fmt.Printf("cs.LatestHeight: %v, height: %v\n", cs.LatestHeight, height)
-
 	if cs.LatestHeight < height {
 		return ibctypes.ErrInvalidHeight
 	}
@@ -180,8 +176,6 @@ func (cs ClientState) VerifyPacketCommitment(
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
 		return clienttypes.ErrClientFrozen
 	}
-
-	fmt.Printf("path: %+v, seq: %+v\n", path, sequence)
 
 	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); !ok {
 		return clienttypes.ErrFailedPacketCommitmentVerification

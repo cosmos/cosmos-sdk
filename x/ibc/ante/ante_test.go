@@ -174,11 +174,6 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	suite.Error(err, "%+v", err) // invalid proof
 
 	suite.updateClient()
-	cctx, _ = suite.ctx.CacheContext()
-	proof, proofHeight = suite.queryProof(packetCommitmentPath)
-	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
-	_, err = handler(cctx, suite.newTx(msg), false)
-	suite.Error(err, "%+v", err) // next recvseq not set
 
 	proof, proofHeight = suite.queryProof(packetCommitmentPath)
 	fmt.Printf("proof height: %v\n", proofHeight)
@@ -189,6 +184,9 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	for i := 0; i < 10; i++ {
 		suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(cctx, cpportid, cpchanid, uint64(i))
 		_, err := handler(cctx, suite.newTx(msg), false)
+		if err == nil {
+			err = suite.app.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, packet, packet.Data)
+		}
 		if i == 1 {
 			suite.NoError(err, "%d", i) // successfully executed
 			write()

@@ -91,7 +91,11 @@ func (suite *HandlerTestSuite) updateClient() {
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(height), state)
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(height-1), state)
+	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClient)
+	cs, _ := csi.(tendermint.ClientState)
+	cs.LatestHeight = uint64(height - 1)
+	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }
 
 func (suite *HandlerTestSuite) createConnection(state connectionexported.State) {
@@ -176,6 +180,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	suite.Error(err, "%+v", err) // next recvseq not set
 
 	proof, proofHeight = suite.queryProof(packetCommitmentPath)
+	fmt.Printf("proof height: %v\n", proofHeight)
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, cpportid, cpchanid, 1)
 	cctx, write := suite.ctx.CacheContext()
@@ -203,7 +208,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 	var packet channeltypes.Packet
 	for i := 0; i < 5; i++ {
 		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
-		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(i), channeltypes.CommitPacket(packet.Data))
+		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet.Data))
 	}
 
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(10))

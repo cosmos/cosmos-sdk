@@ -122,6 +122,8 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 				suite.ctx, uint64(proofHeight), proof, testConnectionID1, connection, suite.consensusState,
 			)
 
+			fmt.Println()
+
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
@@ -176,6 +178,8 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 				testChannel1, channel, suite.consensusState,
 			)
 
+			fmt.Println()
+
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
@@ -229,6 +233,8 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 				testChannel1, 1, commitmentBz, suite.consensusState,
 			)
 
+			fmt.Println()
+
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
@@ -280,6 +286,8 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
 				testChannel1, 1, ack, suite.consensusState,
 			)
+
+			fmt.Println()
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)

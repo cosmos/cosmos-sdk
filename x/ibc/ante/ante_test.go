@@ -75,6 +75,7 @@ func (suite *HandlerTestSuite) createClient() {
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
 	suite.NoError(err)
 }
 

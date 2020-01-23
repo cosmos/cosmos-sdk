@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added amount event to MsgMultiSend, emitted for each output.
+
 ### State Machine Breaking
 
 * (genesis) [\#5506](https://github.com/cosmos/cosmos-sdk/pull/5506) The `x/distribution` genesis state

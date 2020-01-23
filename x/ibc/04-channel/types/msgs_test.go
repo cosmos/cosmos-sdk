@@ -483,6 +483,9 @@ func TestMsgPacketGetSigners(t *testing.T) {
 func (suite *MsgTestSuite) TestMsgTimeout() {
 	testMsgs := []MsgTimeout{
 		NewMsgTimeout(packet, 0, proof, 1, addr),
+		NewMsgTimeout(packet, 0, proof, 0, addr),
+		NewMsgTimeout(packet, 0, proof, 1, emptyAddr),
+		NewMsgTimeout(packet, 0, emptyProof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -491,6 +494,9 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 		errMsg  string
 	}{
 		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height must be > 0"},
+		{testMsgs[2], false, "missing signer address"},
+		{testMsgs[3], false, "cannot submit an empty proof"},
 	}
 
 	for i, tc := range testCases {
@@ -507,6 +513,9 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 	testMsgs := []MsgAcknowledgement{
 		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 0, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, emptyAddr),
+		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -515,6 +524,9 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		errMsg  string
 	}{
 		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height must be > 0"},
+		{testMsgs[2], false, "missing signer address"},
+		{testMsgs[3], false, "cannot submit an empty proof"},
 	}
 
 	for i, tc := range testCases {

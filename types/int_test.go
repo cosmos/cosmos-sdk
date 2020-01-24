@@ -282,21 +282,21 @@ func TestEncodingRandom(t *testing.T) {
 		ni := NewInt(n)
 		var ri Int
 
-		str, err := ni.MarshalAmino()
+		str, err := ni.Marshal()
 		require.Nil(t, err)
-		err = (&ri).UnmarshalAmino(str)
+		err = (&ri).Unmarshal(str)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "binary mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 
 		bz, err := ni.MarshalJSON()
 		require.Nil(t, err)
 		err = (&ri).UnmarshalJSON(bz)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "json mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 	}
 
 	for i := 0; i < 1000; i++ {
@@ -304,21 +304,21 @@ func TestEncodingRandom(t *testing.T) {
 		ni := NewUint(n)
 		var ri Uint
 
-		str, err := ni.MarshalAmino()
+		str, err := ni.Marshal()
 		require.Nil(t, err)
-		err = (&ri).UnmarshalAmino(str)
+		err = (&ri).Unmarshal(str)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "binary mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 
 		bz, err := ni.MarshalJSON()
 		require.Nil(t, err)
 		err = (&ri).UnmarshalJSON(bz)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "json mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 	}
 }
 
@@ -326,29 +326,71 @@ func TestEncodingTableInt(t *testing.T) {
 	var i Int
 
 	cases := []struct {
-		i   Int
-		bz  []byte
-		str string
+		i      Int
+		jsonBz []byte
+		rawBz  []byte
 	}{
-		{NewInt(0), []byte("\"0\""), "0"},
-		{NewInt(100), []byte("\"100\""), "100"},
-		{NewInt(51842), []byte("\"51842\""), "51842"},
-		{NewInt(19513368), []byte("\"19513368\""), "19513368"},
-		{NewInt(999999999999), []byte("\"999999999999\""), "999999999999"},
+		{
+			NewInt(0),
+			[]byte("\"0\""),
+			[]byte{0x30},
+		},
+		{
+			NewInt(100),
+			[]byte("\"100\""),
+			[]byte{0x31, 0x30, 0x30},
+		},
+		{
+			NewInt(-100),
+			[]byte("\"-100\""),
+			[]byte{0x2d, 0x31, 0x30, 0x30},
+		},
+		{
+			NewInt(51842),
+			[]byte("\"51842\""),
+			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
+		},
+		{
+			NewInt(-51842),
+			[]byte("\"-51842\""),
+			[]byte{0x2d, 0x35, 0x31, 0x38, 0x34, 0x32},
+		},
+		{
+			NewInt(19513368),
+			[]byte("\"19513368\""),
+			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
+		},
+		{
+			NewInt(-19513368),
+			[]byte("\"-19513368\""),
+			[]byte{0x2d, 0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
+		},
+		{
+			NewInt(999999999999),
+			[]byte("\"999999999999\""),
+			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
+		},
+		{
+			NewInt(-999999999999),
+			[]byte("\"-999999999999\""),
+			[]byte{0x2d, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
+		},
 	}
 
 	for tcnum, tc := range cases {
 		bz, err := tc.i.MarshalJSON()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.bz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+		require.Equal(t, tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
 		err = (&i).UnmarshalJSON(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 
-		str, err := tc.i.MarshalAmino()
+		bz, err = tc.i.Marshal()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.str, str, "Marshaled value is different from exported. tc #%d", tcnum)
-		err = (&i).UnmarshalAmino(str)
+		require.Equal(t, tc.rawBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
+		err = (&i).Unmarshal(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 	}
@@ -358,29 +400,51 @@ func TestEncodingTableUint(t *testing.T) {
 	var i Uint
 
 	cases := []struct {
-		i   Uint
-		bz  []byte
-		str string
+		i      Uint
+		jsonBz []byte
+		rawBz  []byte
 	}{
-		{NewUint(0), []byte("\"0\""), "0"},
-		{NewUint(100), []byte("\"100\""), "100"},
-		{NewUint(51842), []byte("\"51842\""), "51842"},
-		{NewUint(19513368), []byte("\"19513368\""), "19513368"},
-		{NewUint(999999999999), []byte("\"999999999999\""), "999999999999"},
+		{
+			NewUint(0),
+			[]byte("\"0\""),
+			[]byte{0x30},
+		},
+		{
+			NewUint(100),
+			[]byte("\"100\""),
+			[]byte{0x31, 0x30, 0x30},
+		},
+		{
+			NewUint(51842),
+			[]byte("\"51842\""),
+			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
+		},
+		{
+			NewUint(19513368),
+			[]byte("\"19513368\""),
+			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
+		},
+		{
+			NewUint(999999999999),
+			[]byte("\"999999999999\""),
+			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
+		},
 	}
 
 	for tcnum, tc := range cases {
 		bz, err := tc.i.MarshalJSON()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.bz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+		require.Equal(t, tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
 		err = (&i).UnmarshalJSON(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 
-		str, err := tc.i.MarshalAmino()
+		bz, err = tc.i.Marshal()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.str, str, "Marshaled value is different from exported. tc #%d", tcnum)
-		err = (&i).UnmarshalAmino(str)
+		require.Equal(t, tc.rawBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
+		err = (&i).Unmarshal(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 	}
@@ -391,15 +455,15 @@ func TestSerializationOverflow(t *testing.T) {
 	x := Int{bx}
 	y := new(Int)
 
-	// require amino deserialization to fail due to overflow
-	xStr, err := x.MarshalAmino()
+	bz, err := x.Marshal()
 	require.NoError(t, err)
 
-	err = y.UnmarshalAmino(xStr)
+	// require deserialization to fail due to overflow
+	err = y.Unmarshal(bz)
 	require.Error(t, err)
 
 	// require JSON deserialization to fail due to overflow
-	bz, err := x.MarshalJSON()
+	bz, err = x.MarshalJSON()
 	require.NoError(t, err)
 
 	err = y.UnmarshalJSON(bz)

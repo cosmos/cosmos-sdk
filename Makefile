@@ -11,27 +11,18 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
-all: tools build lint test
-
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
 
-########################################
-### Build
+all: tools build lint test
+
+###############################################################################
+###                                  Build                                  ###
+###############################################################################
 
 build: go.sum
 	@go build -mod=readonly ./...
 .PHONY: build
-
-update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
-.PHONY: update-swagger-docs
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -40,8 +31,17 @@ mocks: $(MOCKS_DIR)
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
-########################################
-### Tools & dependencies
+distclean:
+	rm -rf \
+    gitian-build-darwin/ \
+    gitian-build-linux/ \
+    gitian-build-windows/ \
+    .gitian-builder-cache/
+.PHONY: distclean
+
+###############################################################################
+###                          Tools & Dependencies                           ###
+###############################################################################
 
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
@@ -53,16 +53,19 @@ go.sum: go.mod
 	@go mod verify
 	@go mod tidy
 
-distclean:
-	rm -rf \
-    gitian-build-darwin/ \
-    gitian-build-linux/ \
-    gitian-build-windows/ \
-    .gitian-builder-cache/
-.PHONY: distclean
+###############################################################################
+###                              Documentation                              ###
+###############################################################################
 
-########################################
-### Documentation
+update-swagger-docs: statik
+	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	@if [ -n "$(git status --porcelain)" ]; then \
+        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+        exit 1;\
+    else \
+    	echo "\033[92mSwagger docs are in sync\033[0m";\
+    fi
+.PHONY: update-swagger-docs
 
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
@@ -85,8 +88,9 @@ sync-docs:
 	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
 .PHONY: sync-docs
 
-########################################
-### Testing
+###############################################################################
+###                           Tests & Simulation                            ###
+###############################################################################
 
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
@@ -173,6 +177,14 @@ test-cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 .PHONY: test-cover
 
+benchmark:
+	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
+.PHONY: benchmark
+
+###############################################################################
+###                                Linting                                  ###
+###############################################################################
+
 lint: golangci-lint
 	$(BINDIR)/golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
@@ -185,12 +197,9 @@ format: tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 .PHONY: format
 
-benchmark:
-	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
-.PHONY: benchmark
-
-########################################
-### Devdoc
+###############################################################################
+###                                 Devdoc                                  ###
+###############################################################################
 
 DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
 
@@ -213,3 +222,20 @@ devdoc-update:
 	docker pull tendermint/devdoc
 
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
+
+###############################################################################
+###                                Protobuf                                 ###
+###############################################################################
+
+proto-all: proto-gen proto-lint proto-check-breaking
+
+proto-gen:
+	@./scripts/protocgen.sh
+
+proto-lint:
+	@buf check lint --error-format=json
+
+proto-check-breaking:
+	@buf check breaking --against-input '.git#branch=master'
+
+.PHONY: proto-all proto-gen proto-lint proto-check-breaking

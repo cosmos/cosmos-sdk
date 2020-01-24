@@ -79,6 +79,7 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 	}
 
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, channel)
+
 }
 
 func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {

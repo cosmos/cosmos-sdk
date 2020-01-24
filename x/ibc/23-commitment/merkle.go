@@ -162,7 +162,7 @@ func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) bool {
 
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
-	fmt.Println("FAIL ERROR", err, "len(value)", len(value))
+	fmt.Println("FAIL ERROR", err)
 	return err == nil
 }
 

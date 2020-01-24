@@ -230,6 +230,7 @@ func Wrap(err error, description string) error {
 	// one. This should be done only once per error at the lowest frame
 	// possible (most inner wrap).
 	if stackTrace(err) == nil {
+		fmt.Println("ADDING STACK", err)
 		err = errors.WithStack(err)
 	}
 

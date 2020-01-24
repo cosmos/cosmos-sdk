@@ -30,9 +30,7 @@ type BaseAccount struct {
 }
 
 // NewBaseAccount creates a new BaseAccount object
-func NewBaseAccount(address sdk.AccAddress,
-	pubKey crypto.PubKey, accountNumber uint64, sequence uint64) *BaseAccount {
-
+func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	return &BaseAccount{
 		Address:       address,
 		PubKey:        pubKey,

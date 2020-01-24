@@ -225,7 +225,6 @@ func TestMsgMultiSendEvents(t *testing.T) {
 
 	// Set addr's coins but not addr2's coins
 	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
-	newCoins = sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
 
 	err = app.BankKeeper.InputOutputCoins(ctx, inputs, outputs)
 	require.Error(t, err)

@@ -16,22 +16,25 @@ func RegisterInvariants(ir sdk.InvariantRegistry, bk ViewKeeper) {
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
 func NonnegativeBalanceInvariant(bk ViewKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var msg string
-		var count int
+		var (
+			msg   string
+			count int
+		)
 
 		bk.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
 			if balance.IsNegative() {
 				count++
-				msg += fmt.Sprintf("\t%s has a negative balance of %s\n",
-					addr,
-					balance.String())
+				msg += fmt.Sprintf("\t%s has a negative balance of %s\n", addr, balance)
 			}
+
 			return false
 		})
 
 		broken := count != 0
 
-		return sdk.FormatInvariant(types.ModuleName, "nonnegative-outstanding",
-			fmt.Sprintf("amount of negative balances found %d\n%s", count, msg)), broken
+		return sdk.FormatInvariant(
+			types.ModuleName, "nonnegative-outstanding",
+			fmt.Sprintf("amount of negative balances found %d\n%s", count, msg),
+		), broken
 	}
 }

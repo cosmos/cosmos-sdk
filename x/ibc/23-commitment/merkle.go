@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -153,7 +154,7 @@ func (Proof) GetCommitmentType() Type {
 	return Merkle
 }
 
-// VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
+// VerifyMembership verifies the membership of a merkle proof against the given root, path, and value.
 func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) bool {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
 		return false
@@ -161,6 +162,7 @@ func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) bool {
 
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
+	fmt.Println("FAIL ERROR", err, "len(value)", len(value))
 	return err == nil
 }
 

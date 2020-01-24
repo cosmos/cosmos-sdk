@@ -161,7 +161,14 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.INIT)
 	suite.updateClient()
+	fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+	fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 	proofInit, proofHeight = suite.queryProof(channelKey)
+	fmt.Println("  PROOF HEIGHT:", proofHeight)
+	for _, p := range proofInit.Proof.GetOps() {
+		fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+		fmt.Println("    len(PROOF Data):", len(p.GetData()))
+	}
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
 	suite.NoError(err) // successfully executed
 

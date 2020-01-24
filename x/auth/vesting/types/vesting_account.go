@@ -41,19 +41,17 @@ type BaseVestingAccount struct {
 	EndTime          int64     `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
 }
 
-// NewBaseVestingAccount creates a new BaseVestingAccount object
-func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) (*BaseVestingAccount, error) {
-	// TODO:  Move this check to bank
-	// if (baseAccount.Coins.IsZero() && !originalVesting.IsZero()) || originalVesting.IsAnyGT(baseAccount.Coins) {
-	// 	return &BaseVestingAccount{}, errors.New("vesting amount cannot be greater than total amount")
-	// }
+// NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
+// callers responsibility to ensure the base account has sufficient funds with
+// regards to the original vesting amount.
+func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) *BaseVestingAccount {
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
 		DelegatedFree:    sdk.NewCoins(),
 		DelegatedVesting: sdk.NewCoins(),
 		EndTime:          endTime,
-	}, nil
+	}
 }
 
 // LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)

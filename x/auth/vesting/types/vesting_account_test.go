@@ -621,7 +621,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
 	initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
-	baseVestingWithCoins, _ := NewBaseVestingAccount(baseAcc, initialVesting, 100)
+	baseVestingWithCoins := NewBaseVestingAccount(baseAcc, initialVesting, 100)
 	tests := []struct {
 		name   string
 		acc    authexported.GenesisAccount
@@ -687,8 +687,7 @@ func TestBaseVestingAccountJSON(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)
 
-	acc, err := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
-	require.NoError(t, err)
+	acc := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 
 	bz, err := json.Marshal(acc)
 	require.NoError(t, err)
@@ -708,9 +707,8 @@ func TestContinuousVestingAccountJSON(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)
 
-	baseVesting, err := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
+	baseVesting := NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	acc := NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
-	require.NoError(t, err)
 
 	bz, err := json.Marshal(acc)
 	require.NoError(t, err)

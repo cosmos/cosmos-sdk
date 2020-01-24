@@ -198,7 +198,6 @@ that allows for arbitrary vesting periods.
   HD path and secp256k1 keys, so is non-breaking.
 * (types) [\#5447](https://github.com/cosmos/cosmos-sdk/pull/5447) Added `ApproxRoot` function to sdk.Decimal type in order to get the nth root for a decimal number, where n is a positive integer.
   * An `ApproxSqrt` function was also added for convenience around the common case of n=2.
-* [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added amount event to MsgMultiSend, emitted for each output.
 
 ### Improvements
 
@@ -278,6 +277,7 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
 
 ## [v0.37.6] - 2020-01-21
 

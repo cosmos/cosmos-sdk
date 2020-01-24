@@ -57,7 +57,7 @@ type (
 	ViewKeeper         = keeper.ViewKeeper
 	BaseViewKeeper     = keeper.BaseViewKeeper
 	GenesisState       = types.GenesisState
-	GenesisBalance     = types.GenesisBalance
+	Balance            = types.Balance
 	MsgSend            = types.MsgSend
 	MsgMultiSend       = types.MsgMultiSend
 	Input              = types.Input

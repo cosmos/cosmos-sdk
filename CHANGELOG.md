@@ -37,6 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### State Machine Breaking
+
+* (modules) [\#5539](https://github.com/cosmos/cosmos-sdk/pull/5539) Separate balance from accounts per ADR 004.
+  * Account balances are now persisted and retrieved via the `x/bank` module.
+  * Vesting account interface has been modified to account for changes.
+  * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
+  the original vesting amount.
+
 ## [v0.38.0] - 2020-01-23
 
 ### State Machine Breaking

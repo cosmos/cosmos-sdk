@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: testHeight})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
 	suite.app = app
 
 	privVal := tmtypes.NewMockPV()
@@ -107,7 +107,8 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	state := tendermint.ConsensusState{
-		Root: commitment.NewRoot(commitID.Hash),
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
 	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), state)

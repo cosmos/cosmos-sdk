@@ -1,8 +1,6 @@
 package tendermint
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -66,8 +64,6 @@ func (cs ClientState) VerifyClientConsensusState(
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("  Commit Path",path.String())
 
 	if cs.LatestHeight < height {
 		return ibctypes.ErrInvalidHeight

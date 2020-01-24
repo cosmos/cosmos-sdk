@@ -48,7 +48,6 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			fmt.Printf("TEST NAME %s\n", tc.msg)
 			suite.SetupTest() // reset
 
 			tc.malleate()
@@ -56,24 +55,24 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 			consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(suite.app.LastBlockHeight()))
 
-			fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
-			fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 			proof, proofHeight := suite.queryProof(consensusKey)
-			fmt.Println("  PROOF HEIGHT:", proofHeight)
-			for _, p := range proof.Proof.GetOps() {
-				fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
-				fmt.Println("    len(PROOF Data):", len(p.GetData()))
-			}
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
 				suite.ctx, tc.connection, uint64(proofHeight), proof, suite.consensusState,
 			)
 
-			fmt.Println()
-
 			if tc.expPass {
+				fmt.Printf("TEST NAME %s\n", tc.msg)
+				fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
+				fmt.Println("  PROOF HEIGHT:", proofHeight)
+				for _, p := range proof.Proof.GetOps() {
+					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Println("    len(PROOF Data):", len(p.GetData()))
+				}
+				fmt.Println()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().False(proof.IsEmpty())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -100,7 +99,6 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	}
 
 	for i, tc := range cases {
-		fmt.Printf("TEST NAME %s\n", tc.msg)
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
@@ -109,22 +107,23 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
 			suite.updateClient(testClientID1)
 
-			fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
-			fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 			proof, proofHeight := suite.queryProof(connectionKey)
-			fmt.Println("  PROOF HEIGHT:", proofHeight)
-			for _, p := range proof.Proof.GetOps() {
-				fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
-				fmt.Println("    len(PROOF Data):", len(p.GetData()))
-			}
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.ctx, uint64(proofHeight), proof, testConnectionID1, connection, suite.consensusState,
 			)
 
-			fmt.Println()
-
 			if tc.expPass {
+				fmt.Printf("TEST NAME %s\n", tc.msg)
+				fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
+				fmt.Println("  PROOF HEIGHT:", proofHeight)
+				for _, p := range proof.Proof.GetOps() {
+					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Println("    len(PROOF Data):", len(p.GetData()))
+				}
+				fmt.Println()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
@@ -151,7 +150,6 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	}
 
 	for i, tc := range cases {
-		fmt.Printf("TEST NAME %s\n", tc.msg)
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
@@ -164,23 +162,24 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			)
 			suite.updateClient(testClientID1)
 
-			fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
-			fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 			proof, proofHeight := suite.queryProof(channelKey)
-			fmt.Println("  PROOF HEIGHT:", proofHeight)
-			for _, p := range proof.Proof.GetOps() {
-				fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
-				fmt.Println("    len(PROOF Data):", len(p.GetData()))
-			}
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
 				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
 				testChannel1, channel, suite.consensusState,
 			)
 
-			fmt.Println()
-
 			if tc.expPass {
+				fmt.Printf("TEST NAME %s\n", tc.msg)
+				fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
+				fmt.Println("  PROOF HEIGHT:", proofHeight)
+				for _, p := range proof.Proof.GetOps() {
+					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Println("    len(PROOF Data):", len(p.GetData()))
+				}
+				fmt.Println()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
@@ -211,7 +210,6 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			fmt.Printf("TEST NAME %s\n", tc.msg)
 			suite.SetupTest() // reset
 
 			tc.malleate()
@@ -219,23 +217,24 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, 1, commitmentBz)
 			suite.updateClient(testClientID1)
 
-			fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
-			fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 			proof, proofHeight := suite.queryProof(commitmentKey)
-			fmt.Println("  PROOF HEIGHT:", proofHeight)
-			for _, p := range proof.Proof.GetOps() {
-				fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
-				fmt.Println("    len(PROOF Data):", len(p.GetData()))
-			}
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
 				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
 				testChannel1, 1, commitmentBz, suite.consensusState,
 			)
 
-			fmt.Println()
-
 			if tc.expPass {
+				fmt.Printf("TEST NAME %s\n", tc.msg)
+				fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
+				fmt.Println("  PROOF HEIGHT:", proofHeight)
+				for _, p := range proof.Proof.GetOps() {
+					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Println("    len(PROOF Data):", len(p.GetData()))
+				}
+				fmt.Println()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
@@ -265,7 +264,6 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			fmt.Printf("TEST NAME %s\n", tc.msg)
 			suite.SetupTest() // reset
 
 			tc.malleate()
@@ -273,23 +271,24 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.app.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, 1, ack)
 			suite.updateClient(testClientID1)
 
-			fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
-			fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 			proof, proofHeight := suite.queryProof(packetAckKey)
-			fmt.Println("  PROOF HEIGHT:", proofHeight)
-			for _, p := range proof.Proof.GetOps() {
-				fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
-				fmt.Println("    len(PROOF Data):", len(p.GetData()))
-			}
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
 				suite.ctx, connection, uint64(proofHeight), proof, testPort1,
 				testChannel1, 1, ack, suite.consensusState,
 			)
 
-			fmt.Println()
-
 			if tc.expPass {
+				fmt.Printf("TEST NAME %s\n", tc.msg)
+				fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
+				fmt.Println("  PROOF HEIGHT:", proofHeight)
+				for _, p := range proof.Proof.GetOps() {
+					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Println("    len(PROOF Data):", len(p.GetData()))
+				}
+				fmt.Println()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
@@ -375,6 +374,16 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			)
 
 			if tc.expPass {
+				fmt.Printf("TEST NAME %s\n", tc.msg)
+				fmt.Println("  CTX HEIGHT:", suite.ctx.BlockHeight())
+				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
+				fmt.Println("  PROOF HEIGHT:", proofHeight)
+				for _, p := range proof.Proof.GetOps() {
+					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Println("    len(PROOF Data):", len(p.GetData()))
+				}
+				fmt.Println()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)

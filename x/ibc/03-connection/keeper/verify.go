@@ -44,7 +44,7 @@ func (k Keeper) VerifyConnectionState(
 	}
 
 	return clientState.VerifyConnectionState(
-		k.cdc, clientState.GetLatestHeight(), connection.Counterparty.Prefix, proof, connectionID, connection, consensusState,
+		k.cdc, height, connection.Counterparty.Prefix, proof, connectionID, connection, consensusState,
 	)
 }
 

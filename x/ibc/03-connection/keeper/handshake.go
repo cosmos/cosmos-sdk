@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,19 +87,16 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// XXX: blocked by #5475
-	// err = k.VerifyClientConsensusState(
+	// if err := k.VerifyClientConsensusState(
 	// 	ctx, proofHeight, proofInit, expectedConsensusState,
-	// )
-	// if err != nil {
+	// ); err != nil {
 	// 	return err
 	// }
 
 	previousConnection, found := k.GetConnection(ctx, connectionID)
-	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot relay connection attempt")
-	} else if !(previousConnection.State == exported.INIT &&
+	if found && !(previousConnection.State == exported.INIT &&
 		previousConnection.Counterparty.ConnectionID == counterparty.ConnectionID &&
-		previousConnection.Counterparty.Prefix == counterparty.Prefix &&
+		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 		previousConnection.ClientID == clientID &&
 		previousConnection.Counterparty.ClientID == counterparty.ClientID &&
 		previousConnection.Versions[0] == version) {
@@ -169,10 +167,9 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// XXX: blocked by #5475
-	// err = k.VerifyClientConsensusState(
+	// if err := k.VerifyClientConsensusState(
 	// 	ctx, connection, proofHeight, proofInit, expectedConsensusState,
-	// )
-	// if err != nil {
+	// ); err != nil {
 	// 	return err
 	// }
 

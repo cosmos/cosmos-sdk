@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Vesting account interface has been modified to account for changes.
   * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
   the original vesting amount.
+  * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
 
 ## [v0.38.0] - 2020-01-23
 

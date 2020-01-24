@@ -48,6 +48,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	}
 
 	for i, tc := range cases {
+		tc := tc
 		suite.Run(tc.name, func() {
 			root := commitment.NewRoot(tc.root)
 			path := commitment.NewPath(tc.pathArr)
@@ -99,6 +100,8 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 	}
 
 	for i, tc := range cases {
+		tc := tc
+
 		suite.Run(tc.name, func() {
 			root := commitment.NewRoot(tc.root)
 			path := commitment.NewPath(tc.pathArr)

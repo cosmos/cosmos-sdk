@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -153,25 +154,24 @@ func (Proof) GetCommitmentType() Type {
 }
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
-func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) bool {
+func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
-		return false
+		return errors.New("empty params or proof")
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
-	err := runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
-	return err == nil
+	fmt.Println(path.String())
+	return runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
 }
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
-func (proof Proof) VerifyNonMembership(root RootI, path PathI) bool {
+func (proof Proof) VerifyNonMembership(root RootI, path PathI) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
-		return false
+		return errors.New("empty params or proof")
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
-	err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
-	return err == nil
+	return runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
 }
 
 // IsEmpty returns true if the root is empty

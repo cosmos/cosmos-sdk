@@ -3,6 +3,7 @@ package tendermint
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -73,13 +74,17 @@ func (cs ClientState) VerifyClientConsensusState(
 		return clienttypes.ErrClientFrozen
 	}
 
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
 	bz, err := cdc.MarshalBinaryBare(consensusState)
 	if err != nil {
 		return err
 	}
 
-	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienttypes.ErrFailedClientConsensusStateVerification
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
 	return nil
@@ -107,13 +112,17 @@ func (cs ClientState) VerifyConnectionState(
 		return clienttypes.ErrClientFrozen
 	}
 
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
 	bz, err := cdc.MarshalBinaryBare(connectionEnd)
 	if err != nil {
 		return err
 	}
 
-	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienttypes.ErrFailedConnectionStateVerification
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
 	return nil
@@ -142,13 +151,17 @@ func (cs ClientState) VerifyChannelState(
 		return clienttypes.ErrClientFrozen
 	}
 
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
 	bz, err := cdc.MarshalBinaryBare(channel)
 	if err != nil {
 		return err
 	}
 
-	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienttypes.ErrFailedChannelStateVerification
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
 	return nil
@@ -177,8 +190,12 @@ func (cs ClientState) VerifyPacketCommitment(
 		return clienttypes.ErrClientFrozen
 	}
 
-	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); !ok {
-		return clienttypes.ErrFailedPacketCommitmentVerification
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
 	return nil
@@ -207,8 +224,12 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return clienttypes.ErrClientFrozen
 	}
 
-	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); !ok {
-		return clienttypes.ErrFailedPacketAckVerification
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
 	return nil
@@ -236,8 +257,12 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return clienttypes.ErrClientFrozen
 	}
 
-	if ok := proof != nil && proof.VerifyNonMembership(consensusState.GetRoot(), path); !ok {
-		return clienttypes.ErrFailedPacketAckAbsenceVerification
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
+	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
 	return nil
@@ -265,10 +290,14 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return clienttypes.ErrClientFrozen
 	}
 
+	if proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	}
+
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if ok := proof != nil && proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienttypes.ErrFailedNextSeqRecvVerification
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 
 	return nil

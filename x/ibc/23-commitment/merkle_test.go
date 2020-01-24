@@ -52,9 +52,13 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 			root := commitment.NewRoot(tc.root)
 			path := commitment.NewPath(tc.pathArr)
 
-			ok := proof.VerifyMembership(root, path, tc.value)
+			err := proof.VerifyMembership(root, path, tc.value)
 
-			require.True(suite.T(), ok == tc.shouldPass, "Test case %d failed", i)
+			if tc.shouldPass {
+				suite.Require().NoError(err, "test case %d should have passed", i)
+			} else {
+				suite.Require().Error(err, "test case %d should have failed", i)
+			}
 		})
 	}
 
@@ -99,9 +103,13 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 			root := commitment.NewRoot(tc.root)
 			path := commitment.NewPath(tc.pathArr)
 
-			ok := proof.VerifyNonMembership(root, path)
+			err := proof.VerifyNonMembership(root, path)
 
-			require.True(suite.T(), ok == tc.shouldPass, "Test case %d failed", i)
+			if tc.shouldPass {
+				suite.Require().NoError(err, "test case %d should have passed", i)
+			} else {
+				suite.Require().Error(err, "test case %d should have failed", i)
+			}
 		})
 	}
 

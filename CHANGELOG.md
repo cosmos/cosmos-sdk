@@ -37,7 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-
 ### State Machine Breaking
 
 * (genesis) [\#5506](https://github.com/cosmos/cosmos-sdk/pull/5506) The `x/distribution` genesis state

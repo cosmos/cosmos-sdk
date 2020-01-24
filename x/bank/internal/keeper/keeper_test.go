@@ -211,12 +211,12 @@ func TestMsgMultiSendEvents(t *testing.T) {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin("barcoin", 100))
 	inputs := []types.Input{
-		{addr, newCoins},
-		{addr2, newCoins2},
+		{Address: addr, Coins: newCoins},
+		{Address: addr2, Coins: newCoins2},
 	}
 	outputs := []types.Output{
-		{addr3, newCoins},
-		{addr4, newCoins2},
+		{Address: addr3, Coins: newCoins},
+		{Address: addr4, Coins: newCoins2},
 	}
 	err := app.BankKeeper.InputOutputCoins(ctx, inputs, outputs)
 	require.Error(t, err)

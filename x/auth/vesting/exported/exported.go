@@ -11,11 +11,14 @@ import (
 type VestingAccount interface {
 	authexported.Account
 
-	UnspendableCoins(currVestDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins
+	// LockedCoins returns the set of coins that are not spendable (i.e. locked)
+	// given the current account balance, only including tokens of vesting
+	// denominations, and the current block time.
+	LockedCoins(balance sdk.Coins, blockTime time.Time) sdk.Coins
 
 	// Delegation and undelegation accounting that returns the resulting base
 	// coins amount.
-	TrackDelegation(blockTime time.Time, amount sdk.Coins)
+	TrackDelegation(blockTime time.Time, balance, amount sdk.Coins)
 	TrackUndelegation(amount sdk.Coins)
 
 	GetVestedCoins(blockTime time.Time) sdk.Coins

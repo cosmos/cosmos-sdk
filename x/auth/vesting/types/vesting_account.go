@@ -56,44 +56,46 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 	}, nil
 }
 
-// UnspendableCoinsVestingAccount returns all the unspendable coins for a vesting account given a
-// set of vesting coins.
+// LockedCoinsFromVesting returns all the coins that are not spendable (i.e. locked)
+// for a vesting account given the current vesting coins and account balance,
+// where the balance only includes tokens of vesting denomination.
 //
-// CONTRACT: Delegated vesting coins and vestingCoins must be
-// sorted.
-func (bva BaseVestingAccount) UnspendableCoinsVestingAccount(currentVestingDenomsBalance sdk.Coins, vestingCoins sdk.Coins) sdk.Coins {
-	var unspendableCoins sdk.Coins
+// CONTRACT: Delegated vesting coins and vestingCoins must be sorted.
+func (bva BaseVestingAccount) LockedCoinsFromVesting(balance, vestingCoins sdk.Coins) sdk.Coins {
+	var lockedCoins sdk.Coins
 
 	for _, vestingCoin := range vestingCoins {
 		vestingAmt := vestingCoins.AmountOf(vestingCoin.Denom)
 		delVestingAmt := bva.DelegatedVesting.AmountOf(vestingCoin.Denom)
-		baseAmt := currentVestingDenomsBalance.AmountOf(vestingCoin.Denom)
+		baseAmt := balance.AmountOf(vestingCoin.Denom)
 
 		// compute min((BC + DV) - V, BC) per the specification
 		min := sdk.MinInt(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)
-		unspendableCoin := sdk.NewCoin(vestingCoin.Denom, baseAmt.Sub(min))
+		lockedCoin := sdk.NewCoin(vestingCoin.Denom, baseAmt.Sub(min))
 
-		if !unspendableCoin.IsZero() {
-			unspendableCoins = unspendableCoins.Add(unspendableCoin)
+		if !lockedCoin.IsZero() {
+			lockedCoins = lockedCoins.Add(lockedCoin)
 		}
 	}
 
-	return unspendableCoins
+	return lockedCoins
 }
 
 // TrackDelegation tracks a delegation amount for any given vesting account type
-// given the amount of coins currently vesting.
+// given the amount of coins currently vesting and the current account balance
+// of the delegation denominations.
 //
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
-func (bva *BaseVestingAccount) TrackDelegation(vestingCoins, amount sdk.Coins) {
+func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk.Coins) {
 	for _, coin := range amount {
+		baseAmt := balance.AmountOf(coin.Denom)
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
 		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
 
 		// Panic if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() {
+		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
 			panic("delegation attempt with zero coins or insufficient funds")
 		}
 
@@ -352,17 +354,18 @@ func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coi
 	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
 }
 
-// UnspendableCoins returns the total number of unspendable coins per denom for a
-// continuous vesting account.
-func (cva ContinuousVestingAccount) UnspendableCoins(currentVestingDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins {
-	return cva.BaseVestingAccount.UnspendableCoinsVestingAccount(currentVestingDenomsBalance, cva.GetVestingCoins(blockTime))
+// LockedCoins returns the set of coins that are not spendable (i.e. locked)
+// given the current account balance, only including tokens of vesting
+// denominations, and the current block time.
+func (cva ContinuousVestingAccount) LockedCoins(balance sdk.Coins, blockTime time.Time) sdk.Coins {
+	return cva.BaseVestingAccount.LockedCoinsFromVesting(balance, cva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
-	cva.BaseVestingAccount.TrackDelegation(cva.GetVestingCoins(blockTime), amount)
+func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	cva.BaseVestingAccount.TrackDelegation(balance, cva.GetVestingCoins(blockTime), amount)
 }
 
 // GetStartTime returns the time when vesting starts for a continuous vesting
@@ -529,16 +532,20 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 
 	// track the start time of the next period
 	currentPeriodStartTime := pva.StartTime
+
 	// for each period, if the period is over, add those coins as vested and check the next period.
 	for _, period := range pva.VestingPeriods {
 		x := blockTime.Unix() - currentPeriodStartTime
 		if x < period.Length {
 			break
 		}
+
 		vestedCoins = vestedCoins.Add(period.Amount...)
-		// Update the start time of the next period
+
+		// update the start time of the next period
 		currentPeriodStartTime += period.Length
 	}
+
 	return vestedCoins
 }
 
@@ -548,17 +555,18 @@ func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins
 	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime))
 }
 
-// UnspendableCoins returns the total number of unspendable coins per denom for a
-// periodic vesting account.
-func (pva PeriodicVestingAccount) UnspendableCoins(currentVestingDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins {
-	return pva.BaseVestingAccount.UnspendableCoinsVestingAccount(currentVestingDenomsBalance, pva.GetVestingCoins(blockTime))
+// LockedCoins returns the set of coins that are not spendable (i.e. locked)
+// given the current account balance, only including tokens of vesting
+// denominations, and the current block time.
+func (pva PeriodicVestingAccount) LockedCoins(balance sdk.Coins, blockTime time.Time) sdk.Coins {
+	return pva.BaseVestingAccount.LockedCoinsFromVesting(balance, pva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
-	pva.BaseVestingAccount.TrackDelegation(pva.GetVestingCoins(blockTime), amount)
+func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	pva.BaseVestingAccount.TrackDelegation(balance, pva.GetVestingCoins(blockTime), amount)
 }
 
 // GetStartTime returns the time when vesting starts for a periodic vesting
@@ -734,17 +742,18 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
 }
 
-// UnspendableCoins returns the total number of unspendable coins for a delayed
-// vesting account.
-func (dva DelayedVestingAccount) UnspendableCoins(currentVestingDenomsBalance sdk.Coins, blockTime time.Time) sdk.Coins {
-	return dva.BaseVestingAccount.UnspendableCoinsVestingAccount(currentVestingDenomsBalance, dva.GetVestingCoins(blockTime))
+// LockedCoins returns the set of coins that are not spendable (i.e. locked)
+// given the current account balance, only including tokens of vesting
+// denominations, and the current block time.
+func (dva DelayedVestingAccount) LockedCoins(balance sdk.Coins, blockTime time.Time) sdk.Coins {
+	return dva.BaseVestingAccount.LockedCoinsFromVesting(balance, dva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
-	dva.BaseVestingAccount.TrackDelegation(dva.GetVestingCoins(blockTime), amount)
+func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	dva.BaseVestingAccount.TrackDelegation(balance, dva.GetVestingCoins(blockTime), amount)
 }
 
 // GetStartTime returns zero since a delayed vesting account has no start time.

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
@@ -99,7 +99,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		searchResult, err := utils.QueryTxsByEvents(cliCtx, events, page, limit)
+		searchResult, err := client.QueryTxsByEvents(cliCtx, events, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -121,7 +121,7 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := utils.QueryTx(cliCtx, hashHexStr)
+		output, err := client.QueryTx(cliCtx, hashHexStr)
 		if err != nil {
 			if strings.Contains(err.Error(), hashHexStr) {
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())

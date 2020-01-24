@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### API Breaking Changes
+
+* (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move x/auth/client/utils/ types and functions to x/auth/client/.
+
 ## [v0.38.0] - 2020-01-23
 
 ### State Machine Breaking

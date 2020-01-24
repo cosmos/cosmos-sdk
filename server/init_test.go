@@ -27,7 +27,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup() // clean after itself
 
-	kb, err := crkeys.NewTestKeyring(t.Name(), dir)
+	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", "012345678", false)
@@ -49,7 +49,7 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup() // clean after itself
 
-	kb, err := crkeys.NewTestKeyring(t.Name(), dir)
+	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	keyname := "justakey"

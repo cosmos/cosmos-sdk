@@ -6,6 +6,13 @@ import (
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
 )
 
+// DONTCOVER
+// nolint
+
+const (
+	ModuleName = "distribution"
+)
+
 type (
 	GenesisState struct {
 		Params                          Params                                           `json:"params" yaml:"params"`

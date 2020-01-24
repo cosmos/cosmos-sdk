@@ -2,7 +2,6 @@ package commitment
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -160,7 +159,6 @@ func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) error 
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
-	fmt.Println(path.String())
 	return runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
 }
 

@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 				fmt.Println("  PROOF HEIGHT:", proofHeight)
 				for _, p := range proof.Proof.GetOps() {
-					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Printf("    PROOF Key: %s||%s\n", p.GetType(), string(p.GetKey()))
 					fmt.Println("    len(PROOF Data):", len(p.GetData()))
 				}
 				fmt.Println()
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 				fmt.Println("  PROOF HEIGHT:", proofHeight)
 				for _, p := range proof.Proof.GetOps() {
-					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Printf("    PROOF Key: %s||%s\n", p.GetType(), string(p.GetKey()))
 					fmt.Println("    len(PROOF Data):", len(p.GetData()))
 				}
 				fmt.Println()
@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 				fmt.Println("  PROOF HEIGHT:", proofHeight)
 				for _, p := range proof.Proof.GetOps() {
-					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Printf("    PROOF Key: %s||%s\n", p.GetType(), string(p.GetKey()))
 					fmt.Println("    len(PROOF Data):", len(p.GetData()))
 				}
 				fmt.Println()
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 				fmt.Println("  PROOF HEIGHT:", proofHeight)
 				for _, p := range proof.Proof.GetOps() {
-					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Printf("    PROOF Key: %s||%s\n", p.GetType(), string(p.GetKey()))
 					fmt.Println("    len(PROOF Data):", len(p.GetData()))
 				}
 				fmt.Println()
@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 				fmt.Println("  PROOF HEIGHT:", proofHeight)
 				for _, p := range proof.Proof.GetOps() {
-					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Printf("    PROOF Key: %s||%s\n", p.GetType(), string(p.GetKey()))
 					fmt.Println("    len(PROOF Data):", len(p.GetData()))
 				}
 				fmt.Println()
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 				fmt.Println("  APP HEIGHT:", suite.app.LastBlockHeight())
 				fmt.Println("  PROOF HEIGHT:", proofHeight)
 				for _, p := range proof.Proof.GetOps() {
-					fmt.Printf("    PROOF Key: %s||%s\n", string(p.GetType()), string(p.GetKey()))
+					fmt.Printf("    PROOF Key: %s||%s\n", p.GetType(), string(p.GetKey()))
 					fmt.Println("    len(PROOF Data):", len(p.GetData()))
 				}
 				fmt.Println()

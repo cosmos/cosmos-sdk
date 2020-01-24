@@ -143,7 +143,7 @@ func (k Keeper) ChanOpenTry(
 		ctx, connectionEnd, proofHeight, proofInit,
 		counterparty.PortID, counterparty.ChannelID, expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -222,7 +222,7 @@ func (k Keeper) ChanOpenAck(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	channel.State = exported.OPEN
@@ -300,7 +300,7 @@ func (k Keeper) ChanOpenConfirm(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	channel.State = exported.OPEN
@@ -424,7 +424,7 @@ func (k Keeper) ChanCloseConfirm(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	channel.State = exported.CLOSED

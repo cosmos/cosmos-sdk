@@ -1,56 +1,41 @@
 package keeper_test
 
-// import (
-// 	"fmt"
+import (
+	"fmt"
 
-// 	abci "github.com/tendermint/tendermint/abci/types"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+)
 
-// 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-// 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-// 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-// 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-// 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-// )
+func (suite *KeeperTestSuite) TestConnOpenInit() {
+	testCases := []testCase{
+		{
+			"success", func() {
+				suite.createClient(testClientID1)
+			}, true},
+		{"connection already exists", func() {
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
+		}, false},
+		{"couldn't add connection to client", func() {}, false},
+	}
 
-// func (suite *KeeperTestSuite) TestConnOpenInit() {
-// 	suite.createClient(testClientID1)
-// 	counterparty := connection.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connection.NewCounterparty(testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 
-// 	success := func() error {
-// 		err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.ctx, testConnectionID1, testClientID1, counterparty)
-// 		suite.NoError(err)
+	for i, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-// 		suite.True(existed)
+			tc.malleate()
+			err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.ctx, testConnectionID1, testClientID1, counterparty)
 
-// 		expectConn := connection.ConnectionEnd{
-// 			State:        exported.INIT,
-// 			ClientID:     testClientID1,
-// 			Counterparty: counterparty,
-// 			Versions:     connection.GetCompatibleVersions(),
-// 		}
-// 		suite.EqualValues(expectConn, conn)
-
-// 		return nil
-// 	}
-
-// 	connectionExists := func() error {
-// 		return suite.app.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.ctx, testConnectionID1, testClientID1, counterparty)
-// 	}
-
-// 	var testCases = []testCase{
-// 		{success, true, "success"},
-// 		{connectionExists, false, "connection already exists"},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		if tc.expectPass {
-// 			suite.Require().NoError(tc.fun(), tc.msg)
-// 		} else {
-// 			suite.Require().Error(tc.fun(), tc.msg)
-// 		}
-// 	}
-// }
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
 // func (suite *KeeperTestSuite) TestConnOpenTry() {
 // 	suite.createClient(testClientID2)
@@ -227,8 +212,8 @@ package keeper_test
 // 	}
 // }
 
-// type testCase = struct {
-// 	fun        func() error
-// 	expectPass bool
-// 	msg        string
-// }
+type testCase = struct {
+	msg      string
+	malleate func()
+	expPass  bool
+}

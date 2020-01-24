@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) updateClient(clientID string) {
@@ -147,14 +147,14 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.False(existed)
+	suite.Require().False(existed)
 
 	counterparty := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	expConn := types.NewConnectionEnd(exported.INIT, testClientID1, counterparty, types.GetCompatibleVersions())
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConn)
 	conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.True(existed)
-	suite.EqualValues(expConn, conn)
+	suite.Require().True(existed)
+	suite.Require().EqualValues(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {

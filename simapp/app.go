@@ -255,7 +255,6 @@ func NewSimApp(
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.StakingKeeper),
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
-		ibc.NewAppModule(app.IBCKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),

@@ -7,14 +7,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -28,7 +26,7 @@ import (
 const (
 	clientType = clientexported.Tendermint
 	storeKey   = ibctypes.StoreKey
-	chainID    = "test"
+	chainID    = "gaia"
 	testHeight = 10
 
 	testClientID1     = "testclientidone"
@@ -39,13 +37,6 @@ const (
 
 	testClientID3     = "testclientidthree"
 	testConnectionID3 = "connectionidthree"
-)
-
-var (
-	accountAddress sdk.AccAddress
-	accountPrivKey tmcrypto.PrivKey
-	accountPubKey  tmcrypto.PubKey
-	baseAccount    *authtypes.BaseAccount
 )
 
 type KeeperTestSuite struct {

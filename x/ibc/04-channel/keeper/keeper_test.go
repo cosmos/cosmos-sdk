@@ -208,6 +208,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.Require().NoError(err)
 }
 
+// nolint: unused
 func (suite *KeeperTestSuite) updateClient() {
 	// always commit and begin a new block on updateClient
 	suite.app.Commit()
@@ -255,6 +256,7 @@ func (suite *KeeperTestSuite) createChannel(
 	return channel
 }
 
+// nolint: unused
 func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),

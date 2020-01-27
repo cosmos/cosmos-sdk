@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -28,7 +29,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 		expPass  bool
 		expPanic bool
 	}{
-		{"sucess", params{testClientID, exported.Tendermint}, true, false},
+		{"success", params{testClientID, exported.Tendermint}, true, false},
 		{"client ID exists", params{testClientID, exported.Tendermint}, false, false},
 		{"client type exists", params{testClientID2, exported.Tendermint}, false, true},
 		{"invalid client type", params{testClientID3, invalidClientType}, false, false},

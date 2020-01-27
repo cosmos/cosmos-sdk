@@ -16,7 +16,7 @@ func TestConsensusStateValidateBasic(t *testing.T) {
 		consensusState tendermint.ConsensusState
 		expectPass     bool
 	}{
-		{"sucess",
+		{"success",
 			tendermint.ConsensusState{
 				Root:             commitment.NewRoot([]byte("app_hash")),
 				ValidatorSetHash: []byte("valset_hash"),

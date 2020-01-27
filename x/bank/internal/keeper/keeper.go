@@ -372,6 +372,7 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 // account balances.
 type ViewKeeper interface {
 	ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
+	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
 
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
@@ -416,7 +417,7 @@ func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk
 		return false
 	})
 
-	return balances
+	return balances.Sort()
 }
 
 // GetBalance returns the balance of a specific denomination for a given account

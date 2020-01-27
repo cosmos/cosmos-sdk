@@ -9,9 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
+// Querier path constants
 const (
-	// query balance path
-	QueryBalance = "balances"
+	QueryBalance     = "balance"
+	QueryAllBalances = "all_balances"
 )
 
 // NewQuerier returns a new sdk.Keeper instance.
@@ -21,14 +22,15 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case QueryBalance:
 			return queryBalance(ctx, req, k)
 
+		case QueryAllBalances:
+			return queryAllBalance(ctx, req, k)
+
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }
 
-// queryBalance fetch an account's balance for the supplied height.
-// Height and account address are passed as first and second path components respectively.
 func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryBalanceParams
 
@@ -36,13 +38,30 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	coins := sdk.NewCoins()
+	balance := k.GetBalance(ctx, params.Address, params.Denom)
+
+	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balance)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	var params types.QueryBalancesParams
+
+	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	balances := sdk.NewCoins()
 	k.IterateAccountBalances(ctx, params.Address, func(balance sdk.Coin) bool {
-		coins = coins.Add(balance)
+		balances = balances.Add(balance)
 		return false
 	})
 
-	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, coins)
+	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

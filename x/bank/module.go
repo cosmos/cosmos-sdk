@@ -90,7 +90,7 @@ func (AppModule) Name() string { return ModuleName }
 
 // RegisterInvariants registers the bank module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.accountKeeper)
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // Route returns the message routing key for the bank module.

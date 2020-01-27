@@ -37,9 +37,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Client Breaking
+
+* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account
+balances or a single balance by denom when the `denom` query parameter is present.
+
 ### API Breaking Changes
 
 * (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move x/auth/client/utils/ types and functions to x/auth/client/.
+* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
 
 ### Bug Fixes
 
@@ -47,7 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
-* (modules) [\#5539](https://github.com/cosmos/cosmos-sdk/pull/5539) Separate balance from accounts per ADR 004.
+* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Separate balance from accounts per ADR 004.
   * Account balances are now persisted and retrieved via the `x/bank` module.
   * Vesting account interface has been modified to account for changes.
   * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to

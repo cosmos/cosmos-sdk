@@ -2,8 +2,9 @@ package rest
 
 import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -22,11 +23,6 @@ type (
 	QueryClientState struct {
 		Height int64               `json:"height"`
 		Result types.StateResponse `json:"result"`
-	}
-
-	QueryRoot struct {
-		Height int64              `json:"height"`
-		Result types.RootResponse `json:"result"`
 	}
 
 	QueryNodeConsensusState struct {
@@ -54,9 +50,9 @@ type (
 	}
 
 	PostSubmitMisbehaviour struct {
-		Msgs       []types.MsgSubmitMisbehaviour `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee                   `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature           `json:"signatures" yaml:"signatures"`
-		Memo       string                        `json:"memo" yaml:"memo"`
+		Msgs       []evidence.MsgSubmitEvidence `json:"msg" yaml:"msg"`
+		Fee        auth.StdFee                  `json:"fee" yaml:"fee"`
+		Signatures []auth.StdSignature          `json:"signatures" yaml:"signatures"`
+		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 )

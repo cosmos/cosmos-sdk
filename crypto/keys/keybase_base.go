@@ -17,7 +17,10 @@ import (
 
 type (
 	kbOptions struct {
-		keygenFunc PrivKeyGenFunc
+		keygenFunc           PrivKeyGenFunc
+		deriveFunc           DeriveKeyFunc
+		supportedAlgos       []SigningAlgo
+		supportedAlgosLedger []SigningAlgo
 	}
 
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
@@ -32,7 +35,7 @@ type (
 	}
 
 	writeLocalKeyer interface {
-		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
+		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info
 	}
 
 	infoWriter interface {
@@ -47,10 +50,36 @@ func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 	}
 }
 
+// WithDeriveFunc applies an overridden key derivation function to generate the private key.
+func WithDeriveFunc(f DeriveKeyFunc) KeybaseOption {
+	return func(o *kbOptions) {
+		o.deriveFunc = f
+	}
+}
+
+// WithSupportedAlgos defines the list of accepted SigningAlgos.
+func WithSupportedAlgos(algos []SigningAlgo) KeybaseOption {
+	return func(o *kbOptions) {
+		o.supportedAlgos = algos
+	}
+}
+
+// WithSupportedAlgosLedger defines the list of accepted SigningAlgos compatible with Ledger.
+func WithSupportedAlgosLedger(algos []SigningAlgo) KeybaseOption {
+	return func(o *kbOptions) {
+		o.supportedAlgosLedger = algos
+	}
+}
+
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
-	options := kbOptions{keygenFunc: baseSecpPrivKeyGen}
+	options := kbOptions{
+		keygenFunc:           StdPrivKeyGen,
+		deriveFunc:           StdDeriveKey,
+		supportedAlgos:       []SigningAlgo{Secp256k1},
+		supportedAlgosLedger: []SigningAlgo{Secp256k1},
+	}
 
 	for _, optionFn := range optionsFns {
 		optionFn(&options)
@@ -59,9 +88,20 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	return baseKeybase{options: options}
 }
 
-// baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
-func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
-	return secp256k1.PrivKeySecp256k1(bz)
+// StdPrivKeyGen is the default PrivKeyGen function in the keybase.
+// For now, it only supports Secp256k1
+func StdPrivKeyGen(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
+	if algo == Secp256k1 {
+		return SecpPrivKeyGen(bz), nil
+	}
+	return nil, ErrUnsupportedSigningAlgo
+}
+
+// SecpPrivKeyGen generates a secp256k1 private key from the given bytes
+func SecpPrivKeyGen(bz []byte) tmcrypto.PrivKey {
+	var bzArr [32]byte
+	copy(bzArr[:], bz)
+	return secp256k1.PrivKeySecp256k1(bzArr)
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
@@ -111,29 +151,26 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 
 // CreateAccount creates an account Info object.
 func (kb baseKeybase) CreateAccount(
-	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32,
-) (Info, error) {
-
-	hdPath := CreateHDPath(account, index)
-	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
-}
-
-func (kb baseKeybase) persistDerivedKey(
-	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string,
+	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd, hdPath string, algo SigningAlgo,
 ) (Info, error) {
 
 	// create master key and derive first key for keyring
-	derivedPriv, err := ComputeDerivedKey(seed, fullHdPath)
+	derivedPriv, err := kb.options.deriveFunc(mnemonic, bip39Passphrase, hdPath, algo)
+	if err != nil {
+		return nil, err
+	}
+
+	privKey, err := kb.options.keygenFunc(derivedPriv, algo)
 	if err != nil {
 		return nil, err
 	}
 
 	var info Info
 
-	if passwd != "" {
-		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv), passwd)
+	if encryptPasswd != "" {
+		info = keyWriter.writeLocalKey(name, privKey, encryptPasswd, algo)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv).PubKey())
+		info = kb.writeOfflineKey(keyWriter, name, privKey.PubKey(), algo)
 	}
 
 	return info, nil
@@ -145,7 +182,7 @@ func (kb baseKeybase) CreateLedger(
 	w infoWriter, name string, algo SigningAlgo, hrp string, account, index uint32,
 ) (Info, error) {
 
-	if !IsAlgoSupported(algo) {
+	if !IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -157,7 +194,7 @@ func (kb baseKeybase) CreateLedger(
 		return nil, err
 	}
 
-	return kb.writeLedgerKey(w, name, priv.PubKey(), *hdPath), nil
+	return kb.writeLedgerKey(w, name, priv.PubKey(), *hdPath, algo), nil
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
@@ -169,7 +206,7 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	if !IsAlgoSupported(algo) {
+	if !IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
 		return nil, "", ErrUnsupportedSigningAlgo
 	}
 
@@ -185,37 +222,22 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", err
 	}
 
-	info, err = kb.persistDerivedKey(
-		keyWriter,
-		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
-		name, types.GetConfig().GetFullFundraiserPath(),
-	)
+	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
+	if err != nil {
+		return nil, "", err
+	}
 
 	return info, mnemonic, err
 }
 
-// Derive computes a BIP39 seed from the mnemonic and bip39Passphrase. It creates
-// a private key from the seed using the BIP44 params.
-func (kb baseKeybase) Derive(
-	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, // nolint:interfacer
-) (Info, error) {
-
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
-	if err != nil {
-		return nil, err
-	}
-
-	return kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String())
-}
-
-func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
-	info := newLedgerInfo(name, pub, path)
+func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo SigningAlgo) Info {
+	info := newLedgerInfo(name, pub, path, algo)
 	w.writeInfo(name, info)
 	return info
 }
 
-func (kb baseKeybase) writeOfflineKey(w infoWriter, name string, pub tmcrypto.PubKey) Info {
-	info := newOfflineInfo(name, pub)
+func (kb baseKeybase) writeOfflineKey(w infoWriter, name string, pub tmcrypto.PubKey, algo SigningAlgo) Info {
+	info := newOfflineInfo(name, pub, algo)
 	w.writeInfo(name, info)
 	return info
 }
@@ -226,10 +248,28 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 	return info
 }
 
-// ComputeDerivedKey derives and returns the private key for the given seed and HD path.
-func ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
+// StdDeriveKey is the default DeriveKey function in the keybase.
+// For now, it only supports Secp256k1
+func StdDeriveKey(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
+	if algo == Secp256k1 {
+		return SecpDeriveKey(mnemonic, bip39Passphrase, hdPath)
+	}
+	return nil, ErrUnsupportedSigningAlgo
+}
+
+// SecpDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
+func SecpDeriveKey(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
-	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+	if len(hdPath) == 0 {
+		return masterPriv[:], nil
+	}
+	derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, hdPath)
+	return derivedKey[:], err
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.
@@ -237,9 +277,22 @@ func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
-// IsAlgoSupported returns whether the signing algorithm is supported.
-//
-// TODO: Refactor this to be configurable to support interchangeable key signing
-// and addressing.
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/4941
-func IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }
+// SupportedAlgos returns a list of supported signing algorithms.
+func (kb baseKeybase) SupportedAlgos() []SigningAlgo {
+	return kb.options.supportedAlgos
+}
+
+// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
+func (kb baseKeybase) SupportedAlgosLedger() []SigningAlgo {
+	return kb.options.supportedAlgosLedger
+}
+
+// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
+func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
+	for _, supportedAlgo := range supported {
+		if algo == supportedAlgo {
+			return true
+		}
+	}
+	return false
+}

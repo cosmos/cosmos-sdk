@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.
@@ -31,7 +31,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			stdTx, err := utils.ReadStdTxFromFile(cliCtx.Codec, args[0])
+			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return
 			}

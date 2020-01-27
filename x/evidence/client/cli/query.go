@@ -17,11 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
-const (
-	flagPage  = "page"
-	flagLimit = "limit"
-)
-
 // GetQueryCmd returns the CLI command with all evidence module query commands
 // mounted.
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -44,8 +39,8 @@ $ %s query %s --page=2 --limit=50
 		RunE:                       QueryEvidenceCmd(cdc),
 	}
 
-	cmd.Flags().Int(flagPage, 1, "pagination page of evidence to to query for")
-	cmd.Flags().Int(flagLimit, 100, "pagination limit of evidence to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
 
 	cmd.AddCommand(flags.GetCommands(QueryParamsCmd(cdc))...)
 
@@ -126,7 +121,7 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 }
 
 func queryAllEvidence(cdc *codec.Codec, cliCtx context.CLIContext) error {
-	params := types.NewQueryAllEvidenceParams(viper.GetInt(flagPage), viper.GetInt(flagLimit))
+	params := types.NewQueryAllEvidenceParams(viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)

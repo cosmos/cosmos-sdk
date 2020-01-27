@@ -251,7 +251,7 @@ func TestAddCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Add(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo...)
 		assert.True(t, res.IsValid())
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
@@ -684,4 +684,19 @@ func TestMarshalJSONCoins(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCoinAminoEncoding(t *testing.T) {
+	c := NewInt64Coin(testDenom1, 5)
+
+	bz1, err := cdc.MarshalBinaryBare(c)
+	require.NoError(t, err)
+
+	bz2, err := cdc.MarshalBinaryLengthPrefixed(c)
+	require.NoError(t, err)
+
+	bz3, err := c.Marshal()
+	require.NoError(t, err)
+	require.Equal(t, bz1, bz3)
+	require.Equal(t, bz2[1:], bz3)
 }

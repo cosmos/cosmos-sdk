@@ -6,12 +6,12 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // query routes supported by the IBC connection Querier
 const (
 	QueryAllConnections    = "connections"
-	QueryConnection        = "connection"
 	QueryClientConnections = "client_connections"
 )
 
@@ -31,21 +31,8 @@ func NewConnectionResponse(
 	return ConnectionResponse{
 		Connection:  connection,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ConnectionPath(connectionID), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
-	}
-}
-
-// QueryConnectionParams defines the params for the following queries:
-// - 'custom/ibc/connections/<connectionID>'
-type QueryConnectionParams struct {
-	ConnectionID string
-}
-
-// NewQueryConnectionParams creates a new QueryConnectionParams instance
-func NewQueryConnectionParams(clientID string) QueryConnectionParams {
-	return QueryConnectionParams{
-		ConnectionID: clientID,
 	}
 }
 
@@ -81,7 +68,7 @@ func NewClientConnectionsResponse(
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
 		Proof:           commitment.Proof{Proof: proof},
-		ProofPath:       commitment.NewPath(strings.Split(ClientConnectionsPath(clientID), "/")),
+		ProofPath:       commitment.NewPath(strings.Split(ibctypes.ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}
 }

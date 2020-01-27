@@ -19,21 +19,21 @@ func BatchVerifyMembership(
 	proof ProofI,
 	prefix PrefixI,
 	items map[string][]byte,
-) bool {
+) error {
 	root := CalculateRoot(ctx)
 
 	for pathStr, value := range items {
 		path, err := ApplyPrefix(prefix, pathStr)
 		if err != nil {
-			return false
+			return err
 		}
 
-		if ok := proof.VerifyMembership(root, path, value); !ok {
-			return false
+		if err := proof.VerifyMembership(root, path, value); err != nil {
+			return err
 		}
 	}
 
-	return true
+	return nil
 }
 
 // BatchVerifyNonMembership verifies a proof that many paths have not been set
@@ -45,18 +45,18 @@ func BatchVerifyNonMembership(
 	proof ProofI,
 	prefix PrefixI,
 	paths []string,
-) bool {
+) error {
 	root := CalculateRoot(ctx)
 	for _, pathStr := range paths {
 		path, err := ApplyPrefix(prefix, pathStr)
 		if err != nil {
-			return false
+			return err
 		}
 
-		if ok := proof.VerifyNonMembership(root, path); !ok {
-			return false
+		if err := proof.VerifyNonMembership(root, path); err != nil {
+			return err
 		}
 	}
 
-	return true
+	return nil
 }

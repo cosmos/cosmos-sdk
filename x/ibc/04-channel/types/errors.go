@@ -17,4 +17,5 @@ var (
 	ErrSequenceReceiveNotFound   = sdkerrors.Register(SubModuleName, 9, "sequence receive not found")
 	ErrInvalidPacket             = sdkerrors.Register(SubModuleName, 10, "invalid packet")
 	ErrPacketTimeout             = sdkerrors.Register(SubModuleName, 11, "packet timeout")
+	ErrTooManyConnectionHops     = sdkerrors.Register(SubModuleName, 12, "too many connection hops")
 )

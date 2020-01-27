@@ -1,12 +1,19 @@
 package keeper
 
+// NOTE:
+// OnChanOpenInit, OnChanOpenTry, OnChanOpenAck, OnChanOpenConfirm, OnChanCLoseConfirm
+// will be implemented according to ADR15 in the future PRs. Code left for reference.
+//
+// OnRecvPacket, OnAcknowledgementPacket, OnTimeoutPacket has been implemented according
+// to ADR15.
+
+/*
 import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -123,35 +130,6 @@ func (k Keeper) OnChanCloseConfirm(
 	return nil
 }
 
-// onRecvPacket is called when an FTTransfer packet is received
-// nolint: unused
-func (k Keeper) OnRecvPacket(
-	ctx sdk.Context,
-	packet channelexported.PacketI,
-) error {
-	var data types.PacketData
-
-	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
-
-	return k.ReceiveTransfer(
-		ctx, packet.GetSourcePort(), packet.GetSourceChannel(),
-		packet.GetDestPort(), packet.GetDestChannel(), data,
-	)
-}
-
-// nolint: unused
-func (k Keeper) OnAcknowledgePacket(
-	ctx sdk.Context,
-	packet channelexported.PacketI,
-	acknowledgement []byte,
-) error {
-	// no-op
-	return nil
-}
-
 // nolint: unused
 func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
@@ -191,8 +169,4 @@ func (k Keeper) OnTimeoutPacket(
 
 	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
 }
-
-// nolint: unused
-func (k Keeper) OnTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
-	panic("can't happen, only unordered channels allowed")
-}
+*/

@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
@@ -17,7 +18,7 @@ import (
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/ibc/clients", createClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/clients/{%s}/misbehaviour", submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }
 
 // createClientHandlerFn implements a create client handler
@@ -120,7 +121,6 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param client-id path string true "Client ID"
 // @Param body body rest.SubmitMisbehaviourReq true "Submit misbehaviour request body"
 // @Success 200 {object} PostSubmitMisbehaviour "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
@@ -128,9 +128,6 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Router /ibc/clients/{client-id}/misbehaviour [post]
 func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		clientID := vars[RestClientID]
-
 		var req SubmitMisbehaviourReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -148,12 +145,7 @@ func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgSubmitMisbehaviour(
-			clientID,
-			req.Evidence,
-			fromAddr,
-		)
-
+		msg := evidence.NewMsgSubmitEvidence(req.Evidence, fromAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

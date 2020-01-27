@@ -4,43 +4,76 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-func TestConnectionStateString(t *testing.T) {
-	cases := []struct {
-		name  string
-		state State
+func TestConnectionValidateBasic(t *testing.T) {
+	testCases := []struct {
+		name       string
+		connection ConnectionEnd
+		expPass    bool
 	}{
-		{StateUninitialized, UNINITIALIZED},
-		{StateInit, INIT},
-		{StateTryOpen, TRYOPEN},
-		{StateOpen, OPEN},
+		{
+			"valid connection",
+			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", commitment.NewPrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			true,
+		},
+		{
+			"invalid client id",
+			ConnectionEnd{exported.INIT, "ClientIDTwo", Counterparty{"clientidtwo", "connectionidone", commitment.NewPrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			false,
+		},
+		{
+			"empty versions",
+			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", commitment.NewPrefix([]byte("prefix"))}, nil},
+			false,
+		},
+		{
+			"invalid version",
+			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", commitment.NewPrefix([]byte("prefix"))}, []string{""}},
+			false,
+		},
+		{
+			"invalid counterparty",
+			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", nil}, []string{"1.0.0"}},
+			false,
+		},
 	}
 
-	for _, tt := range cases {
-		tt := tt
-		require.Equal(t, tt.state, StateFromString(tt.name))
-		require.Equal(t, tt.name, tt.state.String())
+	for i, tc := range testCases {
+		tc := tc
+
+		err := tc.connection.ValidateBasic()
+		if tc.expPass {
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
+		} else {
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
+		}
 	}
 }
 
-func TestConnectionlStateMarshalJSON(t *testing.T) {
-	cases := []struct {
-		name  string
-		state State
+func TestCounterpartyValidateBasic(t *testing.T) {
+	testCases := []struct {
+		name         string
+		counterparty Counterparty
+		expPass      bool
 	}{
-		{StateUninitialized, UNINITIALIZED},
-		{StateInit, INIT},
-		{StateTryOpen, TRYOPEN},
-		{StateOpen, OPEN},
+		{"valid counterparty", Counterparty{"clientidone", "connectionidone", commitment.NewPrefix([]byte("prefix"))}, true},
+		{"invalid client id", Counterparty{"InvalidClient", "channelidone", commitment.NewPrefix([]byte("prefix"))}, false},
+		{"invalid connection id", Counterparty{"clientidone", "InvalidConnection", commitment.NewPrefix([]byte("prefix"))}, false},
+		{"invalid prefix", Counterparty{"clientidone", "connectionidone", nil}, false},
 	}
 
-	for _, tt := range cases {
-		tt := tt
-		bz, err := tt.state.MarshalJSON()
-		require.NoError(t, err)
-		var state State
-		require.NoError(t, state.UnmarshalJSON(bz))
-		require.Equal(t, tt.name, state.String())
+	for i, tc := range testCases {
+		tc := tc
+
+		err := tc.counterparty.ValidateBasic()
+		if tc.expPass {
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
+		} else {
+			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
+		}
 	}
 }

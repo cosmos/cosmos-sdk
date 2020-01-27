@@ -7,14 +7,16 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // QueryAllClientStates returns all the light client states. It _does not_ return
 // any merkle proof.
-func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]types.State, int64, error) {
+func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exported.ClientState, int64, error) {
 	params := types.NewQueryAllClientsParams(page, limit)
 	bz, err := cliCtx.Codec.MarshalJSON(params)
 	if err != nil {
@@ -27,7 +29,7 @@ func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]types.S
 		return nil, 0, err
 	}
 
-	var clients []types.State
+	var clients []exported.ClientState
 	err = cliCtx.Codec.UnmarshalJSON(res, &clients)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
@@ -42,7 +44,7 @@ func QueryClientState(
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  types.KeyClientState(clientID),
+		Data:  ibctypes.KeyClientState(clientID),
 		Prove: prove,
 	}
 
@@ -51,7 +53,7 @@ func QueryClientState(
 		return types.StateResponse{}, err
 	}
 
-	var clientState types.State
+	var clientState exported.ClientState
 	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
@@ -64,12 +66,13 @@ func QueryClientState(
 // QueryConsensusState queries the store to get the consensus state and a merkle
 // proof.
 func QueryConsensusState(
-	cliCtx context.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
+	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
+) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  types.KeyConsensusState(clientID),
+		Data:  ibctypes.KeyConsensusState(clientID, height),
 		Prove: prove,
 	}
 
@@ -78,63 +81,12 @@ func QueryConsensusState(
 		return conStateRes, err
 	}
 
-	var cs tendermint.ConsensusState
+	var cs exported.ConsensusState
 	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 
 	return types.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
-}
-
-// QueryCommitmentRoot queries the store to get the commitment root and a merkle
-// proof.
-func QueryCommitmentRoot(
-	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
-) (types.RootResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  types.KeyRoot(clientID, height),
-		Prove: prove,
-	}
-
-	res, err := cliCtx.QueryABCI(req)
-	if err != nil {
-		return types.RootResponse{}, err
-	}
-
-	var root commitment.Root
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &root); err != nil {
-		return types.RootResponse{}, err
-	}
-
-	rootRes := types.NewRootResponse(clientID, height, root, res.Proof, res.Height)
-
-	return rootRes, nil
-}
-
-// QueryCommitter queries the store to get the committer and a merkle proof
-func QueryCommitter(
-	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
-) (types.CommitterResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  types.KeyCommitter(clientID, height),
-		Prove: prove,
-	}
-
-	res, err := cliCtx.QueryABCI(req)
-	if err != nil {
-		return types.CommitterResponse{}, err
-	}
-
-	var committer tendermint.Committer
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &committer); err != nil {
-		return types.CommitterResponse{}, err
-	}
-
-	committerRes := types.NewCommitterResponse(clientID, height, committer, res.Proof, res.Height)
-
-	return committerRes, nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate
@@ -158,20 +110,14 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64,
 		return tendermint.Header{}, 0, err
 	}
 
-	validators, err := node.Validators(&prevheight)
-	if err != nil {
-		return tendermint.Header{}, 0, err
-	}
-
-	nextvalidators, err := node.Validators(&height)
+	validators, err := node.Validators(&prevheight, 0, 10000)
 	if err != nil {
 		return tendermint.Header{}, 0, err
 	}
 
 	header := tendermint.Header{
-		SignedHeader:     commit.SignedHeader,
-		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+		SignedHeader: commit.SignedHeader,
+		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
 
 	return header, height, nil
@@ -191,29 +137,20 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusSta
 	}
 
 	height := info.Response.LastBlockHeight
-	nextHeight := height + 1 // TODO: why was this prevHeight instead of next height?
 
 	commit, err := node.Commit(&height)
 	if err != nil {
 		return tendermint.ConsensusState{}, 0, err
 	}
 
-	validators, err := node.Validators(&height)
-	if err != nil {
-		return tendermint.ConsensusState{}, 0, err
-	}
-
-	nextValidators, err := node.Validators(&nextHeight)
+	validators, err := node.Validators(&height, 0, 10000)
 	if err != nil {
 		return tendermint.ConsensusState{}, 0, err
 	}
 
 	state := tendermint.ConsensusState{
-		ChainID:          commit.ChainID,
-		Height:           uint64(commit.Height),
 		Root:             commitment.NewRoot(commit.AppHash),
-		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators), // TODO: Why wasn't this set before?
-		NextValidatorSet: tmtypes.NewValidatorSet(nextValidators.Validators),
+		ValidatorSetHash: tmtypes.NewValidatorSet(validators.Validators).Hash(),
 	}
 
 	return state, height, nil

@@ -28,11 +28,11 @@ to the existing `TransientStore` but without erasure on `Commit()`, which this `
 The `CapabilityKeeper` will use two stores: a regular, persistent `KVStore`, which will track what capabilities have been created by each module, and an in-memory `MemoryStore` (described below), which will
 store the actual capabilities. The `CapabilityKeeper` will define the following types & functions:
 
-The `Capability` interface, similar to `StoreKey`, provides `Name()` and `String()` methods.
+The `Capability` interface is similar to `StoreKey`, but has a globally unique `Index()` instead of a name. A `String()` method is provided for debugging.
 
 ```golang
 type Capability interface {
-  Name() string
+  Index() uint64
   String() string
 }
 ```
@@ -99,18 +99,21 @@ func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
   persistentStore := ctx.KVStore(ck.persistentKey)
   memoryStore := ctx.KVStore(ck.memoryKey)
   // initialise memory store for all names in persistent store
-  for _, key := range persistentStore.Iter() {
-    capability = &CapabilityKey{name: key}
-    memoryStore.Set("fwd/" + capability, name)
-    memoryStore.Set("rev/" + name, capability)
+  for index, value := range persistentStore.Iter() {
+    capability = &CapabilityKey{index: index}
+    for moduleAndCapability := range value {
+      moduleName, capabilityName := moduleAndCapability.Split("/")
+      memoryStore.Set(moduleName + "/fwd/" + capability, capabilityName)
+      memoryStore.Set(moduleName + "/rev/" + capabilityName, capability)
+    }
   }
   ck.sealed = true
 }
 ```
 
 `NewCapability` can be called by any module to create a new unique, unforgeable object-capability
-reference. The newly created capability is *not* automatically persisted, `ClaimCapability` must be
-called on the `ScopedCapabilityKeeper` in order to persist it.
+reference. The newly created capability is automatically persisted; the calling module need not
+call `ClaimCapability`.
 
 ```golang
 func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capability, error) {
@@ -119,44 +122,52 @@ func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capab
   if memoryStore.Get("rev/" + name) != nil {
     return nil, errors.New("name already taken")
   }
+  // fetch the current index
+  index := persistentStore.Get("index")
   // create a new capability
-  capability := &CapabilityKey{name: name}
+  capability := &CapabilityKey{index: index}
+  // set persistent store
+  persistentStore.Set(index, Set.singleton(sck.moduleName + "/" + name))
+  // update the index
+  index++
+  persistentStore.Set("index", index)
   // set forward mapping in memory store from capability to name
-  memoryStore.Set("fwd/" + capability, name)
+  memoryStore.Set(sck.moduleName + "/fwd/" + capability, name)
   // set reverse mapping in memory store from name to capability
-  memoryStore.Set("rev/" + name, capability)
+  memoryStore.Set(sck.moduleName + "/rev/" + name, capability)
   // return the newly created capability
   return capability
 }
 ```
 
 `AuthenticateCapability` can be called by any module to check that a capability
-does in fact correspond to a particular name (the name can be untrusted user input).
+does in fact correspond to a particular name (the name can be untrusted user input)
+with which the calling module previously associated it.
 
 ```golang
 func (sck ScopedCapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
   memoryStore := ctx.KVStore(sck.memoryKey)
   // return whether forward mapping in memory store matches name
-  return memoryStore.Get("fwd/" + capability) === name
+  return memoryStore.Get(sck.moduleName + "/fwd/" + capability) === name
 }
 ```
 
-`ClaimCapability` allows a module to claim a capability key which it has received (perhaps by calling `NewCapability`, or from another module), so that future `GetCapability` calls will succeed.
+`ClaimCapability` allows a module to claim a capability key which it has received from another module so that future `GetCapability` calls will succeed.
 
-`ClaimCapability` MUST be called, even if `NewCapability` was called by the same module. Capabilities are single-owner, so if multiple modules have a single `Capability` reference, the last module
-to call `ClaimCapability` will own it. To avoid confusion, a module which calls `NewCapability` SHOULD either call `ClaimCapability` or pass the capability to another module which will then claim it.
+`ClaimCapability` MUST be called if a module which receives a capability wishes to access it by name in the future. Capabilities are multi-owner, so if multiple modules have a single `Capability` reference, they will all own it.
 
 ```golang
-func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capability) error {
+func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capability, name string) error {
   persistentStore := ctx.KVStore(sck.persistentKey)
   memoryStore := ctx.KVStore(sck.memoryKey)
-  // fetch name from memory store
-  name := memoryStore.Get("fwd/" + capability)
-  if name === nil {
-    return errors.New("capability not found")
-  }
-  // set name to module in persistent store
-  persistentStore.Set(name, sck.moduleName)
+  // set forward mapping in memory store from capability to name
+  memoryStore.Set(sck.moduleName + "/fwd/" + capability, name)
+  // set reverse mapping in memory store from name to capability
+  memoryStore.Set(sck.moduleName + "/rev/" + name, capability)
+  // update owner set in persistent store
+  owners := persistentStore.Get(capability.Index())
+  owners.add(sck.moduleName + "/" + name)
+  persistentStore.Set(capability.Index(), owners)
 }
 ```
 
@@ -165,15 +176,10 @@ claims a capability, the previously owning module will no longer be able to clai
 
 ```golang
 func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capability, error) {
-  persistentStore := ctx.KVStore(sck.persistentKey)
   memoryStore := ctx.KVStore(sck.memoryKey)
-  // check that this module owns the capability with this name
-  res := persistentStore.Get(name)
-  if res != sck.moduleName {
-    return errors.New("capability of this name not owned by module")
-  }
-  // fetch capability from memory store, return it
-  capability := memoryStore.Get("rev/" + name)
+  // fetch capability from memory store
+  capability := memoryStore.Get(sck.moduleName + "/rev/" + name)
+  // return the capability
   return capability
 }
 ```
@@ -219,7 +225,7 @@ mod2Keeper.SomeFunction(ctx, capability, args...)
 
 ```golang
 func (k Mod2Keeper) SomeFunction(ctx Context, capability Capability) {
-  k.sck.ClaimCapability(ctx, capability)
+  k.sck.ClaimCapability(ctx, capability, "resourceABC")
   // other logic...
 }
 ```
@@ -245,7 +251,7 @@ func (k Mod1Keeper) UseResource(ctx Context, capability Capability, resource str
 ```
 
 If module 2 passed the capability key to module 3, module 3 could then claim it and call module 1 just like module 2 did
-(in which case module 2 could no longer call `GetCapability`, since it would then be owned uniquely by module 3).
+(in which case module 1, module 2, and module 3 would all be able to use this capability).
 
 ## Status
 

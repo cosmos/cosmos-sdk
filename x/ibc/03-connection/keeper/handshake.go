@@ -1,13 +1,13 @@
 package keeper
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -28,11 +28,10 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleVersions())
+	connection := types.NewConnectionEnd(exported.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
-	err := k.addConnectionToClient(ctx, clientID, connectionID)
-	if err != nil {
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot initialize connection")
 	}
 
@@ -57,75 +56,55 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	consHeight := int64(consensusHeight)
+	// XXX: blocked by #5475
+	// if consensusHeight > uint64(ctx.BlockHeight()) {
+	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	// }
 
-	if consHeight > ctx.BlockHeight() {
-		return sdkerrors.Wrapf(
-			ibctypes.ErrInvalidHeight,
-			"consensus height is greater than the latest height (%d > %d)", consHeight, ctx.BlockHeight(),
-		)
-	}
-
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, consHeight)
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID, consensusHeight)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
-	// expectedConn defines Chain A's ConnectionEnd
+	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(exported.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
 	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
-	if err != nil {
+	connection := types.NewConnectionEnd(exported.UNINITIALIZED, clientID, counterparty, []string{version})
+
+	if err := k.VerifyConnectionState(
+		ctx, proofHeight, proofInit, counterparty.ConnectionID,
+		expectedConnection, expectedConsensusState,
+	); err != nil {
 		return err
 	}
 
-	// verify connection state
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofInit,
-		types.ConnectionPath(counterparty.ConnectionID), expConnBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
-	}
-
-	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-	if err != nil {
-		return err
-	}
-
-	// verify client consensus state
-	ok = k.VerifyMembership(
-		ctx, connection, proofHeight, proofConsensus,
-		clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5475
+	// if err := k.VerifyClientConsensusState(
+	// 	ctx, proofHeight, proofInit, expectedConsensusState,
+	// ); err != nil {
+	// 	return err
+	// }
 
 	previousConnection, found := k.GetConnection(ctx, connectionID)
-	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot relay connection attempt")
-	} else if !(previousConnection.State == types.INIT &&
+	if found && !(previousConnection.State == exported.INIT &&
 		previousConnection.Counterparty.ConnectionID == counterparty.ConnectionID &&
-		previousConnection.Counterparty.Prefix == counterparty.Prefix &&
+		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 		previousConnection.ClientID == clientID &&
 		previousConnection.Counterparty.ClientID == counterparty.ClientID &&
 		previousConnection.Versions[0] == version) {
 		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
 	}
 
-	connection.State = types.TRYOPEN
-	err = k.addConnectionToClient(ctx, clientID, connectionID)
-	if err != nil {
+	connection.State = exported.TRYOPEN
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
 
@@ -147,21 +126,17 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	consHeight := int64(consensusHeight)
-
-	if consHeight > ctx.BlockHeight() {
-		return sdkerrors.Wrapf(
-			ibctypes.ErrInvalidHeight,
-			"consensus height is greater than the latest height (%d > %d)", consHeight, ctx.BlockHeight(),
-		)
-	}
+	// XXX: blocked by #5475
+	// if consensusHeight > uint64(ctx.BlockHeight()) {
+	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	// }
 
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
-	if connection.State != types.INIT {
+	if connection.State != exported.INIT {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not INIT (got %s)", connection.State.String(),
@@ -175,42 +150,30 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, consHeight)
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
+	expectedConnection := types.NewConnectionEnd(exported.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
-	if err != nil {
+	if err := k.VerifyConnectionState(
+		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
+		expectedConnection, expectedConsensusState,
+	); err != nil {
 		return err
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofTry,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5475
+	// if err := k.VerifyClientConsensusState(
+	// 	ctx, connection, proofHeight, proofInit, expectedConsensusState,
+	// ); err != nil {
+	// 	return err
+	// }
 
-	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-	if err != nil {
-		return err
-	}
-
-	ok = k.VerifyMembership(
-		ctx, connection, proofHeight, proofConsensus,
-		clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-	}
-
-	connection.State = types.OPEN
+	connection.State = exported.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
@@ -225,38 +188,38 @@ func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck commitment.ProofI,
-	proofHeight uint64,
+	proofHeight,
+	consensusHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
-	if connection.State != types.TRYOPEN {
+	if connection.State != exported.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not TRYOPEN (got %s)", connection.State.String(),
 		)
 	}
 
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
+	}
+
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
+	expectedConnection := types.NewConnectionEnd(exported.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
-	if err != nil {
+	if err := k.VerifyConnectionState(
+		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
+		expectedConnection, expectedConsensusState,
+	); err != nil {
 		return err
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofAck,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client")
-	}
-
-	connection.State = types.OPEN
+	connection.State = exported.OPEN
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
 	return nil

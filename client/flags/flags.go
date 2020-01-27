@@ -21,7 +21,6 @@ const (
 	GasFlagAuto          = "auto"
 )
 
-// Keyring constants
 const (
 	DefaultKeyringBackend = KeyringBackendOS
 	KeyringBackendFile    = "file"
@@ -68,9 +67,9 @@ const (
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 	FlagProve              = "prove"
+	FlagKeyringBackend     = "keyring-backend"
 	FlagPage               = "page"
 	FlagLimit              = "limit"
-	FlagKeyringBackend     = "keyring-backend"
 )
 
 // LineBreak can be included in a command list to provide a blank line

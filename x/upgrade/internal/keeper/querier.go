@@ -3,10 +3,11 @@ package keeper
 import (
 	"encoding/binary"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
@@ -48,7 +49,7 @@ func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	applied := k.getDoneHeight(ctx, params.Name)
+	applied := k.GetDoneHeight(ctx, params.Name)
 	if applied == 0 {
 		return nil, nil
 	}

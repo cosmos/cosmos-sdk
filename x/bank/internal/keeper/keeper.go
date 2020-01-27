@@ -208,6 +208,7 @@ func (keeper BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.In
 			sdk.NewEvent(
 				types.EventTypeTransfer,
 				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
 	}
@@ -280,7 +281,7 @@ func (keeper BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 	}
 
 	oldCoins := keeper.GetCoins(ctx, addr)
-	newCoins := oldCoins.Add(amt)
+	newCoins := oldCoins.Add(amt...)
 
 	if newCoins.IsAnyNegative() {
 		return amt, sdkerrors.Wrapf(
@@ -387,5 +388,5 @@ func trackUndelegation(acc authexported.Account, amt sdk.Coins) error {
 		vacc.TrackUndelegation(amt)
 	}
 
-	return acc.SetCoins(acc.GetCoins().Add(amt))
+	return acc.SetCoins(acc.GetCoins().Add(amt...))
 }

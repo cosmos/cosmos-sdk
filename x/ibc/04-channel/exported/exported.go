@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// ChannelI defines the standard interface for a channel end.
 type ChannelI interface {
 	GetState() State
 	GetOrdering() Order
@@ -14,6 +15,8 @@ type ChannelI interface {
 	ValidateBasic() error
 }
 
+// CounterpartyI defines the standard interface for a channel end's
+// counterparty.
 type CounterpartyI interface {
 	GetPortID() string
 	GetChannelID() string

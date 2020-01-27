@@ -1,8 +1,6 @@
 package tendermint
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -56,6 +54,8 @@ func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
 }
 
+// VerifyClientConsensusState verifies a proof of the consensus state of the
+// Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	cdc *codec.Codec,
 	height uint64,
@@ -68,16 +68,8 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if cs.LatestHeight < height {
-		return ibctypes.ErrInvalidHeight
-	}
-
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
-	}
-
-	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
 	}
 
 	bz, err := cdc.MarshalBinaryBare(consensusState)
@@ -92,6 +84,8 @@ func (cs ClientState) VerifyClientConsensusState(
 	return nil
 }
 
+// VerifyConnectionState verifies a proof of the connection state of the
+// specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
 	cdc *codec.Codec,
 	height uint64,
@@ -106,17 +100,8 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if cs.LatestHeight < height {
-		fmt.Println(cs.LatestHeight, height)
-		return ibctypes.ErrInvalidHeight
-	}
-
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
-	}
-
-	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
 	}
 
 	bz, err := cdc.MarshalBinaryBare(connectionEnd)
@@ -131,6 +116,8 @@ func (cs ClientState) VerifyConnectionState(
 	return nil
 }
 
+// VerifyChannelState verifies a proof of the channel state of the specified
+// channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
 	cdc *codec.Codec,
 	height uint64,
@@ -146,16 +133,8 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if cs.LatestHeight < height {
-		return ibctypes.ErrInvalidHeight
-	}
-
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
-	}
-
-	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
 	}
 
 	bz, err := cdc.MarshalBinaryBare(channel)
@@ -170,6 +149,8 @@ func (cs ClientState) VerifyChannelState(
 	return nil
 }
 
+// VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
+// the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	height uint64,
 	prefix commitment.PrefixI,
@@ -185,16 +166,8 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if cs.LatestHeight < height {
-		return ibctypes.ErrInvalidHeight
-	}
-
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
-	}
-
-	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
 	}
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
@@ -204,6 +177,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	return nil
 }
 
+// VerifyPacketAcknowledgement verifies a proof of an incoming packet
+// acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	height uint64,
 	prefix commitment.PrefixI,
@@ -219,16 +194,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if cs.LatestHeight < height {
-		return ibctypes.ErrInvalidHeight
-	}
-
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
-	}
-
-	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
 	}
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); err != nil {
@@ -238,6 +205,9 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	return nil
 }
 
+// VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
+// incoming packet acknowledgement at the specified port, specified channel, and
+// specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	height uint64,
 	prefix commitment.PrefixI,
@@ -252,16 +222,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if cs.LatestHeight < height {
-		return ibctypes.ErrInvalidHeight
-	}
-
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienttypes.ErrClientFrozen
-	}
-
-	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
 	}
 
 	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
@@ -271,6 +233,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	return nil
 }
 
+// VerifyNextSequenceRecv verifies a proof of the next sequence number to be
+// received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	height uint64,
 	prefix commitment.PrefixI,
@@ -285,6 +249,27 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
+	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
+		return err
+	}
+
+	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
+
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
+	}
+
+	return nil
+}
+
+// validateVerificationArgs perfoms the basic checks on the arguments that are
+// shared between the verification functions.
+func validateVerificationArgs(
+	cs ClientState,
+	height uint64,
+	proof commitment.ProofI,
+	consensusState clientexported.ConsensusState,
+) error {
 	if cs.LatestHeight < height {
 		return ibctypes.ErrInvalidHeight
 	}
@@ -297,10 +282,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
 	}
 
-	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
-
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
+	if consensusState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
 	return nil

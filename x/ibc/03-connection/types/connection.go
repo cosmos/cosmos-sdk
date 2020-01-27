@@ -61,8 +61,6 @@ func (c ConnectionEnd) GetVersions() []string {
 
 // ValidateBasic implements the Connection interface
 func (c ConnectionEnd) ValidateBasic() error {
-	// NOTE: invalid state is considered "UNINITIALIZED"
-
 	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}

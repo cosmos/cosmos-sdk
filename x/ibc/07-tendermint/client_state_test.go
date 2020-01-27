@@ -180,7 +180,6 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		clientState    tendermint.ClientState
 		channel        channel.Channel
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool
@@ -260,7 +259,6 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		clientState    tendermint.ClientState
 		commitment     []byte
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool
@@ -340,7 +338,6 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		clientState    tendermint.ClientState
 		ack            []byte
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool
@@ -419,7 +416,6 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		name           string
 		clientState    tendermint.ClientState
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool
@@ -494,7 +490,6 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		name           string
 		clientState    tendermint.ClientState
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool

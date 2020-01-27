@@ -13,6 +13,9 @@ import (
 // - the header is invalid
 // - header height is lower than the latest client height
 // - header valset commit verification fails
+//
+// Tendermint client validity checking uses the bisection algorithm described
+// in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, header clientexported.Header, chainID string,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {

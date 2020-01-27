@@ -59,7 +59,6 @@ func (ch Channel) GetVersion() string {
 
 // ValidateBasic performs a basic validation of the channel fields
 func (ch Channel) ValidateBasic() error {
-	// TODO: update channel and ordering validation
 	if ch.State.String() == "" {
 		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}

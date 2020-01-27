@@ -70,6 +70,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 }
 
+// nolint: unused
 func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),

@@ -48,6 +48,7 @@ type KeeperTestSuite struct {
 	ctx            sdk.Context
 	app            *simapp.SimApp
 	valSet         *tmtypes.ValidatorSet
+	lastValSet     *tmtypes.ValidatorSet
 	consensusState clientexported.ConsensusState
 	header         tendermint.Header
 }
@@ -68,6 +69,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
+	var signers []tmtypes.PrivValidator
+
 	var validators staking.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
@@ -76,6 +79,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
+		signers = append(signers, privVal)
 
 		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}

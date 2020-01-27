@@ -85,7 +85,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 				WithCodec(cdc).
 // 				WithBroadcastMode(flags.BroadcastBlock)
 
-// 			header, _, err := clientutils.QueryTendermintHeader(cliCtx2)
+// 			header, _, err := clientauthutils.QueryTendermintHeader(cliCtx2)
 // 			if err != nil {
 // 				return err
 // 			}
@@ -103,14 +103,14 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 				return err
 // 			}
 
-// 			res, err := utils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
+// 			res, err := authutils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
 // 			if err != nil || !res.IsOK() {
 // 				return err
 // 			}
 
 // 			viper.Set(flags.FlagChainID, cid2)
 // 			sequence := uint64(viper.GetInt(FlagSequence))
-// 			packetRes, err := channelutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), prove)
+// 			packetRes, err := channelauthutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), prove)
 // 			if err != nil {
 // 				return err
 // 			}
@@ -122,7 +122,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 				return err
 // 			}
 
-// 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+// 			return authclient.GenerateOrBroadcastMsgs(ctx, txBldr, []sdk.Msg{msg})
 // 		},
 // 	}
 

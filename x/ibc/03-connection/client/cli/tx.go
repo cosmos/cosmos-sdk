@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authutils "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authutils "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )

@@ -48,6 +48,7 @@ type KeeperTestSuite struct {
 	ctx            sdk.Context
 	app            *simapp.SimApp
 	valSet         *tmtypes.ValidatorSet
+	lastValSet     *tmtypes.ValidatorSet
 	consensusState clientexported.ConsensusState
 	header         tendermint.Header
 }
@@ -60,6 +61,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
 	suite.app = app
 
+	var signers []tmtypes.PrivValidator
+
 	var validators staking.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
@@ -68,12 +71,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
+		signers = append(signers, privVal)
 
-		valset := tmtypes.NewValidatorSet(validators.ToTmValidators())
-		suite.valSets = append(suite.valSets, valset)
+		suite.lastValSet = suite.valSet
+		suite.valSet = tmtypes.NewValidatorSet(validators.ToTmValidators())
 		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
-	suite.header = tendermint.CreateTestHeader(chainID, testHeight, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
+	suite.header = tendermint.CreateTestHeader(chainID, testHeight, suite.lastValSet, suite.valSet, signers)
 
 	suite.consensusState = tendermint.ConsensusState{
 		Root:             commitment.NewRoot(suite.header.AppHash),

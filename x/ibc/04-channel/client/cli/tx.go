@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authutils "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authutils "github.com/cosmos/cosmos-sdk/x/auth/client"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"

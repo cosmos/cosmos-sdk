@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
@@ -125,20 +126,21 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 
 func (suite KeeperTestSuite) TestGetConsensusState() {
 	cases := []struct {
-		name    string
-		height  int64
-		expPass bool
+		name     string
+		clientID string
+		height   int64
+		expPass  bool
 	}{
-		{"latest height", suite.ctx.BlockHeight(), false},
-		{"zero height", 0, false},
-		{"negative height", -1, false},
-		{"height > latest height", suite.ctx.BlockHeight() + 1, false},
-		{"latest height - 1", suite.ctx.BlockHeight() - 1, true},
+		{"latest height", testClientID, suite.ctx.BlockHeight(), false},
+		{"zero height", testClientID, 0, false},
+		{"negative height", testClientID, -1, false},
+		{"height > latest height", testClientID, suite.ctx.BlockHeight() + 1, false},
+		{"latest height - 1", testClientID, suite.ctx.BlockHeight() - 1, true},
 	}
 
 	for i, tc := range cases {
 		tc := tc
-		cs, found := suite.keeper.GetConsensusState(suite.ctx, tc.height)
+		cs, found := suite.keeper.GetConsensusState(suite.ctx, tc.clientID, uint64(tc.height))
 		if tc.expPass {
 			suite.Require().True(found, "Case %d should have passed: %s", i, tc.name)
 			suite.Require().NotNil(cs, "Case %d should have passed: %s", i, tc.name)

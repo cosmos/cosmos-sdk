@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authutils "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -35,7 +35,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
 			ctx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			sender := ctx.GetFromAddress()
@@ -59,7 +59,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(ctx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(ctx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
@@ -74,7 +74,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 		Args:  cobra.ExactArgs(3),
 // 		RunE: func(cmd *cobra.Command, args []string) error {
 // 			inBuf := bufio.NewReader(cmd.InOrStdin())
-// 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+// 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
 // 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 // 			prove := viper.GetBool(flags.FlagProve)
@@ -85,7 +85,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 				WithCodec(cdc).
 // 				WithBroadcastMode(flags.BroadcastBlock)
 
-// 			header, _, err := clientutils.QueryTendermintHeader(cliCtx2)
+// 			header, _, err := clientauthutils.QueryTendermintHeader(cliCtx2)
 // 			if err != nil {
 // 				return err
 // 			}
@@ -103,14 +103,14 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 				return err
 // 			}
 
-// 			res, err := utils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
+// 			res, err := authutils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
 // 			if err != nil || !res.IsOK() {
 // 				return err
 // 			}
 
 // 			viper.Set(flags.FlagChainID, cid2)
 // 			sequence := uint64(viper.GetInt(FlagSequence))
-// 			packetRes, err := channelutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), prove)
+// 			packetRes, err := channelauthutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), prove)
 // 			if err != nil {
 // 				return err
 // 			}
@@ -122,7 +122,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // 				return err
 // 			}
 
-// 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+// 			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 // 		},
 // 	}
 

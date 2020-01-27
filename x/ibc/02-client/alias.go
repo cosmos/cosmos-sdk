@@ -51,4 +51,5 @@ type (
 	Keeper          = keeper.Keeper
 	MsgCreateClient = types.MsgCreateClient
 	MsgUpdateClient = types.MsgUpdateClient
+	StakingKeeper   = types.StakingKeeper
 )

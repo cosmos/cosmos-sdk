@@ -3,11 +3,13 @@ package cosmos_sdk.codec.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/testdata";
 
+// Dog defines a dog
 message Dog {
   string size = 1;
   string name = 2;
 }
 
+// Cat defines a cat
 message Cat {
   string moniker = 1; 
   int32 lives = 2;

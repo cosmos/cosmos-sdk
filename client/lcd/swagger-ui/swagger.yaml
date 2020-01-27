@@ -29,7 +29,7 @@ tags:
   - name: Misc
     description: Query app version
 schemes:
-  - https
+  - http
 host: stargate.cosmos.network
 securityDefinitions:
   kms:

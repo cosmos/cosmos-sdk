@@ -69,9 +69,9 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	case 0:
 		// randInt = big.NewInt(0)
 	case 1:
-		randInt = max.Int // the underlying big int with all precision bits.
+		randInt = max.BigInt() // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
-		randInt = big.NewInt(0).Rand(r, max.Int)
+		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }

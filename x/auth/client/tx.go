@@ -1,4 +1,4 @@
-package utils
+package client
 
 import (
 	"bufio"
@@ -221,7 +221,7 @@ func SignStdTx(
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", errInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", authtypes.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
@@ -243,7 +243,7 @@ func SignStdTxWithSignerAddress(txBldr authtypes.TxBuilder, cliCtx context.CLICo
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", errInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", authtypes.ErrorInvalidSigner, name)
 	}
 
 	if !offline {

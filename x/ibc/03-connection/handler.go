@@ -87,7 +87,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
 func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenConfirm) (*sdk.Result, error) {
-	err := k.ConnOpenConfirm(ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight)
+	err := k.ConnOpenConfirm(ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight, msg.ConsensusHeight)
 	if err != nil {
 		return nil, err
 	}

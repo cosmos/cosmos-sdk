@@ -9,12 +9,18 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+const (
+	testConnectionID = "connectionid"
+	testPortID       = "testportid"
+	testChannelID    = "testchannelid"
+	testSequence     = 1
+)
+
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string
 		clientState    tendermint.ClientState
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool
@@ -25,7 +31,6 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
@@ -35,7 +40,6 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
@@ -45,7 +49,6 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
@@ -55,7 +58,6 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
@@ -66,7 +68,6 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -77,7 +78,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.cdc, tc.height, tc.prefix, tc.proof, tc.consensusState,
+			suite.cdc, height, tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -89,17 +90,14 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyConnectionState() {
-	testConnectionID := "connectionid"
 	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitment.NewPrefix([]byte("ibc")))
 	conn := connection.NewConnectionEnd(connectionexported.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name           string
 		clientState    tendermint.ClientState
-		connectionID   string
 		connection     connection.ConnectionEnd
 		consensusState tendermint.ConsensusState
-		height         uint64
 		prefix         commitment.Prefix
 		proof          commitment.Proof
 		expPass        bool
@@ -107,61 +105,51 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  tendermint.NewClientState(chainID, height),
-		// 	connectionID: testConnectionID,
 		// 	connection:   conn,
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
-			name:         "ApplyPrefix failed",
-			clientState:  tendermint.NewClientState(chainID, height),
-			connectionID: testConnectionID,
-			connection:   conn,
+			name:        "ApplyPrefix failed",
+			clientState: tendermint.NewClientState(chainID, height),
+			connection:  conn,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
 		{
-			name:         "latest client height < height",
-			clientState:  tendermint.NewClientState(chainID, height-1),
-			connectionID: testConnectionID,
-			connection:   conn,
+			name:        "latest client height < height",
+			clientState: tendermint.NewClientState(chainID, height-1),
+			connection:  conn,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
-			name:         "client is frozen",
-			clientState:  tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
-			connectionID: testConnectionID,
-			connection:   conn,
+			name:        "client is frozen",
+			clientState: tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
+			connection:  conn,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
-			name:         "proof verification failed",
-			clientState:  tendermint.NewClientState(chainID, height),
-			connectionID: testConnectionID,
-			connection:   conn,
+			name:        "proof verification failed",
+			clientState: tendermint.NewClientState(chainID, height),
+			connection:  conn,
 			consensusState: tendermint.ConsensusState{
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -172,7 +160,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.cdc, tc.height, tc.prefix, tc.proof, tc.connectionID, tc.connection, tc.consensusState,
+			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, tc.connection, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -184,17 +172,12 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyChannelState() {
-	testConnectionID := "connectionid"
-	testPortID := "testportid"
-	testChannelID := "testchannelid"
 	counterparty := channel.NewCounterparty(testPortID, testChannelID)
 	ch := channel.NewChannel(channelexported.OPEN, channelexported.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name           string
 		clientState    tendermint.ClientState
-		portID         string
-		channelID      string
 		channel        channel.Channel
 		consensusState tendermint.ConsensusState
 		height         uint64
@@ -205,65 +188,51 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  tendermint.NewClientState(chainID, height),
-		// 	connectionID: testConnectionID,
 		// 	connection:   conn,
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
 			channel:     ch,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: tendermint.NewClientState(chainID, height-1),
-			portID:      testPortID,
-			channelID:   testChannelID,
 			channel:     ch,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
-			portID:      testPortID,
-			channelID:   testChannelID,
 			channel:     ch,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
 			channel:     ch,
 			consensusState: tendermint.ConsensusState{
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -274,7 +243,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.cdc, tc.height, tc.prefix, tc.proof, tc.portID, tc.channelID, tc.channel, tc.consensusState,
+			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, tc.channel, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -286,16 +255,9 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
-	testPortID := "testportid"
-	testChannelID := "testchannelid"
-	testSequence := uint64(1)
-
 	testCases := []struct {
 		name           string
 		clientState    tendermint.ClientState
-		portID         string
-		channelID      string
-		seq            uint64
 		commitment     []byte
 		consensusState tendermint.ConsensusState
 		height         uint64
@@ -306,69 +268,51 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  tendermint.NewClientState(chainID, height),
-		// 	connectionID: testConnectionID,
 		// 	connection:   conn,
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			commitment:  []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: tendermint.NewClientState(chainID, height-1),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			commitment:  []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			commitment:  []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			commitment:  []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -379,7 +323,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			tc.height, tc.prefix, tc.proof, tc.portID, tc.channelID, tc.seq, tc.commitment, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -391,16 +335,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
-	testPortID := "testportid"
-	testChannelID := "testchannelid"
-	testSequence := uint64(1)
-
 	testCases := []struct {
 		name           string
 		clientState    tendermint.ClientState
-		portID         string
-		channelID      string
-		seq            uint64
 		ack            []byte
 		consensusState tendermint.ConsensusState
 		height         uint64
@@ -411,69 +348,51 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  tendermint.NewClientState(chainID, height),
-		// 	connectionID: testConnectionID,
 		// 	connection:   conn,
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			ack:         []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: tendermint.NewClientState(chainID, height-1),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			ack:         []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			ack:         []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			ack:         []byte{},
 			consensusState: tendermint.ConsensusState{
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -484,7 +403,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			tc.height, tc.prefix, tc.proof, tc.portID, tc.channelID, tc.seq, tc.ack, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -496,16 +415,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	testPortID := "testportid"
-	testChannelID := "testchannelid"
-	testSequence := uint64(1)
-
 	testCases := []struct {
 		name           string
 		clientState    tendermint.ClientState
-		portID         string
-		channelID      string
-		seq            uint64
 		consensusState tendermint.ConsensusState
 		height         uint64
 		prefix         commitment.Prefix
@@ -515,65 +427,47 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  tendermint.NewClientState(chainID, height),
-		// 	connectionID: testConnectionID,
 		// 	connection:   conn,
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: tendermint.NewClientState(chainID, height-1),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: tendermint.NewClientState(chainID, height),
-			portID:      testPortID,
-			channelID:   testChannelID,
-			seq:         testSequence,
 			consensusState: tendermint.ConsensusState{
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -584,7 +478,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			tc.height, tc.prefix, tc.proof, tc.portID, tc.channelID, tc.seq, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -596,84 +490,59 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
-	testPortID := "testportid"
-	testChannelID := "testchannelid"
-	testSequence := uint64(1)
-
 	testCases := []struct {
-		name             string
-		clientState      tendermint.ClientState
-		portID           string
-		channelID        string
-		nextSequenceRecv uint64
-		consensusState   tendermint.ConsensusState
-		height           uint64
-		prefix           commitment.Prefix
-		proof            commitment.Proof
-		expPass          bool
+		name           string
+		clientState    tendermint.ClientState
+		consensusState tendermint.ConsensusState
+		height         uint64
+		prefix         commitment.Prefix
+		proof          commitment.Proof
+		expPass        bool
 	}{
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  tendermint.NewClientState(chainID, height),
-		// 	connectionID: testConnectionID,
 		// 	connection:   conn,
 		// 	consensusState: tendermint.ConsensusState{
 		// 		Root: commitment.NewRoot(suite.header.AppHash),
 		// 	},
-		// 	height:  height,
 		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
-			name:             "ApplyPrefix failed",
-			clientState:      tendermint.NewClientState(chainID, height),
-			portID:           testPortID,
-			channelID:        testChannelID,
-			nextSequenceRecv: testSequence,
+			name:        "ApplyPrefix failed",
+			clientState: tendermint.NewClientState(chainID, height),
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.Prefix{},
 			expPass: false,
 		},
 		{
-			name:             "latest client height < height",
-			clientState:      tendermint.NewClientState(chainID, height-1),
-			portID:           testPortID,
-			channelID:        testChannelID,
-			nextSequenceRecv: testSequence,
+			name:        "latest client height < height",
+			clientState: tendermint.NewClientState(chainID, height-1),
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
-			name:             "client is frozen",
-			clientState:      tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
-			portID:           testPortID,
-			channelID:        testChannelID,
-			nextSequenceRecv: testSequence,
+			name:        "client is frozen",
+			clientState: tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: height - 1},
 			consensusState: tendermint.ConsensusState{
 				Root: commitment.NewRoot(suite.header.AppHash),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
-			name:             "proof verification failed",
-			clientState:      tendermint.NewClientState(chainID, height),
-			portID:           testPortID,
-			channelID:        testChannelID,
-			nextSequenceRecv: testSequence,
+			name:        "proof verification failed",
+			clientState: tendermint.NewClientState(chainID, height),
 			consensusState: tendermint.ConsensusState{
 				Root:             commitment.NewRoot(suite.header.AppHash),
 				ValidatorSetHash: suite.valSet.Hash(),
 			},
-			height:  height,
 			prefix:  commitment.NewPrefix([]byte("ibc")),
 			proof:   commitment.Proof{},
 			expPass: false,
@@ -684,7 +553,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			tc.height, tc.prefix, tc.proof, tc.portID, tc.channelID, tc.nextSequenceRecv, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
 		)
 
 		if tc.expPass {

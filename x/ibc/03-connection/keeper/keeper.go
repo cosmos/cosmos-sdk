@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -111,9 +112,12 @@ func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.Connecti
 
 // addConnectionToClient is used to add a connection identifier to the set of
 // connections associated with a client.
-//
-// CONTRACT: client must already exist
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) error {
+	_, found := k.clientKeeper.GetClientState(ctx, clientID)
+	if !found {
+		return clienttypes.ErrClientNotFound
+	}
+
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
 		conns = []string{}

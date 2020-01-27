@@ -108,7 +108,7 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "packet verification failed")
+		return nil, err
 	}
 
 	// NOTE: the remaining code is located on the TimeoutExecuted function
@@ -216,7 +216,7 @@ func (k Keeper) TimeoutOnClose(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel membership verification failed")
+		return nil, err
 	}
 
 	var err error
@@ -239,7 +239,7 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "packet verification failed")
+		return nil, err
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())

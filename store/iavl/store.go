@@ -249,8 +249,8 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	switch req.Path {
 	case "/key": // get by key
 		key := req.Data // data holds the key bytes
-
 		res.Key = key
+
 		if !st.VersionExists(res.Height) {
 			res.Log = iavl.ErrVersionDoesNotExist.Error()
 			break

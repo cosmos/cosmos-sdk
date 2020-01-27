@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -25,17 +26,17 @@ import (
 const (
 	clientType = clientexported.Tendermint
 	storeKey   = ibctypes.StoreKey
-	chainID    = "test"
+	chainID    = "gaia"
 	testHeight = 10
 
-	testClientID1     = "testclientid1"
-	testConnectionID1 = "connectionid1"
+	testClientID1     = "testclientidone"
+	testConnectionID1 = "connectionidone"
 
-	testClientID2     = "testclientid2"
-	testConnectionID2 = "connectionid2"
+	testClientID2     = "testclientidtwo"
+	testConnectionID2 = "connectionidtwo"
 
-	testClientID3     = "testclientid3"
-	testConnectionID3 = "connectionid3"
+	testClientID3     = "testclientidthree"
+	testConnectionID3 = "connectionidthree"
 )
 
 type KeeperTestSuite struct {
@@ -54,7 +55,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: testHeight})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
 	suite.app = app
 
 	privVal := tmtypes.NewMockPV()
@@ -62,6 +63,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = tendermint.CreateTestHeader(chainID, testHeight, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
+
 	suite.consensusState = tendermint.ConsensusState{
 		Root:             commitment.NewRoot(suite.header.AppHash),
 		ValidatorSetHash: suite.valSet.Hash(),
@@ -70,17 +72,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 	res := suite.app.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", storeKey),
-		Data:  key,
-		Prove: true,
+		Path:   fmt.Sprintf("store/%s/key", storeKey),
+		Height: suite.app.LastBlockHeight(),
+		Data:   key,
+		Prove:  true,
 	})
 
-	height := res.Height
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
 
-	return proof, height
+	return proof, res.Height
 }
 
 func (suite *KeeperTestSuite) createClient(clientID string) {
@@ -96,7 +98,18 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)
-	suite.NoError(err)
+	suite.Require().NoError(err)
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	suite.ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
 }
 
 func (suite *KeeperTestSuite) updateClient(clientID string) {
@@ -104,15 +117,29 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	suite.app.Commit()
 	commitID := suite.app.LastCommitID()
 
-	height := suite.app.LastBlockHeight() + 1
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
-	state := tendermint.ConsensusState{
-		Root: commitment.NewRoot(commitID.Hash),
+	consensusState := tendermint.ConsensusState{
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), state)
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(
+		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
+	)
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	suite.ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgUpdateClient(clientID, suite.header, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
+	// suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) createConnection(
@@ -148,14 +175,14 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.False(existed)
+	suite.Require().False(existed)
 
 	counterparty := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	expConn := types.NewConnectionEnd(exported.INIT, testClientID1, counterparty, types.GetCompatibleVersions())
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConn)
 	conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.True(existed)
-	suite.EqualValues(expConn, conn)
+	suite.Require().True(existed)
+	suite.Require().EqualValues(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
@@ -186,5 +213,60 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 	connections := suite.app.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.ctx)
 	suite.Require().Len(connections, len(expConnections))
-	suite.Require().Equal(expConnections, connections)
+	suite.Require().ElementsMatch(expConnections, connections)
+}
+
+// Mocked types
+// TODO: fix tests and replace for real proofs
+
+var (
+	_ commitment.ProofI = validProof{}
+	_ commitment.ProofI = invalidProof{}
+)
+
+type (
+	validProof   struct{}
+	invalidProof struct{}
+)
+
+func (validProof) GetCommitmentType() commitment.Type {
+	return commitment.Merkle
+}
+
+func (validProof) VerifyMembership(
+	root commitment.RootI, path commitment.PathI, value []byte) error {
+	return nil
+}
+
+func (validProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+	return nil
+}
+
+func (validProof) ValidateBasic() error {
+	return nil
+}
+
+func (validProof) IsEmpty() bool {
+	return false
+}
+
+func (invalidProof) GetCommitmentType() commitment.Type {
+	return commitment.Merkle
+}
+
+func (invalidProof) VerifyMembership(
+	root commitment.RootI, path commitment.PathI, value []byte) error {
+	return errors.New("proof failed")
+}
+
+func (invalidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+	return errors.New("proof failed")
+}
+
+func (invalidProof) ValidateBasic() error {
+	return errors.New("invalid proof")
+}
+
+func (invalidProof) IsEmpty() bool {
+	return true
 }

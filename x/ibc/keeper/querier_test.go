@@ -50,12 +50,6 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName),
 		},
 		{
-			"connection - QuerierConnection",
-			[]string{connection.SubModuleName, connection.QueryConnection},
-			false,
-			"",
-		},
-		{
 			"connection - QuerierConnections",
 			[]string{connection.SubModuleName, connection.QueryAllConnections},
 			false,

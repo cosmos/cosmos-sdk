@@ -85,9 +85,7 @@ func (k Keeper) ChanOpenTry(
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
-	if found {
-		return sdkerrors.Wrap(types.ErrChannelExists, channelID)
-	} else if !(previousChannel.State == exported.INIT &&
+	if found && !(previousChannel.State == exported.INIT &&
 		previousChannel.Ordering == order &&
 		previousChannel.Counterparty.PortID == counterparty.PortID &&
 		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
@@ -143,7 +141,7 @@ func (k Keeper) ChanOpenTry(
 		ctx, connectionEnd, proofHeight, proofInit,
 		counterparty.PortID, counterparty.ChannelID, expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -222,7 +220,7 @@ func (k Keeper) ChanOpenAck(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	channel.State = exported.OPEN
@@ -249,7 +247,7 @@ func (k Keeper) ChanOpenConfirm(
 	if channel.State != exported.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPENTRY (got %s)", channel.State.String(),
+			"channel state is not TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
@@ -300,7 +298,7 @@ func (k Keeper) ChanOpenConfirm(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	channel.State = exported.OPEN
@@ -424,7 +422,7 @@ func (k Keeper) ChanCloseConfirm(
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel, consensusState,
 	); err != nil {
-		return sdkerrors.Wrap(err, "channel membership verification failed")
+		return err
 	}
 
 	channel.State = exported.CLOSED

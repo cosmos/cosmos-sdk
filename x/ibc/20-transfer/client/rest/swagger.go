@@ -17,11 +17,4 @@ type (
 		Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
 		Memo       string              `json:"memo" yaml:"memo"`
 	}
-
-	PostRecvPacket struct {
-		Msgs       []types.MsgRecvPacket `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee           `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature   `json:"signatures" yaml:"signatures"`
-		Memo       string                `json:"memo" yaml:"memo"`
-	}
 )

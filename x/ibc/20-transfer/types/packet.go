@@ -12,6 +12,7 @@ import (
 var _ channelexported.PacketDataI = PacketDataTransfer{}
 
 // PacketDataTransfer defines a struct for the packet payload
+// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type PacketDataTransfer struct {
 	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
@@ -31,6 +32,7 @@ func NewPacketDataTransfer(amount sdk.Coins, sender, receiver sdk.AccAddress, so
 	}
 }
 
+// String returns a string representation of PacketDataTransfer
 func (pd PacketDataTransfer) String() string {
 	return fmt.Sprintf(`PacketDataTransfer:
 	Amount:               %s
@@ -44,8 +46,7 @@ func (pd PacketDataTransfer) String() string {
 	)
 }
 
-// Implements channelexported.PacketDataI
-// ValidateBasic performs a basic check of the packet fields
+// ValidateBasic implements channelexported.PacketDataI
 func (pd PacketDataTransfer) ValidateBasic() error {
 	if !pd.Amount.IsAllPositive() {
 		return sdkerrors.ErrInsufficientFunds
@@ -62,43 +63,43 @@ func (pd PacketDataTransfer) ValidateBasic() error {
 	return nil
 }
 
-// Implements channelexported.PacketDataI
+// GetBytes implements channelexported.PacketDataI
 func (pd PacketDataTransfer) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
 }
 
-// Implements channelexported.PacketDataI
+// GetTimeoutHeight implements channelexported.PacketDataI
 func (pd PacketDataTransfer) GetTimeoutHeight() uint64 {
 	return pd.Timeout
 }
 
-// Implements channelexported.PacketDataI
+// Type implements channelexported.PacketDataI
 func (pd PacketDataTransfer) Type() string {
 	return "ics20/transfer"
 }
 
 var _ channelexported.PacketDataI = AckDataTransfer{}
 
-type AckDataTransfer struct {
-}
+// AckDataTransfer is a no-op packet
+// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
+type AckDataTransfer struct{}
 
-// Implements channelexported.PacketDataI
-// ValidateBasic performs a basic check of the packet fields
+// ValidateBasic implements channelexported.PacketDataI
 func (ack AckDataTransfer) ValidateBasic() error {
 	return nil
 }
 
-// Implements channelexported.PacketDataI
+// GetBytes implements channelexported.PacketDataI
 func (ack AckDataTransfer) GetBytes() []byte {
 	return []byte("ok")
 }
 
-// Implements channelexported.PacketDataI
+// GetTimeoutHeight implements channelexported.PacketDataI
 func (ack AckDataTransfer) GetTimeoutHeight() uint64 {
 	return 0
 }
 
-// Implements channelexported.PacketDataI
+// Type implements channelexported.PacketDataI
 func (ack AckDataTransfer) Type() string {
 	return "ics20/transfer/ack"
 }

@@ -446,7 +446,7 @@ func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = MsgTimeout{}
 
-// MsgTimeout receives timeouted packet
+// MsgTimeout receives timed-out packet
 type MsgTimeout struct {
 	Packet           `json:"packet" yaml:"packet"`
 	NextSequenceRecv uint64            `json:"next_sequence_recv" yaml:"next_sequence_recv"`

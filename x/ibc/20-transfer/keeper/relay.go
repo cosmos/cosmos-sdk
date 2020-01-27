@@ -133,6 +133,7 @@ func (k Keeper) TimeoutTransfer(
 	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
 }
 
+// See spec for this function: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func (k Keeper) createOutgoingPacket(
 	ctx sdk.Context,
 	seq uint64,
@@ -149,6 +150,7 @@ func (k Keeper) createOutgoingPacket(
 		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
+		// construct receiving denominations, check correctness
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		coins := make(sdk.Coins, len(amount))
 		for i, coin := range amount {
@@ -161,6 +163,7 @@ func (k Keeper) createOutgoingPacket(
 			coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 		}
 
+		// escrow source tokens (assumed to fail if balance insufficient)
 		err := k.bankKeeper.SendCoins(ctx, sender, escrowAddress, coins)
 		if err != nil {
 			return err
@@ -168,6 +171,7 @@ func (k Keeper) createOutgoingPacket(
 
 	} else {
 		// burn vouchers from the sender's balance if the source is from another chain
+		// construct receiving denomination, check correctness
 		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
 		for _, coin := range amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {

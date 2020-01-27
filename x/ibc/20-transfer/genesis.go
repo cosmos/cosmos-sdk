@@ -10,6 +10,7 @@ import (
 // InitGenesis sets distribution information for genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper) {
 	// check if the module account exists
+	// TODO: should we create the module account if it doesn't exist?
 	moduleAcc := keeper.GetTransferAccount(ctx)
 	if moduleAcc == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.GetModuleAccountName()))

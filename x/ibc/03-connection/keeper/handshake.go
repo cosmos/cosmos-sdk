@@ -56,12 +56,11 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// XXX: blocked by #5475
-	// if consensusHeight > uint64(ctx.BlockHeight()) {
-	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
-	// }
+	if consensusHeight > uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID, consensusHeight)
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}
@@ -86,12 +85,11 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
-	// XXX: blocked by #5475
-	// if err := k.VerifyClientConsensusState(
-	// 	ctx, proofHeight, proofInit, expectedConsensusState,
-	// ); err != nil {
-	// 	return err
-	// }
+	if err := k.VerifyClientConsensusState(
+		ctx, connection, consensusHeight, proofConsensus, expectedConsensusState,
+	); err != nil {
+		return err
+	}
 
 	previousConnection, found := k.GetConnection(ctx, connectionID)
 	if found && !(previousConnection.State == exported.INIT &&
@@ -126,10 +124,9 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// XXX: blocked by #5475
-	// if consensusHeight > uint64(ctx.BlockHeight()) {
-	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
-	// }
+	if consensusHeight > uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	}
 
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
@@ -150,7 +147,7 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}
@@ -166,12 +163,11 @@ func (k Keeper) ConnOpenAck(
 		return err
 	}
 
-	// XXX: blocked by #5475
-	// if err := k.VerifyClientConsensusState(
-	// 	ctx, connection, proofHeight, proofInit, expectedConsensusState,
-	// ); err != nil {
-	// 	return err
-	// }
+	if err := k.VerifyClientConsensusState(
+		ctx, connection, consensusHeight, proofConsensus, expectedConsensusState,
+	); err != nil {
+		return err
+	}
 
 	connection.State = exported.OPEN
 	connection.Versions = []string{version}
@@ -203,7 +199,8 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
+	// TODO: No verification required?
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}

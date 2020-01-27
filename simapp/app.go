@@ -235,7 +235,7 @@ func NewSimApp(
 	)
 
 	app.IBCKeeper = ibc.NewKeeper(
-		app.cdc, keys[ibc.StoreKey], app.BankKeeper, app.StakingKeeper, app.SupplyKeeper,
+		app.cdc, keys[ibc.StoreKey], app.StakingKeeper,
 	)
 
 	transferCapKey := app.IBCKeeper.PortKeeper.BindPort(bank.ModuleName)
@@ -260,6 +260,7 @@ func NewSimApp(
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		transfer.NewAppModule(app.TransferKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

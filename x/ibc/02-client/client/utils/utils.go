@@ -102,15 +102,14 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64,
 		return tendermint.Header{}, 0, err
 	}
 
-	height := info.Response.LastBlockHeight
-	prevheight := height - 1 // TODO: should this be next height?
+	height := info.Response.LastBlockHeight // TODO: should this be prev height?
 
 	commit, err := node.Commit(&height)
 	if err != nil {
 		return tendermint.Header{}, 0, err
 	}
 
-	validators, err := node.Validators(&prevheight, 0, 10000)
+	validators, err := node.Validators(&height, 0, 10000)
 	if err != nil {
 		return tendermint.Header{}, 0, err
 	}
@@ -136,7 +135,7 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusSta
 		return tendermint.ConsensusState{}, 0, err
 	}
 
-	height := info.Response.LastBlockHeight
+	height := info.Response.LastBlockHeight // TODO: should this be prev height?
 
 	commit, err := node.Commit(&height)
 	if err != nil {

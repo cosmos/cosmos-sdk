@@ -81,7 +81,7 @@ func (k Keeper) TimeoutPacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
@@ -203,7 +203,7 @@ func (k Keeper) TimeoutOnClose(
 		exported.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {

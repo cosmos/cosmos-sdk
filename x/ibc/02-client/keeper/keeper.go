@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -72,8 +74,8 @@ func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType expor
 	store.Set(ibctypes.KeyClientType(clientID), []byte{byte(clientType)})
 }
 
-// GetConsensusState gets the stored consensus state from a client at a given height.
-func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
+// GetClientConsensusState gets the stored consensus state from a client at a given height.
+func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(ibctypes.KeyConsensusState(clientID, height))
 	if bz == nil {
@@ -87,10 +89,25 @@ func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string, height uint6
 
 // SetClientConsensusState sets a ConsensusState to a particular client at the given
 // height
-func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
+func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
 	store.Set(ibctypes.KeyConsensusState(clientID, height), bz)
+}
+
+// GetSelfConsensusState introspects the (self) past historical info at a given height
+// and returns the expected consensus state at that height.
+func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
+	if !found {
+		return nil, false
+	}
+
+	consensusState := tendermint.ConsensusState{
+		Root:             commitment.NewRoot(histInfo.Header.AppHash),
+		ValidatorSetHash: tmtypes.NewValidatorSet(histInfo.ValSet.ToTmValidators()).Hash(),
+	}
+	return consensusState, true
 }
 
 // IterateClients provides an iterator over all stored light client State
@@ -136,6 +153,6 @@ func (k Keeper) initialize(
 		return nil, types.ErrInvalidClientType
 	}
 
-	k.SetConsensusState(ctx, clientID, height, consensusState)
+	k.SetClientConsensusState(ctx, clientID, height, consensusState)
 	return clientState, nil
 }

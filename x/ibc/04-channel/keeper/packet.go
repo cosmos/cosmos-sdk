@@ -162,7 +162,7 @@ func (k Keeper) RecvPacket(
 		return nil, types.ErrPacketTimeout
 	}
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
@@ -292,7 +292,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
@@ -387,7 +387,7 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {

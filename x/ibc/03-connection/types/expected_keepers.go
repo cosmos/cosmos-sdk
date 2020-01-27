@@ -8,5 +8,5 @@ import (
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
 	GetClientState(ctx sdk.Context, clientID string) (clientexported.ClientState, bool)
-	GetConsensusState(ctx sdk.Context, clientID string, height uint64) (clientexported.ConsensusState, bool)
+	GetSelfConsensusState(ctx sdk.Context, height uint64) (clientexported.ConsensusState, bool)
 }

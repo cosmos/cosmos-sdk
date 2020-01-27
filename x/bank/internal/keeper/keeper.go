@@ -371,6 +371,8 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 // ViewKeeper defines a module interface that facilitates read only access to
 // account balances.
 type ViewKeeper interface {
+	ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
+
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
@@ -500,6 +502,31 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 	}
 
 	return sdk.NewCoins()
+}
+
+// ValidateBalance validates all balances for a given account address returning
+// an error if any balance is invalid. It will check for vesting account types
+// and validate the balances against the original vesting balances.
+func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error {
+	acc := k.ak.GetAccount(ctx, addr)
+	if acc == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+	}
+
+	balances := k.GetAllBalances(ctx, addr)
+	if !balances.IsValid() {
+		return fmt.Errorf("account balance of %s is invalid", balances)
+	}
+
+	vacc, ok := acc.(vestexported.VestingAccount)
+	if ok {
+		ogv := vacc.GetOriginalVesting()
+		if ogv.IsAnyGT(balances) {
+			return fmt.Errorf("vesting amount %s cannot be greater than total amount %s", ogv, balances)
+		}
+	}
+
+	return nil
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, balance, amt sdk.Coins) error {

@@ -10,6 +10,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 
 	genState.Balances = SanitizeGenesisBalances(genState.Balances)
 	for _, balance := range genState.Balances {
+		if err := keeper.ValidateBalance(ctx, balance.Address); err != nil {
+			panic(err)
+		}
+
 		keeper.SetBalances(ctx, balance.Address, balance.Coins)
 	}
 }

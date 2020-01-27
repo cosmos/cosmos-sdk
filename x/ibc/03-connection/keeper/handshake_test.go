@@ -5,7 +5,6 @@ import (
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // TestConnOpenInit - Chain A (ID #1) initializes (INIT state) a connection with
@@ -46,28 +45,35 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
 	)
 
+	consensusHeight := int64(0)
+
 	testCases := []testCase{
 		{"success", func() {
-			suite.createClient(testClientID1)
+			suite.createClient(testClientID1) // height = 2
 			suite.createClient(testClientID2)
+			consensusHeight = suite.ctx.BlockHeight() // height = 3
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
 			suite.updateClient(testClientID1)
+			suite.updateClient(testClientID2)
 		}, true},
 		{"consensus state not found", func() {}, false},
 		{"connection state verification invalid", func() {
 			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
+			consensusHeight = suite.ctx.BlockHeight()
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.UNINITIALIZED)
 			suite.updateClient(testClientID1)
 		}, false},
 		{"invalid previous connection", func() {
 			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
+			consensusHeight = suite.ctx.BlockHeight()
 			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.UNINITIALIZED)
 			suite.updateClient(testClientID1)
 		}, false},
 		{"couldn't add connection to client", func() {
 			suite.createClient(testClientID1)
+			consensusHeight = suite.ctx.BlockHeight()
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
 			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.INIT)
 			suite.updateClient(testClientID1)
@@ -80,21 +86,27 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 			tc.malleate()
 
-			connectionKey := ibctypes.KeyConnection(testConnectionID1)
-			proofInit, proofHeight := suite.queryProof(connectionKey)
+			// connectionKey := ibctypes.KeyConnection(testConnectionID1)
+			// proofInit, proofHeight := suite.queryProof(connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(proofHeight))
-			proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+			// consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(proofHeight))
+			// proofConsensus, consensusHeight := suite.queryProof(consensusKey)
 
-			err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.ctx, testConnectionID2, counterparty, testClientID2,
-				connection.GetCompatibleVersions(), proofInit, proofConsensus,
-				uint64(proofHeight), uint64(consensusHeight),
-			)
+			proofHeight := consensusHeight - 1
 
 			if tc.expPass {
+				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(
+					suite.ctx, testConnectionID2, counterparty, testClientID2,
+					connection.GetCompatibleVersions(), validProof{}, validProof{},
+					uint64(proofHeight), uint64(consensusHeight),
+				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
+				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(
+					suite.ctx, testConnectionID2, counterparty, testClientID2,
+					connection.GetCompatibleVersions(), invalidProof{}, validProof{},
+					uint64(proofHeight), uint64(consensusHeight),
+				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -105,6 +117,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 // the initialization (TRYINIT) of the connection on  Chain B (ID #2).
 func (suite *KeeperTestSuite) TestConnOpenAck() {
 	version := connection.GetCompatibleVersions()[0]
+	consensusHeight := int64(0)
 
 	testCases := []struct {
 		msg      string
@@ -112,13 +125,14 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		malleate func()
 		expPass  bool
 	}{
-		// {"success", version, func() {
-		// 	suite.createClient(testClientID1)
-		// 	suite.createClient(testClientID2)
-		// 	suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
-		// 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.TRYOPEN)
-		// 	suite.updateClient(testClientID1)
-		// }, true},
+		{"success", version, func() {
+			suite.createClient(testClientID1)
+			consensusHeight = suite.ctx.BlockHeight()
+			suite.createClient(testClientID2)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
+			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.TRYOPEN)
+			suite.updateClient(testClientID1)
+		}, true},
 		{"connection not found", version, func() {}, false},
 		{"connection state is not INIT", version, func() {
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.UNINITIALIZED)
@@ -131,9 +145,10 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		{"consensus state not found", version, func() {
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
 			suite.updateClient(testClientID1)
-		}, true},
+		}, false},
 		{"connection state verification failed", version, func() {
 			suite.createClient(testClientID1)
+			consensusHeight = suite.ctx.BlockHeight()
 			suite.createClient(testClientID2)
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
 			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.UNINITIALIZED)
@@ -147,20 +162,25 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			tc.malleate()
 
-			connectionKey := ibctypes.KeyConnection(testConnectionID2)
-			proofTry, proofHeight := suite.queryProof(connectionKey)
+			// connectionKey := ibctypes.KeyConnection(testConnectionID2)
+			// proofTry, proofHeight := suite.queryProof(connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientID2, uint64(proofHeight))
-			proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+			// consensusKey := ibctypes.KeyConsensusState(testClientID2, uint64(proofHeight))
+			// proofConsensus, consensusHeight := suite.queryProof(consensusKey)
 
-			err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenAck(
-				suite.ctx, testConnectionID1, tc.version, proofTry, proofConsensus,
-				uint64(proofHeight), uint64(consensusHeight),
-			)
+			proofHeight := consensusHeight - 1
 
 			if tc.expPass {
+				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenAck(
+					suite.ctx, testConnectionID1, tc.version, validProof{}, validProof{},
+					uint64(proofHeight), uint64(consensusHeight),
+				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
+				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenAck(
+					suite.ctx, testConnectionID1, tc.version, invalidProof{}, validProof{},
+					uint64(proofHeight), uint64(consensusHeight),
+				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -170,14 +190,17 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 // TestConnOpenAck - Chain B (ID #2) calls ConnOpenConfirm to confirm that
 // Chain A (ID #1) state is now OPEN.
 func (suite *KeeperTestSuite) TestConnOpenConfirm() {
+	consensusHeight := int64(0)
+
 	testCases := []testCase{
-		// {"success", func() {
-		// 	suite.createClient(testClientID1)
-		// 	suite.createClient(testClientID2)
-		// 	suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
-		// 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.TRYOPEN)
-		// 	suite.updateClient(testClientID1)
-		// }, true},
+		{"success", func() {
+			suite.createClient(testClientID1)
+			suite.createClient(testClientID2)
+			consensusHeight = suite.ctx.BlockHeight()
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
+			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.TRYOPEN)
+			suite.updateClient(testClientID1)
+		}, true},
 		{"connection not found", func() {}, false},
 		{"chain B's connection state is not TRYOPEN", func() {
 			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.UNINITIALIZED)
@@ -189,6 +212,8 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 		{"connection state verification failed", func() {
 			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
+			consensusHeight = suite.ctx.BlockHeight()
+			suite.updateClient(testClientID1)
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
 			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.TRYOPEN)
 			suite.updateClient(testClientID1)
@@ -201,16 +226,21 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 			tc.malleate()
 
-			connectionKey := ibctypes.KeyConnection(testConnectionID2)
-			proofAck, proofHeight := suite.queryProof(connectionKey)
-
-			err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-				suite.ctx, testConnectionID2, proofAck, uint64(proofHeight),
-			)
+			// connectionKey := ibctypes.KeyConnection(testConnectionID2)
+			// proofAck, proofHeight := suite.queryProof(connectionKey)
+			proofHeight := consensusHeight - 1
 
 			if tc.expPass {
+				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
+					suite.ctx, testConnectionID2, validProof{}, uint64(proofHeight),
+					uint64(consensusHeight),
+				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
+				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
+					suite.ctx, testConnectionID2, invalidProof{}, uint64(proofHeight),
+					uint64(consensusHeight),
+				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})

@@ -51,7 +51,6 @@ func (k Keeper) CreateClient(
 
 // UpdateClient updates the consensus state and the state root from a provided header
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
-	fmt.Println("FUCKING REIGHTEOIAHROAEIRJAIOJFOADIS")
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
@@ -79,9 +78,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	switch clientType {
 	case exported.Tendermint:
-		fmt.Println("In Verify TM header")
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(clientState, header, ctx.ChainID())
-		fmt.Println("After verify")
 	default:
 		return sdkerrors.Wrapf(types.ErrInvalidClientType, "cannot update client with ID %s", clientID)
 	}

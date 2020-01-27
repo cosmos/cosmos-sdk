@@ -56,7 +56,8 @@ type ConnectionOpenAckReq struct {
 
 // ConnectionOpenConfirmReq defines the properties of a connection open confirm request's body.
 type ConnectionOpenConfirmReq struct {
-	BaseReq     rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	ProofAck    commitment.ProofI `json:"proof_ack" yaml:"proof_ack"`
-	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
+	BaseReq         rest.BaseReq      `json:"base_req" yaml:"base_req"`
+	ProofAck        commitment.ProofI `json:"proof_ack" yaml:"proof_ack"`
+	ProofHeight     uint64            `json:"proof_height" yaml:"proof_height"`
+	ConsensusHeight uint64            `json:"consensus_height" yaml:"consensus_height"`
 }

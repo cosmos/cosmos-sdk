@@ -406,7 +406,6 @@ func (rs *Store) getStoreByName(name string) types.Store {
 func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// Query just routes this to a substore.
 	path := req.Path
-
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
 		return sdkerrors.QueryResult(err)

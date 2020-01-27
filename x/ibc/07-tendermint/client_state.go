@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -105,6 +107,7 @@ func (cs ClientState) VerifyConnectionState(
 	}
 
 	if cs.LatestHeight < height {
+		fmt.Println(cs.LatestHeight, height)
 		return ibctypes.ErrInvalidHeight
 	}
 

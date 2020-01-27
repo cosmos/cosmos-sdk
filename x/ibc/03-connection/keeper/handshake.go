@@ -188,7 +188,8 @@ func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck commitment.ProofI,
-	proofHeight uint64,
+	proofHeight,
+	consensusHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
@@ -202,8 +203,7 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	// NOTE: should be safe to use proofHeight here
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, proofHeight)
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}

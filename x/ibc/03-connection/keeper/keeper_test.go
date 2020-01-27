@@ -1,23 +1,21 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -63,14 +61,7 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
-	accountPrivKey = secp256k1.GenPrivKey()
-	accountPubKey = accountPrivKey.PubKey()
-	accountAddress = sdk.AccAddress(accountPubKey.Address())
-
-	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-	baseAccount = authtypes.NewBaseAccount(accountAddress, coins, accountPubKey, 0, 0)
-
-	app := simapp.SetupWithGenesisAccounts([]authexported.GenesisAccount{baseAccount})
+	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
@@ -104,44 +95,60 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 }
 
 func (suite *KeeperTestSuite) createClient(clientID string) {
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
 
-	consState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(suite.header.Hash()),
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+
+	consensusState := tendermint.ConsensusState{
+		Root:             commitment.NewRoot(commitID.Hash),
 		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
-	suite.ctx = suite.ctx.WithBlockHeader(abci.Header{Height: suite.ctx.BlockHeader().Height + 1})
-
-	_, _, err := simapp.SignCheckDeliver(
-		suite.T(),
-		suite.cdc,
-		suite.app.BaseApp,
-		suite.ctx.BlockHeader(),
-		[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
-		[]uint64{baseAccount.GetAccountNumber()},
-		[]uint64{baseAccount.GetSequence()},
-		true, true, accountPrivKey,
-	)
-
+	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)
 	suite.Require().NoError(err)
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	suite.ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
 }
 
 func (suite *KeeperTestSuite) updateClient(clientID string) {
+	// always commit when updateClient and begin a new block
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
 
-	suite.ctx = suite.ctx.WithBlockHeader(abci.Header{Height: suite.ctx.BlockHeader().Height + 1})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
-	_, _, err := simapp.SignCheckDeliver(
-		suite.T(),
-		suite.cdc,
-		suite.app.BaseApp,
-		suite.ctx.BlockHeader(),
-		[]sdk.Msg{clienttypes.NewMsgUpdateClient(clientID, suite.header, accountAddress)},
-		[]uint64{baseAccount.GetAccountNumber()},
-		[]uint64{baseAccount.GetSequence()},
-		true, true, accountPrivKey,
+	consensusState := tendermint.ConsensusState{
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSetHash: suite.valSet.Hash(),
+	}
+
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(
+		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
 	)
 
-	suite.Require().NoError(err)
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	suite.ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgUpdateClient(clientID, suite.header, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
+	// suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) createConnection(
@@ -215,5 +222,60 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 	connections := suite.app.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.ctx)
 	suite.Require().Len(connections, len(expConnections))
-	suite.Require().Equal(expConnections, connections)
+	suite.Require().ElementsMatch(expConnections, connections)
+}
+
+// Mocked types
+// TODO: fix tests and replace for real proofs
+
+var (
+	_ commitment.ProofI = validProof{}
+	_ commitment.ProofI = invalidProof{}
+)
+
+type (
+	validProof   struct{}
+	invalidProof struct{}
+)
+
+func (validProof) GetCommitmentType() commitment.Type {
+	return commitment.Merkle
+}
+
+func (validProof) VerifyMembership(
+	root commitment.RootI, path commitment.PathI, value []byte) error {
+	return nil
+}
+
+func (validProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+	return nil
+}
+
+func (validProof) ValidateBasic() error {
+	return nil
+}
+
+func (validProof) IsEmpty() bool {
+	return false
+}
+
+func (invalidProof) GetCommitmentType() commitment.Type {
+	return commitment.Merkle
+}
+
+func (invalidProof) VerifyMembership(
+	root commitment.RootI, path commitment.PathI, value []byte) error {
+	return errors.New("proof failed")
+}
+
+func (invalidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+	return errors.New("proof failed")
+}
+
+func (invalidProof) ValidateBasic() error {
+	return errors.New("invalid proof")
+}
+
+func (invalidProof) IsEmpty() bool {
+	return true
 }

@@ -3,9 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -50,10 +48,13 @@ func (msg MsgCreateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
 	if clientType := exported.ClientTypeFromString(msg.ClientType); clientType == 0 {
-		return sdkerrors.Wrap(errors.ErrInvalidClientType, msg.ClientType)
+		return sdkerrors.Wrap(ErrInvalidClientType, msg.ClientType)
 	}
 	if msg.ConsensusState == nil {
-		return errors.ErrInvalidConsensus
+		return ErrInvalidConsensus
+	}
+	if err := msg.ConsensusState.ValidateBasic(); err != nil {
+		return err
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -102,7 +103,7 @@ func (msg MsgUpdateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Header == nil {
-		return errors.ErrInvalidHeader
+		return ErrInvalidHeader
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -117,55 +118,5 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
-}
-
-// MsgSubmitMisbehaviour defines a message to update an IBC client
-type MsgSubmitMisbehaviour struct {
-	ClientID string                    `json:"id" yaml:"id"`
-	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
-	Signer   sdk.AccAddress            `json:"address" yaml:"address"`
-}
-
-// NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance
-func NewMsgSubmitMisbehaviour(id string, evidence evidenceexported.Evidence, signer sdk.AccAddress) MsgSubmitMisbehaviour {
-	return MsgSubmitMisbehaviour{
-		ClientID: id,
-		Evidence: evidence,
-		Signer:   signer,
-	}
-}
-
-// Route implements sdk.Msg
-func (msg MsgSubmitMisbehaviour) Route() string {
-	return ibctypes.RouterKey
-}
-
-// Type implements sdk.Msg
-func (msg MsgSubmitMisbehaviour) Type() string {
-	return "submit_misbehaviour"
-}
-
-// ValidateBasic implements sdk.Msg
-func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
-	if msg.Evidence == nil {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "evidence cannot be nil")
-	}
-	if err := msg.Evidence.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
-	}
-	if msg.Signer.Empty() {
-		return sdkerrors.ErrInvalidAddress
-	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
-}
-
-// GetSignBytes implements sdk.Msg
-func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
-}
-
-// GetSigners implements sdk.Msg
-func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

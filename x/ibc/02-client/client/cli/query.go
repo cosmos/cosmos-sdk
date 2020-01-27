@@ -88,11 +88,11 @@ $ %s query ibc client state [client-id]
 // the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "consensus-state [client-id]",
-		Short:   "Query the latest consensus state of the client",
-		Long:    "Query the consensus state for a particular light client",
-		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id]", version.ClientName),
-		Args:    cobra.ExactArgs(1),
+		Use:     "consensus-state [client-id] [height]",
+		Short:   "Query the consensus state of a client at a given height",
+		Long:    "Query the consensus state for a particular light client at a given height",
+		Example: fmt.Sprintf("%s query ibc client consensus-state [client-id] [height]", version.ClientName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			clientID := args[0]
@@ -100,93 +100,19 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 				return errors.New("client ID can't be blank")
 			}
 
+			height, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return fmt.Errorf("expected integer height, got: %s", args[1])
+			}
+
 			prove := viper.GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusState(cliCtx, clientID, prove)
+			csRes, err := utils.QueryConsensusState(cliCtx, clientID, height, prove)
 			if err != nil {
 				return err
 			}
 
 			return cliCtx.PrintOutput(csRes)
-		},
-	}
-	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
-	return cmd
-}
-
-// GetCmdQueryRoot defines the command to query a verified commitment root
-func GetCmdQueryRoot(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "root [client-id] [height]",
-		Short: "Query a verified commitment root",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query an already verified commitment root at a specific height for a particular client
-
-Example:
-$ %s query ibc client root [client-id] [height]
-`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			clientID := args[0]
-			if strings.TrimSpace(clientID) == "" {
-				return errors.New("client ID can't be blank")
-			}
-
-			height, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("expected integer height, got: %v", args[1])
-			}
-
-			prove := viper.GetBool(flags.FlagProve)
-
-			rootRes, err := utils.QueryCommitmentRoot(cliCtx, clientID, height, prove)
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(rootRes)
-		},
-	}
-	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
-	return cmd
-}
-
-// GetCmdQueryCommitter defines the command to query the committer of the chain
-// at a given height
-func GetCmdQueryCommitter(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "committer [client-id] [height]",
-		Short: "Query a committer",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query a committer at a specific height for a particular client
-
-Example:
-$ %s query ibc client committer [client-id] [height]
-`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			clientID := args[0]
-			if strings.TrimSpace(clientID) == "" {
-				return errors.New("client ID can't be blank")
-			}
-
-			height, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("expected integer height, got: %v", args[1])
-			}
-
-			prove := viper.GetBool(flags.FlagProve)
-
-			committerRes, err := utils.QueryCommitter(cliCtx, clientID, height, prove)
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(committerRes)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")

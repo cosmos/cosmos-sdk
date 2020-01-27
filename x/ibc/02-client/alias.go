@@ -9,53 +9,36 @@ package client
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
 const (
-	AttributeKeyClientID = types.AttributeKeyClientID
-	SubModuleName        = types.SubModuleName
-	StoreKey             = types.StoreKey
-	RouterKey            = types.RouterKey
-	QuerierRoute         = types.QuerierRoute
-	QueryAllClients      = types.QueryAllClients
-	QueryClientState     = types.QueryClientState
-	QueryConsensusState  = types.QueryConsensusState
-	QueryVerifiedRoot    = types.QueryVerifiedRoot
+	AttributeKeyClientID  = types.AttributeKeyClientID
+	AttrbuteKeyClientType = types.AttributeKeyClientType
+	SubModuleName         = types.SubModuleName
+	RouterKey             = types.RouterKey
+	QuerierRoute          = types.QuerierRoute
+	QueryAllClients       = types.QueryAllClients
+	QueryClientState      = types.QueryClientState
+	QueryConsensusState   = types.QueryConsensusState
 )
 
 var (
 	// functions aliases
-	NewKeeper                    = keeper.NewKeeper
-	QuerierClients               = keeper.QuerierClients
-	QuerierClientState           = keeper.QuerierClientState
-	QuerierConsensusState        = keeper.QuerierConsensusState
-	QuerierVerifiedRoot          = keeper.QuerierVerifiedRoot
-	RegisterCodec                = types.RegisterCodec
-	ErrClientExists              = errors.ErrClientExists
-	ErrClientNotFound            = errors.ErrClientNotFound
-	ErrClientFrozen              = errors.ErrClientFrozen
-	ErrConsensusStateNotFound    = errors.ErrConsensusStateNotFound
-	ErrInvalidConsensus          = errors.ErrInvalidConsensus
-	ErrClientTypeNotFound        = errors.ErrClientTypeNotFound
-	ErrInvalidClientType         = errors.ErrInvalidClientType
-	ErrRootNotFound              = errors.ErrRootNotFound
-	ErrInvalidHeader             = errors.ErrInvalidHeader
-	ErrInvalidEvidence           = errors.ErrInvalidEvidence
-	ClientStatePath              = types.ClientStatePath
-	ClientTypePath               = types.ClientTypePath
-	ConsensusStatePath           = types.ConsensusStatePath
-	RootPath                     = types.RootPath
-	KeyClientState               = types.KeyClientState
-	KeyClientType                = types.KeyClientType
-	KeyConsensusState            = types.KeyConsensusState
-	KeyRoot                      = types.KeyRoot
-	NewMsgCreateClient           = types.NewMsgCreateClient
-	NewMsgUpdateClient           = types.NewMsgUpdateClient
-	NewMsgSubmitMibehaviour      = types.NewMsgSubmitMisbehaviour
-	NewQueryClientStateParams    = types.NewQueryClientStateParams
-	NewQueryCommitmentRootParams = types.NewQueryCommitmentRootParams
-	NewClientState               = types.NewClientState
+	NewKeeper                 = keeper.NewKeeper
+	QuerierClients            = keeper.QuerierClients
+	RegisterCodec             = types.RegisterCodec
+	ErrClientExists           = types.ErrClientExists
+	ErrClientNotFound         = types.ErrClientNotFound
+	ErrClientFrozen           = types.ErrClientFrozen
+	ErrConsensusStateNotFound = types.ErrConsensusStateNotFound
+	ErrInvalidConsensus       = types.ErrInvalidConsensus
+	ErrClientTypeNotFound     = types.ErrClientTypeNotFound
+	ErrInvalidClientType      = types.ErrInvalidClientType
+	ErrRootNotFound           = types.ErrRootNotFound
+	ErrInvalidHeader          = types.ErrInvalidHeader
+	ErrInvalidEvidence        = types.ErrInvalidEvidence
+	NewMsgCreateClient        = types.NewMsgCreateClient
+	NewMsgUpdateClient        = types.NewMsgUpdateClient
 
 	// variable aliases
 	SubModuleCdc           = types.SubModuleCdc
@@ -65,11 +48,7 @@ var (
 )
 
 type (
-	Keeper                    = keeper.Keeper
-	MsgCreateClient           = types.MsgCreateClient
-	MsgUpdateClient           = types.MsgUpdateClient
-	MsgSubmitMisbehaviour     = types.MsgSubmitMisbehaviour
-	QueryClientStateParams    = types.QueryClientStateParams
-	QueryCommitmentRootParams = types.QueryCommitmentRootParams
-	State                     = types.State
+	Keeper          = keeper.Keeper
+	MsgCreateClient = types.MsgCreateClient
+	MsgUpdateClient = types.MsgUpdateClient
 )

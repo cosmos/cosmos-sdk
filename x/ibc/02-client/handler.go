@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
@@ -25,6 +25,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk
 		sdk.NewEvent(
 			EventTypeCreateClient,
 			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
+			sdk.NewAttribute(AttrbuteKeyClientType, msg.ClientType),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -49,6 +50,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk
 		sdk.NewEvent(
 			EventTypeUpdateClient,
 			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
+			sdk.NewAttribute(AttrbuteKeyClientType, msg.Header.ClientType().String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -66,12 +68,11 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk
 // light client misbehaviour.
 func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
 	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
-		switch e := evidence.(type) {
-		case tendermint.Misbehaviour:
-			return k.CheckMisbehaviourAndUpdateState(ctx, evidence)
-
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)
+		misbehaviour, ok := evidence.(exported.Misbehaviour)
+		if !ok {
+			return types.ErrInvalidEvidence
 		}
+
+		return k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)
 	}
 }

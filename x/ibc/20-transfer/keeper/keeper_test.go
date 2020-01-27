@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -30,7 +30,7 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
-	testChannelOrder   = channel.UNORDERED
+	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
 )
 
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
-	suite.createConnection(connection.OPEN)
+	suite.createConnection(connectionexported.OPEN)
 }
 
 func (suite *KeeperTestSuite) TestGetTransferAccount() {

@@ -8,7 +8,8 @@ import (
 
 // IBC client events
 const (
-	AttributeKeyClientID = "client_id"
+	AttributeKeyClientID   = "client_id"
+	AttributeKeyClientType = "client_type"
 )
 
 // IBC client events vars

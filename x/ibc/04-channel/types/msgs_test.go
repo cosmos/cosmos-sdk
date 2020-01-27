@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/merkle"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -81,21 +81,21 @@ func TestMsgTestSuite(t *testing.T) {
 // TestMsgChannelOpenInit tests ValidateBasic for MsgChannelOpenInit
 func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 	testMsgs := []MsgChannelOpenInit{
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                      // valid msg
-		NewMsgChannelOpenInit(invalidShortPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                  // too short port id
-		NewMsgChannelOpenInit(invalidLongPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                   // too long port id
-		NewMsgChannelOpenInit(invalidPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                       // port id contains non-alpha
-		NewMsgChannelOpenInit("testportid", invalidShortChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                // too short channel id
-		NewMsgChannelOpenInit("testportid", invalidLongChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                 // too long channel id
-		NewMsgChannelOpenInit("testportid", invalidChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                     // channel id contains non-alpha
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", Order(3), connHops, "testcpport", "testcpchannel", addr),                     // invalid channel order
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ORDERED, invalidConnHops, "testcpport", "testcpchannel", addr),               // connection hops more than 1
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", addr),        // too short connection id
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", addr),         // too long connection id
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", addr), // connection id contains non-alpha
-		NewMsgChannelOpenInit("testportid", "testchannel", "", UNORDERED, connHops, "testcpport", "testcpchannel", addr),                       // empty channel version
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", UNORDERED, connHops, invalidPort, "testcpchannel", addr),                     // invalid counterparty port id
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", UNORDERED, connHops, "testcpport", invalidChannel, addr),                     // invalid counterparty channel id
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                      // valid msg
+		NewMsgChannelOpenInit(invalidShortPort, "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                  // too short port id
+		NewMsgChannelOpenInit(invalidLongPort, "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                   // too long port id
+		NewMsgChannelOpenInit(invalidPort, "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                       // port id contains non-alpha
+		NewMsgChannelOpenInit("testportid", invalidShortChannel, "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                // too short channel id
+		NewMsgChannelOpenInit("testportid", invalidLongChannel, "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                 // too long channel id
+		NewMsgChannelOpenInit("testportid", invalidChannel, "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", addr),                     // channel id contains non-alpha
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.Order(3), connHops, "testcpport", "testcpchannel", addr),                     // invalid channel order
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.ORDERED, invalidConnHops, "testcpport", "testcpchannel", addr),               // connection hops more than 1
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", addr),        // too short connection id
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", addr),         // too long connection id
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", addr), // connection id contains non-alpha
+		NewMsgChannelOpenInit("testportid", "testchannel", "", exported.UNORDERED, connHops, "testcpport", "testcpchannel", addr),                       // empty channel version
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.UNORDERED, connHops, invalidPort, "testcpchannel", addr),                     // invalid counterparty port id
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.UNORDERED, connHops, "testcpport", invalidChannel, addr),                     // invalid counterparty channel id
 	}
 
 	testCases := []struct {
@@ -133,24 +133,24 @@ func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 // TestMsgChannelOpenTry tests ValidateBasic for MsgChannelOpenTry
 func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 	testMsgs := []MsgChannelOpenTry{
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                      // valid msg
-		NewMsgChannelOpenTry(invalidShortPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                  // too short port id
-		NewMsgChannelOpenTry(invalidLongPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                   // too long port id
-		NewMsgChannelOpenTry(invalidPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // port id contains non-alpha
-		NewMsgChannelOpenTry("testportid", invalidShortChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                // too short channel id
-		NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                 // too long channel id
-		NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // channel id contains non-alpha
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, 1, addr),                         // empty counterparty version
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", nil, 1, addr),                              // empty suite.proof
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 0, addr),                      // suite.proof height is zero
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid channel order
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),             // connection hops more than 1
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),        // too short connection id
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),         // too long connection id
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr), // connection id contains non-alpha
-		NewMsgChannelOpenTry("testportid", "testchannel", "", UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // empty channel version
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid counterparty port id
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, connHops, "testcpport", invalidChannel, "1.0", suite.proof, 1, addr),                     // invalid counterparty channel id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                      // valid msg
+		NewMsgChannelOpenTry(invalidShortPort, "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                  // too short port id
+		NewMsgChannelOpenTry(invalidLongPort, "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                   // too long port id
+		NewMsgChannelOpenTry(invalidPort, "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // port id contains non-alpha
+		NewMsgChannelOpenTry("testportid", invalidShortChannel, "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                // too short channel id
+		NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                 // too long channel id
+		NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // channel id contains non-alpha
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, 1, addr),                         // empty counterparty version
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", nil, 1, addr),                              // empty suite.proof
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 0, addr),                      // suite.proof height is zero
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid channel order
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),             // connection hops more than 1
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),        // too short connection id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),         // too long connection id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr), // connection id contains non-alpha
+		NewMsgChannelOpenTry("testportid", "testchannel", "", exported.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // empty channel version
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid counterparty port id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.UNORDERED, connHops, "testcpport", invalidChannel, "1.0", suite.proof, 1, addr),                     // invalid counterparty channel id
 	}
 
 	testCases := []struct {
@@ -477,4 +477,74 @@ func TestMsgPacketGetSigners(t *testing.T) {
 
 	expected := "[746573746164647231]"
 	require.Equal(t, expected, fmt.Sprintf("%v", res))
+}
+
+// TestMsgTimeout tests ValidateBasic for MsgTimeout
+func (suite *MsgTestSuite) TestMsgTimeout() {
+	testMsgs := []MsgTimeout{
+		NewMsgTimeout(packet, 0, proof, 1, addr),
+		NewMsgTimeout(packet, 0, proof, 0, addr),
+		NewMsgTimeout(packet, 0, proof, 1, emptyAddr),
+		NewMsgTimeout(packet, 0, emptyProof, 1, addr),
+		NewMsgTimeout(invalidPacket, 0, proof, 1, addr),
+		NewMsgTimeout(packet, 0, invalidProofs1, 1, addr),
+	}
+
+	testCases := []struct {
+		msg     MsgTimeout
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height must be > 0"},
+		{testMsgs[2], false, "missing signer address"},
+		{testMsgs[3], false, "cannot submit an empty proof"},
+		{testMsgs[4], false, "invalid packet"},
+		{testMsgs[5], false, "cannot submit an invalid proof"},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
+}
+
+// TestMsgAcknowledgement tests ValidateBasic for MsgAcknowledgement
+func (suite *MsgTestSuite) TestMsgAcknowledgement() {
+	testMsgs := []MsgAcknowledgement{
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 0, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, emptyAddr),
+		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
+		NewMsgAcknowledgement(invalidPacket, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, invalidPacket.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, packet.GetData(), invalidProofs1, 1, addr),
+	}
+
+	testCases := []struct {
+		msg     MsgAcknowledgement
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height must be > 0"},
+		{testMsgs[2], false, "missing signer address"},
+		{testMsgs[3], false, "cannot submit an empty proof"},
+		{testMsgs[4], false, "invalid packet"},
+		{testMsgs[5], false, "invalid acknowledgement"},
+		{testMsgs[6], false, "cannot submit an invalid proof"},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
 }

@@ -10,7 +10,7 @@ import (
 )
 
 // Copied unimported test functions from tmtypes to use them here
-func makeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
+func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
 		PartsHeader: tmtypes.PartSetHeader{
@@ -18,10 +18,10 @@ func makeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.Block
 			Hash:  partSetHash,
 		},
 	}
-
 }
 
-func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, nextValSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+// CreateTestHeader creates a mock header for testing only.
+func CreateTestHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, nextValSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
 	vsetHash := valSet.Hash()
 	nextHash := nextValSet.Hash()
 	timestamp := time.Date(math.MaxInt64, 0, 0, 0, 0, 0, math.MaxInt64, time.UTC)
@@ -30,7 +30,7 @@ func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, next
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,
-		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,
@@ -42,7 +42,7 @@ func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, next
 		ProposerAddress:    valSet.Proposer.Address,
 	}
 	hhash := tmHeader.Hash()
-	blockID := makeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
+	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers)
 	if err != nil {
@@ -55,8 +55,7 @@ func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, next
 	}
 
 	return Header{
-		SignedHeader:     signedHeader,
-		ValidatorSet:     valSet,
-		NextValidatorSet: nextValSet,
+		SignedHeader: signedHeader,
+		ValidatorSet: valSet,
 	}
 }

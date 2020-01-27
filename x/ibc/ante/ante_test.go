@@ -13,11 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/ante"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -58,7 +59,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
-	suite.createConnection(connection.OPEN)
+	suite.createConnection(connectionexported.OPEN)
 }
 
 func (suite *HandlerTestSuite) createClient() {
@@ -68,15 +69,13 @@ func (suite *HandlerTestSuite) createClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	consensusState := clienttypestm.ConsensusState{
-		ChainID:          testChainID,
-		Height:           uint64(commitID.Version),
+	consensusState := tendermint.ConsensusState{
 		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
 	suite.NoError(err)
 }
 
@@ -85,20 +84,22 @@ func (suite *HandlerTestSuite) updateClient() {
 	suite.app.Commit()
 	commitID := suite.app.LastCommitID()
 
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	height := suite.app.LastBlockHeight() + 1
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	state := clienttypestm.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+	state := tendermint.ConsensusState{
+		Root: commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
-	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(height-1), state)
+	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClient)
+	cs, _ := csi.(tendermint.ClientState)
+	cs.LatestHeight = uint64(height - 1)
+	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }
 
-func (suite *HandlerTestSuite) createConnection(state connection.State) {
+func (suite *HandlerTestSuite) createConnection(state connectionexported.State) {
 	connection := connection.ConnectionEnd{
 		State:    state,
 		ClientID: testClient,
@@ -113,7 +114,7 @@ func (suite *HandlerTestSuite) createConnection(state connection.State) {
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnection, connection)
 }
 
-func (suite *HandlerTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channel.State, order channel.Order) {
+func (suite *HandlerTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channelexported.State, order channelexported.Order) {
 	ch := channel.Channel{
 		State:    state,
 		Ordering: order,
@@ -165,19 +166,14 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	suite.Error(err, "%+v", err) // channel does not exist
 
 	cctx, _ = suite.ctx.CacheContext()
-	suite.createChannel(cpportid, cpchanid, testConnection, portid, chanid, channel.OPEN, channel.ORDERED)
-	packetCommitmentPath := channel.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
+	suite.createChannel(cpportid, cpchanid, testConnection, portid, chanid, channelexported.OPEN, channelexported.ORDERED)
+	packetCommitmentPath := ibctypes.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := suite.queryProof(packetCommitmentPath)
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 	_, err = handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // invalid proof
 
 	suite.updateClient()
-	cctx, _ = suite.ctx.CacheContext()
-	proof, proofHeight = suite.queryProof(packetCommitmentPath)
-	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
-	_, err = handler(cctx, suite.newTx(msg), false)
-	suite.Error(err, "%+v", err) // next recvseq not set
 
 	proof, proofHeight = suite.queryProof(packetCommitmentPath)
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
@@ -187,6 +183,9 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	for i := 0; i < 10; i++ {
 		suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(cctx, cpportid, cpchanid, uint64(i))
 		_, err := handler(cctx, suite.newTx(msg), false)
+		if err == nil {
+			err = suite.app.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, packet, packet.Data)
+		}
 		if i == 1 {
 			suite.NoError(err, "%d", i) // successfully executed
 			write()
@@ -212,14 +211,14 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(10))
 
-	suite.createChannel(cpportid, cpchanid, testConnection, portid, chanid, channel.OPEN, channel.UNORDERED)
+	suite.createChannel(cpportid, cpchanid, testConnection, portid, chanid, channelexported.OPEN, channelexported.UNORDERED)
 
 	suite.updateClient()
 
 	for i := 10; i >= 0; i-- {
 		cctx, write := suite.ctx.CacheContext()
 		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
-		packetCommitmentPath := channel.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
+		packetCommitmentPath := ibctypes.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
 		proof, proofHeight := suite.queryProof(packetCommitmentPath)
 		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 		_, err := handler(cctx, suite.newTx(msg), false)

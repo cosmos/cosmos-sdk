@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -118,36 +118,33 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "misbehaviour [client-it] [path/to/evidence.json]",
+		Use:   "misbehaviour [path/to/evidence.json]",
 		Short: "submit a client misbehaviour",
 		Long: strings.TrimSpace(fmt.Sprintf(`submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates:
 
 Example:
-$ %s tx ibc client misbehaviour [client-id] [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+$ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
-			clientID := args[0]
-
-			var evidence evidenceexported.Evidence
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &evidence); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+			var ev evidenceexported.Evidence
+			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &evidence); err != nil {
+				if err := cdc.UnmarshalJSON(contents, &ev); err != nil {
 					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}
 
-			msg := types.NewMsgSubmitMisbehaviour(clientID, evidence, cliCtx.GetFromAddress())
+			msg := evidence.NewMsgSubmitEvidence(ev, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

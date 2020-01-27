@@ -12,9 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -34,7 +36,7 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
-	testChannelOrder   = channel.UNORDERED
+	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
 )
 
@@ -71,7 +73,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
-	suite.createConnection(connection.OPEN)
+	suite.createConnection(connectionexported.OPEN)
 }
 
 func (suite *HandlerTestSuite) createClient() {
@@ -81,12 +83,9 @@ func (suite *HandlerTestSuite) createClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	consensusState := clienttypestm.ConsensusState{
-		ChainID:          testChainID,
-		Height:           uint64(commitID.Version),
+	consensusState := tendermint.ConsensusState{
 		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
@@ -101,17 +100,14 @@ func (suite *HandlerTestSuite) updateClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	state := clienttypestm.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+	state := tendermint.ConsensusState{
+		Root: commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
-	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, 1, state)
 }
 
-func (suite *HandlerTestSuite) createConnection(state connection.State) {
+func (suite *HandlerTestSuite) createConnection(state connectionexported.State) {
 	connection := connection.ConnectionEnd{
 		State:    state,
 		ClientID: testClient,
@@ -126,19 +122,20 @@ func (suite *HandlerTestSuite) createConnection(state connection.State) {
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnection, connection)
 }
 
-func (suite *HandlerTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channel.State) {
+func (suite *HandlerTestSuite) createChannel(
+	portID, channnelID, connnnectionID, counterpartyPortID, counterpartyChannelID string, state channelexported.State) {
 	ch := channel.Channel{
 		State:    state,
 		Ordering: testChannelOrder,
 		Counterparty: channel.Counterparty{
-			PortID:    counterpartyPort,
-			ChannelID: counterpartyChan,
+			PortID:    counterpartyPortID,
+			ChannelID: counterpartyChannelID,
 		},
-		ConnectionHops: []string{connID},
+		ConnectionHops: []string{connnnectionID},
 		Version:        testChannelVersion,
 	}
 
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, channnelID, ch)
 }
 
 func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
@@ -166,7 +163,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // channel does not exist
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 	res, err = handler(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // next send sequence not found

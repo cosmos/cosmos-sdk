@@ -1,5 +1,9 @@
 package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "bank"
@@ -18,3 +22,9 @@ const (
 var (
 	BalancesPrefix = []byte("balances")
 )
+
+// AddressFromBalancesKey returns an account address from a balances key which
+// is used as an index to store balances per account.
+func AddressFromBalancesKey(key []byte) sdk.AccAddress {
+	return sdk.AccAddress(key[len(BalancesPrefix) : len(BalancesPrefix)+sdk.AddrLen])
+}

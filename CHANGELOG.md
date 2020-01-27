@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.37.7] - TBD
 
+### Bug Fixes
+
+* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
+
 ## [v0.37.6] - 2020-01-21
 
 ### Improvements

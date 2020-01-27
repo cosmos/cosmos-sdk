@@ -47,6 +47,7 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace,
+		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,

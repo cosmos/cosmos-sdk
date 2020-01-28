@@ -79,7 +79,7 @@ func MakeTestCodec() *codec.Codec {
 // Hogpodge of all sorts of input required for testing.
 // `initPower` is converted to an amount of tokens.
 // If `initPower` is 0, no addrs get created.
-func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, types.BankKeeper, Keeper, types.SupplyKeeper) {
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	bankKey := sdk.NewKVStoreKey(bank.StoreKey)
@@ -158,14 +158,14 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, addr := range Addrs {
-		_, err := bk.AddCoins(ctx, addr, initCoins)
-		if err != nil {
+	for i, addr := range Addrs {
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, PKs[i], uint64(i), 0))
+		if err := bk.SetBalances(ctx, addr, initCoins); err != nil {
 			panic(err)
 		}
 	}
 
-	return ctx, accountKeeper, keeper, supplyKeeper
+	return ctx, accountKeeper, bk, keeper, supplyKeeper
 }
 
 func NewPubKey(pk string) (res crypto.PubKey) {

@@ -30,7 +30,6 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	storeKey   sdk.StoreKey
 	ak         types.AccountKeeper
 	paramSpace params.Subspace
 }
@@ -103,7 +102,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	// safe to call Substract coins as a moduleAcc shouldn't be vesting
+	// safe to call subtract coins as a moduleAcc shouldn't be vesting
 	_, err := k.SubtractCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
@@ -335,7 +334,7 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 // SetBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
-		sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
 	store := ctx.KVStore(k.storeKey)

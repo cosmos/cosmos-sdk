@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -52,6 +53,9 @@ var (
 	TestAddrs = []sdk.AccAddress{
 		delAddr1, delAddr2, delAddr3,
 		valAccAddr1, valAccAddr2, valAccAddr3,
+	}
+	pubkeys = []crypto.PubKey{
+		delPk1, delPk2, delPk3, valOpPk1, valOpPk2, valOpPk3,
 	}
 
 	distrAcc = supply.NewEmptyModuleAccount(types.ModuleName)
@@ -145,9 +149,9 @@ func CreateTestInputAdvanced(
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, addr := range TestAddrs {
-		_, err := bankKeeper.AddCoins(ctx, addr, initCoins)
-		require.Nil(t, err)
+	for i, addr := range TestAddrs {
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		require.NoError(t, bankKeeper.SetBalances(ctx, addr, initCoins))
 	}
 
 	// set module accounts

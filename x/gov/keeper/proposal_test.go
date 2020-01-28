@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetSetProposal(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -28,7 +28,7 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -125,7 +125,7 @@ func TestSubmitProposal(t *testing.T) {
 
 func TestGetProposalsFiltered(t *testing.T) {
 	proposalID := uint64(1)
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
 
 	addr1 := sdk.AccAddress("foo")

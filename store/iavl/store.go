@@ -119,7 +119,7 @@ func (st *Store) Commit() types.CommitID {
 		previous := version - st.pruning.KeepEvery()
 		// Previous flushed version should only by deleted if previous version is not snapshot version
 		// OR if snapshotting is disabled (SnapshotEvery == 0)
-		if !st.pruning.SnapshotVersion(version) {
+		if !st.pruning.SnapshotVersion(previous) {
 			err := st.tree.DeleteVersion(previous)
 			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
 				panic(err)

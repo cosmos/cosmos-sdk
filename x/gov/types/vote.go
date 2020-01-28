@@ -7,13 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Vote
-type Vote struct {
-	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` //  proposalID of the proposal
-	Voter      sdk.AccAddress `json:"voter" yaml:"voter"`             //  address of the voter
-	Option     VoteOption     `json:"option" yaml:"option"`           //  option from OptionSet chosen by the voter
-}
-
 // NewVote creates a new Vote instance
 func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
 	return Vote{proposalID, voter, option}
@@ -48,18 +41,6 @@ func (v Vote) Equals(comp Vote) bool {
 func (v Vote) Empty() bool {
 	return v.Equals(Vote{})
 }
-
-// VoteOption defines a vote option
-type VoteOption byte
-
-// Vote options
-const (
-	OptionEmpty      VoteOption = 0x00
-	OptionYes        VoteOption = 0x01
-	OptionAbstain    VoteOption = 0x02
-	OptionNo         VoteOption = 0x03
-	OptionNoWithVeto VoteOption = 0x04
-)
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.

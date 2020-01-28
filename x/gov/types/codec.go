@@ -30,3 +30,28 @@ func RegisterProposalTypeCodec(o interface{}, name string) {
 func init() {
 	RegisterCodec(ModuleCdc)
 }
+
+type GovCodec interface {
+	codec.Marshaler
+	MarshalProposal(p Proposal) ([]byte, error)
+	UnmarshalProposal(bz []byte, ptr *Proposal) error
+}
+
+type AminoGovCodec struct {
+	codec.Marshaler
+	amino *codec.Codec
+}
+
+func NewAminoGovCodec(amino *codec.Codec) AminoGovCodec {
+	return AminoGovCodec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
+}
+
+func (a AminoGovCodec) MarshalProposal(p Proposal) ([]byte, error) {
+	return a.amino.MarshalBinaryBare(p)
+}
+
+func (a AminoGovCodec) UnmarshalProposal(bz []byte, ptr *Proposal) error {
+	return a.amino.UnmarshalBinaryBare(bz, ptr)
+}
+
+var _ GovCodec = AminoGovCodec{}

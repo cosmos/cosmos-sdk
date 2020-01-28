@@ -161,7 +161,7 @@ func createTestInput(
 		AddRoute(types.RouterKey, types.ProposalHandler)
 
 	keeper := NewKeeper(
-		cdc, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()), supplyKeeper, sk, rtr,
+		types.NewAminoGovCodec(cdc), keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()), supplyKeeper, sk, rtr,
 	)
 
 	keeper.SetProposalID(ctx, types.DefaultStartingProposalID)

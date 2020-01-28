@@ -73,18 +73,19 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
+	sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, types.SupplyKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
-	ctx, ak, _, dk, sk, _, supplyKeeper := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
-	return ctx, ak, dk, sk, supplyKeeper
+	ctx, ak, bk, dk, sk, _, supplyKeeper := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+	return ctx, ak, bk, dk, sk, supplyKeeper
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
-	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
-	Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper) {
+func CreateTestInputAdvanced(
+	t *testing.T, isCheckTx bool, initPower int64, communityTax sdk.Dec,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper,
+) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 

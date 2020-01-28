@@ -32,10 +32,11 @@ func (k Keeper) VerifyClientConsensusState(
 // specified connection end stored on the target machine.
 func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
+	connection types.ConnectionEnd,
 	height uint64,
 	proof commitment.ProofI,
 	connectionID string,
-	connection types.ConnectionEnd,
+	connectionEnd types.ConnectionEnd, // oposite connection
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
@@ -44,14 +45,14 @@ func (k Keeper) VerifyConnectionState(
 
 	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
+		ctx, connectionEnd.GetClientID(), height, // TODO: should this be connection or connectionEnd's?
 	)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	return clientState.VerifyConnectionState(
-		k.cdc, height, connection.Counterparty.Prefix, proof, connectionID, connection, consensusState,
+		k.cdc, height, connection.Counterparty.Prefix, proof, connectionID, connectionEnd, consensusState,
 	)
 }
 

@@ -60,9 +60,9 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		{"success", validProof{}, validProof{}, func() {
 			suite.createClient(testClientID1) // height = 2
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
+			proofHeight = suite.ctx.BlockHeight()
 			suite.createClient(testClientID2)
 			consensusHeight = suite.ctx.BlockHeight() // height = 3
-			proofHeight = suite.ctx.BlockHeight()
 			suite.updateClient(testClientID1)
 			suite.updateClient(testClientID2)
 		}, true},
@@ -92,17 +92,17 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.createClient(testClientID1) // height = 2
 			suite.createClient(testClientID2)
 			consensusHeight = suite.ctx.BlockHeight()
-			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
+			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.UNINITIALIZED)
 			suite.updateClient(testClientID1)
 			suite.updateClient(testClientID2)
-		}, true},
+		}, false},
 		{"couldn't add connection to client", validProof{}, validProof{}, func() {
-			suite.createClient(testClientID1)
+			suite.createClient(testClientID1) // height = 2
 			consensusHeight = suite.ctx.BlockHeight()
-			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
-			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.INIT)
+			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.UNINITIALIZED)
 			suite.updateClient(testClientID1)
-		}, true},
+			suite.updateClient(testClientID2)
+		}, false},
 	}
 
 	for i, tc := range testCases {
@@ -152,13 +152,14 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		expPass        bool
 	}{
 		{"success", version, validProof{}, validProof{}, func() {
-			suite.createClient(testClientID1)
-			consensusHeight = suite.ctx.BlockHeight()
 			suite.createClient(testClientID2)
-			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
-			proofHeight = suite.ctx.BlockHeight()
 			suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, exported.TRYOPEN)
+			proofHeight = suite.ctx.BlockHeight()
+			consensusHeight = suite.ctx.BlockHeight()
+			suite.createClient(testClientID1)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.INIT)
 			suite.updateClient(testClientID1)
+			suite.updateClient(testClientID2)
 		}, true},
 		{"consensus height > latest height", version, validProof{}, validProof{}, func() {
 			consensusHeight = 100

@@ -50,9 +50,8 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			suite.updateClient(testClientID1)
 
-			proofHeight := suite.ctx.BlockHeight() - 1
+			proofHeight := suite.ctx.BlockHeight()
 
 			// TODO: remove mocked types and uncomment
 			// consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(suite.app.LastBlockHeight()))
@@ -81,9 +80,11 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	}{
 		{"verification success", validProof{}, func() {
 			suite.createClient(testClientID1)
+			suite.createClient(testClientID2)
 		}, true},
 		{"client state not found", validProof{}, func() {}, false},
 		{"verification failed", invalidProof{}, func() {
+			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -96,12 +97,14 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			tc.malleate()
 			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
 			suite.updateClient(testClientID1)
-
-			proofHeight := suite.ctx.BlockHeight() - 1
+			counterparty := types.NewCounterparty(testClientID1, testConnectionID1, commitment.NewPrefix([]byte("ibc")))
+			expectedConnection := types.NewConnectionEnd(exported.INIT, testClientID2, counterparty, []string{"1.0.0"})
+			suite.updateClient(testClientID1)
+			proofHeight := uint64(3)
 			// proof, proofHeight := suite.queryProof(connectionKey)
 
 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-				suite.ctx, uint64(proofHeight), tc.proof, testConnectionID1, connection,
+				suite.ctx, connection, proofHeight, tc.proof, testConnectionID1, expectedConnection,
 			)
 
 			if tc.expPass {

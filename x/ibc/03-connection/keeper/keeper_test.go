@@ -140,6 +140,9 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(
 		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
 	)
+	suite.app.IBCKeeper.ClientKeeper.SetClientState(
+		suite.ctx, tendermint.NewClientState(clientID, uint64(suite.app.LastBlockHeight())),
+	)
 
 	// _, _, err := simapp.SignCheckDeliver(
 	// 	suite.T(),

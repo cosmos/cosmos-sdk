@@ -79,7 +79,7 @@ func (k Keeper) ConnOpenTry(
 	connection := types.NewConnectionEnd(exported.UNINITIALIZED, clientID, counterparty, []string{version})
 
 	if err := k.VerifyConnectionState(
-		ctx, proofHeight, proofInit, counterparty.ConnectionID,
+		ctx, connection, proofHeight, proofInit, counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
 		return err
@@ -156,7 +156,7 @@ func (k Keeper) ConnOpenAck(
 	expectedConnection := types.NewConnectionEnd(exported.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	if err := k.VerifyConnectionState(
-		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
+		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
 		return err
@@ -202,7 +202,7 @@ func (k Keeper) ConnOpenConfirm(
 	expectedConnection := types.NewConnectionEnd(exported.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	if err := k.VerifyConnectionState(
-		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
+		ctx, connection, proofHeight, proofAck, connection.Counterparty.ConnectionID,
 		expectedConnection,
 	); err != nil {
 		return err

@@ -200,8 +200,8 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 		{testMsgs[1], false, "empty proofTry"},
 		{testMsgs[2], false, "empty proofTry"},
 		{testMsgs[3], false, "invalid proofHeight"},
-		{testMsgs[5], false, "empty signer"},
-		{testMsgs[6], true, "success"},
+		{testMsgs[4], false, "empty signer"},
+		{testMsgs[5], true, "success"},
 	}
 
 	for i, tc := range testCases {

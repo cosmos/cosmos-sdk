@@ -5,6 +5,7 @@ import (
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // TestConnOpenInit - Chain A (ID #1) initializes (INIT state) a connection with
@@ -97,14 +98,14 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 					suite.ctx, testConnectionID2, counterparty, testClientID2,
-					connection.GetCompatibleVersions(), validProof{}, validProof{},
+					connection.GetCompatibleVersions(), ibctypes.ValidProof{}, ibctypes.ValidProof{},
 					uint64(proofHeight), uint64(consensusHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 					suite.ctx, testConnectionID2, counterparty, testClientID2,
-					connection.GetCompatibleVersions(), invalidProof{}, validProof{},
+					connection.GetCompatibleVersions(), ibctypes.InvalidProof{}, ibctypes.ValidProof{},
 					uint64(proofHeight), uint64(consensusHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
@@ -172,13 +173,13 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenAck(
-					suite.ctx, testConnectionID1, tc.version, validProof{}, validProof{},
+					suite.ctx, testConnectionID1, tc.version, ibctypes.ValidProof{}, ibctypes.ValidProof{},
 					uint64(proofHeight), uint64(consensusHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenAck(
-					suite.ctx, testConnectionID1, tc.version, invalidProof{}, validProof{},
+					suite.ctx, testConnectionID1, tc.version, ibctypes.InvalidProof{}, ibctypes.ValidProof{},
 					uint64(proofHeight), uint64(consensusHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
@@ -232,13 +233,13 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-					suite.ctx, testConnectionID2, validProof{}, uint64(proofHeight),
+					suite.ctx, testConnectionID2, ibctypes.ValidProof{}, uint64(proofHeight),
 					uint64(consensusHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-					suite.ctx, testConnectionID2, invalidProof{}, uint64(proofHeight),
+					suite.ctx, testConnectionID2, ibctypes.InvalidProof{}, uint64(proofHeight),
 					uint64(consensusHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)

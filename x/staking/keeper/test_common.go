@@ -160,9 +160,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for i, addr := range Addrs {
 		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, PKs[i], uint64(i), 0))
-		if err := bk.SetBalances(ctx, addr, initCoins); err != nil {
-			panic(err)
-		}
+		require.NoError(t, bk.SetBalances(ctx, addr, initCoins))
 	}
 
 	return ctx, accountKeeper, bk, keeper, supplyKeeper

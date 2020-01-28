@@ -114,10 +114,12 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 
 	_ = staking.InitGenesis(ctx, sk, accountKeeper, bk, supplyKeeper, genesis)
 
-	for _, addr := range Addrs {
-		_, err = bk.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
+	for i, addr := range Addrs {
+		addr := sdk.AccAddress(addr)
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, Pks[i], uint64(i), 0))
+		require.NoError(t, bk.SetBalances(ctx, addr, initCoins))
 	}
-	require.Nil(t, err)
+
 	paramstore := paramsKeeper.Subspace(types.DefaultParamspace)
 	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore)
 

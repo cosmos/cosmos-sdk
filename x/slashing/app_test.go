@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -48,21 +49,24 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, maccPerms)
-	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace))
+	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, mapp.BankKeeper, maccPerms)
+	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, mapp.BankKeeper, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace))
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace))
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(stakingKeeper))
-	mapp.SetInitChainer(getInitChainer(mapp, stakingKeeper, mapp.AccountKeeper, supplyKeeper,
-		[]supplyexported.ModuleAccountI{feeCollector, notBondedPool, bondPool}))
+	mapp.SetInitChainer(
+		getInitChainer(
+			mapp, stakingKeeper, mapp.AccountKeeper, mapp.BankKeeper, supplyKeeper,
+			[]supplyexported.ModuleAccountI{feeCollector, notBondedPool, bondPool},
+		),
+	)
 
 	require.NoError(t, mapp.CompleteSetup(keyStaking, keySupply, keySlashing))
 
@@ -80,8 +84,11 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper,
-	blacklistedAddrs []supplyexported.ModuleAccountI) sdk.InitChainer {
+func getInitChainer(
+	mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, bk types.BankKeeper,
+	supplyKeeper types.SupplyKeeper, blacklistedAddrs []supplyexported.ModuleAccountI,
+) sdk.InitChainer {
+
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		// set module accounts
 		for _, macc := range blacklistedAddrs {
@@ -90,7 +97,7 @@ func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.A
 
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
-		validators := staking.InitGenesis(ctx, keeper, accountKeeper, supplyKeeper, stakingGenesis)
+		validators := staking.InitGenesis(ctx, keeper, accountKeeper, bk, supplyKeeper, stakingGenesis)
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
@@ -123,10 +130,15 @@ func TestSlashingMsgs(t *testing.T) {
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{genCoin},
 	}
 	accs := []authexported.Account{acc1}
-	mock.SetGenesis(mapp, accs)
+	balances := []bankexported.GenesisBalance{
+		bank.Balance{
+			Address: addr1,
+			Coins:   sdk.Coins{genCoin},
+		},
+	}
+	mock.SetGenesis(mapp, accs, balances)
 
 	description := staking.NewDescription("foo_moniker", "", "", "", "")
 	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())

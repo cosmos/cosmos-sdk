@@ -368,6 +368,7 @@ func TestBech32ifyAddressBytes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
 			got, err := types.Bech32ifyAddressBytes(tt.args.prefix, tt.args.bs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Bech32ifyBytes() error = %v, wantErr %v", err, tt.wantErr)
@@ -400,6 +401,7 @@ func TestMustBech32ifyAddressBytes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
 			if tt.wantPanic {
 				require.Panics(t, func() { types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs) })
 				return

@@ -50,7 +50,7 @@ var (
 	ModuleCdc                   = types.ModuleCdc
 	ParamStoreKeySendEnabled    = types.ParamStoreKeySendEnabled
 	BalancesPrefix              = types.BalancesPrefix
-	AddressFromBalancesKey      = types.AddressFromBalancesKey
+	AddressFromBalancesStore    = types.AddressFromBalancesStore
 )
 
 type (

@@ -2,38 +2,56 @@ package keeper_test
 
 import (
 	"fmt"
+
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 func (suite *KeeperTestSuite) TestSendPacket() {
-	var counterparty types.Counterparty
+	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet exported.PacketI
-	// Packet passes/fails validate basic packet
-	// Channel found/not found
-	// Channel closed/not CLOSED
-	// if packet.GetDestPort() != channel.Counterparty.PortID {}
-	// if packet.GetDestChannel() != channel.Counterparty.ChannelID {}
-	// Connection found/not found
-	// Connection initiated/uninitialized
-	// Client state found/not found
-	// if clientState.GetLatestHeight() >= packet.GetTimeoutHeight() {}
-	// Next sequence found/not found
-	// if packet.GetSequence() != nextSequenceSend {}
-	// Success
+
 	testCases := []testCase{
 		{"success", func() {
-			counterparty = types.NewCounterparty(testPort2, testChannel2)
 			suite.createClient(testClientID1)
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.INIT)
 			suite.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionID1)
-			seq, _ := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceSend(suite.ctx, testPort1, testChannel1)
-			packet = types.NewPacket(mockSuccessPacket{}, seq+1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.updateClient()
 		}, true},
+		{"fail-validate-basic", func() {
+			packet = types.NewPacket(mockFailPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
+		}, false},
+		{"channel-not-found", func() {
+			suite.createClient(testClientID1)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.INIT)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
+		}, false},
+		{"channel-closed", func() {
+			suite.createClient(testClientID1)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.INIT)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
+			suite.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.CLOSED, exported.ORDERED, testConnectionID1)
+		}, false},
+		{"next-sequence-not-found", func() {
+			suite.createClient(testClientID1)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.INIT)
+			suite.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionID1)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
+			suite.updateClient()
+		}, false},
+		{"next-sequence-wrong", func() {
+			suite.createClient(testClientID1)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.INIT)
+			suite.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionID1)
+			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 5)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
+			suite.updateClient()
+		}, false},
 	}
+
 	for i, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			var err error

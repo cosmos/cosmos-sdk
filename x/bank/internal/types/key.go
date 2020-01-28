@@ -28,7 +28,7 @@ var (
 // AddressFromBalancesKey returns an account address from a balances key which
 // is used as an index to store balances per account.
 func AddressFromBalancesKey(key []byte) sdk.AccAddress {
-	addr := key[len(BalancesPrefix):]
+	addr := key[len(BalancesPrefix) : len(BalancesPrefix)+sdk.AddrLen]
 	if len(addr) != sdk.AddrLen {
 		panic(fmt.Sprintf("unexpected account address key length; got: %d, expected: %d", len(addr), sdk.AddrLen))
 	}

@@ -81,8 +81,19 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 // IAVL tree reference.
 //
 // CONTRACT: The IAVL tree should be fully loaded.
-func UnsafeNewStore(tree *iavl.MutableTree) *Store {
-	return &Store{tree: tree}
+// CONTRACT: PruningOptions passed in as argument must be the same as pruning options
+// passed into iavl.MutableTree
+func UnsafeNewStore(tree *iavl.MutableTree, po types.PruningOptions) *Store {
+	commit := types.CommitID{
+		Version: tree.Version(),
+		Hash:    tree.Hash(),
+	}
+
+	return &Store{
+		tree:       tree,
+		pruning:    po,
+		lastCommit: commit,
+	}
 }
 
 // GetImmutable returns a reference to a new store backed by an immutable IAVL
@@ -119,7 +130,7 @@ func (st *Store) Commit() types.CommitID {
 		previous := version - st.pruning.KeepEvery()
 		// Previous flushed version should only by deleted if previous version is not snapshot version
 		// OR if snapshotting is disabled (SnapshotEvery == 0)
-		if !st.pruning.SnapshotVersion(previous) {
+		if previous != 0 && !st.pruning.SnapshotVersion(previous) {
 			err := st.tree.DeleteVersion(previous)
 			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
 				panic(err)

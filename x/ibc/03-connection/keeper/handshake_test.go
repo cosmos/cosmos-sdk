@@ -106,6 +106,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -201,6 +202,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -260,6 +262,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

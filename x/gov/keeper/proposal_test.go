@@ -97,7 +97,7 @@ func registerTestCodec(cdc *codec.Codec) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	registerTestCodec(keeper.cdc)
 

@@ -22,8 +22,9 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	bk keeper.Keeper) simulation.WeightedOperations {
+func WeightedOperations(
+	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+) simulation.WeightedOperations {
 
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
@@ -89,15 +90,21 @@ func sendMsgSend(
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
-	account := ak.GetAccount(ctx, msg.FromAddress)
-
 	var (
 		fees sdk.Coins
 		err  error
 	)
-	cacheCtx, _ := ctx.CacheContext()
-	coins, err := bk.SubtractCoins(cacheCtx, msg.FromAddress, msg.Amount)
-	if err == nil {
+
+	account := ak.GetAccount(ctx, msg.FromAddress)
+	balances := bk.GetAllBalances(ctx, account.GetAddress())
+	locked := bk.LockedCoins(ctx, account.GetAddress())
+	spendable, hasNeg := balances.SafeSub(locked)
+	if hasNeg {
+		spendable = sdk.NewCoins()
+	}
+
+	coins, hasNeg := spendable.SafeSub(msg.Amount)
+	if !hasNeg {
 		fees, err = simulation.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
@@ -287,9 +294,12 @@ func randomSendFields(
 
 	balances := bk.GetAllBalances(ctx, acc.GetAddress())
 	locked := bk.LockedCoins(ctx, acc.GetAddress())
-	balances = balances.Sub(locked)
+	spendable, hasNeg := balances.SafeSub(locked)
+	if hasNeg {
+		spendable = sdk.NewCoins()
+	}
 
-	sendCoins := simulation.RandSubsetCoins(r, balances)
+	sendCoins := simulation.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}

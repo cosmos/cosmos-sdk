@@ -93,7 +93,10 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		balances := bk.GetAllBalances(ctx, account.GetAddress())
 		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable, hasNeg := balances.SafeSub(locked)
+		if hasNeg {
+			spendable = sdk.NewCoins()
+		}
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -143,7 +146,10 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		account := ak.GetAccount(ctx, simAccount.Address)
 		balances := bk.GetAllBalances(ctx, account.GetAddress())
 		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable, hasNeg := balances.SafeSub(locked)
+		if hasNeg {
+			spendable = sdk.NewCoins()
+		}
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -196,7 +202,10 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 		account := ak.GetAccount(ctx, simAccount.Address)
 		balances := bk.GetAllBalances(ctx, account.GetAddress())
 		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable, hasNeg := balances.SafeSub(locked)
+		if hasNeg {
+			spendable = sdk.NewCoins()
+		}
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -236,7 +245,10 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		account := ak.GetAccount(ctx, funder.Address)
 		balances := bk.GetAllBalances(ctx, account.GetAddress())
 		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable, hasNeg := balances.SafeSub(locked)
+		if hasNeg {
+			spendable = sdk.NewCoins()
+		}
 
 		fundAmount := simulation.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {

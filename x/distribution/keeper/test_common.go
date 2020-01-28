@@ -88,6 +88,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
@@ -98,6 +99,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
@@ -123,7 +125,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
 		types.ModuleName:          nil,
@@ -132,10 +134,10 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
 
-	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
+	sk := staking.NewKeeper(cdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(types.DefaultParamspace), sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(types.DefaultParamspace), bankKeeper, sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))

@@ -89,10 +89,10 @@ func makeTestCodec() *codec.Codec {
 }
 
 func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
-
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
@@ -104,6 +104,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyGov, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
@@ -141,10 +142,10 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
 
-	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
+	sk := staking.NewKeeper(cdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	rtr := types.NewRouter().

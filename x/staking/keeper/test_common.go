@@ -82,6 +82,7 @@ func MakeTestCodec() *codec.Codec {
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	bankKey := sdk.NewKVStoreKey(bank.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
@@ -90,6 +91,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(bankKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
@@ -125,6 +127,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	bk := bank.NewBaseKeeper(
+		cdc,
+		bankKey,
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
 		blacklistedAddrs,
@@ -143,12 +147,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(DefaultParamspace))
+	keeper := NewKeeper(cdc, keyStaking, bk, supplyKeeper, pk.Subspace(DefaultParamspace))
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	err = notBondedPool.SetCoins(totalSupply)
-	require.NoError(t, err)
+	require.NoError(t, bk.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply))
 
 	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	supplyKeeper.SetModuleAccount(ctx, bondPool)

@@ -24,8 +24,7 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), amt.MulRaw(numVals)))
 
 	bondedPool := keeper.GetBondedPool(ctx)
-	err := bondedPool.SetCoins(bondedCoins)
-	require.NoError(t, err)
+	require.NoError(t, keeper.bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins))
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// add numVals validators

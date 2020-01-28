@@ -39,6 +39,7 @@ type testInput struct {
 	mApp     *mock.App
 	keeper   keep.Keeper
 	router   types.Router
+	bk       bank.Keeper
 	sk       staking.Keeper
 	addrs    []sdk.AccAddress
 	pubKeys  []crypto.PubKey
@@ -56,7 +57,6 @@ func getMockApp(
 	types.RegisterCodec(mApp.Cdc)
 	supply.RegisterCodec(mApp.Cdc)
 
-	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
@@ -70,18 +70,15 @@ func getMockApp(
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := mApp.ParamsKeeper
-
-	rtr := types.NewRouter().
-		AddRoute(types.RouterKey, handler)
-
-	bk := bank.NewBaseKeeper(mApp.Cdc, keyBank, mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
-
+	rtr := types.NewRouter().AddRoute(types.RouterKey, handler)
 	maccPerms := map[string][]string{
 		types.ModuleName:          {supply.Burner},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
+
+	pk := mApp.ParamsKeeper
+	bk := mApp.BankKeeper
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, maccPerms)
 	sk := staking.NewKeeper(
 		mApp.Cdc, keyStaking, bk, supplyKeeper, pk.Subspace(staking.DefaultParamspace),
@@ -113,7 +110,7 @@ func getMockApp(
 
 	mock.SetGenesis(mApp, genAccs, genBalances)
 
-	return testInput{mApp, keeper, rtr, sk, addrs, pubKeys, privKeys}
+	return testInput{mApp, keeper, rtr, bk, sk, addrs, pubKeys, privKeys}
 }
 
 // gov and staking endblocker

@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetSetProposal(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -28,7 +28,7 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -97,7 +97,7 @@ func registerTestCodec(cdc *codec.Codec) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
 
 	registerTestCodec(keeper.cdc)
 
@@ -125,7 +125,7 @@ func TestSubmitProposal(t *testing.T) {
 
 func TestGetProposalsFiltered(t *testing.T) {
 	proposalID := uint64(1)
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100)
 	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
 
 	addr1 := sdk.AccAddress("foo")

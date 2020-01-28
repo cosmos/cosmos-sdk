@@ -52,6 +52,9 @@ var (
 		delAddr1, delAddr2, delAddr3,
 		valAccAddr1, valAccAddr2, valAccAddr3,
 	}
+	pubkeys = []crypto.PubKey{
+		delPk1, delPk2, delPk3, valOpPk1, valOpPk2, valOpPk3,
+	}
 
 	emptyDelAddr sdk.AccAddress
 	emptyValAddr sdk.ValAddress
@@ -88,9 +91,12 @@ func makeTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
-	initTokens := sdk.TokensFromConsensusPower(initPower)
+func createTestInput(
+	t *testing.T, isCheckTx bool, initPower int64,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, types.SupplyKeeper,
+) {
 
+	initTokens := sdk.TokensFromConsensusPower(initPower)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
@@ -164,9 +170,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	for _, addr := range TestAddrs {
-		_, err := bankKeeper.AddCoins(ctx, addr, initCoins)
-		require.Nil(t, err)
+	for i, addr := range TestAddrs {
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		require.NoError(t, bankKeeper.SetBalances(ctx, addr, initCoins))
 	}
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
@@ -174,7 +180,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	return ctx, accountKeeper, keeper, sk, supplyKeeper
+	return ctx, accountKeeper, bankKeeper, keeper, sk, supplyKeeper
 }
 
 // ProposalEqual checks if two proposals are equal (note: slow, for tests only)

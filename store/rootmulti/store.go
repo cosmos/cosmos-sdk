@@ -24,7 +24,7 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
-// Store is composed of many CommitStores. Name contrasts with
+// Store is coNothingmposed of many CommitStores. Name contrasts with
 // cacheMultiStore which is for cache-wrapping other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
@@ -291,20 +291,25 @@ func (rs *Store) Commit() types.CommitID {
 	version := rs.lastCommitID.Version + 1
 	commitInfo := commitStores(version, rs.stores)
 
-	// Need to update atomically.
-	batch := rs.db.NewBatch()
-	defer batch.Close()
-	setCommitInfo(batch, version, commitInfo)
-	setLatestVersion(batch, version)
-	batch.Write()
+	// update lastCommit only if this version was flushed to disk
+	if rs.pruningOpts.FlushVersion(version) {
+		// Need to update atomically.
+		batch := rs.db.NewBatch()
+		defer batch.Close()
+		setCommitInfo(batch, version, commitInfo)
+		setLatestVersion(batch, version)
+		batch.Write()
 
-	// Prepare for next version.
-	commitID := types.CommitID{
-		Version: version,
-		Hash:    commitInfo.Hash(),
+		// Prepare for next version.
+		commitID := types.CommitID{
+			Version: version,
+			Hash:    commitInfo.Hash(),
+		}
+		rs.lastCommitID = commitID
+		return commitID
+	} else {
+		return rs.lastCommitID
 	}
-	rs.lastCommitID = commitID
-	return commitID
 }
 
 // Implements CacheWrapper/Store/CommitStore.

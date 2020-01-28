@@ -1,9 +1,11 @@
 package iavl
 
 import (
+	"fmt"
 	"io"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -29,13 +31,18 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree Tree
+	tree       Tree
+	pruning    types.PruningOptions
+	lastCommit types.CommitID
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load.
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
+	if !pruning.IsValid() {
+		panic(fmt.Sprintf("PruningOptions are invalid: %#v", pruning))
+	}
 	tree, err := iavl.NewMutableTreeWithOpts(
 		db,
 		dbm.NewMemDB(),
@@ -56,7 +63,18 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 		return nil, err
 	}
 
-	return &Store{tree: tree}, nil
+	lastCommit := types.CommitID{
+		Version: tree.Version(),
+		Hash:    tree.Hash(),
+	}
+
+	store := Store{
+		tree:       tree,
+		pruning:    pruning,
+		lastCommit: lastCommit,
+	}
+
+	return &store, nil
 }
 
 // UnsafeNewStore returns a reference to a new IAVL Store with a given mutable
@@ -94,18 +112,34 @@ func (st *Store) Commit() types.CommitID {
 		panic(err)
 	}
 
-	return types.CommitID{
-		Version: version,
-		Hash:    hash,
+	flushed := st.pruning.FlushVersion(version)
+
+	// If the version we saved got flushed to disk, check if previous flushed version should be deleted
+	if flushed {
+		previous := version - st.pruning.KeepEvery()
+		// Previous flushed version should only by deleted if previous version is not snapshot version
+		// OR if snapshotting is disabled (SnapshotEvery == 0)
+		if !st.pruning.SnapshotVersion(version) {
+			err := st.tree.DeleteVersion(previous)
+			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
+				panic(err)
+			}
+		}
 	}
+
+	if flushed {
+		st.lastCommit = types.CommitID{
+			Version: version,
+			Hash:    hash,
+		}
+	}
+
+	return st.lastCommit
 }
 
 // Implements Committer.
 func (st *Store) LastCommitID() types.CommitID {
-	return types.CommitID{
-		Version: st.tree.Version(),
-		Hash:    st.tree.Hash(),
-	}
+	return st.lastCommit
 }
 
 // SetPruning panics as pruning options should be provided at initialization

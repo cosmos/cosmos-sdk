@@ -502,6 +502,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)
+	iavlStore.pruning = types.PruneNothing
 
 	k1, v1 := []byte("key1"), []byte("val1")
 	k2, v2 := []byte("key2"), []byte("val2")

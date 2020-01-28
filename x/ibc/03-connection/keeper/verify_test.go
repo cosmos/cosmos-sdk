@@ -101,12 +101,12 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-					suite.ctx, uint64(proofHeight), validProof{}, testConnectionID1, connection, suite.consensusState,
+					suite.ctx, uint64(proofHeight), validProof{}, testConnectionID1, connection,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-					suite.ctx, uint64(proofHeight), invalidProof{}, testConnectionID1, connection, suite.consensusState,
+					suite.ctx, uint64(proofHeight), invalidProof{}, testConnectionID1, connection,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -150,13 +150,13 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
 					suite.ctx, connection, uint64(proofHeight), validProof{}, testPort1,
-					testChannel1, channel, suite.consensusState,
+					testChannel1, channel,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
 					suite.ctx, connection, uint64(proofHeight), invalidProof{}, testPort1,
-					testChannel1, channel, suite.consensusState,
+					testChannel1, channel,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -198,13 +198,13 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
 					suite.ctx, connection, uint64(proofHeight), validProof{}, testPort1,
-					testChannel1, 1, commitmentBz, suite.consensusState,
+					testChannel1, 1, commitmentBz,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
 					suite.ctx, connection, uint64(proofHeight), invalidProof{}, testPort1,
-					testChannel1, 1, commitmentBz, suite.consensusState,
+					testChannel1, 1, commitmentBz,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -246,13 +246,13 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
 					suite.ctx, connection, uint64(proofHeight), validProof{}, testPort1,
-					testChannel1, 1, ack, suite.consensusState,
+					testChannel1, 1, ack,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
 					suite.ctx, connection, uint64(proofHeight), invalidProof{}, testPort1,
-					testChannel1, 1, ack, suite.consensusState,
+					testChannel1, 1, ack,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -292,13 +292,13 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
 					suite.ctx, connection, uint64(proofHeight), validProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
+					testChannel1, 1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
 					suite.ctx, connection, uint64(proofHeight), invalidProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
+					testChannel1, 1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -339,13 +339,13 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
 					suite.ctx, connection, uint64(proofHeight), validProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
+					testChannel1, 1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
 					suite.ctx, connection, uint64(proofHeight), invalidProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
+					testChannel1, 1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

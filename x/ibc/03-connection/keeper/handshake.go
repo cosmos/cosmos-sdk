@@ -146,7 +146,6 @@ func (k Keeper) ConnOpenAck(
 			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
 		)
 	}
-
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
@@ -184,8 +183,7 @@ func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck commitment.ProofI,
-	proofHeight,
-	consensusHeight uint64,
+	proofHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {

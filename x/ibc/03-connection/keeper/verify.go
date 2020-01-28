@@ -42,6 +42,7 @@ func (k Keeper) VerifyConnectionState(
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)
@@ -70,6 +71,7 @@ func (k Keeper) VerifyChannelState(
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)
@@ -100,6 +102,7 @@ func (k Keeper) VerifyPacketCommitment(
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)
@@ -130,6 +133,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)
@@ -160,6 +164,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)
@@ -189,6 +194,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)

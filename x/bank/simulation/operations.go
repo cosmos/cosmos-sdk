@@ -239,16 +239,22 @@ func sendMsgMultiSend(
 		sequenceNumbers[i] = acc.GetSequence()
 	}
 
-	// feePayer is the first signer, i.e. first input address
-	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
-
 	var (
 		fees sdk.Coins
 		err  error
 	)
-	cacheCtx, _ := ctx.CacheContext()
-	coins, err := bk.SubtractCoins(cacheCtx, feePayer.GetAddress(), msg.Inputs[0].Coins)
-	if err == nil {
+
+	// feePayer is the first signer, i.e. first input address
+	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
+	balances := bk.GetAllBalances(ctx, feePayer.GetAddress())
+	locked := bk.LockedCoins(ctx, feePayer.GetAddress())
+	spendable, hasNeg := balances.SafeSub(locked)
+	if hasNeg {
+		spendable = sdk.NewCoins()
+	}
+
+	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
+	if !hasNeg {
 		fees, err = simulation.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err

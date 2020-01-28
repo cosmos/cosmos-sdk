@@ -469,7 +469,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		address := types.AddressFromBalancesKey(iterator.Key())
+		address := types.AddressFromBalancesStore(iterator.Key())
 
 		var balance sdk.Coin
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)

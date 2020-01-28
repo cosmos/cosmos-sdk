@@ -15,12 +15,11 @@ func cloneAppend(bz []byte, tail []byte) (res []byte) {
 	return
 }
 
-func TestAddressFromBalancesKey(t *testing.T) {
+func TestAddressFromBalancesStore(t *testing.T) {
 	addr, err := sdk.AccAddressFromBech32("cosmos1n88uc38xhjgxzw9nwre4ep2c8ga4fjxcar6mn7")
 	require.NoError(t, err)
 
-	key := cloneAppend(types.BalancesPrefix, addr.Bytes())
-
-	res := types.AddressFromBalancesKey(key)
+	key := cloneAppend(addr.Bytes(), []byte("stake"))
+	res := types.AddressFromBalancesStore(key)
 	require.Equal(t, res, addr)
 }

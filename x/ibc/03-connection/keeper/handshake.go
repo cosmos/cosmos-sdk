@@ -80,7 +80,7 @@ func (k Keeper) ConnOpenTry(
 
 	if err := k.VerifyConnectionState(
 		ctx, proofHeight, proofInit, counterparty.ConnectionID,
-		expectedConnection, expectedConsensusState,
+		expectedConnection,
 	); err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (k Keeper) ConnOpenAck(
 
 	if err := k.VerifyConnectionState(
 		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
-		expectedConnection, expectedConsensusState,
+		expectedConnection,
 	); err != nil {
 		return err
 	}
@@ -199,19 +199,13 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	// TODO: No verification required?
-	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
-	if !found {
-		return clienttypes.ErrConsensusStateNotFound
-	}
-
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	if err := k.VerifyConnectionState(
 		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
-		expectedConnection, expectedConsensusState,
+		expectedConnection,
 	); err != nil {
 		return err
 	}

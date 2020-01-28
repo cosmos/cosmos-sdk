@@ -26,7 +26,6 @@ type ConnectionKeeper interface {
 		portID,
 		channelID string,
 		channel exported.ChannelI,
-		consensusState clientexported.ConsensusState,
 	) error
 	VerifyPacketCommitment(
 		ctx sdk.Context,
@@ -37,7 +36,6 @@ type ConnectionKeeper interface {
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
-		consensusState clientexported.ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
 		ctx sdk.Context,
@@ -48,7 +46,6 @@ type ConnectionKeeper interface {
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
-		consensusState clientexported.ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		ctx sdk.Context,
@@ -58,7 +55,6 @@ type ConnectionKeeper interface {
 		portID,
 		channelID string,
 		sequence uint64,
-		consensusState clientexported.ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
 		ctx sdk.Context,
@@ -68,7 +64,6 @@ type ConnectionKeeper interface {
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
-		consensusState clientexported.ConsensusState,
 	) error
 }
 

@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -162,17 +161,10 @@ func (k Keeper) RecvPacket(
 		return nil, types.ErrPacketTimeout
 	}
 
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return nil, clienttypes.ErrConsensusStateNotFound
-	}
-
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
-		types.CommitPacket(packet.GetData()), consensusState,
+		types.CommitPacket(packet.GetData()),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
@@ -292,16 +284,9 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return nil, clienttypes.ErrConsensusStateNotFound
-	}
-
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement.GetBytes(), consensusState,
+		packet.GetSequence(), acknowledgement.GetBytes(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
@@ -387,13 +372,6 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return nil, clienttypes.ErrConsensusStateNotFound
-	}
-
 	var err error
 	switch channel.Ordering {
 	case exported.ORDERED:
@@ -401,13 +379,12 @@ func (k Keeper) CleanupPacket(
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
-			consensusState,
 		)
 	case exported.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgement(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-			acknowledgement, consensusState,
+			acknowledgement,
 		)
 	default:
 		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))

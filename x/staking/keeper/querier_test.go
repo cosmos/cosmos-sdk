@@ -125,8 +125,8 @@ func TestQueryParametersPool(t *testing.T) {
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	require.NoError(t, cdc.UnmarshalJSON(res, &pool))
-	require.Equal(t, keeper.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, pool.BondedTokens)
-	require.Equal(t, keeper.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, pool.NotBondedTokens)
+	require.Equal(t, keeper.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, pool.NotBondedTokens)
+	require.Equal(t, keeper.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, pool.BondedTokens)
 }
 
 func TestQueryValidators(t *testing.T) {

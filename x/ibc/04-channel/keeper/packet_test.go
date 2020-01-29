@@ -197,14 +197,16 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 }
 
 func (suite *KeeperTestSuite) TestAcknowledgePacket() {
+	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
 
 	testCases := []testCase{
 		{"success", func() {
 			suite.createClient(testClientID1)
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.OPEN)
-			suite.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionID1)
-			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel2, testPort2, testChannel2)
+			suite.createChannel(testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), exported.OPEN, exported.ORDERED, testConnectionID1)
+			suite.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionID1)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, testPort2, testChannel2)
 			suite.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionID1)
 			suite.updateClient()
 		}, true},
@@ -215,11 +217,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.SetupTest() // reset
 			tc.malleate()
 			if tc.expPass {
-				fmt.Println(packet)
 				out, err := suite.app.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.ctx, packet, mockSuccessPacket{}, ibctypes.ValidProof{}, uint64(suite.ctx.BlockHeader().Height))
-				fmt.Println(tc.msg, err)
-				suite.Require().NotNil(out)
 				suite.Require().NoError(err)
+				suite.Require().NotNil(out)
 			} else {
 				out, err := suite.app.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.ctx, packet, mockSuccessPacket{}, ibctypes.ValidProof{}, uint64(suite.ctx.BlockHeader().Height))
 				fmt.Println(tc.msg, err)
@@ -288,17 +288,3 @@ func (mp mockFailPacket) ValidateBasic() error { return fmt.Errorf("Packet faile
 
 // Type returns human readable identifier, implements sdk.Msg
 func (mp mockFailPacket) Type() string { return "mock/packet/failure" }
-
-type mockTimeoutPacket struct{}
-
-// GetBytes returns the serialised packet data (without timeout)
-func (mp mockTimeoutPacket) GetBytes() []byte { return []byte("THIS IS A TIMEOUT PACKET") }
-
-// GetTimeoutHeight returns the timeout height defined specifically for each packet data type instance
-func (mp mockTimeoutPacket) GetTimeoutHeight() uint64 { return 10 }
-
-// ValidateBasic validates basic properties of the packet data, implements sdk.Msg
-func (mp mockTimeoutPacket) ValidateBasic() error { return nil }
-
-// Type returns human readable identifier, implements sdk.Msg
-func (mp mockTimeoutPacket) Type() string { return "mock/packet/timeout" }

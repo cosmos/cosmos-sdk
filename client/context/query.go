@@ -95,8 +95,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 	}
 
 	if !result.Response.IsOK() {
-		err = errors.New(result.Response.Log)
-		return abci.ResponseQuery{}, err
+		return abci.ResponseQuery{}, errors.New(result.Response.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification

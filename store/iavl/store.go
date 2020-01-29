@@ -141,24 +141,25 @@ func (st *Store) Commit() types.CommitID {
 	st.version = version
 	flushed := st.pruning.FlushVersion(version)
 
+	// If this is not a flushed version, return saved lastCommit
+	if !flushed {
+		return st.lastCommit
+	}
+
 	// If the version we saved got flushed to disk, check if previous flushed version should be deleted
-	if flushed {
-		previous := version - st.pruning.KeepEvery()
-		// Previous flushed version should only by deleted if previous version is not snapshot version
-		// OR if snapshotting is disabled (SnapshotEvery == 0)
-		if previous != 0 && !st.pruning.SnapshotVersion(previous) {
-			err := st.tree.DeleteVersion(previous)
-			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
-				panic(err)
-			}
+	previous := version - st.pruning.KeepEvery()
+	// Previous flushed version should only by deleted if previous version is not snapshot version
+	// OR if snapshotting is disabled (SnapshotEvery == 0)
+	if previous != 0 && !st.pruning.SnapshotVersion(previous) {
+		err := st.tree.DeleteVersion(previous)
+		if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
+			panic(err)
 		}
 	}
 
-	if flushed {
-		st.lastCommit = types.CommitID{
-			Version: version,
-			Hash:    hash,
-		}
+	st.lastCommit = types.CommitID{
+		Version: version,
+		Hash:    hash,
 	}
 
 	return st.lastCommit

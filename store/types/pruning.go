@@ -2,6 +2,7 @@ package types
 
 // PruningStrategy specifies how old states will be deleted over time where
 // keepRecent can be used with keepEvery to create a pruning "strategy".
+// CONTRACT: snapshotEvery is a multiple of keepEvery
 type PruningOptions struct {
 	keepRecent    int64
 	keepEvery     int64
@@ -16,6 +17,9 @@ func NewPruningOptions(keepRecent, keepEvery, snapshotEvery int64) PruningOption
 	}
 }
 
+// Checks if PruningOptions is valid
+// KeepRecent should be larger than KeepEvery
+// SnapshotEvery is a multiple of KeepEvery
 func (po PruningOptions) IsValid() bool {
 	// If we're flushing periodically, we must make in-memory cache less than
 	// that period to avoid inefficiency and undefined behavior

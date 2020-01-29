@@ -6,17 +6,18 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -47,7 +48,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			granter := cliCtx.FromAddress
@@ -80,7 +81,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return authclient.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 
 		},
 	}
@@ -97,7 +98,7 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			granter := cliCtx.FromAddress
@@ -122,7 +123,7 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return authclient.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 	return cmd
@@ -136,7 +137,7 @@ func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			grantee := cliCtx.FromAddress
@@ -164,7 +165,7 @@ func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd

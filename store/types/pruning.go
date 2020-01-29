@@ -22,7 +22,7 @@ func NewPruningOptions(keepRecent, keepEvery, snapshotEvery int64) PruningOption
 // SnapshotEvery is a multiple of KeepEvery
 func (po PruningOptions) IsValid() bool {
 	// If we're flushing periodically, we must make in-memory cache less than
-	// that period to avoid inefficiency and undefined behavior
+	// that period to avoid inefficiency and undefined behavior.
 	if po.keepEvery != 0 && po.keepRecent > po.keepEvery {
 		return false
 	}

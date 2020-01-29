@@ -34,7 +34,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 	for addrStr, coins := range balancesSet {
 		addr, err := sdk.AccAddressFromBech32(addrStr)
 		if err != nil {
-			panic(fmt.Sprintf("failed to convert address from string: %s", err))
+			panic(fmt.Errorf("failed to convert address from string: %w", err))
 		}
 
 		balances = append(balances, Balance{

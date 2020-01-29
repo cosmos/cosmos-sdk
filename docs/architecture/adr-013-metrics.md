@@ -10,27 +10,9 @@ Proposed
 
 ## Context
 
-### A
+There has been discussion around exposing more metrics to users and node operators about the application. Currently there is only a way to expose metrics from Tendermint and not the application itself. To bring more visibility into applications, I would like to propose reporting of metrics through [Prometheus](https://prometheus.io/).
 
-There has been discussion around exposing more metrics to users and node operators about the application. Currently there is only a way to expose metrics from Tendermint and not the application itself.To bring more visibility into applications, I would like to propose reporting of metrics through [Prometheus](https://prometheus.io/).
-
-#### List Of Metrics
-
-(TBD)
-
-| Name                  |   type    | Description |
-| --------------------- | :-------: | ----------: |
-| iavl_io               |  Gauage   |             |
-| db_io                 |  Gauage   |             |
-| txs                   | histogram |             |
-| delegations (staking) | histogram |             |
-| Rewards (distr)       | histogram |             |
-| Sends (bank)          | histogram |             |
-| Supply (supply)       |  Counter  |             |
-
-### B
-
-Part B of this ADR is geared more towards modules. Extending `AppModuleBasic` to support registering of metrics would enable developers to see more information about individual modules.
+Extending `AppModuleBasic` to support registering of metrics would enable developers to see more information about individual modules.
 
 ```go
 type AppModuleBasic interface {
@@ -49,7 +31,7 @@ type AppModuleBasic interface {
 }
 // .....
 
-func (bm BasicManager) RegisterMetrics(appName) MetricsProvider{
+func (bm BasicManager) RegisterMetrics(appName) MetricsProvider {
 	for _, b := range bm {
 		b.RegisterMetrics(appName, labelsAndValues)
 	}
@@ -59,18 +41,27 @@ func (bm BasicManager) RegisterMetrics(appName) MetricsProvider{
 Each module will could define its own `PrometheusMetrics` function:
 
 ```go
+type Metrics struct {
+  Size metrics.Guage
+}
+
 func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
   labels := []string{}
 	for i := 0; i < len(labelsAndValues); i += 2 {
 		labels = append(labels, labelsAndValues[i])
   }
   return &Metrics{
-    ....
+    Size: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: "subsystem",
+		Name:      "size",
+		Help:      "Size of the custom metric",
+	}, labels).With(labelsAndValues...),
   }
 
 ```
 
-To get the correct namespace for the modules changing `BasicManager` to consist of the app name is needed. 
+To get the correct namespace for the modules changing `BasicManager` to consist of the app name is needed.
 
 ```go
 type BasicManager struct {

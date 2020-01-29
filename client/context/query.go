@@ -84,16 +84,6 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 		return abci.ResponseQuery{}, err
 	}
 
-	// When a client did not provide a query height, manually query for it so it can
-	// be injected downstream into responses.
-	if ctx.Height == 0 {
-		status, err := node.Status()
-		if err != nil {
-			return abci.ResponseQuery{}, err
-		}
-		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
-	}
-
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
 		Prove:  req.Prove || !ctx.TrustNode,

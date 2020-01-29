@@ -376,13 +376,13 @@ func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 	return ParseHTTPArgsWithLimit(r, DefaultLimit)
 }
 
-// ParseQueryProve sets the prove to execute a query if set by the http request.
-// It returns false if there was an error parsing the prove.
-func ParseQueryProve(r *http.Request) bool {
-	proveStr := r.FormValue("prove")
-	prove := false
-	if ok, err := strconv.ParseBool(proveStr); err == nil {
-		prove = ok
+// ParseQueryParamBool parses the given param to a boolean. It returns false by
+// default if the string is not parseable to bool.
+func ParseQueryParamBool(r *http.Request, param string) bool {
+	valueStr := r.FormValue(param)
+	value := false
+	if ok, err := strconv.ParseBool(valueStr); err == nil {
+		value = ok
 	}
-	return prove
+	return value
 }

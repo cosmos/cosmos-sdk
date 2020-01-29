@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
+* (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
 
 ## [v0.38.0] - 2020-01-23
 

@@ -24,11 +24,20 @@ var (
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	ClientID         string                `json:"client_id" yaml:"client_id"`
+	// ID of the client commiting the misbehaviour
+	ClientID string `json:"client_id" yaml:"client_id"`
+
+	// NextValidatorSet from Header1
 	FromValidatorSet *tmtypes.ValidatorSet `json:"from_validator_set" yaml:"from_validator_set"`
-	Header1          Header                `json:"header1" yaml:"header1"`
-	Header2          Header                `json:"header2" yaml:"header2"`
-	ChainID          string                `json:"chain_id" yaml:"chain_id"`
+
+	// Old Header
+	Header1 Header `json:"header1" yaml:"header1"`
+
+	// New Header
+	Header2 Header `json:"header2" yaml:"header2"`
+
+	// Id of the misbehaving chain
+	ChainID string `json:"chain_id" yaml:"chain_id"`
 }
 
 // ClientType is Tendermint light client
@@ -68,8 +77,6 @@ func (ev Evidence) Hash() tmbytes.HexBytes {
 }
 
 // GetHeight returns the height at which misbehaviour occurred
-//
-// NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
 	return int64(math.Min(float64(ev.Header1.Height), float64(ev.Header2.Height)))
 }
@@ -93,19 +100,19 @@ func (ev Evidence) ValidateBasic() error {
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
 		)
 	}
-	// Ensure that Heights are the same
-	if ev.Header1.Height != ev.Header2.Height {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
+	// Header 2 must be at a latest height
+	if ev.Header2.Height <= ev.Header1.Height {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "header 2 height is ≤ header 1 height (%d ≤ %d)", ev.Header2.Height, ev.Header1.Height)
 	}
 	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
 	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "header 1")
 	}
 	if err := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "header 2")
 	}
 	return nil
 }

@@ -121,8 +121,12 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	var err error
 	switch e := misbehaviour.(type) {
 	case tendermint.Evidence:
+		unbondingTime := k.stakingKeeper.UnbondingTime(ctx)
+		trustingPeriod := (2 / 3) * unbondingTime
+
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()),
+			clientState, consensusState, misbehaviour,
+			uint64(misbehaviour.GetHeight()), trustingPeriod,
 		)
 
 	default:

@@ -7,6 +7,8 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+var _ clientexported.ConsensusState = ConsensusState{}
+
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
 	Root             commitment.RootI `json:"root" yaml:"root"`

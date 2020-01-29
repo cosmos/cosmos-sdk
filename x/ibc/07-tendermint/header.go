@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"bytes"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -37,6 +39,9 @@ func (h Header) ValidateBasic(chainID string) error {
 	}
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
+	}
+	if !bytes.Equal(h.ValidatorSet.Hash(), h.ValidatorsHash) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator hash doesn't match the validator set")
 	}
 	return nil
 }

@@ -217,13 +217,12 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 			}
 
 			proofHeight := uint64(cliCtx.Height)
-			consensusHeight, err := lastHeight(cliCtx)
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgConnectionOpenConfirm(
-				connectionID, proofAck, proofHeight, consensusHeight, cliCtx.GetFromAddress(),
+				connectionID, proofAck, proofHeight, cliCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

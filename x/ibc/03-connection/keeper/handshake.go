@@ -56,12 +56,11 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// XXX: blocked by #5475
-	// if consensusHeight > uint64(ctx.BlockHeight()) {
-	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
-	// }
+	if consensusHeight > uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID, consensusHeight)
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}
@@ -80,18 +79,17 @@ func (k Keeper) ConnOpenTry(
 	connection := types.NewConnectionEnd(exported.UNINITIALIZED, clientID, counterparty, []string{version})
 
 	if err := k.VerifyConnectionState(
-		ctx, proofHeight, proofInit, counterparty.ConnectionID,
-		expectedConnection, expectedConsensusState,
+		ctx, connection, proofHeight, proofInit, counterparty.ConnectionID,
+		expectedConnection,
 	); err != nil {
 		return err
 	}
 
-	// XXX: blocked by #5475
-	// if err := k.VerifyClientConsensusState(
-	// 	ctx, proofHeight, proofInit, expectedConsensusState,
-	// ); err != nil {
-	// 	return err
-	// }
+	if err := k.VerifyClientConsensusState(
+		ctx, connection, consensusHeight, proofConsensus, expectedConsensusState,
+	); err != nil {
+		return err
+	}
 
 	previousConnection, found := k.GetConnection(ctx, connectionID)
 	if found && !(previousConnection.State == exported.INIT &&
@@ -126,10 +124,9 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// XXX: blocked by #5475
-	// if consensusHeight > uint64(ctx.BlockHeight()) {
-	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
-	// }
+	if consensusHeight > uint64(ctx.BlockHeight()) {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	}
 
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
@@ -149,8 +146,7 @@ func (k Keeper) ConnOpenAck(
 			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
 		)
 	}
-
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
+	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
 	}
@@ -160,18 +156,17 @@ func (k Keeper) ConnOpenAck(
 	expectedConnection := types.NewConnectionEnd(exported.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	if err := k.VerifyConnectionState(
-		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
-		expectedConnection, expectedConsensusState,
+		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionID,
+		expectedConnection,
 	); err != nil {
 		return err
 	}
 
-	// XXX: blocked by #5475
-	// if err := k.VerifyClientConsensusState(
-	// 	ctx, connection, proofHeight, proofInit, expectedConsensusState,
-	// ); err != nil {
-	// 	return err
-	// }
+	if err := k.VerifyClientConsensusState(
+		ctx, connection, consensusHeight, proofConsensus, expectedConsensusState,
+	); err != nil {
+		return err
+	}
 
 	connection.State = exported.OPEN
 	connection.Versions = []string{version}
@@ -188,8 +183,7 @@ func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck commitment.ProofI,
-	proofHeight,
-	consensusHeight uint64,
+	proofHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
@@ -203,18 +197,13 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
-	if !found {
-		return clienttypes.ErrConsensusStateNotFound
-	}
-
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	if err := k.VerifyConnectionState(
-		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
-		expectedConnection, expectedConsensusState,
+		ctx, connection, proofHeight, proofAck, connection.Counterparty.ConnectionID,
+		expectedConnection,
 	); err != nil {
 		return err
 	}

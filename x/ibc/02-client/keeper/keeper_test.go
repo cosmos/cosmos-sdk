@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
@@ -45,17 +47,25 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
-
 	suite.privVal = tmtypes.NewMockPV()
-
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
 	suite.header = tendermint.CreateTestHeader(testClientID, testClientHeight, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-
 	suite.consensusState = tendermint.ConsensusState{
 		Root:             commitment.NewRoot([]byte("hash")),
 		ValidatorSetHash: suite.valSet.Hash(),
+	}
+
+	var validators staking.Validators
+	for i := 1; i < 11; i++ {
+		privVal := tmtypes.NewMockPV()
+		pk := privVal.GetPubKey()
+		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		validators = append(validators, val)
+
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
 }
 
@@ -80,10 +90,10 @@ func (suite *KeeperTestSuite) TestSetClientType() {
 	suite.Require().Equal(exported.Tendermint, clientType, "ClientTypes not stored correctly")
 }
 
-func (suite *KeeperTestSuite) TestSetConsensusState() {
-	suite.keeper.SetConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
+func (suite *KeeperTestSuite) TestSetClientConsensusState() {
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
-	retrievedConsState, found := suite.keeper.GetConsensusState(suite.ctx, testClientID, testClientHeight)
+	retrievedConsState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, testClientHeight)
 
 	suite.Require().True(found, "GetConsensusState failed")
 	tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
@@ -104,4 +114,30 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)
+}
+
+func (suite KeeperTestSuite) TestGetConsensusState() {
+	suite.ctx = suite.ctx.WithBlockHeight(10)
+	cases := []struct {
+		name    string
+		height  uint64
+		expPass bool
+	}{
+		{"zero height", 0, false},
+		{"height > latest height", uint64(suite.ctx.BlockHeight()) + 1, false},
+		{"latest height - 1", uint64(suite.ctx.BlockHeight()) - 1, true},
+		{"latest height", uint64(suite.ctx.BlockHeight()), true},
+	}
+
+	for i, tc := range cases {
+		tc := tc
+		cs, found := suite.keeper.GetSelfConsensusState(suite.ctx, tc.height)
+		if tc.expPass {
+			suite.Require().True(found, "Case %d should have passed: %s", i, tc.name)
+			suite.Require().NotNil(cs, "Case %d should have passed: %s", i, tc.name)
+		} else {
+			suite.Require().False(found, "Case %d should have failed: %s", i, tc.name)
+			suite.Require().Nil(cs, "Case %d should have failed: %s", i, tc.name)
+		}
+	}
 }

@@ -335,3 +335,19 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 		require.True(t, reflect.DeepEqual(sortedVals, vals), "Validator sort returned different slices")
 	}
 }
+
+func TestValidatorToTm(t *testing.T) {
+	vals := make(Validators, 10)
+	expected := make([]*tmtypes.Validator, 10)
+
+	for i := range vals {
+		pk := ed25519.GenPrivKey().PubKey()
+		val := NewValidator(sdk.ValAddress(pk.Address()), pk, Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		vals[i] = val
+		expected[i] = tmtypes.NewValidator(pk, val.ConsensusPower())
+	}
+
+	require.Equal(t, expected, vals.ToTmValidators())
+}

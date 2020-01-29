@@ -234,7 +234,9 @@ func NewSimApp(
 		staking.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], app.BankKeeper, app.SupplyKeeper)
+	app.IBCKeeper = ibc.NewKeeper(
+		app.cdc, keys[ibc.StoreKey], app.StakingKeeper,
+	)
 
 	transferCapKey := app.IBCKeeper.PortKeeper.BindPort(bank.ModuleName)
 	app.TransferKeeper = transfer.NewKeeper(
@@ -258,6 +260,7 @@ func NewSimApp(
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		transfer.NewAppModule(app.TransferKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

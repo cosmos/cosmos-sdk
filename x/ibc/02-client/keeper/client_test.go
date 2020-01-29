@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
-				consensusState, found := suite.keeper.GetConsensusState(suite.ctx, testClientID, suite.header.GetHeight())
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(suite.header.GetHeight()))
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

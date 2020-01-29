@@ -6,8 +6,9 @@ import (
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
 func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpenInit) (*sdk.Result, error) {
-	err := k.ConnOpenInit(ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty)
-	if err != nil {
+	if err := k.ConnOpenInit(
+		ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty,
+	); err != nil {
 		return nil, err
 	}
 
@@ -31,10 +32,11 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
-	err := k.ConnOpenTry(
+	if err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
-		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus, msg.ProofHeight, msg.ConsensusHeight)
-	if err != nil {
+		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
+		msg.ProofHeight, msg.ConsensusHeight,
+	); err != nil {
 		return nil, err
 	}
 
@@ -58,11 +60,10 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpenAck) (*sdk.Result, error) {
-	err := k.ConnOpenAck(
+	if err := k.ConnOpenAck(
 		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
-	)
-	if err != nil {
+	); err != nil {
 		return nil, err
 	}
 
@@ -85,8 +86,9 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
 func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnectionOpenConfirm) (*sdk.Result, error) {
-	err := k.ConnOpenConfirm(ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight, msg.ConsensusHeight)
-	if err != nil {
+	if err := k.ConnOpenConfirm(
+		ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight,
+	); err != nil {
 		return nil, err
 	}
 

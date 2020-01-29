@@ -52,7 +52,8 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
-	var res *sdk.Result
+	var msgResult *sdk.Result
+	var err error
 	for _, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
@@ -75,13 +76,18 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		res, _ = k.router.Route(msg.Route())(ctx, msg)
-		if res != nil {
-			return res, nil
+		handler := k.router.Route(ctx, msg.Route())
+		if handler == nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
+		}
+
+		msgResult, err = handler(ctx, msg)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %d", msg.Type())
 		}
 	}
 
-	return nil, nil
+	return msgResult, nil
 }
 
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration

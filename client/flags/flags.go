@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // nolint
@@ -19,13 +21,9 @@ const (
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
-)
 
-const (
-	DefaultKeyringBackend = KeyringBackendOS
-	KeyringBackendFile    = "file"
-	KeyringBackendOS      = "os"
-	KeyringBackendTest    = "test"
+	// DefaultKeyringBackend
+	DefaultKeyringBackend = keys.BackendOS
 )
 
 const (

@@ -33,6 +33,7 @@ var (
 type Store struct {
 	tree       Tree
 	pruning    types.PruningOptions
+	version    int64
 	lastCommit types.CommitID
 }
 
@@ -71,6 +72,7 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 	store := Store{
 		tree:       tree,
 		pruning:    pruning,
+		version:    tree.Version(),
 		lastCommit: lastCommit,
 	}
 
@@ -92,6 +94,7 @@ func UnsafeNewStore(tree *iavl.MutableTree, po types.PruningOptions) *Store {
 	return &Store{
 		tree:       tree,
 		pruning:    po,
+		version:    tree.Version(),
 		lastCommit: commit,
 	}
 }
@@ -111,7 +114,19 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 		return nil, err
 	}
 
-	return &Store{tree: &immutableTree{iTree}}, nil
+	commit := types.CommitID{
+		Version: version,
+		Hash:    iTree.Hash(),
+	}
+
+	store := &Store{
+		tree:       &immutableTree{iTree},
+		pruning:    st.pruning,
+		version:    version,
+		lastCommit: commit,
+	}
+
+	return store, nil
 }
 
 // Implements Committer.
@@ -123,6 +138,7 @@ func (st *Store) Commit() types.CommitID {
 		panic(err)
 	}
 
+	st.version = version
 	flushed := st.pruning.FlushVersion(version)
 
 	// If the version we saved got flushed to disk, check if previous flushed version should be deleted
@@ -146,6 +162,11 @@ func (st *Store) Commit() types.CommitID {
 	}
 
 	return st.lastCommit
+}
+
+// Implements Committer
+func (st *Store) Version() int64 {
+	return st.version
 }
 
 // Implements Committer.

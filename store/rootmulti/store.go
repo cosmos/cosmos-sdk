@@ -281,6 +281,10 @@ func (rs *Store) TracingEnabled() bool {
 //----------------------------------------
 // +CommitStore
 
+func (rs *Store) Version() int64 {
+	return rs.version
+}
+
 // Implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitID

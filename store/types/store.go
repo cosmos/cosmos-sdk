@@ -16,6 +16,7 @@ type Store interface { //nolint
 
 // something that can persist to disk
 type Committer interface {
+	Version() int64
 	Commit() CommitID
 	LastCommitID() CommitID
 	SetPruning(PruningOptions)

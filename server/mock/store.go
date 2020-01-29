@@ -47,6 +47,10 @@ func (ms multiStore) Commit() sdk.CommitID {
 	panic("not implemented")
 }
 
+func (ms multiStore) Version() int64 {
+	panic("not implemented")
+}
+
 func (ms multiStore) LastCommitID() sdk.CommitID {
 	panic("not implemented")
 }

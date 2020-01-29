@@ -45,7 +45,7 @@ func (k Keeper) VerifyConnectionState(
 
 	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connectionEnd.GetClientID(), height, // TODO: should this be connection or connectionEnd's?
+		ctx, connectionEnd.GetClientID(), height,
 	)
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound

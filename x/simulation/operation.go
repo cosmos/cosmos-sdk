@@ -31,6 +31,13 @@ const (
 	QueuedMsgEntryKind  = "queued_msg"
 )
 
+var entries = map[string]struct{}{
+	BeginBlockEntryKind: struct{}{},
+	EndBlockEntryKind:   struct{}{},
+	MsgEntryKind:        struct{}{},
+	QueuedMsgEntryKind:  struct{}{},
+}
+
 // OperationEntry - an operation entry for logging (ex. BeginBlock, EndBlock, XxxMsg, etc)
 type OperationEntry struct {
 	EntryKind string          `json:"entry_kind" yaml:"entry_kind"`
@@ -41,6 +48,10 @@ type OperationEntry struct {
 
 // NewOperationEntry creates a new OperationEntry instance
 func NewOperationEntry(entry string, height, order int64, op json.RawMessage) OperationEntry {
+	if _, ok := entries[entry]; !ok {
+		panic("Given EntryKind is invalid")
+	}
+
 	return OperationEntry{
 		EntryKind: entry,
 		Height:    height,

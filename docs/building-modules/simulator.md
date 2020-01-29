@@ -33,24 +33,24 @@ for the key-value pairs from the stores to be decoded (_i.e_ unmarshalled)
 to their corresponding types. In particular, it matches the key to a concrete type
 and then unmarshals the value from the `KVPair` to the type provided.
 
-You can use the example here from the distribution module to implement your store decoders.
+You can use the example [here](https://github.com/cosmos/cosmos-sdk/blob/release%2Fv0.38.0/x/distribution/simulation/decoder.go) from the distribution module to implement your store decoders.
 
 ### Randomized genesis
 
-The simulator must test different scenarios and values for the genesis parameter
-in order to succesfully check. The `simulator` package from each module must
-expose a `RandomizedGenState` function to generate the initial random `GenesisState`
-from a given seed. In
+The simulator tests different scenarios and values for genesis parameters
+in order to fully test the edge cases of specific modules. The `simulator` package from each module must expose a `RandomizedGenState` function to generate the initial random `GenesisState` from a given seed. In
 
 Once the module genesis parameter are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
 to the app genesis JSON to use it on the simulations.
 
-You can check an example on how to create the randomized genesis here.
+You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/release%2Fv0.38.0/x/staking/simulation/genesis.go).
 
-### Randomized parameters
+### Randomized parameter changes
 
-<!-- TODO: -->
+The simulator is able to test parameter changes at random. The simulator package from each module must contain a `RandomizedParams` func that will simulate parameter changes of the module throughout the simulations lifespan.
+
+You can see how an example of what is needed to fully test parameter changes [here](https://github.com/cosmos/cosmos-sdk/blob/release%2Fv0.38.0/x/staking/simulation/params.go)
 
 ### Random weighted operations
 
@@ -58,7 +58,7 @@ Operations are one of the crucial parts of the SDK simulation. They are the tran
 (`Msg`) that are simulated with random field values. The sender of the operation
 is also assigned randomly.
 
-Operations on the simulation are simulated using the full [transaction cycle](TODO:link) of a
+Operations on the simulation are simulated using the full [transaction cycle](../core/transactions.md) of a
 `ABCI` application that exposes the `BaseApp`.
 
 <!-- TODO: Operation weights -->
@@ -73,10 +73,9 @@ them to be used on the parameters.
 
 ## Registering simulation functions
 
-Now that all the required functions are defined, we need to integrate them into 
-the module pattern within the `module.go`:
+Now that all the required functions are defined, we need to integrate them into the module pattern within the `module.go`:
 
-<!-- TODO: add link to module.go example -->
++++ https://github.com/cosmos/cosmos-sdk/blob/release%2Fv0.38.0/x/distribution/module.go#L156-L185
 
 ## App Simulator manager
 
@@ -90,7 +89,7 @@ type CustomApp struct {
 }
 ```
 
-Then at the intantiation of the application, we create the `SimulationManager`
+Then at the instantiation of the application, we create the `SimulationManager`
 instance in the same way we create the `ModuleManager` but this time we only pass
 the modules that implement the simulation functions from the `AppModuleSimulation`
 interface described above.

@@ -74,7 +74,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
 func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update [client-id] [path/to/header.json]",
+		Use:   "update [client-id] [path/to/old-header.json] [path/to/new-header.json]",
 		Short: "update existing client with a header",
 		Long: strings.TrimSpace(fmt.Sprintf(`update existing client with a header:
 
@@ -82,7 +82,7 @@ Example:
 $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -90,19 +90,31 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 
 			clientID := args[0]
 
-			var header exported.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			var oldHeader, newHeader exported.Header
+
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &oldHeader); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				if err := cdc.UnmarshalJSON(contents, &oldHeader); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
+			if err := cdc.UnmarshalJSON([]byte(args[2]), &newHeader); err != nil {
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(args[2])
+				if err != nil {
+					return errors.New("neither JSON input nor path to .json file were provided")
+				}
+				if err := cdc.UnmarshalJSON(contents, &newHeader); err != nil {
+					return errors.Wrap(err, "error unmarshalling header file")
+				}
+			}
+
+			msg := types.NewMsgUpdateClient(clientID, oldHeader, newHeader, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

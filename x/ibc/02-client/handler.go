@@ -41,7 +41,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
 func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk.Result, error) {
-	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
+	err := k.UpdateClient(ctx, msg.ClientID, msg.OldHeader, msg.NewHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk
 		sdk.NewEvent(
 			EventTypeUpdateClient,
 			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
-			sdk.NewAttribute(AttrbuteKeyClientType, msg.Header.ClientType().String()),
+			sdk.NewAttribute(AttrbuteKeyClientType, msg.NewHeader.ClientType().String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

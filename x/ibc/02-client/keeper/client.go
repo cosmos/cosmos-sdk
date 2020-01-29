@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -50,15 +52,27 @@ func (k Keeper) CreateClient(
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header
-func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
+func (k Keeper) UpdateClient(
+	ctx sdk.Context, clientID string, oldHeader, newHeader exported.Header,
+) error {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	// check that the header consensus matches the client one
-	if header.ClientType() != clientType {
-		return sdkerrors.Wrapf(types.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
+	// check that the headers client type matches the stored one
+	if oldHeader.ClientType() != clientType {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClientType,
+			"old header type ≠ client type (%s ≠ %s)", oldHeader.ClientType().String(), clientType.String(),
+		)
+	}
+
+	if newHeader.ClientType() != clientType {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClientType,
+			"new header type ≠ client type (%s ≠ %s)", oldHeader.ClientType().String(), clientType.String(),
+		)
 	}
 
 	clientState, found := k.GetClientState(ctx, clientID)
@@ -72,13 +86,18 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	var (
-		consensusState exported.ConsensusState
-		err            error
+		consensusState      exported.ConsensusState
+		err                 error
+		oldHeaderNextValSet *tmtypes.ValidatorSet // TODO: should I get this from the msg or internal query?
 	)
 
 	switch clientType {
 	case exported.Tendermint:
-		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(clientState, header, ctx.ChainID())
+		unbondingTime := k.stakingKeeper.UnbondingTime(ctx)
+		trustingPeriod := (2 / 3) * unbondingTime
+		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
+			clientState, oldHeader, newHeader, oldHeaderNextValSet, ctx.ChainID(), trustingPeriod,
+		)
 	default:
 		return sdkerrors.Wrapf(types.ErrInvalidClientType, "cannot update client with ID %s", clientID)
 	}
@@ -88,8 +107,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
+	k.SetClientConsensusState(ctx, clientID, newHeader.GetHeight(), consensusState)
+	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, newHeader.GetHeight()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -121,12 +140,8 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	var err error
 	switch e := misbehaviour.(type) {
 	case tendermint.Evidence:
-		unbondingTime := k.stakingKeeper.UnbondingTime(ctx)
-		trustingPeriod := (2 / 3) * unbondingTime
-
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour,
-			uint64(misbehaviour.GetHeight()), trustingPeriod,
+			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()),
 		)
 
 	default:

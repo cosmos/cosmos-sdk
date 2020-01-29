@@ -29,7 +29,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		var err error
 		switch msg := msg.(type) {
 		case client.MsgUpdateClient:
-			err = pvr.clientKeeper.UpdateClient(ctx, msg.ClientID, msg.Header)
+			err = pvr.clientKeeper.UpdateClient(ctx, msg.ClientID, msg.OldHeader, msg.NewHeader)
 		case channel.MsgPacket:
 			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
 		case channel.MsgAcknowledgement:

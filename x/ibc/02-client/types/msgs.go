@@ -76,17 +76,19 @@ var _ sdk.Msg = MsgUpdateClient{}
 
 // MsgUpdateClient defines a message to update an IBC client
 type MsgUpdateClient struct {
-	ClientID string          `json:"client_id" yaml:"client_id"`
-	Header   exported.Header `json:"header" yaml:"header"`
-	Signer   sdk.AccAddress  `json:"address" yaml:"address"`
+	ClientID  string          `json:"client_id" yaml:"client_id"`
+	OldHeader exported.Header `json:"old_header" yaml:"old_header"`
+	NewHeader exported.Header `json:"new_header" yaml:"new_header"`
+	Signer    sdk.AccAddress  `json:"address" yaml:"address"`
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header exported.Header, signer sdk.AccAddress) MsgUpdateClient {
+func NewMsgUpdateClient(id string, oldHeader, newHeader exported.Header, signer sdk.AccAddress) MsgUpdateClient {
 	return MsgUpdateClient{
-		ClientID: id,
-		Header:   header,
-		Signer:   signer,
+		ClientID:  id,
+		OldHeader: oldHeader,
+		NewHeader: newHeader,
+		Signer:    signer,
 	}
 }
 
@@ -102,7 +104,10 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
-	if msg.Header == nil {
+	if msg.OldHeader == nil {
+		return ErrInvalidHeader
+	}
+	if msg.NewHeader == nil {
 		return ErrInvalidHeader
 	}
 	if msg.Signer.Empty() {

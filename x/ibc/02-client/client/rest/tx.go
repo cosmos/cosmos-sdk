@@ -101,9 +101,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgUpdateClient(
-			clientID,
-			req.Header,
-			fromAddr,
+			clientID, req.OldHeader, req.NewHeader, fromAddr,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {

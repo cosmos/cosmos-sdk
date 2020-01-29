@@ -24,20 +24,11 @@ var (
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	// ID of the client commiting the misbehaviour
-	ClientID string `json:"client_id" yaml:"client_id"`
-
-	// NextValidatorSet from Header1
+	ClientID         string                `json:"client_id" yaml:"client_id"` // ID of the client commiting the misbehaviour
 	FromValidatorSet *tmtypes.ValidatorSet `json:"from_validator_set" yaml:"from_validator_set"`
-
-	// Old Header
-	Header1 Header `json:"header1" yaml:"header1"`
-
-	// New Header
-	Header2 Header `json:"header2" yaml:"header2"`
-
-	// Id of the misbehaving chain
-	ChainID string `json:"chain_id" yaml:"chain_id"`
+	Header1          Header                `json:"header1" yaml:"header1"`
+	Header2          Header                `json:"header2" yaml:"header2"`
+	ChainID          string                `json:"chain_id" yaml:"chain_id"` // Id of the misbehaving chain
 }
 
 // ClientType is Tendermint light client
@@ -100,9 +91,9 @@ func (ev Evidence) ValidateBasic() error {
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
 		)
 	}
-	// Header 2 must be at a latest height
-	if ev.Header2.Height <= ev.Header1.Height {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "header 2 height is ≤ header 1 height (%d ≤ %d)", ev.Header2.Height, ev.Header1.Height)
+	// Ensure that Heights are the same
+	if ev.Header1.Height != ev.Header2.Height {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
 	}
 	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {

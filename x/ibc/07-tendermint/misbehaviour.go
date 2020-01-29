@@ -3,9 +3,6 @@ package tendermint
 import (
 	"bytes"
 	"errors"
-	"time"
-
-	lite "github.com/tendermint/tendermint/lite2"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -23,7 +20,6 @@ func CheckMisbehaviourAndUpdateState(
 	consensusState clientexported.ConsensusState,
 	misbehaviour clientexported.Misbehaviour,
 	height uint64, // height at which the consensus state was loaded
-	trustingPeriod time.Duration,
 ) (clientexported.ClientState, error) {
 
 	// cast the interface to specific types before checking for misbehaviour
@@ -42,9 +38,7 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
 	}
 
-	if err := checkMisbehaviour(
-		tmClientState, tmConsensusState, tmEvidence, height, trustingPeriod,
-	); err != nil {
+	if err := checkMisbehaviour(tmClientState, tmConsensusState, tmEvidence, height); err != nil {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
@@ -55,8 +49,7 @@ func CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
-	clientState ClientState, consensusState ConsensusState, evidence Evidence,
-	height uint64, trustingPeriod time.Duration,
+	clientState ClientState, consensusState ConsensusState, evidence Evidence, height uint64,
 ) error {
 	// NOTE: header height and commitment root assertions are checked with the
 	// evidence and msg ValidateBasic functions at the AnteHandler level.
@@ -75,9 +68,22 @@ func checkMisbehaviour(
 		)
 	}
 
-	return lite.Verify(
-		evidence.ChainID, &evidence.Header1.SignedHeader, evidence.FromValidatorSet,
-		&evidence.Header2.SignedHeader, evidence.Header2.ValidatorSet, trustingPeriod,
-		time.Now(), lite.DefaultTrustLevel,
-	)
+	// - Evidence is within the trusting period.
+	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
+	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
+	if err := evidence.FromValidatorSet.VerifyFutureCommit(
+		evidence.Header1.ValidatorSet, evidence.ChainID,
+		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "validator set in header 1 has too much change from last known validator set")
+	}
+
+	if err := evidence.FromValidatorSet.VerifyFutureCommit(
+		evidence.Header2.ValidatorSet, evidence.ChainID,
+		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "validator set in header 2 has too much change from last known validator set")
+	}
+
+	return nil
 }

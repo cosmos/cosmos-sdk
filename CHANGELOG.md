@@ -48,10 +48,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
-* (client) [\#5586](https://github.com/cosmos/cosmos-sdk/pull/5586) IBC additions:
+* (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
   * Added `prove` flag for commitment proof verification.
   * Added `queryABCI` function that returns the full `abci.ResponseQuery` with inclusion merkle proofs.
-* (types) [\#5586](https://github.com/cosmos/cosmos-sdk/pull/5586) IBC additions:
+* (types) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
   * `Coin` denomination max lenght has been increased to 32.
   * Added `CapabilityKey` alias for `StoreKey` to match IBC spec.
 

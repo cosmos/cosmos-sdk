@@ -61,12 +61,50 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 
 }
 
-func (suite *KeeperTestSuite) TimeoutExecuted() {
+func (suite *KeeperTestSuite) TestTimeoutExecuted() {
+	counterparty := types.NewCounterparty(testPort2, testChannel2)
+	var packet types.Packet
+
+	testCases := []testCase{
+		{"success", func() {
+			suite.createClient(testClientID1)
+			suite.createClient(testClientID2)
+			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.OPEN)
+			suite.createChannel(testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), exported.OPEN, exported.ORDERED, testConnectionID1)
+			suite.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionID1)
+			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
+			packet = types.NewPacket(newMockTimeoutPacket(3), 1, testPort1, testChannel1, testPort2, testChannel2)
+			err := suite.app.IBCKeeper.ChannelKeeper.SendPacket(suite.ctx, packet)
+			suite.Require().NoError(err)
+			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, testPort2, testChannel2, 0)
+			suite.updateClient()
+			nextRecv, ok := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(suite.ctx, packet.GetDestPort(), packet.GetDestChannel())
+			suite.Require().True(ok)
+			out, err := suite.app.IBCKeeper.ChannelKeeper.TimeoutPacket(suite.ctx, packet, ibctypes.ValidProof{}, 3, nextRecv)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(out)
+		}, true},
+	}
+
+	for i, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
+			suite.SetupTest() // reset
+			tc.malleate()
+			if tc.expPass {
+				err := suite.app.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.ctx, packet)
+				suite.Require().NoError(err)
+			} else {
+				err := suite.app.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.ctx, packet)
+				suite.Require().Error(err)
+			}
+		})
+	}
+
 	// Create packet with appropriate channel and port, test wrong port/channel
 	// Ensure that ordered channel that is created is closed once TimeoutExecuted is called
 }
 
-func (suite *KeeperTestSuite) TimeoutOnClose() {
+func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 	// Create packet with appropriate channel and port, test wrong port/channel
 	// if packet.GetDestPort() != channel.Counterparty.PortID {}
 	// if packet.GetDestChannel() != channel.Counterparty.ChannelID {}

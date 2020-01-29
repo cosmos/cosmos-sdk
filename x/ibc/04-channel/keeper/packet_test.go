@@ -197,17 +197,18 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 }
 
 func (suite *KeeperTestSuite) TestAcknowledgePacket() {
-	counterparty := types.NewCounterparty(testPort2, testChannel2)
+	// counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
 
 	testCases := []testCase{
 		{"success", func() {
 			suite.createClient(testClientID1)
 			suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connectionexported.OPEN)
-			suite.createChannel(testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), exported.OPEN, exported.ORDERED, testConnectionID1)
+			suite.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionID1)
 			suite.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionID1)
+			suite.updateClient()
+			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, testPort2, testChannel2)
-			suite.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionID1)
 			suite.updateClient()
 		}, true},
 	}

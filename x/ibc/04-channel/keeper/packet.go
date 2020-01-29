@@ -259,6 +259,7 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
+	fmt.Println(packet.GetSourcePort(), channel.Counterparty.PortID)
 	if packet.GetSourcePort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,

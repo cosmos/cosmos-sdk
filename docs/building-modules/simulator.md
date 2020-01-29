@@ -79,7 +79,7 @@ Now that all the required functions are defined, we need to integrate them into 
 
 ## App Simulator manager
 
-The following step is setting up the [`SimulatorManager`] at the app level. This
+The following step is setting up the `SimulatorManager` at the app level. This
 is required for the simulation test files on the next step.
 
 ```go

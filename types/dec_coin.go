@@ -11,12 +11,6 @@ import (
 // ----------------------------------------------------------------------------
 // Decimal Coin
 
-// DecCoin defines a coin which can have additional decimal points
-type DecCoin struct {
-	Denom  string `json:"denom"`
-	Amount Dec    `json:"amount"`
-}
-
 // NewDecCoin creates a new DecCoin instance from an Int.
 func NewDecCoin(denom string, amount Int) DecCoin {
 	if err := validate(denom, amount); err != nil {
@@ -134,7 +128,7 @@ func (coin DecCoin) IsPositive() bool {
 //
 // TODO: Remove once unsigned integers are used.
 func (coin DecCoin) IsNegative() bool {
-	return coin.Amount.Sign() == -1
+	return coin.Amount.IsNegative()
 }
 
 // String implements the Stringer interface for DecCoin. It returns a

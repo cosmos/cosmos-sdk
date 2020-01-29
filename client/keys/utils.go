@@ -2,7 +2,6 @@ package keys
 
 import (
 	"fmt"
-	"io"
 	"path/filepath"
 
 	"github.com/99designs/keyring"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -26,44 +24,17 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
-func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
-	rootDir := viper.GetString(flags.FlagHome)
-	return NewKeyBaseFromDir(rootDir)
-}
-
-// NewKeyBaseFromDir initializes a keybase at a particular dir.
-func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir)
+// NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return getLazyKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
-// NewKeyBaseFromHomeFlag initializes a keyring based on configuration.
-func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
-	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input)
-}
-
-// NewKeyBaseFromDir initializes a keyring at the given directory.
-// If the viper flag flags.FlagKeyringBackend is set to file, it returns an on-disk keyring with
-// CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
-// password-less keyring that could be used for testing purposes.
-func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
-	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
-	switch keyringBackend {
-	case flags.KeyringBackendTest:
-		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
-	case flags.KeyringBackendFile:
-		return keys.NewKeyringFile(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
-	case flags.KeyringBackendOS:
-		return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
-	}
-	return nil, fmt.Errorf("unknown keyring backend %q", keyringBackend)
-}
-
-func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
+func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
 }
 
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
@@ -80,9 +51,9 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		var out []byte
 		var err error
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(ko, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(ko)
+			out, err = KeysCdc.MarshalJSON(ko)
 		}
 		if err != nil {
 			panic(err)
@@ -107,9 +78,9 @@ func printInfos(infos []keys.Info) {
 		var err error
 
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(kos, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(kos)
+			out, err = KeysCdc.MarshalJSON(kos)
 		}
 
 		if err != nil {

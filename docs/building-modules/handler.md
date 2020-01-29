@@ -1,7 +1,7 @@
----
+<!--
 order: 4
 synopsis: "A `Handler` designates a function that processes [`message`s](./messages-and-queries.md#messages). `Handler`s are specific to the module in which they are defined, and only process `message`s defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx)."
----
+-->
 
 # Handlers
 
@@ -25,19 +25,24 @@ Let us break it down:
 
 ## Implementation of a module `handler`s
 
-Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the [application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically, the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`, which looks like the following:
+Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The
+[module manager](./module-manager.md) is used to add the module's `handler`s to the
+[application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically,
+the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`,
+which looks like the following:
 
 ```go
 func NewHandler(keeper Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		switch msg := msg.(type) {
 		case MsgType1:
 			return handleMsgType1(ctx, keeper, msg)
+
 		case MsgType2:
 			return handleMsgType2(ctx, keeper, msg)
+
 		default:
-			errMsg := fmt.Sprintf("Unrecognized nameservice Msg type: %v", msg.Type())
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }

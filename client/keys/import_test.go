@@ -9,12 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runImportCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	importKeyCommand := importKeyCommand()
+	importKeyCommand := ImportKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
 
 	// Now add a temporary keybase
@@ -23,7 +25,7 @@ func Test_runImportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	if !runningUnattended {
-		kb, err := NewKeyringFromHomeFlag(mockIn)
+		kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 		require.NoError(t, err)
 		defer func() {
 			kb.Delete("keyname1", "", false)

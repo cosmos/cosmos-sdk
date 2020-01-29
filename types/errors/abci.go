@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 const (
@@ -38,6 +40,43 @@ func ABCIInfo(err error, debug bool) (codespace string, code uint32, log string)
 	}
 
 	return abciCodespace(err), abciCode(err), encode(err)
+}
+
+// ResponseCheckTx returns an ABCI ResponseCheckTx object with fields filled in
+// from the given error and gas values.
+func ResponseCheckTx(err error, gw, gu uint64) abci.ResponseCheckTx {
+	space, code, log := ABCIInfo(err, false)
+	return abci.ResponseCheckTx{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+		GasWanted: int64(gw),
+		GasUsed:   int64(gu),
+	}
+}
+
+// ResponseDeliverTx returns an ABCI ResponseDeliverTx object with fields filled in
+// from the given error and gas values.
+func ResponseDeliverTx(err error, gw, gu uint64) abci.ResponseDeliverTx {
+	space, code, log := ABCIInfo(err, false)
+	return abci.ResponseDeliverTx{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+		GasWanted: int64(gw),
+		GasUsed:   int64(gu),
+	}
+}
+
+// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error.
+func QueryResult(err error) abci.ResponseQuery {
+	space, code, log := ABCIInfo(err, false)
+	return abci.ResponseQuery{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+	}
 }
 
 // The debugErrEncoder encodes the error with a stacktrace.

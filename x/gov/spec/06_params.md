@@ -1,3 +1,7 @@
+<!--
+order: 6
+-->
+
 # Parameters
 
 The governance module contains the following parameters:

@@ -3,8 +3,9 @@ package gov
 import (
 	"testing"
 
-	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/stretchr/testify/require"
+
+	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -29,7 +30,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 	proposalID2 := proposal2.ProposalID
 
-	err, votingStarted := input.keeper.AddDeposit(ctx, proposalID2, input.addrs[0], input.keeper.GetDepositParams(ctx).MinDeposit)
+	votingStarted, err := input.keeper.AddDeposit(ctx, proposalID2, input.addrs[0], input.keeper.GetDepositParams(ctx).MinDeposit)
 	require.NoError(t, err)
 	require.True(t, votingStarted)
 

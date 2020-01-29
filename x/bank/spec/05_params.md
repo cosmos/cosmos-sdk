@@ -1,3 +1,7 @@
+<!--
+order: 5
+-->
+
 # Parameters
 
 The bank module contains the following parameters:

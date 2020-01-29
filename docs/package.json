@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "preserve": "./pre.sh",
-    "serve": "trap 'exit 0' SIGINT; vuepress dev",
+    "serve": "trap 'exit 0' SIGINT; vuepress dev --no-cache",
     "postserve": "./post.sh",
     "prebuild": "./pre.sh",
     "build": "trap 'exit 0' SIGINT; vuepress build --no-cache",
@@ -14,6 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vuepress-theme-cosmos": "^1.0.93"
+    "@vuepress/plugin-google-analytics": "^1.2.0",
+    "tiny-cookie": "^2.3.1",
+    "vuepress-plugin-smooth-scroll": "0.0.9",
+    "vuepress-theme-cosmos": "^1.0.113"
   }
 }

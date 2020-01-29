@@ -6,14 +6,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // module codec
@@ -52,7 +53,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "upgrade",
 		Short: "Querying commands for the upgrade module",
 	}
-	queryCmd.AddCommand(client.GetCommands(
+	queryCmd.AddCommand(flags.GetCommands(
 		cli.GetPlanCmd(StoreKey, cdc),
 		cli.GetAppliedHeightCmd(StoreKey, cdc),
 	)...)
@@ -66,7 +67,7 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "upgrade",
 		Short: "Upgrade transaction subcommands",
 	}
-	txCmd.AddCommand(client.PostCommands()...)
+	txCmd.AddCommand(flags.PostCommands()...)
 	return txCmd
 }
 

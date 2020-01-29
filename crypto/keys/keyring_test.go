@@ -2,7 +2,6 @@
 package keys
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +17,7 @@ import (
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	algo := Secp256k1
@@ -79,7 +78,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = kb.CreateOffline(o1, pub1)
+	i, err = kb.CreateOffline(o1, pub1, Ed25519)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
@@ -102,7 +101,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 func TestLazySignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 	algo := Secp256k1
 
@@ -178,7 +177,7 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 func TestLazyExportImportKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -207,12 +206,13 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
+	algo := Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
-	info, _, err := kb.CreateMnemonic("john", English, notPasswd, Secp256k1)
+	info, _, err := kb.CreateMnemonic("john", English, notPasswd, algo)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")
@@ -247,7 +247,7 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -263,7 +263,7 @@ func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	algo := Secp256k1
@@ -297,7 +297,7 @@ func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 func TestLazySeedPhraseKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	algo := Secp256k1
@@ -318,17 +318,10 @@ func TestLazySeedPhraseKeyRing(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
+	hdPath := params.String()
+	newInfo, err := kb.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
-}
-
-func TestNewKeyringFile(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	buf := strings.NewReader("password\npassword\n")
-	_, err := NewKeyringFile("test", dir, buf)
-	require.NoError(t, err)
 }

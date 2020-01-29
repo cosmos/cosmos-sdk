@@ -49,6 +49,8 @@ func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 // OneUint returns Uint value with one.
 func OneUint() Uint { return Uint{big.NewInt(1)} }
 
+var _ CustomProtobufType = (*Uint)(nil)
+
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
 func (u Uint) Uint64() uint64 {
@@ -74,7 +76,7 @@ func (u Uint) GTE(u2 Uint) bool { return u.GT(u2) || u.Equal(u2) }
 func (u Uint) LT(u2 Uint) bool { return lt(u.i, u2.i) }
 
 // LTE returns true if first Uint is lesser than or equal to the second
-func (u Uint) LTE(u2 Uint) bool { return !u.GTE(u2) }
+func (u Uint) LTE(u2 Uint) bool { return !u.GT(u2) }
 
 // Add adds Uint from another
 func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i, u2.i)) }
@@ -99,6 +101,25 @@ func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 // Quo divides Uint with Uint
 func (u Uint) Quo(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
 
+// Mod returns remainder after dividing with Uint
+func (u Uint) Mod(u2 Uint) Uint {
+	if u2.IsZero() {
+		panic("division-by-zero")
+	}
+	return Uint{mod(u.i, u2.i)}
+}
+
+// Incr increments the Uint by one.
+func (u Uint) Incr() Uint {
+	return u.Add(OneUint())
+}
+
+// Decr decrements the Uint by one.
+// Decr will panic if the Uint is zero.
+func (u Uint) Decr() Uint {
+	return u.Sub(OneUint())
+}
+
 // Quo divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
@@ -110,22 +131,6 @@ func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 
 // Human readable string
 func (u Uint) String() string { return u.i.String() }
-
-// MarshalAmino defines custom encoding scheme
-func (u Uint) MarshalAmino() (string, error) {
-	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
-		u.i = new(big.Int)
-	}
-	return marshalAmino(u.i)
-}
-
-// UnmarshalAmino defines custom decoding scheme
-func (u *Uint) UnmarshalAmino(text string) error {
-	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
-		u.i = new(big.Int)
-	}
-	return unmarshalAmino(u.i, text)
-}
 
 // MarshalJSON defines custom encoding scheme
 func (u Uint) MarshalJSON() ([]byte, error) {
@@ -142,6 +147,65 @@ func (u *Uint) UnmarshalJSON(bz []byte) error {
 	}
 	return unmarshalJSON(u.i, bz)
 }
+
+// Marshal implements the gogo proto custom type interface.
+func (u Uint) Marshal() ([]byte, error) {
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+	return u.i.MarshalText()
+}
+
+// MarshalTo implements the gogo proto custom type interface.
+func (u *Uint) MarshalTo(data []byte) (n int, err error) {
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+	if len(u.i.Bytes()) == 0 {
+		copy(data, []byte{0x30})
+		return 1, nil
+	}
+
+	bz, err := u.Marshal()
+	if err != nil {
+		return 0, err
+	}
+
+	copy(data, bz)
+	return len(bz), nil
+}
+
+// Unmarshal implements the gogo proto custom type interface.
+func (u *Uint) Unmarshal(data []byte) error {
+	if len(data) == 0 {
+		u = nil
+		return nil
+	}
+
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+
+	if err := u.i.UnmarshalText(data); err != nil {
+		return err
+	}
+
+	if u.i.BitLen() > maxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), maxBitLen)
+	}
+
+	return nil
+}
+
+// Size implements the gogo proto custom type interface.
+func (u *Uint) Size() int {
+	bz, _ := u.Marshal()
+	return len(bz)
+}
+
+// Override Amino binary serialization by proxying to protobuf.
+func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
+func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
 
 //__________________________________________________________________________
 
@@ -171,4 +235,40 @@ func checkNewUint(i *big.Int) (Uint, error) {
 		return Uint{}, err
 	}
 	return Uint{i}, nil
+}
+
+// RelativePow raises x to the power of n, where x (and the result, z) are scaled by factor b
+// for example, RelativePow(210, 2, 100) = 441 (2.1^2 = 4.41)
+func RelativePow(x Uint, n Uint, b Uint) (z Uint) {
+	if x.IsZero() {
+		if n.IsZero() {
+			z = b // 0^0 = 1
+			return
+		}
+		z = ZeroUint() // otherwise 0^a = 0
+		return
+	}
+
+	z = x
+	if n.Mod(NewUint(2)).Equal(ZeroUint()) {
+		z = b
+	}
+
+	halfOfB := b.Quo(NewUint(2))
+	n = n.Quo(NewUint(2))
+
+	for n.GT(ZeroUint()) {
+		xSquared := x.Mul(x)
+		xSquaredRounded := xSquared.Add(halfOfB)
+
+		x = xSquaredRounded.Quo(b)
+
+		if n.Mod(NewUint(2)).Equal(OneUint()) {
+			zx := z.Mul(x)
+			zxRounded := zx.Add(halfOfB)
+			z = zxRounded.Quo(b)
+		}
+		n = n.Quo(NewUint(2))
+	}
+	return z
 }

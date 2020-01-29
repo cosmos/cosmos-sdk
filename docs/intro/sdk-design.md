@@ -1,16 +1,16 @@
----
+<!--
 order: 4
----
+-->
 
 # Main Components of the Cosmos SDK
 
-The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of Tendermint. At its core, the SDK is a boilerplate implementation of the [ABCI](./sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../core/store.md#multistore) to persist data and a [`router`](../core/baseapp.md#routing) to handle transactions. 
+The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of Tendermint. At its core, the SDK is a boilerplate implementation of the [ABCI](./sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../core/store.md#multistore) to persist data and a [`router`](../core/baseapp.md#routing) to handle transactions.
 
 Here is a simplified view of how transactions are handled by an application built on top of the Cosmos SDK when transferred from Tendermint via `DeliverTx`:
 
-1. Decode `transactions` received from the Tendermint consensus engine (remember that Tendermint only deals with `[]bytes`). 
+1. Decode `transactions` received from the Tendermint consensus engine (remember that Tendermint only deals with `[]bytes`).
 2. Extract `messages` from `transactions` and do basic sanity checks.
-3. Route each message to the appropriate module so that it can be processed. 
+3. Route each message to the appropriate module so that it can be processed.
 4. Commit state changes.
 
 ## `baseapp`
@@ -25,7 +25,7 @@ For more on `baseapp`, please click [here](../core/baseapp.md).
 
 ## Multistore
 
- The Cosmos SDK provides a [`multistore`](../core/store.md#multisotre) for persisting state. The multistore allows developers to declare any number of [`KVStores`](../core/store.md#base-layer-kvstores). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [a codec](../core/encoding.md) before being stored.
+The Cosmos SDK provides a [`multistore`](../core/store.md#multisotre) for persisting state. The multistore allows developers to declare any number of [`KVStores`](../core/store.md#base-layer-kvstores). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [a codec](../core/encoding.md) before being stored.
 
 The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../core/store.md#multistore)
 
@@ -38,9 +38,9 @@ Here is a simplified view of how a transaction is processed by the application o
 ```
                                       +
                                       |
-                                      |  Transaction relayed from the full-node's Tendermint engine 
+                                      |  Transaction relayed from the full-node's Tendermint engine
                                       |  to the node's application via DeliverTx
-                                      |  
+                                      |
                                       |
                                       |
                 +---------------------v--------------------------+
@@ -88,9 +88,8 @@ SDK modules are defined in the `x/` folder of the SDK. Some core modules include
 - `x/bank`: Used to enable tokens and token transfers.
 - `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
 
-In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html). 
+In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html).
 
 ## Next {hide}
 
 Learn more about the [anatomy of an SDK application](../basics/app-anatomy.md) {hide}
-

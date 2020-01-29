@@ -17,7 +17,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", 0, 0)
+	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", crkeys.CreateHDPath(0, 0).String(), crkeys.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -27,7 +27,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup() // clean after itself
 
-	kb, err := crkeys.NewTestKeyring(t.Name(), dir)
+	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", "012345678", false)
@@ -39,7 +39,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", 0, 0)
+	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", crkeys.CreateHDPath(0, 0).String(), crkeys.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -49,7 +49,7 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup() // clean after itself
 
-	kb, err := crkeys.NewTestKeyring(t.Name(), dir)
+	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	keyname := "justakey"

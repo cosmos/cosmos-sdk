@@ -1,14 +1,16 @@
 package keeper
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetSetProposal(t *testing.T) {
@@ -51,12 +53,12 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 type validProposal struct{}
 
-func (validProposal) GetTitle() string         { return "title" }
-func (validProposal) GetDescription() string   { return "description" }
-func (validProposal) ProposalRoute() string    { return types.RouterKey }
-func (validProposal) ProposalType() string     { return types.ProposalTypeText }
-func (validProposal) String() string           { return "" }
-func (validProposal) ValidateBasic() sdk.Error { return nil }
+func (validProposal) GetTitle() string       { return "title" }
+func (validProposal) GetDescription() string { return "description" }
+func (validProposal) ProposalRoute() string  { return types.RouterKey }
+func (validProposal) ProposalType() string   { return types.ProposalTypeText }
+func (validProposal) String() string         { return "" }
+func (validProposal) ValidateBasic() error   { return nil }
 
 type invalidProposalTitle1 struct{ validProposal }
 
@@ -80,8 +82,8 @@ func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 
 type invalidProposalValidation struct{ validProposal }
 
-func (invalidProposalValidation) ValidateBasic() sdk.Error {
-	return sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInternal, "")
+func (invalidProposalValidation) ValidateBasic() error {
+	return errors.New("invalid proposal")
 }
 
 func registerTestCodec(cdc *codec.Codec) {
@@ -101,7 +103,7 @@ func TestSubmitProposal(t *testing.T) {
 
 	testCases := []struct {
 		content     types.Content
-		expectedErr sdk.Error
+		expectedErr error
 	}{
 		{validProposal{}, nil},
 		// Keeper does not check the validity of title and description, no error
@@ -110,14 +112,14 @@ func TestSubmitProposal(t *testing.T) {
 		{invalidProposalDesc1{}, nil},
 		{invalidProposalDesc2{}, nil},
 		// error only when invalid route
-		{invalidProposalRoute{}, types.ErrNoProposalHandlerExists(types.DefaultCodespace, invalidProposalRoute{})},
+		{invalidProposalRoute{}, types.ErrNoProposalHandlerExists},
 		// Keeper does not call ValidateBasic, msg.ValidateBasic does
 		{invalidProposalValidation{}, nil},
 	}
 
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		_, err := keeper.SubmitProposal(ctx, tc.content)
-		require.Equal(t, tc.expectedErr, err, "unexpected type of error: %s", err)
+		require.True(t, errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
 

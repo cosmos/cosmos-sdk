@@ -1,12 +1,12 @@
----
+<!--
 order: false
 parent:
   order: 4
----
+-->
 
 # Building Modules
 
-This repository contains documentation on concepts developers need to know in order to build modules for Cosmos SDK applications. 
+This repository contains documentation on concepts developers need to know in order to build modules for Cosmos SDK applications.
 
 1. [Introduction to Cosmos SDK Modules](./intro.md)
 2. [`AppModule` Interface and Module Manager](./module-manager.md)
@@ -19,4 +19,3 @@ This repository contains documentation on concepts developers need to know in or
 9. [Genesis](./genesis.md)
 10. [Module Interfaces](./module-interfaces.md)
 11. [Standard Module Structure](./structure.md)
-

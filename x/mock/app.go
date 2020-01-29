@@ -64,7 +64,7 @@ func NewApp() *App {
 	}
 
 	// define keepers
-	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams, params.DefaultCodespace)
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
 
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
@@ -299,7 +299,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 			}
 		}
 
-		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins)
+		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins...)
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 
 		(&baseAcc).SetCoins(coins)

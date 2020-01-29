@@ -32,7 +32,8 @@ const (
 	defaultMultiSigKeyName = "multi"
 )
 
-func showKeysCmd() *cobra.Command {
+// ShowKeysCmd shows key information for a given key name.
+func ShowKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show [name [name...]]",
 		Short: "Show key info for the given name",
@@ -56,7 +57,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
-	kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin())
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

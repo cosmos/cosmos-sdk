@@ -1,3 +1,7 @@
+<!--
+order: 2
+-->
+
 # State Transitions
 
 This document describes the state transition operations pertaining to:
@@ -7,7 +11,7 @@ This document describes the state transition operations pertaining to:
 3. [Slashing](./02_state_transitions.md#slashing)
 
 ## Validators
-State transitions in validators are performed on every [`EndBlock`](./04_end_block.md#validator-set-changes) 
+State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes) 
 in order to check for changes in the active `ValidatorSet`.
 
 ### Unbonded to Bonded

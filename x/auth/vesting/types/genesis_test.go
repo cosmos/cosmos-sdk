@@ -25,7 +25,7 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 	baseVestingAcc, err := NewBaseVestingAccount(&acc1, acc1.Coins, 1548775410)
 	require.NoError(t, err)
 	// invalid delegated vesting
-	baseVestingAcc.DelegatedVesting = acc1.Coins.Add(acc1.Coins)
+	baseVestingAcc.DelegatedVesting = acc1.Coins.Add(acc1.Coins...)
 
 	acc2 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))

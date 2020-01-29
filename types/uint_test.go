@@ -50,7 +50,9 @@ func TestUintPanics(t *testing.T) {
 	require.Panics(t, func() { ZeroUint().QuoUint64(0) })
 	require.Panics(t, func() { OneUint().Quo(ZeroUint().Sub(OneUint())) })
 	require.Panics(t, func() { uintmax.Add(OneUint()) })
+	require.Panics(t, func() { uintmax.Incr() })
 	require.Panics(t, func() { uintmin.Sub(OneUint()) })
+	require.Panics(t, func() { uintmin.Decr() })
 
 	require.Equal(t, uint64(0), MinUint(ZeroUint(), OneUint()).Uint64())
 	require.Equal(t, uint64(1), MaxUint(ZeroUint(), OneUint()).Uint64())
@@ -115,6 +117,7 @@ func TestArithUint(t *testing.T) {
 			{u1.QuoUint64(n2), n1 / n2},
 			{MinUint(u1, u2), minuint(n1, n2)},
 			{MaxUint(u1, u2), maxuint(n1, n2)},
+			{u1.Incr(), n1 + 1},
 		}
 
 		for tcnum, tc := range cases {
@@ -132,6 +135,7 @@ func TestArithUint(t *testing.T) {
 		}{
 			{u1.Sub(u2), n1 - n2},
 			{u1.SubUint64(n2), n1 - n2},
+			{u1.Decr(), n1 - 1},
 		}
 
 		for tcnum, tc := range subs {
@@ -141,7 +145,7 @@ func TestArithUint(t *testing.T) {
 }
 
 func TestCompUint(t *testing.T) {
-	for d := 0; d < 1000; d++ {
+	for d := 0; d < 10000; d++ {
 		n1 := rand.Uint64()
 		i1 := NewUint(n1)
 		n2 := rand.Uint64()
@@ -156,6 +160,8 @@ func TestCompUint(t *testing.T) {
 			{i1.LT(i2), n1 < n2},
 			{i1.GTE(i2), !i1.LT(i2)},
 			{!i1.GTE(i2), i1.LT(i2)},
+			{i1.LTE(i2), n1 <= n2},
+			{i2.LTE(i1), n2 <= n1},
 		}
 
 		for tcnum, tc := range cases {
@@ -181,6 +187,14 @@ func TestImmutabilityAllUint(t *testing.T) {
 		func(i *Uint) { _ = i.LT(randuint()) },
 		func(i *Uint) { _ = i.LTE(randuint()) },
 		func(i *Uint) { _ = i.String() },
+		func(i *Uint) { _ = i.Incr() },
+		func(i *Uint) {
+			if i.IsZero() {
+				return
+			}
+
+			_ = i.Decr()
+		},
 	}
 
 	for i := 0; i < 1000; i++ {
@@ -253,4 +267,23 @@ func TestParseUint(t *testing.T) {
 
 func randuint() Uint {
 	return NewUint(rand.Uint64())
+}
+
+func TestRelativePow(t *testing.T) {
+	tests := []struct {
+		args []Uint
+		want Uint
+	}{
+		{[]Uint{ZeroUint(), ZeroUint(), OneUint()}, OneUint()},
+		{[]Uint{ZeroUint(), ZeroUint(), NewUint(10)}, NewUint(10)},
+		{[]Uint{ZeroUint(), OneUint(), NewUint(10)}, ZeroUint()},
+		{[]Uint{NewUint(10), NewUint(2), OneUint()}, NewUint(100)},
+		{[]Uint{NewUint(210), NewUint(2), NewUint(100)}, NewUint(441)},
+		{[]Uint{NewUint(2100), NewUint(2), NewUint(1000)}, NewUint(4410)},
+		{[]Uint{NewUint(1000000001547125958), NewUint(600), NewUint(1000000000000000000)}, NewUint(1000000928276004850)},
+	}
+	for i, tc := range tests {
+		res := RelativePow(tc.args[0], tc.args[1], tc.args[2])
+		require.Equal(t, tc.want, res, "unexpected result for test case %d, input: %v, got: %v", i, tc.args, res)
+	}
 }

@@ -32,10 +32,46 @@ func Cmd(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+// getPubKeyFromString returns a Tendermint PubKey (PubKeyEd25519) by attempting
+// to decode the pubkey string from hex, base64, and finally bech32. If all
+// encodings fail, an error is returned.
+func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
+	var pubKey ed25519.PubKeyEd25519
+
+	bz, err := hex.DecodeString(pkstr)
+	if err == nil {
+		copy(pubKey[:], bz)
+		return pubKey, nil
+	}
+
+	bz, err = base64.StdEncoding.DecodeString(pkstr)
+	if err == nil {
+		copy(pubKey[:], bz)
+		return pubKey, nil
+	}
+
+	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pkstr)
+	if err == nil {
+		return pk, nil
+	}
+
+	pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeValPub, pkstr)
+	if err == nil {
+		return pk, nil
+	}
+
+	pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkstr)
+	if err == nil {
+		return pk, nil
+	}
+
+	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32", pubKey)
+}
+
 func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
-		Short: "Decode a pubkey from hex, base64, or bech32",
+		Short: "Decode a ED25519 pubkey from hex, base64, or bech32",
 		Long: fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
 
 Example:
@@ -44,67 +80,40 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.ClientName, version.ClientName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			pubkeyString := args[0]
-			var pubKeyI crypto.PubKey
-
-			// try hex, then base64, then bech32
-			pubkeyBytes, err := hex.DecodeString(pubkeyString)
-			if err != nil {
-				var err2 error
-				pubkeyBytes, err2 = base64.StdEncoding.DecodeString(pubkeyString)
-				if err2 != nil {
-					var err3 error
-					pubKeyI, err3 = sdk.GetAccPubKeyBech32(pubkeyString)
-					if err3 != nil {
-						var err4 error
-						pubKeyI, err4 = sdk.GetValPubKeyBech32(pubkeyString)
-
-						if err4 != nil {
-							var err5 error
-							pubKeyI, err5 = sdk.GetConsPubKeyBech32(pubkeyString)
-							if err5 != nil {
-								return fmt.Errorf("expected hex, base64, or bech32. Got errors: hex: %v, base64: %v, bech32 Acc: %v, bech32 Val: %v, bech32 Cons: %v",
-									err, err2, err3, err4, err5)
-							}
-
-						}
-					}
-
-				}
-			}
-
-			var pubKey ed25519.PubKeyEd25519
-			if pubKeyI == nil {
-				copy(pubKey[:], pubkeyBytes)
-			} else {
-				pubKey = pubKeyI.(ed25519.PubKeyEd25519)
-				pubkeyBytes = pubKey[:]
-			}
-
-			pubKeyJSONBytes, err := cdc.MarshalJSON(pubKey)
-			if err != nil {
-				return err
-			}
-			accPub, err := sdk.Bech32ifyAccPub(pubKey)
-			if err != nil {
-				return err
-			}
-			valPub, err := sdk.Bech32ifyValPub(pubKey)
+			pk, err := getPubKeyFromString(args[0])
 			if err != nil {
 				return err
 			}
 
-			consenusPub, err := sdk.Bech32ifyConsPub(pubKey)
+			edPK, ok := pk.(ed25519.PubKeyEd25519)
+			if !ok {
+				return fmt.Errorf("invalid pubkey type; expected ED25519")
+			}
+
+			pubKeyJSONBytes, err := cdc.MarshalJSON(edPK)
 			if err != nil {
 				return err
 			}
-			cmd.Println("Address:", pubKey.Address())
-			cmd.Printf("Hex: %X\n", pubkeyBytes)
+			accPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, edPK)
+			if err != nil {
+				return err
+			}
+			valPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, edPK)
+			if err != nil {
+				return err
+			}
+			consenusPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, edPK)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println("Address:", edPK.Address())
+			cmd.Printf("Hex: %X\n", edPK[:])
 			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
 			cmd.Println("Bech32 Acc:", accPub)
 			cmd.Println("Bech32 Validator Operator:", valPub)
 			cmd.Println("Bech32 Validator Consensus:", consenusPub)
+
 			return nil
 		},
 	}

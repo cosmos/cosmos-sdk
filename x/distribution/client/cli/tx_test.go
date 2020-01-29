@@ -10,13 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 func createFakeTxBuilder() auth.TxBuilder {
 	cdc := codec.New()
 	return auth.NewTxBuilder(
-		utils.GetTxEncoder(cdc),
+		authclient.GetTxEncoder(cdc),
 		123,
 		9876,
 		0,

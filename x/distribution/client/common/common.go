@@ -8,69 +8,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// QueryParams actually queries distribution params.
-func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
-	route := fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamCommunityTax)
-
-	retCommunityTax, _, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBaseProposerReward)
-	retBaseProposerReward, _, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamBonusProposerReward)
-	retBonusProposerReward, _, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	route = fmt.Sprintf("custom/%s/params/%s", queryRoute, types.ParamWithdrawAddrEnabled)
-	retWithdrawAddrEnabled, _, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	return NewPrettyParams(
-		retCommunityTax, retBaseProposerReward, retBonusProposerReward, retWithdrawAddrEnabled,
-	), nil
-}
-
-// QueryDelegatorTotalRewards queries delegator total rewards.
-func QueryDelegatorTotalRewards(cliCtx context.CLIContext, queryRoute, delAddr string) ([]byte, error) {
+// QueryDelegationRewards queries a delegation rewards between a delegator and a
+// validator.
+func QueryDelegationRewards(cliCtx context.CLIContext, queryRoute, delAddr, valAddr string) ([]byte, int64, error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
 	if err != nil {
-		return nil, err
-	}
-
-	res, _, err := cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards),
-		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
-	)
-	return res, err
-}
-
-// QueryDelegationRewards queries a delegation rewards.
-func QueryDelegationRewards(cliCtx context.CLIContext, queryRoute, delAddr, valAddr string) ([]byte, error) {
-	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
-	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	res, _, err := cliCtx.QueryWithData(
-		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegationRewards),
-		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
-	)
-	return res, err
+	params := types.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
+	bz, err := cliCtx.Codec.MarshalJSON(params)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal params: %w", err)
+	}
+
+	route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegationRewards)
+	return cliCtx.QueryWithData(route, bz)
 }
 
 // QueryDelegatorValidators returns delegator's list of validators

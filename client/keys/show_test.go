@@ -28,7 +28,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 }
 
 func Test_showKeysCmd(t *testing.T) {
-	cmd := showKeysCmd()
+	cmd := ShowKeysCmd()
 	require.NotNil(t, cmd)
 	require.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
 	require.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
@@ -36,7 +36,7 @@ func Test_showKeysCmd(t *testing.T) {
 
 func Test_runShowCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	cmd := showKeysCmd()
+	cmd := ShowKeysCmd()
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
 	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "The specified item could not be found in the keyring")
@@ -49,7 +49,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	defer func() {
 		kb.Delete("runShowCmd_Key1", "", false)
@@ -58,13 +58,13 @@ func Test_runShowCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
 	require.NoError(t, err)
 
 	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key

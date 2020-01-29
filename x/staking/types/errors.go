@@ -1,214 +1,59 @@
-// nolint
 package types
 
 import (
-	"fmt"
-	"strings"
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type CodeType = sdk.CodeType
-
-const (
-	DefaultCodespace sdk.CodespaceType = ModuleName
-
-	CodeInvalidValidator  CodeType = 101
-	CodeInvalidDelegation CodeType = 102
-	CodeInvalidInput      CodeType = 103
-	CodeValidatorJailed   CodeType = 104
-	CodeInvalidAddress    CodeType = sdk.CodeInvalidAddress
-	CodeUnauthorized      CodeType = sdk.CodeUnauthorized
-	CodeInternal          CodeType = sdk.CodeInternal
-	CodeUnknownRequest    CodeType = sdk.CodeUnknownRequest
+// x/staking module sentinel errors
+//
+// TODO: Many of these errors are redundant. They should be removed and replaced
+// by sdkerrors.ErrInvalidRequest.
+//
+// REF: https://github.com/cosmos/cosmos-sdk/issues/5450
+var (
+	ErrEmptyValidatorAddr              = sdkerrors.Register(ModuleName, 1, "empty validator address")
+	ErrBadValidatorAddr                = sdkerrors.Register(ModuleName, 2, "validator address is invalid")
+	ErrNoValidatorFound                = sdkerrors.Register(ModuleName, 3, "validator does not exist")
+	ErrValidatorOwnerExists            = sdkerrors.Register(ModuleName, 4, "validator already exist for this operator address; must use new validator operator address")
+	ErrValidatorPubKeyExists           = sdkerrors.Register(ModuleName, 5, "validator already exist for this pubkey; must use new validator pubkey")
+	ErrValidatorPubKeyTypeNotSupported = sdkerrors.Register(ModuleName, 6, "validator pubkey type is not supported")
+	ErrValidatorJailed                 = sdkerrors.Register(ModuleName, 7, "validator for this address is currently jailed")
+	ErrBadRemoveValidator              = sdkerrors.Register(ModuleName, 8, "failed to remove validator")
+	ErrCommissionNegative              = sdkerrors.Register(ModuleName, 9, "commission must be positive")
+	ErrCommissionHuge                  = sdkerrors.Register(ModuleName, 10, "commission cannot be more than 100%")
+	ErrCommissionGTMaxRate             = sdkerrors.Register(ModuleName, 11, "commission cannot be more than the max rate")
+	ErrCommissionUpdateTime            = sdkerrors.Register(ModuleName, 12, "commission cannot be changed more than once in 24h")
+	ErrCommissionChangeRateNegative    = sdkerrors.Register(ModuleName, 13, "commission change rate must be positive")
+	ErrCommissionChangeRateGTMaxRate   = sdkerrors.Register(ModuleName, 14, "commission change rate cannot be more than the max rate")
+	ErrCommissionGTMaxChangeRate       = sdkerrors.Register(ModuleName, 15, "commission cannot be changed more than max change rate")
+	ErrSelfDelegationBelowMinimum      = sdkerrors.Register(ModuleName, 16, "validator's self delegation must be greater than their minimum self delegation")
+	ErrMinSelfDelegationInvalid        = sdkerrors.Register(ModuleName, 17, "minimum self delegation must be a positive integer")
+	ErrMinSelfDelegationDecreased      = sdkerrors.Register(ModuleName, 18, "minimum self delegation cannot be decrease")
+	ErrEmptyDelegatorAddr              = sdkerrors.Register(ModuleName, 19, "empty delegator address")
+	ErrBadDenom                        = sdkerrors.Register(ModuleName, 20, "invalid coin denomination")
+	ErrBadDelegationAddr               = sdkerrors.Register(ModuleName, 21, "invalid address for (address, validator) tuple")
+	ErrBadDelegationAmount             = sdkerrors.Register(ModuleName, 22, "invalid delegation amount")
+	ErrNoDelegation                    = sdkerrors.Register(ModuleName, 23, "no delegation for (address, validator) tuple")
+	ErrBadDelegatorAddr                = sdkerrors.Register(ModuleName, 24, "delegator does not exist with address")
+	ErrNoDelegatorForAddress           = sdkerrors.Register(ModuleName, 25, "delegator does not contain delegation")
+	ErrInsufficientShares              = sdkerrors.Register(ModuleName, 26, "insufficient delegation shares")
+	ErrDelegationValidatorEmpty        = sdkerrors.Register(ModuleName, 27, "cannot delegate to an empty validator")
+	ErrNotEnoughDelegationShares       = sdkerrors.Register(ModuleName, 28, "not enough delegation shares")
+	ErrBadSharesAmount                 = sdkerrors.Register(ModuleName, 29, "invalid shares amount")
+	ErrBadSharesPercent                = sdkerrors.Register(ModuleName, 30, "Invalid shares percent")
+	ErrNotMature                       = sdkerrors.Register(ModuleName, 31, "entry not mature")
+	ErrNoUnbondingDelegation           = sdkerrors.Register(ModuleName, 32, "no unbonding delegation found")
+	ErrMaxUnbondingDelegationEntries   = sdkerrors.Register(ModuleName, 33, "too many unbonding delegation entries for (delegator, validator) tuple")
+	ErrBadRedelegationAddr             = sdkerrors.Register(ModuleName, 34, "invalid address for (address, src-validator, dst-validator) tuple")
+	ErrNoRedelegation                  = sdkerrors.Register(ModuleName, 35, "no redelegation found")
+	ErrSelfRedelegation                = sdkerrors.Register(ModuleName, 36, "cannot redelegate to the same validator")
+	ErrTinyRedelegationAmount          = sdkerrors.Register(ModuleName, 37, "too few tokens to redelegate (truncates to zero tokens)")
+	ErrBadRedelegationDst              = sdkerrors.Register(ModuleName, 38, "redelegation destination validator not found")
+	ErrTransitiveRedelegation          = sdkerrors.Register(ModuleName, 39, "redelegation to this validator already in progress; first redelegation to this validator must complete before next redelegation")
+	ErrMaxRedelegationEntries          = sdkerrors.Register(ModuleName, 40, "too many redelegation entries for (delegator, src-validator, dst-validator) tuple")
+	ErrDelegatorShareExRateInvalid     = sdkerrors.Register(ModuleName, 41, "cannot delegate to validators with invalid (zero) ex-rate")
+	ErrBothShareMsgsGiven              = sdkerrors.Register(ModuleName, 42, "both shares amount and shares percent provided")
+	ErrNeitherShareMsgsGiven           = sdkerrors.Register(ModuleName, 43, "neither shares amount nor shares percent provided")
+	ErrInvalidHistoricalInfo           = sdkerrors.Register(ModuleName, 44, "invalid historical info")
+	ErrNoHistoricalInfo                = sdkerrors.Register(ModuleName, 45, "no historical info found")
 )
-
-//validator
-func ErrNilValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "validator address is nil")
-}
-
-func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidAddress, "validator address is invalid")
-}
-
-func ErrNoValidatorFound(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator does not exist for that address")
-}
-
-func ErrValidatorOwnerExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this operator address, must use new validator operator address")
-}
-
-func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this pubkey, must use new validator pubkey")
-}
-
-func ErrValidatorPubKeyTypeNotSupported(codespace sdk.CodespaceType, keyType string, supportedTypes []string) sdk.Error {
-	msg := fmt.Sprintf("validator pubkey type %s is not supported, must use %s", keyType, strings.Join(supportedTypes, ","))
-	return sdk.NewError(codespace, CodeInvalidValidator, msg)
-}
-
-func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator for this address is currently jailed")
-}
-
-func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "error removing validator")
-}
-
-func ErrDescriptionLength(codespace sdk.CodespaceType, descriptor string, got, max int) sdk.Error {
-	msg := fmt.Sprintf("bad description length for %v, got length %v, max is %v", descriptor, got, max)
-	return sdk.NewError(codespace, CodeInvalidValidator, msg)
-}
-
-func ErrCommissionNegative(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission must be positive")
-}
-
-func ErrCommissionHuge(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be more than 100%")
-}
-
-func ErrCommissionGTMaxRate(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be more than the max rate")
-}
-
-func ErrCommissionUpdateTime(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than once in 24h")
-}
-
-func ErrCommissionChangeRateNegative(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission change rate must be positive")
-}
-
-func ErrCommissionChangeRateGTMaxRate(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission change rate cannot be more than the max rate")
-}
-
-func ErrCommissionGTMaxChangeRate(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than max change rate")
-}
-
-func ErrSelfDelegationBelowMinimum(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator's self delegation must be greater than their minimum self delegation")
-}
-
-func ErrMinSelfDelegationInvalid(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self delegation must be a positive integer")
-}
-
-func ErrMinSelfDelegationDecreased(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self delegation cannot be decrease")
-}
-
-func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "delegator address is nil")
-}
-
-func ErrBadDenom(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "invalid coin denomination")
-}
-
-func ErrBadDelegationAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, validator) pair")
-}
-
-func ErrBadDelegationAmount(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "amount must be > 0")
-}
-
-func ErrNoDelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "no delegation for this (address, validator) pair")
-}
-
-func ErrBadDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "delegator does not exist for that address")
-}
-
-func ErrNoDelegatorForAddress(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "delegator does not contain this delegation")
-}
-
-func ErrInsufficientShares(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "insufficient delegation shares")
-}
-
-func ErrDelegationValidatorEmpty(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "cannot delegate to an empty validator")
-}
-
-func ErrNotEnoughDelegationShares(codespace sdk.CodespaceType, shares string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, fmt.Sprintf("not enough shares only have %v", shares))
-}
-
-func ErrBadSharesAmount(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "shares must be > 0")
-}
-
-func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "shares percent must be >0 and <=1")
-}
-
-func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got, min time.Time) sdk.Error {
-	msg := fmt.Sprintf("%v is not mature requires a min %v of %v, currently it is %v",
-		operation, descriptor, got, min)
-	return sdk.NewError(codespace, CodeUnauthorized, msg)
-}
-
-func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "no unbonding delegation found")
-}
-
-func ErrMaxUnbondingDelegationEntries(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"too many unbonding delegation entries in this delegator/validator duo, please wait for some entries to mature")
-}
-
-func ErrBadRedelegationAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, srcValidator, dstValidator) tuple")
-}
-
-func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "no redelegation found")
-}
-
-func ErrSelfRedelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "cannot redelegate to the same validator")
-}
-
-func ErrVerySmallRedelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "too few tokens to redelegate, truncates to zero tokens")
-}
-
-func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
-}
-
-func ErrTransitiveRedelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"redelegation to this validator already in progress, first redelegation to this validator must complete before next redelegation")
-}
-
-func ErrMaxRedelegationEntries(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"too many redelegation entries in this delegator/src-validator/dst-validator trio, please wait for some entries to mature")
-}
-
-func ErrDelegatorShareExRateInvalid(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"cannot delegate to validators with invalid (zero) ex-rate")
-}
-
-func ErrBothShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "both shares amount and shares percent provided")
-}
-
-func ErrNeitherShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "neither shares amount nor shares percent provided")
-}
-
-func ErrMissingSignature(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "missing signature")
-}

@@ -19,7 +19,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
 var (
@@ -38,7 +38,7 @@ type (
 		Height           int64
 		Round            int64
 		Timestamp        time.Time
-		ValidatorAddress cmn.HexBytes
+		ValidatorAddress tmbytes.HexBytes
 		Signature        []byte
 	}
 
@@ -96,7 +96,7 @@ func (e TestEquivocationEvidence) ValidateBasic() error {
 	return nil
 }
 
-func (e TestEquivocationEvidence) Hash() cmn.HexBytes {
+func (e TestEquivocationEvidence) Hash() tmbytes.HexBytes {
 	return tmhash.Sum(TestingCdc.MustMarshalBinaryBare(e))
 }
 

@@ -1,3 +1,7 @@
+<!--
+order: 3
+-->
+
 # Begin-Block
 
 Minting parameters are recalculated and inflation

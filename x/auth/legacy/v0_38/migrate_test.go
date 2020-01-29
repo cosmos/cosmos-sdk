@@ -70,21 +70,21 @@ func TestMigrate(t *testing.T) {
 		)
 	})
 
-	expectedAcc1 := NewBaseAccount(acc1.Address, acc1.Coins, acc1.AccountNumber, acc1.Sequence)
+	expectedAcc1 := NewBaseAccount(acc1.Address, acc1.Coins, nil, acc1.AccountNumber, acc1.Sequence)
 	expectedAcc2 := NewModuleAccount(
-		NewBaseAccount(acc2.Address, acc2.Coins, acc2.AccountNumber, acc2.Sequence),
+		NewBaseAccount(acc2.Address, acc2.Coins, nil, acc2.AccountNumber, acc2.Sequence),
 		acc2.ModuleName, acc2.ModulePermissions...,
 	)
 	expectedAcc3 := NewContinuousVestingAccountRaw(
 		NewBaseVestingAccount(
-			NewBaseAccount(acc3.Address, acc3.Coins, acc3.AccountNumber, acc3.Sequence),
+			NewBaseAccount(acc3.Address, acc3.Coins, nil, acc3.AccountNumber, acc3.Sequence),
 			acc3.OriginalVesting, acc3.DelegatedFree, acc3.DelegatedVesting, acc3.EndTime,
 		),
 		acc3.StartTime,
 	)
 	expectedAcc4 := NewDelayedVestingAccountRaw(
 		NewBaseVestingAccount(
-			NewBaseAccount(acc4.Address, acc4.Coins, acc4.AccountNumber, acc4.Sequence),
+			NewBaseAccount(acc4.Address, acc4.Coins, nil, acc4.AccountNumber, acc4.Sequence),
 			acc4.OriginalVesting, acc4.DelegatedFree, acc4.DelegatedVesting, acc4.EndTime,
 		),
 	)

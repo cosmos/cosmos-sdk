@@ -72,10 +72,10 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 		{Address: addr3, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	suite.Error(app.BankKeeper.InputOutputCoins(ctx, inputs, []types.Output{}))
-	suite.Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, []types.Output{}))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
 
 	insufficientInputs := []types.Input{
 		{Address: addr1, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -85,18 +85,18 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 		{Address: addr2, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 		{Address: addr3, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
-	suite.Error(app.BankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
-	suite.NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
-	suite.Equal(expected, acc1Balances)
+	suite.Require().Equal(expected, acc1Balances)
 
 	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
-	suite.Equal(expected, acc2Balances)
+	suite.Require().Equal(expected, acc2Balances)
 
 	acc3Balances := app.BankKeeper.GetAllBalances(ctx, addr3)
-	suite.Equal(expected, acc3Balances)
+	suite.Require().Equal(expected, acc3Balances)
 }
 
 func (suite *IntegrationTestSuite) TestSendCoins() {
@@ -110,21 +110,21 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
-	suite.Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
-	suite.NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	expected := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
-	suite.Equal(expected, acc1Balances)
+	suite.Require().Equal(expected, acc1Balances)
 
 	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
 	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
-	suite.Equal(expected, acc2Balances)
+	suite.Require().Equal(expected, acc2Balances)
 }
 
 func (suite *IntegrationTestSuite) TestValidateBalance() {
@@ -136,21 +136,21 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	suite.Error(app.BankKeeper.ValidateBalance(ctx, addr1))
+	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr1))
 
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
-	suite.NoError(app.BankKeeper.ValidateBalance(ctx, addr1))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(app.BankKeeper.ValidateBalance(ctx, addr1))
 
 	bacc := auth.NewBaseAccountWithAddress(addr2)
 	vacc := vesting.NewContinuousVestingAccount(&bacc, balances.Add(balances...), now.Unix(), endTime.Unix())
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
-	suite.Error(app.BankKeeper.ValidateBalance(ctx, addr2))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
+	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr2))
 }
 
 func (suite *IntegrationTestSuite) TestBalance() {
@@ -160,32 +160,32 @@ func (suite *IntegrationTestSuite) TestBalance() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	app.AccountKeeper.SetAccount(ctx, acc)
 
-	suite.Equal(sdk.NewCoin(fooDenom, sdk.ZeroInt()), app.BankKeeper.GetBalance(ctx, addr, fooDenom))
+	suite.Require().Equal(sdk.NewCoin(fooDenom, sdk.ZeroInt()), app.BankKeeper.GetBalance(ctx, addr, fooDenom))
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr, balances))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr, balances))
 
-	suite.Equal(balances.AmountOf(fooDenom), app.BankKeeper.GetBalance(ctx, addr, fooDenom).Amount)
-	suite.Equal(balances, app.BankKeeper.GetAllBalances(ctx, addr))
+	suite.Require().Equal(balances.AmountOf(fooDenom), app.BankKeeper.GetBalance(ctx, addr, fooDenom).Amount)
+	suite.Require().Equal(balances, app.BankKeeper.GetAllBalances(ctx, addr))
 
 	newFooBalance := newFooCoin(99)
-	suite.NoError(app.BankKeeper.SetBalance(ctx, addr, newFooBalance))
-	suite.Equal(newFooBalance, app.BankKeeper.GetBalance(ctx, addr, fooDenom))
+	suite.Require().NoError(app.BankKeeper.SetBalance(ctx, addr, newFooBalance))
+	suite.Require().Equal(newFooBalance, app.BankKeeper.GetBalance(ctx, addr, fooDenom))
 
 	balances = sdk.NewCoins(newBarCoin(500))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr, balances))
-	suite.Equal(sdk.NewCoin(fooDenom, sdk.ZeroInt()), app.BankKeeper.GetBalance(ctx, addr, fooDenom))
-	suite.Equal(balances.AmountOf(barDenom), app.BankKeeper.GetBalance(ctx, addr, barDenom).Amount)
-	suite.Equal(balances, app.BankKeeper.GetAllBalances(ctx, addr))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr, balances))
+	suite.Require().Equal(sdk.NewCoin(fooDenom, sdk.ZeroInt()), app.BankKeeper.GetBalance(ctx, addr, fooDenom))
+	suite.Require().Equal(balances.AmountOf(barDenom), app.BankKeeper.GetBalance(ctx, addr, barDenom).Amount)
+	suite.Require().Equal(balances, app.BankKeeper.GetAllBalances(ctx, addr))
 
 	invalidBalance := sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}
-	suite.Error(app.BankKeeper.SetBalance(ctx, addr, invalidBalance))
+	suite.Require().Error(app.BankKeeper.SetBalance(ctx, addr, invalidBalance))
 }
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app, ctx := suite.app, suite.ctx
 	enabled := false
 	app.BankKeeper.SetSendEnabled(ctx, enabled)
-	suite.Equal(enabled, app.BankKeeper.GetSendEnabled(ctx))
+	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx))
 }
 
 func (suite *IntegrationTestSuite) TestHasBalance() {
@@ -196,12 +196,12 @@ func (suite *IntegrationTestSuite) TestHasBalance() {
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(99)))
+	suite.Require().False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(99)))
 
 	app.BankKeeper.SetBalances(ctx, addr, balances)
-	suite.False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(101)))
-	suite.True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
-	suite.True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
+	suite.Require().False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(101)))
+	suite.Require().True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
+	suite.Require().True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
 }
 
 func (suite *IntegrationTestSuite) TestMsgSendEvents() {
@@ -213,10 +213,10 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	app.AccountKeeper.SetAccount(ctx, acc)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
-	suite.Error(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
 	events := ctx.EventManager().Events()
-	suite.Equal(2, len(events))
+	suite.Require().Equal(2, len(events))
 
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
@@ -239,18 +239,18 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
-	suite.Equal(event1, events[0])
-	suite.Equal(event2, events[1])
+	suite.Require().Equal(event1, events[0])
+	suite.Require().Equal(event2, events[1])
 
 	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
-	suite.NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
 	events = ctx.EventManager().Events()
-	suite.Equal(4, len(events))
-	suite.Equal(event1, events[2])
-	suite.Equal(event2, events[3])
+	suite.Require().Equal(4, len(events))
+	suite.Require().Equal(event1, events[2])
+	suite.Require().Equal(event2, events[3])
 }
 
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
@@ -279,18 +279,18 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		{Address: addr4, Coins: newCoins2},
 	}
 
-	suite.Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events := ctx.EventManager().Events()
-	suite.Equal(0, len(events))
+	suite.Require().Equal(0, len(events))
 
 	// Set addr's coins but not addr2's coins
 	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)))
 
-	suite.Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().Events()
-	suite.Equal(1, len(events))
+	suite.Require().Equal(1, len(events))
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -300,7 +300,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event1.Attributes,
 		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
-	suite.Equal(event1, events[0])
+	suite.Require().Equal(event1, events[0])
 
 	// Set addr's coins and addr2's coins
 	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)))
@@ -309,10 +309,10 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100)))
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
-	suite.NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().Events()
-	suite.Equal(5, len(events))
+	suite.Require().Equal(5, len(events))
 
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -346,10 +346,10 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 
-	suite.Equal(event1, events[1])
-	suite.Equal(event2, events[2])
-	suite.Equal(event3, events[3])
-	suite.Equal(event4, events[4])
+	suite.Require().Equal(event1, events[1])
+	suite.Require().Equal(event2, events[2])
+	suite.Require().Equal(event3, events[3])
+	suite.Require().Equal(event4, events[4])
 }
 
 func (suite *IntegrationTestSuite) TestVestingAccountSend() {
@@ -370,18 +370,18 @@ func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 	vacc := vesting.NewContinuousVestingAccount(&bacc, origCoins, now.Unix(), endTime.Unix())
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
-	suite.Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
 
 	// receive some coins
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins.Add(sendCoins...)))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins.Add(sendCoins...)))
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	suite.NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
-	suite.Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	suite.Require().Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
 }
 
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
@@ -403,18 +403,18 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 	vacc := vesting.NewPeriodicVestingAccount(&bacc, origCoins, ctx.BlockHeader().Time.Unix(), periods)
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
-	suite.Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
 
 	// receive some coins
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins.Add(sendCoins...)))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins.Add(sendCoins...)))
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	suite.NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
-	suite.Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	suite.Require().Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
 }
 
 func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
@@ -435,20 +435,20 @@ func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
 
 	// send some coins to the vesting account
-	suite.NoError(app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
 
 	// require the coins are spendable
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
 	balances := app.BankKeeper.GetAllBalances(ctx, addr1)
-	suite.Equal(origCoins.Add(sendCoins...), balances)
-	suite.Equal(balances.Sub(vacc.LockedCoins(balances, now)), sendCoins)
+	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now)), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	suite.Equal(balances.Sub(vacc.LockedCoins(balances, now.Add(12*time.Hour))), origCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now.Add(12*time.Hour))), origCoins)
 }
 
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
@@ -474,20 +474,20 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
 
 	// send some coins to the vesting account
-	suite.NoError(app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
 
 	// require the coins are spendable
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
 	balances := app.BankKeeper.GetAllBalances(ctx, addr1)
-	suite.Equal(origCoins.Add(sendCoins...), balances)
-	suite.Equal(balances.Sub(vacc.LockedCoins(balances, now)), sendCoins)
+	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now)), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	suite.Equal(balances.Sub(vacc.LockedCoins(balances, now.Add(12*time.Hour))), origCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now.Add(12*time.Hour))), origCoins)
 }
 
 func (suite *IntegrationTestSuite) TestDelegateCoins() {
@@ -511,19 +511,19 @@ func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	suite.NoError(app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
-	suite.Equal(origCoins.Sub(delCoins), app.BankKeeper.GetAllBalances(ctx, addr2))
-	suite.Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addrModule))
+	suite.Require().NoError(app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
+	suite.Require().Equal(origCoins.Sub(delCoins), app.BankKeeper.GetAllBalances(ctx, addr2))
+	suite.Require().Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addrModule))
 
 	// require the ability for a vesting account to delegate
-	suite.NoError(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
-	suite.Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
+	suite.Require().NoError(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	suite.Require().Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
 }
 
 func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
@@ -537,17 +537,17 @@ func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
 	macc := app.AccountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 
-	suite.Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
 	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}}
-	suite.Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, invalidCoins))
+	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, invalidCoins))
 
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
 
-	suite.Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
 	app.AccountKeeper.SetAccount(ctx, acc)
 
-	suite.Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, origCoins.Add(origCoins...)))
+	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, origCoins.Add(origCoins...)))
 }
 
 func (suite *IntegrationTestSuite) TestUndelegateCoins() {
@@ -572,35 +572,35 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
 	err := app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
-	suite.Equal(origCoins.Sub(delCoins), app.BankKeeper.GetAllBalances(ctx, addr2))
-	suite.Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addrModule))
+	suite.Require().Equal(origCoins.Sub(delCoins), app.BankKeeper.GetAllBalances(ctx, addr2))
+	suite.Require().Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addrModule))
 
 	// require the ability for a non-vesting account to undelegate
-	suite.NoError(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr2, delCoins))
+	suite.Require().NoError(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr2, delCoins))
 
-	suite.Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr2))
-	suite.True(app.BankKeeper.GetAllBalances(ctx, addrModule).Empty())
+	suite.Require().Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr2))
+	suite.Require().True(app.BankKeeper.GetAllBalances(ctx, addrModule).Empty())
 
 	// require the ability for a vesting account to delegate
-	suite.NoError(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	suite.Require().NoError(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
 
-	suite.Equal(origCoins.Sub(delCoins), app.BankKeeper.GetAllBalances(ctx, addr1))
-	suite.Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addrModule))
+	suite.Require().Equal(origCoins.Sub(delCoins), app.BankKeeper.GetAllBalances(ctx, addr1))
+	suite.Require().Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addrModule))
 
 	// require the ability for a vesting account to undelegate
-	suite.NoError(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	suite.Require().NoError(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 
-	suite.Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
-	suite.True(app.BankKeeper.GetAllBalances(ctx, addrModule).Empty())
+	suite.Require().Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
+	suite.Require().True(app.BankKeeper.GetAllBalances(ctx, addrModule).Empty())
 }
 
 func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {
@@ -614,15 +614,15 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {
 	macc := app.AccountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 
-	suite.Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	suite.Require().Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
 
-	suite.Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	suite.Require().Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 	app.AccountKeeper.SetAccount(ctx, acc)
 
-	suite.Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	suite.Require().Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

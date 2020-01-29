@@ -22,28 +22,28 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	querier := keeper.NewQuerier(app.BankKeeper)
 
 	res, err := querier(ctx, []string{types.QueryBalance}, req)
-	suite.NotNil(err)
-	suite.Nil(res)
+	suite.Require().NotNil(err)
+	suite.Require().Nil(res)
 
 	req.Data = app.Codec().MustMarshalJSON(types.NewQueryBalanceParams(addr, fooDenom))
 	res, err = querier(ctx, []string{types.QueryBalance}, req)
-	suite.NoError(err)
-	suite.NotNil(res)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
 
 	var balance sdk.Coin
-	suite.NoError(app.Codec().UnmarshalJSON(res, &balance))
+	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balance))
 	suite.True(balance.IsZero())
 
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
 
 	res, err = querier(ctx, []string{types.QueryBalance}, req)
-	suite.NoError(err)
-	suite.NotNil(res)
-	suite.NoError(app.Codec().UnmarshalJSON(res, &balance))
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balance))
 	suite.True(balance.IsEqual(newFooCoin(50)))
 }
 
@@ -58,28 +58,28 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	querier := keeper.NewQuerier(app.BankKeeper)
 
 	res, err := querier(ctx, []string{types.QueryAllBalances}, req)
-	suite.NotNil(err)
-	suite.Nil(res)
+	suite.Require().NotNil(err)
+	suite.Require().Nil(res)
 
 	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesParams(addr))
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
-	suite.NoError(err)
-	suite.NotNil(res)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
 
 	var balances sdk.Coins
-	suite.NoError(app.Codec().UnmarshalJSON(res, &balances))
+	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balances))
 	suite.True(balances.IsZero())
 
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
 
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
-	suite.NoError(err)
-	suite.NotNil(res)
-	suite.NoError(app.Codec().UnmarshalJSON(res, &balances))
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balances))
 	suite.True(balances.IsEqual(origCoins))
 }
 

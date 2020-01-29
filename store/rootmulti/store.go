@@ -29,6 +29,7 @@ const (
 // the CommitMultiStore interface.
 type Store struct {
 	db           dbm.DB
+	version      int64
 	lastCommitID types.CommitID
 	pruningOpts  types.PruningOptions
 	storesParams map[types.StoreKey]storeParams
@@ -198,6 +199,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	rs.lastCommitID = lastCommitID
+	rs.version = lastCommitID.Version
 	rs.stores = newStores
 
 	return nil
@@ -288,21 +290,21 @@ func (rs *Store) LastCommitID() types.CommitID {
 func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
-	version := rs.lastCommitID.Version + 1
-	commitInfo := commitStores(version, rs.stores)
+	rs.version = rs.version + 1
+	commitInfo := commitStores(rs.version, rs.stores)
 
 	// update lastCommit only if this version was flushed to disk
-	if rs.pruningOpts.FlushVersion(version) {
+	if rs.pruningOpts.FlushVersion(rs.version) {
 		// Need to update atomically.
 		batch := rs.db.NewBatch()
 		defer batch.Close()
-		setCommitInfo(batch, version, commitInfo)
-		setLatestVersion(batch, version)
+		setCommitInfo(batch, rs.version, commitInfo)
+		setLatestVersion(batch, rs.version)
 		batch.Write()
 
 		// Prepare for next version.
 		commitID := types.CommitID{
-			Version: version,
+			Version: rs.version,
 			Hash:    commitInfo.Hash(),
 		}
 		rs.lastCommitID = commitID

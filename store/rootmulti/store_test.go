@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -287,6 +288,76 @@ func TestParsePath(t *testing.T) {
 	require.Equal(t, substore, "bang")
 	require.Equal(t, subsubpath, "/baz")
 
+}
+
+func TestMultiStoreRestart(t *testing.T) {
+	db := dbm.NewMemDB()
+	pruning := types.NewPruningOptions(1, 3, 6)
+	multi := newMultiStoreWithMounts(db, pruning)
+	err := multi.LoadLatestVersion()
+	require.Nil(t, err)
+
+	initCid := multi.LastCommitID()
+
+	k, v := "wind", "blows"
+	k2, v2 := "water", "flows"
+	k3, v3 := "fire", "burns"
+
+	for i := 1; i < 3; i++ {
+		// Set and commit data in one store.
+		store1 := multi.getStoreByName("store1").(types.KVStore)
+		store1.Set([]byte(k), []byte(fmt.Sprintf("%s:%d", v, i)))
+
+		// ... and another.
+		store2 := multi.getStoreByName("store2").(types.KVStore)
+		store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, i)))
+
+		// ... and another.
+		store3 := multi.getStoreByName("store3").(types.KVStore)
+		store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, i)))
+
+		cid := multi.Commit()
+		require.Equal(t, initCid, cid)
+	}
+
+	// Set and commit data in one store.
+	store1 := multi.getStoreByName("store1").(types.KVStore)
+	store1.Set([]byte(k), []byte(fmt.Sprintf("%s:%d", v, 3)))
+
+	// ... and another.
+	store2 := multi.getStoreByName("store2").(types.KVStore)
+	store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, 3)))
+
+	flushedCid := multi.Commit()
+	require.NotEqual(t, initCid, flushedCid, "CID is different after flush to disk")
+
+	// ... and another.
+	store3 := multi.getStoreByName("store3").(types.KVStore)
+	store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, 3)))
+
+	postFlushCid := multi.Commit()
+	require.Equal(t, flushedCid, postFlushCid, "Commit changed after in-memory commit")
+
+	multi = newMultiStoreWithMounts(db, pruning)
+	err = multi.LoadLatestVersion()
+	require.Nil(t, err)
+
+	reloadedCid := multi.LastCommitID()
+	require.Equal(t, flushedCid, reloadedCid, "Reloaded CID is not the same as last flushed CID")
+
+	// Check that store1 and store2 retained date from 3rd commit
+	store1 = multi.getStoreByName("store1").(types.KVStore)
+	val := store1.Get([]byte(k))
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v, 3)), val, "Reloaded value not the same as last flushed value")
+
+	store2 = multi.getStoreByName("store2").(types.KVStore)
+	val2 := store2.Get([]byte(k2))
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v2, 3)), val2, "Reloaded value not the same as last flushed value")
+
+	// Check that store3 still has data from last commit even though update happened on 2nd commit
+	store3 = multi.getStoreByName("store3").(types.KVStore)
+	val3 := store3.Get([]byte(k3))
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v3, 2)), val3, "Reloaded value not the same as last flushed value")
 }
 
 func TestMultiStoreQuery(t *testing.T) {

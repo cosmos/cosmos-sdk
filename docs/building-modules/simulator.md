@@ -65,7 +65,7 @@ Shown below is how weights are set:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/release%2Fv0.38.0/x/staking/simulation/operations.go#L18-L92
 
-As you can see the weights are predefined in this case but there are options on how to override this behavior with different weights. One is allowing `*rand.Rand` to define a weight for the operation, or you can inject your own predefined weights.
+As you can see the weights are predefined in this case but there are options on how to override this behavior with different weights. One is allowing `*rand.Rand` to define a random weight for the operation, or you can inject your own predefined weights.
 
 Here is how one can override the above package `simappparams`.
 

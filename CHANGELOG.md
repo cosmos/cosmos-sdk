@@ -62,7 +62,9 @@ pruning setting `syncable` used `KeepEvery:100`.
 
 * (deps) Bump Tendermint version to [v0.33.6](https://github.com/tendermint/tendermint/releases/tag/v0.33.6)
 * (deps) Bump IAVL version to [v0.14.0](https://github.com/cosmos/iavl/releases/tag/v0.14.0)
-* (client) Introduce `QueryABCI` call to query a Tendermint node with an `abci.RequestQuery`
+* (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) `CLIContext` additions:
+  * Introduce `QueryABCI` that returns the full `abci.ResponseQuery` with inclusion Merkle proofs.
+  * Added `prove` flag for Merkle proof verification.
 
 ### API Breaking Changes
 

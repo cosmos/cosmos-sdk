@@ -280,8 +280,8 @@ vesting coins less the number of coins vested so far.
 
 However, given that account balances are tracked via the `x/bank` module and that
 we want to avoid loading the entire account balance, we can instead determine
-the locked balance and infer the spendable balance, which can be defined as follows:
-`max(V - DV, 0)`.
+the locked balance, which can be defined as `max(V - DV, 0)`, and infer the
+spendable balance from that.
 
 ```go
 func (va VestingAccount) LockedCoinsFromVesting(v Coins) Coins {

@@ -498,6 +498,10 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 // ValidateBalance validates all balances for a given account address returning
 // an error if any balance is invalid. It will check for vesting account types
 // and validate the balances against the original vesting balances.
+//
+// CONTRACT: ValidateBalance should only be called upon genesis state. In the
+// case of vesting accounts, balances may change in a valid manner that would
+// otherwise yield an error from this call.
 func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {

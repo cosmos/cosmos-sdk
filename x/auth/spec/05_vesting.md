@@ -284,12 +284,8 @@ the locked balance, which can be defined as `max(V - DV, 0)`, and infer the
 spendable balance from that.
 
 ```go
-func (va VestingAccount) LockedCoinsFromVesting(v Coins) Coins {
-   return max(v - va.DelegatedVesting, 0)
-}
-
 func (va VestingAccount) LockedCoins(t Time) Coins {
-   return va.LockedCoinsFromVesting(va.GetVestingCoins(t))
+   return max(va.GetVestingCoins(t) - va.DelegatedVesting, 0)
 }
 ```
 

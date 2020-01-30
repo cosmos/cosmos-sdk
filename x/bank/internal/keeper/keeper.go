@@ -280,15 +280,7 @@ func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
-
-		// newBalance should never be negative as the amount is already validated
 		newBalance := balance.Add(coin)
-		if newBalance.IsNegative() {
-			return nil, sdkerrors.Wrapf(
-				sdkerrors.ErrInsufficientFunds, "resulting balance %s is negative", newBalance,
-			)
-		}
-
 		resultCoins = resultCoins.Add(newBalance)
 
 		k.SetBalance(ctx, addr, newBalance)

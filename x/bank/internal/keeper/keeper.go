@@ -480,15 +480,7 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 	if acc != nil {
 		vacc, ok := acc.(vestexported.VestingAccount)
 		if ok {
-			vestingCoins := vacc.GetVestingCoins(ctx.BlockTime())
-			balance := sdk.NewCoins()
-
-			for _, vestingCoin := range vestingCoins {
-				balance := k.GetBalance(ctx, acc.GetAddress(), vestingCoin.Denom)
-				balance.Add(balance)
-			}
-
-			return vacc.LockedCoins(balance, ctx.BlockTime())
+			return vacc.LockedCoins(ctx.BlockTime())
 		}
 	}
 

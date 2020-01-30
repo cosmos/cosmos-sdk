@@ -11,14 +11,12 @@ import (
 type VestingAccount interface {
 	authexported.Account
 
-	// LockedCoins returns the set of coins that are not spendable (i.e. locked)
-	// given the current account balance, only including tokens of vesting
-	// denominations, and the current block time.
+	// LockedCoins returns the set of coins that are not spendable (i.e. locked).
 	//
 	// To get spendable coins of a vesting account, first the total balance must
 	// be retrieved and the locked tokens can be subtracted from the total balance.
 	// Note, the spendable balance can be negative.
-	LockedCoins(balance sdk.Coins, blockTime time.Time) sdk.Coins
+	LockedCoins(blockTime time.Time) sdk.Coins
 
 	// TrackDelegation performs internal vesting accounting necessary when
 	// delegating from a vesting account. It accepts the current block time, the

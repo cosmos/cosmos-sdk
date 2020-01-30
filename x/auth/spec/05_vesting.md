@@ -313,7 +313,7 @@ based on if the account is a vesting account or not.
 
 ```go
 func (k Keeper) SendCoins(ctx Context, from Account, to Account, amount Coins) {
-    bc := k.GetCoins(ctx, from)
+    bc := k.GetBalances(ctx, from)
     v := k.LockedCoins(ctx, from)
 
     spendable := bc - v

@@ -102,7 +102,6 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	// safe to call subtract coins as a moduleAcc shouldn't be vesting
 	_, err := k.SubtractCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err

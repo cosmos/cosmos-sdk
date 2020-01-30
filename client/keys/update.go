@@ -4,7 +4,9 @@ import (
 	"bufio"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -30,7 +32,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
 	if err != nil {
 		return err
 	}

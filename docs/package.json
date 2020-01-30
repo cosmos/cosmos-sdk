@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "@vuepress/plugin-google-analytics": "^1.2.0",
+<<<<<<< HEAD
     "cheerio": "^1.0.0-rc.3",
     "dom-parser": "^0.1.6",
     "jsdom": "^15.2.1",
@@ -22,5 +23,10 @@
     "tiny-cookie": "^2.3.1",
     "vuepress-plugin-smooth-scroll": "0.0.9",
     "vuepress-theme-cosmos": "^1.0.132"
+=======
+    "tiny-cookie": "^2.3.1",
+    "vuepress-plugin-smooth-scroll": "0.0.9",
+    "vuepress-theme-cosmos": "^1.0.113"
+>>>>>>> master
   }
 }

@@ -26,25 +26,32 @@ Let us break it down:
 
 ## Implementation of a module `handler`s
 
-Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the [application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically, the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`, which looks like the following:
+Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The
+[module manager](./module-manager.md) is used to add the module's `handler`s to the
+[application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically,
+the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`,
+which looks like the following:
 
 ```go
 func NewHandler(keeper Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
 		case MsgType1:
 			return handleMsgType1(ctx, keeper, msg)
+
 		case MsgType2:
 			return handleMsgType2(ctx, keeper, msg)
+
 		default:
-			errMsg := fmt.Sprintf("Unrecognized nameservice Msg type: %v", msg.Type())
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
 ```
 
-This simple switch returns a `handler` function specific to the type of the received `message`. These `handler` functions are the ones that actually process `message`s, and usually follow the following 2 steps:
+First, the `handler` function sets a new `EventManager` to the context to isolate events per `msg`.
+Then, this simple switch returns a `handler` function specific to the type of the received `message`. These `handler` functions are the ones that actually process `message`s, and usually follow the following 2 steps:
 
 - First, they perform *stateful* checks to make sure the `message` is valid. At this stage, the `message`'s `ValidateBasic()` method has already been called, meaning *stateless* checks on the message (like making sure parameters are correctly formatted) have already been performed. Checks performed in the `handler` can be more expensive and require access to the state. For example, a `handler` for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. To access the state, the `handler` needs to call the [`keeper`'s](./keeper.md) getter functions. 
 - Then, if the checks are successfull, the `handler` calls the [`keeper`'s](./keeper.md) setter functions to actually perform the state transition. 

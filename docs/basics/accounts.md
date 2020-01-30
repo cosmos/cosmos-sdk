@@ -2,9 +2,9 @@
 order: 3
 -->
 
-This document describes the in-built accounts system of the Cosmos SDK. {synopsis}
-
 # Accounts 
+
+This document describes the in-built accounts system of the Cosmos SDK. {synopsis}
 
 ### Pre-requisite Readings
 

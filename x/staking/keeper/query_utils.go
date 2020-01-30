@@ -21,7 +21,7 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 
 		validator, found := k.GetValidator(ctx, delegation.ValidatorAddress)
 		if !found {
-			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
+			panic(types.ErrNoValidatorFound)
 		}
 		validators[i] = validator
 		i++
@@ -31,16 +31,16 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 
 // return a validator that a delegator is bonded to
 func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress) (validator types.Validator, err sdk.Error) {
+	validatorAddr sdk.ValAddress) (validator types.Validator, err error) {
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
-		return validator, types.ErrNoDelegation(types.DefaultCodespace)
+		return validator, types.ErrNoDelegation
 	}
 
 	validator, found = k.GetValidator(ctx, delegation.ValidatorAddress)
 	if !found {
-		panic(types.ErrNoValidatorFound(types.DefaultCodespace))
+		panic(types.ErrNoValidatorFound)
 	}
 	return
 }

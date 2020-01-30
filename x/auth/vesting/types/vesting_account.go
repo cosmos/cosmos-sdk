@@ -74,7 +74,7 @@ func (bva BaseVestingAccount) SpendableCoinsVestingAccount(vestingCoins sdk.Coin
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Add(sdk.Coins{spendableCoin})
+			spendableCoins = spendableCoins.Add(spendableCoin)
 		}
 	}
 
@@ -108,12 +108,12 @@ func (bva *BaseVestingAccount) TrackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Add(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Add(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Add(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Add(yCoin)
 		}
 	}
 }
@@ -220,7 +220,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(bva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -250,7 +250,7 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(bva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +274,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -406,7 +406,7 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(cva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -437,7 +437,7 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(cva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -461,7 +461,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -543,7 +543,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 		if x < period.Length {
 			break
 		}
-		vestedCoins = vestedCoins.Add(period.Amount)
+		vestedCoins = vestedCoins.Add(period.Amount...)
 		// Update the start time of the next period
 		currentPeriodStartTime += period.Length
 	}
@@ -589,7 +589,7 @@ func (pva PeriodicVestingAccount) Validate() error {
 	originalVesting := sdk.NewCoins()
 	for _, p := range pva.VestingPeriods {
 		endTime += p.Length
-		originalVesting = originalVesting.Add(p.Amount)
+		originalVesting = originalVesting.Add(p.Amount...)
 	}
 	if endTime != pva.EndTime {
 		return errors.New("vesting end time does not match length of all vesting periods")
@@ -622,7 +622,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(pva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -654,7 +654,7 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(pva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -678,7 +678,7 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -781,7 +781,7 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if dva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(dva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, dva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -805,7 +805,7 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
@@ -24,7 +25,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec, childCmds []*cobra.Command) *co
 
 	submitEvidenceCmd := SubmitEvidenceCmd(cdc)
 	for _, childCmd := range childCmds {
-		submitEvidenceCmd.AddCommand(client.PostCommands(childCmd)[0])
+		submitEvidenceCmd.AddCommand(flags.PostCommands(childCmd)[0])
 	}
 
 	// TODO: Add tx commands.

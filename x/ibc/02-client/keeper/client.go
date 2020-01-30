@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -86,17 +84,17 @@ func (k Keeper) UpdateClient(
 	}
 
 	var (
-		consensusState      exported.ConsensusState
-		err                 error
-		oldHeaderNextValSet *tmtypes.ValidatorSet // TODO: should I get this from the msg or internal query?
+		consensusState exported.ConsensusState
+		err            error
 	)
 
 	switch clientType {
 	case exported.Tendermint:
+		// TODO: use udb time from connected chain. Blocked on ICS07 Follow up PR.
 		unbondingTime := k.stakingKeeper.UnbondingTime(ctx)
 		trustingPeriod := (2 / 3) * unbondingTime
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, oldHeader, newHeader, oldHeaderNextValSet, ctx.ChainID(), trustingPeriod,
+			clientState, oldHeader, newHeader, ctx.ChainID(), trustingPeriod,
 		)
 	default:
 		return sdkerrors.Wrapf(types.ErrInvalidClientType, "cannot update client with ID %s", clientID)

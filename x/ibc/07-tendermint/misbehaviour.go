@@ -8,6 +8,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	lite "github.com/tendermint/tendermint/lite2"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -71,16 +72,16 @@ func checkMisbehaviour(
 	// - Evidence is within the trusting period.
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := evidence.FromValidatorSet.VerifyFutureCommit(
-		evidence.Header1.ValidatorSet, evidence.ChainID,
-		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
+	if err := evidence.FromValidatorSet.VerifyCommitTrusting(
+		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
+		evidence.Header1.Commit, lite.DefaultTrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(err, "validator set in header 1 has too much change from last known validator set")
 	}
 
-	if err := evidence.FromValidatorSet.VerifyFutureCommit(
-		evidence.Header2.ValidatorSet, evidence.ChainID,
-		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
+	if err := evidence.FromValidatorSet.VerifyCommitTrusting(
+		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
+		evidence.Header2.Commit, lite.DefaultTrustLevel,
 	); err != nil {
 		return sdkerrors.Wrapf(err, "validator set in header 2 has too much change from last known validator set")
 	}

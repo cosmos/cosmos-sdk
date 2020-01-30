@@ -4,7 +4,6 @@ import (
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -24,7 +23,6 @@ import (
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState,
 	oldHeader, newHeader clientexported.Header,
-	oldHeaderNextVals *tmtypes.ValidatorSet,
 	chainID string,
 	trustingPeriod time.Duration,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
@@ -50,7 +48,7 @@ func CheckValidityAndUpdateState(
 	}
 
 	if err := checkValidity(
-		tmClientState, tmHeader1, tmHeader2, oldHeaderNextVals, chainID, trustingPeriod); err != nil {
+		tmClientState, tmHeader1, tmHeader2, chainID, trustingPeriod); err != nil {
 		return nil, nil, err
 	}
 
@@ -59,21 +57,14 @@ func CheckValidityAndUpdateState(
 }
 
 // checkValidity checks if the Tendermint header is valid
+// NOTE: old and new header validation is checked by lite.Verify
 func checkValidity(
 	clientState ClientState,
 	oldHeader,
 	newHeader Header,
-	oldHeaderNextVals *tmtypes.ValidatorSet,
 	chainID string,
 	trustingPeriod time.Duration,
 ) error {
-	if newHeader.Height <= oldHeader.Height {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader,
-			"new header height ≤ old header height (%d <= %d)", newHeader.Height, oldHeader.Height,
-		)
-	}
-
 	if newHeader.GetHeight() < clientState.LatestHeight {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
@@ -81,14 +72,9 @@ func checkValidity(
 		)
 	}
 
-	// basic consistency check for the new header
-	if err := newHeader.ValidateBasic(chainID); err != nil {
-		return err
-	}
-
 	// call tendermint light client verification function
 	return lite.Verify(
-		chainID, &oldHeader.SignedHeader, oldHeaderNextVals, &newHeader.SignedHeader,
+		chainID, &oldHeader.SignedHeader, oldHeader.NextValidatorSet, &newHeader.SignedHeader,
 		newHeader.ValidatorSet, trustingPeriod, time.Now(), lite.DefaultTrustLevel,
 	)
 }

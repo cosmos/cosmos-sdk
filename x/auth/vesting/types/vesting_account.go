@@ -63,7 +63,7 @@ func (bva BaseVestingAccount) LockedCoinsFromVesting(balance, vestingCoins sdk.C
 	var lockedCoins sdk.Coins
 
 	for _, vestingCoin := range vestingCoins {
-		vestingAmt := vestingCoins.AmountOf(vestingCoin.Denom)
+		vestingAmt := vestingCoin.Amount
 		delVestingAmt := bva.DelegatedVesting.AmountOf(vestingCoin.Denom)
 		baseAmt := balance.AmountOf(vestingCoin.Denom)
 

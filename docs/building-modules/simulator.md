@@ -61,9 +61,17 @@ is also assigned randomly.
 Operations on the simulation are simulated using the full [transaction cycle](../core/transactions.md) of a
 `ABCI` application that exposes the `BaseApp`.
 
-<!-- TODO: Operation weights -->
+Shown below is how weights are set:
 
-<!-- TODO: Skip results -->
++++ https://github.com/cosmos/cosmos-sdk/blob/release%2Fv0.38.0/x/staking/simulation/operations.go#L18-L92
+
+As you can see the weights are predefined in this case but there are options on how to override this behavior with different weights. One is allowing `*rand.Rand` to define a weight for the operation, or you can inject your own predefined weights.
+
+Here is how one can override the above package `simappparams`.
+
++++ https://github.com/cosmos/gaia/blob/master/sims.mk#L9-L22
+
+For the last test a tool called runsim  <!-- # TODO: add link to runsim readme when its created --> is used, this is used to parallelize go test instances, provide info to Github and slack integrations to provide information to your team on how the simulations are running.  
 
 ### Random proposal contents
 

@@ -11,7 +11,7 @@ import (
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
-	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	ctx, _, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -44,7 +44,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 }
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
-	ctx, ak, k, sk, supplyKeeper := CreateTestInputDefault(t, false, 1000)
+	ctx, ak, bk, k, sk, supplyKeeper := CreateTestInputDefault(t, false, 1000)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 50% commission
@@ -88,7 +88,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollector := supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err = feeCollector.SetCoins(fees)
+	err = bk.SetBalances(ctx, feeCollector.GetAddress(), fees)
 	require.NoError(t, err)
 	ak.SetAccount(ctx, feeCollector)
 
@@ -121,7 +121,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	communityTax := sdk.NewDec(0)
-	ctx, ak, _, k, sk, _, supplyKeeper := CreateTestInputAdvanced(t, false, 1000000, communityTax)
+	ctx, ak, bk, k, sk, _, supplyKeeper := CreateTestInputAdvanced(t, false, 1000000, communityTax)
 	sh := staking.NewHandler(sk)
 
 	// create validator with 10% commission
@@ -177,7 +177,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollector := supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err = feeCollector.SetCoins(fees)
+	err = bk.SetBalances(ctx, feeCollector.GetAddress(), fees)
 	require.NoError(t, err)
 
 	ak.SetAccount(ctx, feeCollector)

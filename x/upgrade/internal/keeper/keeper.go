@@ -137,7 +137,7 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 }
 
 // DumpUpgradeInfoToFile adds plan height to upgrade-info.json
-func (k Keeper) DumpUpgradeInfoToFile(height int64) error {
+func (k Keeper) DumpUpgradeInfoToFile(height int64, name string) error {
 	upgradeInfoFileDir := k.GetHomePath()
 	upgradeInfoFilePath, err := types.EnsureConfigExists(upgradeInfoFileDir)
 	if err != nil {
@@ -146,6 +146,7 @@ func (k Keeper) DumpUpgradeInfoToFile(height int64) error {
 
 	var upgradeInfo store.UpgradeInfo
 	upgradeInfo.Height = height
+	upgradeInfo.Name = name
 
 	info, err := json.Marshal(upgradeInfo)
 
@@ -153,8 +154,7 @@ func (k Keeper) DumpUpgradeInfoToFile(height int64) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
-	return nil
+	return ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
 }
 
 // GetHomepath returns the height at which the given upgrade was executed

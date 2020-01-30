@@ -1,32 +1,29 @@
 package types
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 func useUpgradeLoader(upgrades *store.StoreUpgrades) func(*baseapp.BaseApp) {
 	return func(app *baseapp.BaseApp) {
 		app.SetStoreLoader(StoreLoaderWithUpgrade(upgrades))
-	}
-}
-
-func useFileUpgradeLoader(upgradeInfoPath string) func(*baseapp.BaseApp) {
-	return func(app *baseapp.BaseApp) {
-		app.SetStoreLoader(UpgradeableStoreLoader(upgradeInfoPath))
 	}
 }
 
@@ -77,9 +74,12 @@ func TestSetLoader(t *testing.T) {
 	viper.Set(flags.FlagHome, homeDir)
 
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
-
-	data := []byte(`{"height": 0, "store_upgrades": {"renamed":[{"old_key": "bnk", "new_key": "bank"}]}}`)
-	err := ioutil.WriteFile(upgradeInfoFilePath, data, 0644)
+	upgradeInfo := &store.UpgradeInfo{
+		Name: "test", Height: 0,
+	}
+	data, err := json.Marshal(upgradeInfo)
+	require.NoError(t, err)
+	err = ioutil.WriteFile(upgradeInfoFilePath, data, 0644)
 	require.NoError(t, err)
 
 	// make sure it exists before running everything
@@ -105,11 +105,6 @@ func TestSetLoader(t *testing.T) {
 			origStoreKey: "foo",
 			loadStoreKey: "bar",
 		},
-		"file loader with existing file": {
-			setLoader:    useFileUpgradeLoader(upgradeInfoFilePath),
-			origStoreKey: "bnk",
-			loadStoreKey: "bank",
-		},
 	}
 
 	k := []byte("key")
@@ -120,6 +115,7 @@ func TestSetLoader(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
 			db := dbm.NewMemDB()
+
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db

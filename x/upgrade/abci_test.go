@@ -402,9 +402,9 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 
 	planHeight := s.ctx.BlockHeight() + 1
-
+	name := "test"
 	t.Log("verify if upgrade height is dumped to file")
-	err := s.keeper.DumpUpgradeInfoToFile(planHeight)
+	err := s.keeper.DumpUpgradeInfoToFile(planHeight, name)
 	require.Nil(t, err)
 
 	upgradeInfoFileDir := s.keeper.GetHomePath()

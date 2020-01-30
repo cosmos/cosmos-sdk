@@ -41,7 +41,7 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 			// Write upgrade height info to filesystem
 			// So multistore upgrades can make use of this height to determine
 			// to continue or skip the multistore upgrades on launching new binary
-			err := k.DumpUpgradeInfoToFile(ctx.BlockHeight())
+			err := k.DumpUpgradeInfoToFile(ctx.BlockHeight(), plan.Name)
 			if err != nil {
 				panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 			}

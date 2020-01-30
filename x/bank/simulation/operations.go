@@ -97,12 +97,7 @@ func sendMsgSend(
 	)
 
 	account := ak.GetAccount(ctx, msg.FromAddress)
-	balances := bk.GetAllBalances(ctx, account.GetAddress())
-	locked := bk.LockedCoins(ctx, account.GetAddress())
-	spendable, hasNeg := balances.SafeSub(locked)
-	if hasNeg {
-		spendable = sdk.NewCoins()
-	}
+	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount)
 	if !hasNeg {
@@ -248,12 +243,7 @@ func sendMsgMultiSend(
 
 	// feePayer is the first signer, i.e. first input address
 	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
-	balances := bk.GetAllBalances(ctx, feePayer.GetAddress())
-	locked := bk.LockedCoins(ctx, feePayer.GetAddress())
-	spendable, hasNeg := balances.SafeSub(locked)
-	if hasNeg {
-		spendable = sdk.NewCoins()
-	}
+	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
 	if !hasNeg {
@@ -301,12 +291,7 @@ func randomSendFields(
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 
-	balances := bk.GetAllBalances(ctx, acc.GetAddress())
-	locked := bk.LockedCoins(ctx, acc.GetAddress())
-	spendable, hasNeg := balances.SafeSub(locked)
-	if hasNeg {
-		spendable = sdk.NewCoins()
-	}
+	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
 	sendCoins := simulation.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {

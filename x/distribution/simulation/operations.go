@@ -91,12 +91,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 		simToAccount, _ := simulation.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -144,12 +139,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -200,12 +190,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -243,12 +228,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		funder, _ := simulation.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, funder.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fundAmount := simulation.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {

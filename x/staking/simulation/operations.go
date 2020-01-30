@@ -122,12 +122,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		selfDelegation := sdk.NewCoin(denom, amount)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
@@ -206,12 +201,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -282,12 +272,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		bondAmt := sdk.NewCoin(denom, amount)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(sdk.Coins{bondAmt})
@@ -375,12 +360,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -483,12 +463,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {

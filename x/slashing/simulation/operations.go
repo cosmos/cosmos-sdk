@@ -76,12 +76,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 		}
 
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable, hasNeg := balances.SafeSub(locked)
-		if hasNeg {
-			spendable = sdk.NewCoins()
-		}
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {

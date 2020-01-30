@@ -3,6 +3,8 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"math"
+	"os"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,6 +84,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddress, delegation.ValidatorAddress), b)
+	k.ExportDelegationsForAccount(ctx, delegation.DelegatorAddress)
 }
 
 // remove a delegation
@@ -90,6 +93,16 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 	k.BeforeDelegationRemoved(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddress, delegation.ValidatorAddress))
+	k.ExportDelegationsForAccount(ctx, delegation.DelegatorAddress)
+}
+
+func (k Keeper) ExportDelegationsForAccount(ctx sdk.Context, account sdk.AccAddress) {
+	delegations := k.GetDelegatorDelegations(ctx, account, math.MaxUint16)
+	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	for _, delegation := range delegations {
+		f.WriteString(fmt.Sprintf("%s,%s,%d,%d,%s,%s\n", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(ctx.BlockHeight()), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID()))
+	}
+	f.Close()
 }
 
 // return a given amount of all the delegator unbonding-delegations
@@ -175,6 +188,11 @@ func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDeleg
 	key := GetUBDKey(ubd.DelegatorAddress, ubd.ValidatorAddress)
 	store.Set(key, bz)
 	store.Set(GetUBDByValIndexKey(ubd.DelegatorAddress, ubd.ValidatorAddress), []byte{}) // index, store empty bytes
+	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	for _, entry := range ubd.Entries {
+		f.WriteString(fmt.Sprintf("%s,%s,%d,%d,%s,%s,%s\n", ubd.DelegatorAddress, ubd.ValidatorAddress, entry.Balance.Int64(), uint64(ctx.BlockHeight()), entry.CompletionTime.Format("2006-01-02 15:04:05"), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID()))
+	}
+	f.Close()
 }
 
 // remove the unbonding delegation object and associated index

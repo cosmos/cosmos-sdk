@@ -1,8 +1,10 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -20,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the consensus params in the main store.
@@ -614,15 +617,15 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 // DeliverTx implements the ABCI interface.
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	var result sdk.Result
-
 	tx, err := app.txDecoder(txBytes)
+	txHash := fmt.Sprintf("%X", tmhash.Sum(txBytes))
 	if err != nil {
 		result = err.Result()
 	} else {
 		result = app.runTx(runTxModeDeliver, txBytes, tx)
 	}
 
-	return abci.ResponseDeliverTx{
+	response := abci.ResponseDeliverTx{
 		Code:      uint32(result.Code),
 		Codespace: string(result.Codespace),
 		Data:      result.Data,
@@ -631,7 +634,81 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Tags:      result.Tags,
 	}
+
+	ctx := app.getContextForTx(runTxModeDeliver, txBytes)
+
+	sdktx, _ := tx.(auth.StdTx)
+	jsonTags, _ := codec.Cdc.MarshalJSON(sdk.TagsToStringTags(result.Tags))
+	jsonMsgs := MsgsToString(sdktx.GetMsgs())
+	jsonFee, _ := codec.Cdc.MarshalJSON(sdktx.Fee)
+
+	for idx, msg := range sdktx.GetMsgs() {
+		f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/messages.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		msgString, _ := codec.Cdc.MarshalJSON(msg)
+		f.WriteString(fmt.Sprintf("%s,%d,%s,\"%s\",%s,%s\n",
+			txHash,
+			idx,
+			msg.Type(),
+			strings.ReplaceAll(string(msgString), "\"", "\"\""),
+			ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"),
+			ctx.ChainID()))
+		f.Close()
+		extractAddresses(msg, string(txHash), ctx.BlockHeight(), idx, ctx.ChainID())
+	}
+
+	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/txs.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	f.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,\"%s\",%s,\"%s\",\"%s\",\"%s\",%s,%s\n",
+		txHash,
+		ctx.BlockHeight(),
+		uint32(result.Code),
+		int64(result.GasWanted),
+		int64(result.GasUsed),
+		strings.ReplaceAll(result.Log, "\"", "\"\""),
+		sdktx.GetMemo(),
+		strings.ReplaceAll(string(jsonFee), "\"", "\"\""),
+		strings.ReplaceAll(string(jsonTags), "\"", "\"\""),
+		strings.ReplaceAll(string(jsonMsgs), "\"", "\"\""),
+		ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"),
+		ctx.ChainID()))
+	f.Close()
+
+	return response
+
 }
+
+func extractAddresses(msg sdk.Msg, hash string, height int64, idx int, chainid string) {
+	m := BasicMsgStruct{}
+	_ = json.Unmarshal(msg.GetSignBytes(), &m)
+	ref := reflect.ValueOf(&m.Value).Elem()
+	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/addresses.%d.%s", height, chainid), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	for i := 0; i < ref.NumField(); i++ {
+		addr := ref.Field(i).Interface()
+		sdkAddr, ok := addr.(sdk.Address) // cast to address interface so we have access to the String() method, which bech32ifies the address
+		if ok && !sdkAddr.Empty() {
+			f.WriteString(fmt.Sprintf("%s,%d,%s,%s\n", hash, idx, sdkAddr.String(), chainid))
+		}
+	}
+	f.Close()
+}
+
+type (
+	// AddressContainingStruct exists to parse JSON blobs containing sdk.Addressbased fields.
+	AddressContainingStruct struct {
+		From         sdk.AccAddress `json:"from_address"`
+		To           sdk.AccAddress `json:"to_address"`
+		Validator    sdk.ValAddress `json:"validator_address"`
+		Delegator    sdk.AccAddress `json:"delegator_address"`
+		SrcValidator sdk.ValAddress `json:"src_validator_address"`
+		DstValidator sdk.ValAddress `json:"dst_validator_address"`
+		Proposer     sdk.AccAddress `json:"proposer"`
+	}
+
+	// BasicMsgStruct is a simplified reprentation of an sdk.Msg
+	BasicMsgStruct struct {
+		Type  string                  `json:"type"`
+		Value AddressContainingStruct `json:"value"`
+	}
+)
 
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
@@ -927,4 +1004,12 @@ func (st *state) CacheMultiStore() sdk.CacheMultiStore {
 
 func (st *state) Context() sdk.Context {
 	return st.ctx
+}
+
+func MsgsToString(msgs []sdk.Msg) string {
+	outStrings := []string{}
+	for _, msg := range msgs {
+		outStrings = append(outStrings, string(msg.GetSignBytes()))
+	}
+	return fmt.Sprintf("[%s]", strings.Join(outStrings, ","))
 }

@@ -119,6 +119,16 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	// The deducted tokens are returned to pool.NotBondedTokens.
 	// TODO: Move the token accounting outside of `RemoveValidatorTokens` so it is less confusing
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+
+	// we want to export all delegations for every user who was slashed.
+	affectedDelegators := make(map[string]sdk.AccAddress)
+	for _, delegation := range k.GetValidatorDelegations(ctx, validator.GetOperator()) {
+		affectedDelegators[delegation.GetDelegatorAddr().String()] = delegation.GetDelegatorAddr()
+	}
+	for _, delegator := range affectedDelegators {
+		k.ExportDelegationsForAccount(ctx, delegator)
+	}
+
 	pool := k.GetPool(ctx)
 	// Burn the slashed tokens, which are now loose.
 	pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)

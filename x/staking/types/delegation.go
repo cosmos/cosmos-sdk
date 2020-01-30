@@ -109,6 +109,10 @@ type UnbondingDelegation struct {
 	Entries          []UnbondingDelegationEntry `json:"entries"`           // unbonding delegation entries
 }
 
+func (u UnbondingDelegation) GetEntries() []UnbondingDelegationEntry {
+	return u.Entries
+}
+
 // UnbondingDelegationEntry - entry to an UnbondingDelegation
 type UnbondingDelegationEntry struct {
 	CreationHeight int64     `json:"creation_height"` // height which the unbonding took place

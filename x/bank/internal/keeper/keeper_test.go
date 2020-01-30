@@ -474,10 +474,10 @@ func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
 	balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now)), sendCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now)), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now.Add(12*time.Hour))), origCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))), origCoins)
 }
 
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
@@ -513,10 +513,10 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
 	balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now)), sendCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now)), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(balances, now.Add(12*time.Hour))), origCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))), origCoins)
 }
 
 func (suite *IntegrationTestSuite) TestDelegateCoins() {

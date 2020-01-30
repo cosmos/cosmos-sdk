@@ -76,29 +76,23 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
-	currBalance := origCoins
-
 	cva := NewContinuousVestingAccount(&bacc, origCoins, now.Unix(), endTime.Unix())
 
 	// require that all original coins are locked at the end of the vesting
 	// schedule
-	lockedCoins := cva.LockedCoins(currBalance, now)
+	lockedCoins := cva.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that there exist no locked coins in the beginning of the
-	lockedCoins = cva.LockedCoins(currBalance, endTime)
-	require.Nil(t, lockedCoins)
+	lockedCoins = cva.LockedCoins(endTime)
+	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all vested coins (50%) are spendable
-	lockedCoins = cva.LockedCoins(currBalance, now.Add(12*time.Hour))
+	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 
-	// receive some coins
-	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	currBalance = currBalance.Add(recvAmt...)
-
 	// require that all vested coins (50%) are spendable plus any received
-	lockedCoins = cva.LockedCoins(currBalance, now.Add(12*time.Hour))
+	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
@@ -236,29 +230,29 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	// require that all coins are locked in the beginning of the vesting
 	// schedule
 	dva := NewDelayedVestingAccount(&bacc, origCoins, endTime.Unix())
-	lockedCoins := dva.LockedCoins(origCoins, now)
+	lockedCoins := dva.LockedCoins(now)
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// require that all coins are spendable after the maturation of the vesting
 	// schedule
-	lockedCoins = dva.LockedCoins(origCoins, endTime)
-	require.Nil(t, lockedCoins)
+	lockedCoins = dva.LockedCoins(endTime)
+	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all coins are still vesting after some time
-	lockedCoins = dva.LockedCoins(origCoins, now.Add(12*time.Hour))
+	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// receive some coins
 	// require that only received coins are spendable since the account is still
 	// vesting
-	lockedCoins = dva.LockedCoins(origCoins.Add(sdk.NewInt64Coin(stakeDenom, 50)), now.Add(12*time.Hour))
+	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
-	lockedCoins = dva.LockedCoins(origCoins.Sub(delegatedAmount), now.Add(12*time.Hour))
+	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount)))
 }
 
@@ -449,22 +443,21 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 
 	// require that there exist no spendable coins at the beginning of the
 	// vesting schedule
-	lockedCoins := pva.LockedCoins(origCoins, now)
+	lockedCoins := pva.LockedCoins(now)
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that all original coins are spendable at the end of the vesting
 	// schedule
-	lockedCoins = pva.LockedCoins(origCoins, endTime)
-	require.Nil(t, lockedCoins)
+	lockedCoins = pva.LockedCoins(endTime)
+	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all still vesting coins (50%) are locked
-	lockedCoins = pva.LockedCoins(origCoins, now.Add(12*time.Hour))
+	lockedCoins = pva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 
 	// receive some coins
 	// require that all still vesting coins (50% of original) are locked plus any received
-	recvAmt := sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}
-	lockedCoins = pva.LockedCoins(origCoins.Add(recvAmt...), now.Add(12*time.Hour))
+	lockedCoins = pva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 

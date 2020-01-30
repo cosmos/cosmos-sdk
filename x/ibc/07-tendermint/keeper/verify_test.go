@@ -1,4 +1,4 @@
-package tendermint_test
+package keeper_test
 
 import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"

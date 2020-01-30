@@ -1,4 +1,4 @@
-package tendermint
+package keeper
 
 import (
 	"fmt"
@@ -14,52 +14,11 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var _ clientexported.ClientState = ClientState{}
-
-// ClientState from Tendermint tracks the current validator set, latest height,
-// and a possible frozen height.
-type ClientState struct {
-	// Client ID
-	ID string `json:"id" yaml:"id"`
-	// Latest block height
-	LatestHeight uint64 `json:"latest_height" yaml:"latest_height"`
-	// Block height when the client was frozen due to a misbehaviour
-	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
-}
-
-// NewClientState creates a new ClientState instance
-func NewClientState(id string, latestHeight uint64) ClientState {
-	return ClientState{
-		ID:           id,
-		LatestHeight: latestHeight,
-		FrozenHeight: 0,
-	}
-}
-
-// GetID returns the tendermint client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.ID
-}
-
-// ClientType is tendermint.
-func (cs ClientState) ClientType() clientexported.ClientType {
-	return clientexported.Tendermint
-}
-
-// GetLatestHeight returns latest block height.
-func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.LatestHeight
-}
-
-// IsFrozen returns true if the frozen height has been set.
-func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight != 0
-}
-
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
-func (cs ClientState) VerifyClientConsensusState(
+func (k Keeper) VerifyClientConsensusState(
 	cdc *codec.Codec,
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
@@ -88,8 +47,9 @@ func (cs ClientState) VerifyClientConsensusState(
 
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
-func (cs ClientState) VerifyConnectionState(
+func (k Keeper) VerifyConnectionState(
 	cdc *codec.Codec,
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
@@ -120,8 +80,9 @@ func (cs ClientState) VerifyConnectionState(
 
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
-func (cs ClientState) VerifyChannelState(
+func (k Keeper) VerifyChannelState(
 	cdc *codec.Codec,
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
@@ -153,7 +114,8 @@ func (cs ClientState) VerifyChannelState(
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
-func (cs ClientState) VerifyPacketCommitment(
+func (k Keeper) VerifyPacketCommitment(
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
@@ -181,7 +143,8 @@ func (cs ClientState) VerifyPacketCommitment(
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
-func (cs ClientState) VerifyPacketAcknowledgement(
+func (k Keeper) VerifyPacketAcknowledgement(
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
@@ -210,7 +173,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
-func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+func (k Keeper) VerifyPacketAcknowledgementAbsence(
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
@@ -237,7 +201,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
-func (cs ClientState) VerifyNextSequenceRecv(
+func (k Keeper) VerifyNextSequenceRecv(
+	cs ClientState,
 	height uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,

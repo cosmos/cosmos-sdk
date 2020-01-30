@@ -1,4 +1,4 @@
-package tendermint_test
+package types_test
 
 import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"

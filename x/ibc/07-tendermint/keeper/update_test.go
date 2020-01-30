@@ -1,4 +1,4 @@
-package tendermint_test
+package keeper_test
 
 import (
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"

@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 
@@ -130,16 +129,9 @@ func (k Keeper) ChanOpenTry(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return clienttypes.ErrConsensusStateNotFound
-	}
-
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		counterparty.PortID, counterparty.ChannelID, expectedChannel, consensusState,
+		counterparty.PortID, counterparty.ChannelID, expectedChannel,
 	); err != nil {
 		return err
 	}
@@ -208,17 +200,10 @@ func (k Keeper) ChanOpenAck(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return clienttypes.ErrConsensusStateNotFound
-	}
-
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel, consensusState,
+		expectedChannel,
 	); err != nil {
 		return err
 	}
@@ -286,17 +271,10 @@ func (k Keeper) ChanOpenConfirm(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return clienttypes.ErrConsensusStateNotFound
-	}
-
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofAck,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel, consensusState,
+		expectedChannel,
 	); err != nil {
 		return err
 	}
@@ -410,17 +388,10 @@ func (k Keeper) ChanCloseConfirm(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return clienttypes.ErrConsensusStateNotFound
-	}
-
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel, consensusState,
+		expectedChannel,
 	); err != nil {
 		return err
 	}

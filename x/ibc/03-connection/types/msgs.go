@@ -249,24 +249,22 @@ var _ sdk.Msg = MsgConnectionOpenConfirm{}
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
-	ConnectionID    string            `json:"connection_id"`
-	ProofAck        commitment.ProofI `json:"proof_ack"` // proof for the change of the connection state on Chain A: `INIT -> OPEN`
-	ProofHeight     uint64            `json:"proof_height"`
-	ConsensusHeight uint64            `json:"consensus_height"`
-	Signer          sdk.AccAddress    `json:"signer"`
+	ConnectionID string            `json:"connection_id"`
+	ProofAck     commitment.ProofI `json:"proof_ack"` // proof for the change of the connection state on Chain A: `INIT -> OPEN`
+	ProofHeight  uint64            `json:"proof_height"`
+	Signer       sdk.AccAddress    `json:"signer"`
 }
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck commitment.ProofI, proofHeight, consensusHeight uint64,
+	connectionID string, proofAck commitment.ProofI, proofHeight uint64,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenConfirm {
 	return MsgConnectionOpenConfirm{
-		ConnectionID:    connectionID,
-		ProofAck:        proofAck,
-		ProofHeight:     proofHeight,
-		ConsensusHeight: consensusHeight,
-		Signer:          signer,
+		ConnectionID: connectionID,
+		ProofAck:     proofAck,
+		ProofHeight:  proofHeight,
+		Signer:       signer,
 	}
 }
 
@@ -293,9 +291,6 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
-	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

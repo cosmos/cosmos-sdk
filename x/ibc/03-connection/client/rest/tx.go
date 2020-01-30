@@ -191,7 +191,7 @@ func connectionOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 
 		// create the message
 		msg := types.NewMsgConnectionOpenConfirm(
-			connectionID, req.ProofAck, req.ProofHeight, req.ConsensusHeight, fromAddr,
+			connectionID, req.ProofAck, req.ProofHeight, fromAddr,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {

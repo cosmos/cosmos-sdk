@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const (
@@ -31,14 +32,15 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	cases := []struct {
 		msg        string
 		connection types.ConnectionEnd
+		proof      commitment.ProofI
 		malleate   func()
 		expPass    bool
 	}{
-		{"verification success", connection1, func() {
+		{"verification success", connection1, validProof{}, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", connection1, func() {}, false},
-		{"verification failed", connection1, func() {
+		{"client state not found", connection1, validProof{}, func() {}, false},
+		{"verification failed", connection1, invalidProof{}, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -49,23 +51,20 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			suite.updateClient(testClientID1)
 
-			proofHeight := suite.ctx.BlockHeight() - 1
+			proofHeight := suite.ctx.BlockHeight()
 
 			// TODO: remove mocked types and uncomment
 			// consensusKey := ibctypes.KeyConsensusState(testClientID1, uint64(suite.app.LastBlockHeight()))
 			// proof, proofHeight := suite.queryProof(consensusKey)
 
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
+				suite.ctx, tc.connection, uint64(proofHeight), tc.proof, suite.consensusState,
+			)
+
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-					suite.ctx, tc.connection, uint64(proofHeight), ibctypes.ValidProof{}, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-					suite.ctx, tc.connection, uint64(proofHeight), ibctypes.InvalidProof{}, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -76,14 +75,17 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	// connectionKey := ibctypes.KeyConnection(testConnectionID1)
 	cases := []struct {
 		msg      string
+		proof    commitment.ProofI
 		malleate func()
 		expPass  bool
 	}{
-		{"verification success", func() {
+		{"verification success", validProof{}, func() {
 			suite.createClient(testClientID1)
+			suite.createClient(testClientID2)
 		}, true},
-		{"client state not found", func() {}, false},
-		{"verification failed", func() {
+		{"client state not found", validProof{}, func() {}, false},
+		{"verification failed", invalidProof{}, func() {
+			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -96,19 +98,19 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			tc.malleate()
 			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
 			suite.updateClient(testClientID1)
-
-			proofHeight := suite.ctx.BlockHeight() - 1
+			counterparty := types.NewCounterparty(testClientID1, testConnectionID1, commitment.NewPrefix([]byte("ibc")))
+			expectedConnection := types.NewConnectionEnd(exported.INIT, testClientID2, counterparty, []string{"1.0.0"})
+			suite.updateClient(testClientID1)
+			proofHeight := uint64(3)
 			// proof, proofHeight := suite.queryProof(connectionKey)
 
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
+				suite.ctx, connection, proofHeight, tc.proof, testConnectionID1, expectedConnection,
+			)
+
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-					suite.ctx, uint64(proofHeight), ibctypes.ValidProof{}, testConnectionID1, connection, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-					suite.ctx, uint64(proofHeight), ibctypes.InvalidProof{}, testConnectionID1, connection, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -117,17 +119,21 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 
 func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	// channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
-
 	cases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
 	}{
-		{"verification success", func() {
+		{"verification success", validProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", func() {}, false},
-		{"verification failed", func() {
+		{"client state not found", validProof{}, 2, func() {}, false},
+		{"consensus state not found", validProof{}, 100, func() {
+			suite.createClient(testClientID1)
+		}, false},
+		{"verification failed", invalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -145,20 +151,15 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			)
 			suite.updateClient(testClientID1)
 
-			proofHeight := suite.ctx.BlockHeight() - 1
 			// proof, proofHeight := suite.queryProof(channelKey)
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
+				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, channel,
+			)
 
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.ValidProof{}, testPort1,
-					testChannel1, channel, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.InvalidProof{}, testPort1,
-					testChannel1, channel, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -170,15 +171,20 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 	commitmentBz := []byte("commitment")
 
 	cases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
 	}{
-		{"verification success", func() {
+		{"verification success", validProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", func() {}, false},
-		{"verification failed", func() {
+		{"client state not found", validProof{}, 2, func() {}, false},
+		{"consensus state not found", validProof{}, 100, func() {
+			suite.createClient(testClientID1)
+		}, false},
+		{"verification failed", invalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -193,20 +199,15 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, 1, commitmentBz)
 			suite.updateClient(testClientID1)
 
-			proofHeight := suite.ctx.BlockHeight() - 1
 			// proof, proofHeight := suite.queryProof(commitmentKey)
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
+				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1, commitmentBz,
+			)
 
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.ValidProof{}, testPort1,
-					testChannel1, 1, commitmentBz, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.InvalidProof{}, testPort1,
-					testChannel1, 1, commitmentBz, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -218,15 +219,20 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 	ack := []byte("acknowledgement")
 
 	cases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
 	}{
-		{"verification success", func() {
+		{"verification success", validProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", func() {}, false},
-		{"verification failed", func() {
+		{"client state not found", validProof{}, 2, func() {}, false},
+		{"consensus state not found", validProof{}, 100, func() {
+			suite.createClient(testClientID1)
+		}, false},
+		{"verification failed", invalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -240,21 +246,16 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
 			suite.app.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, 1, ack)
 			suite.updateClient(testClientID1)
-
-			proofHeight := suite.ctx.BlockHeight() - 1
 			// proof, proofHeight := suite.queryProof(packetAckKey)
 
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
+				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1, ack,
+			)
+
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.ValidProof{}, testPort1,
-					testChannel1, 1, ack, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.InvalidProof{}, testPort1,
-					testChannel1, 1, ack, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -265,15 +266,20 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	// packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
 
 	cases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
 	}{
-		{"verification success", func() {
+		{"verification success", validProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", func() {}, false},
-		{"verification failed", func() {
+		{"client state not found", validProof{}, 2, func() {}, false},
+		{"consensus state not found", validProof{}, 100, func() {
+			suite.createClient(testClientID1)
+		}, false},
+		{"verification failed", invalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -287,20 +293,16 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			connection := suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, exported.OPEN)
 			suite.updateClient(testClientID1)
 
-			proofHeight := suite.ctx.BlockHeight() - 1
 			// proof, proofHeight := suite.queryProof(packetAckKey)
 
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
+				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1,
+			)
+
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.ValidProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.InvalidProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})
@@ -311,15 +313,20 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 	// nextSeqRcvKey := ibctypes.KeyNextSequenceRecv(testPort1, testChannel1)
 
 	cases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
 	}{
-		{"verification success", func() {
+		{"verification success", validProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", func() {}, false},
-		{"verification failed", func() {
+		{"client state not found", validProof{}, 2, func() {}, false},
+		{"consensus state not found", validProof{}, 100, func() {
+			suite.createClient(testClientID1)
+		}, false},
+		{"verification failed", invalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -334,20 +341,15 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, testPort1, testChannel1, 1)
 			suite.updateClient(testClientID1)
 
-			proofHeight := suite.ctx.BlockHeight() - 1
 			// proof, proofHeight := suite.queryProof(nextSeqRcvKey)
+			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
+				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1,
+			)
 
 			if tc.expPass {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.ValidProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
-				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-					suite.ctx, connection, uint64(proofHeight), ibctypes.InvalidProof{}, testPort1,
-					testChannel1, 1, suite.consensusState,
-				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		})

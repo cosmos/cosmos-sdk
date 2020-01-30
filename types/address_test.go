@@ -345,3 +345,68 @@ func TestCustomAddressVerifier(t *testing.T) {
 	_, err = types.ConsAddressFromBech32(consBech)
 	require.Nil(t, err)
 }
+
+func TestBech32ifyAddressBytes(t *testing.T) {
+	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	type args struct {
+		prefix string
+		bs     []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"empty address", args{"prefixA", []byte{}}, "", false},
+		{"empty prefix", args{"", addr20byte}, "", true},
+		{"10-byte address", args{"prefixA", addr10byte}, "prefixA1qqqsyqcyq5rqwzqfwvmuzx", false},
+		{"10-byte address", args{"prefixB", addr10byte}, "prefixB1qqqsyqcyq5rqwzqf4xftmx", false},
+		{"20-byte address", args{"prefixA", addr20byte}, "prefixA1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn6j4npq", false},
+		{"20-byte address", args{"prefixB", addr20byte}, "prefixB1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn8e9wka", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			got, err := types.Bech32ifyAddressBytes(tt.args.prefix, tt.args.bs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bech32ifyBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestMustBech32ifyAddressBytes(t *testing.T) {
+	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	type args struct {
+		prefix string
+		bs     []byte
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      string
+		wantPanic bool
+	}{
+		{"empty address", args{"prefixA", []byte{}}, "", false},
+		{"empty prefix", args{"", addr20byte}, "", true},
+		{"10-byte address", args{"prefixA", addr10byte}, "prefixA1qqqsyqcyq5rqwzqfwvmuzx", false},
+		{"10-byte address", args{"prefixB", addr10byte}, "prefixB1qqqsyqcyq5rqwzqf4xftmx", false},
+		{"20-byte address", args{"prefixA", addr20byte}, "prefixA1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn6j4npq", false},
+		{"20-byte address", args{"prefixB", addr20byte}, "prefixB1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn8e9wka", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			if tt.wantPanic {
+				require.Panics(t, func() { types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs) })
+				return
+			}
+			require.Equal(t, tt.want, types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs))
+		})
+	}
+}

@@ -183,13 +183,12 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenConfirm{
-		NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", nil, 10, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", commitment.Proof{Proof: nil}, 10, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, 0, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, 10, nil),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, 10, signer),
+		NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", nil, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", commitment.Proof{Proof: nil}, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, nil),
+		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, signer),
 	}
 
 	var testCases = []struct {
@@ -201,9 +200,8 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 		{testMsgs[1], false, "empty proofTry"},
 		{testMsgs[2], false, "empty proofTry"},
 		{testMsgs[3], false, "invalid proofHeight"},
-		{testMsgs[4], false, "invalid consensusHeight"},
-		{testMsgs[5], false, "empty signer"},
-		{testMsgs[6], true, "success"},
+		{testMsgs[4], false, "empty signer"},
+		{testMsgs[5], true, "success"},
 	}
 
 	for i, tc := range testCases {

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -20,6 +21,7 @@ import (
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
@@ -56,16 +58,25 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
 	suite.app = app
-
 	privVal := tmtypes.NewMockPV()
-
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = tendermint.CreateTestHeader(chainID, testHeight, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
-
 	suite.consensusState = tendermint.ConsensusState{
 		Root:             commitment.NewRoot(suite.header.AppHash),
 		ValidatorSetHash: suite.valSet.Hash(),
+	}
+
+	var validators staking.Validators
+	for i := 1; i < 11; i++ {
+		privVal := tmtypes.NewMockPV()
+		pk := privVal.GetPubKey()
+		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		validators = append(validators, val)
+
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
 }
 
@@ -125,8 +136,11 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(
 		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
+	)
+	suite.app.IBCKeeper.ClientKeeper.SetClientState(
+		suite.ctx, tendermint.NewClientState(clientID, uint64(suite.app.LastBlockHeight())),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

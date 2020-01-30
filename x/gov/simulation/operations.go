@@ -128,9 +128,7 @@ func SimulateSubmitProposal(
 		msg := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(deposit)
@@ -213,9 +211,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(deposit)
@@ -275,13 +271,10 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		option := randomVotingOption(r)
-
 		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -315,9 +308,7 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, addr sdk.AccAddress,
 ) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
-	balances := bk.GetAllBalances(ctx, account.GetAddress())
-	locked := bk.LockedCoins(ctx, account.GetAddress())
-	spendable := balances.Sub(locked)
+	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	if spendable.Empty() {
 		return nil, true, nil // skip

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,8 +25,14 @@ var (
 	BalancesPrefix = []byte("balances")
 )
 
-// AddressFromBalancesKey returns an account address from a balances key which
-// is used as an index to store balances per account.
-func AddressFromBalancesKey(key []byte) sdk.AccAddress {
-	return sdk.AccAddress(key[len(BalancesPrefix) : len(BalancesPrefix)+sdk.AddrLen])
+// AddressFromBalancesStore returns an account address from a balances prefix
+// store. The key must not contain the perfix BalancesPrefix as the prefix store
+// iterator discards the actual prefix.
+func AddressFromBalancesStore(key []byte) sdk.AccAddress {
+	addr := key[:sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
+		panic(fmt.Sprintf("unexpected account address key length; got: %d, expected: %d", len(addr), sdk.AddrLen))
+	}
+
+	return sdk.AccAddress(addr)
 }

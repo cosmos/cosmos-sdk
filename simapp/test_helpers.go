@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -48,7 +47,7 @@ func Setup(isCheckTx bool) *SimApp {
 // genesis accounts.
 func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()

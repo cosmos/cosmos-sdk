@@ -1,6 +1,8 @@
 package bank
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,9 +31,14 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 
 	balances := []Balance{}
 
-	for addr, coins := range balancesSet {
+	for addrStr, coins := range balancesSet {
+		addr, err := sdk.AccAddressFromBech32(addrStr)
+		if err != nil {
+			panic(fmt.Errorf("failed to convert address from string: %w", err))
+		}
+
 		balances = append(balances, Balance{
-			Address: sdk.AccAddress([]byte(addr)),
+			Address: addr,
 			Coins:   coins,
 		})
 	}

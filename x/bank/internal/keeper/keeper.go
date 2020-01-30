@@ -368,6 +368,7 @@ type ViewKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
 	IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
 	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
@@ -460,7 +461,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		address := types.AddressFromBalancesKey(iterator.Key())
+		address := types.AddressFromBalancesStore(iterator.Key())
 
 		var balance sdk.Coin
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
@@ -485,6 +486,21 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 	}
 
 	return sdk.NewCoins()
+}
+
+// SpendableCoins returns the total balances of spendable coins for an account
+// by address. If the account has no spendable coins, an empty Coins slice is
+// returned.
+func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	balances := k.GetAllBalances(ctx, addr)
+	locked := k.LockedCoins(ctx, addr)
+
+	spendable, hasNeg := balances.SafeSub(locked)
+	if hasNeg {
+		return sdk.NewCoins()
+	}
+
+	return spendable
 }
 
 // ValidateBalance validates all balances for a given account address returning

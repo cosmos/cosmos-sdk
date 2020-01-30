@@ -92,7 +92,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
-// nolint: funlen
+// nolint: funlen interfacer
 func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -122,9 +122,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		selfDelegation := sdk.NewCoin(denom, amount)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
@@ -173,7 +171,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
-// nolint: funlen
+// nolint: funlen interfacer
 func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -203,9 +201,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -242,7 +238,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 }
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
-// nolint: funlen
+// nolint: funlen interfacer
 func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -276,9 +272,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		bondAmt := sdk.NewCoin(denom, amount)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(sdk.Coins{bondAmt})
@@ -311,7 +305,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 }
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
-// nolint: funlen
+// nolint: funlen,interfacer
 func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -366,9 +360,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
@@ -395,7 +387,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 }
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
-// nolint: funlen
+// nolint: funlen,interfacer
 func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -406,8 +398,8 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
-		srcAddr := srcVal.GetOperator()
 
+		srcAddr := srcVal.GetOperator()
 		delegations := k.GetValidatorDelegations(ctx, srcAddr)
 
 		// get random delegator from src validator
@@ -464,15 +456,14 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 				break
 			}
 		}
+
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
 		if simAccount.PrivKey == nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
-		balances := bk.GetAllBalances(ctx, account.GetAddress())
-		locked := bk.LockedCoins(ctx, account.GetAddress())
-		spendable := balances.Sub(locked)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {

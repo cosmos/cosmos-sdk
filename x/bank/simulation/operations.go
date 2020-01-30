@@ -22,8 +22,9 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	bk keeper.Keeper) simulation.WeightedOperations {
+func WeightedOperations(
+	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+) simulation.WeightedOperations {
 
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
@@ -84,20 +85,22 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 }
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
+// nolint: interfacer
 func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
-	account := ak.GetAccount(ctx, msg.FromAddress)
-
 	var (
 		fees sdk.Coins
 		err  error
 	)
-	cacheCtx, _ := ctx.CacheContext()
-	coins, err := bk.SubtractCoins(cacheCtx, msg.FromAddress, msg.Amount)
-	if err == nil {
+
+	account := ak.GetAccount(ctx, msg.FromAddress)
+	spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+	coins, hasNeg := spendable.SafeSub(msg.Amount)
+	if !hasNeg {
 		fees, err = simulation.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
@@ -218,6 +221,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
+// nolint: interfacer
 func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
@@ -232,16 +236,17 @@ func sendMsgMultiSend(
 		sequenceNumbers[i] = acc.GetSequence()
 	}
 
-	// feePayer is the first signer, i.e. first input address
-	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
-
 	var (
 		fees sdk.Coins
 		err  error
 	)
-	cacheCtx, _ := ctx.CacheContext()
-	coins, err := bk.SubtractCoins(cacheCtx, feePayer.GetAddress(), msg.Inputs[0].Coins)
-	if err == nil {
+
+	// feePayer is the first signer, i.e. first input address
+	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
+	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
+
+	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
+	if !hasNeg {
 		fees, err = simulation.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
@@ -268,6 +273,7 @@ func sendMsgMultiSend(
 
 // randomSendFields returns the sender and recipient simulation accounts as well
 // as the transferred amount.
+// nolint: interfacer
 func randomSendFields(
 	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, bk keeper.Keeper, ak types.AccountKeeper,
 ) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
@@ -285,11 +291,9 @@ func randomSendFields(
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 
-	balances := bk.GetAllBalances(ctx, acc.GetAddress())
-	locked := bk.LockedCoins(ctx, acc.GetAddress())
-	balances = balances.Sub(locked)
+	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
-	sendCoins := simulation.RandSubsetCoins(r, balances)
+	sendCoins := simulation.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}

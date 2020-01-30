@@ -3,10 +3,8 @@ package simulation
 // DONTCOVER
 
 import (
-	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
@@ -47,6 +45,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	bankGenesis := types.NewGenesisState(sendEnabled, RandomGenesisBalances(simState))
 
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, bankGenesis))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
 }

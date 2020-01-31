@@ -375,7 +375,7 @@ func nextVersion(iavl *Store) {
 
 func TestIAVLDefaultPruning(t *testing.T) {
 	//Expected stored / deleted version numbers for:
-	//numRecent = 5, storeEvery = 3, snapshotEvery = 6
+	//numRecent = 5, storeEvery = 3, snapshotEvery = 5
 	var states = []pruneState{
 		{[]int64{}, []int64{}},
 		{[]int64{1}, []int64{}},

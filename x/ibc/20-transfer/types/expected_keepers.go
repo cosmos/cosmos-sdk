@@ -20,6 +20,7 @@ type ChannelKeeper interface {
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
 	SendPacket(ctx sdk.Context, packet channelexported.PacketI) error
 	PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error
+	ChanCloseInit(ctx sdk.Context, portID, channelID string) error
 }
 
 // ClientKeeper defines the expected IBC client keeper

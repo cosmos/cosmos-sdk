@@ -70,8 +70,9 @@ func (k Keeper) ReceiveTransfer(
 		}
 
 		// mint new tokens if the source of the transfer is the same chain
-		err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
-		if err != nil {
+		if err := k.supplyKeeper.MintCoins(
+			ctx, types.GetModuleAccountName(), data.Amount,
+		); err != nil {
 			return err
 		}
 
@@ -125,8 +126,9 @@ func (k Keeper) TimeoutTransfer(
 	}
 
 	// mint from supply
-	err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
-	if err != nil {
+	if err := k.supplyKeeper.MintCoins(
+		ctx, types.GetModuleAccountName(), data.Amount,
+	); err != nil {
 		return err
 	}
 
@@ -164,8 +166,9 @@ func (k Keeper) createOutgoingPacket(
 		}
 
 		// escrow source tokens (assumed to fail if balance insufficient)
-		err := k.bankKeeper.SendCoins(ctx, sender, escrowAddress, coins)
-		if err != nil {
+		if err := k.bankKeeper.SendCoins(
+			ctx, sender, escrowAddress, coins,
+		); err != nil {
 			return err
 		}
 
@@ -183,14 +186,16 @@ func (k Keeper) createOutgoingPacket(
 		}
 
 		// transfer the coins to the module account and burn them
-		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.GetModuleAccountName(), amount)
-		if err != nil {
+		if err := k.supplyKeeper.SendCoinsFromAccountToModule(
+			ctx, sender, types.GetModuleAccountName(), amount,
+		); err != nil {
 			return err
 		}
 
 		// burn from supply
-		err = k.supplyKeeper.BurnCoins(ctx, types.GetModuleAccountName(), amount)
-		if err != nil {
+		if err := k.supplyKeeper.BurnCoins(
+			ctx, types.GetModuleAccountName(), amount,
+		); err != nil {
 			return err
 		}
 	}

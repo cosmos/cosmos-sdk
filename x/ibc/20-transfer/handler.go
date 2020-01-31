@@ -20,25 +20,26 @@ func NewHandler(k Keeper) sdk.Handler {
 			case PacketDataTransfer: // i.e fulfills the Data interface
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", msg)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", msg)
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.Data.(type) {
 			case PacketDataTransfer:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", data)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 message type: %T", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer message type: %T", msg)
 		}
 	}
 }
 
 // See createOutgoingPacket in spec:https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
-	err := k.SendTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source)
-	if err != nil {
+	if err := k.SendTransfer(
+		ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source,
+	); err != nil {
 		return nil, err
 	}
 
@@ -57,19 +58,26 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 }
 
 // See onRecvPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer) (*sdk.Result, error) {
+func handlePacketDataTransfer(
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer,
+) (*sdk.Result, error) {
 	packet := msg.Packet
-	err := k.ReceiveTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
-	if err != nil {
-		panic(err)
-		// TODO: Source chain sent invalid packet, shutdown channel
+	if err := k.ReceiveTransfer(
+		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,
+	); err != nil {
+		// TODO: handle packet receipt that due to an error (specify)
+		// the receiving chain couldn't process the transfer
+
+		// source chain sent invalid packet, shutdown our channel end
+		if err := k.ChanCloseInit(ctx, packet.DestinationPort, packet.DestinationChannel); err != nil {
+			return nil, err
+		}
+		return nil, err
 	}
 
 	acknowledgement := types.AckDataTransfer{}
-	err = k.PacketExecuted(ctx, packet, acknowledgement)
-	if err != nil {
-		panic(err)
-		// TODO: This should not happen
+	if err := k.PacketExecuted(ctx, packet, acknowledgement); err != nil {
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -89,11 +97,12 @@ func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPac
 // See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) (*sdk.Result, error) {
 	packet := msg.Packet
-	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
-	if err != nil {
-		// This chain sent invalid packet
-		panic(err)
+	if err := k.TimeoutTransfer(
+		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,
+	); err != nil {
+		return nil, err
 	}
+
 	// packet timeout should not fail
 	return &sdk.Result{
 		Events: ctx.EventManager().Events(),

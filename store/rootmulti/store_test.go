@@ -316,8 +316,11 @@ func TestMultiStoreRestart(t *testing.T) {
 		store3 := multi.getStoreByName("store3").(types.KVStore)
 		store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, i)))
 
-		cid := multi.Commit()
-		require.Equal(t, initCid, cid)
+		multi.Commit()
+
+		cinfo, err := getCommitInfo(multi.db, int64(i))
+		require.NotNil(t, err)
+		require.Equal(t, commitInfo{}, cinfo)
 	}
 
 	// Set and commit data in one store.
@@ -328,22 +331,28 @@ func TestMultiStoreRestart(t *testing.T) {
 	store2 := multi.getStoreByName("store2").(types.KVStore)
 	store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, 3)))
 
-	flushedCid := multi.Commit()
-	require.NotEqual(t, initCid, flushedCid, "CID is different after flush to disk")
+	multi.Commit()
+
+	flushedCinfo, err := getCommitInfo(multi.db, 3)
+	require.Nil(t, err)
+	require.NotEqual(t, initCid, flushedCinfo, "CID is different after flush to disk")
 
 	// ... and another.
 	store3 := multi.getStoreByName("store3").(types.KVStore)
 	store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, 3)))
 
-	postFlushCid := multi.Commit()
-	require.Equal(t, flushedCid, postFlushCid, "Commit changed after in-memory commit")
+	multi.Commit()
+
+	postFlushCinfo, err := getCommitInfo(multi.db, 4)
+	require.NotNil(t, err)
+	require.Equal(t, commitInfo{}, postFlushCinfo, "Commit changed after in-memory commit")
 
 	multi = newMultiStoreWithMounts(db, pruning)
 	err = multi.LoadLatestVersion()
 	require.Nil(t, err)
 
 	reloadedCid := multi.LastCommitID()
-	require.Equal(t, flushedCid, reloadedCid, "Reloaded CID is not the same as last flushed CID")
+	require.Equal(t, flushedCinfo.CommitID(), reloadedCid, "Reloaded CID is not the same as last flushed CID")
 
 	// Check that store1 and store2 retained date from 3rd commit
 	store1 = multi.getStoreByName("store1").(types.KVStore)

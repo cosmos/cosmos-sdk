@@ -114,8 +114,6 @@ func (st *Store) Commit() types.CommitID {
 		// TODO: Do we want to extend Commit to allow returning errors?
 		panic(err)
 	}
-	fmt.Printf("Hash: %x\n", hash)
-	fmt.Println("Leaves:", st.tree.(*iavl.MutableTree).Size())
 
 	flushed := st.pruning.FlushVersion(version)
 	if flushed {

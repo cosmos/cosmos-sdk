@@ -13,7 +13,7 @@ import (
 )
 
 func TestHistoricalInfo(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10)
 	validators := make([]types.Validator, len(addrVals))
 
 	for i, valAddr := range addrVals {
@@ -37,7 +37,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	ctx, _, k, _ := CreateTestInput(t, false, 10)
+	ctx, _, _, k, _ := CreateTestInput(t, false, 10)
 
 	// set historical entries in params to 5
 	params := types.DefaultParams()

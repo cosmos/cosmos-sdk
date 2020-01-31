@@ -26,7 +26,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	k keeper.Keeper, sk stakingkeeper.Keeper,
+	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
 ) simulation.WeightedOperations {
 
 	var weightMsgSetWithdrawAddress int
@@ -60,26 +60,26 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
-			SimulateMsgSetWithdrawAddress(ak, k),
+			SimulateMsgSetWithdrawAddress(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawDelegationReward,
-			SimulateMsgWithdrawDelegatorReward(ak, k, sk),
+			SimulateMsgWithdrawDelegatorReward(ak, bk, k, sk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawValidatorCommission,
-			SimulateMsgWithdrawValidatorCommission(ak, k, sk),
+			SimulateMsgWithdrawValidatorCommission(ak, bk, k, sk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
-			SimulateMsgFundCommunityPool(ak, k, sk),
+			SimulateMsgFundCommunityPool(ak, bk, k, sk),
 		),
 	}
 }
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 // nolint: funlen
-func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -89,9 +89,11 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		simToAccount, _ := simulation.RandomAcc(r, accs)
-		account := ak.GetAccount(ctx, simAccount.Address)
 
-		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -119,7 +121,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 // nolint: funlen
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -137,7 +139,9 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -165,7 +169,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
 // nolint: funlen
-func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -186,7 +190,9 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -214,7 +220,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -222,9 +228,9 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, k keeper.Keeper, sk st
 		funder, _ := simulation.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, funder.Address)
-		coins := account.SpendableCoins(ctx.BlockTime())
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fundAmount := simulation.RandSubsetCoins(r, coins)
+		fundAmount := simulation.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -234,7 +240,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, k keeper.Keeper, sk st
 			err  error
 		)
 
-		coins, hasNeg := coins.SafeSub(fundAmount)
+		coins, hasNeg := spendable.SafeSub(fundAmount)
 		if !hasNeg {
 			fees, err = simulation.RandomFees(r, ctx, coins)
 			if err != nil {

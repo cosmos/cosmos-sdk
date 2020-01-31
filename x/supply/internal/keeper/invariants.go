@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
@@ -26,8 +25,8 @@ func TotalSupply(k Keeper) sdk.Invariant {
 		var expectedTotal sdk.Coins
 		supply := k.GetSupply(ctx)
 
-		k.ak.IterateAccounts(ctx, func(acc exported.Account) bool {
-			expectedTotal = expectedTotal.Add(acc.GetCoins()...)
+		k.bk.IterateAllBalances(ctx, func(_ sdk.AccAddress, balance sdk.Coin) bool {
+			expectedTotal = expectedTotal.Add(balance)
 			return false
 		})
 

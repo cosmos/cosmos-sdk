@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 )
@@ -69,7 +70,7 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
-		prove := rest.ParseQueryProve(r)
+		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -109,7 +110,7 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		prove := rest.ParseQueryProve(r)
+		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {

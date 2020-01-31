@@ -1,8 +1,6 @@
 package exported
 
 import (
-	"time"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,13 +25,6 @@ type Account interface {
 	GetSequence() uint64
 	SetSequence(uint64) error
 
-	GetCoins() sdk.Coins
-	SetCoins(sdk.Coins) error
-
-	// Calculates the amount of coins that can be sent to other accounts given
-	// the current time.
-	SpendableCoins(blockTime time.Time) sdk.Coins
-
 	// Ensure that account implements stringer
 	String() string
 }
@@ -56,5 +47,6 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 // GenesisAccount defines a genesis account that embeds an Account with validation capabilities.
 type GenesisAccount interface {
 	Account
+
 	Validate() error
 }

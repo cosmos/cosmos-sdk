@@ -21,9 +21,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func useUpgradeLoader(upgrades *store.StoreUpgrades) func(*baseapp.BaseApp) {
+func useUpgradeLoader(height int64, upgrades *store.StoreUpgrades) func(*baseapp.BaseApp) {
 	return func(app *baseapp.BaseApp) {
-		app.SetStoreLoader(UpgradeStoreLoader(upgrades))
+		app.SetStoreLoader(UpgradeStoreLoader(height, upgrades))
 	}
 }
 
@@ -75,7 +75,7 @@ func TestSetLoader(t *testing.T) {
 
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
 	upgradeInfo := &store.UpgradeInfo{
-		Name: "test", Height: 0,
+		Name: "test", Height: 10,
 	}
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
@@ -96,7 +96,7 @@ func TestSetLoader(t *testing.T) {
 			loadStoreKey: "foo",
 		},
 		"rename with inline opts": {
-			setLoader: useUpgradeLoader(&store.StoreUpgrades{
+			setLoader: useUpgradeLoader(10, &store.StoreUpgrades{
 				Renamed: []store.StoreRename{{
 					OldKey: "foo",
 					NewKey: "bar",

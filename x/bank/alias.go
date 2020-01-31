@@ -52,22 +52,22 @@ var (
 	BalancesPrefix              = types.BalancesPrefix
 	AddressFromBalancesStore    = types.AddressFromBalancesStore
 	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
-	GenesisBalancesIterator     = types.GenesisBalancesIterator
 )
 
 type (
-	Keeper                 = keeper.Keeper
-	BaseKeeper             = keeper.BaseKeeper
-	SendKeeper             = keeper.SendKeeper
-	BaseSendKeeper         = keeper.BaseSendKeeper
-	ViewKeeper             = keeper.ViewKeeper
-	BaseViewKeeper         = keeper.BaseViewKeeper
-	GenesisState           = types.GenesisState
-	Balance                = types.Balance
-	MsgSend                = types.MsgSend
-	MsgMultiSend           = types.MsgMultiSend
-	Input                  = types.Input
-	Output                 = types.Output
-	QueryBalanceParams     = types.QueryBalanceParams
-	QueryAllBalancesParams = types.QueryAllBalancesParams
+	Keeper                  = keeper.Keeper
+	BaseKeeper              = keeper.BaseKeeper
+	SendKeeper              = keeper.SendKeeper
+	BaseSendKeeper          = keeper.BaseSendKeeper
+	ViewKeeper              = keeper.ViewKeeper
+	BaseViewKeeper          = keeper.BaseViewKeeper
+	GenesisState            = types.GenesisState
+	Balance                 = types.Balance
+	MsgSend                 = types.MsgSend
+	MsgMultiSend            = types.MsgMultiSend
+	Input                   = types.Input
+	Output                  = types.Output
+	QueryBalanceParams      = types.QueryBalanceParams
+	QueryAllBalancesParams  = types.QueryAllBalancesParams
+	GenesisBalancesIterator = types.GenesisBalancesIterator
 )

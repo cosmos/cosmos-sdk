@@ -31,10 +31,8 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree       Tree
-	pruning    types.PruningOptions
-	version    int64
-	lastCommit types.CommitID
+	tree    Tree
+	pruning types.PruningOptions
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally it will load the
@@ -64,16 +62,9 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 		return nil, err
 	}
 
-	lastCommit := types.CommitID{
-		Version: tree.Version(),
-		Hash:    tree.Hash(),
-	}
-
 	store := Store{
-		tree:       tree,
-		pruning:    pruning,
-		version:    tree.Version(),
-		lastCommit: lastCommit,
+		tree:    tree,
+		pruning: pruning,
 	}
 
 	return &store, nil
@@ -86,16 +77,9 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 // CONTRACT: PruningOptions passed in as argument must be the same as pruning options
 // passed into iavl.MutableTree
 func UnsafeNewStore(tree *iavl.MutableTree, po types.PruningOptions) *Store {
-	commit := types.CommitID{
-		Version: tree.Version(),
-		Hash:    tree.Hash(),
-	}
-
 	return &Store{
-		tree:       tree,
-		pruning:    po,
-		version:    tree.Version(),
-		lastCommit: commit,
+		tree:    tree,
+		pruning: po,
 	}
 }
 
@@ -114,16 +98,9 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 		return nil, err
 	}
 
-	commit := types.CommitID{
-		Version: version,
-		Hash:    iTree.Hash(),
-	}
-
 	store := &Store{
-		tree:       &immutableTree{iTree},
-		pruning:    st.pruning,
-		version:    version,
-		lastCommit: commit,
+		tree:    &immutableTree{iTree},
+		pruning: st.pruning,
 	}
 
 	return store, nil
@@ -137,42 +114,35 @@ func (st *Store) Commit() types.CommitID {
 		// TODO: Do we want to extend Commit to allow returning errors?
 		panic(err)
 	}
+	fmt.Printf("Hash: %x\n", hash)
+	fmt.Println("Leaves:", st.tree.(*iavl.MutableTree).Size())
 
-	st.version = version
 	flushed := st.pruning.FlushVersion(version)
-
-	// If this is not a flushed version, return saved lastCommit
-	if !flushed {
-		return st.lastCommit
-	}
-
-	// If the version we saved got flushed to disk, check if previous flushed version should be deleted
-	previous := version - st.pruning.KeepEvery()
-	// Previous flushed version should only by deleted if previous version is not snapshot version
-	// OR if snapshotting is disabled (SnapshotEvery == 0)
-	if previous != 0 && !st.pruning.SnapshotVersion(previous) {
-		err := st.tree.DeleteVersion(previous)
-		if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
-			panic(err)
+	if flushed {
+		// If the version we saved got flushed to disk, check if previous flushed version should be deleted
+		previous := version - st.pruning.KeepEvery()
+		// Previous flushed version should only by deleted if previous version is not snapshot version
+		// OR if snapshotting is disabled (SnapshotEvery == 0)
+		if previous != 0 && !st.pruning.SnapshotVersion(previous) {
+			err := st.tree.DeleteVersion(previous)
+			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
+				panic(err)
+			}
 		}
 	}
 
-	st.lastCommit = types.CommitID{
+	return types.CommitID{
 		Version: version,
 		Hash:    hash,
 	}
-
-	return st.lastCommit
-}
-
-// Implements Committer
-func (st *Store) Version() int64 {
-	return st.version
 }
 
 // Implements Committer.
 func (st *Store) LastCommitID() types.CommitID {
-	return st.lastCommit
+	return types.CommitID{
+		Version: st.tree.Version(),
+		Hash:    st.tree.Hash(),
+	}
 }
 
 // SetPruning panics as pruning options should be provided at initialization

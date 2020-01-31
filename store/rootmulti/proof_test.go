@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -63,9 +64,11 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
 	require.NoError(t, store.LoadVersion(0))
 
+	fmt.Println("hello")
 	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit()
+	fmt.Printf("CID: %v\n", cid)
 
 	// Get Proof
 	res := store.Query(abci.RequestQuery{
@@ -74,6 +77,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 		Prove: true,
 	})
 	require.NotNil(t, res.Proof)
+	fmt.Println("bye")
 
 	// Verify proof.
 	prt := DefaultProofRuntime()

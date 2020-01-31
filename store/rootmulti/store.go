@@ -29,7 +29,6 @@ const (
 // the CommitMultiStore interface.
 type Store struct {
 	db           dbm.DB
-	version      int64
 	lastCommitID types.CommitID
 	pruningOpts  types.PruningOptions
 	storesParams map[types.StoreKey]storeParams
@@ -199,7 +198,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	rs.lastCommitID = lastCommitID
-	rs.version = lastCommitID.Version
 	rs.stores = newStores
 
 	return nil
@@ -281,10 +279,6 @@ func (rs *Store) TracingEnabled() bool {
 //----------------------------------------
 // +CommitStore
 
-func (rs *Store) Version() int64 {
-	return rs.version
-}
-
 // Implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitID
@@ -294,23 +288,22 @@ func (rs *Store) LastCommitID() types.CommitID {
 func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
-	rs.version = rs.version + 1
-	commitInfo := commitStores(rs.version, rs.stores)
+	version := rs.lastCommitID.Version
+	commitInfo := commitStores(version, rs.stores)
 
-	// update lastCommit only if this version was flushed to disk
-	if !rs.pruningOpts.FlushVersion(rs.version) {
-		return rs.lastCommitID
+	// write CommitInfo to disk only if this version was flushed to disk
+	if rs.pruningOpts.FlushVersion(version) {
+		// Need to update atomically.
+		batch := rs.db.NewBatch()
+		defer batch.Close()
+		setCommitInfo(batch, version, commitInfo)
+		setLatestVersion(batch, version)
+		batch.Write()
 	}
-	// Need to update atomically.
-	batch := rs.db.NewBatch()
-	defer batch.Close()
-	setCommitInfo(batch, rs.version, commitInfo)
-	setLatestVersion(batch, rs.version)
-	batch.Write()
 
 	// Prepare for next version.
 	commitID := types.CommitID{
-		Version: rs.version,
+		Version: version,
 		Hash:    commitInfo.Hash(),
 	}
 	rs.lastCommitID = commitID
@@ -452,6 +445,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
+	fmt.Printf("commitInfo: %v\n", commitInfo)
 	if errMsg != nil {
 		return sdkerrors.QueryResult(err)
 	}

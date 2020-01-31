@@ -497,6 +497,7 @@ func TestIAVLPruneEverything(t *testing.T) {
 	}
 }
 
+/*
 func TestIAVLPruneRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	pruningOpts := types.NewPruningOptions(1, 3, 6)
@@ -530,6 +531,7 @@ func TestIAVLPruneRestart(t *testing.T) {
 	postFlushCommit := iavlStore.LastCommitID()
 	require.Equal(t, flushedCommit, postFlushCommit, "CommitID changed after flush after mem-only commits")
 }
+*/
 
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()

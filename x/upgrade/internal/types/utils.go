@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-func EnsureConfigExists(upgradeInfoFileDir string) (string, error) {
+func EnsureUpgradeInfoFileExists(upgradeInfoFileDir string) (string, error) {
 	if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
 		err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
 		if err != nil {
@@ -13,5 +13,6 @@ func EnsureConfigExists(upgradeInfoFileDir string) (string, error) {
 		}
 		return filepath.Join(upgradeInfoFileDir, "upgrade-info.json"), nil
 	}
+
 	return filepath.Join(upgradeInfoFileDir, "upgrade-info.json"), nil
 }

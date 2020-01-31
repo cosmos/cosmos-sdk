@@ -23,7 +23,7 @@ import (
 
 func useUpgradeLoader(upgrades *store.StoreUpgrades) func(*baseapp.BaseApp) {
 	return func(app *baseapp.BaseApp) {
-		app.SetStoreLoader(StoreLoaderWithUpgrade(upgrades))
+		app.SetStoreLoader(UpgradeStoreLoader(upgrades))
 	}
 }
 

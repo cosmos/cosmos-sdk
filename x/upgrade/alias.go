@@ -29,7 +29,7 @@ var (
 	NewQueryAppliedParams            = types.NewQueryAppliedParams
 	NewKeeper                        = keeper.NewKeeper
 	NewQuerier                       = keeper.NewQuerier
-	StoreLoaderWithUpgrade           = types.StoreLoaderWithUpgrade
+	UpgradeStoreLoader               = types.UpgradeStoreLoader
 )
 
 type (

@@ -8,14 +8,15 @@ The staking module emits the following events:
 
 ## EndBlocker
 
-| Type                  | Attribute Key         | Attribute Value        |
-| --------------------- | --------------------- | ---------------------- |
-| complete_unbonding    | amount                | {totalUnbondingAmount} |
-| complete_unbonding    | validator             | {validatorAddress}     |
-| complete_unbonding    | delegator             | {delegatorAddress}     |
-| complete_redelegation | source_validator      | {srcValidatorAddress}  |
-| complete_redelegation | destination_validator | {dstValidatorAddress}  |
-| complete_redelegation | delegator             | {delegatorAddress}     |
+| Type                  | Attribute Key         | Attribute Value           |
+| --------------------- | --------------------- | ------------------------- |
+| complete_unbonding    | amount                | {totalUnbondingAmount}    |
+| complete_unbonding    | validator             | {validatorAddress}        |
+| complete_unbonding    | delegator             | {delegatorAddress}        |
+| complete_redelegation | amount                | {totalRedelegationAmount} |
+| complete_redelegation | source_validator      | {srcValidatorAddress}     |
+| complete_redelegation | destination_validator | {dstValidatorAddress}     |
+| complete_redelegation | delegator             | {delegatorAddress}        |
 
 ## Handlers
 

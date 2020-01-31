@@ -766,17 +766,19 @@ func (k Keeper) BeginRedelegation(
 	return completionTime, nil
 }
 
-// CompleteRedelegation completes the unbonding of all mature entries in the
-// retrieved unbonding delegation object.
-func (k Keeper) CompleteRedelegation(
+// CompleteRedelegation completes the redelegations of all mature entries in the
+// retrieved redelegation object and returns the total redelegation (initial)
+// balance or an error upon failure.
+func (k Keeper) CompleteRedelegationWithAmount(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
-) error {
+) (sdk.Coins, error) {
 
 	red, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
 	if !found {
-		return types.ErrNoRedelegation
+		return nil, types.ErrNoRedelegation
 	}
 
+	balances := sdk.NewCoins()
 	ctxTime := ctx.BlockHeader().Time
 
 	// loop through all the entries and complete mature redelegation entries
@@ -785,6 +787,11 @@ func (k Keeper) CompleteRedelegation(
 		if entry.IsMature(ctxTime) {
 			red.RemoveEntry(int64(i))
 			i--
+
+			if !entry.InitialBalance.IsZero() {
+				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.InitialBalance))
+				balances = balances.Add(amt...)
+			}
 		}
 	}
 
@@ -795,7 +802,17 @@ func (k Keeper) CompleteRedelegation(
 		k.SetRedelegation(ctx, red)
 	}
 
-	return nil
+	return balances, nil
+}
+
+// CompleteRedelegation performs the same logic as CompleteRedelegationWithAmount
+// except it does not return the
+func (k Keeper) CompleteRedelegation(
+	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
+) error {
+
+	_, err := k.CompleteRedelegationWithAmount(ctx, delAddr, valSrcAddr, valDstAddr)
+	return err
 }
 
 // ValidateUnbondAmount validates that a given unbond or redelegation amount is

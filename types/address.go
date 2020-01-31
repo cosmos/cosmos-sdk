@@ -557,6 +557,30 @@ func (ca ConsAddress) String() string {
 	return bech32Addr
 }
 
+// Bech32ifyAddressBytes returns a bech32 representation of address bytes.
+// Returns an empty sting if the byte slice is 0-length. Returns an error if the bech32 conversion
+// fails or the prefix is empty.
+func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
+	if len(bs) == 0 {
+		return "", nil
+	}
+	if len(prefix) == 0 {
+		return "", errors.New("prefix cannot be empty")
+	}
+	return bech32.ConvertAndEncode(prefix, bs)
+}
+
+// MustBech32ifyAddressBytes returns a bech32 representation of address bytes.
+// Returns an empty sting if the byte slice is 0-length. It panics if the bech32 conversion
+// fails or the prefix is empty.
+func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
+	s, err := Bech32ifyAddressBytes(prefix, bs)
+	if err != nil {
+		panic(err)
+	}
+	return s
+}
+
 // Format implements the fmt.Formatter interface.
 // nolint: errcheck
 func (ca ConsAddress) Format(s fmt.State, verb rune) {

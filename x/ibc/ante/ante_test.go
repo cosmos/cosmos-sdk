@@ -75,7 +75,7 @@ func (suite *HandlerTestSuite) createClient() {
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
 	suite.NoError(err)
 }
 
@@ -92,7 +92,7 @@ func (suite *HandlerTestSuite) updateClient() {
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(height-1), state)
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClient)
 	cs, _ := csi.(tendermint.ClientState)
 	cs.LatestHeight = uint64(height - 1)

@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -271,7 +273,10 @@ func validateVerificationArgs(
 	consensusState clientexported.ConsensusState,
 ) error {
 	if cs.LatestHeight < height {
-		return ibctypes.ErrInvalidHeight
+		return sdkerrors.Wrap(
+			ibctypes.ErrInvalidHeight,
+			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.LatestHeight, height),
+		)
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {

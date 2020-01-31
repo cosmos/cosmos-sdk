@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) updateClient() {
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, 1, state)
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, 1, state)
 }
 
 func (suite *KeeperTestSuite) createConnection(state connectionexported.State) {
@@ -109,14 +109,14 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // sender has insufficient coins
 
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testCoins)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testCoins)
 	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.NoError(err) // successfully executed
 
-	senderCoins := suite.app.BankKeeper.GetCoins(suite.ctx, testAddr1)
+	senderCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, testAddr1)
 	suite.Equal(sdk.Coins(nil), senderCoins)
 
-	escrowCoins := suite.app.BankKeeper.GetCoins(suite.ctx, types.GetEscrowAddress(testPort1, testChannel1))
+	escrowCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, types.GetEscrowAddress(testPort1, testChannel1))
 	suite.Equal(testCoins, escrowCoins)
 
 	newNextSeqSend, found := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceSend(suite.ctx, testPort1, testChannel1)
@@ -129,16 +129,16 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	// test the situation where the source is false
 	isSourceChain = false
 
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins2)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins2)
 	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // incorrect denom prefix
 
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins1)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins1)
 	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, isSourceChain)
 	suite.NoError(err) // successfully executed
 
-	senderCoins = suite.app.BankKeeper.GetCoins(suite.ctx, testAddr1)
+	senderCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, testAddr1)
 	suite.Equal(sdk.Coins(nil), senderCoins)
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
 	suite.Equal(testPrefixedCoins2, totalSupply.GetTotal()) // supply should be inflated
 
-	receiverCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
+	receiverCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, packetData.Receiver)
 	suite.Equal(testPrefixedCoins2, receiverCoins)
 
 	// test the situation where the source is false
@@ -176,14 +176,14 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, escrowAddress, testCoins)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, packetData.Receiver, sdk.Coins{})
 	err = suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
 	suite.NoError(err) // successfully executed
 
-	escrowCoins := suite.app.BankKeeper.GetCoins(suite.ctx, escrowAddress)
+	escrowCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, escrowAddress)
 	suite.Equal(sdk.Coins(nil), escrowCoins)
 
-	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
+	receiverCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, packetData.Receiver)
 	suite.Equal(testCoins, receiverCoins)
 }

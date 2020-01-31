@@ -104,56 +104,6 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	return ctx.WithVerifier(verifier)
 }
 
-// NewCLIContextIBC takes additional arguments
-func NewCLIContextIBC(input io.Reader, from string, chainID string, nodeURI string) CLIContext {
-	var rpc rpcclient.Client
-
-	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
-		os.Exit(1)
-	}
-
-	if !genOnly {
-		if nodeURI != "" {
-			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	ctx := CLIContext{
-		Client:        rpc,
-		ChainID:       chainID,
-		Output:        os.Stdout,
-		NodeURI:       nodeURI,
-		From:          from,
-		OutputFormat:  viper.GetString(cli.OutputFlag),
-		Height:        viper.GetInt64(flags.FlagHeight),
-		HomeDir:       viper.GetString(flags.FlagHome),
-		TrustNode:     viper.GetBool(flags.FlagTrustNode),
-		UseLedger:     viper.GetBool(flags.FlagUseLedger),
-		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
-		Simulate:      viper.GetBool(flags.FlagDryRun),
-		GenerateOnly:  genOnly,
-		FromAddress:   fromAddress,
-		FromName:      fromName,
-		Indent:        viper.GetBool(flags.FlagIndentResponse),
-		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
-	}
-
-	// create a verifier for the specific chain ID and RPC client
-	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && viper.IsSet(flags.FlagTrustNode) {
-		fmt.Printf("failed to create verifier: %s\n", err)
-		os.Exit(1)
-	}
-
-	return ctx.WithVerifier(verifier)
-}
-
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly. It will also create Tendermint verifier using

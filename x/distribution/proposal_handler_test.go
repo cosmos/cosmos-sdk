@@ -19,28 +19,24 @@ var (
 )
 
 func testProposal(recipient sdk.AccAddress, amount sdk.Coins) types.CommunityPoolSpendProposal {
-	return types.NewCommunityPoolSpendProposal(
-		"Test",
-		"description",
-		recipient,
-		amount,
-	)
+	return types.NewCommunityPoolSpendProposal("Test", "description", recipient, amount)
 }
 
 func TestProposalHandlerPassed(t *testing.T) {
-	ctx, accountKeeper, keeper, _, supplyKeeper := CreateTestInputDefault(t, false, 10)
+	ctx, ak, bk, keeper, _, supplyKeeper := CreateTestInputDefault(t, false, 10)
 	recipient := delAddr1
 
 	// add coins to the module account
 	macc := keeper.GetDistributionAccount(ctx)
-	err := macc.SetCoins(macc.GetCoins().Add(amount...))
+	balances := bk.GetAllBalances(ctx, macc.GetAddress())
+	err := bk.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
 	require.NoError(t, err)
 
 	supplyKeeper.SetModuleAccount(ctx, macc)
 
-	account := accountKeeper.NewAccountWithAddress(ctx, recipient)
-	require.True(t, account.GetCoins().IsZero())
-	accountKeeper.SetAccount(ctx, account)
+	account := ak.NewAccountWithAddress(ctx, recipient)
+	ak.SetAccount(ctx, account)
+	require.True(t, bk.GetAllBalances(ctx, account.GetAddress()).IsZero())
 
 	feePool := keeper.GetFeePool(ctx)
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
@@ -49,19 +45,23 @@ func TestProposalHandlerPassed(t *testing.T) {
 	tp := testProposal(recipient, amount)
 	hdlr := NewCommunityPoolSpendProposalHandler(keeper)
 	require.NoError(t, hdlr(ctx, tp))
-	require.Equal(t, accountKeeper.GetAccount(ctx, recipient).GetCoins(), amount)
+
+	balances = bk.GetAllBalances(ctx, recipient)
+	require.Equal(t, balances, amount)
 }
 
 func TestProposalHandlerFailed(t *testing.T) {
-	ctx, accountKeeper, keeper, _, _ := CreateTestInputDefault(t, false, 10)
+	ctx, ak, bk, keeper, _, _ := CreateTestInputDefault(t, false, 10)
 	recipient := delAddr1
 
-	account := accountKeeper.NewAccountWithAddress(ctx, recipient)
-	require.True(t, account.GetCoins().IsZero())
-	accountKeeper.SetAccount(ctx, account)
+	account := ak.NewAccountWithAddress(ctx, recipient)
+	ak.SetAccount(ctx, account)
+	require.True(t, bk.GetAllBalances(ctx, account.GetAddress()).IsZero())
 
 	tp := testProposal(recipient, amount)
 	hdlr := NewCommunityPoolSpendProposalHandler(keeper)
 	require.Error(t, hdlr(ctx, tp))
-	require.True(t, accountKeeper.GetAccount(ctx, recipient).GetCoins().IsZero())
+
+	balances := bk.GetAllBalances(ctx, recipient)
+	require.True(t, balances.IsZero())
 }

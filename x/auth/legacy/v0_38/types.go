@@ -46,7 +46,7 @@ type (
 
 	BaseAccount struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -54,7 +54,7 @@ type (
 
 	baseAccountPretty struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        string         `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -72,7 +72,7 @@ type (
 
 	vestingAccountPretty struct {
 		Address          sdk.AccAddress `json:"address" yaml:"address"`
-		Coins            sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins            sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey           string         `json:"public_key" yaml:"public_key"`
 		AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
 		Sequence         uint64         `json:"sequence" yaml:"sequence"`
@@ -104,7 +104,7 @@ type (
 
 	moduleAccountPretty struct {
 		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
 		PubKey        string         `json:"public_key" yaml:"public_key"`
 		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 		Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -486,7 +486,7 @@ func validatePermissions(permissions ...string) error {
 	return nil
 }
 
-func sanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
+func SanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
 	sort.Slice(genAccounts, func(i, j int) bool {
 		return genAccounts[i].GetAccountNumber() < genAccounts[j].GetAccountNumber()
 	})
@@ -500,7 +500,7 @@ func sanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
 	return genAccounts
 }
 
-func validateGenAccounts(genAccounts GenesisAccounts) error {
+func ValidateGenAccounts(genAccounts GenesisAccounts) error {
 	addrMap := make(map[string]bool, len(genAccounts))
 	for _, acc := range genAccounts {
 

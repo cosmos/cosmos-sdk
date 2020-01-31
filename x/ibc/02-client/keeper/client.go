@@ -88,7 +88,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.SetConsensusState(ctx, clientID, header.GetHeight(), consensusState)
+	k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -113,7 +113,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrap(types.ErrClientNotFound, misbehaviour.GetClientID())
 	}
 
-	consensusState, found := k.GetConsensusState(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
+	consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
 	if !found {
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}

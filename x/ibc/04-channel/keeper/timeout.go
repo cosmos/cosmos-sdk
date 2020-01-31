@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -81,13 +80,6 @@ func (k Keeper) TimeoutPacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return nil, clienttypes.ErrConsensusStateNotFound
-	}
-
 	var err error
 	switch channel.Ordering {
 	case exported.ORDERED:
@@ -95,13 +87,11 @@ func (k Keeper) TimeoutPacket(
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
-			consensusState,
 		)
 	case exported.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-			consensusState,
 		)
 	default:
 		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))
@@ -203,18 +193,11 @@ func (k Keeper) TimeoutOnClose(
 		exported.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(
-		ctx, connectionEnd.GetClientID(), proofHeight,
-	)
-	if !found {
-		return nil, clienttypes.ErrConsensusStateNotFound
-	}
-
 	// check that the opposing channel end has closed
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel, consensusState,
+		expectedChannel,
 	); err != nil {
 		return nil, err
 	}
@@ -226,13 +209,11 @@ func (k Keeper) TimeoutOnClose(
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proofClosed,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
-			consensusState,
 		)
 	case exported.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proofClosed,
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
-			consensusState,
 		)
 	default:
 		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))

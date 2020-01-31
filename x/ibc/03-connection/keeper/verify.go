@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -13,18 +13,18 @@ import (
 // specified client stored on the target machine.
 func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.cdc, height, connection.Counterparty.Prefix, proof, consensusState,
+		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 }
 
@@ -32,19 +32,27 @@ func (k Keeper) VerifyClientConsensusState(
 // specified connection end stored on the target machine.
 func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	connectionID string,
-	connection types.ConnectionEnd,
-	consensusState clientexported.ConsensusState,
+	connectionEnd exported.ConnectionI, // oposite connection
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
 	}
 
+	// TODO: move to specific clients; blocked by #5502
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
+		ctx, connectionEnd.GetClientID(), height,
+	)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
+	}
+
 	return clientState.VerifyConnectionState(
-		k.cdc, height, connection.Counterparty.Prefix, proof, connectionID, connection, consensusState,
+		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
 	)
 }
 
@@ -52,17 +60,24 @@ func (k Keeper) VerifyConnectionState(
 // channel end, under the specified port, stored on the target machine.
 func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
-	consensusState clientexported.ConsensusState,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
+	}
+
+	// TODO: move to specific clients; blocked by #5502
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
+		ctx, connection.GetClientID(), height,
+	)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	return clientState.VerifyChannelState(
@@ -75,18 +90,25 @@ func (k Keeper) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
-	consensusState clientexported.ConsensusState,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
+	}
+
+	// TODO: move to specific clients; blocked by #5502
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
+		ctx, connection.GetClientID(), height,
+	)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	return clientState.VerifyPacketCommitment(
@@ -99,18 +121,25 @@ func (k Keeper) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-	consensusState clientexported.ConsensusState,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
+	}
+
+	// TODO: move to specific clients; blocked by #5502
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
+		ctx, connection.GetClientID(), height,
+	)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
@@ -124,17 +153,24 @@ func (k Keeper) VerifyPacketAcknowledgement(
 // specified sequence.
 func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	sequence uint64,
-	consensusState clientexported.ConsensusState,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
+	}
+
+	// TODO: move to specific clients; blocked by #5502
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
+		ctx, connection.GetClientID(), height,
+	)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
@@ -147,17 +183,24 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
+	connection exported.ConnectionI,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-	consensusState clientexported.ConsensusState,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return clienttypes.ErrClientNotFound
+	}
+
+	// TODO: move to specific clients; blocked by #5502
+	consensusState, found := k.clientKeeper.GetClientConsensusState(
+		ctx, connection.GetClientID(), height,
+	)
+	if !found {
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	return clientState.VerifyNextSequenceRecv(

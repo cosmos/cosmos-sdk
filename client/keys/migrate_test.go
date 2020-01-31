@@ -13,7 +13,7 @@ import (
 )
 
 func Test_runMigrateCmd(t *testing.T) {
-	cmd := addKeyCommand()
+	cmd := AddKeyCommand()
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 

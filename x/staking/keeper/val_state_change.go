@@ -31,7 +31,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	// Remove all mature unbonding delegations from the ubd queue.
 	matureUnbonds := k.DequeueAllMatureUBDQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
-		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddress, dvPair.ValidatorAddress)
+		balances, err := k.CompleteUnbondingWithAmount(ctx, dvPair.DelegatorAddress, dvPair.ValidatorAddress)
 		if err != nil {
 			continue
 		}
@@ -39,6 +39,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeCompleteUnbonding,
+				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
 				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress.String()),
 				sdk.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress.String()),
 			),

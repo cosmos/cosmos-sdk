@@ -660,14 +660,16 @@ func (k Keeper) Undelegate(
 	return completionTime, nil
 }
 
-// CompleteUnbonding completes the unbonding of all mature entries in the
-// retrieved unbonding delegation object.
-func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+// CompleteUnbondingWithAmount completes the unbonding of all mature entries in
+// the retrieved unbonding delegation object and returns the total unbonding
+// balance or an error upon failure.
+func (k Keeper) CompleteUnbondingWithAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
-		return types.ErrNoUnbondingDelegation
+		return nil, types.ErrNoUnbondingDelegation
 	}
 
+	balances := sdk.NewCoins()
 	ctxTime := ctx.BlockHeader().Time
 
 	// loop through all the entries and complete unbonding mature entries
@@ -682,8 +684,10 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
 				err := k.supplyKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, ubd.DelegatorAddress, amt)
 				if err != nil {
-					return err
+					return nil, err
 				}
+
+				balances = balances.Add(amt...)
 			}
 		}
 	}
@@ -695,7 +699,14 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 		k.SetUnbondingDelegation(ctx, ubd)
 	}
 
-	return nil
+	return balances, nil
+}
+
+// CompleteUnbonding performs the same logic as CompleteUnbondingWithAmount except
+// it does not return the total unbonding amount.
+func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	_, err := k.CompleteUnbondingWithAmount(ctx, delAddr, valAddr)
+	return err
 }
 
 // begin unbonding / redelegation; create a redelegation record

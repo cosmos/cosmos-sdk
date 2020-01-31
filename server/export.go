@@ -44,7 +44,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 					return err
 				}
 
-				genesis, err := ioutil.ReadFile(config.BaseConfig.RootDir)
+				genesis, err := ioutil.ReadFile(config.GenesisFile())
 				if err != nil {
 					return err
 				}

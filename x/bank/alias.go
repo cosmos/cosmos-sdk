@@ -51,6 +51,7 @@ var (
 	ParamStoreKeySendEnabled    = types.ParamStoreKeySendEnabled
 	BalancesPrefix              = types.BalancesPrefix
 	AddressFromBalancesStore    = types.AddressFromBalancesStore
+	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
 )
 
 type (

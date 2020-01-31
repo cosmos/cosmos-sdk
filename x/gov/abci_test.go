@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -263,7 +262,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	macc := input.keeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	initialModuleAccCoins := macc.GetCoins()
+	initialModuleAccCoins := input.bk.GetAllBalances(ctx, macc.GetAddress())
 
 	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal)
 	require.NoError(t, err)
@@ -277,7 +276,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	macc = input.keeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	moduleAccCoins := macc.GetCoins()
+	moduleAccCoins := input.bk.GetAllBalances(ctx, macc.GetAddress())
 
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
@@ -293,7 +292,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	macc = input.keeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
+	require.True(t, input.bk.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {

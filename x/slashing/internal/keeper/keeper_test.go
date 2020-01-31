@@ -16,7 +16,7 @@ import (
 // and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
+	ctx, bk, sk, _, keeper := CreateTestInput(t, TestParams())
 	addr, val := Addrs[0], Pks[0]
 	amt := sdk.TokensFromConsensusPower(100)
 	sh := staking.NewHandler(sk)
@@ -32,7 +32,7 @@ func TestHandleNewValidator(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		t, bk.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
@@ -54,7 +54,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	bondPool := sk.GetBondedPool(ctx)
 	expTokens := sdk.TokensFromConsensusPower(100)
-	require.Equal(t, expTokens.Int64(), bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
+	require.Equal(t, expTokens.Int64(), bk.GetBalance(ctx, bondPool.GetAddress(), sk.BondDenom(ctx)).Amount.Int64())
 }
 
 // Test a jailed validator being "down" twice

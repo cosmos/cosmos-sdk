@@ -16,10 +16,6 @@ type commitDBStoreAdapter struct {
 	dbadapter.Store
 }
 
-func (cdsa commitDBStoreAdapter) Version() int64 {
-	return -1
-}
-
 func (cdsa commitDBStoreAdapter) Commit() types.CommitID {
 	return types.CommitID{
 		Version: -1,

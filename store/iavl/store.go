@@ -40,7 +40,7 @@ type Store struct {
 // fails to load.
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
 	if !pruning.IsValid() {
-		panic(fmt.Sprintf("PruningOptions are invalid: %#v", pruning))
+		return nil, fmt.Errorf("pruning options are invalid: %v", pruning)
 	}
 	tree, err := iavl.NewMutableTreeWithOpts(
 		db,

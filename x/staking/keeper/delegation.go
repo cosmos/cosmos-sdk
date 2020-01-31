@@ -769,7 +769,7 @@ func (k Keeper) BeginRedelegation(
 	return completionTime, nil
 }
 
-// CompleteRedelegation completes the redelegations of all mature entries in the
+// CompleteRedelegationWithAmount completes the redelegations of all mature entries in the
 // retrieved redelegation object and returns the total redelegation (initial)
 // balance or an error upon failure.
 func (k Keeper) CompleteRedelegationWithAmount(
@@ -809,7 +809,7 @@ func (k Keeper) CompleteRedelegationWithAmount(
 }
 
 // CompleteRedelegation performs the same logic as CompleteRedelegationWithAmount
-// except it does not return the
+// except it does not return the total redelegation amount.
 func (k Keeper) CompleteRedelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
 ) error {

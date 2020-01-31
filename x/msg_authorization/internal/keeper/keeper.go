@@ -83,7 +83,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 		msgResult, err = handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %d", msg.Type())
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", msg.Type())
 		}
 	}
 

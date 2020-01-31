@@ -49,7 +49,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
-	x := types.SendAuthorization{SpendLimit: newCoins}
+	x = types.SendAuthorization{SpendLimit: newCoins}
 	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
 	s.Require().NotNil(authorization)

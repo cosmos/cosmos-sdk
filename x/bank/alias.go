@@ -52,6 +52,7 @@ var (
 	BalancesPrefix              = types.BalancesPrefix
 	AddressFromBalancesStore    = types.AddressFromBalancesStore
 	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
+	GenesisBalancesIterator     = types.GenesisBalancesIterator
 )
 
 type (

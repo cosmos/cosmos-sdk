@@ -793,8 +793,7 @@ func (k Keeper) CompleteRedelegationWithAmount(
 			i--
 
 			if !entry.InitialBalance.IsZero() {
-				amt := sdk.NewCoin(bondDenom, entry.InitialBalance)
-				balances = balances.Add(amt)
+				balances = balances.Add(sdk.NewCoin(bondDenom, entry.InitialBalance))
 			}
 		}
 	}

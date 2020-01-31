@@ -669,6 +669,7 @@ func (k Keeper) CompleteUnbondingWithAmount(ctx sdk.Context, delAddr sdk.AccAddr
 		return nil, types.ErrNoUnbondingDelegation
 	}
 
+	bondDenom := k.GetParams(ctx).BondDenom
 	balances := sdk.NewCoins()
 	ctxTime := ctx.BlockHeader().Time
 
@@ -681,13 +682,15 @@ func (k Keeper) CompleteUnbondingWithAmount(ctx sdk.Context, delAddr sdk.AccAddr
 
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
-				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
-				err := k.supplyKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, ubd.DelegatorAddress, amt)
+				amt := sdk.NewCoin(bondDenom, entry.Balance)
+				err := k.supplyKeeper.UndelegateCoinsFromModuleToAccount(
+					ctx, types.NotBondedPoolName, ubd.DelegatorAddress, sdk.NewCoins(amt),
+				)
 				if err != nil {
 					return nil, err
 				}
 
-				balances = balances.Add(amt...)
+				balances = balances.Add(amt)
 			}
 		}
 	}
@@ -778,6 +781,7 @@ func (k Keeper) CompleteRedelegationWithAmount(
 		return nil, types.ErrNoRedelegation
 	}
 
+	bondDenom := k.GetParams(ctx).BondDenom
 	balances := sdk.NewCoins()
 	ctxTime := ctx.BlockHeader().Time
 
@@ -789,8 +793,8 @@ func (k Keeper) CompleteRedelegationWithAmount(
 			i--
 
 			if !entry.InitialBalance.IsZero() {
-				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.InitialBalance))
-				balances = balances.Add(amt...)
+				amt := sdk.NewCoin(bondDenom, entry.InitialBalance)
+				balances = balances.Add(amt)
 			}
 		}
 	}

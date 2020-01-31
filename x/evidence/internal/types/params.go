@@ -36,14 +36,9 @@ func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func (p Params) MarshalYAML() (interface{}, error) {
-	bz, err := yaml.Marshal(p)
-	return string(bz), err
-}
-
 func (p Params) String() string {
-	out, _ := p.MarshalYAML()
-	return out.(string)
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // ParamSetPairs returns the parameter set pairs.

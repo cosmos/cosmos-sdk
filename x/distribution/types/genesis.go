@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,11 +53,8 @@ type ValidatorSlashEventRecord struct {
 
 // GenesisState - all distribution state that must be provided at genesis
 type GenesisState struct {
+	Params                          Params                                 `json:"params" yaml:"params"`
 	FeePool                         FeePool                                `json:"fee_pool" yaml:"fee_pool"`
-	CommunityTax                    sdk.Dec                                `json:"community_tax" yaml:"community_tax"`
-	BaseProposerReward              sdk.Dec                                `json:"base_proposer_reward" yaml:"base_proposer_reward"`
-	BonusProposerReward             sdk.Dec                                `json:"bonus_proposer_reward" yaml:"bonus_proposer_reward"`
-	WithdrawAddrEnabled             bool                                   `json:"withdraw_addr_enabled" yaml:"withdraw_addr_enabled"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos" yaml:"delegator_withdraw_infos"`
 	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer" yaml:"previous_proposer"`
 	OutstandingRewards              []ValidatorOutstandingRewardsRecord    `json:"outstanding_rewards" yaml:"outstanding_rewards"`
@@ -70,18 +65,15 @@ type GenesisState struct {
 	ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events" yaml:"validator_slash_events"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
+func NewGenesisState(
+	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
-	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
-	slashes []ValidatorSlashEventRecord) GenesisState {
+	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
+) GenesisState {
 
 	return GenesisState{
-		FeePool:                         feePool,
-		CommunityTax:                    communityTax,
-		BaseProposerReward:              baseProposerReward,
-		BonusProposerReward:             bonusProposerReward,
-		WithdrawAddrEnabled:             withdrawAddrEnabled,
+		Params:                          params,
+		FeePool:                         fp,
 		DelegatorWithdrawInfos:          dwis,
 		PreviousProposer:                pp,
 		OutstandingRewards:              r,
@@ -97,10 +89,7 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		FeePool:                         InitialFeePool(),
-		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
-		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%
-		WithdrawAddrEnabled:             true,
+		Params:                          DefaultParams(),
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
 		OutstandingRewards:              []ValidatorOutstandingRewardsRecord{},
@@ -113,24 +102,9 @@ func DefaultGenesisState() GenesisState {
 }
 
 // ValidateGenesis validates the genesis state of distribution genesis input
-func ValidateGenesis(data GenesisState) error {
-	if data.CommunityTax.IsNegative() || data.CommunityTax.GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameter CommunityTax should non-negative and "+
-			"less than one, is %s", data.CommunityTax.String())
+func ValidateGenesis(gs GenesisState) error {
+	if err := gs.Params.ValidateBasic(); err != nil {
+		return err
 	}
-	if data.BaseProposerReward.IsNegative() {
-		return fmt.Errorf("mint parameter BaseProposerReward should be positive, is %s",
-			data.BaseProposerReward.String())
-	}
-	if data.BonusProposerReward.IsNegative() {
-		return fmt.Errorf("mint parameter BonusProposerReward should be positive, is %s",
-			data.BonusProposerReward.String())
-	}
-	if (data.BaseProposerReward.Add(data.BonusProposerReward)).
-		GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameters BaseProposerReward and "+
-			"BonusProposerReward cannot add to be greater than one, "+
-			"adds to %s", data.BaseProposerReward.Add(data.BonusProposerReward).String())
-	}
-	return data.FeePool.ValidateGenesis()
+	return gs.FeePool.ValidateGenesis()
 }

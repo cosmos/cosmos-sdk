@@ -2,6 +2,8 @@ package types
 
 import (
 	"sync"
+
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // DefaultKeyringServiceName defines a default service name for the keyring.
@@ -11,7 +13,6 @@ const DefaultKeyringServiceName = "cosmos"
 // This could be used to initialize certain configuration parameters for the SDK.
 type Config struct {
 	fullFundraiserPath  string
-	keyringServiceName  string
 	bech32AddressPrefix map[string]string
 	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
@@ -28,6 +29,7 @@ func GetConfig() *Config {
 	if sdkConfig != nil {
 		return sdkConfig
 	}
+
 	sdkConfig = &Config{
 		sealed: false,
 		bech32AddressPrefix: map[string]string{
@@ -41,7 +43,6 @@ func GetConfig() *Config {
 		coinType:           CoinType,
 		fullFundraiserPath: FullFundraiserPath,
 		txEncoder:          nil,
-		keyringServiceName: DefaultKeyringServiceName,
 	}
 	return sdkConfig
 }
@@ -104,12 +105,6 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
-// Set the keyringServiceName (BIP44Prefix) on the config
-func (config *Config) SetKeyringServiceName(keyringServiceName string) {
-	config.assertNotSealed()
-	config.keyringServiceName = keyringServiceName
-}
-
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -169,7 +164,9 @@ func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
 }
 
-// GetKeyringServiceName returns the keyring service name from the config.
-func (config *Config) GetKeyringServiceName() string {
-	return config.keyringServiceName
+func KeyringServiceName() string {
+	if len(version.Name) == 0 {
+		return DefaultKeyringServiceName
+	}
+	return version.Name
 }

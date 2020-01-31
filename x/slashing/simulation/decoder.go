@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +13,7 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding slashing type
-func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.ValidatorSigningInfoKey):
 		var infoA, infoB types.ValidatorSigningInfo

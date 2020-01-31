@@ -4,17 +4,16 @@ import (
 	"io"
 	"sync"
 
+	"github.com/tendermint/iavl"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/pkg/errors"
-	"github.com/tendermint/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (
@@ -31,27 +30,22 @@ var (
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree Tree
-
-	// How many old versions we hold onto.
-	// A value of 0 means keep no recent states.
-	numRecent int64
-
-	// This is the distance between state-sync waypoint states to be stored.
-	// See https://github.com/tendermint/tendermint/issues/828
-	// A value of 1 means store every state.
-	// A value of 0 means store no waypoints. (node cannot assist in state-sync)
-	// By default this value should be set the same across all nodes,
-	// so that nodes can know the waypoints their peers store.
-	storeEvery int64
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load.
 func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
-	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
+	tree, err := iavl.NewMutableTreeWithOpts(
+		db,
+		dbm.NewMemDB(),
+		defaultIAVLCacheSize,
+		iavl.PruningOptions(pruning.KeepEvery(), pruning.KeepRecent()),
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
 	if lazyLoading {
 		_, err = tree.LazyLoadVersion(id.Version)
 	} else {
@@ -62,21 +56,15 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 		return nil, err
 	}
 
-	iavl := UnsafeNewStore(tree, int64(0), int64(0))
-	iavl.SetPruning(pruning)
-
-	return iavl, nil
+	return &Store{tree: tree}, nil
 }
 
-// UnsafeNewStore returns a reference to a new IAVL Store.
+// UnsafeNewStore returns a reference to a new IAVL Store with a given mutable
+// IAVL tree reference.
 //
 // CONTRACT: The IAVL tree should be fully loaded.
-func UnsafeNewStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *Store {
-	return &Store{
-		tree:       tree,
-		numRecent:  numRecent,
-		storeEvery: storeEvery,
-	}
+func UnsafeNewStore(tree *iavl.MutableTree) *Store {
+	return &Store{tree: tree}
 }
 
 // GetImmutable returns a reference to a new store backed by an immutable IAVL
@@ -94,11 +82,7 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 		return nil, err
 	}
 
-	return &Store{
-		tree:       &immutableTree{iTree},
-		numRecent:  0,
-		storeEvery: 0,
-	}, nil
+	return &Store{tree: &immutableTree{iTree}}, nil
 }
 
 // Implements Committer.
@@ -108,18 +92,6 @@ func (st *Store) Commit() types.CommitID {
 	if err != nil {
 		// TODO: Do we want to extend Commit to allow returning errors?
 		panic(err)
-	}
-
-	// Release an old version of history, if not a sync waypoint.
-	previous := version - 1
-	if st.numRecent < previous {
-		toRelease := previous - st.numRecent
-		if st.storeEvery == 0 || toRelease%st.storeEvery != 0 {
-			err := st.tree.DeleteVersion(toRelease)
-			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
-				panic(err)
-			}
-		}
 	}
 
 	return types.CommitID{
@@ -136,10 +108,10 @@ func (st *Store) LastCommitID() types.CommitID {
 	}
 }
 
-// Implements Committer.
-func (st *Store) SetPruning(opt types.PruningOptions) {
-	st.numRecent = opt.KeepRecent()
-	st.storeEvery = opt.KeepEvery()
+// SetPruning panics as pruning options should be provided at initialization
+// since IAVl accepts pruning options directly.
+func (st *Store) SetPruning(_ types.PruningOptions) {
+	panic("cannot set pruning options on an initialized IAVL store")
 }
 
 // VersionExists returns whether or not a given version is stored.
@@ -250,7 +222,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 		res.Key = key
 		if !st.VersionExists(res.Height) {
-			res.Log = cmn.ErrorWrap(iavl.ErrVersionDoesNotExist, "").Error()
+			res.Log = iavl.ErrVersionDoesNotExist.Error()
 			break
 		}
 
@@ -269,11 +241,11 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			if value != nil {
 				// value was found
 				res.Value = value
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewValueOp(key, proof).ProofOp()}}
 			} else {
 				// value wasn't found
 				res.Value = nil
-				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLAbsenceOp(key, proof).ProofOp()}}
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewAbsenceOp(key, proof).ProofOp()}}
 			}
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)
@@ -314,7 +286,7 @@ type iavlIterator struct {
 	tree *iavl.ImmutableTree
 
 	// Channel to push iteration values.
-	iterCh chan cmn.KVPair
+	iterCh chan tmkv.Pair
 
 	// Close this to release goroutine.
 	quitCh chan struct{}
@@ -340,7 +312,7 @@ func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool
 		start:     types.Cp(start),
 		end:       types.Cp(end),
 		ascending: ascending,
-		iterCh:    make(chan cmn.KVPair), // Set capacity > 0?
+		iterCh:    make(chan tmkv.Pair), // Set capacity > 0?
 		quitCh:    make(chan struct{}),
 		initCh:    make(chan struct{}),
 	}
@@ -357,7 +329,7 @@ func (iter *iavlIterator) iterateRoutine() {
 			select {
 			case <-iter.quitCh:
 				return true // done with iteration.
-			case iter.iterCh <- cmn.KVPair{Key: key, Value: value}:
+			case iter.iterCh <- tmkv.Pair{Key: key, Value: value}:
 				return false // yay.
 			}
 		},
@@ -425,6 +397,11 @@ func (iter *iavlIterator) Close() {
 	// wait iterCh to close
 	for range iter.iterCh {
 	}
+}
+
+// Error performs a no-op.
+func (iter *iavlIterator) Error() error {
+	return nil
 }
 
 //----------------------------------------

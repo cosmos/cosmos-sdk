@@ -103,8 +103,8 @@ $ %s query gov proposals --page=2 --limit=100
 			bechDepositorAddr := viper.GetString(flagDepositor)
 			bechVoterAddr := viper.GetString(flagVoter)
 			strProposalStatus := viper.GetString(flagStatus)
-			page := viper.GetInt(flagPage)
-			limit := viper.GetInt(flagNumLimit)
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
 
 			var depositorAddr sdk.AccAddress
 			var voterAddr sdk.AccAddress
@@ -162,8 +162,8 @@ $ %s query gov proposals --page=2 --limit=100
 		},
 	}
 
-	cmd.Flags().Int(flagPage, 1, "pagination page of proposals to to query for")
-	cmd.Flags().Int(flagNumLimit, 100, "pagination limit of proposals to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of proposals to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of proposals to query for")
 	cmd.Flags().String(flagDepositor, "", "(optional) filter by proposals deposited on by depositor")
 	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
 	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected")
@@ -265,8 +265,9 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			if err != nil {
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
-			page := viper.GetInt(flagPage)
-			limit := viper.GetInt(flagNumLimit)
+
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
 
 			params := types.NewQueryProposalVotesParams(proposalID, page, limit)
 			bz, err := cdc.MarshalJSON(params)
@@ -299,8 +300,8 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			return cliCtx.PrintOutput(votes)
 		},
 	}
-	cmd.Flags().Int(flagPage, 1, "pagination page of votes to to query for")
-	cmd.Flags().Int(flagNumLimit, 100, "pagination limit of votes to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of votes to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of votes to query for")
 	return cmd
 }
 

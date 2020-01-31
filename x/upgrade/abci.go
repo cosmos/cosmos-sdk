@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

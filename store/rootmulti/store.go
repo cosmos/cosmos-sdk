@@ -45,17 +45,26 @@ type Store struct {
 var _ types.CommitMultiStore = (*Store)(nil)
 var _ types.Queryable = (*Store)(nil)
 
-// nolint
+// NewStore returns a reference to a new Store object with the provided DB. The
+// store will be created with a PruneNothing pruning strategy by default. After
+// a store is created, KVStores must be mounted and finally LoadLatestVersion or
+// LoadVersion must be called.
 func NewStore(db dbm.DB) *Store {
 	return &Store{
 		db:           db,
+		pruningOpts:  types.PruneNothing,
 		storesParams: make(map[types.StoreKey]storeParams),
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 	}
 }
 
-// Implements CommitMultiStore
+// SetPruning sets the pruning strategy on the root store and all the sub-stores.
+// Note, calling SetPruning on the root store prior to LoadVersion or
+// LoadLatestVersion performs a no-op as the stores aren't mounted yet.
+//
+// TODO: Consider removing this API altogether on sub-stores as a pruning
+// strategy should only be provided on initialization.
 func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 	rs.pruningOpts = pruningOpts
 	for _, substore := range rs.stores {
@@ -156,7 +165,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	// load each Store (note this doesn't panic on unmounted keys now)
 	var newStores = make(map[types.StoreKey]types.CommitKVStore)
 	for key, storeParams := range rs.storesParams {
-
 		// Load it
 		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
@@ -592,12 +600,14 @@ func (si storeInfo) Hash() []byte {
 
 func getLatestVersion(db dbm.DB) int64 {
 	var latest int64
-	latestBytes := db.Get([]byte(latestVersionKey))
-	if latestBytes == nil {
+	latestBytes, err := db.Get([]byte(latestVersionKey))
+	if err != nil {
+		panic(err)
+	} else if latestBytes == nil {
 		return 0
 	}
 
-	err := cdc.UnmarshalBinaryLengthPrefixed(latestBytes, &latest)
+	err = cdc.UnmarshalBinaryLengthPrefixed(latestBytes, &latest)
 	if err != nil {
 		panic(err)
 	}
@@ -643,14 +653,16 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 	// Get from DB.
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
-	cInfoBytes := db.Get([]byte(cInfoKey))
-	if cInfoBytes == nil {
-		return commitInfo{}, fmt.Errorf("failed to get Store: no data")
+	cInfoBytes, err := db.Get([]byte(cInfoKey))
+	if err != nil {
+		return commitInfo{}, fmt.Errorf("failed to get commit info: %v", err)
+	} else if cInfoBytes == nil {
+		return commitInfo{}, fmt.Errorf("failed to get commit info: no data")
 	}
 
 	var cInfo commitInfo
 
-	err := cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
+	err = cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
 	if err != nil {
 		return commitInfo{}, fmt.Errorf("failed to get Store: %v", err)
 	}

@@ -82,16 +82,18 @@ type AppModule struct {
 
 	keeper        Keeper
 	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 	stakingKeeper stakingkeeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper, stakingKeeper stakingkeeper.Keeper) AppModule {
+func NewAppModule(keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk stakingkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
+		accountKeeper:  ak,
+		bankKeeper:     bk,
+		stakingKeeper:  sk,
 	}
 }
 
@@ -176,6 +178,8 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the slashing module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.keeper, am.stakingKeeper)
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc,
+		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
+	)
 }

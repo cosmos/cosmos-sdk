@@ -375,8 +375,8 @@ func queryPool(ctx sdk.Context, k Keeper) ([]byte, error) {
 	}
 
 	pool := types.NewPool(
-		notBondedPool.GetCoins().AmountOf(bondDenom),
-		bondedPool.GetCoins().AmountOf(bondDenom),
+		k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount,
+		k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount,
 	)
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, pool)

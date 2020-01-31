@@ -9,7 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"gopkg.in/yaml.v2"
 )
 
@@ -42,7 +42,7 @@ func (e Equivocation) String() string {
 }
 
 // Hash returns the hash of an Equivocation object.
-func (e Equivocation) Hash() cmn.HexBytes {
+func (e Equivocation) Hash() tmbytes.HexBytes {
 	return tmhash.Sum(ModuleCdc.MustMarshalBinaryBare(e))
 }
 

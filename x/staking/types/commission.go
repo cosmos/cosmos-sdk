@@ -1,26 +1,10 @@
 package types
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-type (
-	// Commission defines a commission parameters for a given validator.
-	Commission struct {
-		CommissionRates `json:"commission_rates" yaml:"commission_rates"`
-		UpdateTime      time.Time `json:"update_time" yaml:"update_time"` // the last time the commission rate was changed
-	}
-
-	// CommissionRates defines the initial commission rates to be used for creating a
-	// validator.
-	CommissionRates struct {
-		Rate          sdk.Dec `json:"rate" yaml:"rate"`                       // the commission rate charged to delegators, as a fraction
-		MaxRate       sdk.Dec `json:"max_rate" yaml:"max_rate"`               // maximum commission rate which validator can ever charge, as a fraction
-		MaxChangeRate sdk.Dec `json:"max_change_rate" yaml:"max_change_rate"` // maximum daily increase of the validator commission, as a fraction
-	}
+	yaml "gopkg.in/yaml.v2"
 )
 
 // NewCommissionRates returns an initialized validator commission rates.
@@ -49,20 +33,16 @@ func NewCommissionWithTime(rate, maxRate, maxChangeRate sdk.Dec, updatedAt time.
 	}
 }
 
-// Equal checks if the given Commission object is equal to the receiving
-// Commission object.
-func (c Commission) Equal(c2 Commission) bool {
-	return c.Rate.Equal(c2.Rate) &&
-		c.MaxRate.Equal(c2.MaxRate) &&
-		c.MaxChangeRate.Equal(c2.MaxChangeRate) &&
-		c.UpdateTime.Equal(c2.UpdateTime)
+// String implements the Stringer interface for a Commission object.
+func (c Commission) String() string {
+	out, _ := yaml.Marshal(c)
+	return string(out)
 }
 
-// String implements the Stringer interface for a Commission.
-func (c Commission) String() string {
-	return fmt.Sprintf("rate: %s, maxRate: %s, maxChangeRate: %s, updateTime: %s",
-		c.Rate, c.MaxRate, c.MaxChangeRate, c.UpdateTime,
-	)
+// String implements the Stringer interface for a CommissionRates object.
+func (cr CommissionRates) String() string {
+	out, _ := yaml.Marshal(cr)
+	return string(out)
 }
 
 // Validate performs basic sanity validation checks of initial commission

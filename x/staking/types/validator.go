@@ -9,6 +9,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/crypto/sr25519"
 	tmtypes "github.com/tendermint/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
@@ -52,23 +55,105 @@ type Validator struct {
 	MinSelfDelegation       sdk.Int        `json:"min_self_delegation" yaml:"min_self_delegation"` // validator's self declared minimum self delegation
 }
 
-// custom marshal yaml function due to consensus pubkey
-func (v Validator) MarshalYAML() (interface{}, error) {
-	bs, err := yaml.Marshal(struct {
-		OperatorAddress         sdk.ValAddress
-		ConsPubKey              string
-		Jailed                  bool
-		Status                  sdk.BondStatus
-		Tokens                  sdk.Int
-		DelegatorShares         sdk.Dec
-		Description             Description
-		UnbondingHeight         int64
-		UnbondingCompletionTime time.Time
-		Commission              Commission
-		MinSelfDelegation       sdk.Int
-	}{
+func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
+	return Validator{
+		OperatorAddress:         operator,
+		ConsPubKey:              pubKey,
+		Jailed:                  false,
+		Status:                  sdk.Unbonded,
+		Tokens:                  sdk.ZeroInt(),
+		DelegatorShares:         sdk.ZeroDec(),
+		Description:             description,
+		UnbondingHeight:         int64(0),
+		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
+		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		MinSelfDelegation:       sdk.OneInt(),
+	}
+}
+
+// ToProto converts a Validator into a ValidatorProto type.
+func (v Validator) ToProto() ValidatorProto {
+	var pk sdk.PublicKey
+
+	switch t := v.ConsPubKey.(type) {
+	case secp256k1.PubKeySecp256k1:
+		pk = sdk.PublicKey{
+			Pub: &sdk.PublicKey_Secp256K1{t.Bytes()},
+		}
+
+	case ed25519.PubKeyEd25519:
+		pk = sdk.PublicKey{
+			Pub: &sdk.PublicKey_Ed25519{t.Bytes()},
+		}
+
+	case sr25519.PubKeySr25519:
+		pk = sdk.PublicKey{
+			Pub: &sdk.PublicKey_Sr25519{t.Bytes()},
+		}
+	}
+
+	return ValidatorProto{
+		OperatorAddress:   v.OperatorAddress,
+		ConsensusPubkey:   pk,
+		Jailed:            v.Jailed,
+		Status:            []byte{byte(v.Status)},
+		Tokens:            v.Tokens,
+		DelegatorShares:   v.DelegatorShares,
+		Description:       v.Description,
+		UnbondingHeight:   v.UnbondingHeight,
+		UnbondingTime:     v.UnbondingCompletionTime,
+		Commission:        v.Commission,
+		MinSelfDelegation: v.MinSelfDelegation,
+	}
+}
+
+// ToValidator converts a ValidatorProto to a Validator type.
+func (vp ValidatorProto) ToValidator() Validator {
+	var (
+		pk  crypto.PubKey
+		err error
+	)
+
+	switch t := vp.ConsensusPubkey.GetPub().(type) {
+	case *sdk.PublicKey_Secp256K1:
+		err = ModuleCdc.amino.UnmarshalBinaryBare(t.Secp256K1, &pk)
+
+	case *sdk.PublicKey_Ed25519:
+		err = ModuleCdc.amino.UnmarshalBinaryBare(t.Ed25519, &pk)
+
+	case *sdk.PublicKey_Sr25519:
+		err = ModuleCdc.amino.UnmarshalBinaryBare(t.Sr25519, &pk)
+
+	default:
+		err = fmt.Errorf("unsupported public key type: %T", t)
+	}
+
+	if err != nil {
+		panic(fmt.Errorf("failed to decode public key: %w", err))
+	}
+
+	return Validator{
+		OperatorAddress:         vp.OperatorAddress,
+		ConsPubKey:              pk,
+		Jailed:                  vp.Jailed,
+		Status:                  sdk.BondStatus(vp.Status[0]),
+		Tokens:                  vp.Tokens,
+		DelegatorShares:         vp.DelegatorShares,
+		Description:             vp.Description,
+		UnbondingHeight:         vp.UnbondingHeight,
+		UnbondingCompletionTime: vp.UnbondingTime,
+		Commission:              vp.Commission,
+		MinSelfDelegation:       vp.MinSelfDelegation,
+	}
+}
+
+// String implements the Stringer interface for a Validator object.
+func (v Validator) String() string {
+	bechConsPubKey, _ := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
+
+	bz, _ := yaml.Marshal(bechValidator{
 		OperatorAddress:         v.OperatorAddress,
-		ConsPubKey:              sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey),
+		ConsPubKey:              bechConsPubKey,
 		Jailed:                  v.Jailed,
 		Status:                  v.Status,
 		Tokens:                  v.Tokens,
@@ -79,11 +164,8 @@ func (v Validator) MarshalYAML() (interface{}, error) {
 		Commission:              v.Commission,
 		MinSelfDelegation:       v.MinSelfDelegation,
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	return string(bs), nil
+	return string(bz)
 }
 
 // Validators is a collection of Validator
@@ -135,30 +217,14 @@ func (v Validators) Swap(i, j int) {
 	v[j] = it
 }
 
-// NewValidator - initialize a new validator
-func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
-	return Validator{
-		OperatorAddress:         operator,
-		ConsPubKey:              pubKey,
-		Jailed:                  false,
-		Status:                  sdk.Unbonded,
-		Tokens:                  sdk.ZeroInt(),
-		DelegatorShares:         sdk.ZeroDec(),
-		Description:             description,
-		UnbondingHeight:         int64(0),
-		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
-		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation:       sdk.OneInt(),
-	}
-}
-
 // return the redelegation
-func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(validator)
+func MustMarshalValidator(cdc codec.Marshaler, validator Validator) []byte {
+	valProto := validator.ToProto()
+	return cdc.MustMarshalBinaryLengthPrefixed(&valProto)
 }
 
 // unmarshal a redelegation from a store value
-func MustUnmarshalValidator(cdc *codec.Codec, value []byte) Validator {
+func MustUnmarshalValidator(cdc codec.Marshaler, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, value)
 	if err != nil {
 		panic(err)
@@ -167,32 +233,13 @@ func MustUnmarshalValidator(cdc *codec.Codec, value []byte) Validator {
 }
 
 // unmarshal a redelegation from a store value
-func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &validator)
-	return validator, err
-}
-
-// String returns a human readable string representation of a validator.
-func (v Validator) String() string {
-	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
-	if err != nil {
-		panic(err)
+func UnmarshalValidator(cdc codec.Marshaler, value []byte) (Validator, error) {
+	vp := ValidatorProto{}
+	if err := cdc.UnmarshalBinaryLengthPrefixed(value, &vp); err != nil {
+		return Validator{}, err
 	}
-	return fmt.Sprintf(`Validator
-  Operator Address:           %s
-  Validator Consensus Pubkey: %s
-  Jailed:                     %v
-  Status:                     %s
-  Tokens:                     %s
-  Delegator Shares:           %s
-  Description:                %s
-  Unbonding Height:           %d
-  Unbonding Completion Time:  %v
-  Minimum Self Delegation:    %v
-  Commission:                 %s`, v.OperatorAddress, bechConsPubKey,
-		v.Jailed, v.Status, v.Tokens,
-		v.DelegatorShares, v.Description,
-		v.UnbondingHeight, v.UnbondingCompletionTime, v.MinSelfDelegation, v.Commission)
+
+	return vp.ToValidator(), nil
 }
 
 // this is a helper struct used for JSON de- and encoding only
@@ -292,16 +339,6 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-// Description - description fields for a validator
-type Description struct {
-	Moniker         string `json:"moniker" yaml:"moniker"`                   // name
-	Identity        string `json:"identity" yaml:"identity"`                 // optional identity signature (ex. UPort or Keybase)
-	Website         string `json:"website" yaml:"website"`                   // optional website link
-	SecurityContact string `json:"security_contact" yaml:"security_contact"` // optional security contact info
-	Details         string `json:"details" yaml:"details"`                   // optional details
-}
-
-// NewDescription returns a new Description with the provided values.
 func NewDescription(moniker, identity, website, securityContact, details string) Description {
 	return Description{
 		Moniker:         moniker,
@@ -310,6 +347,12 @@ func NewDescription(moniker, identity, website, securityContact, details string)
 		SecurityContact: securityContact,
 		Details:         details,
 	}
+}
+
+// String implements the Stringer interface for a Description object.
+func (d Description) String() string {
+	out, _ := yaml.Marshal(d)
+	return string(out)
 }
 
 // UpdateDescription updates the fields of a given description. An error is

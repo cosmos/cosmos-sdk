@@ -25,13 +25,37 @@ func NewHistoricalInfo(header abci.Header, valSet Validators) HistoricalInfo {
 	}
 }
 
+// ToProto converts a HistoricalInfo into a HistoricalInfoProto type.
+func (hi HistoricalInfo) ToProto() HistoricalInfoProto {
+	valsetProto := make([]ValidatorProto, len(hi.ValSet))
+	for i, val := range hi.ValSet {
+		valsetProto[i] = val.ToProto()
+	}
+
+	return HistoricalInfoProto{
+		Header: hi.Header,
+		Valset: valsetProto,
+	}
+}
+
+// ToHistoricalInfo converts a HistoricalInfoProto to a HistoricalInfo type.
+func (hip HistoricalInfoProto) ToHistoricalInfo() HistoricalInfo {
+	valset := make(Validators, len(hip.Valset))
+	for i, valProto := range hip.Valset {
+		valset[i] = valProto.ToValidator()
+	}
+
+	return NewHistoricalInfo(hip.Header, valset)
+}
+
 // MustMarshalHistoricalInfo wll marshal historical info and panic on error
-func MustMarshalHistoricalInfo(cdc *codec.Codec, hi HistoricalInfo) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(hi)
+func MustMarshalHistoricalInfo(cdc codec.Marshaler, hi HistoricalInfo) []byte {
+	hiProto := hi.ToProto()
+	return cdc.MustMarshalBinaryLengthPrefixed(&hiProto)
 }
 
 // MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
-func MustUnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) HistoricalInfo {
+func MustUnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) HistoricalInfo {
 	hi, err := UnmarshalHistoricalInfo(cdc, value)
 	if err != nil {
 		panic(err)
@@ -40,9 +64,13 @@ func MustUnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) HistoricalInfo 
 }
 
 // UnmarshalHistoricalInfo will unmarshal historical info and return any error
-func UnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) (hi HistoricalInfo, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &hi)
-	return hi, err
+func UnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) (hi HistoricalInfo, err error) {
+	hip := HistoricalInfoProto{}
+	if err := cdc.UnmarshalBinaryLengthPrefixed(value, &hip); err != nil {
+		return HistoricalInfo{}, err
+	}
+
+	return hip.ToHistoricalInfo(), nil
 }
 
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted

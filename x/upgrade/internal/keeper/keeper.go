@@ -164,12 +164,14 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 // EnsureUpgradeInfoFileExists checks if upgrade-info file is present
 // if not it creates the file
 func EnsureUpgradeInfoFileExists(upgradeInfoFileDir string) (string, error) {
-	if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
-		err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
-		if err != nil {
-			return "", err
+	if upgradeInfoFileDir != "" {
+		if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
+			err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
+			if err != nil {
+				return "", err
+			}
+			return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
 		}
-		return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
 	}
 
 	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil

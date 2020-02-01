@@ -201,27 +201,27 @@ func NewSimApp(
 	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], app.cdc, viper.GetString(cli.HomeFlag))
 
 	/*
-	// TODO remove all this
-	// This is a sample code to demonstrate store upgrades.
+		// TODO remove all this
+		// This is a sample code to demonstrate store upgrades.
 
-	// this configures a no-op upgrade handler for the "fooupgrade" upgrade
-	app.UpgradeKeeper.SetUpgradeHandler("fooupgrade", func(ctx sdk.Context, plan upgrade.Plan) {
-		// code goes here
-	})
+		// this configures a no-op upgrade handler for the "fooupgrade" upgrade
+		app.UpgradeKeeper.SetUpgradeHandler("fooupgrade", func(ctx sdk.Context, plan upgrade.Plan) {
+			// code goes here
+		})
 
-	upgradeName, upgradeHeight := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if upgradeName == "fooupgrade" {
-		storeUpgrades := store.StoreUpgrades{
-			Renamed: []store.StoreRename{{
-				OldKey: "foo",
-				NewKey: "bar",
-			}},
-			Deleted: []string{},
+		upgradeName, upgradeHeight := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+		if upgradeName == "fooupgrade" {
+			storeUpgrades := store.StoreUpgrades{
+				Renamed: []store.StoreRename{{
+					OldKey: "foo",
+					NewKey: "bar",
+				}},
+				Deleted: []string{},
+			}
+
+			// configure store loader that checks if version == upgradeHeight and applies store upgrades
+			app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeHeight, &storeUpgrades))
 		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeHeight, &storeUpgrades))
-	}
 	*/
 
 	// create evidence keeper with router

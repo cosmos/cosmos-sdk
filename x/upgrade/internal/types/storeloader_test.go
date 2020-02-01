@@ -75,7 +75,7 @@ func TestSetLoader(t *testing.T) {
 
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
 	upgradeInfo := &store.UpgradeInfo{
-		Name: "test", Height: 10,
+		Name: "test", Height: 0,
 	}
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
@@ -96,7 +96,7 @@ func TestSetLoader(t *testing.T) {
 			loadStoreKey: "foo",
 		},
 		"rename with inline opts": {
-			setLoader: useUpgradeLoader(10, &store.StoreUpgrades{
+			setLoader: useUpgradeLoader(0, &store.StoreUpgrades{
 				Renamed: []store.StoreRename{{
 					OldKey: "foo",
 					NewKey: "bar",
@@ -123,6 +123,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
+
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			capKey := sdk.NewKVStoreKey(baseapp.MainStoreKey)
 			app.MountStores(capKey)

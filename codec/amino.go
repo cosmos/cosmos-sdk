@@ -45,7 +45,7 @@ func RegisterEvidences(cdc *Codec) {
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object
 // via an Amino codec. It returns an error if it cannot serialize or indent as
 // JSON.
-func MarshalJSONIndent(m Marshaler, obj interface{}) ([]byte, error) {
+func MarshalJSONIndent(m JSONMarshaler, obj interface{}) ([]byte, error) {
 	bz, err := m.MarshalJSON(obj)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func MarshalJSONIndent(m Marshaler, obj interface{}) ([]byte, error) {
 }
 
 // MustMarshalJSONIndent executes MarshalJSONIndent except it panics upon failure.
-func MustMarshalJSONIndent(m Marshaler, obj interface{}) []byte {
+func MustMarshalJSONIndent(m JSONMarshaler, obj interface{}) []byte {
 	bz, err := MarshalJSONIndent(m, obj)
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal JSON: %s", err))

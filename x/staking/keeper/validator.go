@@ -219,7 +219,7 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 }
 
 // return a given amount of all the validators
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint32) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	validators = make([]types.Validator, maxRetrieve)
 
@@ -232,6 +232,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 		validators[i] = validator
 		i++
 	}
+
 	return validators[:i] // trim if the array length < maxRetrieve
 }
 

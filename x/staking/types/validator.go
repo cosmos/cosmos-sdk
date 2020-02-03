@@ -376,6 +376,18 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 	return v, issuedTokens
 }
 
+// MinEqual defines a more minimum set of equality conditions when comparing two
+// validators.
+func (v Validator) MinEqual(other Validator) bool {
+	return v.ConsensusPubkey == other.ConsensusPubkey &&
+		bytes.Equal(v.OperatorAddress, other.OperatorAddress) &&
+		v.Status.Equal(other.Status) &&
+		v.Tokens.Equal(other.Tokens) &&
+		v.DelegatorShares.Equal(other.DelegatorShares) &&
+		v.Description == other.Description &&
+		v.Commission.Equal(other.Commission)
+}
+
 // nolint - for ValidatorI
 func (v Validator) IsJailed() bool              { return v.Jailed }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }

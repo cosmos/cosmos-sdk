@@ -148,8 +148,8 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusSta
 	}
 
 	state := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commit.AppHash),
-		ValidatorSetHash: tmtypes.NewValidatorSet(validators.Validators).Hash(),
+		Root:         commitment.NewRoot(commit.AppHash),
+		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
 
 	return state, height, nil

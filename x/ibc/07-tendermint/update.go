@@ -64,8 +64,9 @@ func checkValidity(clientState ClientState, header Header, chainID string) error
 func update(clientState ClientState, header Header) (ClientState, ConsensusState) {
 	clientState.LatestHeight = header.GetHeight()
 	consensusState := ConsensusState{
-		Root:             commitment.NewRoot(header.AppHash),
-		ValidatorSetHash: header.ValidatorSet.Hash(),
+		Timestamp:    header.Time,
+		Root:         commitment.NewRoot(header.AppHash),
+		ValidatorSet: header.ValidatorSet,
 	}
 
 	return clientState, consensusState

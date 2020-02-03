@@ -1,9 +1,8 @@
 package tendermint
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
+	"math"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -43,7 +42,15 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
-	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
+	var newFrozenHeight uint64
+	if tmClientState.IsFrozen() {
+		// freeze at an earlier height if another misbehaviour is discovered
+		newFrozenHeight = uint64(math.Min(float64(tmClientState.FrozenHeight), float64(tmEvidence.GetHeight())))
+	} else {
+		newFrozenHeight = uint64(tmEvidence.GetHeight())
+	}
+
+	tmClientState.FrozenHeight = newFrozenHeight
 
 	return tmClientState, nil
 }
@@ -63,23 +70,17 @@ func checkMisbehaviour(
 		)
 	}
 
-	if !bytes.Equal(consensusState.ValidatorSetHash, evidence.FromValidatorSet.Hash()) {
-		return errors.New(
-			"the consensus state's validator set hash doesn't match the evidence's one",
-		)
-	}
-
 	// Evidence is within the trusting period. ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// check that the validator sets on both headers are valid given the last trusted validatorset
 	// less than or equal to evidence height
-	if err := evidence.FromValidatorSet.VerifyFutureCommit(
+	if err := consensusState.ValidatorSet.VerifyFutureCommit(
 		evidence.Header1.ValidatorSet, evidence.ChainID,
 		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
 	); err != nil {
 		return fmt.Errorf("validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
-	if err := evidence.FromValidatorSet.VerifyFutureCommit(
+	if err := consensusState.ValidatorSet.VerifyFutureCommit(
 		evidence.Header2.ValidatorSet, evidence.ChainID,
 		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
 	); err != nil {

@@ -22,7 +22,7 @@ type TestSuite struct {
 	paramsKeeper  params.Keeper
 	bankKeeper    bank.Keeper
 	keeper        Keeper
-	router        sdk.Router
+	router        types.Router
 }
 
 func (s *TestSuite) SetupTest() {

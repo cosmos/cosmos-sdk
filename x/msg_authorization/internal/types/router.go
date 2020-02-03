@@ -6,9 +6,6 @@ import (
 
 var _ Router = (*router)(nil)
 
-// Router implements a governance Handler router.
-//
-// TODO: Use generic router (ref #3976).
 type Router interface {
 	AddRoute(r string, h sdk.Handler) (rtr Router)
 	Seal()

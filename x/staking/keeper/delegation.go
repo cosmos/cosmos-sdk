@@ -660,14 +660,17 @@ func (k Keeper) Undelegate(
 	return completionTime, nil
 }
 
-// CompleteUnbonding completes the unbonding of all mature entries in the
-// retrieved unbonding delegation object.
-func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+// CompleteUnbondingWithAmount completes the unbonding of all mature entries in
+// the retrieved unbonding delegation object and returns the total unbonding
+// balance or an error upon failure.
+func (k Keeper) CompleteUnbondingWithAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
-		return types.ErrNoUnbondingDelegation
+		return nil, types.ErrNoUnbondingDelegation
 	}
 
+	bondDenom := k.GetParams(ctx).BondDenom
+	balances := sdk.NewCoins()
 	ctxTime := ctx.BlockHeader().Time
 
 	// loop through all the entries and complete unbonding mature entries
@@ -679,11 +682,15 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
-				amt := sdk.NewCoins(sdk.NewCoin(k.GetParams(ctx).BondDenom, entry.Balance))
-				err := k.supplyKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, ubd.DelegatorAddress, amt)
+				amt := sdk.NewCoin(bondDenom, entry.Balance)
+				err := k.supplyKeeper.UndelegateCoinsFromModuleToAccount(
+					ctx, types.NotBondedPoolName, ubd.DelegatorAddress, sdk.NewCoins(amt),
+				)
 				if err != nil {
-					return err
+					return nil, err
 				}
+
+				balances = balances.Add(amt)
 			}
 		}
 	}
@@ -695,7 +702,14 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 		k.SetUnbondingDelegation(ctx, ubd)
 	}
 
-	return nil
+	return balances, nil
+}
+
+// CompleteUnbonding performs the same logic as CompleteUnbondingWithAmount except
+// it does not return the total unbonding amount.
+func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	_, err := k.CompleteUnbondingWithAmount(ctx, delAddr, valAddr)
+	return err
 }
 
 // begin unbonding / redelegation; create a redelegation record
@@ -755,17 +769,20 @@ func (k Keeper) BeginRedelegation(
 	return completionTime, nil
 }
 
-// CompleteRedelegation completes the unbonding of all mature entries in the
-// retrieved unbonding delegation object.
-func (k Keeper) CompleteRedelegation(
+// CompleteRedelegationWithAmount completes the redelegations of all mature entries in the
+// retrieved redelegation object and returns the total redelegation (initial)
+// balance or an error upon failure.
+func (k Keeper) CompleteRedelegationWithAmount(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
-) error {
+) (sdk.Coins, error) {
 
 	red, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
 	if !found {
-		return types.ErrNoRedelegation
+		return nil, types.ErrNoRedelegation
 	}
 
+	bondDenom := k.GetParams(ctx).BondDenom
+	balances := sdk.NewCoins()
 	ctxTime := ctx.BlockHeader().Time
 
 	// loop through all the entries and complete mature redelegation entries
@@ -774,6 +791,10 @@ func (k Keeper) CompleteRedelegation(
 		if entry.IsMature(ctxTime) {
 			red.RemoveEntry(int64(i))
 			i--
+
+			if !entry.InitialBalance.IsZero() {
+				balances = balances.Add(sdk.NewCoin(bondDenom, entry.InitialBalance))
+			}
 		}
 	}
 
@@ -784,7 +805,17 @@ func (k Keeper) CompleteRedelegation(
 		k.SetRedelegation(ctx, red)
 	}
 
-	return nil
+	return balances, nil
+}
+
+// CompleteRedelegation performs the same logic as CompleteRedelegationWithAmount
+// except it does not return the total redelegation amount.
+func (k Keeper) CompleteRedelegation(
+	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
+) error {
+
+	_, err := k.CompleteRedelegationWithAmount(ctx, delAddr, valSrcAddr, valDstAddr)
+	return err
 }
 
 // ValidateUnbondAmount validates that a given unbond or redelegation amount is

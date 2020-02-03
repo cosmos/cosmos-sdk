@@ -75,7 +75,9 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 func (AppModule) Route() string { return RouterKey }
 
 // NewHandler is empty, as we do not handle Messages (just proposals)
-func (am AppModule) NewHandler() sdk.Handler { return nil }
+func (am AppModule) NewHandler() sdk.Handler {
+	return NewHandler(am.keeper)
+}
 
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return QuerierRoute }

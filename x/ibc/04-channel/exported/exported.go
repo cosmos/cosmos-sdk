@@ -46,6 +46,11 @@ type PacketDataI interface {
 	Type() string         // Type returns human readable identifier, implements sdk.Msg
 }
 
+// PacketAcknowledgementI defines the interface for IBC packet acknowledgements.
+type PacketAcknowledgementI interface {
+	GetBytes() []byte
+}
+
 // Order defines if a channel is ORDERED or UNORDERED
 type Order byte
 

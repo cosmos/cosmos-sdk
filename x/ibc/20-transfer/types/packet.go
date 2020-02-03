@@ -83,13 +83,13 @@ func (ftpd FungibleTokenPacketData) Type() string {
 	return "ics20/transfer"
 }
 
-var _ channelexported.PacketDataI = AckDataTransfer{}
+var _ channelexported.PacketAcknowledgementI = AckDataTransfer{}
 
 // AckDataTransfer is a no-op packet
 // See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 type AckDataTransfer struct{}
 
-// GetBytes implements channelexported.PacketDataI
+// GetBytes implements channelexported.PacketAcknowledgementI
 func (ack AckDataTransfer) GetBytes() []byte {
 	return []byte("ok")
 }

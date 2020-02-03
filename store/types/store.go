@@ -44,7 +44,8 @@ type StoreUpgrades struct {
 	Deleted []string      `json:"deleted"`
 }
 
-// UpgradeInfo defines height and StoreUpgrades to be used for multistore upgrades
+// UpgradeInfo defines height and name of the upgrade
+// to ensure multistore upgrades happens only at matching height
 type UpgradeInfo struct {
 	Name   string `json:"name"`
 	Height int64  `json:"height"`

@@ -41,7 +41,7 @@ type (
 	ClientKeeper            = types.ClientKeeper
 	ConnectionKeeper        = types.ConnectionKeeper
 	SupplyKeeper            = types.SupplyKeeper
-	MsgTransfer             = types.MsgTransfer
 	FungibleTokenPacketData = types.FungibleTokenPacketData
-	AckDataTransfer         = types.AckDataTransfer
+	MsgTransfer             = types.MsgTransfer
+	PacketDataTransfer      = types.PacketDataTransfer
 )

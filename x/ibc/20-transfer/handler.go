@@ -87,7 +87,6 @@ func handlePacketDataTransfer(
 		),
 	)
 
-	// packet receiving should not fail
 	return &sdk.Result{
 		Events: ctx.EventManager().Events(),
 	}, nil
@@ -96,13 +95,18 @@ func handlePacketDataTransfer(
 // See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data FungibleTokenPacketData) (*sdk.Result, error) {
 	packet := msg.Packet
-	if err := k.TimeoutTransfer(
-		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,
-	); err != nil {
-		return nil, err
+	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
+	if err != nil {
+		// TODO: This chain sent invalid packet
+		panic(err)
 	}
 
-	// packet timeout should not fail
+	err = k.TimeoutExecuted(ctx, packet)
+	if err != nil {
+		// TODO: This should not happen
+		panic(err)
+	}
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events(),
 	}, nil

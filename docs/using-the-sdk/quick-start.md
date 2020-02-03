@@ -33,15 +33,15 @@ To create a basic Cosmos SDK application, simply type in the following command:
 scaffold app <lvl> <username|org> <repo>
 ```
 
-There are currently two levels available for use, One is [lvl-1](https://github.com/cosmos/scaffold/blob/master/docs/lvl-1.md) and the other is [lvl-max](https://github.com/cosmos/scaffold/blob/master/docs/lvl-max.md).
+There are multiple levels of apps to choose from, they can be found [here](https://github.com/cosmos/scaffold/blob/master/docs/app.md).
 
 where `username|org` is the name of your github/gitlab/atlassian username or organisation, and `repo` the name of the distant repository you would push your application too. These arguments are used to configure the imports so that people can easily download and install your application once (if) you upload it.
 
 The command above creates a starter application in a new folder named after the `repo` argument. This application contains the [basic logic most SDK applications](../intro/sdk-app-architecture.md) need as well as a set of standard [modules](../building-modules/intro.md) already hooked up. You can find which level consists of which modules [here](https://github.com/cosmos/scaffold/blob/master/docs/app.md)
 
-where:
+The structure of the generated app will look like similar to the [recommended folder structure](../building-modules/structure.md). Below you will find a simple break down of some of the files.
 
-- `app.go` is the [main file](../basics/app-anatomy.md#core-application-file) defining the application logic. This is where the state is intantiated and modules are declared. This is also where the Cosmos SDK is imported as a dependency to help build the application.
+- `app.go` is the [main file](../basics/app-anatomy.md#core-application-file) defining the application logic. This is where the state is instantiated and modules are declared. This is also where the Cosmos SDK is imported as a dependency to help build the application.
 - `export.go` is a helper file used to export the state of the application into a new genesis file. It is helpful when you want to upgrade your chain to a new (breaking) version.
 - `acli/main.go` builds the command-line interface for your blockchain application. It enables end-users to create transactions and query the chain for information.
 - `aud/main.go` builds the main [daemon client](../basics/app-anatomy.md#node-client) of the chain. It is used to run a full-node that will connect to peers and sync its local application state with the latest state of the network.

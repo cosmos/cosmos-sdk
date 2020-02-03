@@ -27,9 +27,10 @@ var (
 	NewSoftwareUpgradeProposal       = types.NewSoftwareUpgradeProposal
 	NewCancelSoftwareUpgradeProposal = types.NewCancelSoftwareUpgradeProposal
 	NewQueryAppliedParams            = types.NewQueryAppliedParams
+	UpgradeStoreLoader               = types.UpgradeStoreLoader
 	NewKeeper                        = keeper.NewKeeper
 	NewQuerier                       = keeper.NewQuerier
-	UpgradeStoreLoader               = types.UpgradeStoreLoader
+	EnsureUpgradeInfoFileExists      = keeper.EnsureUpgradeInfoFileExists
 )
 
 type (

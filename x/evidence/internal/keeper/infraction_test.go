@@ -24,24 +24,24 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	amt := sdk.TokensFromConsensusPower(power)
+	selfDelegation := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
 
 	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
+	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, selfDelegation))
 	suite.NoError(err)
 	suite.NotNil(res)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
 	suite.Equal(
-		suite.app.BankKeeper.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(amt))),
+		suite.app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
+		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),
 	)
-	suite.Equal(amt, suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
+	suite.Equal(selfDelegation, suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
 	// handle a signature to set signing info
-	suite.app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), amt.Int64(), true)
+	suite.app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), selfDelegation.Int64(), true)
 
 	// double sign less than max age
 	oldTokens := suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetTokens()
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
 	suite.Equal(
-		suite.app.BankKeeper.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
+		suite.app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(amt))),
 	)
 	suite.Equal(amt, suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())

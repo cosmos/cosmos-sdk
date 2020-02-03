@@ -24,8 +24,10 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	k keeper.Keeper, wContents []simulation.WeightedProposalContent) simulation.WeightedOperations {
+func WeightedOperations(
+	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	bk types.BankKeeper, k keeper.Keeper, wContents []simulation.WeightedProposalContent,
+) simulation.WeightedOperations {
 
 	var (
 		weightMsgDeposit int
@@ -57,7 +59,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 			wProposalOps,
 			simulation.NewWeightedOperation(
 				weight,
-				SimulateSubmitProposal(ak, k, wContent.ContentSimulatorFn),
+				SimulateSubmitProposal(ak, bk, k, wContent.ContentSimulatorFn),
 			),
 		)
 	}
@@ -65,11 +67,11 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	wGovOps := simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgDeposit,
-			SimulateMsgDeposit(ak, k),
+			SimulateMsgDeposit(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgVote,
-			SimulateMsgVote(ak, k),
+			SimulateMsgVote(ak, bk, k),
 		),
 	}
 
@@ -81,7 +83,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 // future operations.
 // nolint: funlen
 func SimulateSubmitProposal(
-	ak types.AccountKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn,
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn,
 ) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
@@ -115,7 +117,7 @@ func SimulateSubmitProposal(
 		}
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
-		deposit, skip, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
 		switch {
 		case skip:
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -126,10 +128,10 @@ func SimulateSubmitProposal(
 		msg := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		coins := account.SpendableCoins(ctx.BlockTime())
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
-		coins, hasNeg := coins.SafeSub(deposit)
+		coins, hasNeg := spendable.SafeSub(deposit)
 		if !hasNeg {
 			fees, err = simulation.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -177,7 +179,7 @@ func SimulateSubmitProposal(
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simulation.FutureOperation{
 				BlockTime: whenVote,
-				Op:        operationSimulateMsgVote(ak, k, accs[whoVotes[i]], int64(proposalID)),
+				Op:        operationSimulateMsgVote(ak, bk, k, accs[whoVotes[i]], int64(proposalID)),
 			}
 		}
 
@@ -187,7 +189,7 @@ func SimulateSubmitProposal(
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
 // nolint: funlen
-func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string,
@@ -198,7 +200,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address)
 		switch {
 		case skip:
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -209,10 +211,10 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		coins := account.SpendableCoins(ctx.BlockTime())
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
-		coins, hasNeg := coins.SafeSub(deposit)
+		coins, hasNeg := spendable.SafeSub(deposit)
 		if !hasNeg {
 			fees, err = simulation.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -241,11 +243,11 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 
 // SimulateMsgVote generates a MsgVote with random values.
 // nolint: funlen
-func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return operationSimulateMsgVote(ak, k, simulation.Account{}, -1)
+func SimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
+	return operationSimulateMsgVote(ak, bk, k, simulation.Account{}, -1)
 }
 
-func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
+func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
 	simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -269,11 +271,12 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 		}
 
 		option := randomVotingOption(r)
-
 		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		fees, err := simulation.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -302,11 +305,12 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 // This is to simulate multiple users depositing to get the
 // proposal above the minimum deposit amount
 func randomDeposit(r *rand.Rand, ctx sdk.Context,
-	ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, addr sdk.AccAddress,
 ) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
-	coins := account.SpendableCoins(ctx.BlockHeader().Time)
-	if coins.Empty() {
+	spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+	if spendable.Empty() {
 		return nil, true, nil // skip
 	}
 
@@ -314,7 +318,7 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	denomIndex := r.Intn(len(minDeposit))
 	denom := minDeposit[denomIndex].Denom
 
-	depositCoins := coins.AmountOf(denom)
+	depositCoins := spendable.AmountOf(denom)
 	if depositCoins.IsZero() {
 		return nil, true, nil
 	}

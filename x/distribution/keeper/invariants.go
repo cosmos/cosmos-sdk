@@ -148,11 +148,15 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 		expectedInt, _ := expectedCoins.Add(communityPool...).TruncateDecimal()
 
 		macc := k.GetDistributionAccount(ctx)
+		balances := k.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-		broken := !macc.GetCoins().IsEqual(expectedInt)
-		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins",
+		broken := !balances.IsEqual(expectedInt)
+		return sdk.FormatInvariant(
+			types.ModuleName, "ModuleAccount coins",
 			fmt.Sprintf("\texpected ModuleAccount coins:     %s\n"+
 				"\tdistribution ModuleAccount coins: %s\n",
-				expectedInt, macc.GetCoins())), broken
+				expectedInt, balances,
+			),
+		), broken
 	}
 }

@@ -6,10 +6,12 @@ order: 6
 
 - [Vesting](#vesting)
   - [Intro and Requirements](#intro-and-requirements)
+  - [Note](#note)
   - [Vesting Account Types](#vesting-account-types)
   - [Vesting Account Specification](#vesting-account-specification)
     - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
       - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+    - [Periodic Vesting Accounts](#periodic-vesting-accounts)
       - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
     - [Transferring/Sending](#transferringsending)
       - [Keepers/Handlers](#keepershandlers)
@@ -22,6 +24,7 @@ order: 6
   - [Examples](#examples)
     - [Simple](#simple)
     - [Slashing](#slashing)
+    - [Periodic Vesting](#periodic-vesting)
   - [Glossary](#glossary)
 
 ## Intro and Requirements
@@ -67,45 +70,50 @@ having coins fail to vest).
 // VestingAccount defines an interface that any vesting account type must
 // implement.
 type VestingAccount interface {
-    Account
+  Account
 
-    GetVestedCoins(Time)  Coins
-    GetVestingCoins(Time) Coins
+  GetVestedCoins(Time)  Coins
+  GetVestingCoins(Time) Coins
 
-    // Delegation and undelegation accounting that returns the resulting base
-    // coins amount.
-    TrackDelegation(Time, Coins)
-    TrackUndelegation(Coins)
+  // TrackDelegation performs internal vesting accounting necessary when
+  // delegating from a vesting account. It accepts the current block time, the
+  // delegation amount and balance of all coins whose denomination exists in
+  // the account's original vesting balance.
+  TrackDelegation(Time, Coins, Coins)
 
-    GetStartTime() int64
-    GetEndTime()   int64
+  // TrackUndelegation performs internal vesting accounting necessary when a
+  // vesting account performs an undelegation.
+  TrackUndelegation(Coins)
+
+  GetStartTime() int64
+  GetEndTime()   int64
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
 type BaseVestingAccount struct {
-    BaseAccount
+  BaseAccount
 
-    OriginalVesting  Coins // coins in account upon initialization
-    DelegatedFree    Coins // coins that are vested and delegated
-    DelegatedVesting Coins // coins that vesting and delegated
+  OriginalVesting  Coins // coins in account upon initialization
+  DelegatedFree    Coins // coins that are vested and delegated
+  DelegatedVesting Coins // coins that vesting and delegated
 
-    EndTime  int64 // when the coins become unlocked
+  EndTime  int64 // when the coins become unlocked
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
 type ContinuousVestingAccount struct {
-    BaseVestingAccount
+  BaseVestingAccount
 
-    StartTime  int64 // when the coins start to vest
+  StartTime  int64 // when the coins start to vest
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
 // coins after a specific time, but non prior. In other words, it keeps them
 // locked until a specified time.
 type DelayedVestingAccount struct {
-    BaseVestingAccount
+  BaseVestingAccount
 }
 
 // VestingPeriod defines a length of time and amount of coins that will vest
@@ -127,16 +135,18 @@ type PeriodicVestingAccount struct {
 ```
 
 In order to facilitate less ad-hoc type checking and assertions and to support
-flexibility in account usage, the existing `Account` interface is updated to contain
-the following:
+flexibility in account balance usage, the existing `x/bank` `ViewKeeper` interface
+is updated to contain the following:
 
 ```go
-type Account interface {
-    // ...
+type ViewKeeper interface {
+  // ...
 
-    // Calculates the amount of coins that can be sent to other accounts given
-    // the current time.
-    SpendableCoins(Time) Coins
+  // Calculates the total locked account balance.
+  LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+
+  // Calculates the total spendable balance that can be sent to other accounts.
+  SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 ```
 
@@ -268,10 +278,31 @@ In other words, a vesting account may transfer the minimum of the base account
 balance and the base account balance plus the number of currently delegated
 vesting coins less the number of coins vested so far.
 
+However, given that account balances are tracked via the `x/bank` module and that
+we want to avoid loading the entire account balance, we can instead determine
+the locked balance, which can be defined as `max(V - DV, 0)`, and infer the
+spendable balance from that.
+
 ```go
-func (va VestingAccount) SpendableCoins(t Time) Coins {
-    bc := va.GetCoins()
-    return min((bc + va.DelegatedVesting) - va.GetVestingCoins(t), bc)
+func (va VestingAccount) LockedCoins(t Time) Coins {
+   return max(va.GetVestingCoins(t) - va.DelegatedVesting, 0)
+}
+```
+
+The `x/bank` `ViewKeeper` can then provide APIs to determine locked and spendable
+coins for any account:
+
+```go
+func (k Keeper) LockedCoins(ctx Context, addr AccAddress) Coins {
+    acc := k.GetAccount(ctx, addr)
+    if acc != nil {
+        if acc.IsVesting() {
+            return acc.LockedCoins(ctx.BlockTime())
+        }
+    }
+
+    // non-vesting accounts do not have any locked coins
+    return NewCoins()
 }
 ```
 
@@ -281,21 +312,18 @@ The corresponding `x/bank` keeper should appropriately handle sending coins
 based on if the account is a vesting account or not.
 
 ```go
-func SendCoins(t Time, from Account, to Account, amount Coins) {
-    bc := from.GetCoins()
+func (k Keeper) SendCoins(ctx Context, from Account, to Account, amount Coins) {
+    bc := k.GetBalances(ctx, from)
+    v := k.LockedCoins(ctx, from)
 
-    if isVesting(from) {
-        sc := from.SpendableCoins(t)
-        assert(amount <= sc)
-    }
-
-    newCoins := bc - amount
+    spendable := bc - v
+    newCoins := spendable - amount
     assert(newCoins >= 0)
 
-    from.SetCoins(bc - amount)
-    to.SetCoins(amount)
+    from.SetBalance(newCoins)
+    to.AddBalance(amount)
 
-    // save accounts...
+    // save balances...
 }
 ```
 
@@ -310,7 +338,8 @@ For a vesting account attempting to delegate `D` coins, the following is perform
 5. Set `DF += Y`
 
 ```go
-func (va VestingAccount) TrackDelegation(t Time, amount Coins) {
+func (va VestingAccount) TrackDelegation(t Time, balance Coins, amount Coins) {
+    assert(balance <= amount)
     x := min(max(va.GetVestingCoins(t) - va.DelegatedVesting, 0), amount)
     y := amount - x
 
@@ -326,13 +355,10 @@ fields, so upstream callers MUST modify the `Coins` field by subtracting `amount
 
 ```go
 func DelegateCoins(t Time, from Account, amount Coins) {
-    bc := from.GetCoins()
-    assert(amount <= bc)
-
     if isVesting(from) {
         from.TrackDelegation(t, amount)
     } else {
-        from.SetCoins(sc - amount)
+        from.SetBalance(sc - amount)
     }
 
     // save account...
@@ -383,7 +409,7 @@ func UndelegateCoins(to Account, amount Coins) {
             // save account ...
         }
     } else {
-        AddCoins(to, amount)
+        AddBalance(to, amount)
         // save account...
     }
 }

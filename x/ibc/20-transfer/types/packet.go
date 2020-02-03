@@ -89,22 +89,7 @@ var _ channelexported.PacketDataI = AckDataTransfer{}
 // See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 type AckDataTransfer struct{}
 
-// ValidateBasic implements channelexported.PacketDataI
-func (ack AckDataTransfer) ValidateBasic() error {
-	return nil
-}
-
 // GetBytes implements channelexported.PacketDataI
 func (ack AckDataTransfer) GetBytes() []byte {
 	return []byte("ok")
-}
-
-// GetTimeoutHeight implements channelexported.PacketDataI
-func (ack AckDataTransfer) GetTimeoutHeight() uint64 {
-	return 0
-}
-
-// Type implements channelexported.PacketDataI
-func (ack AckDataTransfer) Type() string {
-	return "ics20/transfer/ack"
 }

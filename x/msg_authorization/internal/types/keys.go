@@ -7,7 +7,7 @@ import (
 
 const (
 	// ModuleName is the module name constant used in many places
-	ModuleName = "msg_authorization"
+	ModuleName = "msgauth"
 
 	// StoreKey is the store key string for msg_authorization
 	StoreKey = ModuleName

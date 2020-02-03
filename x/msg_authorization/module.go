@@ -74,7 +74,6 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 // Route is empty, as we do not handle Messages (just proposals)
 func (AppModule) Route() string { return RouterKey }
 
-// NewHandler is empty, as we do not handle Messages (just proposals)
 func (am AppModule) NewHandler() sdk.Handler {
 	return NewHandler(am.keeper)
 }

@@ -1,10 +1,11 @@
 package simapp
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/viper"
 	"io"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -199,30 +200,6 @@ func NewSimApp(
 		app.subspaces[crisis.ModuleName], invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName,
 	)
 	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], app.cdc, viper.GetString(flags.FlagHome))
-
-	/*
-		// TODO remove all this
-		// This is a sample code to demonstrate store upgrades.
-
-		// this configures a no-op upgrade handler for the "fooupgrade" upgrade
-		app.UpgradeKeeper.SetUpgradeHandler("fooupgrade", func(ctx sdk.Context, plan upgrade.Plan) {
-			// code goes here
-		})
-
-		upgradeName, upgradeHeight := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-		if upgradeName == "fooupgrade" {
-			storeUpgrades := store.StoreUpgrades{
-				Renamed: []store.StoreRename{{
-					OldKey: "foo",
-					NewKey: "bar",
-				}},
-				Deleted: []string{},
-			}
-
-			// configure store loader that checks if version == upgradeHeight and applies store upgrades
-			app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeHeight, &storeUpgrades))
-		}
-	*/
 
 	// create evidence keeper with router
 	evidenceKeeper := evidence.NewKeeper(

@@ -1,6 +1,9 @@
 package tendermint
 
 import (
+	"errors"
+	"time"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -18,6 +21,7 @@ import (
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, header clientexported.Header, chainID string,
+	currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(ClientState)
 	if !ok {
@@ -33,7 +37,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmHeader, chainID); err != nil {
+	if err := checkValidity(tmClientState, tmHeader, chainID, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -41,14 +45,39 @@ func CheckValidityAndUpdateState(
 	return tmClientState, consensusState, nil
 }
 
-// checkValidity checks if the Tendermint header is valid
+// checkValidity checks if the Tendermint header is valid.
 //
 // CONTRACT: assumes header.Height > consensusState.Height
-func checkValidity(clientState ClientState, header Header, chainID string) error {
-	if header.GetHeight() < clientState.LatestHeight {
+func checkValidity(
+	clientState ClientState, header Header, chainID string, currentTimestamp time.Time,
+) error {
+	// assert trusting period has not yet passed
+	if currentTimestamp.Sub(clientState.LatestTimestamp) >= clientState.TrustingPeriod {
+		return errors.New("trusting period since last client timestamp already passed")
+	}
+
+	// assert header timestamp is not in the future (& transitively that is not past the trusting period)
+	if header.Time.Unix() > currentTimestamp.Unix() {
+		return sdkerrors.Wrap(
+			clienttypes.ErrInvalidHeader,
+			"header blocktime can't be in the future",
+		)
+	}
+
+	// assert header timestamp is past current timestamp
+	if header.Time.Unix() <= clientState.LatestTimestamp.Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height < latest client state height (%d < %d)", header.GetHeight(), clientState.LatestHeight,
+			"header blocktime ≤ latest client state block time (%s ≤ %s)",
+			header.Time.String(), clientState.LatestTimestamp.String(),
+		)
+	}
+
+	// assert header height is newer than any we know
+	if header.GetHeight() <= clientState.LatestHeight {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header height ≤ latest client state height (%d ≤ %d)", header.GetHeight(), clientState.LatestHeight,
 		)
 	}
 

@@ -78,9 +78,11 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	switch clientType {
 	case exported.Tendermint:
-		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(clientState, header, ctx.ChainID())
+		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
+			clientState, header, ctx.ChainID(), ctx.BlockTime(),
+		)
 	default:
-		return sdkerrors.Wrapf(types.ErrInvalidClientType, "cannot update client with ID %s", clientID)
+		err = types.ErrInvalidClientType
 	}
 
 	if err != nil {
@@ -122,7 +124,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	switch e := misbehaviour.(type) {
 	case tendermint.Evidence:
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()),
+			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()), ctx.BlockTime(),
 		)
 
 	default:

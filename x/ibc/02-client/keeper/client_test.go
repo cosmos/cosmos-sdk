@@ -105,8 +105,9 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 
 			if tc.expPass {
 				expConsensusState := tendermint.ConsensusState{
-					Root:             commitment.NewRoot(suite.header.AppHash),
-					ValidatorSetHash: suite.header.ValidatorSet.Hash(),
+					Timestamp:    suite.header.Time,
+					Root:         commitment.NewRoot(suite.header.AppHash),
+					ValidatorSet: suite.header.ValidatorSet,
 				}
 
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -153,14 +154,13 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"trusting period misbehavior should pass",
 			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, suite.valSet, bothSigners),
-				Header2:          tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, bothValSet, bothSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          testClientID,
-				ClientID:         testClientID,
+				Header1:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
 			},
 			func() error {
-				suite.consensusState.ValidatorSetHash = bothValSet.Hash()
+				suite.consensusState.ValidatorSet = bothValSet
 				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
 				return err
 			},
@@ -175,8 +175,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"consensus state not found",
 			tendermint.Evidence{
-				Header1:  tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, suite.valSet, bothSigners),
-				Header2:  tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, bothValSet, bothSigners),
+				Header1:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
 				ChainID:  testClientID,
 				ClientID: testClientID,
 			},
@@ -190,8 +190,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"consensus state not found",
 			tendermint.Evidence{
-				Header1:  tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, suite.valSet, bothSigners),
-				Header2:  tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, bothValSet, bothSigners),
+				Header1:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
 				ChainID:  testClientID,
 				ClientID: testClientID,
 			},
@@ -205,11 +205,10 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"misbehaviour check failed",
 			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(testClientID, testClientHeight, bothValSet, bothValSet, bothSigners),
-				Header2:          tendermint.CreateTestHeader(testClientID, testClientHeight, altValSet, bothValSet, altSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          testClientID,
-				ClientID:         testClientID,
+				Header1:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				Header2:  tendermint.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), altValSet, bothValSet, altSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
 			},
 			func() error {
 				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)

@@ -2,10 +2,12 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -15,9 +17,14 @@ import (
 )
 
 func TestMsgCreateClientValidateBasic(t *testing.T) {
+	validator := tmtypes.NewValidator(tmtypes.NewMockPV().GetPubKey(), 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	cs := tendermint.ConsensusState{
-		Root:             commitment.NewRoot([]byte("root")),
-		ValidatorSetHash: []byte("hash"),
+		Timestamp:    now,
+		Root:         commitment.NewRoot([]byte("root")),
+		ValidatorSet: valSet,
 	}
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())

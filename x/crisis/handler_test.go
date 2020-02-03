@@ -90,7 +90,7 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	app, ctx, addrs := createTestApp()
 	sender := addrs[0]
-	coin := app.AccountKeeper.GetAccount(ctx, sender).GetCoins()[0]
+	coin := app.BankKeeper.GetAllBalances(ctx, sender)[0]
 	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
 	app.CrisisKeeper.SetConstantFee(ctx, excessCoins)
 

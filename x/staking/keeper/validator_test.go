@@ -17,7 +17,7 @@ import (
 //_______________________________________________________
 
 func TestSetValidator(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10)
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
@@ -70,12 +70,12 @@ func TestSetValidator(t *testing.T) {
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 0)
+	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
-	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
+	bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -111,7 +111,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	maxVals := 5
 
 	// create context, keeper, and pool for tests
-	ctx, _, keeper, _ := CreateTestInput(t, false, 0)
+	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 
@@ -121,8 +121,8 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// create a random pool
-	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
+	bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -165,14 +165,14 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// initialize setup
-	ctx, _, keeper, _ := CreateTestInput(t, false, 100)
+	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 100)
 
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	valTokens := sdk.TokensFromConsensusPower(100)
 
 	bondedPool := keeper.GetBondedPool(ctx)
-	err := bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens)))
+	err := bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens)))
 	require.NoError(t, err)
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -195,7 +195,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 
 // This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
 func TestValidatorBasics(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	//construct the validators
 	var validators [3]types.Validator
@@ -294,7 +294,7 @@ func TestValidatorBasics(t *testing.T) {
 
 // test how the validators are sorted, tests GetBondedValidatorsByPower
 func TestGetValidatorSortingUnmixed(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// initialize some validators into the state
 	amts := []int64{
@@ -374,11 +374,12 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 }
 
 func TestGetValidatorSortingMixed(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 1000)
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
-	bondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
-	notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
+
+	bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
+	bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -432,7 +433,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 
 // TODO separate out into multiple tests
 func TestGetValidatorsEdgeCases(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// set max validators to 2
 	params := keeper.GetParams(ctx)
@@ -446,10 +447,14 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	for i, power := range powers {
 		moniker := fmt.Sprintf("val#%d", int64(i))
 		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{Moniker: moniker})
+
 		tokens := sdk.TokensFromConsensusPower(power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+
 		notBondedPool := keeper.GetNotBondedPool(ctx)
-		require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoin(params.BondDenom, tokens))))
+		balances := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
+		require.NoError(t, bk.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, tokens))))
+
 		keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 		validators[i] = TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
@@ -465,8 +470,10 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(500)
 	validators[0], _ = validators[0].AddTokensFromDel(delTokens)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
+
 	newTokens := sdk.NewCoins()
-	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens...)))
+	balances := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
+	require.NoError(t, bk.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// test that the two largest validators are
@@ -496,7 +503,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	notBondedPool = keeper.GetNotBondedPool(ctx)
 	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.TokensFromConsensusPower(1)))
-	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens...)))
+	balances = bk.GetAllBalances(ctx, notBondedPool.GetAddress())
+	require.NoError(t, bk.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
@@ -511,7 +519,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
 
 	bondedPool := keeper.GetBondedPool(ctx)
-	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(sdk.NewCoin(params.BondDenom, rmTokens))))
+	balances = bk.GetAllBalances(ctx, bondedPool.GetAddress())
+	require.NoError(t, bk.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, rmTokens))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
@@ -525,7 +534,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
 
 	notBondedPool = keeper.GetNotBondedPool(ctx)
-	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
+	balances = bk.GetAllBalances(ctx, notBondedPool.GetAddress())
+	require.NoError(t, bk.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
@@ -538,7 +548,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 }
 
 func TestValidatorBondHeight(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
@@ -585,7 +595,7 @@ func TestValidatorBondHeight(t *testing.T) {
 }
 
 func TestFullValidatorSetPowerChange(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	max := 2
 	params.MaxValidators = uint16(2)
@@ -627,7 +637,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -657,7 +667,7 @@ func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesIdentical(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -680,7 +690,7 @@ func TestApplyAndReturnValidatorSetUpdatesIdentical(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -709,7 +719,7 @@ func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20}
 	var validators [2]types.Validator
@@ -741,7 +751,7 @@ func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{10, 20, 5, 15, 25}
 	var validators [5]types.Validator
@@ -787,7 +797,7 @@ func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := types.DefaultParams()
 	params.MaxValidators = 2
 	keeper.SetParams(ctx, params)
@@ -828,7 +838,7 @@ func TestApplyAndReturnValidatorSetUpdatesWithCliffValidator(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	powers := []int64{100, 100}
 	var validators [2]types.Validator
@@ -869,7 +879,7 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(3)
 
@@ -950,7 +960,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 }
 
 func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(2)
 
@@ -1027,7 +1037,7 @@ func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 }
 
 func TestUpdateValidatorCommission(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Now().UTC()})
 
 	commission1 := types.NewCommissionWithTime(

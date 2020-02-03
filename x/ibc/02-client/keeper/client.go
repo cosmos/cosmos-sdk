@@ -90,14 +90,11 @@ func (k Keeper) UpdateClient(
 
 	switch clientType {
 	case exported.Tendermint:
-		// TODO: use udb time from connected chain. Blocked on ICS07 Follow up PR.
-		unbondingTime := k.stakingKeeper.UnbondingTime(ctx)
-		trustingPeriod := (2 / 3) * unbondingTime
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, oldHeader, newHeader, ctx.ChainID(), trustingPeriod,
+			clientState, oldHeader, newHeader, ctx.ChainID(), ctx.BlockTime(),
 		)
 	default:
-		return sdkerrors.Wrapf(types.ErrInvalidClientType, "cannot update client with ID %s", clientID)
+		err = types.ErrInvalidClientType
 	}
 
 	if err != nil {
@@ -139,7 +136,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	switch e := misbehaviour.(type) {
 	case tendermint.Evidence:
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()),
+			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()), ctx.BlockTime(),
 		)
 
 	default:

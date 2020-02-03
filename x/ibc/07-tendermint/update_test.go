@@ -14,13 +14,13 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	}{
 		{
 			name:        "successful update",
-			clientState: tendermint.NewClientState(chainID, height),
+			clientState: tendermint.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
 			chainID:     chainID,
 			expPass:     true,
 		},
 		{
 			name:        "header basic validation failed",
-			clientState: tendermint.NewClientState(chainID, height),
+			clientState: tendermint.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
 			chainID:     "cosmoshub",
 			expPass:     false,
 		},
@@ -36,11 +36,11 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		tc := tc
 
 		expectedConsensus := tendermint.ConsensusState{
-			Root:             commitment.NewRoot(suite.header.AppHash),
-			ValidatorSetHash: suite.header.ValidatorSet.Hash(),
+			Root:         commitment.NewRoot(suite.header.AppHash),
+			ValidatorSet: suite.header.ValidatorSet,
 		}
 
-		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, suite.header, tc.chainID)
+		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, suite.header, tc.chainID, suite.now)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

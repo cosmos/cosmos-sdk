@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"errors"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -24,7 +25,7 @@ func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState,
 	oldHeader, newHeader clientexported.Header,
 	chainID string,
-	trustingPeriod time.Duration,
+	currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(ClientState)
 	if !ok {
@@ -47,8 +48,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(
-		tmClientState, tmHeader1, tmHeader2, chainID, trustingPeriod); err != nil {
+	if err := checkValidity(tmClientState, tmHeader1, tmHeader2, chainID, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -63,19 +63,42 @@ func checkValidity(
 	oldHeader,
 	newHeader Header,
 	chainID string,
-	trustingPeriod time.Duration,
+	currentTimestamp time.Time,
 ) error {
-	if newHeader.GetHeight() < clientState.LatestHeight {
+	// assert trusting period has not yet passed
+	if currentTimestamp.Sub(clientState.LatestTimestamp) >= clientState.TrustingPeriod {
+		return errors.New("trusting period since last client timestamp already passed")
+	}
+
+	// assert header timestamp is not in the future (& transitively that is not past the trusting period)
+	if newHeader.Time.Unix() > currentTimestamp.Unix() {
+		return sdkerrors.Wrap(
+			clienttypes.ErrInvalidHeader,
+			"header blocktime can't be in the future",
+		)
+	}
+
+	// assert header timestamp is past current timestamp
+	if newHeader.Time.Unix() <= clientState.LatestTimestamp.Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height < latest client state height (%d < %d)", newHeader.Height, clientState.LatestHeight,
+			"header blocktime ≤ latest client state block time (%s ≤ %s)",
+			newHeader.Time.String(), clientState.LatestTimestamp.String(),
+		)
+	}
+
+	// assert header height is newer than any we know
+	if newHeader.GetHeight() <= clientState.LatestHeight {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header height ≤ latest client state height (%d ≤ %d)", newHeader.GetHeight(), clientState.LatestHeight,
 		)
 	}
 
 	// call tendermint light client verification function
 	return lite.Verify(
 		chainID, &oldHeader.SignedHeader, oldHeader.NextValidatorSet, &newHeader.SignedHeader,
-		newHeader.ValidatorSet, trustingPeriod, time.Now(), lite.DefaultTrustLevel,
+		newHeader.ValidatorSet, clientState.TrustingPeriod, time.Now(), lite.DefaultTrustLevel,
 	)
 }
 
@@ -83,8 +106,9 @@ func checkValidity(
 func update(clientState ClientState, header Header) (ClientState, ConsensusState) {
 	clientState.LatestHeight = header.GetHeight()
 	consensusState := ConsensusState{
-		Root:             commitment.NewRoot(header.AppHash),
-		ValidatorSetHash: header.ValidatorSet.Hash(),
+		Timestamp:    header.Time,
+		Root:         commitment.NewRoot(header.AppHash),
+		ValidatorSet: header.ValidatorSet,
 	}
 
 	return clientState, consensusState

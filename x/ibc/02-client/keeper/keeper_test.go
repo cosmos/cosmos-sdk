@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -26,6 +26,9 @@ const (
 	testClientID3 = "ethermint"
 
 	testClientHeight = 5
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 type KeeperTestSuite struct {
@@ -38,22 +41,26 @@ type KeeperTestSuite struct {
 	header         tendermint.Header
 	valSet         *tmtypes.ValidatorSet
 	privVal        tmtypes.PrivValidator
+	now            time.Time
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
+	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	now2 := suite.now.Add(time.Duration(time.Hour * 1))
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.header = tendermint.CreateTestHeader(testClientID, testClientHeight, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = tendermint.CreateTestHeader(testClientID, testClientHeight+2, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = tendermint.ConsensusState{
-		Root:             commitment.NewRoot([]byte("hash")),
-		ValidatorSetHash: suite.valSet.Hash(),
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot([]byte("hash")),
+		ValidatorSet: suite.valSet,
 	}
 
 	var validators staking.Validators
@@ -74,7 +81,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := tendermint.NewClientState(testClientID, testClientHeight)
+	clientState := tendermint.NewClientState(testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -94,17 +101,18 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
 	retrievedConsState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, testClientHeight)
-
 	suite.Require().True(found, "GetConsensusState failed")
-	tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
-	require.Equal(suite.T(), suite.consensusState, tmConsState, "ConsensusState not stored correctly")
+
+	tmConsState, ok := retrievedConsState.(tendermint.ConsensusState)
+	suite.Require().True(ok)
+	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		tendermint.NewClientState(testClientID2, testClientHeight),
-		tendermint.NewClientState(testClientID3, testClientHeight),
-		tendermint.NewClientState(testClientID, testClientHeight),
+		tendermint.NewClientState(testClientID2, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		tendermint.NewClientState(testClientID3, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		tendermint.NewClientState(testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
 	}
 
 	for i := range expClients {

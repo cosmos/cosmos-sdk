@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
@@ -25,19 +24,15 @@ var _ exported.GenesisAccount = (*BaseAccount)(nil)
 // implements Account.
 type BaseAccount struct {
 	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
 	PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
 }
 
 // NewBaseAccount creates a new BaseAccount object
-func NewBaseAccount(address sdk.AccAddress, coins sdk.Coins,
-	pubKey crypto.PubKey, accountNumber uint64, sequence uint64) *BaseAccount {
-
+func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	return &BaseAccount{
 		Address:       address,
-		Coins:         coins,
 		PubKey:        pubKey,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
@@ -81,17 +76,6 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return nil
 }
 
-// GetCoins - Implements sdk.Account.
-func (acc *BaseAccount) GetCoins() sdk.Coins {
-	return acc.Coins
-}
-
-// SetCoins - Implements sdk.Account.
-func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
-	acc.Coins = coins
-	return nil
-}
-
 // GetAccountNumber - Implements Account
 func (acc *BaseAccount) GetAccountNumber() uint64 {
 	return acc.AccountNumber
@@ -114,12 +98,6 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 	return nil
 }
 
-// SpendableCoins returns the total set of spendable coins. For a base account,
-// this is simply the base coins.
-func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
-	return acc.GetCoins()
-}
-
 // Validate checks for errors on the account fields
 func (acc BaseAccount) Validate() error {
 	if acc.PubKey != nil && acc.Address != nil &&
@@ -132,7 +110,6 @@ func (acc BaseAccount) Validate() error {
 
 type baseAccountPretty struct {
 	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
 	PubKey        string         `json:"public_key" yaml:"public_key"`
 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -147,7 +124,6 @@ func (acc BaseAccount) String() string {
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 	alias := baseAccountPretty{
 		Address:       acc.Address,
-		Coins:         acc.Coins,
 		AccountNumber: acc.AccountNumber,
 		Sequence:      acc.Sequence,
 	}
@@ -173,7 +149,6 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 func (acc BaseAccount) MarshalJSON() ([]byte, error) {
 	alias := baseAccountPretty{
 		Address:       acc.Address,
-		Coins:         acc.Coins,
 		AccountNumber: acc.AccountNumber,
 		Sequence:      acc.Sequence,
 	}
@@ -207,7 +182,6 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	acc.Address = alias.Address
-	acc.Coins = alias.Coins
 	acc.AccountNumber = alias.AccountNumber
 	acc.Sequence = alias.Sequence
 

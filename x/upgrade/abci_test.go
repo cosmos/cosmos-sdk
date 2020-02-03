@@ -412,6 +412,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	require.Nil(t, err)
 
 	data, err := ioutil.ReadFile(upgradeInfoFilePath)
+	require.NoError(t, err)
 
 	var upgrades storetypes.UpgradeInfo
 	err = json.Unmarshal(data, &upgrades)

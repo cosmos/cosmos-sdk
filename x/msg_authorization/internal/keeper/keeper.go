@@ -15,11 +15,11 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      *codec.Codec
-	router   sdk.Router
+	router   types.Router
 }
 
 // NewKeeper constructs a message authorisation Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router sdk.Router) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router types.Router) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,

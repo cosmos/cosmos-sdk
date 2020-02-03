@@ -12,6 +12,7 @@ var _ Router = (*router)(nil)
 type Router interface {
 	AddRoute(r string, h sdk.Handler) (rtr Router)
 	Seal()
+	Route(c sdk.Context, p string) (h sdk.Handler)
 }
 
 type router struct {
@@ -48,4 +49,8 @@ func (rtr *router) AddRoute(path string, h sdk.Handler) Router {
 
 	rtr.routes[path] = h
 	return rtr
+}
+
+func (rtr *router) Route(_ sdk.Context, path string) sdk.Handler {
+	return rtr.routes[path]
 }

@@ -64,7 +64,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccount
 }
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function
-// in order to expose it to the ICS20 trasfer handler.
+// in order to expose it to the ICS20 transfer handler.
 func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error {
 	return k.channelKeeper.PacketExecuted(ctx, packet, acknowledgement)
 }
@@ -73,4 +73,10 @@ func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, 
 // in order to expose it to the ICS20 trasfer handler.
 func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID)
+}
+
+// TimeoutExecuted defines a wrapper function for the channel Keeper's function
+// in order to expose it to the ICS20 transfer handler.
+func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error {
+	return k.channelKeeper.TimeoutExecuted(ctx, packet)
 }

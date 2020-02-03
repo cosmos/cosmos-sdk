@@ -21,6 +21,7 @@ type ChannelKeeper interface {
 	SendPacket(ctx sdk.Context, packet channelexported.PacketI) error
 	PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error
 	ChanCloseInit(ctx sdk.Context, portID, channelID string) error
+	TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error
 }
 
 // ClientKeeper defines the expected IBC client keeper

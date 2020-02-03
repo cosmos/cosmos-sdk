@@ -28,6 +28,7 @@ var (
 	NewMsgRevokeAuthorization = types.NewMsgRevokeAuthorization
 	NewMsgExecDelegated       = types.NewMsgExecDelegated
 	NewKeeper                 = keeper.NewKeeper
+	NewRouter                 = types.NewRouter
 
 	// variable aliases
 	ModuleCdc = types.ModuleCdc

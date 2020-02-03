@@ -137,7 +137,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		oldPowerBytes, found := last[valAddrBytes]
 
 		newPower := validator.ConsensusPower()
-		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(newPower)
+		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(&sdk.IntProto{Int: sdk.NewInt(newPower)})
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
@@ -240,7 +240,6 @@ func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
@@ -254,14 +253,13 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	k.DeleteValidatorQueue(ctx, validator)
 
 	// trigger hook
-	k.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddress)
+	k.AfterValidatorBonded(ctx, validator.GetConsAddr(), validator.OperatorAddress)
 
 	return validator
 }
 
 // perform all the store operations for when a validator begins unbonding
 func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-
 	params := k.GetParams(ctx)
 
 	// delete the validator by power index, as the key will change
@@ -275,7 +273,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	validator = validator.UpdateStatus(sdk.Unbonding)
 
 	// set the unbonding completion time and completion height appropriately
-	validator.UnbondingCompletionTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
+	validator.UnbondingTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = ctx.BlockHeader().Height
 
 	// save the now unbonded validator record and power index
@@ -286,7 +284,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.InsertValidatorQueue(ctx, validator)
 
 	// trigger hook
-	k.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddress)
+	k.AfterValidatorBeginUnbonding(ctx, validator.GetConsAddr(), validator.OperatorAddress)
 
 	return validator
 }

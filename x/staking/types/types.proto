@@ -161,9 +161,9 @@ message Description {
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
 // calculation of future undelegations without iterating over delegators.
 // When coins are delegated to this validator, the validator is credited with a
-// delegation whose number of bond shares is based on the amount of coins delegated
-// divided by the current exchange rate. Voting power can be calculated as total
-// bonded shares multiplied by exchange rate.
+// delegation whose number of bond shares is based on the amount of coins
+// delegated divided by the current exchange rate. Voting power can be
+// calculated as total bonded shares multiplied by exchange rate.
 message Validator {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
@@ -176,9 +176,8 @@ message Validator {
   string consensus_pubkey = 2
       [ (gogoproto.moretags) = "yaml:\"consensus_pubkey\"" ];
   bool jailed = 3;
-  int32 status = 4 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"
-  ];
+  int32 status = 4 [ (gogoproto.casttype) =
+                         "github.com/cosmos/cosmos-sdk/types.BondStatus" ];
   string tokens = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
@@ -221,6 +220,9 @@ message DVPair {
   ];
 }
 
+// DVPairs defines an array of DVPair objects.
+message DVPairs { repeated DVPair pairs = 1 [ (gogoproto.nullable) = false ]; }
+
 // DVVTriplet is struct that just has a delegator-validator-validator triplet
 // with no other data. It is intended to be used as a marshalable pointer. For
 // example, a DVVTriplet can be used to construct the key to getting a
@@ -241,6 +243,11 @@ message DVVTriplet {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
+}
+
+// DVVTriplets defines an array of DVVTriplet objects.
+message DVVTriplets {
+  repeated DVVTriplet triplets = 1 [ (gogoproto.nullable) = false ];
 }
 
 // Delegation represents the bond with tokens held by an account. It is

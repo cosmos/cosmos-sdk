@@ -3,11 +3,11 @@ package upgrade_test
 import (
 	"encoding/json"
 	"errors"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	"io/ioutil"
 	"testing"
 	"time"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -402,13 +402,13 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 
 	planHeight := s.ctx.BlockHeight() + 1
-
+	name := "test"
 	t.Log("verify if upgrade height is dumped to file")
-	err := s.keeper.DumpUpgradeInfoToFile(planHeight)
+	err := s.keeper.DumpUpgradeInfoToDisk(planHeight, name)
 	require.Nil(t, err)
 
-	upgradeInfoFileDir := s.keeper.GetHomePath()
-	upgradeInfoFilePath, err := types.EnsureConfigExists(upgradeInfoFileDir)
+	upgradeInfoFileDir := s.keeper.GetHomeDir()
+	upgradeInfoFilePath, err := upgrade.EnsureUpgradeInfoFileExists(upgradeInfoFileDir)
 	require.Nil(t, err)
 
 	data, err := ioutil.ReadFile(upgradeInfoFilePath)

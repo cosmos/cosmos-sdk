@@ -46,8 +46,8 @@ type StoreUpgrades struct {
 
 // UpgradeInfo defines height and StoreUpgrades to be used for multistore upgrades
 type UpgradeInfo struct {
-	Height        int64         `json:"height"`
-	StoreUpgrades StoreUpgrades `json:"store_upgrades"`
+	Name   string `json:"name"`
+	Height int64  `json:"height"`
 }
 
 // StoreRename defines a name change of a sub-store.

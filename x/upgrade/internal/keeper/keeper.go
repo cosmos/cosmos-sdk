@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -15,6 +17,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 )
+
+const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
 	homePath           string
@@ -136,16 +140,17 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToFile adds plan height to upgrade-info.json
-func (k Keeper) DumpUpgradeInfoToFile(height int64) error {
-	upgradeInfoFileDir := k.GetHomePath()
-	upgradeInfoFilePath, err := types.EnsureConfigExists(upgradeInfoFileDir)
+// DumpUpgradeInfoToDisk adds plan height to upgrade-info.json
+func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
+	upgradeInfoFileDir := k.GetHomeDir()
+	upgradeInfoFilePath, err := EnsureUpgradeInfoFileExists(upgradeInfoFileDir)
 	if err != nil {
 		return err
 	}
 
 	var upgradeInfo store.UpgradeInfo
 	upgradeInfo.Height = height
+	upgradeInfo.Name = name
 
 	info, err := json.Marshal(upgradeInfo)
 
@@ -153,11 +158,45 @@ func (k Keeper) DumpUpgradeInfoToFile(height int64) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
-	return nil
+	return ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
 }
 
-// GetHomepath returns the height at which the given upgrade was executed
-func (k Keeper) GetHomePath() string {
+// EnsureUpgradeInfoFileExists checks if upgrade-info file is present
+// if not it creates the file
+func EnsureUpgradeInfoFileExists(upgradeInfoFileDir string) (string, error) {
+	if upgradeInfoFileDir != "" {
+		if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
+			err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
+			if err != nil {
+				return "", err
+			}
+			return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+		}
+	}
+
+	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+}
+
+// GetHomeDir returns the height at which the given upgrade was executed
+func (k Keeper) GetHomeDir() string {
 	return k.homePath
+}
+
+// ReadUpgradeInfoFromDisk returns the name and height of the upgrade
+// which is written to disk by the old binary when panic'ing
+// if there's an error in reading the info,
+// it assumes that the upgrade info is not available
+func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeName string, upgradeHeight int64) {
+	var upgradeInfo store.UpgradeInfo
+	upgradeInfoPath := filepath.Join(k.homePath, UpgradeInfoFileName)
+
+	data, err := ioutil.ReadFile(upgradeInfoPath)
+	if err != nil {
+		return "", -1
+	}
+
+	// don't consider error
+	json.Unmarshal(data, &upgradeInfo)
+
+	return upgradeInfo.Name, upgradeInfo.Height
 }

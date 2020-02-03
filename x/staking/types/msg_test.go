@@ -32,7 +32,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"partial description", "", "", "c", "", "", commission1, sdk.OneInt(), valAddr1, pk1, coinPos, true},
 		{"empty description", "", "", "", "", "", commission2, sdk.OneInt(), valAddr1, pk1, coinPos, false},
 		{"empty address", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), emptyAddr, pk1, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", "e", commission1, sdk.OneInt(), valAddr1, emptyPubkey, coinPos, true},
+		{"empty pubkey", "a", "b", "c", "d", "e", commission1, sdk.OneInt(), valAddr1, emptyPubkey, coinPos, false},
 		{"empty bond", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), valAddr1, pk1, coinZero, false},
 		{"zero min self delegation", "a", "b", "c", "d", "e", commission1, sdk.ZeroInt(), valAddr1, pk1, coinPos, false},
 		{"negative min self delegation", "a", "b", "c", "d", "e", commission1, sdk.NewInt(-1), valAddr1, pk1, coinPos, false},

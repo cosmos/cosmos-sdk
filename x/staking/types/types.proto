@@ -82,7 +82,7 @@ message ValidatorProto {
     (gogoproto.nullable) = false
   ];
   bool jailed = 3;
-  bytes status = 4;
+  int32 status = 4;
   string tokens = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false

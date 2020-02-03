@@ -78,17 +78,17 @@ func (v Validator) ToProto() ValidatorProto {
 	switch t := v.ConsPubKey.(type) {
 	case secp256k1.PubKeySecp256k1:
 		pk = sdk.PublicKey{
-			Pub: &sdk.PublicKey_Secp256K1{t.Bytes()},
+			Pub: &sdk.PublicKey_Secp256K1{Secp256K1: t.Bytes()},
 		}
 
 	case ed25519.PubKeyEd25519:
 		pk = sdk.PublicKey{
-			Pub: &sdk.PublicKey_Ed25519{t.Bytes()},
+			Pub: &sdk.PublicKey_Ed25519{Ed25519: t.Bytes()},
 		}
 
 	case sr25519.PubKeySr25519:
 		pk = sdk.PublicKey{
-			Pub: &sdk.PublicKey_Sr25519{t.Bytes()},
+			Pub: &sdk.PublicKey_Sr25519{Sr25519: t.Bytes()},
 		}
 	}
 
@@ -96,7 +96,7 @@ func (v Validator) ToProto() ValidatorProto {
 		OperatorAddress:   v.OperatorAddress,
 		ConsensusPubkey:   pk,
 		Jailed:            v.Jailed,
-		Status:            []byte{byte(v.Status)},
+		Status:            int32(v.Status),
 		Tokens:            v.Tokens,
 		DelegatorShares:   v.DelegatorShares,
 		Description:       v.Description,
@@ -136,7 +136,7 @@ func (vp ValidatorProto) ToValidator() Validator {
 		OperatorAddress:         vp.OperatorAddress,
 		ConsPubKey:              pk,
 		Jailed:                  vp.Jailed,
-		Status:                  sdk.BondStatus(vp.Status[0]),
+		Status:                  sdk.BondStatus(byte(vp.Status)),
 		Tokens:                  vp.Tokens,
 		DelegatorShares:         vp.DelegatorShares,
 		Description:             vp.Description,

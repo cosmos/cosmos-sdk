@@ -13,9 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // define constants used for testing
@@ -83,4 +88,80 @@ func (suite *KeeperTestSuite) TestGetTransferAccount() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func (suite *KeeperTestSuite) createClient() {
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+
+	consensusState := tendermint.ConsensusState{
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSetHash: suite.valSet.Hash(),
+	}
+
+	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
+	suite.NoError(err)
+}
+
+func (suite *KeeperTestSuite) updateClient() {
+	// always commit and begin a new block on updateClient
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+
+	state := tendermint.ConsensusState{
+		Root: commitment.NewRoot(commitID.Hash),
+	}
+
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, 1, state)
+}
+
+func (suite *KeeperTestSuite) createConnection(state connectionexported.State) {
+	connection := connection.ConnectionEnd{
+		State:    state,
+		ClientID: testClient,
+		Counterparty: connection.Counterparty{
+			ClientID:     testClient,
+			ConnectionID: testConnection,
+			Prefix:       suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		},
+		Versions: connection.GetCompatibleVersions(),
+	}
+
+	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnection, connection)
+}
+
+func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channelexported.State) {
+	ch := channel.Channel{
+		State:    state,
+		Ordering: testChannelOrder,
+		Counterparty: channel.Counterparty{
+			PortID:    counterpartyPort,
+			ChannelID: counterpartyChan,
+		},
+		ConnectionHops: []string{connID},
+		Version:        testChannelVersion,
+	}
+
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
+}
+
+func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
+	res := suite.app.Query(abci.RequestQuery{
+		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Data:  key,
+		Prove: true,
+	})
+
+	height = res.Height
+	proof = commitment.Proof{
+		Proof: res.Proof,
+	}
+
+	return
 }

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,10 +36,10 @@ func (k Keeper) SendTransfer(
 	}
 
 	coins := make(sdk.Coins, len(amount))
-	prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 	switch {
 	case isSourceChain:
 		// build the receiving denomination prefix
+		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		for i, coin := range amount {
 			coins[i] = sdk.NewCoin(prefix+coin.Denom, coin.Amount)
 		}
@@ -56,7 +57,7 @@ func (k Keeper) ReceiveTransfer(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string,
-	data types.PacketDataTransfer,
+	data types.FungibleTokenPacketData,
 ) error {
 	if data.Source {
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
@@ -107,7 +108,7 @@ func (k Keeper) TimeoutTransfer(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string,
-	data types.PacketDataTransfer,
+	data types.FungibleTokenPacketData,
 ) error {
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
@@ -154,6 +155,7 @@ func (k Keeper) createOutgoingPacket(
 
 		// construct receiving denominations, check correctness
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
+		fmt.Println(prefix)
 		coins := make(sdk.Coins, len(amount))
 		for i, coin := range amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
@@ -200,7 +202,9 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	packetData := types.NewPacketDataTransfer(amount, sender, receiver, isSourceChain, uint64(ctx.BlockHeight())+DefaultPacketTimeout)
+	packetData := types.NewFungibleTokenPacketData(
+		amount, sender, receiver, isSourceChain, uint64(ctx.BlockHeight())+DefaultPacketTimeout,
+	)
 
 	packet := channel.NewPacket(
 		packetData,

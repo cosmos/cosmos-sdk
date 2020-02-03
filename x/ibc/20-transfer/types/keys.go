@@ -10,17 +10,17 @@ import (
 )
 
 const (
-	// SubModuleName defines the IBC transfer name
-	SubModuleName = "transfer"
+	// ModuleName defines the IBC transfer name
+	ModuleName = "transfer"
 
 	// StoreKey is the store key string for IBC transfer
-	StoreKey = SubModuleName
+	StoreKey = ModuleName
 
 	// RouterKey is the message route for IBC transfer
-	RouterKey = SubModuleName
+	RouterKey = ModuleName
 
 	// QuerierRoute is the querier route for IBC transfer
-	QuerierRoute = SubModuleName
+	QuerierRoute = ModuleName
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel
@@ -39,5 +39,5 @@ func GetDenomPrefix(portID, channelID string) string {
 
 // GetModuleAccountName returns the IBC transfer module account name for supply
 func GetModuleAccountName() string {
-	return fmt.Sprintf("%s/%s", ibctypes.ModuleName, SubModuleName)
+	return fmt.Sprintf("%s/%s", ibctypes.ModuleName, ModuleName)
 }

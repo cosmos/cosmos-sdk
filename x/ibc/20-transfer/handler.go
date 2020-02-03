@@ -3,7 +3,6 @@ package transfer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -17,14 +16,14 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
 			switch data := msg.Data.(type) {
-			case PacketDataTransfer: // i.e fulfills the Data interface
+			case FungibleTokenPacketData: // i.e fulfills the Data interface
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", msg)
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.Data.(type) {
-			case PacketDataTransfer:
+			case FungibleTokenPacketData:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
@@ -46,9 +45,9 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
-			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver.String()),
+			sdk.NewAttribute(AttributeKeyReceiver, msg.Receiver.String()),
 		),
 	)
 
@@ -59,7 +58,7 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 
 // See onRecvPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handlePacketDataTransfer(
-	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer,
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data FungibleTokenPacketData,
 ) (*sdk.Result, error) {
 	packet := msg.Packet
 	if err := k.ReceiveTransfer(
@@ -75,7 +74,7 @@ func handlePacketDataTransfer(
 		return nil, err
 	}
 
-	acknowledgement := types.AckDataTransfer{}
+	acknowledgement := AckDataTransfer{}
 	if err := k.PacketExecuted(ctx, packet, acknowledgement); err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func handlePacketDataTransfer(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
 		),
 	)
@@ -95,7 +94,7 @@ func handlePacketDataTransfer(
 }
 
 // See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) (*sdk.Result, error) {
+func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data FungibleTokenPacketData) (*sdk.Result, error) {
 	packet := msg.Packet
 	if err := k.TimeoutTransfer(
 		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,

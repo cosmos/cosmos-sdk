@@ -9,11 +9,11 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
 
-var _ channelexported.PacketDataI = PacketDataTransfer{}
+var _ channelexported.PacketDataI = FungibleTokenPacketData{}
 
-// PacketDataTransfer defines a struct for the packet payload
+// FungibleTokenPacketData defines a struct for the packet payload
 // See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
-type PacketDataTransfer struct {
+type FungibleTokenPacketData struct {
 	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
 	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
@@ -21,9 +21,11 @@ type PacketDataTransfer struct {
 	Timeout  uint64         `json:"timeout" yaml:"timeout"`
 }
 
-// NewPacketDataTransfer contructs a new PacketDataTransfer
-func NewPacketDataTransfer(amount sdk.Coins, sender, receiver sdk.AccAddress, source bool, timeout uint64) PacketDataTransfer {
-	return PacketDataTransfer{
+// NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
+func NewFungibleTokenPacketData(
+	amount sdk.Coins, sender, receiver sdk.AccAddress,
+	source bool, timeout uint64) FungibleTokenPacketData {
+	return FungibleTokenPacketData{
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
@@ -32,49 +34,52 @@ func NewPacketDataTransfer(amount sdk.Coins, sender, receiver sdk.AccAddress, so
 	}
 }
 
-// String returns a string representation of PacketDataTransfer
-func (pd PacketDataTransfer) String() string {
-	return fmt.Sprintf(`PacketDataTransfer:
+// String returns a string representation of FungibleTokenPacketData
+func (ftpd FungibleTokenPacketData) String() string {
+	return fmt.Sprintf(`FungibleTokenPacketData:
 	Amount:               %s
 	Sender:               %s
 	Receiver:             %s
 	Source:               %v`,
-		pd.Amount.String(),
-		pd.Sender,
-		pd.Receiver,
-		pd.Source,
+		ftpd.Amount.String(),
+		ftpd.Sender,
+		ftpd.Receiver,
+		ftpd.Source,
 	)
 }
 
 // ValidateBasic implements channelexported.PacketDataI
-func (pd PacketDataTransfer) ValidateBasic() error {
-	if !pd.Amount.IsAllPositive() {
+func (ftpd FungibleTokenPacketData) ValidateBasic() error {
+	if !ftpd.Amount.IsAllPositive() {
 		return sdkerrors.ErrInsufficientFunds
 	}
-	if !pd.Amount.IsValid() {
+	if !ftpd.Amount.IsValid() {
 		return sdkerrors.ErrInvalidCoins
 	}
-	if pd.Sender.Empty() {
+	if ftpd.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-	if pd.Receiver.Empty() {
+	if ftpd.Receiver.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing receiver address")
+	}
+	if ftpd.Timeout == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacketTimeout, "timeout cannot be 0")
 	}
 	return nil
 }
 
 // GetBytes implements channelexported.PacketDataI
-func (pd PacketDataTransfer) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
+func (ftpd FungibleTokenPacketData) GetBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ftpd))
 }
 
 // GetTimeoutHeight implements channelexported.PacketDataI
-func (pd PacketDataTransfer) GetTimeoutHeight() uint64 {
-	return pd.Timeout
+func (ftpd FungibleTokenPacketData) GetTimeoutHeight() uint64 {
+	return ftpd.Timeout
 }
 
 // Type implements channelexported.PacketDataI
-func (pd PacketDataTransfer) Type() string {
+func (ftpd FungibleTokenPacketData) Type() string {
 	return "ics20/transfer"
 }
 

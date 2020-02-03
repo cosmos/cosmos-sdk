@@ -6,18 +6,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPacketDataTransferValidation tests ValidateBasic for PacketDataTransfer
-func TestPacketDataTransferValidation(t *testing.T) {
-	testPacketDataTransfer := []PacketDataTransfer{
-		NewPacketDataTransfer(coins, addr1, addr2, true, 100),             // valid msg
-		NewPacketDataTransfer(invalidDenomCoins, addr1, addr2, true, 100), // invalid amount
-		NewPacketDataTransfer(negativeCoins, addr1, addr2, false, 100),    // amount contains negative coin
-		NewPacketDataTransfer(coins, emptyAddr, addr2, false, 100),        // missing sender address
-		NewPacketDataTransfer(coins, addr1, emptyAddr, false, 100),        // missing recipient address
+// TestFungibleTokenPacketDataValidateBasic tests ValidateBasic for FungibleTokenPacketData
+func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
+	testPacketDataTransfer := []FungibleTokenPacketData{
+		NewFungibleTokenPacketData(coins, addr1, addr2, true, 100),             // valid msg
+		NewFungibleTokenPacketData(invalidDenomCoins, addr1, addr2, true, 100), // invalid amount
+		NewFungibleTokenPacketData(negativeCoins, addr1, addr2, false, 100),    // amount contains negative coin
+		NewFungibleTokenPacketData(coins, emptyAddr, addr2, false, 100),        // missing sender address
+		NewFungibleTokenPacketData(coins, addr1, emptyAddr, false, 100),        // missing recipient address
 	}
 
 	testCases := []struct {
-		packetData PacketDataTransfer
+		packetData FungibleTokenPacketData
 		expPass    bool
 		errMsg     string
 	}{

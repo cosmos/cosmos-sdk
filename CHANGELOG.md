@@ -60,7 +60,8 @@ balances or a single balance by denom when the `denom` query parameter is presen
   the original vesting amount.
   * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
 * (staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffer for state
-serialization instead of Amino.
+serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
+for JSON encoding.
   * `BondStatus` is now of type `int32` instead of `byte`.
   * Types of `int16` in the `Params` type are now of type `int32`.
   * Every reference of `crypto.Pubkey` in context of a `Validator` is now of type string. `GetPubKeyFromBech32` must be used to get the `crypto.Pubkey`.

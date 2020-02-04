@@ -367,8 +367,8 @@ func TestBech32ifyAddressBytes(t *testing.T) {
 		{"20-byte address", args{"prefixB", addr20byte}, "prefixB1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn8e9wka", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt := tt
 			got, err := types.Bech32ifyAddressBytes(tt.args.prefix, tt.args.bs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Bech32ifyBytes() error = %v, wantErr %v", err, tt.wantErr)
@@ -400,8 +400,8 @@ func TestMustBech32ifyAddressBytes(t *testing.T) {
 		{"20-byte address", args{"prefixB", addr20byte}, "prefixB1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn8e9wka", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt := tt
 			if tt.wantPanic {
 				require.Panics(t, func() { types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs) })
 				return

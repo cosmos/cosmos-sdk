@@ -50,7 +50,7 @@ func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.ValSet) == 0 {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
 	}
-	if !sort.IsSorted(Validators(hi.ValSet)) {
+	if !sort.IsSorted(hi.ValSet) {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 	return nil

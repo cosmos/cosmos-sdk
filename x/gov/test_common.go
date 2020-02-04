@@ -81,7 +81,7 @@ func getMockApp(
 	bk := mApp.BankKeeper
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, maccPerms)
 	sk := staking.NewKeeper(
-		mApp.Cdc, keyStaking, bk, supplyKeeper, pk.Subspace(staking.DefaultParamspace),
+		staking.ModuleCdc, keyStaking, bk, supplyKeeper, pk.Subspace(staking.DefaultParamspace),
 	)
 
 	keeper := keep.NewKeeper(

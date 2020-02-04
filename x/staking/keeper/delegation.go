@@ -194,9 +194,10 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
 // the given addresses. It creates the unbonding delegation if it does not exist
-func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Int) types.UnbondingDelegation {
+func (k Keeper) SetUnbondingDelegationEntry(
+	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	creationHeight int64, minTime time.Time, balance sdk.Int,
+) types.UnbondingDelegation {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if found {
@@ -204,6 +205,7 @@ func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
 	} else {
 		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance)
 	}
+
 	k.SetUnbondingDelegation(ctx, ubd)
 	return ubd
 }

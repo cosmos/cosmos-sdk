@@ -93,7 +93,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 // return all redelegations for a delegator
 func (k Keeper) GetAllRedelegations(
 	ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
-) ([]types.Redelegation) {
+) []types.Redelegation {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetREDsKey(delegator)

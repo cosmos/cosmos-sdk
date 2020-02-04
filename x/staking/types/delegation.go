@@ -206,10 +206,7 @@ func NewRedelegation(
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (d *Redelegation) AddEntry(creationHeight int64,
-	minTime time.Time, balance sdk.Int,
-	sharesDst sdk.Dec) {
-
+func (d *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec) {
 	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst)
 	d.Entries = append(d.Entries, entry)
 }

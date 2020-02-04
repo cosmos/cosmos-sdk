@@ -21,14 +21,6 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
 }
 
-// CommunityPoolSpendProposal spends from the community pool
-type CommunityPoolSpendProposal struct {
-	Title       string         `json:"title" yaml:"title"`
-	Description string         `json:"description" yaml:"description"`
-	Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
-	Amount      sdk.Coins      `json:"amount" yaml:"amount"`
-}
-
 // NewCommunityPoolSpendProposal creates a new community pool spned proposal.
 func NewCommunityPoolSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) CommunityPoolSpendProposal {
 	return CommunityPoolSpendProposal{title, description, recipient, amount}

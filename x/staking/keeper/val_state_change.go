@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -137,7 +138,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		oldPowerBytes, found := last[valAddrBytes]
 
 		newPower := validator.ConsensusPower()
-		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(&sdk.IntProto{Int: sdk.NewInt(newPower)})
+		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.Int64Value{Value: newPower})
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {

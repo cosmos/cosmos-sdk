@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -275,15 +277,15 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 		return 0
 	}
 
-	ip := sdk.IntProto{}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
-	return ip.Int.Int64()
+	intV := gogotypes.Int64Value{}
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &intV)
+	return intV.GetValue()
 }
 
 // Set the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&sdk.IntProto{Int: sdk.NewInt(power)})
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.Int64Value{Value: power})
 	store.Set(types.GetLastValidatorPowerKey(operator), bz)
 }
 

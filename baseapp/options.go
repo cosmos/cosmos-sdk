@@ -44,6 +44,11 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
+// SetDebug will turn on or off debug flag
+func SetDebug(debug bool) func(*BaseApp) {
+	return func(app *BaseApp) { app.setDebug(debug) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

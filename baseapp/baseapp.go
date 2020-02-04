@@ -106,6 +106,9 @@ type BaseApp struct { // nolint: maligned
 
 	// application's version string
 	appVersion string
+
+	// debug flag turns on more error reporting
+	debug bool
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -127,6 +130,7 @@ func NewBaseApp(
 		queryRouter:    NewQueryRouter(),
 		txDecoder:      txDecoder,
 		fauxMerkleMode: false,
+		debug:          false,
 	}
 	for _, option := range options {
 		option(app)
@@ -352,6 +356,10 @@ func (app *BaseApp) setHaltTime(haltTime uint64) {
 
 func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
+}
+
+func (app *BaseApp) setDebug(debug bool) {
+	app.debug = debug
 }
 
 // Router returns the router of the BaseApp.

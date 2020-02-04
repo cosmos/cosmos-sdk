@@ -120,8 +120,9 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 }
 
 // return a unbonding delegation
-func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, found bool) {
+func (k Keeper) GetUnbondingDelegation(
+	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
+) (ubd types.UnbondingDelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetUBDKey(delAddr, valAddr)

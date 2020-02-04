@@ -88,8 +88,8 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 }
 
 // String implements the stringer interface for a UnbondingDelegationEntry.
-func (ubd UnbondingDelegationEntry) String() string {
-	out, _ := yaml.Marshal(ubd)
+func (e UnbondingDelegationEntry) String() string {
+	out, _ := yaml.Marshal(e)
 	return string(out)
 }
 
@@ -114,14 +114,14 @@ func NewUnbondingDelegation(
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (d *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int) {
+func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int) {
 	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
-	d.Entries = append(d.Entries, entry)
+	ubd.Entries = append(ubd.Entries, entry)
 }
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
-func (d *UnbondingDelegation) RemoveEntry(i int64) {
-	d.Entries = append(d.Entries[:i], d.Entries[i+1:]...)
+func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
+	ubd.Entries = append(ubd.Entries[:i], ubd.Entries[i+1:]...)
 }
 
 // return the unbonding delegation
@@ -145,12 +145,12 @@ func UnmarshalUBD(cdc codec.Marshaler, value []byte) (ubd UnbondingDelegation, e
 }
 
 // String returns a human readable string representation of an UnbondingDelegation.
-func (d UnbondingDelegation) String() string {
+func (ubd UnbondingDelegation) String() string {
 	out := fmt.Sprintf(`Unbonding Delegations between:
   Delegator:                 %s
   Validator:                 %s
-	Entries:`, d.DelegatorAddress, d.ValidatorAddress)
-	for i, entry := range d.Entries {
+	Entries:`, ubd.DelegatorAddress, ubd.ValidatorAddress)
+	for i, entry := range ubd.Entries {
 		out += fmt.Sprintf(`    Unbonding Delegation %d:
       Creation Height:           %v
       Min time to unbond (unix): %v
@@ -180,8 +180,8 @@ func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balanc
 }
 
 // String implements the Stringer interface for a RedelegationEntry object.
-func (red RedelegationEntry) String() string {
-	out, _ := yaml.Marshal(red)
+func (e RedelegationEntry) String() string {
+	out, _ := yaml.Marshal(e)
 	return string(out)
 }
 
@@ -206,14 +206,14 @@ func NewRedelegation(
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (d *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec) {
+func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec) {
 	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst)
-	d.Entries = append(d.Entries, entry)
+	red.Entries = append(red.Entries, entry)
 }
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
-func (d *Redelegation) RemoveEntry(i int64) {
-	d.Entries = append(d.Entries[:i], d.Entries[i+1:]...)
+func (red *Redelegation) RemoveEntry(i int64) {
+	red.Entries = append(red.Entries[:i], red.Entries[i+1:]...)
 }
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
@@ -237,17 +237,17 @@ func UnmarshalRED(cdc codec.Marshaler, value []byte) (red Redelegation, err erro
 }
 
 // String returns a human readable string representation of a Redelegation.
-func (d Redelegation) String() string {
+func (red Redelegation) String() string {
 	out := fmt.Sprintf(`Redelegations between:
   Delegator:                 %s
   Source Validator:          %s
   Destination Validator:     %s
   Entries:
 `,
-		d.DelegatorAddress, d.ValidatorSrcAddress, d.ValidatorDstAddress,
+		red.DelegatorAddress, red.ValidatorSrcAddress, red.ValidatorDstAddress,
 	)
 
-	for i, entry := range d.Entries {
+	for i, entry := range red.Entries {
 		out += fmt.Sprintf(`    Redelegation Entry #%d:
       Creation height:           %v
       Min time to unbond (unix): %v

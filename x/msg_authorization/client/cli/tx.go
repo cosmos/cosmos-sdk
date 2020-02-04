@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 )
 
@@ -62,7 +61,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var authorization exported.Authorization
+			var authorization types.SendAuthorization
 			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err

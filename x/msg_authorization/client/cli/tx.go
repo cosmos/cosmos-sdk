@@ -61,7 +61,8 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var authorization types.SendAuthorization
+			var amount sdk.Coins
+			authorization := &types.SendAuthorization{SpendLimit: amount}
 			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err

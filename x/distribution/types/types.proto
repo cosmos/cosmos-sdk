@@ -118,11 +118,12 @@ message FeePool {
   ];
 }
 
+// CommunityPoolSpendProposal spends from the community pool
 message CommunityPoolSpendProposal {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters) = false;
   string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
-  string Description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
   bytes recipient = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"recipient\""

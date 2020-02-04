@@ -191,11 +191,12 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeName string, upgradeHeight int
 	upgradeInfoPath := filepath.Join(k.homePath, UpgradeInfoFileName)
 
 	data, err := ioutil.ReadFile(upgradeInfoPath)
+
+	// if error in reading the file, assume there are no upgrades
 	if err != nil {
 		return "", -1
 	}
 
-	// don't consider error
 	json.Unmarshal(data, &upgradeInfo)
 
 	return upgradeInfo.Name, upgradeInfo.Height

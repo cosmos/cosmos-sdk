@@ -16,7 +16,9 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.ClientType)
 	}
 
-	_, err := k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
+	_, err := k.CreateClient(
+		ctx, msg.ClientID, clientType, msg.ConsensusState, msg.TrustingPeriod, msg.UnbondingPeriod,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +43,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
 func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk.Result, error) {
-	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
-	if err != nil {
+	if err := k.UpdateClient(ctx, msg.ClientID, msg.Header); err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -19,19 +21,26 @@ var _ sdk.Msg = MsgCreateClient{}
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID       string                  `json:"client_id" yaml:"client_id"`
-	ClientType     string                  `json:"client_type" yaml:"client_type"`
-	ConsensusState exported.ConsensusState `json:"consensus_state" yaml:"consensus_address"`
-	Signer         sdk.AccAddress          `json:"address" yaml:"address"`
+	ClientID        string                  `json:"client_id" yaml:"client_id"`
+	ClientType      string                  `json:"client_type" yaml:"client_type"`
+	ConsensusState  exported.ConsensusState `json:"consensus_state" yaml:"consensus_address"`
+	TrustingPeriod  time.Duration           `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod time.Duration           `json:"unbonding_period" yaml:"unbonding_period"`
+	Signer          sdk.AccAddress          `json:"address" yaml:"address"`
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
-func NewMsgCreateClient(id, clientType string, consensusState exported.ConsensusState, signer sdk.AccAddress) MsgCreateClient {
+func NewMsgCreateClient(
+	id, clientType string, consensusState exported.ConsensusState,
+	trustingPeriod, unbondingPeriod time.Duration, signer sdk.AccAddress,
+) MsgCreateClient {
 	return MsgCreateClient{
-		ClientID:       id,
-		ClientType:     clientType,
-		ConsensusState: consensusState,
-		Signer:         signer,
+		ClientID:        id,
+		ClientType:      clientType,
+		ConsensusState:  consensusState,
+		TrustingPeriod:  trustingPeriod,
+		UnbondingPeriod: unbondingPeriod,
+		Signer:          signer,
 	}
 }
 
@@ -55,6 +64,12 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	}
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {
 		return err
+	}
+	if msg.TrustingPeriod == 0 {
+		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
+	}
+	if msg.UnbondingPeriod == 0 {
+		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "duration cannot be 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

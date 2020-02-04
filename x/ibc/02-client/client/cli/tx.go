@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -27,15 +28,15 @@ import (
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [path/to/consensus_state.json]",
+		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
 		Short: "create new client with a consensus state",
 		Long: strings.TrimSpace(fmt.Sprintf(`create new client with a specified identifier and consensus state:
 
 Example:
-$ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+$ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] --from node0 --home ../node0/<app>cli --chain-id $CID
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -55,9 +56,19 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 				}
 			}
 
+			trustingPeriod, err := time.ParseDuration(args[2])
+			if err != nil {
+				return err
+			}
+
+			ubdPeriod, err := time.ParseDuration(args[3])
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgCreateClient(
 				clientID, state.ClientType().String(), state,
-				cliCtx.GetFromAddress(),
+				trustingPeriod, ubdPeriod, cliCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

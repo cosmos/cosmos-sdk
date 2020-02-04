@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,6 +16,7 @@ import (
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
 	clientType exported.ClientType, consensusState exported.ConsensusState,
+	trustingPeriod, unbondingPeriod time.Duration,
 ) (exported.ClientState, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
@@ -26,7 +28,7 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
 	}
 
-	clientState, err := k.initialize(ctx, clientID, clientType, consensusState)
+	clientState, err := k.initialize(ctx, clientID, clientType, consensusState, trustingPeriod, unbondingPeriod)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "cannot create client with ID %s", clientID)
 	}

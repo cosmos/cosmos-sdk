@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
-	tmmath "github.com/tendermint/tendermint/libs/math"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,10 +15,6 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
-
-// DefaultTrustingPeriodConstant defines the default constant for the client
-// initialization trusting period
-var defaultTrustingPeriodConstant tmmath.Fraction = tmmath.Fraction{Numerator: 2, Denominator: 3}
 
 // Keeper represents a type that grants read and write permissions to any client
 // state information
@@ -148,7 +143,7 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
 func (k Keeper) initialize(
 	ctx sdk.Context, clientID string, clientType exported.ClientType,
-	consensusState exported.ConsensusState,
+	consensusState exported.ConsensusState, trustingPeriod, unbondingPeriod time.Duration,
 ) (exported.ClientState, error) {
 	height := uint64(ctx.BlockHeight())
 
@@ -158,8 +153,6 @@ func (k Keeper) initialize(
 	)
 	switch clientType {
 	case exported.Tendermint:
-		unbondingPeriod := k.stakingKeeper.UnbondingTime(ctx)
-		trustingPeriod := time.Duration(defaultTrustingPeriodConstant.Numerator) * unbondingPeriod / time.Duration(defaultTrustingPeriodConstant.Denominator)
 		clientState, err = tendermint.Initialize(
 			clientID, consensusState, trustingPeriod, unbondingPeriod, height,
 		)

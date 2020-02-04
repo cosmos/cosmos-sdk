@@ -25,6 +25,8 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
 	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
 
+		fmt.Println("AppStateFn")
+		fmt.Println("config", config)
 		if FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
 		} else {

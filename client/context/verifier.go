@@ -1,6 +1,7 @@
 package context
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -23,6 +24,7 @@ const (
 // have the chain ID and home directory set. If the CLIContext has TrustNode
 // enabled, no verifier will be created.
 func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
+	fmt.Println("ctx", ctx)
 	if ctx.TrustNode {
 		return nil, nil
 	}

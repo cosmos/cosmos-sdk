@@ -73,17 +73,19 @@ var (
 
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
+	fmt.Println("FlagChainID -> ", FlagChainID)
 	for _, c := range cmds {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
-		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
+		c.Flags().String(FlagChainID, "hellochain", "Chain ID of tendermint node")
+		c.Flags().StringP(FlagNode, "n", "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
-
+		fmt.Println("FlagChainID", FlagChainID)
 		c.MarkFlagRequired(FlagChainID)
 
 		c.SetErr(c.ErrOrStderr())

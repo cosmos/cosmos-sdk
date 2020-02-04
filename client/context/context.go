@@ -46,9 +46,9 @@ type CLIContext struct {
 }
 
 // NewCLIContextWithInputAndFrom returns a new initialized CLIContext with parameters from the
-// command line using Viper. It takes a io.Reader and and key name or address and populates
+// command line using Viper. It takes a io.Reader and a key name or address and populates
 // the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
-// using  the chain ID, home directory and RPC URI provided by the command line. If using
+// using the chain ID, home directory and RPC URI provided by the command line. If using
 // a CLIContext in tests or any non CLI-based environment, the verifier will not be created
 // and will be set as nil because FlagTrustNode must be set.
 func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
@@ -73,6 +73,12 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		}
 	}
 
+	fmt.Println("flags.FlagChainID", flags.FlagChainID)
+	fmt.Println("viper.Get(flags.FlagChainID)", viper.Get(flags.FlagChainID))
+
+	fmt.Println("flags.FlagTrustNode", flags.FlagTrustNode)
+	fmt.Println("viper.GetBool(flags.FlagTrustNode)", viper.GetBool(flags.FlagTrustNode))
+	fmt.Println("?")
 	ctx := CLIContext{
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
@@ -94,6 +100,8 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
 
+	fmt.Println("viper.IsSet(flags.FlagTrustNode", viper.IsSet(flags.FlagTrustNode))
+	fmt.Println("viper.IsSet(flags.FlagChainID", viper.IsSet(flags.FlagChainID))
 	// create a verifier for the specific chain ID and RPC client
 	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
 	if err != nil && viper.IsSet(flags.FlagTrustNode) {

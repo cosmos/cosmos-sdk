@@ -39,6 +39,7 @@ var (
 	DefaultGenesisState         = types.DefaultGenesisState
 	ValidateGenesis             = types.ValidateGenesis
 	SanitizeGenesisBalances     = types.SanitizeGenesisBalances
+	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
 	NewMsgSend                  = types.NewMsgSend
 	NewMsgMultiSend             = types.NewMsgMultiSend
 	NewInput                    = types.NewInput
@@ -54,18 +55,19 @@ var (
 )
 
 type (
-	Keeper                 = keeper.Keeper
-	BaseKeeper             = keeper.BaseKeeper
-	SendKeeper             = keeper.SendKeeper
-	BaseSendKeeper         = keeper.BaseSendKeeper
-	ViewKeeper             = keeper.ViewKeeper
-	BaseViewKeeper         = keeper.BaseViewKeeper
-	GenesisState           = types.GenesisState
-	Balance                = types.Balance
-	MsgSend                = types.MsgSend
-	MsgMultiSend           = types.MsgMultiSend
-	Input                  = types.Input
-	Output                 = types.Output
-	QueryBalanceParams     = types.QueryBalanceParams
-	QueryAllBalancesParams = types.QueryAllBalancesParams
+	Keeper                  = keeper.Keeper
+	BaseKeeper              = keeper.BaseKeeper
+	SendKeeper              = keeper.SendKeeper
+	BaseSendKeeper          = keeper.BaseSendKeeper
+	ViewKeeper              = keeper.ViewKeeper
+	BaseViewKeeper          = keeper.BaseViewKeeper
+	GenesisState            = types.GenesisState
+	Balance                 = types.Balance
+	MsgSend                 = types.MsgSend
+	MsgMultiSend            = types.MsgMultiSend
+	Input                   = types.Input
+	Output                  = types.Output
+	QueryBalanceParams      = types.QueryBalanceParams
+	QueryAllBalancesParams  = types.QueryAllBalancesParams
+	GenesisBalancesIterator = types.GenesisBalancesIterator
 )

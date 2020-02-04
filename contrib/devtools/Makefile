@@ -1,4 +1,4 @@
-.PHONY: all tools tools-clean statik runsim golangci-lint \
+.PHONY: all tools tools-clean statik runsim \
 protoc buf protoc-gen-buf-check-breaking protoc-gen-buf-check-lint protoc-gen-gocosmos
 
 ###
@@ -47,21 +47,14 @@ UNAME_M ?= $(shell uname -m)
 
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
-GOLANGCI_LINT_HASHSUM := f11179f445385a4a6d5079d67de63fe48a9113cee8e9ee0ced19327a83a4394b
 
 BUF_VERSION ?= 0.4.0
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
-GOLANGCI_LINT  = $(TOOLS_DESTDIR)/golangci-lint
 STATIK         = $(TOOLS_DESTDIR)/statik
 RUNSIM         = $(TOOLS_DESTDIR)/runsim
 
-tools: protoc buf statik runsim golangci-lint
-
-golangci-lint: $(GOLANGCI_LINT)
-$(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
-	@echo "Installing golangci-lint..."
-	@bash $(mkfile_dir)/install-golangci-lint.sh $(TOOLS_DESTDIR) $(GOLANGCI_LINT_HASHSUM)
+tools: protoc buf statik runsim
 
 # Install the runsim binary with a temporary workaround of entering an outside
 # directory as the "go get" command ignores the -mod option and will polute the

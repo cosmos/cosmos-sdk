@@ -15,9 +15,9 @@ import (
 const msgRoute = "testMsg"
 
 var (
-	numAccts                 = 2
-	genCoins                 = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
-	accs, addrs, _, privKeys = CreateGenAccounts(numAccts, genCoins)
+	numAccts                           = 2
+	genCoins                           = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
+	accs, balances, addrs, _, privKeys = CreateGenAccounts(numAccts, genCoins)
 )
 
 // testMsg is a mock transaction that has a validation which can fail.
@@ -57,7 +57,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	mApp.Cdc.RegisterConcrete(testMsg{}, "mock/testMsg", nil)
 	mApp.Cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 
-	SetGenesis(mApp, accs)
+	SetGenesis(mApp, accs, balances)
 	ctxCheck := mApp.BaseApp.NewContext(true, abci.Header{})
 
 	msg := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
@@ -99,7 +99,7 @@ func TestCheckGenTx(t *testing.T) {
 	mApp.Cdc.RegisterConcrete(testMsg{}, "mock/testMsg", nil)
 	mApp.Cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 
-	SetGenesis(mApp, accs)
+	SetGenesis(mApp, accs, balances)
 
 	msg1 := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
 	CheckGenTx(

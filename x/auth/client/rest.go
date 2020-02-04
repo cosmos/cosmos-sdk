@@ -1,4 +1,4 @@
-package utils
+package client
 
 import (
 	"log"
@@ -31,7 +31,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, errInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, types.ErrorInvalidGasAdjustment.Error())
 			return
 		}
 

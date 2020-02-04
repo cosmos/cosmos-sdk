@@ -37,6 +37,43 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Client Breaking
+
+* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account
+balances or a single balance by denom when the `denom` query parameter is present.
+
+### API Breaking Changes
+
+* (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move x/auth/client/utils/ types and functions to x/auth/client/.
+* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
+
+### Bug Fixes
+
+* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
+
+### State Machine Breaking
+
+* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Separate balance from accounts per ADR 004.
+  * Account balances are now persisted and retrieved via the `x/bank` module.
+  * Vesting account interface has been modified to account for changes.
+  * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
+  the original vesting amount.
+  * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
+
+### Improvements
+
+* (modules) [\#5597](https://github.com/cosmos/cosmos-sdk/pull/5597) Add `amount` event attribute to the `complete_unbonding`
+and `complete_redelegation` events that reflect the total balances of the completed unbondings and redelegations
+respectively.
+* (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
+* (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
+* (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
+  * Added `prove` flag for commitment proof verification.
+  * Added `queryABCI` function that returns the full `abci.ResponseQuery` with inclusion merkle proofs.
+* (types) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
+  * `Coin` denomination max lenght has been increased to 32.
+  * Added `CapabilityKey` alias for `StoreKey` to match IBC spec.
+
 ## [v0.38.0] - 2020-01-23
 
 ### State Machine Breaking

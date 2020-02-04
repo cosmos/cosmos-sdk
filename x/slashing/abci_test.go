@@ -14,7 +14,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
 	addr, pk := slashingkeeper.Addrs[2], slashingkeeper.Pks[2]
@@ -26,7 +26,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		t, bk.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())

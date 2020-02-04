@@ -11,7 +11,7 @@ import (
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 5, 5})
 
 	tp := TestProposal
@@ -31,7 +31,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyNoQuorum(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{2, 5, 0})
 
 	tp := TestProposal
@@ -52,7 +52,7 @@ func TestTallyNoQuorum(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 5, 5})
 
 	tp := TestProposal
@@ -76,7 +76,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 0})
 
 	tp := TestProposal
@@ -98,7 +98,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 0})
 
 	tp := TestProposal
@@ -121,7 +121,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{6, 6, 7})
 
 	tp := TestProposal
@@ -146,7 +146,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{6, 6, 7})
 
 	tp := TestProposal
@@ -170,7 +170,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{6, 6, 7})
 
 	tp := TestProposal
@@ -194,7 +194,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 7})
 
 	tp := TestProposal
@@ -217,7 +217,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
@@ -251,7 +251,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
@@ -284,7 +284,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
@@ -322,7 +322,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{25, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
@@ -359,7 +359,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 }
 
 func TestTallyJailedValidator(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{25, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
@@ -398,7 +398,7 @@ func TestTallyJailedValidator(t *testing.T) {
 }
 
 func TestTallyValidatorMultipleDelegations(t *testing.T) {
-	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{10, 10, 10})
 
 	delTokens := sdk.TokensFromConsensusPower(10)

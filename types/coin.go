@@ -11,20 +11,6 @@ import (
 //-----------------------------------------------------------------------------
 // Coin
 
-// Coin hold some amount of one currency.
-//
-// CONTRACT: A coin will never hold a negative amount of any denomination.
-//
-// TODO: Make field members private for further safety.
-type Coin struct {
-	Denom string `json:"denom"`
-
-	// To allow the use of unsigned integers (see: #1273) a larger refactor will
-	// need to be made. So we use signed integers for now with safety measures in
-	// place preventing negative values being used.
-	Amount Int `json:"amount"`
-}
-
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
@@ -594,8 +580,8 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 16 characters long.
-	reDnmString = `[a-z][a-z0-9]{2,15}`
+	// Denominations can be 3 ~ 32 characters long.
+	reDnmString = `[a-z][a-z0-9/]{2,31}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`

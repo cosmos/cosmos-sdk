@@ -49,6 +49,8 @@ func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 // OneUint returns Uint value with one.
 func OneUint() Uint { return Uint{big.NewInt(1)} }
 
+var _ CustomProtobufType = (*Uint)(nil)
+
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
 func (u Uint) Uint64() uint64 {
@@ -130,22 +132,6 @@ func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 // Human readable string
 func (u Uint) String() string { return u.i.String() }
 
-// MarshalAmino defines custom encoding scheme
-func (u Uint) MarshalAmino() (string, error) {
-	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
-		u.i = new(big.Int)
-	}
-	return marshalAmino(u.i)
-}
-
-// UnmarshalAmino defines custom decoding scheme
-func (u *Uint) UnmarshalAmino(text string) error {
-	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
-		u.i = new(big.Int)
-	}
-	return unmarshalAmino(u.i, text)
-}
-
 // MarshalJSON defines custom encoding scheme
 func (u Uint) MarshalJSON() ([]byte, error) {
 	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
@@ -161,6 +147,65 @@ func (u *Uint) UnmarshalJSON(bz []byte) error {
 	}
 	return unmarshalJSON(u.i, bz)
 }
+
+// Marshal implements the gogo proto custom type interface.
+func (u Uint) Marshal() ([]byte, error) {
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+	return u.i.MarshalText()
+}
+
+// MarshalTo implements the gogo proto custom type interface.
+func (u *Uint) MarshalTo(data []byte) (n int, err error) {
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+	if len(u.i.Bytes()) == 0 {
+		copy(data, []byte{0x30})
+		return 1, nil
+	}
+
+	bz, err := u.Marshal()
+	if err != nil {
+		return 0, err
+	}
+
+	copy(data, bz)
+	return len(bz), nil
+}
+
+// Unmarshal implements the gogo proto custom type interface.
+func (u *Uint) Unmarshal(data []byte) error {
+	if len(data) == 0 {
+		u = nil
+		return nil
+	}
+
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+
+	if err := u.i.UnmarshalText(data); err != nil {
+		return err
+	}
+
+	if u.i.BitLen() > maxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), maxBitLen)
+	}
+
+	return nil
+}
+
+// Size implements the gogo proto custom type interface.
+func (u *Uint) Size() int {
+	bz, _ := u.Marshal()
+	return len(bz)
+}
+
+// Override Amino binary serialization by proxying to protobuf.
+func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
+func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
 
 //__________________________________________________________________________
 

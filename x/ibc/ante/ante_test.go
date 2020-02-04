@@ -3,6 +3,7 @@ package ante_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -33,6 +34,9 @@ const (
 	testConnection = "testconnection"
 
 	testChannelVersion = "1.0"
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 // define variables used for testing
@@ -43,11 +47,13 @@ type HandlerTestSuite struct {
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	valSet *tmtypes.ValidatorSet
+	now    time.Time
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
+	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
@@ -65,16 +71,18 @@ func (suite *HandlerTestSuite) SetupTest() {
 func (suite *HandlerTestSuite) createClient() {
 	suite.app.Commit()
 	commitID := suite.app.LastCommitID()
+	now2 := suite.now.Add(time.Hour)
 
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: now2}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSetHash: suite.valSet.Hash(),
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
+	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState, trustingPeriod, ubdPeriod)
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
 	suite.NoError(err)
 }
@@ -85,7 +93,9 @@ func (suite *HandlerTestSuite) updateClient() {
 	commitID := suite.app.LastCommitID()
 
 	height := suite.app.LastBlockHeight() + 1
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
+	suite.now = suite.now.Add(time.Minute)
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height, Time: suite.now}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	state := tendermint.ConsensusState{

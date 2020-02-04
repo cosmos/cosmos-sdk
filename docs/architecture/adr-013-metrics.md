@@ -18,7 +18,7 @@ Extending `AppModuleBasic` to support registering of metrics would enable develo
 type AppModuleBasic interface {
   Name() string
   RegisterCodec(*codec.Codec)
-  + RegisterMetrics(namespace string, labelsAndValues ...string) *Metrics
+  RegisterMetrics(namespace string, labelsAndValues ...string) *Metrics
 
   // genesis
   DefaultGenesis() json.RawMessage
@@ -38,17 +38,19 @@ func (bm BasicManager) RegisterMetrics(appName) MetricsProvider {
 }
 ```
 
-Each module will could define its own `PrometheusMetrics` function:
+Each module can define its own `CreateMetrics` function:
 
 ```go
 type Metrics struct {
   Size metrics.Guage
+
+  Transactions metrics.Counter
 }
 
-func PrometheusMetrics(namespace string, labelsAndValues ...string) *Metrics {
-  labels := []string{}
-	for i := 0; i < len(labelsAndValues); i += 2 {
-		labels = append(labels, labelsAndValues[i])
+func CreateMetrics(namespace string, labelsAndValues ...string) *Metrics {
+  labels := make([]string, len(labelsAndValues/2))
+  for i := 0; i < len(labelsAndValues); i += 2 {
+      labels[i/2] = labelsAndValues[i]
   }
   return &Metrics{
     Size: prometheus.NewGaugeFrom(stdprometheus.GaugeOpts{

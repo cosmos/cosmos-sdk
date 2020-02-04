@@ -13,7 +13,7 @@ type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
 	// by this authorization and will be updated as tokens are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
-	SpendLimit sdk.Coins
+	SpendLimit sdk.Coins `json:"spend_limit"`
 }
 
 func (authorization SendAuthorization) MsgType() sdk.Msg {

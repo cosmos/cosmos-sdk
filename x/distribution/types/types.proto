@@ -96,6 +96,17 @@ message ValidatorHistoricalRewards {
   uint32 reference_count = 2;
 }
 
+// current rewards and current period for a validator
+// kept as a running counter and incremented each block
+// as long as the validator's tokens remain constant
+message ValidatorCurrentRewards {
+  repeated cosmos_sdk.v1.DecCoin rewards = 1 [
+    (gogoproto.moretags) = "yaml:\"rewards\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // validator slash event
 // height is implicit within the store key
 // needed to calculate appropriate amounts of staking token
@@ -152,3 +163,4 @@ message DelegatorStartingInfo {
   ];
   uint64 height = 3 [ (gogoproto.moretags) = "yaml:\"height\"" ];
 }
+

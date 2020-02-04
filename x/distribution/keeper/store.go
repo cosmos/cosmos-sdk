@@ -74,7 +74,7 @@ func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsA
 // set the proposer public key for this block
 func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(consAddr)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&consAddr)
 	store.Set(types.ProposerKey, b)
 }
 
@@ -89,7 +89,7 @@ func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, de
 // set the starting info associated with a delegator
 func (k Keeper) SetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(period)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&period)
 	store.Set(types.GetDelegatorStartingInfoKey(val, del), b)
 }
 
@@ -282,7 +282,7 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddre
 // set validator outstanding rewards
 func (k Keeper) SetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&rewards)
 	store.Set(types.GetValidatorOutstandingRewardsKey(val), b)
 }
 
@@ -298,7 +298,7 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorOutstandingRewardsPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var rewards types.ValidatorOutstandingRewards
+		rewards := types.ValidatorOutstandingRewards{}
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewards)
 		addr := types.GetValidatorOutstandingRewardsAddress(iter.Key())
 		if handler(addr, rewards) {
@@ -321,7 +321,7 @@ func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 // set slash event for height
 func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(event)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&event)
 	store.Set(types.GetValidatorSlashEventKey(val, height, period), b)
 }
 

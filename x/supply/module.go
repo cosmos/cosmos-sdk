@@ -2,6 +2,7 @@ package supply
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -48,10 +49,10 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 // ValidateGenesis performs genesis state validation for the supply module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &data)
-	if err != nil {
-		return err
+	if err := ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
+
 	return ValidateGenesis(data)
 }
 
@@ -75,14 +76,16 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper Keeper
+	bk     types.BankKeeper
 	ak     types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, bk types.BankKeeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		bk:             bk,
 		ak:             ak,
 	}
 }
@@ -120,7 +123,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.ak, genesisState)
+	InitGenesis(ctx, am.keeper, am.bk, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -164,7 +167,7 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
 }
 
-// WeightedOperations doesn't return any operation for the nft module.
+// WeightedOperations doesn't return any operation for the supply module.
 func (AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
 	return nil
 }

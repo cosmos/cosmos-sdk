@@ -49,7 +49,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	defer func() {
 		kb.Delete("runShowCmd_Key1", "", false)
@@ -58,13 +58,13 @@ func Test_runShowCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
 	require.NoError(t, err)
 
 	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key

@@ -17,6 +17,7 @@ type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           *codec.Codec
 	paramSpace    params.Subspace
+	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	supplyKeeper  types.SupplyKeeper
 
@@ -27,7 +28,7 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
+	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, bk types.BankKeeper,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string,
 	blacklistedAddrs map[string]bool,
 ) Keeper {
@@ -37,10 +38,16 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
-		paramSpace:       paramSpace.WithKeyTable(ParamKeyTable()),
+		paramSpace:       paramSpace,
+		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,
@@ -118,7 +125,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 
 	// update outstanding
 	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr)
-	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(commission)))
+	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoinsFromCoins(commission...)))
 
 	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
@@ -143,7 +150,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
 	k.IterateValidatorOutstandingRewards(ctx,
 		func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			totalRewards = totalRewards.Add(rewards)
+			totalRewards = totalRewards.Add(rewards...)
 			return false
 		},
 	)
@@ -161,7 +168,7 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	}
 
 	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoins(amount))
+	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
 	k.SetFeePool(ctx, feePool)
 
 	return nil

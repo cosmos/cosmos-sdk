@@ -278,7 +278,7 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 
 func TestValidatorMarshalYAML(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
-	bechifiedPub, err := sdk.Bech32ifyConsPub(validator.ConsPubKey)
+	bechifiedPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, validator.ConsPubKey)
 	require.NoError(t, err)
 	bs, err := yaml.Marshal(validator)
 	require.NoError(t, err)
@@ -334,4 +334,20 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 		Validators(vals).Sort()
 		require.True(t, reflect.DeepEqual(sortedVals, vals), "Validator sort returned different slices")
 	}
+}
+
+func TestValidatorToTm(t *testing.T) {
+	vals := make(Validators, 10)
+	expected := make([]*tmtypes.Validator, 10)
+
+	for i := range vals {
+		pk := ed25519.GenPrivKey().PubKey()
+		val := NewValidator(sdk.ValAddress(pk.Address()), pk, Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		vals[i] = val
+		expected[i] = tmtypes.NewValidator(pk, val.ConsensusPower())
+	}
+
+	require.Equal(t, expected, vals.ToTmValidators())
 }

@@ -36,7 +36,7 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	app.CrisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)
 
 	feePool := distr.InitialFeePool()
-	feePool.CommunityPool = sdk.NewDecCoins(sdk.NewCoins(constantFee))
+	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(sdk.NewCoins(constantFee)...)
 	app.DistrKeeper.SetFeePool(ctx, feePool)
 	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))
 
@@ -90,7 +90,7 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 	app, ctx, addrs := createTestApp()
 	sender := addrs[0]
-	coin := app.AccountKeeper.GetAccount(ctx, sender).GetCoins()[0]
+	coin := app.BankKeeper.GetAllBalances(ctx, sender)[0]
 	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
 	app.CrisisKeeper.SetConstantFee(ctx, excessCoins)
 

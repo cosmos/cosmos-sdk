@@ -38,25 +38,43 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-		"", "", 0, 1)
+		"", "", CreateHDPath(0, 0).String(), Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "Invalid mnemonic", err.Error())
 }
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 	kb := NewInMemory()
+
+	supportedLedgerAlgos := kb.SupportedAlgosLedger()
+	for _, supportedAlgo := range supportedLedgerAlgos {
+		if Ed25519 == supportedAlgo {
+			assert.FailNow(t, "Was not an unsupported algorithm")
+		}
+	}
+
 	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
 	assert.Error(t, err)
-	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
+	assert.Equal(t, "unsupported signing algo", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(WithSupportedAlgosLedger([]SigningAlgo{Secp256k1, Ed25519}))
 
 	// test_cover and test_unit will result in different answers
 	// test_cover does not compile some dependencies so ledger is disabled
 	// test_unit may add a ledger mock
 	// both cases are acceptable
+	supportedLedgerAlgos := kb.SupportedAlgosLedger()
+	secpSupported := false
+	edSupported := false
+	for _, supportedAlgo := range supportedLedgerAlgos {
+		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
+		edSupported = edSupported || (supportedAlgo == Ed25519)
+	}
+	assert.True(t, secpSupported)
+	assert.True(t, edSupported)
+
 	ledger, err := kb.CreateLedger("some_account", Secp256k1, "cosmos", 3, 1)
 
 	if err != nil {
@@ -69,7 +87,7 @@ func TestCreateLedger(t *testing.T) {
 
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyAccPub(pubKey)
+	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -80,7 +98,7 @@ func TestCreateLedger(t *testing.T) {
 	assert.Equal(t, "some_account", restoredKey.GetName())
 	assert.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyAccPub(pubKey)
+	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -92,7 +110,21 @@ func TestCreateLedger(t *testing.T) {
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(WithSupportedAlgos([]SigningAlgo{Secp256k1, Sr25519}))
+
+	// Test modified supported algos
+	supportedAlgos := cstore.SupportedAlgos()
+	secpSupported := false
+	edSupported := false
+	srSupported := false
+	for _, supportedAlgo := range supportedAlgos {
+		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
+		edSupported = edSupported || (supportedAlgo == Ed25519)
+		srSupported = srSupported || (supportedAlgo == Sr25519)
+	}
+	assert.True(t, secpSupported)
+	assert.False(t, edSupported)
+	assert.True(t, srSupported)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -152,10 +184,12 @@ func TestKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = cstore.CreateOffline(o1, pub1)
+	i, err = cstore.CreateOffline(o1, pub1, algo)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
+	iOffline := i.(*offlineInfo)
+	require.Equal(t, algo, iOffline.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
@@ -393,7 +427,8 @@ func TestSeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
+	hdPath := params.String()
+	newInfo, err := cstore.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
@@ -402,7 +437,11 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	customKeyGenFunc := func(bz [32]byte) crypto.PrivKey { return secp256k1.PrivKeySecp256k1(bz) }
+	customKeyGenFunc := func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error) {
+		var bzArr [32]byte
+		copy(bzArr[:], bz)
+		return secp256k1.PrivKeySecp256k1(bzArr), nil
+	}
 	cstore := NewInMemory(WithKeygenFunc(customKeyGenFunc))
 
 	sec := Secp256k1

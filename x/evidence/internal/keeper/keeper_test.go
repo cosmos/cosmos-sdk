@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
@@ -76,6 +77,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.querier = keeper.NewQuerier(*evidenceKeeper)
 	suite.keeper = *evidenceKeeper
 	suite.app = app
+
+	for i, addr := range valAddresses {
+		addr := sdk.AccAddress(addr)
+		app.AccountKeeper.SetAccount(suite.ctx, auth.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+	}
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

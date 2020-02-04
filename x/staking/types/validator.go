@@ -68,7 +68,7 @@ func (v Validator) MarshalYAML() (interface{}, error) {
 		MinSelfDelegation       sdk.Int
 	}{
 		OperatorAddress:         v.OperatorAddress,
-		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
+		ConsPubKey:              sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey),
 		Jailed:                  v.Jailed,
 		Status:                  v.Status,
 		Tokens:                  v.Tokens,
@@ -100,6 +100,15 @@ func (v Validators) String() (out string) {
 func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
+	}
+	return validators
+}
+
+// ToTmValidators casts all validators to the corresponding tendermint type.
+func (v Validators) ToTmValidators() []*tmtypes.Validator {
+	validators := make([]*tmtypes.Validator, len(v))
+	for i, val := range v {
+		validators[i] = val.ToTmValidator()
 	}
 	return validators
 }
@@ -165,7 +174,7 @@ func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, er
 
 // String returns a human readable string representation of a validator.
 func (v Validator) String() string {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
+	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
 	if err != nil {
 		panic(err)
 	}
@@ -203,7 +212,7 @@ type bechValidator struct {
 
 // MarshalJSON marshals the validator to JSON using Bech32
 func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
+	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +238,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
-	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)
+	consPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, bv.ConsPubKey)
 	if err != nil {
 		return err
 	}
@@ -368,6 +377,11 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
 		Power:  0,
 	}
+}
+
+// ToTmValidator casts an SDK validator to a tendermint type Validator.
+func (v Validator) ToTmValidator() *tmtypes.Validator {
+	return tmtypes.NewValidator(v.ConsPubKey, v.ConsensusPower())
 }
 
 // SetInitialCommission attempts to set a validator's initial commission. An

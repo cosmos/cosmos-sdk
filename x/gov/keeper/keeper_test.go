@@ -3,12 +3,13 @@ package keeper
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestIncrementProposalNumber(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	tp := TestProposal
 	keeper.SubmitProposal(ctx, tp)
@@ -23,7 +24,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	// create test proposals
 	tp := TestProposal

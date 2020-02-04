@@ -184,9 +184,9 @@ When messages and queries are received by the application, they must be routed t
 
 ### Message Routing
 
-[`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a `router` which maps `paths` (`string`) to the appropriate module [`handler`](../building-modules/handler.md). Usually, the `path` is the name of the module.
+[`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a `router` which maps `paths` (`string`) to the appropriate module [`handler`](../building-modules/handler.md) using the `.Route(ctx sdk.Context, path string)` function. Usually, the `path` is the name of the module.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go
+The [default router included in baseapp](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) is stateless.  However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes.  For this reason, the `sdk.Context` is also passed into the `Route` function of the [Router interface](https://github.com/cosmos/cosmos-sdk/blob/master/types/router.go#L12).  For a stateless router that doesn't want to make use of this, can just ignore the ctx.
 
 The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
 

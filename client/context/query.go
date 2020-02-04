@@ -8,7 +8,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -45,8 +45,14 @@ func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, er
 // QueryStore performs a query to a Tendermint node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, int64, error) {
+func (ctx CLIContext) QueryStore(key tmbytes.HexBytes, storeName string) ([]byte, int64, error) {
 	return ctx.queryStore(key, storeName, "key")
+}
+
+// QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
+// It returns the ResultQuery obtained from the query.
+func (ctx CLIContext) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
+	return ctx.queryABCI(req)
 }
 
 // QuerySubspace performs a query to a Tendermint node with the provided
@@ -72,40 +78,51 @@ func (ctx CLIContext) GetFromName() string {
 	return ctx.FromName
 }
 
+func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return abci.ResponseQuery{}, err
+	}
+
+	opts := rpcclient.ABCIQueryOptions{
+		Height: ctx.Height,
+		Prove:  req.Prove || !ctx.TrustNode,
+	}
+
+	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)
+	if err != nil {
+		return abci.ResponseQuery{}, err
+	}
+
+	if !result.Response.IsOK() {
+		return abci.ResponseQuery{}, errors.New(result.Response.Log)
+	}
+
+	// data from trusted node or subspace query doesn't need verification
+	if ctx.TrustNode || !isQueryStoreWithProof(req.Path) {
+		return result.Response, nil
+	}
+
+	err = ctx.verifyProof(req.Path, result.Response)
+	if err != nil {
+		return abci.ResponseQuery{}, err
+	}
+
+	return result.Response, nil
+}
+
 // query performs a query to a Tendermint node with the provided store name
 // and path. It returns the result and height of the query upon success
 // or an error if the query fails. In addition, it will verify the returned
 // proof if TrustNode is disabled. If proof verification fails or the query
 // height is invalid, an error will be returned.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
-	node, err := ctx.GetNode()
+func (ctx CLIContext) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
+	resp, err := ctx.queryABCI(abci.RequestQuery{
+		Path: path,
+		Data: key,
+	})
 	if err != nil {
-		return res, height, err
-	}
-
-	opts := rpcclient.ABCIQueryOptions{
-		Height: ctx.Height,
-		Prove:  !ctx.TrustNode,
-	}
-
-	result, err := node.ABCIQueryWithOptions(path, key, opts)
-	if err != nil {
-		return res, height, err
-	}
-
-	resp := result.Response
-	if !resp.IsOK() {
-		return res, resp.Height, errors.New(resp.Log)
-	}
-
-	// data from trusted node or subspace query doesn't need verification
-	if ctx.TrustNode || !isQueryStoreWithProof(path) {
-		return resp.Value, resp.Height, nil
-	}
-
-	err = ctx.verifyProof(path, resp)
-	if err != nil {
-		return res, resp.Height, err
+		return nil, 0, err
 	}
 
 	return resp.Value, resp.Height, nil
@@ -167,7 +184,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 // queryStore performs a query to a Tendermint node with the provided a store
 // name and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, int64, error) {
+func (ctx CLIContext) queryStore(key tmbytes.HexBytes, storeName, endPath string) ([]byte, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

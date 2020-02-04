@@ -5,9 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// RouterKey is they name of the bank module
-const RouterKey = ModuleName
-
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
 	FromAddress sdk.AccAddress `json:"from_address" yaml:"from_address"`
@@ -168,7 +165,7 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 			return err
 		}
 
-		totalIn = totalIn.Add(in.Coins)
+		totalIn = totalIn.Add(in.Coins...)
 	}
 
 	for _, out := range outputs {
@@ -176,7 +173,7 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 			return err
 		}
 
-		totalOut = totalOut.Add(out.Coins)
+		totalOut = totalOut.Add(out.Coins...)
 	}
 
 	// make sure inputs and outputs match

@@ -68,11 +68,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	distrGenesis := types.GenesisState{
-		FeePool:             types.InitialFeePool(),
-		CommunityTax:        communityTax,
-		BaseProposerReward:  baseProposerReward,
-		BonusProposerReward: bonusProposerReward,
-		WithdrawAddrEnabled: withdrawEnabled,
+		FeePool: types.InitialFeePool(),
+		Params: types.Params{
+			CommunityTax:        communityTax,
+			BaseProposerReward:  baseProposerReward,
+			BonusProposerReward: bonusProposerReward,
+			WithdrawAddrEnabled: withdrawEnabled,
+		},
 	}
 
 	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, distrGenesis))

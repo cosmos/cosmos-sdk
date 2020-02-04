@@ -140,19 +140,23 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 
 		var expectedCoins sdk.DecCoins
 		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			expectedCoins = expectedCoins.Add(rewards)
+			expectedCoins = expectedCoins.Add(rewards...)
 			return false
 		})
 
 		communityPool := k.GetFeePoolCommunityCoins(ctx)
-		expectedInt, _ := expectedCoins.Add(communityPool).TruncateDecimal()
+		expectedInt, _ := expectedCoins.Add(communityPool...).TruncateDecimal()
 
 		macc := k.GetDistributionAccount(ctx)
+		balances := k.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-		broken := !macc.GetCoins().IsEqual(expectedInt)
-		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins",
+		broken := !balances.IsEqual(expectedInt)
+		return sdk.FormatInvariant(
+			types.ModuleName, "ModuleAccount coins",
 			fmt.Sprintf("\texpected ModuleAccount coins:     %s\n"+
 				"\tdistribution ModuleAccount coins: %s\n",
-				expectedInt, macc.GetCoins())), broken
+				expectedInt, balances,
+			),
+		), broken
 	}
 }

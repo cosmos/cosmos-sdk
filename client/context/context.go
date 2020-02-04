@@ -14,9 +14,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +25,7 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	Keybase       cryptokeys.Keybase
+	Keybase       keys.Keybase
 	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
@@ -59,14 +58,18 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
 	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
 	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
+		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
 	}
 
 	if !genOnly {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
+			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
+			if err != nil {
+				fmt.Printf("failted to get client: %v\n", err)
+				os.Exit(1)
+			}
 		}
 	}
 
@@ -154,7 +157,11 @@ func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
-	ctx.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
+	client, err := rpcclient.NewHTTP(nodeURI, "/websocket")
+	if err != nil {
+		panic(err)
+	}
+	ctx.Client = client
 	return ctx
 }
 
@@ -267,12 +274,13 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyringFromHomeFlag(input)
+	keybase, err := keys.NewKeyring(sdk.KeyringServiceName(),
+		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err
 	}
 
-	var info cryptokeys.Info
+	var info keys.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {

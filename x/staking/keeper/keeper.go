@@ -24,6 +24,7 @@ var _ types.DelegationSet = Keeper{}
 type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                *codec.Codec
+	bankKeeper         types.BankKeeper
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
 	paramstore         params.Subspace
@@ -33,23 +34,24 @@ type Keeper struct {
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, supplyKeeper types.SupplyKeeper, paramstore params.Subspace,
+	cdc *codec.Codec, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps params.Subspace,
 ) Keeper {
 
 	// ensure bonded and not bonded module accounts are set
-	if addr := supplyKeeper.GetModuleAddress(types.BondedPoolName); addr == nil {
+	if addr := sk.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
 	}
 
-	if addr := supplyKeeper.GetModuleAddress(types.NotBondedPoolName); addr == nil {
+	if addr := sk.GetModuleAddress(types.NotBondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
 	return Keeper{
 		storeKey:           key,
 		cdc:                cdc,
-		supplyKeeper:       supplyKeeper,
-		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
+		bankKeeper:         bk,
+		supplyKeeper:       sk,
+		paramstore:         ps.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),

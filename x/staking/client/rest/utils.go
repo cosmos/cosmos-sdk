@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -32,7 +32,7 @@ func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, delegatorAddr),
 	}
 
-	return utils.QueryTxsByEvents(cliCtx, events, page, limit)
+	return authclient.QueryTxsByEvents(cliCtx, events, page, limit)
 }
 
 func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {

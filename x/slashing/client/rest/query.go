@@ -33,7 +33,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
+		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, vars["validatorPubKey"])
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

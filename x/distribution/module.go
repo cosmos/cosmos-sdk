@@ -2,6 +2,7 @@ package distribution
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -49,10 +50,10 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 // ValidateGenesis performs genesis state validation for the distribution module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &data)
-	if err != nil {
-		return err
+	if err := ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
+
 	return ValidateGenesis(data)
 }
 
@@ -79,17 +80,21 @@ type AppModule struct {
 
 	keeper        Keeper
 	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 	stakingKeeper stakingkeeper.Keeper
 	supplyKeeper  types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper,
-	supplyKeeper types.SupplyKeeper, stakingKeeper stakingkeeper.Keeper) AppModule {
+func NewAppModule(
+	keeper Keeper, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+	supplyKeeper types.SupplyKeeper, stakingKeeper stakingkeeper.Keeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
 		supplyKeeper:   supplyKeeper,
 		stakingKeeper:  stakingKeeper,
 	}
@@ -130,7 +135,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.supplyKeeper, genesisState)
+	InitGenesis(ctx, am.bankKeeper, am.supplyKeeper, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -179,6 +184,7 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.keeper, am.stakingKeeper)
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
+	)
 }

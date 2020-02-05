@@ -10,20 +10,20 @@ import (
 )
 
 // RegisterInvariants registers all governance invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
-	ir.RegisterRoute(types.ModuleName, "module-account", ModuleAccountInvariant(keeper))
+func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper, bk types.BankKeeper) {
+	ir.RegisterRoute(types.ModuleName, "module-account", ModuleAccountInvariant(keeper, bk))
 }
 
 // AllInvariants runs all invariants of the governance module
-func AllInvariants(keeper Keeper) sdk.Invariant {
+func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		return ModuleAccountInvariant(keeper)(ctx)
+		return ModuleAccountInvariant(keeper, bk)(ctx)
 	}
 }
 
 // ModuleAccountInvariant checks that the module account coins reflects the sum of
 // deposit amounts held on store
-func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
+func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 
@@ -33,10 +33,11 @@ func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
 		})
 
 		macc := keeper.GetGovernanceAccount(ctx)
-		broken := !macc.GetCoins().IsEqual(expectedDeposits)
+		balances := bk.GetAllBalances(ctx, macc.GetAddress())
+		broken := !balances.IsEqual(expectedDeposits)
 
 		return sdk.FormatInvariant(types.ModuleName, "deposits",
 			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts:  %s\n",
-				macc.GetCoins(), expectedDeposits)), broken
+				balances, expectedDeposits)), broken
 	}
 }

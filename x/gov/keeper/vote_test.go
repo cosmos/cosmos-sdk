@@ -9,7 +9,7 @@ import (
 )
 
 func TestVotes(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -14,30 +15,33 @@ import (
 // circle dependencies
 type DummySupplyKeeper struct {
 	ak auth.AccountKeeper
+	bk bank.Keeper
 }
 
 // NewDummySupplyKeeper creates a DummySupplyKeeper instance
-func NewDummySupplyKeeper(ak auth.AccountKeeper) DummySupplyKeeper {
-	return DummySupplyKeeper{ak}
+func NewDummySupplyKeeper(ak auth.AccountKeeper, bk bank.Keeper) DummySupplyKeeper {
+	return DummySupplyKeeper{ak, bk}
 }
 
 // SendCoinsFromAccountToModule for the dummy supply keeper
 func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
 	fromAcc := sk.ak.GetAccount(ctx, fromAddr)
 	moduleAcc := sk.GetModuleAccount(ctx, recipientModule)
+	fromBalances := sk.bk.GetAllBalances(ctx, fromAcc.GetAddress())
 
-	newFromCoins, hasNeg := fromAcc.GetCoins().SafeSub(amt)
+	newFromCoins, hasNeg := fromBalances.SafeSub(amt)
 	if hasNeg {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fromAcc.GetCoins().String())
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fromBalances.String())
 	}
 
-	newToCoins := moduleAcc.GetCoins().Add(amt...)
+	toBalances := sk.bk.GetAllBalances(ctx, moduleAcc.GetAddress())
+	newToCoins := toBalances.Add(amt...)
 
-	if err := fromAcc.SetCoins(newFromCoins); err != nil {
+	if err := sk.bk.SetBalances(ctx, fromAcc.GetAddress(), newFromCoins); err != nil {
 		return err
 	}
 
-	if err := moduleAcc.SetCoins(newToCoins); err != nil {
+	if err := sk.bk.SetBalances(ctx, moduleAcc.GetAddress(), newToCoins); err != nil {
 		return err
 	}
 

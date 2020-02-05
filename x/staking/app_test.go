@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -35,19 +36,22 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:   nil,
 		types.NotBondedPoolName: {supply.Burner, supply.Staking},
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, maccPerms)
-	keeper := NewKeeper(mApp.Cdc, keyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace))
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, mApp.BankKeeper, maccPerms)
+	keeper := NewKeeper(mApp.Cdc, keyStaking, mApp.BankKeeper, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace))
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper, supplyKeeper,
-		[]supplyexported.ModuleAccountI{feeCollector, notBondedPool, bondPool}))
+	mApp.SetInitChainer(
+		getInitChainer(
+			mApp, keeper, mApp.AccountKeeper, mApp.BankKeeper, supplyKeeper,
+			[]supplyexported.ModuleAccountI{feeCollector, notBondedPool, bondPool},
+		),
+	)
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, keySupply))
 	return mApp, keeper
@@ -66,18 +70,22 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 
 // getInitChainer initializes the chainer of the mock app and sets the genesis
 // state. It returns an empty ResponseInitChain.
-func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper,
-	blacklistedAddrs []supplyexported.ModuleAccountI) sdk.InitChainer {
+func getInitChainer(
+	mapp *mock.App, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper,
+	sk types.SupplyKeeper, blacklistedAddrs []supplyexported.ModuleAccountI,
+) sdk.InitChainer {
+
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
 		// set module accounts
 		for _, macc := range blacklistedAddrs {
-			supplyKeeper.SetModuleAccount(ctx, macc)
+			sk.SetModuleAccount(ctx, macc)
 		}
 
 		stakingGenesis := DefaultGenesisState()
-		validators := InitGenesis(ctx, keeper, accountKeeper, supplyKeeper, stakingGenesis)
+		validators := InitGenesis(ctx, keeper, ak, bk, sk, stakingGenesis)
+
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
@@ -121,17 +129,21 @@ func TestStakingMsgs(t *testing.T) {
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
-	acc1 := &auth.BaseAccount{
-		Address: addr1,
-		Coins:   sdk.Coins{genCoin},
-	}
-	acc2 := &auth.BaseAccount{
-		Address: addr2,
-		Coins:   sdk.Coins{genCoin},
-	}
+	acc1 := &auth.BaseAccount{Address: addr1}
+	acc2 := &auth.BaseAccount{Address: addr2}
 	accs := []authexported.Account{acc1, acc2}
+	balances := []bankexported.GenesisBalance{
+		bank.Balance{
+			Address: addr1,
+			Coins:   sdk.Coins{genCoin},
+		},
+		bank.Balance{
+			Address: addr2,
+			Coins:   sdk.Coins{genCoin},
+		},
+	}
 
-	mock.SetGenesis(mApp, accs)
+	mock.SetGenesis(mApp, accs, balances)
 	mock.CheckBalance(t, mApp, addr1, sdk.Coins{genCoin})
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin})
 

@@ -17,7 +17,7 @@ import (
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amt := sdk.TokensFromConsensusPower(100)
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
@@ -30,7 +30,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		t, bk.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
@@ -44,7 +44,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 
 func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := slashingkeeper.Addrs[0], slashingkeeper.Pks[0], sdk.TokensFromConsensusPower(amtInt)
@@ -58,7 +58,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		t, bk.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))},
 	)
 
@@ -153,9 +153,8 @@ func TestInvalidMsg(t *testing.T) {
 // Test a validator through uptime, downtime, revocation,
 // unrevocation, starting height reset, and revocation again
 func TestHandleAbsentValidator(t *testing.T) {
-
 	// initial setup
-	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashingkeeper.TestParams())
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashingkeeper.TestParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
@@ -169,7 +168,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		t, bk.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
@@ -206,8 +205,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// validator should be bonded still
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
+
 	bondPool := sk.GetBondedPool(ctx)
-	require.True(sdk.IntEq(t, amt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx))))
+	require.True(sdk.IntEq(t, amt, bk.GetBalance(ctx, bondPool.GetAddress(), sk.BondDenom(ctx)).Amount))
 
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
@@ -265,8 +265,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
-	bondPool = sk.GetBondedPool(ctx)
-	require.Equal(t, amt.Int64()-slashAmt, bondPool.GetCoins().AmountOf(sk.BondDenom(ctx)).Int64())
+	require.Equal(t, amt.Int64()-slashAmt, bk.GetBalance(ctx, bondPool.GetAddress(), sk.BondDenom(ctx)).Amount.Int64())
 
 	// Validator start height should not have been changed
 	info, found = keeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))

@@ -12,10 +12,21 @@ Simulation is executed with various inputs including the number of blocks to
 simulate, the block size, whether the app should commit or not, the invariant
 checking period, and a seed which is used as a source of pseudo-randomness.
 
+// #1 number of blocks to simulate
+// #2 block size
+// #3 whether the app should commit or not
+// #4 invariant checking periods
+// #5 a seed used a pseudo-randaomness
+
 In addition to the various inputs, simulation runs mainly in three modes:
 
 1. Completely random where the initial state, module parameters and simulation
 parameters are pseudo-randomly generated.
+
+// - initial states
+// - module parameters
+// - simulation parameters
+
 
 2. From a genesis file where the initial state and the module parameters are defined.
 This mode is helpful for running simulations on a known state such as a live

@@ -156,10 +156,8 @@ func NewOperationQueue() OperationQueue {
 	return make(OperationQueue)
 }
 
-// queueOperations adds all future operations into the operation queue.
 func queueOperations(queuedOps OperationQueue,
 	queuedTimeOps []FutureOperation, futureOps []FutureOperation) {
-
 	if futureOps == nil {
 		return
 	}
@@ -187,6 +185,48 @@ func queueOperations(queuedOps OperationQueue,
 		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
 		queuedTimeOps[index] = futureOp
 	}
+}
+
+// queueOperations queues FutureOperations into the OperationQueue if its blockheight equals zero
+// otherwise its queued in queuedTimeOps.
+func queueOperationsB(queuedOps OperationQueue,
+	queuedTimeOps []FutureOperation, futureOpts []FutureOperation) {
+
+	for i, futureOpt := range futureOpts {
+		futureOpt := futureOpt
+		switch {
+		case futureOpt.BlockHeight == 0:
+			queuedTimeOps = append(queuedTimeOps, futureOpt)
+			sort.Sort(byBlockTime(futureOpts))
+			deleteFutureOpt(futureOpts, i)
+			continue
+		case futureOpt.BlockHeight > 0:
+			if val, ok := queuedOps[futureOpt.BlockHeight]; ok {
+				queuedOps[futureOpt.BlockHeight] = append(val, futureOpt.Op)
+				continue
+			}
+
+			queuedOps[futureOpt.BlockHeight] = []Operation{futureOpt.Op}
+			continue
+		default:
+			panic("FutureOperations BlockHeight cannot be negative")
+		}
+	}
+}
+
+type byBlockTime []FutureOperation
+
+func (fo byBlockTime) Len() int      { return len(fo) }
+func (fo byBlockTime) Swap(i, j int) { fo[i], fo[j] = fo[j], fo[i] }
+func (fo byBlockTime) Less(i, j int) bool {
+	// TODO: this may need to be reversed
+	return fo[i].BlockTime.After(fo[j].BlockTime)
+}
+
+// deleteFutureOpts deletes i within FutureOperations.  It exist
+// to increase performance when QueueingOperations
+func deleteFutureOpt(f []FutureOperation, i int) {
+	f[len(f)-1], f[i] = f[i], f[len(f)-1]
 }
 
 //________________________________________________________________________

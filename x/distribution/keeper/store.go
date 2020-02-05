@@ -55,7 +55,7 @@ func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 // set the global fee pool distribution info
 func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(feePool)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&feePool)
 	store.Set(types.FeePoolKey, b)
 }
 
@@ -131,7 +131,7 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddres
 // set historical rewards for a particular period
 func (k Keeper) SetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&rewards)
 	store.Set(types.GetValidatorHistoricalRewardsKey(val, period), b)
 }
 
@@ -200,7 +200,7 @@ func (k Keeper) GetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress) 
 // set current rewards for a validator
 func (k Keeper) SetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress, rewards types.ValidatorCurrentRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(&rewards)
 	store.Set(types.GetValidatorCurrentRewardsKey(val), b)
 }
 
@@ -298,9 +298,10 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorOutstandingRewardsPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		rewards := types.ValidatorOutstandingRewards{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewards)
+		rewardsProto := sdk.DecProto{}
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewardsProto)
 		addr := types.GetValidatorOutstandingRewardsAddress(iter.Key())
+		rewards := types.ValidatorOutstandingRewards(rewardsProto)
 		if handler(addr, rewards) {
 			break
 		}

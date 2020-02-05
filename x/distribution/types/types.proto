@@ -105,6 +105,7 @@ message ValidatorCurrentRewards {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
+  uint64 period = 2 [(gogoproto.moretags) = "yaml:\"period\"" ];
 }
 
 // validator slash event

@@ -15,14 +15,6 @@ func NewValidatorHistoricalRewards(cumulativeRewardRatio sdk.DecCoins, reference
 	}
 }
 
-// current rewards and current period for a validator
-// kept as a running counter and incremented each block
-// as long as the validator's tokens remain constant
-type ValidatorCurrentRewards struct {
-	Rewards sdk.DecCoins `json:"rewards" yaml:"rewards"` // current rewards
-	Period  uint64       `json:"period" yaml:"period"`   // current period
-}
-
 // create a new ValidatorCurrentRewards
 func NewValidatorCurrentRewards(rewards sdk.DecCoins, period uint64) ValidatorCurrentRewards {
 	return ValidatorCurrentRewards{

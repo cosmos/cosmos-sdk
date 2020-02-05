@@ -47,6 +47,31 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.ctx = ctx
 }
 
+func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
+	app, ctx := suite.app, suite.ctx
+	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+
+	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	suite.Require().Equal(balances, acc1Balances)
+
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	suite.Require().Nil(app.AccountKeeper.GetAccount(ctx, addr2))
+	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
+
+	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
+
+	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
+	suite.Require().Equal(sendAmt, acc2Balances)
+	suite.Require().NotNil(app.AccountKeeper.GetAccount(ctx, addr2))
+}
+
 func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	app, ctx := suite.app, suite.ctx
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))

@@ -26,10 +26,10 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 
 	// fetch outstanding
-	outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr)
+	outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr).Rewards
 
 	// force-withdraw commission
-	commission := h.k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	commission := h.k.GetValidatorAccumulatedCommission(ctx, valAddr).Commission
 	if !commission.IsZero() {
 		// subtract from outstanding
 		outstanding = outstanding.Sub(commission)

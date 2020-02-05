@@ -108,6 +108,26 @@ message ValidatorCurrentRewards {
   uint64 period = 2 [(gogoproto.moretags) = "yaml:\"period\"" ];
 }
 
+// accumulated commission for a validator
+// kept as a running counter, can be withdrawn at any time
+message ValidatorAccumulatedCommission {
+  repeated cosmos_sdk.v1.DecCoin commission = 1 [
+    (gogoproto.moretags) = "yaml:\"commission\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// outstanding (un-withdrawn) rewards for a validator
+// inexpensive to track, allows simple sanity checks
+message ValidatorOutstandingRewards {
+  repeated cosmos_sdk.v1.DecCoin rewards = 1 [
+    (gogoproto.moretags) = "yaml:\"rewards\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // validator slash event
 // height is implicit within the store key
 // needed to calculate appropriate amounts of staking token

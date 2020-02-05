@@ -592,7 +592,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.True(t, rewards.IsZero())
 
 	// commission should be zero
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).Commission.IsZero())
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -646,5 +646,5 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards)
 
 	// commission should be zero
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).Commission.IsZero())
 }

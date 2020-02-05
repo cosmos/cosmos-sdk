@@ -241,10 +241,10 @@ func (k Keeper) SetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAd
 	var bz []byte
 
 	store := ctx.KVStore(k.storeKey)
-	if commission.IsZero() {
-		bz = k.cdc.MustMarshalBinaryLengthPrefixed(types.InitialValidatorAccumulatedCommission())
+	if commission.Commission.IsZero() {
+		bz = k.cdc.MustMarshalBinaryLengthPrefixed(&types.ValidatorAccumulatedCommission{})
 	} else {
-		bz = k.cdc.MustMarshalBinaryLengthPrefixed(commission)
+		bz = k.cdc.MustMarshalBinaryLengthPrefixed(&commission)
 	}
 
 	store.Set(types.GetValidatorAccumulatedCommissionKey(val), bz)
@@ -274,8 +274,8 @@ func (k Keeper) IterateValidatorAccumulatedCommissions(ctx sdk.Context, handler 
 // get validator outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetValidatorOutstandingRewardsKey(val))
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &rewards)
+	bz := store.Get(types.GetValidatorOutstandingRewardsKey(val))
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &rewards)
 	return
 }
 
@@ -298,10 +298,9 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorOutstandingRewardsPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		rewardsProto := sdk.DecProto{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewardsProto)
+		rewards := types.ValidatorOutstandingRewards{}
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewards)
 		addr := types.GetValidatorOutstandingRewardsAddress(iter.Key())
-		rewards := types.ValidatorOutstandingRewards(rewardsProto)
 		if handler(addr, rewards) {
 			break
 		}

@@ -23,10 +23,6 @@ func NewValidatorCurrentRewards(rewards sdk.DecCoins, period uint64) ValidatorCu
 	}
 }
 
-// accumulated commission for a validator
-// kept as a running counter, can be withdrawn at any time
-type ValidatorAccumulatedCommission = sdk.DecCoins
-
 // return the initial accumulated commission (zero)
 func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 	return ValidatorAccumulatedCommission{}
@@ -53,7 +49,3 @@ func (vs ValidatorSlashEvents) String() string {
 	}
 	return strings.TrimSpace(out)
 }
-
-// outstanding (un-withdrawn) rewards for a validator
-// inexpensive to track, allows simple sanity checks
-type ValidatorOutstandingRewards = sdk.DecCoins

@@ -75,11 +75,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).IsZero())
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).IsZero())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).Rewards.IsZero())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).Rewards.IsZero())
 	require.True(t, k.GetFeePool(ctx).CommunityPool.IsZero())
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).Commission.IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).Commission.IsZero())
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards.IsZero())
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
 
@@ -112,7 +112,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	// 50% commission for first proposer, (0.5 * 93%) * 100 / 2 = 23.25
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 	// zero commission for second proposer
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).Commission.IsZero())
 	// just staking.proportional for first proposer less commission = (0.5 * 93%) * 100 / 2 = 23.25
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards)
 	// proposer reward + staking.proportional for second proposer = (5 % + 0.5 * (93%)) * 100 = 51.5
@@ -162,12 +162,12 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).IsZero())
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).IsZero())
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr3).IsZero())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).Rewards.IsZero())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).Rewards.IsZero())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr3).Rewards.IsZero())
 	require.True(t, k.GetFeePool(ctx).CommunityPool.IsZero())
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
-	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).Commission.IsZero())
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).Commission.IsZero())
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards.IsZero())
 	require.True(t, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards.IsZero())
 
@@ -198,7 +198,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 	k.AllocateTokens(ctx, 31, 31, valConsAddr2, votes)
 
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).IsValid())
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).IsValid())
-	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr3).IsValid())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).Rewards.IsValid())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).Rewards.IsValid())
+	require.True(t, k.GetValidatorOutstandingRewards(ctx, valOpAddr3).Rewards.IsValid())
 }

@@ -47,6 +47,9 @@ issues:
     - text: "ST1003:"
       linters:
         - stylecheck
+    - text: "ST1016:"
+      linters:
+        - stylecheck
 
 linters-settings:
   dogsled:

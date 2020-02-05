@@ -123,6 +123,7 @@ var (
 	ErrNeitherShareMsgsGiven           = types.ErrNeitherShareMsgsGiven
 	ErrInvalidHistoricalInfo           = types.ErrInvalidHistoricalInfo
 	ErrNoHistoricalInfo                = types.ErrNoHistoricalInfo
+	ErrEmptyValidatorPubKey            = types.ErrEmptyValidatorPubKey
 	NewGenesisState                    = types.NewGenesisState
 	DefaultGenesisState                = types.DefaultGenesisState
 	NewMultiStakingHooks               = types.NewMultiStakingHooks

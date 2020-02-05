@@ -186,7 +186,6 @@ func (k Keeper) GetHomeDir() string {
 // if there's an error in reading the info,
 // it assumes that the upgrade info is not available
 func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeName string, upgradeHeight int64) {
-	var upgradeInfo store.UpgradeInfo
 	upgradeInfoPath, err := k.GetUpgradeInfoPath()
 	// if error in reading the path, assume there are no upgrades
 	if err != nil {
@@ -200,7 +199,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeName string, upgradeHeight int
 		return "", -1
 	}
 
+	var upgradeInfo store.UpgradeInfo
 	json.Unmarshal(data, &upgradeInfo)
-
 	return upgradeInfo.Name, upgradeInfo.Height
 }

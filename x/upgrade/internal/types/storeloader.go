@@ -7,7 +7,7 @@ import (
 )
 
 // UpgradeStoreLoader is used to prepare baseapp with a fixed StoreLoader
-// pattern. This is useful in test cases, or with custom upgrade loading logic.
+// pattern. This is useful for custom upgrade loading logic.
 func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		if upgradeHeight == ms.LastCommitID().Version {

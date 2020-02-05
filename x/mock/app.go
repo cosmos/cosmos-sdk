@@ -210,7 +210,7 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (
 		})
 	}
 
-	return
+	return // nolint
 }
 
 // SetGenesis sets the mock app genesis accounts.

@@ -27,7 +27,7 @@ func TestHistoricalInfo(t *testing.T) {
 	recv, found := keeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
-	require.True(t, sort.IsSorted(types.Validators(recv.ValSet)), "HistoricalInfo validators is not sorted")
+	require.True(t, sort.IsSorted(recv.ValSet), "HistoricalInfo validators is not sorted")
 
 	keeper.DeleteHistoricalInfo(ctx, 2)
 

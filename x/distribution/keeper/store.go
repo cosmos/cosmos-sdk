@@ -60,13 +60,12 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 }
 
 // get the proposer public key for this block
-func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
+func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) { // here
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.ProposerKey)
 	if bz == nil {
 		panic("Previous proposer not set")
 	}
-	conAddr := sdk.ConsAddress{}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &conAddr)
 	return
 }

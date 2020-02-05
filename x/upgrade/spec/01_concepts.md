@@ -60,8 +60,8 @@ or if the binary was upgraded too early, the node will gracefully panic and exit
 The `x/upgrade` module also facilitates store migrations as part of the upgrade. The
 `StoreLoader` sets the migrations that need to occur before the new binary can 
 successfully run the chain. This `StoreLoader` is also application specific and 
-not defined on a per-module basis. Registering a `StoreLoader` is done via
-`upgrade#UpgradeStoreLoader` in the application.
+not defined on a per-module basis. Registering this `StoreLoader` is done via
+`app#SetStoreLoader` in the application.
 
 ```go
 func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader

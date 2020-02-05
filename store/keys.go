@@ -11,30 +11,7 @@ import (
 // with all subkeys.
 func PrefixKeyString(prefix string, subkeys ...[]byte) []byte {
 	buf := [][]byte{[]byte(prefix)}
-	return PrefixKeyBytes(append(buf, subkeys...)...)
-}
-
-// PrefixKeyBytes returns a byte slice consisting of all subkeys concatenated together.
-func PrefixKeyBytes(subkeys ...[]byte) []byte {
-	if len(subkeys) == 0 {
-		return []byte{}
-	}
-
-	var buf bytes.Buffer
-	buf.Write(subkeys[0])
-
-	if len(subkeys) > 1 {
-		for _, sk := range subkeys[1:] {
-			if len(sk) == 0 {
-				continue
-			}
-
-			buf.WriteRune('/')
-			buf.Write(sk)
-		}
-	}
-
-	return buf.Bytes()
+	return bytes.Join(append(buf, subkeys...), []byte("/"))
 }
 
 // Int64Subkey returns a byte slice from the provided subkey suitable for use
@@ -55,10 +32,16 @@ func Uint64Subkey(subkey uint64) []byte {
 }
 
 // SDKUintSubkey returns a byte slice from the provided subkey suitable for use
-// an iterable key in the store.
-func SDKUintSubkey(subkey sdk.Uint) []byte {
-	var buf [32]byte
+// an iterable key in the store. The bytes representing the number will be left-padded
+// to padToBits bits. If padTo < len(subkey.Bytes()), or padToBits % 8 != 0,
+// this method will panic.
+func SDKUintSubkey(subkey sdk.Uint, padToBits int) []byte {
+	if padToBits%8 != 0 {
+		panic("padToBits must be divisible by 8")
+	}
+	padToBytes := padToBits / 8
+	buf := make([]byte, padToBytes, padToBytes)
 	b := subkey.BigInt().Bytes()
-	copy(buf[32-len(b):], b)
-	return buf[:]
+	copy(buf[padToBytes-len(b):], b)
+	return buf
 }

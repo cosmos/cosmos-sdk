@@ -1,14 +1,16 @@
 package store
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
-	"testing"
-	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -24,9 +26,9 @@ func upsert(ctx sdk.Context, sk sdk.StoreKey, cdc *amino.Codec, key []byte, val 
 func TestDel(t *testing.T) {
 	cdc := amino.NewCodec()
 	ctx, sk := mockApp(t)
-	require.Error(t, Del(ctx, sk, testKey))
+	require.Error(t, Delete(ctx, sk, testKey))
 	upsert(ctx, sk, cdc, testKey, 12345)
-	require.NoError(t, Del(ctx, sk, testKey))
+	require.NoError(t, Delete(ctx, sk, testKey))
 	require.False(t, Has(ctx, sk, testKey))
 }
 

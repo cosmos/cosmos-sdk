@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,9 +10,9 @@ var (
 	ErrStoreKeyNotFound = errors.New("key not found")
 )
 
-// Del deletes the value in the store identified by sk and at the key
-// identified by key. Del will return an error if the key does not exist.
-func Del(ctx sdk.Context, sk StoreKey, key []byte) error {
+// Delete deletes the value in the store identified by sk and at the key
+// identified by key. Delete will return an error if the key does not exist.
+func Delete(ctx sdk.Context, sk StoreKey, key []byte) error {
 	if !Has(ctx, sk, key) {
 		return ErrStoreKeyNotFound
 	}

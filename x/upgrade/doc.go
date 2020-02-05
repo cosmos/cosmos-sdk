@@ -68,7 +68,7 @@ as well as providing the opportunity for the upgraded software to perform any ne
 (with the old binary) and applying the migration (with the new binary) are enforced in the state machine. Actually
 switching the binaries is an ops task and not handled inside the sdk / abci app.
 
-Here is a sample code to handle store migrations with an upgrade:
+Here is a sample code to set store migrations with an upgrade:
 
 	// this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
 	app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", upgradeHandlerFunc)

@@ -407,8 +407,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	err := s.keeper.DumpUpgradeInfoToDisk(planHeight, name)
 	require.Nil(t, err)
 
-	upgradeInfoFileDir := s.keeper.GetHomeDir()
-	upgradeInfoFilePath, err := upgrade.EnsureUpgradeInfoFileExists(upgradeInfoFileDir)
+	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
 	require.Nil(t, err)
 
 	data, err := ioutil.ReadFile(upgradeInfoFilePath)

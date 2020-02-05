@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -142,16 +143,15 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 
 // DumpUpgradeInfoToDisk adds plan height to upgrade-info.json
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
-	upgradeInfoFileDir := k.GetHomeDir()
-	upgradeInfoFilePath, err := EnsureUpgradeInfoFileExists(upgradeInfoFileDir)
+	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err
 	}
 
-	var upgradeInfo store.UpgradeInfo
-	upgradeInfo.Height = height
-	upgradeInfo.Name = name
-
+	upgradeInfo := store.UpgradeInfo{
+		Name:   name,
+		Height: height,
+	}
 	info, err := json.Marshal(upgradeInfo)
 
 	if err != nil {
@@ -161,17 +161,16 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 	return ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
 }
 
-// EnsureUpgradeInfoFileExists checks if upgrade-info file is present
-// if not it creates the file
-func EnsureUpgradeInfoFileExists(upgradeInfoFileDir string) (string, error) {
-	if upgradeInfoFileDir != "" {
-		if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
-			err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
-			if err != nil {
-				return "", err
-			}
-			return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+// GetUpgradeInfoPath returns the upgrade info file path
+func (k Keeper) GetUpgradeInfoPath() (string, error) {
+	upgradeInfoFileDir := path.Join(k.GetHomeDir(), "data")
+
+	if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
+		err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
+		if err != nil {
+			return "", err
 		}
+		return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
 	}
 
 	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
@@ -188,7 +187,11 @@ func (k Keeper) GetHomeDir() string {
 // it assumes that the upgrade info is not available
 func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeName string, upgradeHeight int64) {
 	var upgradeInfo store.UpgradeInfo
-	upgradeInfoPath := filepath.Join(k.homePath, UpgradeInfoFileName)
+	upgradeInfoPath, err := k.GetUpgradeInfoPath()
+	// if error in reading the path, assume there are no upgrades
+	if err != nil {
+		return "", -1
+	}
 
 	data, err := ioutil.ReadFile(upgradeInfoPath)
 

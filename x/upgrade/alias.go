@@ -30,7 +30,6 @@ var (
 	UpgradeStoreLoader               = types.UpgradeStoreLoader
 	NewKeeper                        = keeper.NewKeeper
 	NewQuerier                       = keeper.NewQuerier
-	EnsureUpgradeInfoFileExists      = keeper.EnsureUpgradeInfoFileExists
 )
 
 type (

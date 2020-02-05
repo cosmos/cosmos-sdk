@@ -47,6 +47,11 @@ issues:
     - text: "ST1003:"
       linters:
         - stylecheck
+    # FIXME disabled until golangci-lint updates stylecheck with this fix:
+    # https://github.com/dominikh/go-tools/issues/389
+    - text: "ST1016:"
+      linters:
+        - stylecheck
 
 linters-settings:
   dogsled:

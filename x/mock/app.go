@@ -19,6 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -32,14 +34,17 @@ type App struct {
 	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
 	KeyMain    *sdk.KVStoreKey
 	KeyAccount *sdk.KVStoreKey
+	KeyBank    *sdk.KVStoreKey
 	KeyParams  *sdk.KVStoreKey
 	TKeyParams *sdk.TransientStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper auth.AccountKeeper
+	BankKeeper    bank.Keeper
 	ParamsKeeper  params.Keeper
 
 	GenesisAccounts  []authexported.Account
+	GenesisBalances  []bankexported.GenesisBalance
 	TotalCoinsSupply sdk.Coins
 }
 
@@ -58,30 +63,34 @@ func NewApp() *App {
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
+		KeyBank:          sdk.NewKVStoreKey(bank.StoreKey),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
-	// define keepers
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
-
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
 		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
 	)
-
-	supplyKeeper := NewDummySupplyKeeper(app.AccountKeeper)
+	app.BankKeeper = bank.NewBaseKeeper(
+		app.Cdc,
+		app.KeyBank,
+		app.AccountKeeper,
+		app.ParamsKeeper.Subspace(bank.DefaultParamspace),
+		make(map[string]bool),
+	)
+	supplyKeeper := NewDummySupplyKeeper(app.AccountKeeper, app.BankKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer))
 
-	// Not sealing for custom extension
-
+	// not sealing for custom extension
 	return app
 }
 
@@ -90,15 +99,17 @@ func NewApp() *App {
 func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 	newKeys = append(
 		newKeys,
-		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams,
+		app.KeyMain, app.KeyAccount, app.KeyBank, app.KeyParams, app.TKeyParams,
 	)
 
 	for _, key := range newKeys {
 		switch key.(type) {
 		case *sdk.KVStoreKey:
 			app.MountStore(key, sdk.StoreTypeIAVL)
+
 		case *sdk.TransientStoreKey:
 			app.MountStore(key, sdk.StoreTypeTransient)
+
 		default:
 			return fmt.Errorf("unsupported StoreKey: %+v", key)
 		}
@@ -111,15 +122,17 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 
 // InitChainer performs custom logic for initialization.
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
-
-	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, genacc.GetAddress())
-		acc.SetCoins(genacc.GetCoins())
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
+	for _, balance := range app.GenesisBalances {
+		app.BankKeeper.SetBalances(ctx, balance.GetAddress(), balance.GetCoins())
+	}
+
 	auth.InitGenesis(ctx, app.AccountKeeper, auth.DefaultGenesisState())
+	bank.InitGenesis(ctx, app.BankKeeper, bank.DefaultGenesisState())
 
 	return abci.ResponseInitChain{}
 }
@@ -167,8 +180,10 @@ func (b AddrKeysSlice) Swap(i, j int) {
 
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
-func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []authexported.Account,
-	addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (
+	genAccs []authexported.Account, genBalances []bankexported.GenesisBalance,
+	addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey,
+) {
 
 	addrKeysSlice := AddrKeysSlice{}
 
@@ -188,6 +203,9 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []authexported.
 		privKeys = append(privKeys, addrKeysSlice[i].PrivKey)
 		genAccs = append(genAccs, &auth.BaseAccount{
 			Address: addrKeysSlice[i].Address,
+		})
+		genBalances = append(genBalances, bank.Balance{
+			Address: addrKeysSlice[i].Address,
 			Coins:   genCoins,
 		})
 	}
@@ -196,10 +214,11 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []authexported.
 }
 
 // SetGenesis sets the mock app genesis accounts.
-func SetGenesis(app *App, accs []authexported.Account) {
+func SetGenesis(app *App, accs []authexported.Account, balances []bankexported.GenesisBalance) {
 	// Pass the accounts in via the application (lazy) instead of through
 	// RequestInitChain.
 	app.GenesisAccounts = accs
+	app.GenesisBalances = balances
 
 	app.InitChain(abci.RequestInitChain{})
 	app.Commit()
@@ -282,14 +301,15 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 // RandomSetGenesis set genesis accounts with random coin values using the
 // provided addresses and coin denominations.
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
-	accts := make([]authexported.Account, len(addrs))
+	accounts := make([]authexported.Account, len(addrs))
+	balances := make([]bankexported.GenesisBalance, len(addrs))
 	randCoinIntervals := []BigInterval{
 		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
 		{sdk.NewIntWithDecimal(1, 2), sdk.NewIntWithDecimal(1, 3)},
 		{sdk.NewIntWithDecimal(1, 40), sdk.NewIntWithDecimal(1, 50)},
 	}
 
-	for i := 0; i < len(accts); i++ {
+	for i := 0; i < len(accounts); i++ {
 		coins := make([]sdk.Coin, len(denoms))
 
 		// generate a random coin for each denomination
@@ -302,10 +322,12 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins...)
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 
-		(&baseAcc).SetCoins(coins)
-		accts[i] = &baseAcc
+		accounts[i] = &baseAcc
+		balances[i] = bank.Balance{Address: addrs[i], Coins: coins}
 	}
-	app.GenesisAccounts = accts
+
+	app.GenesisAccounts = accounts
+	app.GenesisBalances = balances
 }
 
 func createCodec() *codec.Codec {

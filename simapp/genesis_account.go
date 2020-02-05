@@ -31,9 +31,6 @@ type SimGenesisAccount struct {
 // Validate checks for errors on the vesting and module account parameters
 func (sga SimGenesisAccount) Validate() error {
 	if !sga.OriginalVesting.IsZero() {
-		if sga.OriginalVesting.IsAnyGT(sga.Coins) {
-			return errors.New("vesting amount cannot be greater than total amount")
-		}
 		if sga.StartTime >= sga.EndTime {
 			return errors.New("vesting start-time cannot be before end-time")
 		}

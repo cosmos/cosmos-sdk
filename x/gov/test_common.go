@@ -19,6 +19,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
@@ -38,6 +39,7 @@ type testInput struct {
 	mApp     *mock.App
 	keeper   keep.Keeper
 	router   types.Router
+	bk       bank.Keeper
 	sk       staking.Keeper
 	addrs    []sdk.AccAddress
 	pubKeys  []crypto.PubKey
@@ -68,21 +70,18 @@ func getMockApp(
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := mApp.ParamsKeeper
-
-	rtr := types.NewRouter().
-		AddRoute(types.RouterKey, handler)
-
-	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
-
+	rtr := types.NewRouter().AddRoute(types.RouterKey, handler)
 	maccPerms := map[string][]string{
 		types.ModuleName:          {supply.Burner},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
+
+	pk := mApp.ParamsKeeper
+	bk := mApp.BankKeeper
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, maccPerms)
 	sk := staking.NewKeeper(
-		mApp.Cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace),
+		mApp.Cdc, keyStaking, bk, supplyKeeper, pk.Subspace(staking.DefaultParamspace),
 	)
 
 	keeper := keep.NewKeeper(
@@ -93,24 +92,25 @@ func getMockApp(
 	mApp.QueryRouter().AddRoute(types.QuerierRoute, keep.NewQuerier(keeper))
 
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genAccs, genState,
+	mApp.SetInitChainer(getInitChainer(mApp, bk, keeper, sk, supplyKeeper, genAccs, genState,
 		[]supplyexported.ModuleAccountI{govAcc, notBondedPool, bondPool}))
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, keyGov, keySupply))
 
 	var (
-		addrs    []sdk.AccAddress
-		pubKeys  []crypto.PubKey
-		privKeys []crypto.PrivKey
+		genBalances []bankexported.GenesisBalance
+		addrs       []sdk.AccAddress
+		pubKeys     []crypto.PubKey
+		privKeys    []crypto.PrivKey
 	)
 
 	if genAccs == nil || len(genAccs) == 0 {
-		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, valCoins)
+		genAccs, genBalances, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, valCoins)
 	}
 
-	mock.SetGenesis(mApp, genAccs)
+	mock.SetGenesis(mApp, genAccs, genBalances)
 
-	return testInput{mApp, keeper, rtr, sk, addrs, pubKeys, privKeys}
+	return testInput{mApp, keeper, rtr, bk, sk, addrs, pubKeys, privKeys}
 }
 
 // gov and staking endblocker
@@ -122,7 +122,7 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []authexported.Account, genState GenesisState,
+func getInitChainer(mapp *mock.App, bk types.BankKeeper, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []authexported.Account, genState GenesisState,
 	blacklistedAddrs []supplyexported.ModuleAccountI) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
@@ -137,11 +137,11 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 			supplyKeeper.SetModuleAccount(ctx, macc)
 		}
 
-		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, supplyKeeper, stakingGenesis)
+		validators := staking.InitGenesis(ctx, stakingKeeper, mapp.AccountKeeper, bk, supplyKeeper, stakingGenesis)
 		if genState.IsEmpty() {
-			InitGenesis(ctx, keeper, supplyKeeper, types.DefaultGenesisState())
+			InitGenesis(ctx, bk, supplyKeeper, keeper, types.DefaultGenesisState())
 		} else {
-			InitGenesis(ctx, keeper, supplyKeeper, genState)
+			InitGenesis(ctx, bk, supplyKeeper, keeper, genState)
 		}
 		return abci.ResponseInitChain{
 			Validators: validators,

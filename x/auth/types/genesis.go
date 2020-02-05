@@ -55,12 +55,6 @@ func SanitizeGenesisAccounts(genAccs exported.GenesisAccounts) exported.GenesisA
 		return genAccs[i].GetAccountNumber() < genAccs[j].GetAccountNumber()
 	})
 
-	for _, acc := range genAccs {
-		if err := acc.SetCoins(acc.GetCoins().Sort()); err != nil {
-			panic(err)
-		}
-	}
-
 	return genAccs
 }
 

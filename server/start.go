@@ -43,7 +43,7 @@ default, the application will run with Tendermint in process.
 
 Pruning options can be provided via the '--pruning' flag. The options are as follows:
 
-syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+syncable: only those states not needed for state syncing will be deleted (flushes every 100th to disk and keeps every 10000th)
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 everything: all saved states will be deleted, storing only the current state
 

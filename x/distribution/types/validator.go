@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,6 +29,11 @@ func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 	return ValidatorAccumulatedCommission{}
 }
 
+func UnmarshalValidatorAccumulatedCommission(cdc codec.Marshaler, value []byte) (v ValidatorAccumulatedCommission, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &v)
+	return v, err
+}
+
 // create a new ValidatorSlashEvent
 func NewValidatorSlashEvent(validatorPeriod uint64, fraction sdk.Dec) ValidatorSlashEvent {
 	return ValidatorSlashEvent{
@@ -36,12 +42,9 @@ func NewValidatorSlashEvent(validatorPeriod uint64, fraction sdk.Dec) ValidatorS
 	}
 }
 
-// ValidatorSlashEvents is a collection of ValidatorSlashEvent
-type ValidatorSlashEvents []ValidatorSlashEvent
-
 func (vs ValidatorSlashEvents) String() string {
 	out := "Validator Slash Events:\n"
-	for i, sl := range vs {
+	for i, sl := range vs.ValidatorSlashEvents {
 		out += fmt.Sprintf(`  Slash %d:
     Period:   %d
     Fraction: %s

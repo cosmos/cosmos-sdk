@@ -140,8 +140,10 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 				return err
 			}
 
-			var valCom types.ValidatorAccumulatedCommission
-			cdc.MustUnmarshalJSON(res, &valCom)
+			valCom, err := types.UnmarshalValidatorAccumulatedCommission(types.ModuleCdc, res)
+			if err != nil {
+				return err
+			}
 			return cliCtx.PrintOutput(valCom)
 		},
 	}
@@ -192,7 +194,10 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 			}
 
 			var slashes types.ValidatorSlashEvents
-			cdc.MustUnmarshalJSON(res, &slashes)
+			err = cdc.UnmarshalBinaryLengthPrefixed(res, &slashes)
+			if err != nil {
+				return err
+			}
 			return cliCtx.PrintOutput(slashes)
 		},
 	}

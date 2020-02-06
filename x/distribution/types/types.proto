@@ -141,6 +141,15 @@ message ValidatorSlashEvent {
   ];
 }
 
+// ValidatorSlashEvents is a collection of ValidatorSlashEvent
+message ValidatorSlashEvents {
+  option (gogoproto.goproto_stringer) = false;
+  repeated ValidatorSlashEvent validator_slash_events = 1 [
+    (gogoproto.moretags) = "yaml:\"validator_slash_events\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // global fee pool for distribution
 message FeePool {
   repeated cosmos_sdk.v1.DecCoin community_pool = 1 [

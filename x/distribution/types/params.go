@@ -92,6 +92,9 @@ func validateCommunityTax(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("community tax must be not nil")
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("community tax must be positive: %s", v)
 	}
@@ -108,6 +111,9 @@ func validateBaseProposerReward(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("base proposer reward must be not nil")
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("base proposer reward must be positive: %s", v)
 	}
@@ -124,6 +130,9 @@ func validateBonusProposerReward(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("bonus proposer reward must be not nil")
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("bonus proposer reward must be positive: %s", v)
 	}

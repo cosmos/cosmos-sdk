@@ -294,11 +294,7 @@ func (rs *Store) Commit() types.CommitID {
 	// write CommitInfo to disk only if this version was flushed to disk
 	if rs.pruningOpts.FlushVersion(version) {
 		// Need to update atomically.
-		batch := rs.db.NewBatch()
-		defer batch.Close()
-		setCommitInfo(batch, version, rs.lastCommitInfo)
-		setLatestVersion(batch, version)
-		batch.Write()
+		flushCommitInfo(rs.db, version, rs.lastCommitInfo)
 	}
 
 	// Prepare for next version.
@@ -443,6 +439,8 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"))
 	}
 
+	// If the request's height is the latest height we've committed, then utilize the store's lastCommitInfo
+	// as this commit info may not be flushed to disk. Otherwise, we query for the commit info from disk.
 	var commitInfo commitInfo
 	if res.Height == rs.lastCommitInfo.Version {
 		commitInfo = rs.lastCommitInfo
@@ -683,4 +681,13 @@ func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
 	cInfoBytes := cdc.MustMarshalBinaryLengthPrefixed(cInfo)
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
+}
+
+// Flush a commitInfo for given version to a db
+func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
+	batch := db.NewBatch()
+	defer batch.Close()
+	setCommitInfo(batch, version, cInfo)
+	setLatestVersion(batch, version)
+	batch.Write()
 }

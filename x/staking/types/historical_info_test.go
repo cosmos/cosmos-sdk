@@ -23,7 +23,7 @@ var (
 
 func TestHistoricalInfo(t *testing.T) {
 	hi := NewHistoricalInfo(header, validators)
-	require.True(t, sort.IsSorted(Validators(hi.ValSet)), "Validators are not sorted")
+	require.True(t, sort.IsSorted(hi.ValSet), "Validators are not sorted")
 
 	var value []byte
 	require.NotPanics(t, func() {
@@ -35,7 +35,7 @@ func TestHistoricalInfo(t *testing.T) {
 	recv, err := UnmarshalHistoricalInfo(ModuleCdc, value)
 	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")
 	require.Equal(t, hi, recv, "Unmarshalled HistoricalInfo is different from original")
-	require.True(t, sort.IsSorted(Validators(hi.ValSet)), "Validators are not sorted")
+	require.True(t, sort.IsSorted(hi.ValSet), "Validators are not sorted")
 }
 
 func TestValidateBasic(t *testing.T) {

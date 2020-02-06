@@ -51,7 +51,7 @@ type StakingKeeper interface {
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingexported.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint16
+	MaxValidators(sdk.Context) uint32
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -90,8 +90,11 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var finishTime time.Time
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
@@ -121,7 +124,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr1, validator.OperatorAddress)
-	assert.Equal(t, pk1, validator.ConsPubKey)
+	assert.Equal(t, pk1, validator.GetConsPubKey())
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
@@ -153,7 +156,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr2, validator.OperatorAddress)
-	assert.Equal(t, pk2, validator.ConsPubKey)
+	assert.Equal(t, pk2, validator.GetConsPubKey())
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
@@ -225,8 +228,12 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var finishTime time.Time
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
+
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
 
@@ -459,8 +466,11 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
-		var finishTime time.Time
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+		ts := &gogotypes.Timestamp{}
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+		finishTime, err := gogotypes.TimestampFromProto(ts)
+		require.NoError(t, err)
 
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
@@ -572,8 +582,11 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
-		var finishTime time.Time
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+		ts := &gogotypes.Timestamp{}
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+		_, err = gogotypes.TimestampFromProto(ts)
+		require.NoError(t, err)
 
 		// adds validator into unbonding queue
 		EndBlocker(ctx, keeper)
@@ -626,8 +639,11 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
-		var finishTime time.Time
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+		ts := &gogotypes.Timestamp{}
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+		finishTime, err := gogotypes.TimestampFromProto(ts)
+		require.NoError(t, err)
 
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
@@ -661,8 +677,11 @@ func TestJailValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var finishTime time.Time
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
@@ -677,7 +696,12 @@ func TestJailValidator(t *testing.T) {
 	res, err = handleMsgUndelegate(ctx, msgUndelegateDelegator, keeper)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+
+	ts = &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err = gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
@@ -720,8 +744,11 @@ func TestValidatorQueue(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var finishTime time.Time
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
@@ -821,8 +848,12 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	require.NotNil(t, res)
 
 	// change the ctx to Block Time one second before the validator would have unbonded
-	var finishTime time.Time
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &finishTime)
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
+
 	ctx = ctx.WithBlockTime(finishTime.Add(time.Second * -1))
 
 	// unbond the delegator from the validator

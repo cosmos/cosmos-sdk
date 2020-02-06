@@ -74,7 +74,7 @@ type ValidatorSet interface {
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingexported.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint16
+	MaxValidators(sdk.Context) uint32
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

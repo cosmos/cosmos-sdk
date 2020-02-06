@@ -42,7 +42,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, mApp.BankKeeper, maccPerms)
-	keeper := NewKeeper(mApp.Cdc, keyStaking, mApp.BankKeeper, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace))
+	keeper := NewKeeper(ModuleCdc, keyStaking, mApp.BankKeeper, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace))
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))

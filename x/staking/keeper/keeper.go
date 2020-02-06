@@ -23,7 +23,7 @@ var _ types.DelegationSet = Keeper{}
 // keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey
-	cdc                *codec.Codec
+	cdc                codec.Marshaler
 	bankKeeper         types.BankKeeper
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
@@ -34,7 +34,7 @@ type Keeper struct {
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps params.Subspace,
+	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps params.Subspace,
 ) Keeper {
 
 	// ensure bonded and not bonded module accounts are set
@@ -73,19 +73,21 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 }
 
 // Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
+func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.LastTotalPowerKey)
-	if b == nil {
+	bz := store.Get(types.LastTotalPowerKey)
+	if bz == nil {
 		return sdk.ZeroInt()
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &power)
-	return
+
+	ip := sdk.IntProto{}
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
+	return ip.Int
 }
 
 // Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
-	store.Set(types.LastTotalPowerKey, b)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&sdk.IntProto{Int: power})
+	store.Set(types.LastTotalPowerKey, bz)
 }

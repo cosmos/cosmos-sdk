@@ -50,6 +50,7 @@ balances or a single balance by denom when the `denom` query parameter is presen
 ### Bug Fixes
 
 * (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
+* (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set. 
 
 ### State Machine Breaking
 

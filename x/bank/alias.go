@@ -39,7 +39,6 @@ var (
 	DefaultGenesisState         = types.DefaultGenesisState
 	ValidateGenesis             = types.ValidateGenesis
 	SanitizeGenesisBalances     = types.SanitizeGenesisBalances
-	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
 	NewMsgSend                  = types.NewMsgSend
 	NewMsgMultiSend             = types.NewMsgMultiSend
 	NewInput                    = types.NewInput

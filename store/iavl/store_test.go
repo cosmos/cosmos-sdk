@@ -428,7 +428,10 @@ type pruneState struct {
 
 func testPruning(t *testing.T, numRecent int64, storeEvery int64, snapshotEvery int64, states []pruneState) {
 	db := dbm.NewMemDB()
-	pruningOpts := types.NewPruningOptions(numRecent, storeEvery, snapshotEvery)
+	pruningOpts := types.PruningOptions{
+		KeepEvery:     storeEvery,
+		SnapshotEvery: snapshotEvery,
+	}
 	iavlOpts := iavl.PruningOptions(storeEvery, numRecent)
 
 	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
@@ -496,42 +499,6 @@ func TestIAVLPruneEverything(t *testing.T) {
 		nextVersion(iavlStore)
 	}
 }
-
-/*
-func TestIAVLPruneRestart(t *testing.T) {
-	db := dbm.NewMemDB()
-	pruningOpts := types.NewPruningOptions(1, 3, 6)
-	iavlOpts := iavl.PruningOptions(3, 1)
-
-	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
-	require.NoError(t, err)
-
-	iavlStore := UnsafeNewStore(tree, pruningOpts)
-	initialCommitID := iavlStore.LastCommitID()
-
-	// Create versions without triggering flush
-	for i := 0; i < 2; i++ {
-		nextVersion(iavlStore)
-	}
-
-	unflushedCommitID := iavlStore.LastCommitID()
-	require.Equal(t, initialCommitID, unflushedCommitID, "CommitID changed before flush")
-
-	// trigger flush to disk with new version
-	nextVersion(iavlStore)
-
-	// IAVLStore should have flushed to disk on last version: 3
-	flushedCommit := iavlStore.LastCommitID()
-
-	// Create new versions without triggering flush
-	for i := 0; i < 2; i++ {
-		nextVersion(iavlStore)
-	}
-
-	postFlushCommit := iavlStore.LastCommitID()
-	require.Equal(t, flushedCommit, postFlushCommit, "CommitID changed after flush after mem-only commits")
-}
-*/
 
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()

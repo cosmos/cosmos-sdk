@@ -1,70 +1,48 @@
 package types
 
-// PruningStrategy specifies how old states will be deleted over time where
-// keepRecent can be used with keepEvery to create a pruning "strategy".
-// CONTRACT: snapshotEvery is a multiple of keepEvery
+// PruningOptions defines the specific pruning strategy every store in a multi-store will use
+// when committing state, where keepEvery determines which committed heights are flushed
+// to disk and snapshotEvery determines which of these heights are kept after pruning.
+// Note, that the invariant keepEvery % snapshotEvery = 0 must hold
 type PruningOptions struct {
-	keepRecent    int64
-	keepEvery     int64
-	snapshotEvery int64
-}
-
-func NewPruningOptions(keepRecent, keepEvery, snapshotEvery int64) PruningOptions {
-	return PruningOptions{
-		keepRecent:    keepRecent,
-		keepEvery:     keepEvery,
-		snapshotEvery: snapshotEvery,
-	}
+	KeepEvery     int64
+	SnapshotEvery int64
 }
 
 // Checks if PruningOptions is valid
-// KeepRecent should be larger than KeepEvery
 // SnapshotEvery is a multiple of KeepEvery
 func (po PruningOptions) IsValid() bool {
-	// If we're flushing each version, then no need for in-memory cache
-	if po.keepEvery == 1 && po.keepRecent != 0 {
+	// Must flush at positive block interval
+	if po.KeepEvery <= 0 {
 		return false
 	}
-	// If we're flushing periodically, we must keep latest version
-	// in memory to keep track of state changes
-	if po.keepEvery > 1 && po.keepRecent != 1 {
-		return false
-	}
-	// snapshotEvery must be a multiple of keepEvery
-	if po.keepEvery == 0 {
-		return po.snapshotEvery == 0
-	}
-	return po.snapshotEvery%po.keepEvery == 0
+	// SnapshotEvery must be a multiple of KeepEvery
+	return po.SnapshotEvery%po.KeepEvery == 0
 }
 
 func (po PruningOptions) FlushVersion(ver int64) bool {
-	return po.keepEvery != 0 && ver%po.keepEvery == 0
+	return po.KeepEvery != 0 && ver%po.KeepEvery == 0
 }
 
 func (po PruningOptions) SnapshotVersion(ver int64) bool {
-	return po.snapshotEvery != 0 && ver%po.snapshotEvery == 0
-}
-
-// How much recent state will be kept. Older state will be deleted.
-func (po PruningOptions) KeepRecent() int64 {
-	return po.keepRecent
-}
-
-// Keeps every N stated, deleting others.
-func (po PruningOptions) KeepEvery() int64 {
-	return po.keepEvery
-}
-
-func (po PruningOptions) SnapshotEvery() int64 {
-	return po.snapshotEvery
+	return po.SnapshotEvery != 0 && ver%po.SnapshotEvery == 0
 }
 
 // default pruning strategies
 var (
 	// PruneEverything means all saved states will be deleted, storing only the current state
-	PruneEverything = NewPruningOptions(0, 1, 0)
+	PruneEverything = PruningOptions{
+		KeepEvery:     1,
+		SnapshotEvery: 0,
+	}
 	// PruneNothing means all historic states will be saved, nothing will be deleted
-	PruneNothing = NewPruningOptions(0, 1, 1)
-	// PruneSyncable means only those states not needed for state syncing will be deleted (flush every 100 + snapshot every 10000th)
-	PruneSyncable = NewPruningOptions(1, 100, 10000)
+	PruneNothing = PruningOptions{
+		KeepEvery:     1,
+		SnapshotEvery: 1,
+	}
+	// PruneSyncable means only those states not needed for state syncing will be deleted (flush every 100 + Snapshot every 10000th)
+	PruneSyncable = PruningOptions{
+		KeepEvery:     100,
+		SnapshotEvery: 10000,
+	}
 )

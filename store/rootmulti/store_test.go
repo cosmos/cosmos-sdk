@@ -292,7 +292,10 @@ func TestParsePath(t *testing.T) {
 
 func TestMultiStoreRestart(t *testing.T) {
 	db := dbm.NewMemDB()
-	pruning := types.NewPruningOptions(1, 3, 6)
+	pruning := types.PruningOptions{
+		KeepEvery:     3,
+		SnapshotEvery: 6,
+	}
 	multi := newMultiStoreWithMounts(db, pruning)
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)

@@ -42,11 +42,20 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 	if !pruning.IsValid() {
 		return nil, fmt.Errorf("pruning options are invalid: %v", pruning)
 	}
+	// If KeepEvery = 1, keepRecent should be 0 since there is no need to keep latest version in in-memory cache
+	// If KeepEvery > 1, keepRecent should be 1 so that state changes in between flushed blocks can be saved in
+	// in-memory latest tree.
+	var keepRecent int64
+	if pruning.KeepEvery == 1 {
+		keepRecent = 0
+	} else {
+		keepRecent = 1
+	}
 	tree, err := iavl.NewMutableTreeWithOpts(
 		db,
 		dbm.NewMemDB(),
 		defaultIAVLCacheSize,
-		iavl.PruningOptions(pruning.KeepEvery(), pruning.KeepRecent()),
+		iavl.PruningOptions(pruning.KeepEvery, keepRecent),
 	)
 	if err != nil {
 		return nil, err
@@ -118,7 +127,7 @@ func (st *Store) Commit() types.CommitID {
 	flushed := st.pruning.FlushVersion(version)
 	if flushed {
 		// If the version we saved got flushed to disk, check if previous flushed version should be deleted
-		previous := version - st.pruning.KeepEvery()
+		previous := version - st.pruning.KeepEvery
 		// Previous flushed version should only by deleted if previous version is not snapshot version
 		// OR if snapshotting is disabled (SnapshotEvery == 0)
 		if previous != 0 && !st.pruning.SnapshotVersion(previous) {

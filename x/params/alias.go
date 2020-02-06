@@ -37,6 +37,7 @@ var (
 )
 
 type (
+	Codec                   = types.Codec
 	ParamSetPair            = subspace.ParamSetPair
 	ParamSetPairs           = subspace.ParamSetPairs
 	ParamSet                = subspace.ParamSet

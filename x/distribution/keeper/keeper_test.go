@@ -70,7 +70,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	), balance)
 
 	// check remainder
-	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)
+	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3).Commission
 	require.Equal(t, sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(1).Quo(sdk.NewDec(4))),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(2))),

@@ -37,7 +37,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	expected := sdk.DecCoins{
 		{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(5)},
 	}
-	require.Equal(t, expected, k.GetValidatorAccumulatedCommission(ctx, val.GetOperator()))
+	require.Equal(t, expected, k.GetValidatorAccumulatedCommission(ctx, val.GetOperator()).Commission)
 
 	// check current rewards
 	require.Equal(t, expected, k.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards)
@@ -105,12 +105,12 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	k.AllocateTokens(ctx, 200, 200, valConsAddr2, votes)
 
 	// 98 outstanding rewards (100 less 2 to community pool)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(465, 1)}}, k.GetValidatorOutstandingRewards(ctx, valOpAddr1))
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(515, 1)}}, k.GetValidatorOutstandingRewards(ctx, valOpAddr2))
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(465, 1)}}, k.GetValidatorOutstandingRewards(ctx, valOpAddr1).Rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(515, 1)}}, k.GetValidatorOutstandingRewards(ctx, valOpAddr2).Rewards)
 	// 2 community pool coins
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(2)}}, k.GetFeePool(ctx).CommunityPool)
 	// 50% commission for first proposer, (0.5 * 93%) * 100 / 2 = 23.25
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).Commission)
 	// zero commission for second proposer
 	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).Commission.IsZero())
 	// just staking.proportional for first proposer less commission = (0.5 * 93%) * 100 / 2 = 23.25

@@ -45,6 +45,7 @@ respectively.
 
 ### Bug Fixes
 
+* (x/gov) [\#5622](https://github.com/cosmos/cosmos-sdk/pull/5622) Track any events emitted from a proposal's handler upon successful execution.
 * (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
 
 ## [v0.37.6] - 2020-01-21

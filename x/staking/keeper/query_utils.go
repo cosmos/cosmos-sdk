@@ -6,9 +6,11 @@ import (
 )
 
 // Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	maxRetrieve uint16) (validators []types.Validator) {
-	validators = make([]types.Validator, maxRetrieve)
+func (k Keeper) GetDelegatorValidators(
+	ctx sdk.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
+) []types.Validator {
+
+	validators := make([]types.Validator, maxRetrieve)
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
@@ -23,15 +25,18 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 		if !found {
 			panic(types.ErrNoValidatorFound)
 		}
+
 		validators[i] = validator
 		i++
 	}
+
 	return validators[:i] // trim
 }
 
 // return a validator that a delegator is bonded to
-func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress) (validator types.Validator, err error) {
+func (k Keeper) GetDelegatorValidator(
+	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+) (validator types.Validator, err error) {
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
@@ -42,7 +47,8 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 	if !found {
 		panic(types.ErrNoValidatorFound)
 	}
-	return
+
+	return validator, nil
 }
 
 //_____________________________________________________________________________________
@@ -85,9 +91,9 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 }
 
 // return all redelegations for a delegator
-func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	srcValAddress, dstValAddress sdk.ValAddress) (
-	redelegations []types.Redelegation) {
+func (k Keeper) GetAllRedelegations(
+	ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
+) []types.Redelegation {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
@@ -97,6 +103,8 @@ func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 
+	redelegations := []types.Redelegation{}
+
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
 		if srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddress)) {
@@ -105,7 +113,9 @@ func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		if dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddress)) {
 			continue
 		}
+
 		redelegations = append(redelegations, redelegation)
 	}
+
 	return redelegations
 }

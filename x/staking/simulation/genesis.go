@@ -27,8 +27,8 @@ func GenUnbondingTime(r *rand.Rand) (ubdTime time.Duration) {
 }
 
 // GenMaxValidators randomized MaxValidators
-func GenMaxValidators(r *rand.Rand) (maxValidators uint16) {
-	return uint16(r.Intn(250) + 1)
+func GenMaxValidators(r *rand.Rand) (maxValidators uint32) {
+	return uint32(r.Intn(250) + 1)
 }
 
 // RandomizedGenState generates a random GenesisState for staking
@@ -40,7 +40,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { unbondTime = GenUnbondingTime(r) },
 	)
 
-	var maxValidators uint16
+	var maxValidators uint32
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MaxValidators, &maxValidators, simState.Rand,
 		func(r *rand.Rand) { maxValidators = GenMaxValidators(r) },
@@ -82,6 +82,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, stakingGenesis.Params))
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(types.ModuleCdc, stakingGenesis.Params))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
 }

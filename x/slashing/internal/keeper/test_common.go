@@ -57,6 +57,7 @@ func createTestCodec() *codec.Codec {
 
 func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
@@ -67,6 +68,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
@@ -91,7 +93,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
-	bk := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	bk := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
@@ -102,7 +104,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, InitTokens.MulRaw(int64(len(Addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace))
+	sk := staking.NewKeeper(cdc, keyStaking, bk, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace))
 	genesis := staking.DefaultGenesisState()
 
 	// set module accounts
@@ -110,12 +112,14 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	supplyKeeper.SetModuleAccount(ctx, bondPool)
 	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	_ = staking.InitGenesis(ctx, sk, accountKeeper, supplyKeeper, genesis)
+	_ = staking.InitGenesis(ctx, sk, accountKeeper, bk, supplyKeeper, genesis)
 
-	for _, addr := range Addrs {
-		_, err = bk.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
+	for i, addr := range Addrs {
+		addr := sdk.AccAddress(addr)
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, Pks[i], uint64(i), 0))
+		require.NoError(t, bk.SetBalances(ctx, addr, initCoins))
 	}
-	require.Nil(t, err)
+
 	paramstore := paramsKeeper.Subspace(types.DefaultParamspace)
 	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore)
 

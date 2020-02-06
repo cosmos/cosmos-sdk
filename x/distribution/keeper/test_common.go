@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -53,6 +54,9 @@ var (
 		delAddr1, delAddr2, delAddr3,
 		valAccAddr1, valAccAddr2, valAccAddr3,
 	}
+	pubkeys = []crypto.PubKey{
+		delPk1, delPk2, delPk3, valOpPk1, valOpPk2, valOpPk3,
+	}
 
 	distrAcc = supply.NewEmptyModuleAccount(types.ModuleName)
 )
@@ -73,21 +77,23 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
+	sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, types.SupplyKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 
-	ctx, ak, _, dk, sk, _, supplyKeeper := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
-	return ctx, ak, dk, sk, supplyKeeper
+	ctx, ak, bk, dk, sk, _, supplyKeeper := CreateTestInputAdvanced(t, isCheckTx, initPower, communityTax)
+	return ctx, ak, bk, dk, sk, supplyKeeper
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
-	communityTax sdk.Dec) (sdk.Context, auth.AccountKeeper, bank.Keeper,
-	Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper) {
+func CreateTestInputAdvanced(
+	t *testing.T, isCheckTx bool, initPower int64, communityTax sdk.Dec,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper,
+) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
@@ -98,6 +104,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
@@ -123,7 +130,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
 		types.ModuleName:          nil,
@@ -132,19 +139,19 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	}
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
 
-	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
+	sk := staking.NewKeeper(cdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(types.DefaultParamspace), sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(types.DefaultParamspace), bankKeeper, sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, addr := range TestAddrs {
-		_, err := bankKeeper.AddCoins(ctx, addr, initCoins)
-		require.Nil(t, err)
+	for i, addr := range TestAddrs {
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		require.NoError(t, bankKeeper.SetBalances(ctx, addr, initCoins))
 	}
 
 	// set module accounts

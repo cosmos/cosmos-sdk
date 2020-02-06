@@ -17,6 +17,7 @@ type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           *codec.Codec
 	paramSpace    params.Subspace
+	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	supplyKeeper  types.SupplyKeeper
 
@@ -27,7 +28,7 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
+	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, bk types.BankKeeper,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string,
 	blacklistedAddrs map[string]bool,
 ) Keeper {
@@ -46,6 +47,7 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace,
+		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,

@@ -20,7 +20,7 @@ var (
 
 func TestNewQuerier(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
 	var validators [2]types.Validator
@@ -107,7 +107,7 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParametersPool(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	bondDenom := sdk.DefaultBondDenom
 
 	res, err := queryParameters(ctx, keeper)
@@ -124,15 +124,14 @@ func TestQueryParametersPool(t *testing.T) {
 	var pool types.Pool
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
-	errRes = cdc.UnmarshalJSON(res, &pool)
-	require.NoError(t, errRes)
-	require.Equal(t, bondedPool.GetCoins().AmountOf(bondDenom), pool.BondedTokens)
-	require.Equal(t, notBondedPool.GetCoins().AmountOf(bondDenom), pool.NotBondedTokens)
+	require.NoError(t, cdc.UnmarshalJSON(res, &pool))
+	require.Equal(t, keeper.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, pool.NotBondedTokens)
+	require.Equal(t, keeper.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, pool.BondedTokens)
 }
 
 func TestQueryValidators(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)
 	params := keeper.GetParams(ctx)
 
 	// Create Validators
@@ -195,7 +194,7 @@ func TestQueryValidators(t *testing.T) {
 
 func TestQueryDelegation(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)
 	params := keeper.GetParams(ctx)
 
 	// Create Validators and Delegation
@@ -415,7 +414,7 @@ func TestQueryDelegation(t *testing.T) {
 
 func TestQueryRedelegations(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)
 
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
@@ -480,7 +479,7 @@ func TestQueryRedelegations(t *testing.T) {
 
 func TestQueryUnbondingDelegation(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)
 
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
@@ -571,7 +570,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 func TestQueryHistoricalInfo(t *testing.T) {
 	cdc := codec.New()
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10000)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)
 
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})

@@ -47,6 +47,11 @@ respectively.
 
 ### Bug Fixes
 
+* (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The IAVL `Store#Commit` method has been refactored to
+delete a flushed version if it is not a snapshot version. The root multi-store now keeps track of `commitInfo` instead
+of `types.CommitID`. During `Commit` of the root multi-store, `lastCommitInfo` is updated from the saved state
+and is only flushed to disk if it is a snapshot version. During `Query` of the root multi-store, if the request height
+is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetch `commitInfo` from disk.
 * (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
 * (x/gov) [\#5622](https://github.com/cosmos/cosmos-sdk/pull/5622) Track any events emitted from a proposal's handler upon successful execution.
 

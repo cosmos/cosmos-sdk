@@ -9,9 +9,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
 }
 
-// ModuleCdc defines the module codec
-//var ModuleCdc *codec.Codec
-
 type Codec struct {
 	codec.Marshaler
 	// Keep reference to the amino codec to allow backwards compatibility along

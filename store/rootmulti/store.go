@@ -28,13 +28,13 @@ const (
 // cacheMultiStore which is for cache-wrapping other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-	db           dbm.DB
-	lastCommitID types.CommitID
-	pruningOpts  types.PruningOptions
-	storesParams map[types.StoreKey]storeParams
-	stores       map[types.StoreKey]types.CommitKVStore
-	keysByName   map[string]types.StoreKey
-	lazyLoading  bool
+	db             dbm.DB
+	lastCommitInfo commitInfo
+	pruningOpts    types.PruningOptions
+	storesParams   map[types.StoreKey]storeParams
+	stores         map[types.StoreKey]types.CommitKVStore
+	keysByName     map[string]types.StoreKey
+	lazyLoading    bool
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -146,11 +146,12 @@ func (rs *Store) LoadVersion(ver int64) error {
 
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	infos := make(map[string]storeInfo)
-	var lastCommitID types.CommitID
+	var cInfo commitInfo
 
 	// load old data if we are not version 0
 	if ver != 0 {
-		cInfo, err := getCommitInfo(rs.db, ver)
+		var err error
+		cInfo, err = getCommitInfo(rs.db, ver)
 		if err != nil {
 			return err
 		}
@@ -159,7 +160,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		for _, storeInfo := range cInfo.StoreInfos {
 			infos[storeInfo.Name] = storeInfo
 		}
-		lastCommitID = cInfo.CommitID()
 	}
 
 	// load each Store (note this doesn't panic on unmounted keys now)
@@ -197,7 +197,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
-	rs.lastCommitID = lastCommitID
+	rs.lastCommitInfo = cInfo
 	rs.stores = newStores
 
 	return nil
@@ -281,29 +281,26 @@ func (rs *Store) TracingEnabled() bool {
 
 // Implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
-	return rs.lastCommitID
+	return rs.lastCommitInfo.CommitID()
 }
 
 // Implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
-	version := rs.lastCommitID.Version + 1
-	commitInfo := commitStores(version, rs.stores)
+	version := rs.lastCommitInfo.Version + 1
+	rs.lastCommitInfo = commitStores(version, rs.stores)
 
-	// Need to update atomically.
-	batch := rs.db.NewBatch()
-	defer batch.Close()
-	setCommitInfo(batch, version, commitInfo)
-	setLatestVersion(batch, version)
-	batch.Write()
+	// write CommitInfo to disk only if this version was flushed to disk
+	if rs.pruningOpts.FlushVersion(version) {
+		flushCommitInfo(rs.db, version, rs.lastCommitInfo)
+	}
 
 	// Prepare for next version.
 	commitID := types.CommitID{
 		Version: version,
-		Hash:    commitInfo.Hash(),
+		Hash:    rs.lastCommitInfo.Hash(),
 	}
-	rs.lastCommitID = commitID
 	return commitID
 }
 
@@ -412,7 +409,6 @@ func (rs *Store) getStoreByName(name string) types.Store {
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
 func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
-	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
@@ -441,9 +437,18 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"))
 	}
 
-	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
-	if errMsg != nil {
-		return sdkerrors.QueryResult(err)
+	// If the request's height is the latest height we've committed, then utilize
+	// the store's lastCommitInfo as this commit info may not be flushed to disk.
+	// Otherwise, we query for the commit info from disk.
+	var commitInfo commitInfo
+
+	if res.Height == rs.lastCommitInfo.Version {
+		commitInfo = rs.lastCommitInfo
+	} else {
+		commitInfo, err = getCommitInfo(rs.db, res.Height)
+		if err != nil {
+			return sdkerrors.QueryResult(err)
+		}
 	}
 
 	// Restore origin path and append proof op.
@@ -626,26 +631,22 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
-		// Commit
 		commitID := store.Commit()
 
 		if store.GetStoreType() == types.StoreTypeTransient {
 			continue
 		}
 
-		// Record CommitID
 		si := storeInfo{}
 		si.Name = key.Name()
 		si.Core.CommitID = commitID
-		// si.Core.StoreType = store.GetStoreType()
 		storeInfos = append(storeInfos, si)
 	}
 
-	ci := commitInfo{
+	return commitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
-	return ci
 }
 
 // Gets commitInfo from disk.
@@ -675,4 +676,15 @@ func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
 	cInfoBytes := cdc.MustMarshalBinaryLengthPrefixed(cInfo)
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
+}
+
+// flushCommitInfo flushes a commitInfo for given version to the DB. Note, this
+// needs to happen atomically.
+func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
+	batch := db.NewBatch()
+	defer batch.Close()
+
+	setCommitInfo(batch, version, cInfo)
+	setLatestVersion(batch, version)
+	batch.Write()
 }

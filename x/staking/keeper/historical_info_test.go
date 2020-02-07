@@ -4,12 +4,11 @@ import (
 	"sort"
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestHistoricalInfo(t *testing.T) {
@@ -27,7 +26,7 @@ func TestHistoricalInfo(t *testing.T) {
 	recv, found := keeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
-	require.True(t, sort.IsSorted(recv.ValSet), "HistoricalInfo validators is not sorted")
+	require.True(t, sort.IsSorted(types.Validators(recv.Valset)), "HistoricalInfo validators is not sorted")
 
 	keeper.DeleteHistoricalInfo(ctx, 2)
 
@@ -91,7 +90,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	// Check HistoricalInfo at height 10 is persisted
 	expected := types.HistoricalInfo{
 		Header: header,
-		ValSet: vals,
+		Valset: vals,
 	}
 	recv, found = k.GetHistoricalInfo(ctx, 10)
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")

@@ -7,11 +7,6 @@ import (
 // verify interface at compile time
 var _ sdk.Msg = &MsgUnjail{}
 
-// MsgUnjail - struct for unjailing jailed validator
-//type MsgUnjail struct {
-//	ValidatorAddr sdk.ValAddress `json:"address" yaml:"address"` // address of the validator operator
-//}
-
 // NewMsgUnjail creates a new MsgUnjail instance
 func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 	return MsgUnjail{
@@ -19,7 +14,7 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 	}
 }
 
-// nolint
+//nolint
 func (msg MsgUnjail) Route() string { return RouterKey }
 func (msg MsgUnjail) Type() string  { return "unjail" }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {

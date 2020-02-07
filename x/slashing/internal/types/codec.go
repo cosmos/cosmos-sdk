@@ -10,11 +10,25 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 // ModuleCdc defines the module codec
-var ModuleCdc *codec.Codec
+//var ModuleCdc *codec.Codec
+
+type Codec struct {
+	codec.Marshaler
+	// Keep reference to the amino codec to allow backwards compatibility along
+	// with type, and interface registration.
+	amino *codec.Codec
+}
+
+func NewCodec(amino *codec.Codec) *Codec {
+	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
+}
+
+var ModuleCdc *Codec
 
 func init() {
-	ModuleCdc = codec.New()
-	RegisterCodec(ModuleCdc)
-	codec.RegisterCrypto(ModuleCdc)
-	ModuleCdc.Seal()
+	ModuleCdc = NewCodec(codec.New())
+	//ModuleCdc = codec.New()
+	RegisterCodec(ModuleCdc.amino)
+	//codec.RegisterCrypto(ModuleCdc)
+	ModuleCdc.amino.Seal()
 }

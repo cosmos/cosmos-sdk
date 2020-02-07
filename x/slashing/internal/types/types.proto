@@ -1,0 +1,8 @@
+syntax = "proto3";
+package cosmos_sdk.x.slashing.v1;
+
+
+message MsgUnjail {
+  string address = 1;
+
+}

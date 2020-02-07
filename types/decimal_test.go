@@ -330,12 +330,6 @@ func TestSerializationGocodecJSON(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-type testDEmbedStruct struct {
-	Field1 string `json:"f1"`
-	Field2 int    `json:"f2"`
-	Field3 Dec    `json:"f3"`
-}
-
 func TestStringOverflow(t *testing.T) {
 	// two random 64 bit primes
 	dec1, err := NewDecFromStr("51643150036226787134389711697696177267")

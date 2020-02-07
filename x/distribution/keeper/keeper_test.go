@@ -11,7 +11,7 @@ import (
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
-	ctx, _, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000) // nolint: dogseld
+	ctx, _, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000) // nolint: dogsled
 
 	params := keeper.GetParams(ctx)
 	params.WithdrawAddrEnabled = false
@@ -79,7 +79,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestGetTotalRewards(t *testing.T) {
-	ctx, _, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000) // nolint: dogseld
+	ctx, _, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000) // nolint: dogsled
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),

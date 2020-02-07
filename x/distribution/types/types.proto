@@ -41,39 +41,32 @@ message MsgWithdrawValidatorCommission {
 // MsgFundCommunityPool defines a Msg type that allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
-  repeated cosmos_sdk.v1.Coin amount = 1
-    [
-      (gogoproto.nullable) = false,
-      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-      (gogoproto.moretags) = "yaml:\"amount\""
-    ];
-  bytes depositor = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-    (gogoproto.moretags) = "yaml:\"depositor\""
+  repeated cosmos_sdk.v1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // Params defines the set of distribution parameters.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  string community_tax = 1 [
-    (gogoproto.moretags) = "yaml:\"community_tax\"",
+  string community_tax                = 1 [
+    (gogoproto.moretags)   = "yaml:\"community_tax\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
   string base_proposer_reward = 2 [
-    (gogoproto.moretags) = "yaml:\"base_proposer_reward\"",
+    (gogoproto.moretags)   = "yaml:\"base_proposer_reward\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
   string bonus_proposer_reward = 3 [
-    (gogoproto.moretags) = "yaml:\"bonus_proposer_reward\"",
+    (gogoproto.moretags)   = "yaml:\"bonus_proposer_reward\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
-  bool withdraw_addr_enabled = 4 [
-    (gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""
-  ];
+  bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
 }
 
 // historical rewards for a validator
@@ -84,16 +77,17 @@ message Params {
 // which might need to reference this historical entry
 // at any point.
 // ReferenceCount =
-//    number of outstanding delegations which ended the associated period (and might need to read that record)
+//    number of outstanding delegations which ended the associated period (and might need to read
+//    that record)
 //  + number of slashes which ended the associated period (and might need to read that record)
 //  + one per validator for the zeroeth period, set on initialization
 message ValidatorHistoricalRewards {
   repeated cosmos_sdk.v1.DecCoin cumulative_reward_ratio = 1 [
-    (gogoproto.moretags) = "yaml:\"cumulative_reward_ratio\"",
+    (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)     = false
   ];
-  uint32 reference_count = 2;
+  uint32 reference_count = 2 [(gogoproto.moretags) = "yaml:\"reference_count\""];
 }
 
 // current rewards and current period for a validator
@@ -101,20 +95,18 @@ message ValidatorHistoricalRewards {
 // as long as the validator's tokens remain constant
 message ValidatorCurrentRewards {
   repeated cosmos_sdk.v1.DecCoin rewards = 1 [
-    (gogoproto.moretags) = "yaml:\"rewards\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)     = false
   ];
-  uint64 period = 2 [(gogoproto.moretags) = "yaml:\"period\"" ];
+  uint64 period = 2;
 }
 
 // accumulated commission for a validator
 // kept as a running counter, can be withdrawn at any time
 message ValidatorAccumulatedCommission {
   repeated cosmos_sdk.v1.DecCoin commission = 1 [
-    (gogoproto.moretags) = "yaml:\"commission\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)     = false
   ];
 }
 
@@ -122,9 +114,9 @@ message ValidatorAccumulatedCommission {
 // inexpensive to track, allows simple sanity checks
 message ValidatorOutstandingRewards {
   repeated cosmos_sdk.v1.DecCoin rewards = 1 [
-    (gogoproto.moretags) = "yaml:\"rewards\"",
+    (gogoproto.moretags)     = "yaml:\"rewards\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)     = false
   ];
 }
 
@@ -133,47 +125,39 @@ message ValidatorOutstandingRewards {
 // needed to calculate appropriate amounts of staking token
 // for delegations which withdraw after a slash has occurred
 message ValidatorSlashEvent {
-  uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\"" ];
-  string fraction = 2 [
-    (gogoproto.moretags) = "yaml:\"fraction\"",
+  uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\""];
+  string fraction         = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
 }
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent
 message ValidatorSlashEvents {
-  option (gogoproto.goproto_stringer) = false;
-  repeated ValidatorSlashEvent validator_slash_events = 1 [
-    (gogoproto.moretags) = "yaml:\"validator_slash_events\"",
-    (gogoproto.nullable) = false
-  ];
+  option (gogoproto.goproto_stringer)                 = false;
+  repeated ValidatorSlashEvent validator_slash_events = 1
+      [(gogoproto.moretags) = "yaml:\"validator_slash_events\"", (gogoproto.nullable) = false];
 }
 
 // global fee pool for distribution
 message FeePool {
   repeated cosmos_sdk.v1.DecCoin community_pool = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.moretags) = "yaml:\"community_pool\""
+    (gogoproto.moretags)     = "yaml:\"community_pool\""
   ];
 }
 
 // CommunityPoolSpendProposal spends from the community pool
 message CommunityPoolSpendProposal {
   option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters) = false;
-  string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
-  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
-  bytes recipient = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-    (gogoproto.moretags) = "yaml:\"recipient\""
-  ];
-  repeated cosmos_sdk.v1.Coin amount = 4
-  [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"amount\""
+  option (gogoproto.goproto_getters)  = false;
+  string   title                      = 1;
+  string   description                = 2;
+  bytes    recipient = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  repeated cosmos_sdk.v1.Coin amount = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
 
@@ -185,12 +169,11 @@ message CommunityPoolSpendProposal {
 // delegators within the validator may be left with less than a full token,
 // thus sdk.Dec is used
 message DelegatorStartingInfo {
-  uint64 previous_period = 1 [ (gogoproto.moretags) = "yaml:\"previous_period\""];
-  string stake = 2 [ 
-    (gogoproto.moretags) = "yaml:\"stake\"",
+  uint64 previous_period = 1 [(gogoproto.moretags) = "yaml:\"previous_period\""];
+  string stake           = 2 [
+    (gogoproto.moretags)   = "yaml:\"stake\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
-  uint64 height = 3 [ (gogoproto.moretags) = "yaml:\"height\"" ];
+  uint64 height = 3 [(gogoproto.moretags) = "yaml:\"creation_height\""];
 }
-

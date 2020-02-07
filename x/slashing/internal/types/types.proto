@@ -1,8 +1,13 @@
 syntax = "proto3";
 package cosmos_sdk.x.slashing.v1;
 
+option go_package = "types";
+
+import "third_party/proto/gogoproto/gogo.proto";
 
 message MsgUnjail {
-  string address = 1;
-
+  bytes validator_addr = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.moretags) = "yaml:\"address\""
+  ];
 }

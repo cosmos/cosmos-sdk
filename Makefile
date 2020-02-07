@@ -238,4 +238,23 @@ proto-lint:
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=master'
 
+# Origin
+# TODO: Update to the version of Tendermint that is being used in go.mod
+version_branch = v0.33.0
+tendermint = https://raw.githubusercontent.com/tendermint/tendermint/$(version_branch)
+
+# Outputs
+tmkv = third_party/proto/tendermint/libs/kv/types.proto
+tmmerkle = third_party/proto/tendermint/crypto/merkle/merkle.proto
+tmabci = third_party/proto/tendermint/abci/types/types.proto
+
+	# You *only* need to run this to rebuild protobufs from the tendermint source
+proto-update-tendermint:
+	# When running this command you will have to update the proto files with third_party imports instead of what is copied
+	@curl $(tendermint)/abci/types/types.proto > $(tmabci)
+	@curl $(tendermint)/libs/kv/types.proto > $(tmkv)
+	@curl $(tendermint)/crypto/merkle/merkle.proto > $(tmmerkle)
+	@sed 's@package types;@package abci;@' $(tmabci) > protobuf/abci.proto
+	@curl $(tendermint)/version/version.go | grep -F -eTMCoreSem -eABCISemVer > version.txt
+
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking

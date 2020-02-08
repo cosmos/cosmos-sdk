@@ -6,7 +6,6 @@
 package msg_authorization
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 )
@@ -35,7 +34,7 @@ var (
 )
 
 type (
-	Authorization          = exported.Authorization
+	Authorization          = types.Authorization
 	SendAuthorization      = types.SendAuthorization
 	AuthorizationGrant     = types.AuthorizationGrant
 	GenericAuthorization   = types.GenericAuthorization

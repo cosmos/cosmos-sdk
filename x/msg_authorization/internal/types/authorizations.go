@@ -1,13 +1,18 @@
 package types
 
 import (
-	"time"
-
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type AuthorizationGrant struct {
-	Authorization exported.Authorization
+type Authorization interface {
+	Msg() sdk.Msg
+	MsgType() string
+	Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Authorization, delete bool)
+}
 
-	Expiration time.Time
+type AuthorizationGrant struct {
+	Authorization Authorization `json:"authorization"`
+
+	Expiration int64 `json:"expiration"`
 }

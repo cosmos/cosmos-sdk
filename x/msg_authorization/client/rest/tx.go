@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 )
 
@@ -20,11 +19,11 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 type GrantRequest struct {
-	BaseReq       rest.BaseReq           `json:"base_req" yaml:"base_req"`
-	Granter       sdk.AccAddress         `json:"granter"`
-	Grantee       sdk.AccAddress         `json:"grantee"`
-	Authorization exported.Authorization `json:"authorization"`
-	Expiration    time.Time              `json:"expiration"`
+	BaseReq       rest.BaseReq        `json:"base_req" yaml:"base_req"`
+	Granter       sdk.AccAddress      `json:"granter"`
+	Grantee       sdk.AccAddress      `json:"grantee"`
+	Authorization types.Authorization `json:"authorization"`
+	Expiration    time.Time           `json:"expiration"`
 }
 
 type RevokeRequest struct {

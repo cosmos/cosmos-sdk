@@ -30,14 +30,14 @@ func (s *TestSuite) SetupTest() {
 }
 
 func (s *TestSuite) TestKeeper() {
-	err := s.bankKeeper.SetCoins(s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
+	err := s.bankKeeper.SetBalances(s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	s.Require().Nil(err)
-	s.Require().True(s.bankKeeper.GetCoins(s.ctx, granterAddr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
+	s.Require().True(s.bankKeeper.GetBalance(s.ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
 
 	s.T().Log("verify that no authorization returns nil")
-	authorization, _ := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, expiration := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
 	s.Require().Nil(authorization)
-	//require.Nil(t, expiration)
+	s.Require().Zero(expiration)
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
 
@@ -53,7 +53,7 @@ func (s *TestSuite) TestKeeper() {
 	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
 	s.Require().NotNil(authorization)
-	s.Require().Equal(authorization.MsgType(), bank.MsgSend{})
+	s.Require().Equal(authorization.MsgType(), bank.MsgSend{}.Type())
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgMultiSend{})
@@ -78,9 +78,9 @@ func (s *TestSuite) TestKeeper() {
 }
 
 func (s *TestSuite) TestKeeperFees() {
-	err := s.bankKeeper.SetCoins(s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
+	err := s.bankKeeper.SetBalances(s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	s.Require().Nil(err)
-	s.Require().True(s.bankKeeper.GetCoins(s.ctx, granterAddr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
+	s.Require().True(s.bankKeeper.GetBalance(s.ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
 
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
@@ -109,9 +109,10 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
 	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{SpendLimit: smallCoin}, now)
-	authorization, _ := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, expiration := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
 	s.Require().NotNil(authorization)
-	s.Require().Equal(authorization.MsgType(), bank.MsgSend{})
+	s.Require().Zero(expiration)
+	s.Require().Equal(authorization.MsgType(), bank.MsgSend{}.Type())
 	result, error = s.keeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
 	s.Require().NotNil(result)
 	s.Require().Nil(error)

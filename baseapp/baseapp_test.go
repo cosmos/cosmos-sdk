@@ -83,7 +83,7 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneSyncable)
+	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -293,7 +293,7 @@ func TestAppVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := SetPruning(store.PruneSyncable)
+	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -324,6 +324,88 @@ func TestLoadVersionInvalid(t *testing.T) {
 	// require error when loading an invalid version
 	err = app.LoadVersion(2, capKey)
 	require.Error(t, err)
+}
+
+func TestLoadVersionPruning(t *testing.T) {
+	logger := log.NewNopLogger()
+	pruningOptions := store.PruningOptions{
+		KeepEvery:     2,
+		SnapshotEvery: 6,
+	}
+	pruningOpt := SetPruning(pruningOptions)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
+	app.MountStores(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	require.Nil(t, err)
+
+	emptyCommitID := sdk.CommitID{}
+
+	// fresh store has zero/empty last commit
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	require.Equal(t, int64(0), lastHeight)
+	require.Equal(t, emptyCommitID, lastID)
+
+	// execute a block
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Commit()
+
+	// execute a block, collect commit ID
+	header = abci.Header{Height: 2}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
+
+	// execute a block
+	header = abci.Header{Height: 3}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
+
+	// reload with LoadLatestVersion, check it loads last flushed version
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+	err = app.LoadLatestVersion(capKey)
+	require.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(2), commitID2)
+
+	// re-execute block 3 and check it is same CommitID
+	header = abci.Header{Height: 3}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	recommitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
+	require.Equal(t, commitID3, recommitID3, "Commits of identical blocks not equal after reload")
+
+	// execute a block, collect commit ID
+	header = abci.Header{Height: 4}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID4 := sdk.CommitID{Version: 4, Hash: res.Data}
+
+	// execute a block
+	header = abci.Header{Height: 5}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+
+	// reload with LoadLatestVersion, check it loads last flushed version
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+	err = app.LoadLatestVersion(capKey)
+	require.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(4), commitID4)
+
+	// reload with LoadVersion of previous flushed version
+	// and check it fails since previous flush should be pruned
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+	err = app.LoadVersion(2, capKey)
+	require.NotNil(t, err)
 }
 
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {

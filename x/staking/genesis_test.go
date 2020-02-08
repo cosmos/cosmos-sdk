@@ -17,7 +17,7 @@ import (
 )
 
 func TestInitGenesis(t *testing.T) {
-	ctx, accKeeper, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, bk, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
 
 	valTokens := sdk.TokensFromConsensusPower(1)
 
@@ -25,22 +25,28 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]Validator, 2)
 	var delegations []Delegation
 
+	pk0, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keep.PKs[0])
+	require.NoError(t, err)
+
+	pk1, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keep.PKs[1])
+	require.NoError(t, err)
+
 	// initialize the validators
 	validators[0].OperatorAddress = sdk.ValAddress(keep.Addrs[0])
-	validators[0].ConsPubKey = keep.PKs[0]
+	validators[0].ConsensusPubkey = pk0
 	validators[0].Description = NewDescription("hoop", "", "", "", "")
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = valTokens
 	validators[0].DelegatorShares = valTokens.ToDec()
 	validators[1].OperatorAddress = sdk.ValAddress(keep.Addrs[1])
-	validators[1].ConsPubKey = keep.PKs[1]
+	validators[1].ConsensusPubkey = pk1
 	validators[1].Description = NewDescription("bloop", "", "", "", "")
 	validators[1].Status = sdk.Bonded
 	validators[1].Tokens = valTokens
 	validators[1].DelegatorShares = valTokens.ToDec()
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals := InitGenesis(ctx, keeper, accKeeper, supplyKeeper, genesisState)
+	vals := InitGenesis(ctx, keeper, accKeeper, bk, supplyKeeper, genesisState)
 
 	actualGenesis := ExportGenesis(ctx, keeper)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
@@ -68,7 +74,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	ctx, accKeeper, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, bk, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
@@ -89,7 +95,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	}
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals := InitGenesis(ctx, keeper, accKeeper, supplyKeeper, genesisState)
+	vals := InitGenesis(ctx, keeper, accKeeper, bk, supplyKeeper, genesisState)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {

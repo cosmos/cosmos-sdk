@@ -30,7 +30,7 @@ tags:
     description: Query app version
 schemes:
   - https
-host: stargate.cosmos.network
+host: api.cosmos.network
 securityDefinitions:
   kms:
     type: basic
@@ -40,7 +40,7 @@ paths:
       description: Information about the connected node
       summary: The properties of the connected node
       tags:
-        - Tendermint RPC
+        - Gaia REST
       produces:
         - application/json
       responses:

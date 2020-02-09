@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -104,7 +104,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		return nil, false
 	}
 
-	consensusState := tendermint.ConsensusState{
+	consensusState := ibctmtypes.ConsensusState{
 		Timestamp:    ctx.BlockTime(),
 		Root:         commitment.NewRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(histInfo.ValSet.ToTmValidators()),
@@ -153,7 +153,7 @@ func (k Keeper) initialize(
 	)
 	switch clientType {
 	case exported.Tendermint:
-		clientState, err = tendermint.Initialize(
+		clientState, err = ibctmtypes.Initialize(
 			clientID, consensusState, trustingPeriod, unbondingPeriod, height,
 		)
 	default:

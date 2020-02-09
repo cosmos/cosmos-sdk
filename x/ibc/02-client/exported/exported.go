@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -108,6 +110,23 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+}
+
+// MsgCreateClient defines the msg interface that the
+// CreateClient Handler expects
+type MsgCreateClient interface {
+	sdk.Msg
+	GetClientID() string
+	GetClientType() string
+	GetConsensusState() ConsensusState
+}
+
+// MsgUpdateClient defines the msg interface that the
+// UpdateClient Handler expects
+type MsgUpdateClient interface {
+	sdk.Msg
+	GetClientID() string
+	GetHeader() Header
 }
 
 // ClientType defines the type of the consensus algorithm

@@ -20,8 +20,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
@@ -44,7 +43,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 
 			clientID := args[0]
 
-			var state exported.ConsensusState
+			var state ibctmtypes.ConsensusState
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &state); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -66,8 +65,8 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 				return err
 			}
 
-			msg := types.NewMsgCreateClient(
-				clientID, state.ClientType().String(), state,
+			msg := ibctmtypes.NewMsgCreateClient(
+				clientID, state,
 				trustingPeriod, ubdPeriod, cliCtx.GetFromAddress(),
 			)
 
@@ -101,7 +100,7 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 
 			clientID := args[0]
 
-			var header exported.Header
+			var header ibctmtypes.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -113,7 +112,7 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
+			msg := ibctmtypes.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

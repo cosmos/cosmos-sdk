@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -124,7 +125,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 
 	var err error
 	switch e := misbehaviour.(type) {
-	case tendermint.Evidence:
+	case ibctmtypes.Evidence:
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
 			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()), ctx.BlockTime(),
 		)

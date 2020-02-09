@@ -1,57 +1,50 @@
-package tendermint_test
+package types_test
 
 import (
 	"time"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 	testCases := []struct {
 		msg            string
-		consensusState tendermint.ConsensusState
+		consensusState ibctmtypes.ConsensusState
 		expectPass     bool
 	}{
 		{"success",
-			tendermint.ConsensusState{
+			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Root:         commitment.NewRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},
 			true},
 		{"root is nil",
-			tendermint.ConsensusState{
+			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Root:         nil,
 				ValidatorSet: suite.valSet,
 			},
 			false},
 		{"root is empty",
-			tendermint.ConsensusState{
+			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Root:         commitment.Root{},
 				ValidatorSet: suite.valSet,
 			},
 			false},
-		{"invalid client type",
-			tendermint.ConsensusState{
-				Timestamp:    suite.now,
-				Root:         commitment.NewRoot([]byte("app_hash")),
-				ValidatorSet: suite.valSet,
-			},
-			false},
 		{"valset is nil",
-			tendermint.ConsensusState{
+			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Root:         commitment.NewRoot([]byte("app_hash")),
 				ValidatorSet: nil,
 			},
 			false},
-		{"valset is nil",
-			tendermint.ConsensusState{
-				Timestamp:    time.Unix(0, 0),
+		{"timestamp is zero",
+			ibctmtypes.ConsensusState{
+				Timestamp:    time.Time{},
 				Root:         commitment.NewRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},

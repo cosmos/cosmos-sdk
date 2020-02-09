@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -26,17 +27,17 @@ func CheckMisbehaviourAndUpdateState(
 ) (clientexported.ClientState, error) {
 
 	// cast the interface to specific types before checking for misbehaviour
-	tmClientState, ok := clientState.(ClientState)
+	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not Tendermint")
 	}
 
-	tmConsensusState, ok := consensusState.(ConsensusState)
+	tmConsensusState, ok := consensusState.(types.ConsensusState)
 	if !ok {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")
 	}
 
-	tmEvidence, ok := misbehaviour.(Evidence)
+	tmEvidence, ok := misbehaviour.(types.Evidence)
 	if !ok {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
 	}
@@ -62,7 +63,7 @@ func CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func checkMisbehaviour(
-	clientState ClientState, consensusState ConsensusState, evidence Evidence,
+	clientState types.ClientState, consensusState types.ConsensusState, evidence types.Evidence,
 	height uint64, currentTimestamp time.Time,
 ) error {
 	// check if provided height matches the headers' height

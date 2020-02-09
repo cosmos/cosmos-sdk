@@ -2,31 +2,32 @@ package tendermint_test
 
 import (
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func (suite *TendermintTestSuite) TestCheckValidity() {
 	testCases := []struct {
 		name        string
-		clientState tendermint.ClientState
+		clientState ibctmtypes.ClientState
 		chainID     string
 		expPass     bool
 	}{
 		{
 			name:        "successful update",
-			clientState: tendermint.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.clientTime),
 			chainID:     chainID,
 			expPass:     true,
 		},
 		{
 			name:        "header basic validation failed",
-			clientState: tendermint.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.clientTime),
 			chainID:     "cosmoshub",
 			expPass:     false,
 		},
 		{
 			name:        "header height < latest client height",
-			clientState: tendermint.NewClientState(chainID, height+1),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height+1, suite.clientTime),
 			chainID:     chainID,
 			expPass:     false,
 		},
@@ -35,7 +36,8 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expectedConsensus := tendermint.ConsensusState{
+		expectedConsensus := ibctmtypes.ConsensusState{
+			Timestamp:    suite.headerTime,
 			Root:         commitment.NewRoot(suite.header.AppHash),
 			ValidatorSet: suite.header.ValidatorSet,
 		}

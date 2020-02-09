@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -50,9 +50,8 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgCreateClient(
+		msg := ibctmtypes.NewMsgCreateClient(
 			req.ClientID,
-			req.ConsensusState.ClientType().String(),
 			req.ConsensusState,
 			req.TrustingPeriod, req.UnbondingPeriod,
 			fromAddr,
@@ -101,7 +100,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgUpdateClient(
+		msg := ibctmtypes.NewMsgUpdateClient(
 			clientID,
 			req.Header,
 			fromAddr,

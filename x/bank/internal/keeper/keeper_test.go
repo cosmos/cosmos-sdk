@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -141,6 +141,95 @@ func TestSendKeeper(t *testing.T) {
 	// negative values.
 	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{"FOOCOIN", sdk.NewInt(-5)}})
 	require.Error(t, err)
+}
+
+func TestMsgMultiSendEvents(t *testing.T) {
+	input := setupTestInput()
+	ctx := input.ctx
+
+	input.k.SetSendEnabled(ctx, true)
+
+	addr := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr3 := sdk.AccAddress([]byte("addr3"))
+	addr4 := sdk.AccAddress([]byte("addr4"))
+	acc := input.ak.NewAccountWithAddress(ctx, addr)
+	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
+
+	input.ak.SetAccount(ctx, acc)
+	input.ak.SetAccount(ctx, acc2)
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
+	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin("barcoin", 100))
+	inputs := []types.Input{
+		{Address: addr, Coins: newCoins},
+		{Address: addr2, Coins: newCoins2},
+	}
+	outputs := []types.Output{
+		{Address: addr3, Coins: newCoins},
+		{Address: addr4, Coins: newCoins2},
+	}
+	err := input.k.InputOutputCoins(ctx, inputs, outputs)
+	require.Error(t, err)
+	events := ctx.EventManager().Events()
+	require.Equal(t, 0, len(events))
+
+	// Set addr's coins but not addr2's coins
+	input.k.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+
+	err = input.k.InputOutputCoins(ctx, inputs, outputs)
+	require.Error(t, err)
+	events = ctx.EventManager().Events()
+	require.Equal(t, 1, len(events))
+	event1 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []cmn.KVPair{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		cmn.KVPair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())})
+	require.Equal(t, event1, events[0])
+
+	// Set addr's coins and addr2's coins
+	input.k.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	newCoins = sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
+	input.k.SetCoins(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 100)))
+	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin("barcoin", 100))
+
+	err = input.k.InputOutputCoins(ctx, inputs, outputs)
+	require.NoError(t, err)
+	events = ctx.EventManager().Events()
+	require.Equal(t, 5, len(events))
+	event2 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []cmn.KVPair{},
+	}
+	event2.Attributes = append(
+		event2.Attributes,
+		cmn.KVPair{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())})
+	event3 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []cmn.KVPair{},
+	}
+	event3.Attributes = append(
+		event3.Attributes,
+		cmn.KVPair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())})
+	event3.Attributes = append(
+		event3.Attributes,
+		cmn.KVPair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+	event4 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []cmn.KVPair{},
+	}
+	event4.Attributes = append(
+		event4.Attributes,
+		cmn.KVPair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())})
+	event4.Attributes = append(
+		event4.Attributes,
+		cmn.KVPair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())})
+	require.Equal(t, event1, events[1])
+	require.Equal(t, event2, events[2])
+	require.Equal(t, event3, events[3])
+	require.Equal(t, event4, events[4])
 }
 
 func TestViewKeeper(t *testing.T) {

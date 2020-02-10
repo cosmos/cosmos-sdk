@@ -6,7 +6,6 @@ import (
 )
 
 type Authorization interface {
-	Msg() sdk.Msg
 	MsgType() string
 	Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }

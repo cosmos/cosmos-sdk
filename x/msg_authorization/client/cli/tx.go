@@ -61,8 +61,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var amount sdk.Coins
-			authorization := &types.SendAuthorization{SpendLimit: amount}
+			var authorization types.Authorization
 			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err
@@ -105,16 +104,7 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			bz, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
-
-			var msgAuthorized sdk.Msg
-			err = cdc.UnmarshalJSON(bz, &msgAuthorized)
-			if err != nil {
-				return err
-			}
+			msgAuthorized := args[1]
 
 			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
 			if err := msg.ValidateBasic(); err != nil {

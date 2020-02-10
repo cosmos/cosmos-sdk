@@ -59,10 +59,10 @@ type MsgRevokeAuthorization struct {
 	Grantee sdk.AccAddress `json:"grantee"`
 	// AuthorizationMsgType is the type of sdk.Msg that the revoked Authorization refers to.
 	// i.e. this is what `Authorization.MsgType()` returns
-	AuthorizationMsgType sdk.Msg `json:"authorization_msg_type"`
+	AuthorizationMsgType string `json:"authorization_msg_type"`
 }
 
-func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType sdk.Msg) MsgRevokeAuthorization {
+func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType string) MsgRevokeAuthorization {
 	return MsgRevokeAuthorization{
 		Granter:              granter,
 		Grantee:              grantee,

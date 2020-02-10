@@ -12,7 +12,6 @@ type GenericAuthorization struct {
 	Message sdk.Msg
 }
 
-func (cap GenericAuthorization) Msg() sdk.Msg { return cap.Message }
 func (cap GenericAuthorization) MsgType() string {
 	return cap.Message.Type()
 }

@@ -35,7 +35,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().True(s.bankKeeper.GetBalance(s.ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
 
 	s.T().Log("verify that no authorization returns nil")
-	authorization, expiration := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, expiration := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 	s.Require().Zero(expiration)
 	now := s.ctx.BlockHeader().Time
@@ -45,34 +45,34 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify if expired authorization is rejected")
 	x := types.SendAuthorization{SpendLimit: newCoins}
 	s.keeper.Grant(s.ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
 	x = types.SendAuthorization{SpendLimit: newCoins}
 	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 	s.Require().Equal(authorization.MsgType(), bank.MsgSend{}.Type())
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgMultiSend{})
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgMultiSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, recepientAddr, granterAddr, bank.MsgMultiSend{})
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, recepientAddr, granterAddr, bank.MsgMultiSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("")
 
 	s.T().Log("verify revoke fails with wrong information")
-	s.keeper.Revoke(s.ctx, recepientAddr, granterAddr, bank.MsgSend{})
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, recepientAddr, granterAddr, bank.MsgSend{})
+	s.keeper.Revoke(s.ctx, recepientAddr, granterAddr, bank.MsgSend{}.Type())
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, recepientAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke executes with correct information")
-	s.keeper.Revoke(s.ctx, recepientAddr, granterAddr, bank.MsgSend{})
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	s.keeper.Revoke(s.ctx, recepientAddr, granterAddr, bank.MsgSend{}.Type())
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 
 }
@@ -109,7 +109,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
 	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{SpendLimit: smallCoin}, now)
-	authorization, expiration := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, expiration := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 	s.Require().Zero(expiration)
 	s.Require().Equal(authorization.MsgType(), bank.MsgSend{}.Type())
@@ -118,7 +118,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().Nil(error)
 	fmt.Printf("%# v", pretty.Formatter(result))
 
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 
 	s.T().Log("verify dispatch fails with overlimit")
@@ -140,7 +140,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NotNil(error)
 	fmt.Printf("%# v", pretty.Formatter(error))
 
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 }
 

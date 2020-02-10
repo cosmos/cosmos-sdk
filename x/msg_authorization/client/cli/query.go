@@ -50,11 +50,7 @@ func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			var msgAuthorized sdk.Msg
-			err = cdc.UnmarshalJSON([]byte(args[2]), &msgAuthorized)
-			if err != nil {
-				return err
-			}
+			msgAuthorized := args[2]
 
 			res, _, err := cliCtx.QueryStore(types.GetActorAuthorizationKey(granteeAddr, granterAddr, msgAuthorized), storeName)
 			if err != nil {

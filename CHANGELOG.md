@@ -84,7 +84,7 @@ for JSON encoding.
 * (distr) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffer for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.
-  * `ValidatorSlashEvents` is now a struct with `slashevents `.
+  * `ValidatorSlashEvents` is now a struct with `slashevents`.
   * `ValidatorOutstandingRewards` is now a struct with `rewards`.
   * `ValidatorAccumulatedCommission` is now a struct with `commission`.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type

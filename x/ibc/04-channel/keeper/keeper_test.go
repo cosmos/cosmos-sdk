@@ -18,7 +18,8 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -203,7 +204,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
-	consensusState := tendermint.ConsensusState{
+	consensusState := ibctmtypes.ConsensusState{
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
 	}
@@ -222,13 +223,13 @@ func (suite *KeeperTestSuite) updateClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
-	state := tendermint.ConsensusState{
+	state := ibctmtypes.ConsensusState{
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClientID1, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClientID1)
-	cs, _ := csi.(tendermint.ClientState)
+	cs, _ := csi.(ibctmtypes.ClientState)
 	cs.LatestHeight = uint64(height - 1)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }

@@ -25,5 +25,5 @@ func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute stri
 
 // GetTxCmd returns the root tx command for the IBC client
 func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	return cli.GetTxCmd(fmt.Sprintf("%s/%s", storeKey, types.SubModuleName), cdc)
+	return cli.GetTxCmd(cdc, fmt.Sprintf("%s/%s", storeKey, types.SubModuleName))
 }

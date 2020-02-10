@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -37,8 +37,8 @@ type KeeperTestSuite struct {
 	cdc            *codec.Codec
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
-	consensusState tendermint.ConsensusState
-	header         tendermint.Header
+	consensusState ibctmtypes.ConsensusState
+	header         ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
 	privVal        tmtypes.PrivValidator
 	now            time.Time
@@ -56,8 +56,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.privVal = tmtypes.NewMockPV()
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.header = tendermint.CreateTestHeader(testClientID, testClientHeight+2, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-	suite.consensusState = tendermint.ConsensusState{
+	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight+2, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.consensusState = ibctmtypes.ConsensusState{
 		Timestamp:    suite.now,
 		Root:         commitment.NewRoot([]byte("hash")),
 		ValidatorSet: suite.valSet,
@@ -81,7 +81,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := tendermint.NewClientState(testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now)
+	clientState := ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -103,16 +103,18 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	retrievedConsState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, testClientHeight)
 	suite.Require().True(found, "GetConsensusState failed")
 
-	tmConsState, ok := retrievedConsState.(tendermint.ConsensusState)
+	tmConsState, ok := retrievedConsState.(ibctmtypes.ConsensusState)
+	// recalculate cached totalVotingPower field for equality check
+	tmConsState.ValidatorSet.TotalVotingPower()
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		tendermint.NewClientState(testClientID2, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
-		tendermint.NewClientState(testClientID3, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
-		tendermint.NewClientState(testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
 	}
 
 	for i := range expClients {

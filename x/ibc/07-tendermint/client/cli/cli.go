@@ -8,7 +8,7 @@ import (
 )
 
 // GetTxCmd returns the transaction commands for IBC clients
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 	ics07TendermintTxCmd := &cobra.Command{
 		Use:                        "tendermint",
 		Short:                      "Tendermint transaction subcommands",

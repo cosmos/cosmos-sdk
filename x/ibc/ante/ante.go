@@ -3,6 +3,7 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 )
 
@@ -28,8 +29,8 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	for _, msg := range tx.GetMsgs() {
 		var err error
 		switch msg := msg.(type) {
-		case client.MsgUpdateClient:
-			err = pvr.clientKeeper.UpdateClient(ctx, msg.ClientID, msg.Header)
+		case clientexported.MsgUpdateClient:
+			err = pvr.clientKeeper.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
 		case channel.MsgPacket:
 			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
 		case channel.MsgAcknowledgement:

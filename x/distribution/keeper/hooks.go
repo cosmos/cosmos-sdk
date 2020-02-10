@@ -24,9 +24,8 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 // cleanup for after validator is removed
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
-
 	// fetch outstanding
-	outstanding := h.k.GetValidatorOutstandingRewards(ctx, valAddr).Rewards
+	outstanding := h.k.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
 
 	// force-withdraw commission
 	commission := h.k.GetValidatorAccumulatedCommission(ctx, valAddr).Commission

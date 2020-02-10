@@ -30,6 +30,10 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
+		JSONMarshaler
+	}
+
+	JSONMarshaler interface {
 		MarshalJSON(o interface{}) ([]byte, error) // nolint: stdmethods
 		MustMarshalJSON(o interface{}) []byte
 

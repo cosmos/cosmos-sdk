@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -79,16 +78,6 @@ var (
 	}
 )
 
-// MakeCodec - custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	ModuleBasics.RegisterCodec(cdc)
-	vesting.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
-}
-
 // Verify app interface at compile time
 var _ App = (*SimApp)(nil)
 
@@ -135,6 +124,9 @@ func NewSimApp(
 	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
 ) *SimApp {
 
+	appCodec := NewAppCodec()
+
+	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
 	cdc := MakeCodec()
 
 	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
@@ -180,7 +172,7 @@ func NewSimApp(
 		app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
 	)
 	stakingKeeper := staking.NewKeeper(
-		app.cdc, keys[staking.StoreKey], app.BankKeeper, app.SupplyKeeper, app.subspaces[staking.ModuleName],
+		appCodec.Staking, keys[staking.StoreKey], app.BankKeeper, app.SupplyKeeper, app.subspaces[staking.ModuleName],
 	)
 	app.MintKeeper = mint.NewKeeper(
 		app.cdc, keys[mint.StoreKey], app.subspaces[mint.ModuleName], &stakingKeeper,

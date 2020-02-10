@@ -151,7 +151,7 @@ func createTestInput(
 	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
 
-	sk := staking.NewKeeper(cdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
+	sk := staking.NewKeeper(staking.ModuleCdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	rtr := types.NewRouter().

@@ -30,7 +30,7 @@ type RevokeRequest struct {
 	BaseReq              rest.BaseReq   `json:"base_req" yaml:"base_req"`
 	Granter              sdk.AccAddress `json:"granter"`
 	Grantee              sdk.AccAddress `json:"grantee"`
-	AuthorizationMsgType sdk.Msg        `json:"authorization_msg_type"`
+	AuthorizationMsgType string         `json:"authorization_msg_type"`
 }
 
 func grantHandler(cliCtx context.CLIContext) http.HandlerFunc {

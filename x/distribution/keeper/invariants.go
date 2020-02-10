@@ -89,7 +89,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 				}
 			}
 
-			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator()).Rewards
+			remaining = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
 			if len(remaining) > 0 && remaining[0].Amount.IsNegative() {
 				return true
 			}

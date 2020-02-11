@@ -12,6 +12,7 @@ lint:
     - PACKAGE_DIRECTORY_MATCH
   ignore:
     - third_party
+    - codec/testdata
 breaking:
   use:
     - FILE

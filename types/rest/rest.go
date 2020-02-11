@@ -375,3 +375,14 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
 	return ParseHTTPArgsWithLimit(r, DefaultLimit)
 }
+
+// ParseQueryParamBool parses the given param to a boolean. It returns false by
+// default if the string is not parseable to bool.
+func ParseQueryParamBool(r *http.Request, param string) bool {
+	valueStr := r.FormValue(param)
+	value := false
+	if ok, err := strconv.ParseBool(valueStr); err == nil {
+		value = ok
+	}
+	return value
+}

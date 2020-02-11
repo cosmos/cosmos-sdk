@@ -11,13 +11,8 @@ type Animal interface {
 	Greet() string
 }
 
-// Cat is not defined a Protobuf message.
-type Cat struct {
-	Name string
-}
-
 func (c Cat) Greet() string {
-	return fmt.Sprintf("Meow, my name is %s", c.Name)
+	return fmt.Sprintf("Meow, my name is %s", c.Moniker)
 }
 
 func (d Dog) Greet() string {

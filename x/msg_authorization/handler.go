@@ -3,7 +3,7 @@ package msg_authorization
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
@@ -27,9 +27,11 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k K
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
+			types.EventGrantAuthorization,
+			sdk.NewAttribute(types.AttributeKeyGrantType, msg.Authorization.MsgType()),
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee.String()),
 		),
 	)
 
@@ -37,13 +39,18 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k K
 }
 
 func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k Keeper) (*sdk.Result, error) {
-	k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
+	err := k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
+	if err != nil {
+		return nil, err
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
+			types.EventRevokeAuthorization,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGrantType, msg.AuthorizationMsgType),
+			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee.String()),
 		),
 	)
 

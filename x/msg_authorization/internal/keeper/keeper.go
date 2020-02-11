@@ -100,9 +100,14 @@ func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAd
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
-func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) {
+func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
+	authorization, _ := k.GetAuthorization(ctx, grantee, granter, msgType)
+	if authorization == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+	}
 	store.Delete(k.getActorAuthorizationKey(grantee, granter, msgType))
+	return nil
 }
 
 // GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,

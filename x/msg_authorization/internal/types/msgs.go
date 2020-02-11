@@ -97,13 +97,13 @@ func (msg MsgRevokeAuthorization) ValidateBasic() error {
 // one signer corresponding to the granter of the authorization.
 type MsgExecDelegated struct {
 	Grantee sdk.AccAddress `json:"grantee"`
-	Msgs    []sdk.Msg      `json:"msg"`
+	Msgs    []sdk.Msg      `json:"msgs"`
 }
 
-func NewMsgExecDelegated(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecDelegated {
+func NewMsgExecDelegated(grantee sdk.AccAddress, msg []sdk.Msg) MsgExecDelegated {
 	return MsgExecDelegated{
 		Grantee: grantee,
-		Msgs:    msgs,
+		Msgs:    msg,
 	}
 }
 

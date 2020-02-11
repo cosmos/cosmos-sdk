@@ -56,7 +56,7 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	}
 	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, mapp.BankKeeper, maccPerms)
 	stakingKeeper := staking.NewKeeper(staking.ModuleCdc, keyStaking, mapp.BankKeeper, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace))
-	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace))
+	keeper := NewKeeper(staking.ModuleCdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace))
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 

@@ -54,16 +54,17 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 }
 
 // GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
-func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
+func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) bool {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
+	var missed gogotypes.BoolValue
 	if bz == nil {
 		// lazy: treat empty key as not missed
-		missed = false
-		return
+		return false
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &gogotypes.BoolValue{Value: missed})
-	return
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+
+	return missed.Value
 }
 
 // IterateValidatorMissedBlockBitArray iterates over the signed blocks window

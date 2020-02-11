@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // nolint
@@ -21,11 +23,10 @@ const (
 	GasFlagAuto          = "auto"
 
 	// DefaultKeyringBackend
-	DefaultKeyringBackend = KeyringBackendOS
-	KeyringBackendFile    = "file"
-	KeyringBackendOS      = "os"
-	KeyringBackendTest    = "test"
+	DefaultKeyringBackend = keys.BackendOS
+)
 
+const (
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.
 	BroadcastBlock = "block"
@@ -35,7 +36,10 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+)
 
+// List of CLI flags
+const (
 	FlagHome               = tmcli.HomeFlag
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"
@@ -60,7 +64,10 @@ const (
 	FlagRPCWriteTimeout    = "write-timeout"
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
+	FlagProve              = "prove"
 	FlagKeyringBackend     = "keyring-backend"
+	FlagPage               = "page"
+	FlagLimit              = "limit"
 )
 
 // LineBreak can be included in a command list to provide a blank line

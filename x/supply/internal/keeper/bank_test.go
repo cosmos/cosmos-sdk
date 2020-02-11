@@ -24,24 +24,26 @@ var (
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
-func getCoinsByName(ctx sdk.Context, sk keep.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
+// nolint
+func getCoinsByName(ctx sdk.Context, sk keep.Keeper, ak types.AccountKeeper, bk types.BankKeeper, moduleName string) sdk.Coins {
 	moduleAddress := sk.GetModuleAddress(moduleName)
 	macc := ak.GetAccount(ctx, moduleAddress)
 	if macc == nil {
 		return sdk.Coins(nil)
 	}
-	return macc.GetCoins()
+
+	return bk.GetAllBalances(ctx, macc.GetAddress())
 }
 
 func TestSendCoins(t *testing.T) {
 	app, ctx := createTestApp(false)
 	keeper := app.SupplyKeeper
 	ak := app.AccountKeeper
+	bk := app.BankKeeper
 
 	baseAcc := ak.NewAccountWithAddress(ctx, types.NewModuleAddress("baseAcc"))
 
-	err := holderAcc.SetCoins(initCoins)
-	require.NoError(t, err)
+	require.NoError(t, bk.SetBalances(ctx, holderAcc.GetAddress(), initCoins))
 	keeper.SetSupply(ctx, types.NewSupply(initCoins))
 
 	keeper.SetModuleAccount(ctx, holderAcc)
@@ -60,30 +62,33 @@ func TestSendCoins(t *testing.T) {
 		keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
 	})
 
-	err = keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...))
-	require.Error(t, err)
+	require.Error(
+		t,
+		keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...)),
+	)
 
-	err = keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), types.Burner, initCoins)
-	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, holderAcc.GetName()))
-	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, types.Burner))
+	require.NoError(
+		t, keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), types.Burner, initCoins),
+	)
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, bk, holderAcc.GetName()))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, bk, types.Burner))
 
-	err = keeper.SendCoinsFromModuleToAccount(ctx, types.Burner, baseAcc.GetAddress(), initCoins)
-	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, types.Burner))
+	require.NoError(
+		t, keeper.SendCoinsFromModuleToAccount(ctx, types.Burner, baseAcc.GetAddress(), initCoins),
+	)
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, bk, types.Burner))
+	require.Equal(t, initCoins, bk.GetAllBalances(ctx, baseAcc.GetAddress()))
 
-	require.Equal(t, initCoins, ak.GetAccount(ctx, baseAcc.GetAddress()).GetCoins())
-
-	err = keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), types.Burner, initCoins)
-	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), ak.GetAccount(ctx, baseAcc.GetAddress()).GetCoins())
-	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, types.Burner))
+	require.NoError(t, keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), types.Burner, initCoins))
+	require.Equal(t, sdk.Coins(nil), bk.GetAllBalances(ctx, baseAcc.GetAddress()))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, bk, types.Burner))
 }
 
 func TestMintCoins(t *testing.T) {
 	app, ctx := createTestApp(false)
 	keeper := app.SupplyKeeper
 	ak := app.AccountKeeper
+	bk := app.BankKeeper
 
 	keeper.SetModuleAccount(ctx, burnerAcc)
 	keeper.SetModuleAccount(ctx, minterAcc)
@@ -101,7 +106,7 @@ func TestMintCoins(t *testing.T) {
 
 	err = keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, types.Minter))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, bk, types.Minter))
 	require.Equal(t, initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
 
 	// test same functionality on module account with multiple permissions
@@ -109,7 +114,7 @@ func TestMintCoins(t *testing.T) {
 
 	err = keeper.MintCoins(ctx, multiPermAcc.GetName(), initCoins)
 	require.NoError(t, err)
-	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, multiPermAcc.GetName()))
+	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, bk, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) })
@@ -119,8 +124,9 @@ func TestBurnCoins(t *testing.T) {
 	app, ctx := createTestApp(false)
 	keeper := app.SupplyKeeper
 	ak := app.AccountKeeper
+	bk := app.BankKeeper
 
-	require.NoError(t, burnerAcc.SetCoins(initCoins))
+	require.NoError(t, bk.SetBalances(ctx, burnerAcc.GetAddress(), initCoins))
 	keeper.SetSupply(ctx, types.NewSupply(initCoins))
 	keeper.SetModuleAccount(ctx, burnerAcc)
 
@@ -136,7 +142,7 @@ func TestBurnCoins(t *testing.T) {
 
 	err = keeper.BurnCoins(ctx, types.Burner, initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, types.Burner))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, bk, types.Burner))
 	require.Equal(t, initialSupply.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 
 	// test same functionality on module account with multiple permissions
@@ -144,11 +150,11 @@ func TestBurnCoins(t *testing.T) {
 	initialSupply = initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	require.NoError(t, multiPermAcc.SetCoins(initCoins))
+	require.NoError(t, bk.SetBalances(ctx, multiPermAcc.GetAddress(), initCoins))
 	keeper.SetModuleAccount(ctx, multiPermAcc)
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
 	require.NoError(t, err)
-	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, multiPermAcc.GetName()))
+	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, bk, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 }

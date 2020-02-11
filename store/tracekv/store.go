@@ -149,6 +149,11 @@ func (ti *traceIterator) Close() {
 	ti.parent.Close()
 }
 
+// Error delegates the Error call to the parent iterator.
+func (ti *traceIterator) Error() error {
+	return ti.parent.Error()
+}
+
 // GetStoreType implements the KVStore interface. It returns the underlying
 // KVStore type.
 func (tkv *Store) GetStoreType() types.StoreType {

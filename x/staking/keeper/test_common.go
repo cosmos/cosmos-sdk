@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -50,7 +49,7 @@ var (
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
+	return t, exp.MinEqual(got), "expected:\n%v\ngot:\n%v", exp, got
 }
 
 //_______________________________________________________________________________________
@@ -79,9 +78,10 @@ func MakeTestCodec() *codec.Codec {
 // Hogpodge of all sorts of input required for testing.
 // `initPower` is converted to an amount of tokens.
 // If `initPower` is 0, no addrs get created.
-func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, types.BankKeeper, Keeper, types.SupplyKeeper) {
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	bankKey := sdk.NewKVStoreKey(bank.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
@@ -90,6 +90,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(bankKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
@@ -125,6 +126,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	bk := bank.NewBaseKeeper(
+		cdc,
+		bankKey,
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
 		blacklistedAddrs,
@@ -143,26 +146,23 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(DefaultParamspace))
+	keeper := NewKeeper(types.ModuleCdc, keyStaking, bk, supplyKeeper, pk.Subspace(DefaultParamspace))
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
-	err = notBondedPool.SetCoins(totalSupply)
-	require.NoError(t, err)
+	require.NoError(t, bk.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply))
 
 	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	supplyKeeper.SetModuleAccount(ctx, bondPool)
 	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, addr := range Addrs {
-		_, err := bk.AddCoins(ctx, addr, initCoins)
-		if err != nil {
-			panic(err)
-		}
+	for i, addr := range Addrs {
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, PKs[i], uint64(i), 0))
+		require.NoError(t, bk.SetBalances(ctx, addr, initCoins))
 	}
 
-	return ctx, accountKeeper, keeper, supplyKeeper
+	return ctx, accountKeeper, bk, keeper, supplyKeeper
 }
 
 func NewPubKey(pk string) (res crypto.PubKey) {
@@ -272,12 +272,15 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 		}
 		return validator
 	}
+
 	cachectx, _ := ctx.CacheContext()
 	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
+
 	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddress)
 	if !found {
 		panic("validator expected but not found")
 	}
+
 	return validator
 }
 

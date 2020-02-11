@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -43,7 +43,7 @@ default, the application will run with Tendermint in process.
 
 Pruning options can be provided via the '--pruning' flag. The options are as follows:
 
-syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+syncable: only those states not needed for state syncing will be deleted (flushes every 100th to disk and keeps every 10000th)
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 everything: all saved states will be deleted, storing only the current state
 
@@ -114,14 +114,14 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	err = svr.Start()
 	if err != nil {
-		cmn.Exit(err.Error())
+		tmos.Exit(err.Error())
 	}
 
-	cmn.TrapSignal(ctx.Logger, func() {
+	tmos.TrapSignal(ctx.Logger, func() {
 		// cleanup
 		err = svr.Stop()
 		if err != nil {
-			cmn.Exit(err.Error())
+			tmos.Exit(err.Error())
 		}
 	})
 

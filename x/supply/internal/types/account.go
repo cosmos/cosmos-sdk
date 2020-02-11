@@ -116,7 +116,6 @@ func (ma ModuleAccount) Validate() error {
 
 type moduleAccountPretty struct {
 	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
 	PubKey        string         `json:"public_key" yaml:"public_key"`
 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
@@ -133,7 +132,6 @@ func (ma ModuleAccount) String() string {
 func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 	bs, err := yaml.Marshal(moduleAccountPretty{
 		Address:       ma.Address,
-		Coins:         ma.Coins,
 		PubKey:        "",
 		AccountNumber: ma.AccountNumber,
 		Sequence:      ma.Sequence,
@@ -152,7 +150,6 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
 	return json.Marshal(moduleAccountPretty{
 		Address:       ma.Address,
-		Coins:         ma.Coins,
 		PubKey:        "",
 		AccountNumber: ma.AccountNumber,
 		Sequence:      ma.Sequence,
@@ -168,7 +165,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 		return err
 	}
 
-	ma.BaseAccount = authtypes.NewBaseAccount(alias.Address, alias.Coins, nil, alias.AccountNumber, alias.Sequence)
+	ma.BaseAccount = authtypes.NewBaseAccount(alias.Address, nil, alias.AccountNumber, alias.Sequence)
 	ma.Name = alias.Name
 	ma.Permissions = alias.Permissions
 

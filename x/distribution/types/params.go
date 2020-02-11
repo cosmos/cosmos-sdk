@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -20,14 +21,6 @@ var (
 	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 )
-
-// Params defines the set of distribution parameters.
-type Params struct {
-	CommunityTax        sdk.Dec `json:"community_tax" yaml:"community_tax"`
-	BaseProposerReward  sdk.Dec `json:"base_proposer_reward" yaml:"base_proposer_reward"`
-	BonusProposerReward sdk.Dec `json:"bonus_proposer_reward" yaml:"bonus_proposer_reward"`
-	WithdrawAddrEnabled bool    `json:"withdraw_addr_enabled" yaml:"withdraw_addr_enabled"`
-}
 
 // ParamKeyTable returns the parameter key table.
 func ParamKeyTable() params.KeyTable {
@@ -91,6 +84,9 @@ func validateCommunityTax(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("community tax must be not nil")
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("community tax must be positive: %s", v)
 	}
@@ -107,6 +103,9 @@ func validateBaseProposerReward(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("base proposer reward must be not nil")
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("base proposer reward must be positive: %s", v)
 	}
@@ -123,6 +122,9 @@ func validateBonusProposerReward(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("bonus proposer reward must be not nil")
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("bonus proposer reward must be positive: %s", v)
 	}

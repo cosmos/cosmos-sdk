@@ -160,6 +160,11 @@ func (gi *gasIterator) Close() {
 	gi.parent.Close()
 }
 
+// Error delegates the Error call to the parent iterator.
+func (gi *gasIterator) Error() error {
+	return gi.parent.Error()
+}
+
 // consumeSeekGas consumes a flat gas cost for seeking and a variable gas cost
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {

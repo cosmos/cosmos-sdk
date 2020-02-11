@@ -1,15 +1,47 @@
 package bank
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// InitGenesis sets distribution information for genesis.
-func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
-	keeper.SetSendEnabled(ctx, data.SendEnabled)
+// InitGenesis initializes the bank module's state from a given genesis state.
+func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
+	keeper.SetSendEnabled(ctx, genState.SendEnabled)
+
+	genState.Balances = SanitizeGenesisBalances(genState.Balances)
+	for _, balance := range genState.Balances {
+		if err := keeper.ValidateBalance(ctx, balance.Address); err != nil {
+			panic(err)
+		}
+
+		keeper.SetBalances(ctx, balance.Address, balance.Coins)
+	}
 }
 
-// ExportGenesis returns a GenesisState for a given context and keeper.
+// ExportGenesis returns the bank module's genesis state.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
-	return NewGenesisState(keeper.GetSendEnabled(ctx))
+	balancesSet := make(map[string]sdk.Coins)
+
+	keeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
+		balancesSet[addr.String()] = balancesSet[addr.String()].Add(balance)
+		return false
+	})
+
+	balances := []Balance{}
+
+	for addrStr, coins := range balancesSet {
+		addr, err := sdk.AccAddressFromBech32(addrStr)
+		if err != nil {
+			panic(fmt.Errorf("failed to convert address from string: %w", err))
+		}
+
+		balances = append(balances, Balance{
+			Address: addr,
+			Coins:   coins,
+		})
+	}
+
+	return NewGenesisState(keeper.GetSendEnabled(ctx), balances)
 }

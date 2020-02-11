@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +38,7 @@ func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.AccountI, e
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
 func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.AccountI, int64, error) {
-	bs, err := json.Marshal(NewQueryAccountParams(addr))
+	bs, err := ar.codec.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err
 	}

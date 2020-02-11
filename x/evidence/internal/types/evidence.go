@@ -21,15 +21,6 @@ const (
 
 var _ exported.Evidence = (*Equivocation)(nil)
 
-// Equivocation implements the Evidence interface and defines evidence of double
-// signing misbehavior.
-type Equivocation struct {
-	Height           int64           `json:"height" yaml:"height"`
-	Time             time.Time       `json:"time" yaml:"time"`
-	Power            int64           `json:"power" yaml:"power"`
-	ConsensusAddress sdk.ConsAddress `json:"consensus_address" yaml:"consensus_address"`
-}
-
 // Route returns the Evidence Handler route for an Equivocation type.
 func (e Equivocation) Route() string { return RouteEquivocation }
 
@@ -57,7 +48,8 @@ func (e Equivocation) ValidateBasic() error {
 	if e.Power < 1 {
 		return fmt.Errorf("invalid equivocation validator power: %d", e.Power)
 	}
-	if e.ConsensusAddress.Empty() {
+	consaddr := sdk.ConsAddress(e.ConsensusAddress)
+	if consaddr.Empty() {
 		return fmt.Errorf("invalid equivocation validator consensus address: %s", e.ConsensusAddress)
 	}
 

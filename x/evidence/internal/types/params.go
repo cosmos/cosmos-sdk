@@ -26,11 +26,6 @@ var (
 	DoubleSignJailEndTime = time.Unix(253402300799, 0)
 )
 
-// Params defines the total set of parameters for the evidence module
-type Params struct {
-	MaxEvidenceAge time.Duration `json:"max_evidence_age" yaml:"max_evidence_age"`
-}
-
 // ParamKeyTable returns the parameter key table.
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})

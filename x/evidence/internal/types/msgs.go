@@ -15,13 +15,6 @@ var (
 	_ sdk.Msg = MsgSubmitEvidence{}
 )
 
-// MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
-// Evidence.
-type MsgSubmitEvidence struct {
-	Evidence  exported.Evidence `json:"evidence" yaml:"evidence"`
-	Submitter sdk.AccAddress    `json:"submitter" yaml:"submitter"`
-}
-
 func NewMsgSubmitEvidence(e exported.Evidence, s sdk.AccAddress) MsgSubmitEvidence {
 	return MsgSubmitEvidence{Evidence: e, Submitter: s}
 }

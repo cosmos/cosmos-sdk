@@ -131,9 +131,12 @@ func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 			grantee := cliCtx.FromAddress
 
 			var stdTx auth.StdTx
+			bz, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
 
-			bz := []byte(args[1])
-			err := cdc.UnmarshalJSON(bz, &stdTx)
+			err = cdc.UnmarshalJSON(bz, &stdTx)
 			if err != nil {
 				return err
 			}

@@ -25,21 +25,21 @@ func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {
 }
 
 // MaxValidators - Maximum number of validators
-func (k Keeper) MaxValidators(ctx sdk.Context) (res uint16) {
+func (k Keeper) MaxValidators(ctx sdk.Context) (res uint32) {
 	k.paramstore.Get(ctx, types.KeyMaxValidators, &res)
 	return
 }
 
 // MaxEntries - Maximum number of simultaneous unbonding
 // delegations or redelegations (per pair/trio)
-func (k Keeper) MaxEntries(ctx sdk.Context) (res uint16) {
+func (k Keeper) MaxEntries(ctx sdk.Context) (res uint32) {
 	k.paramstore.Get(ctx, types.KeyMaxEntries, &res)
 	return
 }
 
 // HistoricalEntries = number of historical info entries
 // to persist in store
-func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint16) {
+func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint32) {
 	k.paramstore.Get(ctx, types.KeyHistoricalEntries, &res)
 	return
 }

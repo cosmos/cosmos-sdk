@@ -375,7 +375,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	_ = staking.EndBlocker(ctx, sk)
 
-	sk.Jail(ctx, sdk.ConsAddress(val2.ConsPubKey.Address()))
+	sk.Jail(ctx, sdk.ConsAddress(val2.GetConsPubKey().Address()))
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)

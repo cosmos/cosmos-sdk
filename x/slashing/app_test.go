@@ -55,7 +55,7 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, mapp.BankKeeper, maccPerms)
-	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, mapp.BankKeeper, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace))
+	stakingKeeper := staking.NewKeeper(staking.ModuleCdc, keyStaking, mapp.BankKeeper, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace))
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace))
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
@@ -158,7 +158,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.ConsPubKey.Address())}
+	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
 
 	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ConsAddress(addr1), false)

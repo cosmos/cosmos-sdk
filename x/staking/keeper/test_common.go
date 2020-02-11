@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -50,7 +49,7 @@ var (
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
+	return t, exp.MinEqual(got), "expected:\n%v\ngot:\n%v", exp, got
 }
 
 //_______________________________________________________________________________________
@@ -147,7 +146,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, bk, supplyKeeper, pk.Subspace(DefaultParamspace))
+	keeper := NewKeeper(types.ModuleCdc, keyStaking, bk, supplyKeeper, pk.Subspace(DefaultParamspace))
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
@@ -273,12 +272,15 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 		}
 		return validator
 	}
+
 	cachectx, _ := ctx.CacheContext()
 	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
+
 	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddress)
 	if !found {
 		panic("validator expected but not found")
 	}
+
 	return validator
 }
 

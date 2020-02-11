@@ -13,6 +13,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 // Applications may extend account functionality and types by extending the
 // oneof set and using their own AuthCodec (e.g. types/vesting).
 message Account {
+  // sum defines a list of all acceptable concrete AccountI implementations. The
+  // base Account type only specifies a BaseAccount as the only valid for the sum.
   oneof sum {
     BaseAccount base_account = 1;
   }

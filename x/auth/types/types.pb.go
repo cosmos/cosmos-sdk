@@ -32,6 +32,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Applications may extend account functionality and types by extending the
 // oneof set and using their own AuthCodec (e.g. types/vesting).
 type Account struct {
+	// sum defines a list of all acceptable concrete AccountI implementations. The
+	// base Account type only specifies a BaseAccount as the only valid for the sum.
+	//
 	// Types that are valid to be assigned to Sum:
 	//	*Account_BaseAccount
 	Sum isAccount_Sum `protobuf_oneof:"sum"`

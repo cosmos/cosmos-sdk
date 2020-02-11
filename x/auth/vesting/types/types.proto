@@ -13,6 +13,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 message VestingAccount {
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/auth/exported.AccountI";
 
+  // sum defines a list of all acceptable concrete vesting AccountI
+  // implementations.
   oneof sum {
     ContinuousVestingAccount continuous_vesting_account = 1;
     DelayedVestingAccount    delayed_vesting_account    = 2;

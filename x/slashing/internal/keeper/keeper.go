@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -52,14 +53,12 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 func (k Keeper) GetPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
 
-	//TODO change this to use protobuf
 	var pubkey gogotypes.StringValue
 	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
 
 	if err != nil {
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
-
 
 	pkStr, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pubkey.Value)
 
@@ -101,7 +100,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey string) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.StringValue{Value:pubkey})
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.StringValue{Value: pubkey})
 	store.Set(types.GetAddrPubkeyRelationKey(addr), bz)
 }
 

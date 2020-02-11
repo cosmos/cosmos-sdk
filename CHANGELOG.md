@@ -37,6 +37,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.38.1] - TBD
+
+### Improvements
+
+* (modules) [\#5597](https://github.com/cosmos/cosmos-sdk/pull/5597) Add `amount` event attribute to the `complete_unbonding`
+and `complete_redelegation` events that reflect the total balances of the completed unbondings and redelegations
+respectively.
+
+### Bug Fixes
+
+* (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The IAVL `Store#Commit` method has been refactored to
+delete a flushed version if it is not a snapshot version. The root multi-store now keeps track of `commitInfo` instead
+of `types.CommitID`. During `Commit` of the root multi-store, `lastCommitInfo` is updated from the saved state
+and is only flushed to disk if it is a snapshot version. During `Query` of the root multi-store, if the request height
+is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetch `commitInfo` from disk.
+* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
+* (x/gov) [\#5622](https://github.com/cosmos/cosmos-sdk/pull/5622) Track any events emitted from a proposal's handler upon successful execution.
+
 ## [v0.38.0] - 2020-01-23
 
 ### State Machine Breaking
@@ -2862,7 +2880,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.38.0...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.38.1...HEAD
+[v0.38.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.1
 [v0.38.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.0
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6
 [v0.37.5]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.5

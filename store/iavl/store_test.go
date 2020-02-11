@@ -52,7 +52,7 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 func TestGetImmutable(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
-	store := UnsafeNewStore(tree)
+	store := UnsafeNewStore(tree, types.PruneNothing)
 
 	require.True(t, tree.Set([]byte("hello"), []byte("adios")))
 	hash, ver, err := tree.SaveVersion()
@@ -82,7 +82,7 @@ func TestGetImmutable(t *testing.T) {
 func TestTestGetImmutableIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
-	store := UnsafeNewStore(tree)
+	store := UnsafeNewStore(tree, types.PruneNothing)
 
 	newStore, err := store.GetImmutable(cID.Version)
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestTestGetImmutableIterator(t *testing.T) {
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 
 	key := "hello"
 
@@ -130,14 +130,14 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 func TestIAVLStoreNoNilSet(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 	require.Panics(t, func() { iavlStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
 func TestIAVLIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
 	var i int
@@ -213,7 +213,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 
 	iavlStore.Set([]byte{0x00}, []byte("0"))
 	iavlStore.Set([]byte{0x00, 0x00}, []byte("0 0"))
@@ -246,7 +246,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -310,7 +310,7 @@ func TestIAVLReversePrefixIterator(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -375,7 +375,7 @@ func nextVersion(iavl *Store) {
 
 func TestIAVLDefaultPruning(t *testing.T) {
 	//Expected stored / deleted version numbers for:
-	//numRecent = 5, storeEvery = 3
+	//numRecent = 5, storeEvery = 3, snapshotEvery = 5
 	var states = []pruneState{
 		{[]int64{}, []int64{}},
 		{[]int64{1}, []int64{}},
@@ -383,23 +383,23 @@ func TestIAVLDefaultPruning(t *testing.T) {
 		{[]int64{1, 2, 3}, []int64{}},
 		{[]int64{1, 2, 3, 4}, []int64{}},
 		{[]int64{1, 2, 3, 4, 5}, []int64{}},
-		{[]int64{2, 3, 4, 5, 6}, []int64{1}},
-		{[]int64{3, 4, 5, 6, 7}, []int64{1, 2}},
-		{[]int64{3, 4, 5, 6, 7, 8}, []int64{1, 2}},
-		{[]int64{3, 5, 6, 7, 8, 9}, []int64{1, 2, 4}},
-		{[]int64{3, 6, 7, 8, 9, 10}, []int64{1, 2, 4, 5}},
-		{[]int64{3, 6, 7, 8, 9, 10, 11}, []int64{1, 2, 4, 5}},
-		{[]int64{3, 6, 8, 9, 10, 11, 12}, []int64{1, 2, 4, 5, 7}},
-		{[]int64{3, 6, 9, 10, 11, 12, 13}, []int64{1, 2, 4, 5, 7, 8}},
-		{[]int64{3, 6, 9, 10, 11, 12, 13, 14}, []int64{1, 2, 4, 5, 7, 8}},
-		{[]int64{3, 6, 9, 11, 12, 13, 14, 15}, []int64{1, 2, 4, 5, 7, 8, 10}},
+		{[]int64{2, 4, 5, 6}, []int64{1, 3}},
+		{[]int64{4, 5, 6, 7}, []int64{1, 2, 3}},
+		{[]int64{4, 5, 6, 7, 8}, []int64{1, 2, 3}},
+		{[]int64{5, 6, 7, 8, 9}, []int64{1, 2, 3, 4}},
+		{[]int64{6, 7, 8, 9, 10}, []int64{1, 2, 3, 4, 5}},
+		{[]int64{6, 7, 8, 9, 10, 11}, []int64{1, 2, 3, 4, 5}},
+		{[]int64{6, 8, 10, 11, 12}, []int64{1, 2, 3, 4, 5, 7, 9}},
+		{[]int64{6, 10, 11, 12, 13}, []int64{1, 2, 3, 4, 5, 7, 8, 9}},
+		{[]int64{6, 10, 11, 12, 13, 14}, []int64{1, 2, 3, 4, 5, 7, 8, 9}},
+		{[]int64{6, 11, 12, 13, 14, 15}, []int64{1, 2, 3, 4, 5, 7, 8, 9, 10}},
 	}
-	testPruning(t, int64(5), int64(3), states)
+	testPruning(t, int64(5), int64(3), int64(6), states)
 }
 
 func TestIAVLAlternativePruning(t *testing.T) {
 	//Expected stored / deleted version numbers for:
-	//numRecent = 3, storeEvery = 5
+	//numRecent = 3, storeEvery = 5, snapshotEvery = 10
 	var states = []pruneState{
 		{[]int64{}, []int64{}},
 		{[]int64{1}, []int64{}},
@@ -411,14 +411,14 @@ func TestIAVLAlternativePruning(t *testing.T) {
 		{[]int64{5, 6, 7}, []int64{1, 2, 3, 4}},
 		{[]int64{5, 6, 7, 8}, []int64{1, 2, 3, 4}},
 		{[]int64{5, 7, 8, 9}, []int64{1, 2, 3, 4, 6}},
-		{[]int64{5, 8, 9, 10}, []int64{1, 2, 3, 4, 6, 7}},
-		{[]int64{5, 9, 10, 11}, []int64{1, 2, 3, 4, 6, 7, 8}},
-		{[]int64{5, 10, 11, 12}, []int64{1, 2, 3, 4, 6, 7, 8, 9}},
-		{[]int64{5, 10, 11, 12, 13}, []int64{1, 2, 3, 4, 6, 7, 8, 9}},
-		{[]int64{5, 10, 12, 13, 14}, []int64{1, 2, 3, 4, 6, 7, 8, 9, 11}},
-		{[]int64{5, 10, 13, 14, 15}, []int64{1, 2, 3, 4, 6, 7, 8, 9, 11, 12}},
+		{[]int64{8, 9, 10}, []int64{1, 2, 3, 4, 6, 7}},
+		{[]int64{9, 10, 11}, []int64{1, 2, 3, 4, 6, 7, 8}},
+		{[]int64{10, 11, 12}, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}},
+		{[]int64{10, 11, 12, 13}, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}},
+		{[]int64{10, 12, 13, 14}, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 11}},
+		{[]int64{10, 13, 14, 15}, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12}},
 	}
-	testPruning(t, int64(3), int64(5), states)
+	testPruning(t, int64(3), int64(5), int64(10), states)
 }
 
 type pruneState struct {
@@ -426,26 +426,30 @@ type pruneState struct {
 	deleted []int64
 }
 
-func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []pruneState) {
+func testPruning(t *testing.T, numRecent int64, storeEvery int64, snapshotEvery int64, states []pruneState) {
 	db := dbm.NewMemDB()
+	pruningOpts := types.PruningOptions{
+		KeepEvery:     storeEvery,
+		SnapshotEvery: snapshotEvery,
+	}
 	iavlOpts := iavl.PruningOptions(storeEvery, numRecent)
 
 	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, pruningOpts)
 
 	for step, state := range states {
 		for _, ver := range state.stored {
 			require.True(t, iavlStore.VersionExists(ver),
-				"missing version %d with latest version %d; should save last %d and every %d",
-				ver, step, numRecent, storeEvery)
+				"missing version %d with latest version %d; should save last %d, store every %d, and snapshot every %d",
+				ver, step, numRecent, storeEvery, snapshotEvery)
 		}
 
 		for _, ver := range state.deleted {
 			require.False(t, iavlStore.VersionExists(ver),
-				"not pruned version %d with latest version %d; should prune all but last %d and every %d",
-				ver, step, numRecent, storeEvery)
+				"not pruned version %d with latest version %d; should prune all but last %d and every %d with intermediate flush interval %d",
+				ver, step, numRecent, snapshotEvery, storeEvery)
 		}
 
 		nextVersion(iavlStore)
@@ -457,7 +461,7 @@ func TestIAVLNoPrune(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 	nextVersion(iavlStore)
 
 	for i := 1; i < 100; i++ {
@@ -478,7 +482,7 @@ func TestIAVLPruneEverything(t *testing.T) {
 	tree, err := iavl.NewMutableTreeWithOpts(db, dbm.NewMemDB(), cacheSize, iavlOpts)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneEverything)
 	nextVersion(iavlStore)
 
 	for i := 1; i < 100; i++ {
@@ -501,7 +505,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 	tree, err := iavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 
 	k1, v1 := []byte("key1"), []byte("val1")
 	k2, v2 := []byte("key2"), []byte("val2")
@@ -600,7 +604,7 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		tree.Set(key, value)
 	}
 
-	iavlStore := UnsafeNewStore(tree)
+	iavlStore := UnsafeNewStore(tree, types.PruneNothing)
 	iterators := make([]types.Iterator, b.N/treeSize)
 
 	for i := 0; i < len(iterators); i++ {

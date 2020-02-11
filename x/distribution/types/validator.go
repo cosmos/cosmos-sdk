@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,11 +26,6 @@ func NewValidatorCurrentRewards(rewards sdk.DecCoins, period uint64) ValidatorCu
 // return the initial accumulated commission (zero)
 func InitialValidatorAccumulatedCommission() ValidatorAccumulatedCommission {
 	return ValidatorAccumulatedCommission{}
-}
-
-func UnmarshalValidatorAccumulatedCommission(cdc codec.Marshaler, value []byte) (v ValidatorAccumulatedCommission, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &v)
-	return v, err
 }
 
 // create a new ValidatorSlashEvent

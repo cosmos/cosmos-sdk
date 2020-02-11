@@ -4,16 +4,17 @@ package cosmos_sdk.x.mint.v1;
 option go_package = "types";
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "types/types.proto";
 
 // Minter represents the minting state.
 message Minter {
-  cosmos_sdk.v1.DecProto inflation = 1 [
-    (gogoproto.moretags) = "yaml:\"inflation\"",
-    (gogoproto.nullable) = false
+  string inflation = 1 [
+    (gogoproto.moretags)   = "yaml:\"inflation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];  // current annual inflation rate
-  cosmos_sdk.v1.DecProto annual_provisions = 2 [
-    (gogoproto.moretags) = "yaml:\"annual_provisions\"",
-    (gogoproto.nullable) = false
+  string annual_provisions = 2 [
+    (gogoproto.moretags)   = "yaml:\"annual_provisions\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];  // current annual expected provisions
 }

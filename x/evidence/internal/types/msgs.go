@@ -27,10 +27,10 @@ func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) ValidateBasic() error {
-	if m.Evidence == nil {
+	if m.Evidence.GetEvidenceI() == nil {
 		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
 	}
-	if err := m.Evidence.ValidateBasic(); err != nil {
+	if err := m.Evidence.GetEvidenceI().ValidateBasic(); err != nil {
 		return err
 	}
 	if m.Submitter.Empty() {

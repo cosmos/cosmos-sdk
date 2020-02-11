@@ -10,8 +10,8 @@ import (
 // provisions values.
 func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
 	return Minter{
-		Inflation:        sdk.DecProto{Dec: inflation},
-		AnnualProvisions: sdk.DecProto{Dec: annualProvisions},
+		Inflation:        inflation,
+		AnnualProvisions: annualProvisions,
 	}
 }
 
@@ -33,7 +33,7 @@ func DefaultInitialMinter() Minter {
 
 // validate minter
 func ValidateMinter(minter Minter) error {
-	if minter.Inflation.Dec.IsNegative() {
+	if minter.Inflation.IsNegative() {
 		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
 			minter.Inflation.String())
 	}
@@ -41,7 +41,7 @@ func ValidateMinter(minter Minter) error {
 }
 
 // NextInflationRate returns the new inflation rate for the next hour.
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.DecProto {
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
 	// the distance from the desired ratio (67%). The maximum rate change possible is
@@ -55,7 +55,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.DecPro
 	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
 
 	// adjust the new annual inflation for this next cycle
-	inflation := m.Inflation.Dec.Add(inflationRateChange) // note inflationRateChange may be negative
+	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
 	if inflation.GT(params.InflationMax) {
 		inflation = params.InflationMax
 	}
@@ -63,19 +63,19 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.DecPro
 		inflation = params.InflationMin
 	}
 
-	return sdk.DecProto{Dec: inflation}
+	return inflation
 }
 
 // NextAnnualProvisions returns the annual provisions based on current total
 // supply and inflation rate.
-func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.DecProto {
+func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
 
-	return sdk.DecProto{Dec: m.Inflation.Dec.MulInt(totalSupply)}
+	return m.Inflation.MulInt(totalSupply)
 }
 
 // BlockProvision returns the provisions for a block based on the annual
 // provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.Dec.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
+	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

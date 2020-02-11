@@ -44,10 +44,10 @@ func TestNextInflation(t *testing.T) {
 		{sdk.NewDecWithPrec(67, 2), sdk.NewDecWithPrec(15, 2), sdk.ZeroDec()},
 	}
 	for i, tc := range tests {
-		minter.Inflation = sdk.DecProto{Dec: tc.setInflation}
+		minter.Inflation = tc.setInflation
 
 		inflation := minter.NextInflationRate(params, tc.bondedRatio)
-		diffInflation := inflation.Dec.Sub(tc.setInflation)
+		diffInflation := inflation.Sub(tc.setInflation)
 
 		require.True(t, diffInflation.Equal(tc.expChange),
 			"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
@@ -70,7 +70,7 @@ func TestBlockProvision(t *testing.T) {
 		{(secondsPerYear / 5) / 2, 0},
 	}
 	for i, tc := range tests {
-		minter.AnnualProvisions = sdk.DecProto{Dec: sdk.NewDec(tc.annualProvisions)}
+		minter.AnnualProvisions = sdk.NewDec(tc.annualProvisions)
 		provisions := minter.BlockProvision(params)
 
 		expProvisions := sdk.NewCoin(params.MintDenom,
@@ -94,7 +94,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 
 	s1 := rand.NewSource(100)
 	r1 := rand.New(s1)
-	minter.AnnualProvisions = sdk.DecProto{Dec: sdk.NewDec(r1.Int63n(1000000))}
+	minter.AnnualProvisions = sdk.NewDec(r1.Int63n(1000000))
 
 	// run the BlockProvision function b.N times
 	for n := 0; n < b.N; n++ {

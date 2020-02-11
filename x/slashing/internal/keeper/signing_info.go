@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	gogotypes "github.com/gogo/protobuf/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,7 +62,7 @@ func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 		missed = false
 		return
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &gogotypes.BoolValue{Value: missed})
 	return
 }
 
@@ -79,7 +80,7 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 		if bz == nil {
 			continue
 		}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &gogotypes.BoolValue{Value: missed})
 		if handler(index, missed) {
 			break
 		}
@@ -128,7 +129,7 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 // missed a block in the current window
 func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.BoolValue{Value: missed})
 	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 

@@ -250,11 +250,13 @@ tmabci = third_party/proto/tendermint/abci/types/types.proto
 
 # You *only* need to run this to rebuild protobufs from the tendermint source
 proto-update-tendermint:
-	# When running this command you will have to update the proto files with third_party imports instead of what is copied
 	@curl $(tendermint)/abci/types/types.proto > $(tmabci)
+	sed -i '' '8,9 s|github.com/tendermint|third_party/proto|g' $(tmabci)
+	sed -i '' '7 s|github.com/gogo/protobuf|third_party/proto|' $(tmabci)
 	@curl $(tendermint)/libs/kv/types.proto > $(tmkv)
+	sed -i '' 's|github.com/gogo/protobuf|third_party/proto|' $(tmkv)
 	@curl $(tendermint)/crypto/merkle/merkle.proto > $(tmmerkle)
-	@sed 's@package types;@package abci;@' $(tmabci) > protobuf/abci.proto
-	@curl $(tendermint)/version/version.go | grep -F -eTMCoreSem -eABCISemVer > version.txt
+	sed -i '' '7 s|github.com/gogo/protobuf|third_party/proto|' $(tmmerkle)
+
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-tendermint

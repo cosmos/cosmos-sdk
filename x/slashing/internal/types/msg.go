@@ -29,8 +29,9 @@ func (msg MsgUnjail) GetSignBytes() []byte {
 
 // ValidateBasic validity check for the AnteHandler
 func (msg MsgUnjail) ValidateBasic() error {
-	if msg.ValidatorAddr.Empty() {
+	if len(msg.ValidatorAddr) < 1 { //if empty
 		return ErrBadValidatorAddr
 	}
+
 	return nil
 }

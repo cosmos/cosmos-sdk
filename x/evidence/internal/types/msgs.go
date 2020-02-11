@@ -16,6 +16,7 @@ var (
 )
 
 func NewMsgSubmitEvidence(e exported.EvidenceI, s sdk.AccAddress) MsgSubmitEvidence {
+	// Codec.MarshalEvidence(e)
 	return MsgSubmitEvidence{Evidence: e, Submitter: s}
 }
 

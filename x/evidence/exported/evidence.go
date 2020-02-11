@@ -8,7 +8,7 @@ import (
 
 // Evidence defines the contract which concrete evidence types of misbehavior
 // must implement.
-type Evidence interface {
+type EvidenceI interface {
 	Route() string
 	Type() string
 	String() string

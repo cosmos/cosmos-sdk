@@ -19,7 +19,7 @@ const (
 	TypeEquivocation  = "equivocation"
 )
 
-var _ exported.Evidence = (*Equivocation)(nil)
+var _ exported.EvidenceI = (*Equivocation)(nil)
 
 // Route returns the Evidence Handler route for an Equivocation type.
 func (e Equivocation) Route() string { return RouteEquivocation }
@@ -83,7 +83,7 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 
 // ConvertDuplicateVoteEvidence converts a Tendermint concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
-func ConvertDuplicateVoteEvidence(dupVote abci.Evidence) exported.Evidence {
+func ConvertDuplicateVoteEvidence(dupVote abci.Evidence) exported.EvidenceI {
 	return Equivocation{
 		Height:           dupVote.Height,
 		Power:            dupVote.Validator.Power,

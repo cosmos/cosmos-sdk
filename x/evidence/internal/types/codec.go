@@ -12,7 +12,7 @@ var ModuleCdc = codec.New()
 // RegisterCodec registers all the necessary types and interfaces for the
 // evidence module.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
+	cdc.RegisterInterface((*exported.EvidenceI)(nil), nil)
 	cdc.RegisterConcrete(MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
 	cdc.RegisterConcrete(Equivocation{}, "cosmos-sdk/Equivocation", nil)
 }

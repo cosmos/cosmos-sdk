@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	_ exported.Evidence = (*TestEquivocationEvidence)(nil)
+	_ exported.EvidenceI = (*TestEquivocationEvidence)(nil)
 
 	TestingCdc = codec.New()
 )
@@ -112,7 +112,7 @@ func (v TestVote) SignBytes(chainID string) []byte {
 }
 
 func TestEquivocationHandler(k interface{}) Handler {
-	return func(ctx sdk.Context, e exported.Evidence) error {
+	return func(ctx sdk.Context, e exported.EvidenceI) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}

@@ -15,7 +15,7 @@ var (
 	_ sdk.Msg = MsgSubmitEvidence{}
 )
 
-func NewMsgSubmitEvidence(e exported.Evidence, s sdk.AccAddress) MsgSubmitEvidence {
+func NewMsgSubmitEvidence(e exported.EvidenceI, s sdk.AccAddress) MsgSubmitEvidence {
 	return MsgSubmitEvidence{Evidence: e, Submitter: s}
 }
 

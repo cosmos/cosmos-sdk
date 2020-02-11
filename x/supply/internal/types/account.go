@@ -51,7 +51,7 @@ func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	}
 
 	return &ModuleAccount{
-		BaseAccount: &baseAcc,
+		BaseAccount: baseAcc,
 		Name:        name,
 		Permissions: permissions,
 	}

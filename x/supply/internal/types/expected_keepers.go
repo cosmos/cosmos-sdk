@@ -7,10 +7,10 @@ import (
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(exported.Account) (stop bool))
-	GetAccount(sdk.Context, sdk.AccAddress) exported.Account
-	SetAccount(sdk.Context, exported.Account)
-	NewAccount(sdk.Context, exported.Account) exported.Account
+	IterateAccounts(ctx sdk.Context, process func(exported.AccountI) (stop bool))
+	GetAccount(sdk.Context, sdk.AccAddress) exported.AccountI
+	SetAccount(sdk.Context, exported.AccountI)
+	NewAccount(sdk.Context, exported.AccountI) exported.AccountI
 }
 
 // BankKeeper defines the expected bank keeper (noalias)

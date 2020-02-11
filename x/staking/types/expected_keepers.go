@@ -15,8 +15,8 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account // only used for simulation
+	IterateAccounts(ctx sdk.Context, process func(authexported.AccountI) (stop bool))
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.AccountI // only used for simulation
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

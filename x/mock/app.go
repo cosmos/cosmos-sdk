@@ -43,7 +43,7 @@ type App struct {
 	BankKeeper    bank.Keeper
 	ParamsKeeper  params.Keeper
 
-	GenesisAccounts  []authexported.Account
+	GenesisAccounts  []authexported.AccountI
 	GenesisBalances  []bankexported.GenesisBalance
 	TotalCoinsSupply sdk.Coins
 }
@@ -71,7 +71,7 @@ func NewApp() *App {
 
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
 	app.AccountKeeper = auth.NewAccountKeeper(
-		app.Cdc,
+		auth.ModuleCdc,
 		app.KeyAccount,
 		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
@@ -181,7 +181,7 @@ func (b AddrKeysSlice) Swap(i, j int) {
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
 func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (
-	genAccs []authexported.Account, genBalances []bankexported.GenesisBalance,
+	genAccs []authexported.AccountI, genBalances []bankexported.GenesisBalance,
 	addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey,
 ) {
 
@@ -214,7 +214,7 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (
 }
 
 // SetGenesis sets the mock app genesis accounts.
-func SetGenesis(app *App, accs []authexported.Account, balances []bankexported.GenesisBalance) {
+func SetGenesis(app *App, accs []authexported.AccountI, balances []bankexported.GenesisBalance) {
 	// Pass the accounts in via the application (lazy) instead of through
 	// RequestInitChain.
 	app.GenesisAccounts = accs
@@ -301,7 +301,7 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 // RandomSetGenesis set genesis accounts with random coin values using the
 // provided addresses and coin denominations.
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
-	accounts := make([]authexported.Account, len(addrs))
+	accounts := make([]authexported.AccountI, len(addrs))
 	balances := make([]bankexported.GenesisBalance, len(addrs))
 	randCoinIntervals := []BigInterval{
 		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
@@ -322,7 +322,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins...)
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 
-		accounts[i] = &baseAcc
+		accounts[i] = baseAcc
 		balances[i] = bank.Balance{Address: addrs[i], Coins: coins}
 	}
 

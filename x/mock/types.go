@@ -68,7 +68,7 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 
 	// create a new module account
 	macc := &supply.ModuleAccount{
-		BaseAccount: &baseAcc,
+		BaseAccount: baseAcc,
 		Name:        moduleName,
 		Permissions: nil,
 	}

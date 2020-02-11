@@ -65,6 +65,7 @@ is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetc
 * (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
 * (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set. 
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
+* (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`
 
 ### State Machine Breaking
 
@@ -338,6 +339,19 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug.
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+
+## [v0.37.7] - 2020-02-10
+
+### Improvements
+
+* (modules) [\#5597](https://github.com/cosmos/cosmos-sdk/pull/5597) Add `amount` event attribute to the `complete_unbonding`
+and `complete_redelegation` events that reflect the total balances of the completed unbondings and redelegations
+respectively.
+
+### Bug Fixes
+
+* (x/gov) [\#5622](https://github.com/cosmos/cosmos-sdk/pull/5622) Track any events emitted from a proposal's handler upon successful execution.
+* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
 
 ## [v0.37.6] - 2020-01-21
 
@@ -2932,6 +2946,7 @@ BUG FIXES:
 
 [Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.38.0...HEAD
 [v0.38.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.0
+[v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6
 [v0.37.5]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.5
 [v0.37.4]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.4

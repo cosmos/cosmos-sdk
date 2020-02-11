@@ -84,16 +84,6 @@ var (
 	}
 )
 
-// MakeCodec custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	ModuleBasics.RegisterCodec(cdc)
-	vesting.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
-}
-
 // Verify app interface at compile time
 var _ App = (*SimApp)(nil)
 

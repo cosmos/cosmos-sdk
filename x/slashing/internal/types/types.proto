@@ -30,3 +30,19 @@ message ValidatorSigningInfo {
   bool tombstoned   = 5 [(gogoproto.moretags) =  "yaml:\"tombstoned\""]; // whether or not a validator has been tombstoned (killed out of validator set)
   int64 missed_blocks_counter = 6 [(gogoproto.moretags) =  "yaml:\"missed_blocks_counter\""]; // missed blocks counter (to avoid scanning the array every time)
 }
+
+// QuerySigningInfoParams defines the params for the following queries:
+// - 'custom/slashing/signingInfo'
+message QuerySigningInfoParams {
+  bytes cons_address = 1 [
+    (gogoproto.casttype) =  "github.com/cosmos/cosmos-sdk/types.ConsAddress",
+    (gogoproto.moretags) =  "yaml:\"cons_address\"" // validator consensus address
+  ];
+}
+
+// QuerySigningInfosParams defines the params for the following queries:
+// - 'custom/slashing/signingInfos'
+message QuerySigningInfosParams {
+  int32 Page = 1;
+  int32 Limit = 2;
+}

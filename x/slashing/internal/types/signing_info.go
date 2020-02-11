@@ -2,9 +2,8 @@ package types
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

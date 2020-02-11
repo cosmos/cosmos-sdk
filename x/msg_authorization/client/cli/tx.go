@@ -119,7 +119,7 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "send-as [granter] [msg_tx_json] --from [grantee]",
+		Use:   "send-as [grantee] [msg_tx_json] --from [grantee]",
 		Short: "execute tx on behalf of granter account",
 		Long:  "execute tx on behalf of granter account",
 		Args:  cobra.ExactArgs(2),
@@ -130,24 +130,15 @@ func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 
 			grantee := cliCtx.FromAddress
 
-			// TODO cleanup this
-			//granter, err := sdk.AccAddressFromBech32(args[0])
-			//if err != nil {
-			//	return err
-			//}
-
-			// TODO interactive should look good, consider second arg as optional?
-			//generatedTx, err := input.GetString("Enter generated tx json string:", inBuf)
-
 			var stdTx auth.StdTx
 
-			err := cdc.UnmarshalJSON([]byte(args[1]), &stdTx)
+			bz := []byte(args[1])
+			err := cdc.UnmarshalJSON(bz, &stdTx)
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgExecDelegated(grantee, stdTx.Msgs)
-			// TODO include the granter as delegated signer in the encoded JSON
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err

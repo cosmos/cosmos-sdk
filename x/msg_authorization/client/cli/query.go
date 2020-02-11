@@ -62,7 +62,7 @@ func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command
 			}
 
 			var grant types.AuthorizationGrant
-			cdc.MustUnmarshalJSON(res, grant)
+			cdc.MustUnmarshalJSON(res, &grant)
 
 			return cliCtx.PrintOutput(grant)
 		},

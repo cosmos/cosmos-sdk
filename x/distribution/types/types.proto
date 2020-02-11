@@ -175,5 +175,8 @@ message DelegatorStartingInfo {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  uint64 height = 3 [(gogoproto.moretags) = "yaml:\"creation_height\""];
+  uint64 height = 3 [
+    (gogoproto.moretags) = "yaml:\"creation_height\"",
+    (gogoproto.jsontag) = "creation_height"
+    ];
 }

@@ -6,7 +6,7 @@ const (
 	EventRevokeAuthorization  = "revoke-authorization"
 	EventExecuteAuthorization = "execute-authorization"
 
-	AttributeGranttype         = "grant-type"
+	AttributeKeyGrantType      = "grant-type"
 	AttributeKeyGranteeAddress = "grantee"
 	AttributeKeyGranterAddress = "granter"
 

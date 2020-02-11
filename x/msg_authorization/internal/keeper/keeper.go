@@ -54,7 +54,6 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	var msgResult *sdk.Result
 	var err error
 	for _, msg := range msgs {
-		fmt.Printf("this is %v", msg)
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can be given to msg with only one signer")
@@ -102,10 +101,14 @@ func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAd
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
-func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) bool {
+func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (bool, error) {
 	store := ctx.KVStore(k.storeKey)
+	authorization, _ := k.GetAuthorization(ctx, grantee, granter, msgType)
+	if authorization == nil {
+		return false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+	}
 	store.Delete(k.getActorAuthorizationKey(grantee, granter, msgType))
-	return true
+	return true, nil
 }
 
 // GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,

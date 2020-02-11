@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
@@ -48,7 +47,6 @@ func TestBaseAddressPubKey(t *testing.T) {
 func TestBaseAccountSequence(t *testing.T) {
 	_, _, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
-
 	seq := uint64(7)
 
 	err := acc.SetSequence(seq)
@@ -59,7 +57,6 @@ func TestBaseAccountSequence(t *testing.T) {
 func TestBaseAccountMarshal(t *testing.T) {
 	_, pub, addr := KeyTestPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
-
 	seq := uint64(7)
 
 	// set everything on the account
@@ -68,21 +65,15 @@ func TestBaseAccountMarshal(t *testing.T) {
 	err = acc.SetSequence(seq)
 	require.Nil(t, err)
 
-	// need a codec for marshaling
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-
-	b, err := cdc.MarshalBinaryLengthPrefixed(acc)
+	bz, err := ModuleCdc.MarshalAccount(acc)
 	require.Nil(t, err)
 
-	acc2 := BaseAccount{}
-	err = cdc.UnmarshalBinaryLengthPrefixed(b, &acc2)
+	acc2, err := ModuleCdc.UnmarshalAccount(bz)
 	require.Nil(t, err)
 	require.Equal(t, acc, acc2)
 
 	// error on bad bytes
-	acc2 = BaseAccount{}
-	err = cdc.UnmarshalBinaryLengthPrefixed(b[:len(b)/2], &acc2)
+	_, err = ModuleCdc.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(t, err)
 }
 
@@ -90,6 +81,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := NewBaseAccount(addr, pubkey, 0, 0)
+
 	tests := []struct {
 		name   string
 		acc    exported.GenesisAccount
@@ -106,8 +98,10 @@ func TestGenesisAccountValidate(t *testing.T) {
 			errors.New("pubkey and address pair is invalid"),
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
 			require.Equal(t, tt.expErr, err)

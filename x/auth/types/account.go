@@ -71,16 +71,9 @@ func (acc BaseAccount) GetPubKey() crypto.PubKey {
 
 // SetPubKey - Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	var (
-		pkStr string
-		err   error
-	)
-
-	if pubKey != nil {
-		pkStr, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-		if err != nil {
-			return err
-		}
+	pkStr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	if err != nil {
+		return err
 	}
 
 	acc.PubKey = pkStr

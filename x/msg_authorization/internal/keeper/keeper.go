@@ -54,6 +54,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	var msgResult *sdk.Result
 	var err error
 	for _, msg := range msgs {
+		fmt.Printf("this is %v", msg)
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can be given to msg with only one signer")

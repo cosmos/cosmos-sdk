@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,4 +35,10 @@ func (i ValidatorSigningInfo) String() string {
   Missed Blocks Counter: %d`,
 		i.Address, i.StartHeight, i.IndexOffset, i.JailedUntil,
 		i.Tombstoned, i.MissedBlocksCounter)
+}
+
+// unmarshal a validator signing info from a store value
+func UnmarshalValSigningInfo(cdc codec.Marshaler, value []byte) (signingInfo ValidatorSigningInfo, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &signingInfo)
+	return signingInfo, err
 }

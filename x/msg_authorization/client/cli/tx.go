@@ -141,7 +141,10 @@ func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			fmt.Printf("this is stdTx: %v", stdTx)
+
 			msg := types.NewMsgExecDelegated(grantee, stdTx.Msgs)
+			fmt.Printf("this is msgs: %v", stdTx.Msgs)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err

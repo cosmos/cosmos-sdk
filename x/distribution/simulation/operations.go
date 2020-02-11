@@ -177,7 +177,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 		}
 
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
-		if commission.IsZero() {
+		if commission.Commission.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 

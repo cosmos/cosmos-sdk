@@ -9,7 +9,7 @@ import (
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
 type VestingAccount interface {
-	authexported.Account
+	authexported.AccountI
 
 	// LockedCoins returns the set of coins that are not spendable (i.e. locked).
 	//

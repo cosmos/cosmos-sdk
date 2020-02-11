@@ -134,7 +134,7 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
+func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.AccountI) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
@@ -161,16 +161,6 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 		return tx.GetSigners()[0]
 	}
 	return sdk.AccAddress{}
-}
-
-//__________________________________________________________
-
-// StdFee includes the amount of coins paid in fees and the maximum
-// gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
-type StdFee struct {
-	Amount sdk.Coins `json:"amount" yaml:"amount"`
-	Gas    uint64    `json:"gas" yaml:"gas"`
 }
 
 // NewStdFee returns a new instance of StdFee

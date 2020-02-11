@@ -42,7 +42,7 @@ type StakingKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.AccountI
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

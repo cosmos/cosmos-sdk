@@ -19,7 +19,7 @@ func TestSanitize(t *testing.T) {
 	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	authAcc2 := NewBaseAccountWithAddress(addr2)
 
-	genAccs := exported.GenesisAccounts{&authAcc1, &authAcc2}
+	genAccs := exported.GenesisAccounts{authAcc1, authAcc2}
 
 	require.True(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[1].GetAddress(), addr2)
@@ -41,18 +41,17 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 
 	genAccs := make(exported.GenesisAccounts, 2)
-	genAccs[0] = &acc1
-	genAccs[1] = &acc1
+	genAccs[0] = acc1
+	genAccs[1] = acc1
 
 	require.Error(t, ValidateGenAccounts(genAccs))
 }
 
 func TestGenesisAccountIterator(t *testing.T) {
 	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
-
 	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 
-	genAccounts := exported.GenesisAccounts{&acc1, &acc2}
+	genAccounts := exported.GenesisAccounts{acc1, acc2}
 
 	authGenState := DefaultGenesisState()
 	authGenState.Accounts = genAccounts
@@ -65,7 +64,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 
 	var addresses []sdk.AccAddress
 	GenesisAccountIterator{}.IterateGenesisAccounts(
-		ModuleCdc, appGenesis, func(acc exported.Account) (stop bool) {
+		ModuleCdc, appGenesis, func(acc exported.AccountI) (stop bool) {
 			addresses = append(addresses, acc.GetAddress())
 			return false
 		},

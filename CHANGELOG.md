@@ -75,7 +75,7 @@ is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetc
   * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
   the original vesting amount.
   * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
-* (staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffer for state
+* (x/staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffer for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.
   * `BondStatus` is now of type `int32` instead of `byte`.
@@ -83,7 +83,7 @@ for JSON encoding.
   * Every reference of `crypto.Pubkey` in context of a `Validator` is now of type string. `GetPubKeyFromBech32` must be used to get the `crypto.Pubkey`.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
   provided is specified by `ModuleCdc`.
-* (distr) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffer for state
+* (x/distribution) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffer for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.
   * `ValidatorHistoricalRewards.ReferenceCount` is now of types `uint32` instead of `uint16`.
@@ -92,6 +92,15 @@ for JSON encoding.
   * `ValidatorAccumulatedCommission` is now a struct with `commission`.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
   provided is specified by `ModuleCdc`.
+* (x/auth) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/auth` module to use Protocol Buffer for state
+serialization instead of Amino.
+  * The `BaseAccount.PubKey` field is now represented as a Bech32 string instead of a `crypto.Pubkey`.
+  * `NewBaseAccountWithAddress` now returns a reference to a `BaseAccount`.
+  * Rename `Account` interface to `AccountI`.
+  * The `x/auth` module now accepts an `AuthCodec` which extends the `codec.Marshaler` interface by
+  requiring a concrete codec to know to serialize accounts.
+  * The `AccountRetriever` type now accepts an `AuthCodec` in its constructor in order to know how to
+  serialize accounts.
 
 ### Improvements
 

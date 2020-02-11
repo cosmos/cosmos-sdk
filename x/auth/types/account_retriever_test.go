@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 
@@ -18,9 +17,9 @@ func TestAccountRetriever(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockNodeQuerier := mocks.NewMockNodeQuerier(mockCtrl)
-	accRetr := NewAccountRetriever(NewCodec(nil), mockNodeQuerier)
+	accRetr := NewAccountRetriever(ModuleCdc, mockNodeQuerier)
 	addr := []byte("test")
-	bs, err := json.Marshal(NewQueryAccountParams(addr))
+	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
 	require.NoError(t, err)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq("custom/acc/account"),

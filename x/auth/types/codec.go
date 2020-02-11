@@ -28,7 +28,7 @@ type Codec struct {
 }
 
 func NewCodec(amino *codec.Codec) *Codec {
-	return &Codec{Marshaler: codec.NewBaseCodec(amino), amino: amino}
+	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
 }
 
 // MarshalAccount marshals an AccountI interface. If the given type implements
@@ -72,7 +72,7 @@ func (c *Codec) UnmarshalAccountJSON(bz []byte) (exported.AccountI, error) {
 //
 // NOTE: This codec is deprecated, where a codec via NewCodec without an Amino
 // codec should be used.
-var ModuleCDC = NewCodec(codec.New())
+var ModuleCdc = NewCodec(codec.New())
 
 // RegisterCodec registers concrete types on the codec
 func RegisterCodec(cdc *codec.Codec) {
@@ -85,10 +85,10 @@ func RegisterCodec(cdc *codec.Codec) {
 // RegisterAccountTypeCodec registers an external account type defined in
 // another module for the internal ModuleCdc.
 func RegisterAccountTypeCodec(o interface{}, name string) {
-	ModuleCDC.amino.RegisterConcrete(o, name, nil)
+	ModuleCdc.amino.RegisterConcrete(o, name, nil)
 }
 
 func init() {
-	RegisterCodec(ModuleCDC.amino)
-	codec.RegisterCrypto(ModuleCDC.amino)
+	RegisterCodec(ModuleCdc.amino)
+	codec.RegisterCrypto(ModuleCdc.amino)
 }

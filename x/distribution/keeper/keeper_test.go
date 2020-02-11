@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
@@ -53,10 +54,10 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	require.Equal(t, expCoins, balance)
 
 	// set outstanding rewards
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr3, valCommission)
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr3, types.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	// set commission
-	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr3, valCommission)
+	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr3, types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
 	keeper.WithdrawValidatorCommission(ctx, valOpAddr3)
@@ -69,7 +70,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	), balance)
 
 	// check remainder
-	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)
+	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3).Commission
 	require.Equal(t, sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(1).Quo(sdk.NewDec(4))),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(2))),
@@ -86,8 +87,8 @@ func TestGetTotalRewards(t *testing.T) {
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, valCommission)
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr2, valCommission)
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, types.ValidatorOutstandingRewards{Rewards: valCommission})
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr2, types.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	expectedRewards := valCommission.MulDec(sdk.NewDec(2))
 	totalRewards := keeper.GetTotalRewards(ctx)

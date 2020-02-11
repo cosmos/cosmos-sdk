@@ -76,7 +76,7 @@ func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 		return false
 	})
 
-	start, end := client.Paginate(len(signingInfos), params.Page, params.Limit, int(k.sk.MaxValidators(ctx)))
+	start, end := client.Paginate(len(signingInfos), int(params.Page), int(params.Limit), int(k.sk.MaxValidators(ctx)))
 	if start < 0 || end < 0 {
 		signingInfos = []types.ValidatorSigningInfo{}
 	} else {

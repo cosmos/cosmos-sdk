@@ -35,8 +35,8 @@ func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command
 	return &cobra.Command{
 		Use:   "authorization",
 		Args:  cobra.ExactArgs(3),
-		Short: "query authorzation for a granter-grantee pair",
-		Long:  "query authorzation for a granter-grantee pair",
+		Short: "query authorization for a granter-grantee pair",
+		Long:  "query authorization for a granter-grantee pair",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

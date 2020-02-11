@@ -89,7 +89,7 @@ func (s *TestSuite) TestKeeperFees() {
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 	//lotCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 4567))
 
-	msgs := types.MsgExecDelegated{
+	msgs := types.MsgExecAuthorized{
 		Grantee: granteeAddr,
 		Msgs: []sdk.Msg{
 			bank.MsgSend{
@@ -124,7 +124,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch fails with overlimit")
 	// grant authorization
 
-	msgs = types.MsgExecDelegated{
+	msgs = types.MsgExecAuthorized{
 		Grantee: granteeAddr,
 		Msgs: []sdk.Msg{
 			bank.MsgSend{

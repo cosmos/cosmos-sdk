@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -66,7 +65,6 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("this is authorization %v", authorization)
 			expirationString := viper.GetString(FlagExpiration)
 			expiration, err := time.Parse(time.RFC3339, expirationString)
 			if err != nil {
@@ -141,7 +139,7 @@ func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgExecDelegated(grantee, stdTx.Msgs)
+			msg := types.NewMsgExecAuthorized(grantee, stdTx.Msgs)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err

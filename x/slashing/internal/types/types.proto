@@ -43,6 +43,6 @@ message QuerySigningInfoParams {
 // QuerySigningInfosParams defines the params for the following queries:
 // - 'custom/slashing/signingInfos'
 message QuerySigningInfosParams {
-  int32 Page = 1;
-  int32 Limit = 2;
+  int32 page = 1;
+  int32 limit = 2;
 }

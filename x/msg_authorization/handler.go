@@ -39,7 +39,7 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k K
 }
 
 func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k Keeper) (*sdk.Result, error) {
-	_, err := k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
+	err := k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
 	if err != nil {
 		return nil, err
 	}

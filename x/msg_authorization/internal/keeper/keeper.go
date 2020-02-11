@@ -92,23 +92,22 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
 // time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
 // overwrites that.
-func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) bool {
+func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(types.AuthorizationGrant{Authorization: authorization, Expiration: expiration.Unix()})
 	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)
-	return true
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
-func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (bool, error) {
+func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
 	authorization, _ := k.GetAuthorization(ctx, grantee, granter, msgType)
 	if authorization == nil {
-		return false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 	}
 	store.Delete(k.getActorAuthorizationKey(grantee, granter, msgType))
-	return true, nil
+	return nil
 }
 
 // GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,

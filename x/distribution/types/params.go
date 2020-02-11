@@ -22,14 +22,6 @@ var (
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 )
 
-// Params defines the set of distribution parameters.
-type Params struct {
-	CommunityTax        sdk.Dec `json:"community_tax" yaml:"community_tax"`
-	BaseProposerReward  sdk.Dec `json:"base_proposer_reward" yaml:"base_proposer_reward"`
-	BonusProposerReward sdk.Dec `json:"bonus_proposer_reward" yaml:"bonus_proposer_reward"`
-	WithdrawAddrEnabled bool    `json:"withdraw_addr_enabled" yaml:"withdraw_addr_enabled"`
-}
-
 // ParamKeyTable returns the parameter key table.
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})

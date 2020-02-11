@@ -142,7 +142,7 @@ func CreateTestInputAdvanced(
 	sk := staking.NewKeeper(staking.ModuleCdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(types.DefaultParamspace), bankKeeper, sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
+	keeper := NewKeeper(types.ModuleCdc, keyDistr, pk.Subspace(types.DefaultParamspace), bankKeeper, sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))

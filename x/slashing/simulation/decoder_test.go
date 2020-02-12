@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	gogotypes "github.com/gogo/protobuf/types"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	types.RegisterCodec(cdc)
+
 	return
 }
 
@@ -36,12 +38,14 @@ func TestDecodeStore(t *testing.T) {
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
 	bechPK := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, delPk1)
-	missed := true
+
+	var missed gogotypes.BoolValue
+	missed.Value = true
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
 		tmkv.Pair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
-		tmkv.Pair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
+		tmkv.Pair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.StringValue{Value:bechPK})},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
@@ -50,7 +54,7 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
-		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed, missed)},
+		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v missedB: %v\n", missed.Value, missed.Value)},
 		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPK, bechPK)},
 		{"other", ""},
 	}

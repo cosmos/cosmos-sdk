@@ -11,7 +11,7 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding mint type
-func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
+func DecodeStore(cdc codec.Marshaler, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key, types.MinterKey):
 		var minterA, minterB types.Minter

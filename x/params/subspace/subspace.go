@@ -99,6 +99,8 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
 // value to the provided pointer. If the value does not exist, it will panic.
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+	s.checkType(key, ptr)
+
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 

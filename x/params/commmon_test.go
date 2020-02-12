@@ -17,12 +17,12 @@ type s struct {
 	I int
 }
 
-func createTestCodec() *codec.Codec {
+func createTestCodec() codec.Marshaler {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
-	return cdc
+	return NewCodec(cdc)
 }
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
@@ -38,12 +38,12 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
-func testComponents() (*codec.Codec, sdk.Context, sdk.StoreKey, sdk.StoreKey, Keeper) {
+func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, Keeper) {
 	cdc := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(mkey, tkey)
-	keeper := NewKeeper(ModuleCdc, mkey, tkey)
+	keeper := NewKeeper(cdc, mkey, tkey)
 
 	return cdc, ctx, mkey, tkey, keeper
 }

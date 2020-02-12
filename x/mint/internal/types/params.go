@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"gopkg.in/yaml.v2"
 )
 
 // Parameter store keys
@@ -81,18 +82,10 @@ func (p Params) Validate() error {
 
 }
 
-func (p Params) String() string {
-	return fmt.Sprintf(`Minting Params:
-  Mint Denom:             %s
-  Inflation Rate Change:  %s
-  Inflation Max:          %s
-  Inflation Min:          %s
-  Goal Bonded:            %s
-  Blocks Per Year:        %d
-`,
-		p.MintDenom, p.InflationRateChange, p.InflationMax,
-		p.InflationMin, p.GoalBonded, p.BlocksPerYear,
-	)
+// String implements the Stringer interface.
+func (pc Params) String() string {
+	out, _ := yaml.Marshal(pc)
+	return string(out)
 }
 
 // Implements params.ParamSet

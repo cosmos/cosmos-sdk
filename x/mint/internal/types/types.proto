@@ -22,27 +22,22 @@ message Minter {
 // mint parameters
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  string mint_denom = 1 [(gogoproto.moretags) = "yaml:\"mint_denom\""];  // type of coin to mint
-  string inflation_rate_change = 2 [
-    (gogoproto.moretags)   = "yaml:\"inflation_rate_change\"",
+  string mint_denom                   = 1;  // type of coin to mint
+  string inflation_rate_change        = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];  // maximum annual change in inflation rate
   string inflation_max = 3 [
-    (gogoproto.moretags)   = "yaml:\"inflation_max\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];  // maximum inflation rate
   string inflation_min = 4 [
-    (gogoproto.moretags)   = "yaml:\"inflation_min\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];  // minimum inflation rate
   string goal_bonded = 5 [
-    (gogoproto.moretags)   = "yaml:\"goal_bonded\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
-  ];  // goal of percent bonded atoms
-  uint64 blocks_per_year = 6
-      [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];  // expected blocks per year
+  ];                           // goal of percent bonded atoms
+  uint64 blocks_per_year = 6;  // expected blocks per year
 }

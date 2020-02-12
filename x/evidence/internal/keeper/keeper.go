@@ -19,7 +19,7 @@ import (
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
-	cdc            *codec.Codec
+	cdc            codec.Marshaler
 	storeKey       sdk.StoreKey
 	paramSpace     params.Subspace
 	router         types.Router
@@ -28,7 +28,7 @@ type Keeper struct {
 }
 
 func NewKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, paramSpace params.Subspace,
 	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 

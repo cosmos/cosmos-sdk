@@ -87,7 +87,7 @@ func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 
 	start, end := client.Paginate(len(evidence), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		evidence = []exported.Evidence{}
+		evidence = []exported.EvidenceI{}
 	} else {
 		evidence = evidence[start:end]
 	}

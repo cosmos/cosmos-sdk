@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e exported.Evidence
+	var e exported.EvidenceI
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Equal(evidence[0], e)
 }
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e []exported.Evidence
+	var e []exported.EvidenceI
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, numEvidence)
 }
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e []exported.Evidence
+	var e []exported.EvidenceI
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
 }

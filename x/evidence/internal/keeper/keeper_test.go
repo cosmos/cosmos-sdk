@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
+		types.ModuleCdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.TestEvidenceRouteEquivocation, types.TestEquivocationHandler(*evidenceKeeper))
@@ -84,8 +84,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 }
 
-func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
-	evidence := make([]exported.Evidence, numEvidence)
+func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.EvidenceI {
+	evidence := make([]exported.EvidenceI, numEvidence)
 
 	for i := 0; i < numEvidence; i++ {
 		pk := ed25519.GenPrivKey()

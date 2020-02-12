@@ -32,7 +32,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
+		types.ModuleCdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.TestEvidenceRouteEquivocation, types.TestEquivocationHandler(*evidenceKeeper))
@@ -45,7 +45,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 func (suite *GenesisTestSuite) TestInitGenesis_Valid() {
 	pk := ed25519.GenPrivKey()
 
-	testEvidence := make([]exported.Evidence, 100)
+	testEvidence := make([]exported.EvidenceI, 100)
 	for i := 0; i < 100; i++ {
 		sv := types.TestVote{
 			ValidatorAddress: pk.PubKey().Address(),
@@ -78,7 +78,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Valid() {
 func (suite *GenesisTestSuite) TestInitGenesis_Invalid() {
 	pk := ed25519.GenPrivKey()
 
-	testEvidence := make([]exported.Evidence, 100)
+	testEvidence := make([]exported.EvidenceI, 100)
 	for i := 0; i < 100; i++ {
 		sv := types.TestVote{
 			ValidatorAddress: pk.PubKey().Address(),

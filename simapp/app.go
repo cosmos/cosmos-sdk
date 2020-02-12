@@ -150,7 +150,7 @@ func NewSimApp(
 	}
 
 	// init params keeper and subspaces
-	app.ParamsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tkeys[params.TStoreKey])
+	app.ParamsKeeper = params.NewKeeper(appCodec.Params, keys[params.StoreKey], tkeys[params.TStoreKey])
 	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.ParamsKeeper.Subspace(staking.DefaultParamspace)

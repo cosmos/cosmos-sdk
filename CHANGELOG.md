@@ -44,6 +44,8 @@ balances or a single balance by denom when the `denom` query parameter is presen
 
 ### API Breaking Changes
 
+* (x/params) [\#5619](https://github.com/cosmos/cosmos-sdk/pull/5619) The `x/params` keeper now accepts a `codec.Marshaller` instead of
+a reference to an amino codec. Amino is still used for JSON serialization.
 * (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The `keepRecent` field has been removed from the `PruningOptions` type.
 The `PruningOptions` type now only includes fields `KeepEvery` and `SnapshotEvery`, where `KeepEvery`
 determines which committed heights are flushed to disk and `SnapshotEvery` determines which of these

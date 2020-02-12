@@ -69,7 +69,7 @@ func NewApp() *App {
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
-	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
+	app.ParamsKeeper = params.NewKeeper(params.ModuleCdc, app.KeyParams, app.TKeyParams)
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,

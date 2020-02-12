@@ -3,8 +3,8 @@ package simulation
 import (
 	"bytes"
 	"fmt"
-	gogotypes "github.com/gogo/protobuf/types"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 

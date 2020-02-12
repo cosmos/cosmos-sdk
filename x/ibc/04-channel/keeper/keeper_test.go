@@ -45,6 +45,8 @@ const (
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
 
+	testHeight = 10
+
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
@@ -205,11 +207,13 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
 	consensusState := ibctmtypes.ConsensusState{
+		Height:       testHeight,
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, testClientType, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(clientID, consensusState, trustingPeriod, ubdPeriod)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.Require().NoError(err)
 }
 

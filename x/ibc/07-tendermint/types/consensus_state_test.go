@@ -17,6 +17,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"success",
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
+				Height:       height,
 				Root:         commitment.NewRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},
@@ -24,6 +25,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"root is nil",
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
+				Height:       height,
 				Root:         nil,
 				ValidatorSet: suite.valSet,
 			},
@@ -31,6 +33,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"root is empty",
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
+				Height:       height,
 				Root:         commitment.Root{},
 				ValidatorSet: suite.valSet,
 			},
@@ -38,13 +41,23 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"valset is nil",
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
+				Height:       height,
 				Root:         commitment.NewRoot([]byte("app_hash")),
 				ValidatorSet: nil,
+			},
+			false},
+		{"height is 0",
+			ibctmtypes.ConsensusState{
+				Timestamp:    suite.now,
+				Height:       0,
+				Root:         commitment.NewRoot([]byte("app_hash")),
+				ValidatorSet: suite.valSet,
 			},
 			false},
 		{"timestamp is zero",
 			ibctmtypes.ConsensusState{
 				Timestamp:    time.Time{},
+				Height:       height,
 				Root:         commitment.NewRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},

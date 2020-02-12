@@ -92,7 +92,9 @@ func (suite *HandlerTestSuite) createClient() {
 		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(testClient, consensusState, trustingPeriod, ubdPeriod)
+	suite.NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)
 }
 

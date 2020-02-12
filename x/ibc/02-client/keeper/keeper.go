@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -105,6 +104,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	}
 
 	consensusState := ibctmtypes.ConsensusState{
+		Height:       height,
 		Timestamp:    ctx.BlockTime(),
 		Root:         commitment.NewRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(histInfo.ValSet.ToTmValidators()),
@@ -137,33 +137,4 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
 		return false
 	})
 	return states
-}
-
-// State returns a new client state with a given id as defined in
-// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
-func (k Keeper) initialize(
-	ctx sdk.Context, clientID string, clientType exported.ClientType,
-	consensusState exported.ConsensusState, trustingPeriod, unbondingPeriod time.Duration,
-) (exported.ClientState, error) {
-	height := uint64(ctx.BlockHeight())
-
-	var (
-		clientState exported.ClientState
-		err         error
-	)
-	switch clientType {
-	case exported.Tendermint:
-		clientState, err = ibctmtypes.Initialize(
-			clientID, consensusState, trustingPeriod, unbondingPeriod, height,
-		)
-	default:
-		err = types.ErrInvalidClientType
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	k.SetClientConsensusState(ctx, clientID, height, consensusState)
-	return clientState, nil
 }

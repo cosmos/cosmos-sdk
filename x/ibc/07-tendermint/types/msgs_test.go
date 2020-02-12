@@ -21,6 +21,7 @@ func TestMsgCreateClientValidateBasic(t *testing.T) {
 
 	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	cs := ibctmtypes.ConsensusState{
+		Height:       height,
 		Timestamp:    now,
 		Root:         commitment.NewRoot([]byte("root")),
 		ValidatorSet: valSet,

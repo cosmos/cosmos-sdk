@@ -58,6 +58,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight+2, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
+		Height:       testClientHeight,
 		Timestamp:    suite.now,
 		Root:         commitment.NewRoot([]byte("hash")),
 		ValidatorSet: suite.valSet,

@@ -36,16 +36,23 @@ type ClientState struct {
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 }
 
+// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
+func InitializeFromMsg(
+	msg MsgCreateClient,
+) (ClientState, error) {
+	return Initialize(msg.GetClientID(), msg.GetConsensusState(), msg.TrustingPeriod, msg.UnbondingPeriod)
+}
+
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
 	id string, consensusState clientexported.ConsensusState, trustingPeriod, ubdPeriod time.Duration,
-	latestHeight uint64,
 ) (ClientState, error) {
 	tmConsState, ok := consensusState.(ConsensusState)
 	if !ok {
 		return ClientState{}, errors.New("consensus state is not from Tendermint")
 	}
+	latestHeight := tmConsState.GetHeight()
 
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")

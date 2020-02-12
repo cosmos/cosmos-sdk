@@ -83,8 +83,9 @@ func (suite *HandlerTestSuite) createClient() {
 		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState, trustingPeriod, ubdPeriod)
-	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
+	clientState, err := ibctmtypes.Initialize(testClient, consensusState, trustingPeriod, ubdPeriod)
+	suite.NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)
 }
 

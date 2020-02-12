@@ -26,14 +26,13 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 	cases := []struct {
 		msg      string
-		params   params
+		clientID string
 		expPass  bool
 		expPanic bool
 	}{
-		{"success", params{testClientID, exported.Tendermint}, true, false},
-		{"client ID exists", params{testClientID, exported.Tendermint}, false, false},
-		{"client type exists", params{testClientID2, exported.Tendermint}, false, true},
-		{"invalid client type", params{testClientID3, invalidClientType}, false, false},
+		{"success", testClientID, true, false},
+		{"client ID exists", testClientID, false, false},
+		{"client type exists", testClientID2, false, true},
 	}
 
 	for i, tc := range cases {
@@ -41,17 +40,24 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				suite.keeper.CreateClient(suite.ctx, tc.params.clientID, tc.params.clientType, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				suite.Require().NoError(err, "err on client state initialization")
+				suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := suite.keeper.CreateClient(suite.ctx, tc.params.clientID, tc.params.clientType, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			if tc.expPass {
+				suite.Require().NoError(err, "errored on initialization")
+				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
+			}
+			if err == nil {
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			}
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-				suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.msg)
 			}
 		}
 	}
@@ -64,7 +70,11 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			if err != nil {
+				return err
+			}
+			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			return err
 		}, true},
 		{"client type not found", func() error {
@@ -85,7 +95,11 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			if err != nil {
+				return err
+			}
+			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			if err != nil {
 				return err
 			}
@@ -166,7 +180,12 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				if err != nil {
+					return err
+				}
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+
 				return err
 			},
 			true,
@@ -216,7 +235,12 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				if err != nil {
+					return err
+				}
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+
 				return err
 			},
 			false,

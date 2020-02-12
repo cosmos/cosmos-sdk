@@ -13,10 +13,6 @@ import (
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
 	clientType := exported.ClientTypeFromString(msg.GetClientType())
-	if clientType == 0 {
-
-	}
-
 	switch clientType {
 	case 0:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
@@ -25,8 +21,12 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		if !ok {
 			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
 		}
-		_, err := k.CreateClient(
-			ctx, msg.GetClientID(), clientType, msg.GetConsensusState(), tmMsg.TrustingPeriod, tmMsg.UnbondingPeriod,
+		clientState, err := ibctmtypes.InitializeFromMsg(tmMsg)
+		if err != nil {
+			return nil, err
+		}
+		_, err = k.CreateClient(
+			ctx, clientState, msg.GetConsensusState(),
 		)
 		if err != nil {
 			return nil, err

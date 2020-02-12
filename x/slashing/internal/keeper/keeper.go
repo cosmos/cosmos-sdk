@@ -41,7 +41,6 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 	addr := pubkey.Address()
 
 	pkStr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubkey)
-
 	if err != nil {
 		panic(fmt.Errorf("error while setting address-pubkey relation: %s", addr))
 	}

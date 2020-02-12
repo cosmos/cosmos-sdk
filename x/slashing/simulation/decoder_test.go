@@ -2,9 +2,10 @@ package simulation
 
 import (
 	"fmt"
-	gogotypes "github.com/gogo/protobuf/types"
 	"testing"
 	"time"
+
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/stretchr/testify/require"
 

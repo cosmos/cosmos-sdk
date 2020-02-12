@@ -10,7 +10,8 @@ import "google/protobuf/timestamp.proto";
 message MsgUnjail {
   bytes validator_addr = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
-    (gogoproto.moretags) = "yaml:\"address\""
+    (gogoproto.moretags) = "yaml:\"address\"",
+    (gogoproto.jsontag) = "address"
   ];
 }
 

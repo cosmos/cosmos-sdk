@@ -16,8 +16,8 @@ type AppCodec struct {
 	amino *codec.Codec
 
 	Params       *params.Codec
-	Staking      *staking.Codec
 	Slashing     *slashing.Codec
+	Staking      *staking.Codec
 	Distribution *distr.Codec
 }
 

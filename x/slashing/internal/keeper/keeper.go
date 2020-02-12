@@ -54,13 +54,11 @@ func (k Keeper) GetPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 
 	var pubkey gogotypes.StringValue
 	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
-
 	if err != nil {
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
 
 	pkStr, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pubkey.Value)
-
 	if err != nil {
 		return pkStr, err
 	}

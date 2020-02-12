@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -69,6 +71,12 @@ func (pcp ParameterChangeProposal) String() string {
 
 func NewParamChange(subspace, key, value string) ParamChange {
 	return ParamChange{subspace, key, value}
+}
+
+// String implements the Stringer interface.
+func (pc ParamChange) String() string {
+	out, _ := yaml.Marshal(pc)
+	return string(out)
 }
 
 // ValidateChanges performs basic validation checks over a set of ParamChange. It

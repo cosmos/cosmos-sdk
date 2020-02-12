@@ -63,30 +63,100 @@ func (m *Minter) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Minter proto.InternalMessageInfo
 
+// mint parameters
+type Params struct {
+	MintDenom           string                                 `protobuf:"bytes,1,opt,name=mint_denom,json=mintDenom,proto3" json:"mint_denom,omitempty" yaml:"mint_denom"`
+	InflationRateChange github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=inflation_rate_change,json=inflationRateChange,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_rate_change" yaml:"inflation_rate_change"`
+	InflationMax        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=inflation_max,json=inflationMax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_max" yaml:"inflation_max"`
+	InflationMin        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=inflation_min,json=inflationMin,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_min" yaml:"inflation_min"`
+	GoalBonded          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=goal_bonded,json=goalBonded,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"goal_bonded" yaml:"goal_bonded"`
+	BlocksPerYear       uint64                                 `protobuf:"varint,6,opt,name=blocks_per_year,json=blocksPerYear,proto3" json:"blocks_per_year,omitempty" yaml:"blocks_per_year"`
+}
+
+func (m *Params) Reset()      { *m = Params{} }
+func (*Params) ProtoMessage() {}
+func (*Params) Descriptor() ([]byte, []int) {
+	return fileDescriptor_48d27b0438cc4590, []int{1}
+}
+func (m *Params) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Params) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Params.Merge(m, src)
+}
+func (m *Params) XXX_Size() int {
+	return m.Size()
+}
+func (m *Params) XXX_DiscardUnknown() {
+	xxx_messageInfo_Params.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Params proto.InternalMessageInfo
+
+func (m *Params) GetMintDenom() string {
+	if m != nil {
+		return m.MintDenom
+	}
+	return ""
+}
+
+func (m *Params) GetBlocksPerYear() uint64 {
+	if m != nil {
+		return m.BlocksPerYear
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Minter)(nil), "cosmos_sdk.x.mint.v1.Minter")
+	proto.RegisterType((*Params)(nil), "cosmos_sdk.x.mint.v1.Params")
 }
 
 func init() { proto.RegisterFile("x/mint/internal/types/types.proto", fileDescriptor_48d27b0438cc4590) }
 
 var fileDescriptor_48d27b0438cc4590 = []byte{
-	// 256 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xac, 0xd0, 0xcf, 0xcd,
-	0xcc, 0x2b, 0xd1, 0xcf, 0xcc, 0x2b, 0x49, 0x2d, 0xca, 0x4b, 0xcc, 0xd1, 0x2f, 0xa9, 0x2c, 0x48,
-	0x2d, 0x86, 0x90, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9, 0x42, 0x22, 0xc9, 0xf9, 0xc5, 0xb9, 0xf9,
-	0xc5, 0xf1, 0xc5, 0x29, 0xd9, 0x7a, 0x15, 0x7a, 0x20, 0xd5, 0x7a, 0x65, 0x86, 0x52, 0x6a, 0x25,
-	0x19, 0x99, 0x45, 0x29, 0xf1, 0x05, 0x89, 0x45, 0x25, 0x95, 0xfa, 0x60, 0x85, 0xfa, 0xe9, 0xf9,
-	0xe9, 0xf9, 0x08, 0x16, 0x44, 0xb7, 0xd2, 0x63, 0x46, 0x2e, 0x36, 0x5f, 0xb0, 0xe9, 0x42, 0x09,
-	0x5c, 0x9c, 0x99, 0x79, 0x69, 0x39, 0x89, 0x25, 0x99, 0xf9, 0x79, 0x12, 0x8c, 0x0a, 0x8c, 0x1a,
-	0x9c, 0x4e, 0x4e, 0x27, 0xee, 0xc9, 0x33, 0xdc, 0xba, 0x27, 0xaf, 0x96, 0x9e, 0x59, 0x92, 0x51,
-	0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x0f, 0xb1, 0x0e, 0x4a, 0xe9, 0x16, 0xa7, 0x64, 0x43, 0x5d,
-	0xe3, 0x92, 0x9a, 0xfc, 0xe9, 0x9e, 0xbc, 0x40, 0x65, 0x62, 0x6e, 0x8e, 0x95, 0x12, 0xdc, 0x20,
-	0xa5, 0x20, 0x84, 0xa1, 0x42, 0xe5, 0x5c, 0x82, 0x89, 0x79, 0x79, 0xa5, 0x89, 0x39, 0xf1, 0x05,
-	0x45, 0xf9, 0x65, 0x99, 0xc5, 0x99, 0xf9, 0x79, 0xc5, 0x12, 0x4c, 0x60, 0x9b, 0xbc, 0x48, 0xb6,
-	0x49, 0x02, 0x62, 0x13, 0x86, 0x81, 0x4a, 0x41, 0x02, 0x10, 0xb1, 0x00, 0xb8, 0x90, 0x93, 0xfc,
-	0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c,
-	0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44, 0xb1, 0x82, 0x8d, 0x4c, 0x62, 0x03,
-	0x87, 0x86, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x95, 0x13, 0x6a, 0x70, 0x01, 0x00, 0x00,
+	// 456 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xb1, 0x6e, 0xd4, 0x30,
+	0x1c, 0xc6, 0x13, 0xb8, 0x9e, 0x74, 0x86, 0x8a, 0xd6, 0xb4, 0x28, 0xaa, 0x50, 0x52, 0x3c, 0x54,
+	0x5d, 0x48, 0x84, 0x60, 0xea, 0x18, 0x4e, 0x0c, 0x48, 0x45, 0xa7, 0x6c, 0xb0, 0x18, 0x5f, 0x62,
+	0x72, 0xd6, 0x25, 0x76, 0x64, 0xbb, 0x25, 0xb7, 0xf2, 0x04, 0x8c, 0x8c, 0x3c, 0x4e, 0x27, 0xd4,
+	0x11, 0x31, 0x44, 0xe8, 0xee, 0x0d, 0xee, 0x09, 0x50, 0xec, 0xd3, 0xa5, 0x1c, 0x53, 0x24, 0x96,
+	0xc4, 0xff, 0x2f, 0x9f, 0xbf, 0xdf, 0x67, 0x4b, 0x01, 0xcf, 0xea, 0xa8, 0x64, 0x5c, 0x47, 0x8c,
+	0x6b, 0x2a, 0x39, 0x29, 0x22, 0xbd, 0xa8, 0xa8, 0xb2, 0xcf, 0xb0, 0x92, 0x42, 0x0b, 0x78, 0x94,
+	0x0a, 0x55, 0x0a, 0x85, 0x55, 0x36, 0x0f, 0xeb, 0xb0, 0x75, 0x87, 0xd7, 0x2f, 0x4e, 0xce, 0xf4,
+	0x8c, 0xc9, 0x0c, 0x57, 0x44, 0xea, 0x45, 0x64, 0x8c, 0x51, 0x2e, 0x72, 0xd1, 0xad, 0xec, 0x6e,
+	0xb4, 0x72, 0xc1, 0xf0, 0xd2, 0xa4, 0xc3, 0x8f, 0x60, 0xc4, 0xf8, 0xa7, 0x82, 0x68, 0x26, 0xb8,
+	0xe7, 0x9e, 0xba, 0xe7, 0xa3, 0x38, 0xbe, 0x69, 0x02, 0xe7, 0x57, 0x13, 0x9c, 0xe5, 0x4c, 0xcf,
+	0xae, 0xa6, 0x61, 0x2a, 0xca, 0xc8, 0xe2, 0x36, 0xaf, 0xe7, 0x2a, 0x9b, 0x6f, 0xda, 0x8c, 0x69,
+	0xba, 0x6e, 0x82, 0x83, 0x05, 0x29, 0x8b, 0x0b, 0xb4, 0x0d, 0x42, 0x49, 0x17, 0x0a, 0x3f, 0x83,
+	0x43, 0xc2, 0xf9, 0x15, 0x29, 0x70, 0x25, 0xc5, 0x35, 0x53, 0x4c, 0x70, 0xe5, 0xdd, 0x33, 0xa4,
+	0xb7, 0xbd, 0x49, 0x9e, 0x25, 0xfd, 0x13, 0x88, 0x92, 0x03, 0xab, 0x4d, 0x3a, 0xe9, 0xc7, 0x00,
+	0x0c, 0x27, 0x44, 0x92, 0x52, 0xc1, 0x57, 0x00, 0xb4, 0x77, 0x84, 0x33, 0xca, 0x45, 0xb9, 0x39,
+	0xe6, 0xf1, 0xba, 0x09, 0x0e, 0x6d, 0x5c, 0xf7, 0x0d, 0x25, 0xa3, 0x76, 0x18, 0xb7, 0x6b, 0xf8,
+	0xc5, 0x05, 0xc7, 0xdb, 0x73, 0x60, 0x49, 0x34, 0xc5, 0xe9, 0x8c, 0xf0, 0x9c, 0x6e, 0xea, 0xbf,
+	0xeb, 0x5d, 0xff, 0xe9, 0xce, 0x45, 0xdd, 0x0d, 0x45, 0xc9, 0xe3, 0xad, 0x9e, 0x10, 0x4d, 0x5f,
+	0x1b, 0x15, 0xce, 0xc1, 0x7e, 0x67, 0x2f, 0x49, 0xed, 0xdd, 0x37, 0xec, 0x37, 0xbd, 0xd9, 0x47,
+	0xbb, 0xec, 0x92, 0xd4, 0x28, 0x79, 0xb8, 0x9d, 0x2f, 0x49, 0xbd, 0x03, 0x63, 0xdc, 0x1b, 0xfc,
+	0x37, 0x18, 0xe3, 0x7f, 0xc1, 0x18, 0x87, 0x14, 0x3c, 0xc8, 0x05, 0x29, 0xf0, 0x54, 0xf0, 0x8c,
+	0x66, 0xde, 0x9e, 0x41, 0x8d, 0x7b, 0xa3, 0xa0, 0x45, 0xdd, 0x89, 0x42, 0x09, 0x68, 0xa7, 0xd8,
+	0x0c, 0x30, 0x06, 0x8f, 0xa6, 0x85, 0x48, 0xe7, 0x0a, 0x57, 0x54, 0xe2, 0x05, 0x25, 0xd2, 0x1b,
+	0x9e, 0xba, 0xe7, 0x83, 0xf8, 0x64, 0xdd, 0x04, 0x4f, 0xec, 0xe6, 0x1d, 0x03, 0x4a, 0xf6, 0xad,
+	0x32, 0xa1, 0xf2, 0x3d, 0x25, 0xf2, 0x62, 0xf0, 0xed, 0x7b, 0xe0, 0xc4, 0xc1, 0xcd, 0xd2, 0x77,
+	0x6f, 0x97, 0xbe, 0xfb, 0x7b, 0xe9, 0xbb, 0x5f, 0x57, 0xbe, 0x73, 0xbb, 0xf2, 0x9d, 0x9f, 0x2b,
+	0xdf, 0xf9, 0xb0, 0x67, 0x0a, 0x4d, 0x87, 0xe6, 0xf7, 0x7a, 0xf9, 0x27, 0x00, 0x00, 0xff, 0xff,
+	0x7e, 0xea, 0x58, 0xad, 0xc1, 0x03, 0x00, 0x00,
 }
 
 func (m *Minter) Marshal() (dAtA []byte, err error) {
@@ -132,6 +202,81 @@ func (m *Minter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *Params) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Params) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BlocksPerYear != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.BlocksPerYear))
+		i--
+		dAtA[i] = 0x30
+	}
+	{
+		size := m.GoalBonded.Size()
+		i -= size
+		if _, err := m.GoalBonded.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTypes(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.InflationMin.Size()
+		i -= size
+		if _, err := m.InflationMin.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTypes(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.InflationMax.Size()
+		i -= size
+		if _, err := m.InflationMax.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTypes(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.InflationRateChange.Size()
+		i -= size
+		if _, err := m.InflationRateChange.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTypes(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.MintDenom) > 0 {
+		i -= len(m.MintDenom)
+		copy(dAtA[i:], m.MintDenom)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.MintDenom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -153,6 +298,30 @@ func (m *Minter) Size() (n int) {
 	n += 1 + l + sovTypes(uint64(l))
 	l = m.AnnualProvisions.Size()
 	n += 1 + l + sovTypes(uint64(l))
+	return n
+}
+
+func (m *Params) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MintDenom)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = m.InflationRateChange.Size()
+	n += 1 + l + sovTypes(uint64(l))
+	l = m.InflationMax.Size()
+	n += 1 + l + sovTypes(uint64(l))
+	l = m.InflationMin.Size()
+	n += 1 + l + sovTypes(uint64(l))
+	l = m.GoalBonded.Size()
+	n += 1 + l + sovTypes(uint64(l))
+	if m.BlocksPerYear != 0 {
+		n += 1 + sovTypes(uint64(m.BlocksPerYear))
+	}
 	return n
 }
 
@@ -259,6 +428,246 @@ func (m *Minter) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Params) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Params: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MintDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MintDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InflationRateChange", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InflationRateChange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InflationMax", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InflationMax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InflationMin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InflationMin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GoalBonded", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.GoalBonded.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlocksPerYear", wireType)
+			}
+			m.BlocksPerYear = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BlocksPerYear |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])

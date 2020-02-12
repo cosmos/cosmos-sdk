@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -15,6 +16,7 @@ type AppCodec struct {
 
 	Staking      *staking.Codec
 	Distribution *distr.Codec
+	Mint         *mint.Codec
 }
 
 func NewAppCodec() *AppCodec {
@@ -24,6 +26,7 @@ func NewAppCodec() *AppCodec {
 		amino:        amino,
 		Staking:      staking.NewCodec(amino),
 		Distribution: distr.NewCodec(amino),
+		Mint:         mint.NewCodec(amino),
 	}
 }
 

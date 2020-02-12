@@ -31,6 +31,7 @@ var (
 	ParamKeyTable        = types.ParamKeyTable
 	NewParams            = types.NewParams
 	DefaultParams        = types.DefaultParams
+	NewCodec             = types.NewCodec
 
 	// variable aliases
 	ModuleCdc              = types.ModuleCdc
@@ -48,4 +49,5 @@ type (
 	GenesisState = types.GenesisState
 	Minter       = types.Minter
 	Params       = types.Params
+	Codec        = types.Codec
 )

@@ -13,8 +13,8 @@ import (
 // required module-specific codecs that are to be provided upon initialization.
 type AppCodec struct {
 	amino    *codec.Codec
-	Slashing *slashing.Codec
 
+	Slashing *slashing.Codec
 	Staking      *staking.Codec
 	Distribution *distr.Codec
 }

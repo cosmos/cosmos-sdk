@@ -3,7 +3,6 @@ package simulation
 import (
 	"bytes"
 	"fmt"
-
 	"github.com/tendermint/tendermint/crypto"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 

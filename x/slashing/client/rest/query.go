@@ -45,8 +45,8 @@ func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		params := types.NewQuerySigningInfoParams(sdk.ConsAddress(pk.Address()))
-		bz, err := params.Marshal()
 
+		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -78,11 +78,10 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQuerySigningInfosParams(int32(page), int32(limit))
-		bz, err := params.Marshal()
-
+		params := types.NewQuerySigningInfosParams(page, limit)
+		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

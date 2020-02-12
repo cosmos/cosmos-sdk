@@ -13,6 +13,7 @@ type Codec struct {
 	codec.Marshaler
 	// Keep reference to the amino codec to allow backwards compatibility along
 	// with type, and interface registration.
+
 	amino *codec.Codec
 }
 
@@ -24,8 +25,6 @@ var ModuleCdc *Codec
 
 func init() {
 	ModuleCdc = NewCodec(codec.New())
-	//ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc.amino)
-	//codec.RegisterCrypto(ModuleCdc)
 	ModuleCdc.amino.Seal()
 }

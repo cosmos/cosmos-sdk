@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -18,14 +20,6 @@ var _ govtypes.Content = ParameterChangeProposal{}
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeChange)
 	govtypes.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
-}
-
-// ParameterChangeProposal defines a proposal which contains multiple parameter
-// changes.
-type ParameterChangeProposal struct {
-	Title       string        `json:"title" yaml:"title"`
-	Description string        `json:"description" yaml:"description"`
-	Changes     []ParamChange `json:"changes" yaml:"changes"`
 }
 
 func NewParameterChangeProposal(title, description string, changes []ParamChange) ParameterChangeProposal {
@@ -75,24 +69,14 @@ func (pcp ParameterChangeProposal) String() string {
 	return b.String()
 }
 
-// ParamChange defines a parameter change.
-type ParamChange struct {
-	Subspace string `json:"subspace" yaml:"subspace"`
-	Key      string `json:"key" yaml:"key"`
-	Value    string `json:"value" yaml:"value"`
-}
-
 func NewParamChange(subspace, key, value string) ParamChange {
 	return ParamChange{subspace, key, value}
 }
 
 // String implements the Stringer interface.
 func (pc ParamChange) String() string {
-	return fmt.Sprintf(`Param Change:
-  Subspace: %s
-  Key:      %s
-  Value:    %X
-`, pc.Subspace, pc.Key, pc.Value)
+	out, _ := yaml.Marshal(pc)
+	return string(out)
 }
 
 // ValidateChanges performs basic validation checks over a set of ParamChange. It

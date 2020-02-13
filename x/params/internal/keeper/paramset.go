@@ -1,4 +1,4 @@
-package subspace
+package keeper
 
 type (
 	ValueValidatorFn func(value interface{}) error

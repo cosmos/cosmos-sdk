@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/params"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -11,7 +13,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -26,14 +27,14 @@ type AccountKeeper struct {
 	// The codec codec for binary encoding/decoding of accounts.
 	cdc *codec.Codec
 
-	paramSubspace subspace.Subspace
+	paramSubspace params.Subspace
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 // nolint
 func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
+	cdc *codec.Codec, key sdk.StoreKey, paramstore params.Subspace, proto func() exported.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{

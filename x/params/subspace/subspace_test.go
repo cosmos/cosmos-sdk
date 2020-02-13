@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
+	ptypes "github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -26,7 +26,7 @@ type SubspaceTestSuite struct {
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	cdc := types.ModuleCdc
+	cdc := ptypes.ModuleCdc
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
@@ -47,7 +47,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := subspace.NewSubspace(types.ModuleCdc, key, tkey, "testsubspace2")
+		ss := subspace.NewSubspace(ptypes.ModuleCdc, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }

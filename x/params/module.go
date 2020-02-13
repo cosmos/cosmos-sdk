@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -31,7 +30,7 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the params module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
+	RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the params

@@ -5,6 +5,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
+// SupplyCodec defines the interface needed to serialize x/supply state. It must
+// be aware of all concrete supply types.
+type SupplyCodec interface {
+	codec.Marshaler
+
+	MarshalSupply(supply exported.SupplyI) ([]byte, error)
+	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
+
+	MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error)
+	UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error)
+}
+
 // RegisterCodec registers the necessary x/supply interfaces and concrete types
 // on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {

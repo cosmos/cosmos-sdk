@@ -5,7 +5,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
@@ -13,7 +12,7 @@ import (
 
 // Keeper of the supply store
 type Keeper struct {
-	cdc       codec.Marshaler
+	cdc       types.SupplyCodec
 	storeKey  sdk.StoreKey
 	ak        types.AccountKeeper
 	bk        types.BankKeeper
@@ -22,7 +21,7 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, ak types.AccountKeeper,
+	cdc types.SupplyCodec, key sdk.StoreKey, ak types.AccountKeeper,
 	bk types.BankKeeper, maccPerms map[string][]string,
 ) Keeper {
 
@@ -46,22 +45,29 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetSupply retrieves the Supply from store
-func (k Keeper) GetSupply(ctx sdk.Context) *types.Supply {
+func (k Keeper) GetSupply(ctx sdk.Context) exported.SupplyI {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(SupplyKey)
-	if b == nil {
+	bz := store.Get(SupplyKey)
+	if bz == nil {
 		panic("stored supply should not have been nil")
 	}
 
-	supply := &types.Supply{}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, supply)
+	supply, err := k.cdc.UnmarshalSupply(bz)
+	if err != nil {
+		panic(err)
+	}
+
 	return supply
 }
 
 // SetSupply sets the Supply to store
-func (k Keeper) SetSupply(ctx sdk.Context, supply *types.Supply) {
+func (k Keeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(supply)
+	bz, err := k.cdc.MarshalSupply(supply)
+	if err != nil {
+		panic(err)
+	}
+
 	store.Set(SupplyKey, bz)
 }
 

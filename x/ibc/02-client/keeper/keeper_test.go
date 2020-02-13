@@ -152,3 +152,35 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 		}
 	}
 }
+
+func (suite KeeperTestSuite) TestConsensusStateHelpers() {
+	// initial setup
+	clientState, _ := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+	suite.keeper.SetClientState(suite.ctx, clientState)
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
+
+	nextState := ibctmtypes.ConsensusState{
+		Height:       testClientHeight + 5,
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot([]byte("next")),
+		ValidatorSet: suite.valSet,
+	}
+
+	// mock update functionality
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+5, nextState)
+	clientState.LatestHeight += 5
+	suite.keeper.SetClientState(suite.ctx, clientState)
+
+	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
+	// recalculate cached totalVotingPower for equality check
+	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower()
+	suite.Require().True(ok)
+	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
+
+	// Should return existing consensusState at latestClientHeight
+	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, testClientHeight+3)
+	// recalculate cached totalVotingPower for equality check
+	lte.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower()
+	suite.Require().True(ok)
+	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", testClientHeight+3)
+}

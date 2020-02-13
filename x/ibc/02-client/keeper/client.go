@@ -13,6 +13,8 @@ import (
 
 // CreateTMClient creates a new tendermint client state and populates it with a given consensus
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
+//
+// CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) (exported.ClientState, error) {
@@ -114,7 +116,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrap(types.ErrClientNotFound, misbehaviour.GetClientID())
 	}
 
-	consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
+	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
 	if !found {
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}
@@ -123,7 +125,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()), ctx.BlockTime(),
+			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(),
 		)
 
 	default:

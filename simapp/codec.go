@@ -50,6 +50,16 @@ func (c *Codec) MarshalAccountJSON(acc authexported.Account) ([]byte, error) {
 	return c.Marshaler.MarshalJSON(acc)
 }
 
+// UnmarshalAccountJSON returns an Account from JSON encoded bytes.
+func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
+	acc := &Account{}
+	if err := c.Marshaler.UnmarshalJSON(bz, acc); err != nil {
+		return nil, err
+	}
+
+	return acc.GetAccount(), nil
+}
+
 // ----------------------------------------------------------------------------
 
 // MakeCodec creates and returns a reference to an Amino codec that has all the

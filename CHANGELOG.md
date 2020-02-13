@@ -96,7 +96,6 @@ for JSON encoding.
 serialization instead of Amino.
   * The `BaseAccount.PubKey` field is now represented as a Bech32 string instead of a `crypto.Pubkey`.
   * `NewBaseAccountWithAddress` now returns a reference to a `BaseAccount`.
-  * Rename `Account` interface to `AccountI`.
   * The `x/auth` module now accepts an `AuthCodec` which extends the `codec.Marshaler` interface by
   requiring a concrete codec to know to serialize accounts.
   * The `AccountRetriever` type now accepts an `AuthCodec` in its constructor in order to know how to

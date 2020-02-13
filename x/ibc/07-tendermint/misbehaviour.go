@@ -67,10 +67,10 @@ func checkMisbehaviour(
 	height uint64, currentTimestamp time.Time,
 ) error {
 	// check if provided height matches the headers' height
-	if height != uint64(evidence.GetHeight()) {
+	if height > uint64(evidence.GetHeight()) {
 		return sdkerrors.Wrapf(
 			ibctypes.ErrInvalidHeight,
-			"height ≠ evidence header height (%d ≠ %d)", height, evidence.GetHeight(),
+			"height > evidence header height (%d ≠ %d)", height, evidence.GetHeight(),
 		)
 	}
 

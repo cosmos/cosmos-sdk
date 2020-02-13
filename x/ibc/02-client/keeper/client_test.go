@@ -191,6 +191,26 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			true,
 		},
 		{
+			"misbehavior at later height should pass",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
+			},
+			func() error {
+				suite.consensusState.ValidatorSet = bothValSet
+				clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				if err != nil {
+					return err
+				}
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+
+				return err
+			},
+			true,
+		},
+		{
 			"client state not found",
 			ibctmtypes.Evidence{},
 			func() error { return nil },

@@ -41,6 +41,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account
 balances or a single balance by denom when the `denom` query parameter is present.
+* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by
+´/´.
 
 ### API Breaking Changes
 

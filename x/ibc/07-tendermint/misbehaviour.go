@@ -32,6 +32,12 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not Tendermint")
 	}
 
+	// If client is already frozen at earlier height than evidence, return with error
+	if tmClientState.IsFrozen() && tmClientState.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
+			"client is already frozen at earlier height %d than misbehaviour height %d", tmClientState.FrozenHeight, misbehaviour.GetHeight())
+	}
+
 	tmConsensusState, ok := consensusState.(types.ConsensusState)
 	if !ok {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")

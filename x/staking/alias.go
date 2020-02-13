@@ -176,7 +176,6 @@ var (
 	NewDescription                     = types.NewDescription
 
 	// variable aliases
-	NewCodec                         = types.NewCodec
 	ModuleCdc                        = types.ModuleCdc
 	LastValidatorPowerKey            = types.LastValidatorPowerKey
 	LastTotalPowerKey                = types.LastTotalPowerKey
@@ -201,7 +200,6 @@ var (
 
 type (
 	Keeper                    = keeper.Keeper
-	Codec                     = types.Codec
 	Commission                = types.Commission
 	CommissionRates           = types.CommissionRates
 	DVPair                    = types.DVPair

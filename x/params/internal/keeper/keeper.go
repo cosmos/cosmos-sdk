@@ -1,4 +1,4 @@
-package params
+package keeper
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ type Keeper struct {
 	cdc    codec.Marshaler
 	key    sdk.StoreKey
 	tkey   sdk.StoreKey
-	spaces map[string]*Subspace
+	spaces map[string]*subspace.Subspace
 }
 
 // NewKeeper constructs a params keeper
@@ -25,7 +25,7 @@ func NewKeeper(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
 		cdc:    cdc,
 		key:    key,
 		tkey:   tkey,
-		spaces: make(map[string]*Subspace),
+		spaces: make(map[string]*subspace.Subspace),
 	}
 }
 
@@ -35,7 +35,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Allocate subspace used for keepers
-func (k Keeper) Subspace(s string) Subspace {
+func (k Keeper) Subspace(s string) subspace.Subspace {
 	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
@@ -52,10 +52,10 @@ func (k Keeper) Subspace(s string) Subspace {
 }
 
 // Get existing substore from keeper
-func (k Keeper) GetSubspace(s string) (Subspace, bool) {
+func (k Keeper) GetSubspace(s string) (subspace.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {
-		return Subspace{}, false
+		return subspace.Subspace{}, false
 	}
 	return *space, ok
 }

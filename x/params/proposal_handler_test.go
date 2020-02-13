@@ -1,6 +1,7 @@
 package params_test
 
 import (
+	keeper2 "github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,7 +23,7 @@ func validateNoOp(_ interface{}) error { return nil }
 type testInput struct {
 	ctx    sdk.Context
 	cdc    *codec.Codec
-	keeper params.Keeper
+	keeper keeper2.Keeper
 }
 
 var (
@@ -74,7 +75,7 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := params.NewKeeper(types.ModuleCdc, keyParams, tKeyParams)
+	keeper := keeper2.NewKeeper(types.ModuleCdc, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}

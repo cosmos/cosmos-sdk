@@ -1,7 +1,8 @@
 // nolint:deadcode,unused
-package params
+package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -22,7 +23,7 @@ func createTestCodec() codec.Marshaler {
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
-	return NewCodec(cdc)
+	return types.NewCodec(cdc)
 }
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {

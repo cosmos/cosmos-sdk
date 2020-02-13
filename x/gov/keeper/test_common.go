@@ -6,6 +6,7 @@ package keeper // noalias
 import (
 	"bytes"
 	"encoding/hex"
+
 	"testing"
 
 	"github.com/stretchr/testify/require"

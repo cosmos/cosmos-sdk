@@ -5,6 +5,8 @@ package params
 import (
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
 )
 
 const (
@@ -16,6 +18,8 @@ const (
 )
 
 var (
+	NewKeeper = keeper.NewKeeper
+
 	// functions aliases
 	NewParamSetPair            = subspace.NewParamSetPair
 	NewSubspace                = subspace.NewSubspace
@@ -37,6 +41,8 @@ var (
 )
 
 type (
+	Keeper = keeper.Keeper
+
 	Codec                   = types.Codec
 	ParamSetPair            = subspace.ParamSetPair
 	ParamSetPairs           = subspace.ParamSetPairs

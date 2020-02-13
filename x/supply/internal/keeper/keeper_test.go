@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
@@ -13,7 +15,9 @@ func TestSupply(t *testing.T) {
 	initialPower := int64(100)
 	initTokens := sdk.TokensFromConsensusPower(initialPower)
 
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	app.SupplyKeeper.SetSupply(ctx, types.NewSupply(totalSupply))
 
@@ -23,7 +27,7 @@ func TestSupply(t *testing.T) {
 }
 
 func TestValidatePermissions(t *testing.T) {
-	app, _ := createTestApp(false)
+	app := simapp.Setup(false)
 
 	err := app.SupplyKeeper.ValidatePermissions(multiPermAcc)
 	require.NoError(t, err)

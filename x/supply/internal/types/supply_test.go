@@ -14,7 +14,7 @@ import (
 func TestSupplyMarshalYAML(t *testing.T) {
 	supply := DefaultSupply()
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))
-	supply = supply.Inflate(coins)
+	supply.Inflate(coins)
 
 	bz, err := yaml.Marshal(supply)
 	require.NoError(t, err)

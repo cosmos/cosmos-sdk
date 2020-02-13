@@ -4,8 +4,8 @@ package supply
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 const (

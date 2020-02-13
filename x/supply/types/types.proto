@@ -5,7 +5,7 @@ import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 import "x/auth/types/types.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/supply/internal/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/supply/types";
 
 // ModuleAccount defines an account for modules that holds coins on a pool
 message ModuleAccount {

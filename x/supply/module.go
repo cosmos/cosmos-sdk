@@ -17,8 +17,8 @@ import (
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/simulation"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 var (

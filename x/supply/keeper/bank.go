@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.

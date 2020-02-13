@@ -47,7 +47,7 @@ type testInput struct {
 }
 
 func getMockApp(
-	t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []authexported.AccountI,
+	t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []authexported.Account,
 	handler func(ctx sdk.Context, c types.Content) error,
 ) testInput {
 
@@ -122,7 +122,7 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, bk types.BankKeeper, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []authexported.AccountI, genState GenesisState,
+func getInitChainer(mapp *mock.App, bk types.BankKeeper, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []authexported.Account, genState GenesisState,
 	blacklistedAddrs []supplyexported.ModuleAccountI) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)

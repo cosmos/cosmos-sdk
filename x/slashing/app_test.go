@@ -131,7 +131,7 @@ func TestSlashingMsgs(t *testing.T) {
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
 	}
-	accs := []authexported.AccountI{acc1}
+	accs := []authexported.Account{acc1}
 	balances := []bankexported.GenesisBalance{
 		bank.Balance{
 			Address: addr1,

@@ -29,7 +29,7 @@ func NewAccountRetriever(codec AuthCodec, querier NodeQuerier) AccountRetriever 
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.AccountI, error) {
+func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, error) {
 	account, _, err := ar.GetAccountWithHeight(addr)
 	return account, err
 }
@@ -37,7 +37,7 @@ func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.AccountI, e
 // GetAccountWithHeight queries for an account given an address. Returns the
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
-func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.AccountI, int64, error) {
+func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.Account, int64, error) {
 	bs, err := ar.codec.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err

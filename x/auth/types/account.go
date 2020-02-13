@@ -15,7 +15,7 @@ import (
 //-----------------------------------------------------------------------------
 // BaseAccount
 
-var _ exported.AccountI = (*BaseAccount)(nil)
+var _ exported.Account = (*BaseAccount)(nil)
 var _ exported.GenesisAccount = (*BaseAccount)(nil)
 
 // NewBaseAccount creates a new BaseAccount object
@@ -34,7 +34,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber,
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() exported.AccountI {
+func ProtoBaseAccount() exported.Account {
 	return &BaseAccount{}
 }
 
@@ -117,9 +117,9 @@ func (acc BaseAccount) String() string {
 	return string(out)
 }
 
-// SetAccountI sets the Account's oneof sum type to the provided AccountI type.
-// The provided AccountI type must be a reference to a BaseAccount.
-func (acc *Account) SetAccountI(value exported.AccountI) error {
+// SetAccountI sets the Account's oneof sum type to the provided Account type.
+// The provided Account type must be a reference to a BaseAccount.
+func (acc *Account) SetAccountI(value exported.Account) error {
 	if value == nil {
 		acc.Sum = nil
 		return nil
@@ -131,11 +131,11 @@ func (acc *Account) SetAccountI(value exported.AccountI) error {
 		return nil
 	}
 
-	return fmt.Errorf("failed to encode value of type %T as message AccountI", value)
+	return fmt.Errorf("failed to encode value of type %T as message Account", value)
 }
 
-// GetAccountI returns an AccountI based on the internal oneof sum type.
-func (acc *Account) GetAccountI() exported.AccountI {
+// GetAccountI returns an Account based on the internal oneof sum type.
+func (acc *Account) GetAccountI() exported.Account {
 	if x := acc.GetBaseAccount(); x != nil {
 		return x
 	}

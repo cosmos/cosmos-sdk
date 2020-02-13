@@ -22,13 +22,13 @@ type AccountKeeper struct {
 	paramSubspace subspace.Subspace
 
 	// The prototypical Account constructor.
-	proto func() exported.AccountI
+	proto func() exported.Account
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 func NewAccountKeeper(
-	cdc types.AuthCodec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.AccountI,
+	cdc types.AuthCodec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{
@@ -91,7 +91,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	return accNumber
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) exported.AccountI {
+func (ak AccountKeeper) decodeAccount(bz []byte) exported.Account {
 	acc, err := ak.cdc.UnmarshalAccount(bz)
 	if err != nil {
 		panic(err)

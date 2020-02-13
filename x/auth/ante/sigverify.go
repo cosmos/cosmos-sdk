@@ -42,7 +42,7 @@ type SigVerifiableTx interface {
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignBytes(ctx sdk.Context, acc exported.AccountI) []byte
+	GetSignBytes(ctx sdk.Context, acc exported.Account) []byte
 }
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
@@ -185,7 +185,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signerAddrs := sigTx.GetSigners()
-	signerAccs := make([]exported.AccountI, len(signerAddrs))
+	signerAccs := make([]exported.Account, len(signerAddrs))
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
@@ -339,7 +339,7 @@ func ConsumeMultisignatureVerificationGas(
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak keeper.AccountKeeper, addr sdk.AccAddress) (exported.AccountI, error) {
+func GetSignerAcc(ctx sdk.Context, ak keeper.AccountKeeper, addr sdk.AccAddress) (exported.Account, error) {
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, nil
 	}

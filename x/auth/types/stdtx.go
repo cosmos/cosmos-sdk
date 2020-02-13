@@ -134,7 +134,7 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.AccountI) []byte {
+func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64

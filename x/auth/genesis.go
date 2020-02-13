@@ -24,7 +24,7 @@ func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
 
 	var genAccounts exported.GenesisAccounts
-	ak.IterateAccounts(ctx, func(account exported.AccountI) bool {
+	ak.IterateAccounts(ctx, func(account exported.Account) bool {
 		genAccount := account.(exported.GenesisAccount)
 		genAccounts = append(genAccounts, genAccount)
 		return false

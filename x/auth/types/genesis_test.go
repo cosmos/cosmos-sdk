@@ -65,7 +65,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 
 	var addresses []sdk.AccAddress
 	types.GenesisAccountIterator{}.IterateGenesisAccounts(
-		accountCdc, appGenesis, func(acc exported.AccountI) (stop bool) {
+		accountCdc, appGenesis, func(acc exported.Account) (stop bool) {
 			addresses = append(addresses, acc.GetAddress())
 			return false
 		},

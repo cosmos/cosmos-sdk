@@ -6,13 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AccountI is an interface used to store coins at a given address within state.
+// Account is an interface used to store coins at a given address within state.
 // It presumes a notion of sequence numbers for replay protection,
 // a notion of account numbers for replay protection for previously pruned accounts,
 // and a pubkey for authentication purposes.
 //
 // Many complex conditions can be used in the concrete struct which implements Account.
-type AccountI interface {
+type Account interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 
@@ -46,7 +46,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an Account with validation capabilities.
 type GenesisAccount interface {
-	AccountI
+	Account
 
 	Validate() error
 }

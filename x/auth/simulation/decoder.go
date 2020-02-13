@@ -15,7 +15,7 @@ import (
 func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.AddressStoreKeyPrefix):
-		var accA, accB exported.AccountI
+		var accA, accB exported.Account
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &accA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &accB)
 		return fmt.Sprintf("%v\n%v", accA, accB)

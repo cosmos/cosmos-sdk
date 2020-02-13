@@ -27,7 +27,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Account defines the default concrete account type used in the x/auth module.
 // It contains a single oneof field member, BaseAccountProto. The type implements
-// the AccountI interface and provides all necessary account functionality.
+// the Account interface and provides all necessary account functionality.
 //
 // This type should only be used internally for testing purposes. The application's
 // concrete Account type should be defined in the application-level codec.
@@ -35,7 +35,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Applications may extend account functionality and types by extending the
 // oneof set and using their own AuthCodec (e.g. types/vesting).
 type Account struct {
-	// sum defines a list of all acceptable concrete AccountI implementations. The
+	// sum defines a list of all acceptable concrete Account implementations. The
 	// base Account type only specifies a BaseAccount as the only valid for the sum.
 	//
 	// Types that are valid to be assigned to Sum:

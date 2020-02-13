@@ -16,7 +16,7 @@ import (
 
 // Compile-time type assertions
 var (
-	_ authexported.AccountI       = (*BaseVestingAccount)(nil)
+	_ authexported.Account        = (*BaseVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)

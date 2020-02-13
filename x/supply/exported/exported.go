@@ -8,7 +8,7 @@ import (
 
 // ModuleAccountI defines an account interface for modules that hold tokens in an escrow
 type ModuleAccountI interface {
-	exported.AccountI
+	exported.Account
 
 	GetName() string
 	GetPermissions() []string

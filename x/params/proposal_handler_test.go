@@ -1,7 +1,6 @@
 package params_test
 
 import (
-	keeper2 "github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -23,7 +21,7 @@ func validateNoOp(_ interface{}) error { return nil }
 type testInput struct {
 	ctx    sdk.Context
 	cdc    *codec.Codec
-	keeper keeper2.Keeper
+	keeper params.Keeper
 }
 
 var (
@@ -61,7 +59,7 @@ func testProposal(changes ...params.ParamChange) params.ParameterChangeProposal 
 
 func newTestInput(t *testing.T) testInput {
 	cdc := codec.New()
-	types.RegisterCodec(cdc)
+	params.RegisterCodec(cdc)
 
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
@@ -75,7 +73,7 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := keeper2.NewKeeper(types.ModuleCdc, keyParams, tKeyParams)
+	keeper := params.NewKeeper(params.ModuleCdc, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}

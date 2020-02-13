@@ -15,7 +15,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
 )
 
 // GetCmdSubmitProposal implements a command handler for submitting a parameter

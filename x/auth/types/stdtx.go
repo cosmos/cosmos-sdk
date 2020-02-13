@@ -180,10 +180,12 @@ func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.NewCoins()
 	}
-	bz, err := ModuleCdc.MarshalJSON(fee) // TODO
+
+	bz, err := codec.Cdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
+
 	return bz
 }
 
@@ -218,7 +220,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	bz, err := ModuleCdc.MarshalJSON(StdSignDoc{
+
+	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),
@@ -226,9 +229,11 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
 	})
+
 	if err != nil {
 		panic(err)
 	}
+
 	return sdk.MustSortJSON(bz)
 }
 

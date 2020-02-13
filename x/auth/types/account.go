@@ -117,9 +117,9 @@ func (acc BaseAccount) String() string {
 	return string(out)
 }
 
-// SetAccountI sets the Account's oneof sum type to the provided Account type.
+// SetAccount sets the Account's oneof sum type to the provided Account type.
 // The provided Account type must be a reference to a BaseAccount.
-func (acc *Account) SetAccountI(value exported.Account) error {
+func (acc *Account) SetAccount(value exported.Account) error {
 	if value == nil {
 		acc.Sum = nil
 		return nil
@@ -134,8 +134,8 @@ func (acc *Account) SetAccountI(value exported.Account) error {
 	return fmt.Errorf("failed to encode value of type %T as message Account", value)
 }
 
-// GetAccountI returns an Account based on the internal oneof sum type.
-func (acc *Account) GetAccountI() exported.Account {
+// GetAccount returns an Account based on the internal oneof sum type.
+func (acc *Account) GetAccount() exported.Account {
 	if x := acc.GetBaseAccount(); x != nil {
 		return x
 	}

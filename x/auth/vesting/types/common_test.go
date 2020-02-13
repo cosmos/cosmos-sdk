@@ -30,7 +30,7 @@ func NewCodec(amino *codec.Codec) *Codec {
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
 	acc := &types.VestingAccount{}
-	acc.SetAccountI(accI)
+	acc.SetAccount(accI)
 	return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
 }
 
@@ -41,7 +41,7 @@ func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
 		return nil, err
 	}
-	return acc.GetAccountI(), nil
+	return acc.GetAccount(), nil
 }
 
 // MarshalAccountJSON JSON encodes an account object implementing the Account
@@ -57,5 +57,5 @@ func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
 		return nil, err
 	}
 
-	return acc.GetAccountI(), nil
+	return acc.GetAccount(), nil
 }

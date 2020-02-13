@@ -9,9 +9,10 @@ import "x/auth/types/types.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
 // Account defines the default concrete vesting account type used in the x/auth
-// module. This type should only be used internally for testing purposes. The
-// application's concrete Account type should be defined in the application-level
-// codec.
+// module.
+//
+// This type should only be used internally for testing purposes. The application's
+// concrete Account type should be defined in the application-level codec.
 message VestingAccount {
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/auth/exported.Account";
 

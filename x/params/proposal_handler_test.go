@@ -1,7 +1,6 @@
 package params_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 func validateNoOp(_ interface{}) error { return nil }
@@ -25,7 +25,7 @@ type testInput struct {
 }
 
 var (
-	_ keeper.ParamSet = (*testParams)(nil)
+	_ subspace.ParamSet = (*testParams)(nil)
 
 	keyMaxValidators = "MaxValidators"
 	keySlashingRate  = "SlashingRate"
@@ -42,8 +42,8 @@ type testParams struct {
 	SlashingRate  testParamsSlashingRate `json:"slashing_rate" yaml:"slashing_rate"`
 }
 
-func (tp *testParams) ParamSetPairs() keeper.ParamSetPairs {
-	return keeper.ParamSetPairs{
+func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
+	return subspace.ParamSetPairs{
 		params.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
 		params.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
 	}

@@ -5,11 +5,12 @@ package params
 import (
 	"github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 const (
-	StoreKey           = keeper.StoreKey
-	TStoreKey          = keeper.TStoreKey
+	StoreKey           = subspace.StoreKey
+	TStoreKey          = subspace.TStoreKey
 	ModuleName         = types.ModuleName
 	RouterKey          = types.RouterKey
 	ProposalTypeChange = types.ProposalTypeChange
@@ -19,9 +20,9 @@ var (
 	NewKeeper = keeper.NewKeeper
 
 	// functions aliases
-	NewParamSetPair            = keeper.NewParamSetPair
-	NewSubspace                = keeper.NewSubspace
-	NewKeyTable                = keeper.NewKeyTable
+	NewParamSetPair            = subspace.NewParamSetPair
+	NewSubspace                = subspace.NewSubspace
+	NewKeyTable                = subspace.NewKeyTable
 	RegisterCodec              = types.RegisterCodec
 	ErrUnknownSubspace         = types.ErrUnknownSubspace
 	ErrSettingParameter        = types.ErrSettingParameter
@@ -42,12 +43,12 @@ type (
 	Keeper = keeper.Keeper
 
 	Codec                   = types.Codec
-	ParamSetPair            = keeper.ParamSetPair
-	ParamSetPairs           = keeper.ParamSetPairs
-	ParamSet                = keeper.ParamSet
-	Subspace                = keeper.Subspace
-	ReadOnlySubspace        = keeper.ReadOnlySubspace
-	KeyTable                = keeper.KeyTable
+	ParamSetPair            = subspace.ParamSetPair
+	ParamSetPairs           = subspace.ParamSetPairs
+	ParamSet                = subspace.ParamSet
+	Subspace                = subspace.Subspace
+	ReadOnlySubspace        = subspace.ReadOnlySubspace
+	KeyTable                = subspace.KeyTable
 	ParameterChangeProposal = types.ParameterChangeProposal
 	ParamChange             = types.ParamChange
 )

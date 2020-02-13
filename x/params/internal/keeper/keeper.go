@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+
 	"github.com/tendermint/tendermint/libs/log"
 )
 
@@ -14,7 +16,7 @@ type Keeper struct {
 	cdc    codec.Marshaler
 	key    sdk.StoreKey
 	tkey   sdk.StoreKey
-	spaces map[string]*Subspace
+	spaces map[string]*subspace.Subspace
 }
 
 // NewKeeper constructs a params keeper
@@ -23,7 +25,7 @@ func NewKeeper(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
 		cdc:    cdc,
 		key:    key,
 		tkey:   tkey,
-		spaces: make(map[string]*Subspace),
+		spaces: make(map[string]*subspace.Subspace),
 	}
 }
 
@@ -33,7 +35,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Allocate subspace used for keepers
-func (k Keeper) Subspace(s string) Subspace {
+func (k Keeper) Subspace(s string) subspace.Subspace {
 	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
@@ -43,17 +45,17 @@ func (k Keeper) Subspace(s string) Subspace {
 		panic("cannot use empty string for subspace")
 	}
 
-	space := NewSubspace(k.cdc, k.key, k.tkey, s)
+	space := subspace.NewSubspace(k.cdc, k.key, k.tkey, s)
 	k.spaces[s] = &space
 
 	return space
 }
 
 // Get existing substore from keeper
-func (k Keeper) GetSubspace(s string) (Subspace, bool) {
+func (k Keeper) GetSubspace(s string) (subspace.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {
-		return Subspace{}, false
+		return subspace.Subspace{}, false
 	}
 	return *space, ok
 }

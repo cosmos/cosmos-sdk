@@ -3,10 +3,10 @@ package subspace_test
 import (
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 var (
@@ -59,14 +59,14 @@ func validateBondDenom(i interface{}) error {
 	return nil
 }
 
-func (p *params) ParamSetPairs() keeper.ParamSetPairs {
-	return keeper.ParamSetPairs{
+func (p *params) ParamSetPairs() subspace.ParamSetPairs {
+	return subspace.ParamSetPairs{
 		{keyUnbondingTime, &p.UnbondingTime, validateUnbondingTime},
 		{keyMaxValidators, &p.MaxValidators, validateMaxValidators},
 		{keyBondDenom, &p.BondDenom, validateBondDenom},
 	}
 }
 
-func paramKeyTable() keeper.KeyTable {
-	return keeper.NewKeyTable().RegisterParamSet(&params{})
+func paramKeyTable() subspace.KeyTable {
+	return subspace.NewKeyTable().RegisterParamSet(&params{})
 }

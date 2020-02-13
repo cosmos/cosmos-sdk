@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 // Default period for deposits & voting

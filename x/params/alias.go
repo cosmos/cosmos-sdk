@@ -30,12 +30,14 @@ var (
 	NewParameterChangeProposal = types.NewParameterChangeProposal
 	NewParamChange             = types.NewParamChange
 	ValidateChanges            = types.ValidateChanges
+	NewCodec                   = types.NewCodec
 
 	// variable aliases
 	ModuleCdc = types.ModuleCdc
 )
 
 type (
+	Codec                   = types.Codec
 	ParamSetPair            = subspace.ParamSetPair
 	ParamSetPairs           = subspace.ParamSetPairs
 	ParamSet                = subspace.ParamSet

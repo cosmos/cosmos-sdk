@@ -1,5 +1,6 @@
 package vesting
 
+// DONTCOVER
 // nolint
 
 import (
@@ -7,7 +8,6 @@ import (
 )
 
 var (
-	// functions aliases
 	RegisterCodec                  = types.RegisterCodec
 	NewBaseVestingAccount          = types.NewBaseVestingAccount
 	NewContinuousVestingAccountRaw = types.NewContinuousVestingAccountRaw
@@ -16,10 +16,6 @@ var (
 	NewPeriodicVestingAccount      = types.NewPeriodicVestingAccount
 	NewDelayedVestingAccountRaw    = types.NewDelayedVestingAccountRaw
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
-	NewCodec                       = types.NewCodec
-
-	// variable aliases
-	VestingCdc = types.VestingCdc
 )
 
 type (
@@ -29,5 +25,4 @@ type (
 	DelayedVestingAccount    = types.DelayedVestingAccount
 	Period                   = types.Period
 	Periods                  = types.Periods
-	Codec                    = types.Codec
 )

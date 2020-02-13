@@ -29,7 +29,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Account defines the default concrete vesting account type used in the x/auth
-// module.
+// module. This type should only be used internally for testing purposes. The
+// application's concrete Account type should be defined in the application-level
+// codec.
 type VestingAccount struct {
 	// sum defines a list of all acceptable concrete vesting AccountI
 	// implementations.

@@ -29,6 +29,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // It contains a single oneof field member, BaseAccountProto. The type implements
 // the AccountI interface and provides all necessary account functionality.
 //
+// This type should only be used internally for testing purposes. The application's
+// concrete Account type should be defined in the application-level codec.
+//
 // Applications may extend account functionality and types by extending the
 // oneof set and using their own AuthCodec (e.g. types/vesting).
 type Account struct {

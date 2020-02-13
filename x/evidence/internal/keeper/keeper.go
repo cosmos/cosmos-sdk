@@ -83,7 +83,7 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
+func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.EvidenceI) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
 		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
 	}
@@ -108,7 +108,7 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 }
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
-func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
+func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.EvidenceI) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(evidence)
 	store.Set(evidence.Hash(), bz)
@@ -116,7 +116,7 @@ func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (evidence exported.Evidence, found bool) {
+func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (evidence exported.EvidenceI, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)
@@ -131,13 +131,13 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (evidence ex
 // IterateEvidence provides an interator over all stored Evidence objects. For
 // each Evidence object, cb will be called. If the cb returns true, the iterator
 // will close and stop.
-func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
+func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.EvidenceI) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var evidence exported.Evidence
+		var evidence exported.EvidenceI
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &evidence)
 
 		if cb(evidence) {
@@ -147,8 +147,8 @@ func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool
 }
 
 // GetAllEvidence returns all stored Evidence objects.
-func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.Evidence) {
-	k.IterateEvidence(ctx, func(e exported.Evidence) bool {
+func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.EvidenceI) {
+	k.IterateEvidence(ctx, func(e exported.EvidenceI) bool {
 		evidence = append(evidence, e)
 		return false
 	})

@@ -19,7 +19,7 @@ func TestDefaultGenesisState(t *testing.T) {
 func TestGenesisStateValidate_Valid(t *testing.T) {
 	pk := ed25519.GenPrivKey()
 
-	evidence := make([]exported.Evidence, 100)
+	evidence := make([]exported.EvidenceI, 100)
 	for i := 0; i < 100; i++ {
 		sv := types.TestVote{
 			ValidatorAddress: pk.PubKey().Address(),
@@ -46,7 +46,7 @@ func TestGenesisStateValidate_Valid(t *testing.T) {
 func TestGenesisStateValidate_Invalid(t *testing.T) {
 	pk := ed25519.GenPrivKey()
 
-	evidence := make([]exported.Evidence, 100)
+	evidence := make([]exported.EvidenceI, 100)
 	for i := 0; i < 100; i++ {
 		sv := types.TestVote{
 			ValidatorAddress: pk.PubKey().Address(),

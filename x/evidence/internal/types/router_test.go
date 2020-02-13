@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
-func testHandler(sdk.Context, exported.Evidence) error { return nil }
+func testHandler(sdk.Context, exported.EvidenceI) error { return nil }
 
 func TestRouterSeal(t *testing.T) {
 	r := types.NewRouter()

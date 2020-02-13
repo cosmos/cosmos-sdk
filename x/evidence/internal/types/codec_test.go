@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
-var _ exported.Evidence = (*testEvidence)(nil)
+var _ exported.EvidenceI = (*testEvidence)(nil)
 
 type testEvidence struct{}
 
@@ -31,7 +31,7 @@ func TestCodec(t *testing.T) {
 	types.RegisterCodec(cdc)
 	types.RegisterEvidenceTypeCodec(testEvidence{}, "cosmos-sdk/testEvidence")
 
-	var e exported.Evidence = testEvidence{}
+	var e exported.EvidenceI = testEvidence{}
 	bz, err := cdc.MarshalBinaryBare(e)
 	require.NoError(t, err)
 

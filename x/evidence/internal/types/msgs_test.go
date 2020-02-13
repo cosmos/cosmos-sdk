@@ -24,7 +24,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 
 	submitter := sdk.AccAddress("test")
 	testCases := []struct {
-		evidence  exported.Evidence
+		evidence  exported.EvidenceI
 		submitter sdk.AccAddress
 		expectErr bool
 	}{

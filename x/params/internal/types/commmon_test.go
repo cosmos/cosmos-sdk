@@ -1,7 +1,8 @@
 // nolint:deadcode,unused
-package manager
+package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/params/manager"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -9,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 type invalid struct{}
@@ -23,7 +23,7 @@ func createTestCodec() codec.Marshaler {
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
-	return params.NewCodec(cdc)
+	return NewCodec(cdc)
 }
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
@@ -39,12 +39,12 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
-func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, Manager) {
+func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, manager.Manager) {
 	cdc := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(mkey, tkey)
-	keeper := New(cdc, mkey, tkey)
+	keeper := manager.New(cdc, mkey, tkey)
 
 	return cdc, ctx, mkey, tkey, keeper
 }

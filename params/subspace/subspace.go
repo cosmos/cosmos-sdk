@@ -18,7 +18,7 @@ const (
 	TStoreKey = "transient_params"
 )
 
-// Individual parameter store for each keeper
+// Individual parameter store for each manager
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {

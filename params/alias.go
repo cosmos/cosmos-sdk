@@ -3,7 +3,7 @@ package params
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/params/keeper"
+	"github.com/cosmos/cosmos-sdk/params/manager"
 	"github.com/cosmos/cosmos-sdk/params/types"
 )
 
@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	NewKeeper = keeper.NewKeeper
+	NewKeeper = manager.New
 
 	// functions aliases
 	RegisterCodec              = types.RegisterCodec
@@ -34,7 +34,7 @@ var (
 )
 
 type (
-	Keeper = keeper.Keeper
+	Keeper = manager.Manager
 
 	Codec                   = types.Codec
 	ParameterChangeProposal = types.ParameterChangeProposal

@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )
 
-// returns context and an app with updated mint keeper
+// returns context and an app with updated mint manager
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 

@@ -1,4 +1,4 @@
-package keeper
+package manager
 
 import (
 	"reflect"

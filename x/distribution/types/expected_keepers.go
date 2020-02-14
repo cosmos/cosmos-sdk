@@ -8,7 +8,7 @@ import (
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// AccountKeeper defines the expected account keeper used for simulations (noalias)
+// AccountKeeper defines the expected account manager used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 }
@@ -22,7 +22,7 @@ type BankKeeper interface {
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 
-// StakingKeeper expected staking keeper (noalias)
+// StakingKeeper expected staking manager (noalias)
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,

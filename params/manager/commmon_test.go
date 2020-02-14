@@ -1,5 +1,5 @@
 // nolint:deadcode,unused
-package keeper
+package manager
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -39,12 +39,12 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
-func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, Keeper) {
+func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, Manager) {
 	cdc := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(mkey, tkey)
-	keeper := NewKeeper(cdc, mkey, tkey)
+	keeper := New(cdc, mkey, tkey)
 
 	return cdc, ctx, mkey, tkey, keeper
 }

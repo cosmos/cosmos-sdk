@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// DummySupplyKeeper defines a supply keeper used only for testing to avoid
+// DummySupplyKeeper defines a supply manager used only for testing to avoid
 // circle dependencies
 type DummySupplyKeeper struct {
 	ak auth.AccountKeeper
@@ -23,7 +23,7 @@ func NewDummySupplyKeeper(ak auth.AccountKeeper, bk bank.Keeper) DummySupplyKeep
 	return DummySupplyKeeper{ak, bk}
 }
 
-// SendCoinsFromAccountToModule for the dummy supply keeper
+// SendCoinsFromAccountToModule for the dummy supply manager
 func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
 	fromAcc := sk.ak.GetAccount(ctx, fromAddr)
 	moduleAcc := sk.GetModuleAccount(ctx, recipientModule)
@@ -51,7 +51,7 @@ func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAd
 	return nil
 }
 
-// GetModuleAccount for dummy supply keeper
+// GetModuleAccount for dummy supply manager
 func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
 	addr := sk.GetModuleAddress(moduleName)
 
@@ -78,7 +78,7 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	return maccI
 }
 
-// GetModuleAddress for dummy supply keeper
+// GetModuleAddress for dummy supply manager
 func (sk DummySupplyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 }

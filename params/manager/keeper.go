@@ -1,4 +1,4 @@
-package keeper
+package manager
 
 import (
 	"fmt"
@@ -11,17 +11,17 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// Keeper of the global paramstore
-type Keeper struct {
+// Manager of the global paramstore
+type Manager struct {
 	cdc    codec.Marshaler
 	key    sdk.StoreKey
 	tkey   sdk.StoreKey
 	spaces map[string]*subspace.Subspace
 }
 
-// NewKeeper constructs a params keeper
-func NewKeeper(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
-	return Keeper{
+// New constructs a params manager
+func New(cdc codec.Marshaler, key, tkey sdk.StoreKey) Manager {
+	return Manager{
 		cdc:    cdc,
 		key:    key,
 		tkey:   tkey,
@@ -30,12 +30,12 @@ func NewKeeper(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Manager) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // Allocate subspace used for keepers
-func (k Keeper) Subspace(s string) subspace.Subspace {
+func (k Manager) Subspace(s string) subspace.Subspace {
 	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
@@ -51,8 +51,8 @@ func (k Keeper) Subspace(s string) subspace.Subspace {
 	return space
 }
 
-// Get existing substore from keeper
-func (k Keeper) GetSubspace(s string) (subspace.Subspace, bool) {
+// Get existing substore from manager
+func (k Manager) GetSubspace(s string) (subspace.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {
 		return subspace.Subspace{}, false

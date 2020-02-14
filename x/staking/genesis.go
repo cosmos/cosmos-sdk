@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// InitGenesis sets the pool and parameters for the provided keeper.  For each
-// validator in data, it sets that validator in the keeper along with manually
+// InitGenesis sets the pool and parameters for the provided manager.  For each
+// validator in data, it sets that validator in the manager along with manually
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
@@ -140,9 +140,9 @@ func InitGenesis(
 	return res
 }
 
-// ExportGenesis returns a GenesisState for a given context and keeper. The
+// ExportGenesis returns a GenesisState for a given context and manager. The
 // GenesisState will contain the pool, params, validators, and bonds found in
-// the keeper.
+// the manager.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	params := keeper.GetParams(ctx)
 	lastTotalPower := keeper.GetLastTotalPower(ctx)

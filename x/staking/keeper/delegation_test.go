@@ -31,7 +31,7 @@ func TestDelegation(t *testing.T) {
 
 	bond1to1 := types.NewDelegation(addrDels[0], addrVals[0], sdk.NewDec(9))
 
-	// check the empty keeper first
+	// check the empty manager first
 	_, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.False(t, found)
 

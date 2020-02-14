@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
-// Keeper defines the evidence module's keeper. The keeper is responsible for
+// Keeper defines the evidence module's manager. The manager is responsible for
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
@@ -57,7 +57,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // may only be set once and will be sealed if it's not already sealed.
 func (k *Keeper) SetRouter(rtr types.Router) {
 	// It is vital to seal the Evidence Handler router as to not allow further
-	// handlers to be registered after the keeper is created since this
+	// handlers to be registered after the manager is created since this
 	// could create invalid or non-deterministic behavior.
 	if !rtr.Sealed() {
 		rtr.Seal()

@@ -68,7 +68,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
-	// Set last validators in keeper
+	// Set last validators in manager
 	val1 := types.NewValidator(sdk.ValAddress(Addrs[2]), PKs[2], types.Description{})
 	k.SetValidator(ctx, val1)
 	k.SetLastValidatorPower(ctx, val1.OperatorAddress, 10)

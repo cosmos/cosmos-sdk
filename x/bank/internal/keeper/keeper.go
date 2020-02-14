@@ -173,7 +173,7 @@ func NewBaseSendKeeper(
 // inputs that correspond to a series of outputs. It returns an error if the
 // inputs and outputs don't lineup or if any single transfer of tokens fails.
 func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error {
-	// Safety check ensuring that when sending coins the keeper must maintain the
+	// Safety check ensuring that when sending coins the manager must maintain the
 	// Check supply invariant and validity of Coins.
 	if err := types.ValidateInputsOutputs(inputs, outputs); err != nil {
 		return err
@@ -383,7 +383,7 @@ type ViewKeeper interface {
 	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
 }
 
-// BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
+// BaseViewKeeper implements a read only manager implementation of ViewKeeper.
 type BaseViewKeeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey

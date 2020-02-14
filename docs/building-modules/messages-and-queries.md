@@ -1,6 +1,6 @@
 <!--
 order: 3
-synopsis: "`Message`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `keeper`s and `querier`s, exist to process `message`s and `queries`."
+synopsis: "`Message`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `manager`s and `querier`s, exist to process `message`s and `queries`."
 -->
 
 # Messages and Queries

@@ -7,7 +7,7 @@ subspace names which modules provide. The Keeper has a permission to access all
 existing subspaces.
 
 Subspace can be used by the individual keepers, who needs a private parameter store
-that the other keeper cannot modify. Keeper can be used by the Governance keeper,
+that the other manager cannot modify. Keeper can be used by the Governance manager,
 who need to modify any parameter in case of the proposal passes.
 
 Basic Usage:

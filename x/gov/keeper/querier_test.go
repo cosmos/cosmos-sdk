@@ -309,7 +309,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 
 	querier := NewQuerier(keeper)
 
-	// keeper preserves consistent order for each query, but this is not the insertion order
+	// manager preserves consistent order for each query, but this is not the insertion order
 	all := getQueriedVotes(t, ctx, keeper.cdc, querier, proposal.ProposalID, 1, 0)
 	require.Equal(t, len(all), len(votes))
 

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
 
-// Keeper - crisis keeper
+// Keeper - crisis manager
 type Keeper struct {
 	routes         []types.InvarRoute
 	paramSpace     subspace.Subspace
@@ -48,12 +48,12 @@ func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
 	k.routes = append(k.routes, invarRoute)
 }
 
-// Routes - return the keeper's invariant routes
+// Routes - return the manager's invariant routes
 func (k Keeper) Routes() []types.InvarRoute {
 	return k.routes
 }
 
-// Invariants returns all the registered Crisis keeper invariants.
+// Invariants returns all the registered Crisis manager invariants.
 func (k Keeper) Invariants() []sdk.Invariant {
 	invars := make([]sdk.Invariant, len(k.routes))
 	for i, route := range k.routes {

@@ -12,7 +12,7 @@ func TestParams(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 0)
 	expParams := types.DefaultParams()
 
-	//check that the empty keeper loads the default
+	//check that the empty manager loads the default
 	resParams := keeper.GetParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 

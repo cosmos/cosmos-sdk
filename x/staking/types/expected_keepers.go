@@ -7,13 +7,13 @@ import (
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// DistributionKeeper expected distribution keeper (noalias)
+// DistributionKeeper expected distribution manager (noalias)
 type DistributionKeeper interface {
 	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
 	GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins
 }
 
-// AccountKeeper defines the expected account keeper (noalias)
+// AccountKeeper defines the expected account manager (noalias)
 type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account // only used for simulation
@@ -89,10 +89,10 @@ type DelegationSet interface {
 
 //_______________________________________________________________________________
 // Event Hooks
-// These can be utilized to communicate between a staking keeper and another
-// keeper which must take particular actions when validators/delegators change
-// state. The second keeper must implement this interface, which then the
-// staking keeper can call.
+// These can be utilized to communicate between a staking manager and another
+// manager which must take particular actions when validators/delegators change
+// state. The second manager must implement this interface, which then the
+// staking manager can call.
 
 // StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {

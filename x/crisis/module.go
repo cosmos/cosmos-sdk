@@ -69,7 +69,7 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 type AppModule struct {
 	AppModuleBasic
 
-	// NOTE: We store a reference to the keeper here so that after a module
+	// NOTE: We store a reference to the manager here so that after a module
 	// manager is created, the invariants can be properly registered and
 	// executed.
 	keeper *keeper.Keeper

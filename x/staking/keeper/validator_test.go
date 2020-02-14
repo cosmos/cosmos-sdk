@@ -109,12 +109,12 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	numVals := 10
 	maxVals := 5
 
-	// create context, keeper, and pool for tests
+	// create context, manager, and pool for tests
 	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 
-	// create keeper parameters
+	// create manager parameters
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint32(maxVals)
 	keeper.SetParams(ctx, params)
@@ -211,7 +211,7 @@ func TestValidatorBasics(t *testing.T) {
 	assert.Equal(t, sdk.TokensFromConsensusPower(8), validators[1].Tokens)
 	assert.Equal(t, sdk.TokensFromConsensusPower(7), validators[2].Tokens)
 
-	// check the empty keeper first
+	// check the empty manager first
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
 	resVals := keeper.GetLastValidators(ctx)

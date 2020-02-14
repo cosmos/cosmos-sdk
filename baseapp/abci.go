@@ -410,7 +410,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 }
 
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
-	// path[0] should be "custom" because "/custom" prefix is required for keeper
+	// path[0] should be "custom" because "/custom" prefix is required for manager
 	// queries.
 	//
 	// The QueryRouter routes using path[1]. For example, in the path

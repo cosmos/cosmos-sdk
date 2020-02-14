@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	// DefaultParamspace for params keeper
+	// DefaultParamspace for params manager
 	DefaultParamspace = ModuleName
 	// DefaultSendEnabled enabled
 	DefaultSendEnabled = true

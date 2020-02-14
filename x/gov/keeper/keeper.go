@@ -33,7 +33,7 @@ type Keeper struct {
 	router types.Router
 }
 
-// NewKeeper returns a governance keeper. It handles:
+// NewKeeper returns a governance manager. It handles:
 // - submitting governance proposals
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
@@ -51,7 +51,7 @@ func NewKeeper(
 	}
 
 	// It is vital to seal the governance proposal router here as to not allow
-	// further handlers to be registered after the keeper is created since this
+	// further handlers to be registered after the manager is created since this
 	// could create invalid or non-deterministic behavior.
 	rtr.Seal()
 

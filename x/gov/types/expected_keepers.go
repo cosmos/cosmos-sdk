@@ -13,7 +13,7 @@ type ParamSubspace interface {
 	Set(ctx sdk.Context, key []byte, param interface{})
 }
 
-// SupplyKeeper defines the expected supply keeper for module accounts (noalias)
+// SupplyKeeper defines the expected supply manager for module accounts (noalias)
 type SupplyKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) supplyexported.ModuleAccountI
@@ -26,7 +26,7 @@ type SupplyKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
-// StakingKeeper expected staking keeper (Validator and Delegator sets) (noalias)
+// StakingKeeper expected staking manager (Validator and Delegator sets) (noalias)
 type StakingKeeper interface {
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(
@@ -40,7 +40,7 @@ type StakingKeeper interface {
 	)
 }
 
-// AccountKeeper defines the expected account keeper (noalias)
+// AccountKeeper defines the expected account manager (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 }

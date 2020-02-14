@@ -41,7 +41,7 @@ func NewGenesisAccount(
 		Address:           address,
 		Coins:             coins,
 		Sequence:          sequence,
-		AccountNumber:     0, // ignored set by the account keeper during InitGenesis
+		AccountNumber:     0, // ignored set by the account manager during InitGenesis
 		OriginalVesting:   vestingAmount,
 		DelegatedFree:     delFree,
 		DelegatedVesting:  delVesting,

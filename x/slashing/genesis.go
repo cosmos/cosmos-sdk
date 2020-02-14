@@ -7,7 +7,7 @@ import (
 )
 
 // InitGenesis initialize default parameters
-// and the keeper's address to pubkey map
+// and the manager's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper types.StakingKeeper, data types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator exported.ValidatorI) bool {

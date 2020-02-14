@@ -151,7 +151,7 @@ func NewSimApp(
 		subspaces:      make(map[string]subspace.Subspace),
 	}
 
-	// init params keeper and subspaces
+	// init params manager and subspaces
 	app.ParamsKeeper = params.NewKeeper(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
 	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
@@ -192,7 +192,7 @@ func NewSimApp(
 	)
 	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], app.cdc)
 
-	// create evidence keeper with router
+	// create evidence manager with router
 	evidenceKeeper := evidence.NewKeeper(
 		app.cdc, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], &app.StakingKeeper, app.SlashingKeeper,
 	)

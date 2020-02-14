@@ -9,7 +9,7 @@ import (
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
-// AccountKeeper expected account keeper
+// AccountKeeper expected account manager
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
@@ -32,7 +32,7 @@ type ParamSubspace interface {
 	SetParamSet(ctx sdk.Context, ps subspace.ParamSet)
 }
 
-// StakingKeeper expected staking keeper
+// StakingKeeper expected staking manager
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,

@@ -100,7 +100,7 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 
 //____________________________________________________________________________
 
-// AppModule implements an application module for the staking module.
+// AppModuleSimulation implements an application module for the staking module.
 type AppModule struct {
 	AppModuleBasic
 
@@ -110,7 +110,7 @@ type AppModule struct {
 	supplyKeeper  types.SupplyKeeper
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModuleSimulation object
 func NewAppModule(keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk types.SupplyKeeper) AppModule {
 
 	return AppModule{

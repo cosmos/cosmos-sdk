@@ -76,7 +76,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //____________________________________________________________________________
 
-// AppModule implements an application module for the slashing module.
+// AppModuleSimulation implements an application module for the slashing module.
 type AppModule struct {
 	AppModuleBasic
 
@@ -86,7 +86,7 @@ type AppModule struct {
 	stakingKeeper stakingkeeper.Keeper
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModuleSimulation object
 func NewAppModule(keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk stakingkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},

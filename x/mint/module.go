@@ -70,14 +70,14 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //____________________________________________________________________________
 
-// AppModule implements an application module for the mint module.
+// AppModuleSimulation implements an application module for the mint module.
 type AppModule struct {
 	AppModuleBasic
 
 	keeper Keeper
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModuleSimulation object
 func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},

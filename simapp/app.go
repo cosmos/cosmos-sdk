@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"github.com/cosmos/cosmos-sdk/params/simulation"
 	"io"
 	"os"
 
@@ -57,7 +58,6 @@ var (
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distr.ProposalHandler, upgradeclient.ProposalHandler,
 		),
-		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
@@ -265,7 +265,7 @@ func NewSimApp(
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper),
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper, app.StakingKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		params.NewAppModule(), // NOTE: only used for simulation to generate randomized param change proposals
+		simulation.NewAppModule(), // NOTE: only used for simulation to generate randomized param change proposals
 	)
 
 	app.sm.RegisterStoreDecoders()

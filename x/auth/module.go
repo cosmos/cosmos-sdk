@@ -72,14 +72,14 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //____________________________________________________________________________
 
-// AppModule implements an application module for the auth module.
+// AppModuleSimulation implements an application module for the auth module.
 type AppModule struct {
 	AppModuleBasic
 
 	accountKeeper AccountKeeper
 }
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModuleSimulation object
 func NewAppModule(accountKeeper AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},

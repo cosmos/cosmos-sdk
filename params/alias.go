@@ -3,9 +3,9 @@ package params
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/params/internal/types"
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 )
 
 const (

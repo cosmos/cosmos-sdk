@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params"
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace

@@ -1,20 +1,20 @@
-package slashing
+package slashing_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
 	addr, pk := slashingkeeper.Addrs[2], slashingkeeper.Pks[2]
@@ -45,7 +45,8 @@ func TestBeginBlocker(t *testing.T) {
 			}},
 		},
 	}
-	BeginBlocker(ctx, req, keeper)
+
+	slashing.BeginBlocker(ctx, req, keeper)
 
 	info, found := keeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
 	require.True(t, found)
@@ -67,7 +68,8 @@ func TestBeginBlocker(t *testing.T) {
 				}},
 			},
 		}
-		BeginBlocker(ctx, req, keeper)
+
+		slashing.BeginBlocker(ctx, req, keeper)
 	}
 
 	// for 500 blocks, mark the validator as having not signed
@@ -81,7 +83,8 @@ func TestBeginBlocker(t *testing.T) {
 				}},
 			},
 		}
-		BeginBlocker(ctx, req, keeper)
+
+		slashing.BeginBlocker(ctx, req, keeper)
 	}
 
 	// end block

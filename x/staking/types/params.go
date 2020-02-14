@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params"
 	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
@@ -59,11 +58,11 @@ func NewParams(
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		params.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
-		params.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
-		params.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
-		params.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
-		params.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+		subspace.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
+		subspace.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
+		subspace.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
+		subspace.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
+		subspace.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
 	}
 }
 

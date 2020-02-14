@@ -63,7 +63,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(subspace.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(subspace.TStoreKey)
 
 	db := dbm.NewMemDB()
 

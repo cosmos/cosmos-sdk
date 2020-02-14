@@ -44,8 +44,8 @@ type testParams struct {
 
 func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		params.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
-		params.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
+		subspace.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
+		subspace.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
 	}
 }
 
@@ -82,7 +82,7 @@ func newTestInput(t *testing.T) testInput {
 func TestProposalHandlerPassed(t *testing.T) {
 	input := newTestInput(t)
 	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		params.NewKeyTable().RegisterParamSet(&testParams{}),
+		subspace.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
 	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "1"))
@@ -97,7 +97,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 func TestProposalHandlerFailed(t *testing.T) {
 	input := newTestInput(t)
 	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		params.NewKeyTable().RegisterParamSet(&testParams{}),
+		subspace.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
 	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
@@ -110,7 +110,7 @@ func TestProposalHandlerFailed(t *testing.T) {
 func TestProposalHandlerUpdateOmitempty(t *testing.T) {
 	input := newTestInput(t)
 	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		params.NewKeyTable().RegisterParamSet(&testParams{}),
+		subspace.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)

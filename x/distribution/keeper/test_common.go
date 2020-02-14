@@ -3,6 +3,8 @@ package keeper
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/params/subspace"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -98,8 +100,8 @@ func CreateTestInputAdvanced(
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyParams := sdk.NewKVStoreKey(params.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(subspace.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(subspace.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)

@@ -3,8 +3,6 @@ package keeper
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/params"
-
 	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -17,7 +15,7 @@ const (
 
 // ParamTable for staking module
 func ParamKeyTable() subspace.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&types.Params{})
+	return subspace.NewKeyTable().RegisterParamSet(&types.Params{})
 }
 
 // UnbondingTime

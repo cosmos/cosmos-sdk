@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/params"
 	"github.com/cosmos/cosmos-sdk/params/subspace"
 )
 
@@ -19,8 +18,8 @@ var ParamStoreKeySendEnabled = []byte("sendenabled")
 
 // ParamKeyTable type declaration for parameters
 func ParamKeyTable() subspace.KeyTable {
-	return params.NewKeyTable(
-		params.NewParamSetPair(ParamStoreKeySendEnabled, false, validateSendEnabled),
+	return subspace.NewKeyTable(
+		subspace.NewParamSetPair(ParamStoreKeySendEnabled, false, validateSendEnabled),
 	)
 }
 

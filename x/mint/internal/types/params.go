@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/params"
-
 	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,7 +31,7 @@ type Params struct {
 
 // ParamTable for minting module.
 func ParamKeyTable() subspace.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+	return subspace.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 func NewParams(
@@ -110,12 +108,12 @@ func (p Params) String() string {
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		params.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
-		params.NewParamSetPair(KeyInflationRateChange, &p.InflationRateChange, validateInflationRateChange),
-		params.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),
-		params.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
-		params.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
-		params.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
+		subspace.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
+		subspace.NewParamSetPair(KeyInflationRateChange, &p.InflationRateChange, validateInflationRateChange),
+		subspace.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),
+		subspace.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
+		subspace.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
+		subspace.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
 	}
 }
 

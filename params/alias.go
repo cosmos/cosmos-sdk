@@ -4,13 +4,10 @@ package params
 
 import (
 	"github.com/cosmos/cosmos-sdk/params/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/params/subspace"
 	"github.com/cosmos/cosmos-sdk/params/types"
 )
 
 const (
-	StoreKey           = subspace.StoreKey
-	TStoreKey          = subspace.TStoreKey
 	ModuleName         = types.ModuleName
 	RouterKey          = types.RouterKey
 	ProposalTypeChange = types.ProposalTypeChange
@@ -20,9 +17,6 @@ var (
 	NewKeeper = keeper.NewKeeper
 
 	// functions aliases
-	NewParamSetPair            = subspace.NewParamSetPair
-	NewSubspace                = subspace.NewSubspace
-	NewKeyTable                = subspace.NewKeyTable
 	RegisterCodec              = types.RegisterCodec
 	ErrUnknownSubspace         = types.ErrUnknownSubspace
 	ErrSettingParameter        = types.ErrSettingParameter

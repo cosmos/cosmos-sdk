@@ -3,7 +3,7 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"

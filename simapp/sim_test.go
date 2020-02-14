@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 
 	"gopkg.in/yaml.v2"
 )

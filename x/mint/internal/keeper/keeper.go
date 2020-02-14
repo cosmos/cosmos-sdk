@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )

@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 
 	"github.com/stretchr/testify/require"
 

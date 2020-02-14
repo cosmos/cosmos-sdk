@@ -19,7 +19,8 @@ import (
 // "{eventAttribute}.{attributeKey} = '{attributeValue}'". Each event is
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
-func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error) {
+// If an empty string is provided it will order txs by asc
+func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(events) == 0 {
 		return nil, errors.New("must declare at least one event to search")
 	}
@@ -42,7 +43,7 @@ func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit in
 
 	prove := !cliCtx.TrustNode
 
-	resTxs, err := node.TxSearch(query, prove, page, limit)
+	resTxs, err := node.TxSearch(query, prove, page, limit, orderBy)
 	if err != nil {
 		return nil, err
 	}

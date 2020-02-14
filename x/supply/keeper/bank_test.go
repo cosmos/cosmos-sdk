@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/supply/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
@@ -46,7 +47,17 @@ func TestSendCoins(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
 
-	keeper := app.SupplyKeeper
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[types.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+
+	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	ak := app.AccountKeeper
 	bk := app.BankKeeper
 
@@ -97,7 +108,17 @@ func TestMintCoins(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
 
-	keeper := app.SupplyKeeper
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[types.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+
+	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	ak := app.AccountKeeper
 	bk := app.BankKeeper
 
@@ -135,7 +156,17 @@ func TestBurnCoins(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
 
-	keeper := app.SupplyKeeper
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[types.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+
+	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	ak := app.AccountKeeper
 	bk := app.BankKeeper
 

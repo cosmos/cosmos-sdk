@@ -1,8 +1,9 @@
-package simapp
+package codec
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -25,8 +26,7 @@ type Codec struct {
 	amino *codec.Codec
 }
 
-func NewAppCodec() *Codec {
-	amino := MakeCodec()
+func NewAppCodec(amino *codec.Codec) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
 }
 
@@ -109,10 +109,10 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
 //
 // NOTE: This codec will be deprecated in favor of AppCodec once all modules are
 // migrated.
-func MakeCodec() *codec.Codec {
+func MakeCodec(bm module.BasicManager) *codec.Codec {
 	cdc := codec.New()
 
-	ModuleBasics.RegisterCodec(cdc)
+	bm.RegisterCodec(cdc)
 	vesting.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)

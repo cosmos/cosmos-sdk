@@ -1,12 +1,12 @@
 syntax = "proto3";
-package cosmos_sdk.simapp.v1;
+package cosmos_sdk.simapp.codec.v1;
 
 import "third_party/proto/cosmos-proto/cosmos.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
 import "x/supply/types/types.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/simapp";
+option go_package = "github.com/cosmos/cosmos-sdk/simapp/codec";
 
 // Account defines the application-level Account type.
 message Account {

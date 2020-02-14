@@ -1,6 +1,7 @@
-// nolint
-package keeper // noalias
+package keeper
 
+// noalias
+// nolint
 // DONTCOVER
 
 import (
@@ -9,16 +10,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -125,7 +125,9 @@ func createTestInput(
 			},
 		},
 	)
+
 	cdc := makeTestCodec()
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
@@ -147,9 +149,9 @@ func createTestInput(
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
 	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bankKeeper, maccPerms)
 
 	sk := staking.NewKeeper(staking.ModuleCdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())

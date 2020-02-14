@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	_ types.AuthCodec = (*Codec)(nil)
+	_ types.Codec = (*Codec)(nil)
 
 	accountCdc = NewCodec(codec.New())
 )

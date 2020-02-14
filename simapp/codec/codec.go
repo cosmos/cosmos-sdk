@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	_ auth.AuthCodec     = (*Codec)(nil)
-	_ supply.SupplyCodec = (*Codec)(nil)
+	_ auth.Codec   = (*Codec)(nil)
+	_ supply.Codec = (*Codec)(nil)
 )
 
 // AppCodec defines the application-level codec. This codec contains all the

@@ -12,7 +12,7 @@ import (
 
 // Keeper of the supply store
 type Keeper struct {
-	cdc       types.SupplyCodec
+	cdc       types.Codec
 	storeKey  sdk.StoreKey
 	ak        types.AccountKeeper
 	bk        types.BankKeeper
@@ -21,7 +21,7 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper instance
 func NewKeeper(
-	cdc types.SupplyCodec, key sdk.StoreKey, ak types.AccountKeeper,
+	cdc types.Codec, key sdk.StoreKey, ak types.AccountKeeper,
 	bk types.BankKeeper, maccPerms map[string][]string,
 ) Keeper {
 

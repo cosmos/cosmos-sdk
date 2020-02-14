@@ -18,7 +18,7 @@ import (
 // encoding/decoding library.
 type AccountKeeper struct {
 	key           sdk.StoreKey
-	cdc           types.AuthCodec
+	cdc           types.Codec
 	paramSubspace subspace.Subspace
 
 	// The prototypical Account constructor.
@@ -28,7 +28,7 @@ type AccountKeeper struct {
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 func NewAccountKeeper(
-	cdc types.AuthCodec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
+	cdc types.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{

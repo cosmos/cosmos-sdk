@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	_ authtypes.AuthCodec = (*Codec)(nil)
+	_ authtypes.Codec = (*Codec)(nil)
 
 	vestingCdc = NewCodec(codec.New())
 )

@@ -29,7 +29,7 @@ func DefaultGenesisState() GenesisState {
 
 // GetGenesisStateFromAppState returns x/auth GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc AuthCodec, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
@@ -85,7 +85,7 @@ type GenesisAccountIterator struct{}
 // appGenesis and invokes a callback on each genesis account. If any call
 // returns true, iteration stops.
 func (GenesisAccountIterator) IterateGenesisAccounts(
-	cdc AuthCodec, appGenesis map[string]json.RawMessage, cb func(exported.Account) (stop bool),
+	cdc Codec, appGenesis map[string]json.RawMessage, cb func(exported.Account) (stop bool),
 ) {
 
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {

@@ -15,7 +15,7 @@ import (
 //
 // TODO:/XXX: Using a package-level global isn't ideal and we should consider
 // refactoring the module manager to allow passing in the correct module codec.
-var Codec types.AuthCodec
+var Codec types.Codec
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {

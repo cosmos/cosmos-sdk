@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-// AuthCodec defines the interface needed to serialize x/auth state. It must be
+// Codec defines the interface needed to serialize x/auth state. It must be
 // aware of all concrete account types.
-type AuthCodec interface {
+type Codec interface {
 	codec.Marshaler
 
 	MarshalAccount(acc exported.Account) ([]byte, error)

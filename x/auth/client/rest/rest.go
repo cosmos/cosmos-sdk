@@ -14,7 +14,7 @@ import (
 //
 // TODO:/XXX: Using a package-level global isn't ideal and we should consider
 // refactoring the module manager to allow passing in the correct module codec.
-var Codec types.AuthCodec
+var Codec types.Codec
 
 // RegisterRoutes registers the auth module REST routes.
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {

@@ -44,5 +44,5 @@ type (
 	ModuleAccount = types.ModuleAccount
 	GenesisState  = types.GenesisState
 	Supply        = types.Supply
-	SupplyCodec   = types.SupplyCodec
+	Codec         = types.Codec
 )

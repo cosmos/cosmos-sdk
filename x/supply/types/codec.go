@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// SupplyCodec defines the interface needed to serialize x/supply state. It must
+// Codec defines the interface needed to serialize x/supply state. It must
 // be aware of all concrete supply types.
-type SupplyCodec interface {
+type Codec interface {
 	codec.Marshaler
 
 	MarshalSupply(supply exported.SupplyI) ([]byte, error)

@@ -18,12 +18,12 @@ type NodeQuerier interface {
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
-	codec   AuthCodec
+	codec   Codec
 	querier NodeQuerier
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(codec AuthCodec, querier NodeQuerier) AccountRetriever {
+func NewAccountRetriever(codec Codec, querier NodeQuerier) AccountRetriever {
 	return AccountRetriever{codec: codec, querier: querier}
 }
 

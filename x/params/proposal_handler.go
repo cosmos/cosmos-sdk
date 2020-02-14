@@ -2,6 +2,7 @@ package params
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/params"
 
 	"github.com/cosmos/cosmos-sdk/params/manager"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +14,7 @@ import (
 func NewParamChangeProposalHandler(k manager.Manager) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case ParameterChangeProposal:
+		case params.ParameterChangeProposal:
 			return handleParameterChangeProposal(ctx, k, c)
 
 		default:
@@ -22,11 +23,11 @@ func NewParamChangeProposalHandler(k manager.Manager) govtypes.Handler {
 	}
 }
 
-func handleParameterChangeProposal(ctx sdk.Context, k manager.Manager, p ParameterChangeProposal) error {
+func handleParameterChangeProposal(ctx sdk.Context, k manager.Manager, p params.ParameterChangeProposal) error {
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {
-			return sdkerrors.Wrap(ErrUnknownSubspace, c.Subspace)
+			return sdkerrors.Wrap(params.ErrUnknownSubspace, c.Subspace)
 		}
 
 		k.Logger(ctx).Info(
@@ -34,7 +35,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k manager.Manager, p Paramet
 		)
 
 		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
-			return sdkerrors.Wrapf(ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
+			return sdkerrors.Wrapf(params.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
 		}
 	}
 

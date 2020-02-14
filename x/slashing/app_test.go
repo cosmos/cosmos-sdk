@@ -77,8 +77,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := slashing.MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.GetConsPubKey().Address())}
 
-	// no signing info yet
-	checkValidatorSigningInfo(t, app, sdk.ConsAddress(addr1), false)
+	checkValidatorSigningInfo(t, app, sdk.ConsAddress(addr1), true)
 
 	// unjail should fail with unknown validator
 	header = abci.Header{Height: app.LastBlockHeight() + 1}

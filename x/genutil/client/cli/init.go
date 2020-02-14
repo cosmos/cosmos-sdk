@@ -87,7 +87,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			if !viper.GetBool(flagOverwrite) && tmos.FileExists(genFile) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
-			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis())
+			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis(cdc))
 			if err != nil {
 				return errors.Wrap(err, "Failed to marshall default genesis state")
 			}

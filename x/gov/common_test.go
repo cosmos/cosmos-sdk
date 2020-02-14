@@ -2,7 +2,6 @@ package gov_test
 
 import (
 	"bytes"
-	"errors"
 	"log"
 	"sort"
 	"testing"
@@ -12,24 +11,21 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
 	valTokens  = sdk.TokensFromConsensusPower(42)
 	initTokens = sdk.TokensFromConsensusPower(100000)
-	valCoins   = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens))
-	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
 // SortAddresses - Sorts Addresses
 func SortAddresses(addrs []sdk.AccAddress) {
-	var byteAddrs [][]byte
-	for _, addr := range addrs {
-		byteAddrs = append(byteAddrs, addr.Bytes())
+	byteAddrs := make([][]byte, len(addrs))
+
+	for i, addr := range addrs {
+		byteAddrs[i] = addr.Bytes()
 	}
 
 	SortByteArrays(byteAddrs)
@@ -71,25 +67,6 @@ func SortByteArrays(src [][]byte) [][]byte {
 }
 
 const contextKeyBadProposal = "contextKeyBadProposal"
-
-// badProposalHandler implements a governance proposal handler that is identical
-// to the actual handler except this fails if the context doesn't contain a value
-// for the key contextKeyBadProposal or if the value is false.
-func badProposalHandler(ctx sdk.Context, c types.Content) error {
-	switch c.ProposalType() {
-	case types.ProposalTypeText:
-		v := ctx.Value(contextKeyBadProposal)
-
-		if v == nil || !v.(bool) {
-			return errors.New("proposal failed")
-		}
-
-		return nil
-
-	default:
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
-	}
-}
 
 var (
 	pubkeys = []crypto.PubKey{

@@ -34,26 +34,6 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	)
 }
 
-func NewTestMsgCreateValidatorWithCommission(
-	address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int, commissionRate sdk.Dec,
-) staking.MsgCreateValidator {
-
-	commission := staking.NewCommissionRates(commissionRate, sdk.OneDec(), sdk.ZeroDec())
-
-	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), staking.Description{}, commission, sdk.OneInt(),
-	)
-}
-
-func NewTestMsgCreateValidatorWithMinSelfDelegation(
-	address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int, minSelfDelegation sdk.Int,
-) staking.MsgCreateValidator {
-
-	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), staking.Description{}, commissionRates, minSelfDelegation,
-	)
-}
-
 func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)

@@ -15,7 +15,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 - [Distribution](distribution/spec/README.md) - Fee distribution, and staking token provision distribution.
 - [Crisis](crisis/spec/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 - [Mint](mint/spec/README.md) - Creation of new units of staking token.
-- [Params](../params/spec/README.md) - Globally available parameter store.
+- [Params](params/spec/README.md) - Globally available parameter store.
 - [Supply](supply/spec/README.md) - Total token supply of the chain.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](../docs/building-modules/README.md).

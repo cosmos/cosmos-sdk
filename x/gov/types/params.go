@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	params "github.com/cosmos/cosmos-sdk/params/types/subspace"
+	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

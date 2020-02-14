@@ -1,11 +1,11 @@
-package subspace_test
+package types_test
 
 import (
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -59,14 +59,14 @@ func validateBondDenom(i interface{}) error {
 	return nil
 }
 
-func (p *params) ParamSetPairs() subspace.ParamSetPairs {
-	return subspace.ParamSetPairs{
+func (p *params) ParamSetPairs() ptypes.ParamSetPairs {
+	return ptypes.ParamSetPairs{
 		{keyUnbondingTime, &p.UnbondingTime, validateUnbondingTime},
 		{keyMaxValidators, &p.MaxValidators, validateMaxValidators},
 		{keyBondDenom, &p.BondDenom, validateBondDenom},
 	}
 }
 
-func paramKeyTable() subspace.KeyTable {
-	return subspace.NewKeyTable().RegisterParamSet(&params{})
+func paramKeyTable() ptypes.KeyTable {
+	return ptypes.NewKeyTable().RegisterParamSet(&params{})
 }

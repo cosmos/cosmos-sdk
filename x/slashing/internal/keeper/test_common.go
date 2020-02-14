@@ -18,7 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/params/manager"
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -57,14 +57,14 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, subspace.Subspace, Keeper) {
+func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, ptypes.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyParams := sdk.NewKVStoreKey(subspace.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(subspace.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(ptypes.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(ptypes.TStoreKey)
 
 	db := dbm.NewMemDB()
 

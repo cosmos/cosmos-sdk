@@ -6,8 +6,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params/types"
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,7 +15,7 @@ type Manager struct {
 	cdc    codec.Marshaler
 	key    sdk.StoreKey
 	tkey   sdk.StoreKey
-	spaces map[string]*subspace.Subspace
+	spaces map[string]*params.Subspace
 }
 
 // New constructs a params manager
@@ -25,17 +24,17 @@ func New(cdc codec.Marshaler, key, tkey sdk.StoreKey) Manager {
 		cdc:    cdc,
 		key:    key,
 		tkey:   tkey,
-		spaces: make(map[string]*subspace.Subspace),
+		spaces: make(map[string]*params.Subspace),
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Manager) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", params.ModuleName))
 }
 
 // Allocate subspace used for keepers
-func (k Manager) Subspace(s string) subspace.Subspace {
+func (k Manager) Subspace(s string) params.Subspace {
 	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
@@ -45,17 +44,17 @@ func (k Manager) Subspace(s string) subspace.Subspace {
 		panic("cannot use empty string for subspace")
 	}
 
-	space := subspace.NewSubspace(k.cdc, k.key, k.tkey, s)
+	space := params.NewSubspace(k.cdc, k.key, k.tkey, s)
 	k.spaces[s] = &space
 
 	return space
 }
 
 // Get existing substore from manager
-func (k Manager) GetSubspace(s string) (subspace.Subspace, bool) {
+func (k Manager) GetSubspace(s string) (params.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {
-		return subspace.Subspace{}, false
+		return params.Subspace{}, false
 	}
 	return *space, ok
 }

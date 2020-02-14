@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	params "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,11 +31,11 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	paramSpace subspace.Subspace
+	paramSpace params.Subspace
 }
 
 func NewBaseKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace subspace.Subspace, blacklistedAddrs map[string]bool,
+	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -149,14 +149,14 @@ type BaseSendKeeper struct {
 	cdc        *codec.Codec
 	ak         types.AccountKeeper
 	storeKey   sdk.StoreKey
-	paramSpace subspace.Subspace
+	paramSpace params.Subspace
 
 	// list of addresses that are restricted from receiving transactions
 	blacklistedAddrs map[string]bool
 }
 
 func NewBaseSendKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace subspace.Subspace, blacklistedAddrs map[string]bool,
+	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{

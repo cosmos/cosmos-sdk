@@ -19,7 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/params/manager"
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -103,8 +103,8 @@ func createTestInput(
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyParams := sdk.NewKVStoreKey(subspace.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(subspace.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(ptypes.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(ptypes.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)

@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	params "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,14 +21,14 @@ import (
 type Keeper struct {
 	cdc            *codec.Codec
 	storeKey       sdk.StoreKey
-	paramSpace     subspace.Subspace
+	paramSpace     params.Subspace
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
 }
 
 func NewKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace subspace.Subspace,
+	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace,
 	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 

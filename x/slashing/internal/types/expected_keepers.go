@@ -3,7 +3,7 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -26,10 +26,10 @@ type BankKeeper interface {
 
 // ParamSubspace defines the expected Subspace interfacace
 type ParamSubspace interface {
-	WithKeyTable(table subspace.KeyTable) subspace.Subspace
+	WithKeyTable(table params.KeyTable) params.Subspace
 	Get(ctx sdk.Context, key []byte, ptr interface{})
-	GetParamSet(ctx sdk.Context, ps subspace.ParamSet)
-	SetParamSet(ctx sdk.Context, ps subspace.ParamSet)
+	GetParamSet(ctx sdk.Context, ps params.ParamSet)
+	SetParamSet(ctx sdk.Context, ps params.ParamSet)
 }
 
 // StakingKeeper expected staking keeper

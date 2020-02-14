@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 
-	params2 "github.com/cosmos/cosmos-sdk/x/params"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -15,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/params"
 	"github.com/cosmos/cosmos-sdk/params/manager"
-	"github.com/cosmos/cosmos-sdk/params/types/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -28,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	paramsmod "github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -99,7 +98,7 @@ type SimApp struct {
 	tkeys map[string]*sdk.TransientStoreKey
 
 	// subspaces
-	subspaces map[string]subspace.Subspace
+	subspaces map[string]types.Subspace
 
 	// keepers
 	AccountKeeper  auth.AccountKeeper
@@ -142,9 +141,9 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		bam.MainStoreKey, auth.StoreKey, bank.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, subspace.StoreKey, upgrade.StoreKey, evidence.StoreKey,
+		gov.StoreKey, types.StoreKey, upgrade.StoreKey, evidence.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(subspace.TStoreKey)
+	tkeys := sdk.NewTransientStoreKeys(types.TStoreKey)
 
 	app := &SimApp{
 		BaseApp:        bApp,
@@ -152,11 +151,11 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
-		subspaces:      make(map[string]subspace.Subspace),
+		subspaces:      make(map[string]types.Subspace),
 	}
 
 	// init params manager and subspaces
-	app.ParamsManager = manager.New(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
+	app.ParamsManager = manager.New(appCodec.Params, keys[types.StoreKey], tkeys[types.TStoreKey])
 	app.subspaces[auth.ModuleName] = app.ParamsManager.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsManager.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.ParamsManager.Subspace(staking.DefaultParamspace)
@@ -208,7 +207,7 @@ func NewSimApp(
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
-		AddRoute(params.RouterKey, params2.NewParamChangeProposalHandler(app.ParamsManager)).
+		AddRoute(params.RouterKey, paramsmod.NewParamChangeProposalHandler(app.ParamsManager)).
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	app.GovKeeper = gov.NewKeeper(
@@ -364,7 +363,7 @@ func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetSubspace(moduleName string) subspace.Subspace {
+func (app *SimApp) GetSubspace(moduleName string) types.Subspace {
 	return app.subspaces[moduleName]
 }
 

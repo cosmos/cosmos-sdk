@@ -51,7 +51,7 @@ func NewKeeper(
 	}
 
 	// It is vital to seal the governance proposal router here as to not allow
-	// further handlers to be registered after the manager is created since this
+	// further handlers to be registered after the keeper is created since this
 	// could create invalid or non-deterministic behavior.
 	rtr.Seal()
 

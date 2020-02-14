@@ -3,6 +3,8 @@ package keeper
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/params/manager"
+
 	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 
 	"github.com/stretchr/testify/require"
@@ -128,7 +130,7 @@ func CreateTestInputAdvanced(
 	blacklistedAddrs[distrAcc.GetAddress().String()] = true
 
 	cdc := MakeTestCodec()
-	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := manager.New(params.ModuleCdc, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)

@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/params/manager"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -109,7 +111,7 @@ type SimApp struct {
 	GovKeeper      gov.Keeper
 	CrisisKeeper   crisis.Keeper
 	UpgradeKeeper  upgrade.Keeper
-	ParamsKeeper   params.Keeper
+	ParamsManager  params.Keeper
 	EvidenceKeeper evidence.Keeper
 
 	// the module manager
@@ -151,16 +153,16 @@ func NewSimApp(
 	}
 
 	// init params manager and subspaces
-	app.ParamsKeeper = params.NewKeeper(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
-	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
-	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
-	app.subspaces[staking.ModuleName] = app.ParamsKeeper.Subspace(staking.DefaultParamspace)
-	app.subspaces[mint.ModuleName] = app.ParamsKeeper.Subspace(mint.DefaultParamspace)
-	app.subspaces[distr.ModuleName] = app.ParamsKeeper.Subspace(distr.DefaultParamspace)
-	app.subspaces[slashing.ModuleName] = app.ParamsKeeper.Subspace(slashing.DefaultParamspace)
-	app.subspaces[gov.ModuleName] = app.ParamsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
-	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
-	app.subspaces[evidence.ModuleName] = app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
+	app.ParamsManager = manager.New(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
+	app.subspaces[auth.ModuleName] = app.ParamsManager.Subspace(auth.DefaultParamspace)
+	app.subspaces[bank.ModuleName] = app.ParamsManager.Subspace(bank.DefaultParamspace)
+	app.subspaces[staking.ModuleName] = app.ParamsManager.Subspace(staking.DefaultParamspace)
+	app.subspaces[mint.ModuleName] = app.ParamsManager.Subspace(mint.DefaultParamspace)
+	app.subspaces[distr.ModuleName] = app.ParamsManager.Subspace(distr.DefaultParamspace)
+	app.subspaces[slashing.ModuleName] = app.ParamsManager.Subspace(slashing.DefaultParamspace)
+	app.subspaces[gov.ModuleName] = app.ParamsManager.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
+	app.subspaces[crisis.ModuleName] = app.ParamsManager.Subspace(crisis.DefaultParamspace)
+	app.subspaces[evidence.ModuleName] = app.ParamsManager.Subspace(evidence.DefaultParamspace)
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
@@ -203,7 +205,7 @@ func NewSimApp(
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
-		AddRoute(params.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
+		AddRoute(params.RouterKey, params.NewParamChangeProposalHandler(app.ParamsManager)).
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	app.GovKeeper = gov.NewKeeper(

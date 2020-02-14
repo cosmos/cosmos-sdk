@@ -8,25 +8,16 @@ import (
 )
 
 const (
-	ModuleName         = types.ModuleName
-	RouterKey          = types.RouterKey
-	ProposalTypeChange = types.ProposalTypeChange
+	RouterKey = types.RouterKey
 )
 
 var (
-	NewKeeper = manager.New
-
 	// functions aliases
 	RegisterCodec              = types.RegisterCodec
 	ErrUnknownSubspace         = types.ErrUnknownSubspace
 	ErrSettingParameter        = types.ErrSettingParameter
-	ErrEmptyChanges            = types.ErrEmptyChanges
-	ErrEmptySubspace           = types.ErrEmptySubspace
-	ErrEmptyKey                = types.ErrEmptyKey
-	ErrEmptyValue              = types.ErrEmptyValue
 	NewParameterChangeProposal = types.NewParameterChangeProposal
 	NewParamChange             = types.NewParamChange
-	ValidateChanges            = types.ValidateChanges
 	NewCodec                   = types.NewCodec
 
 	// variable aliases

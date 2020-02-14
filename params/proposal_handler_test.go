@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/params"
+	"github.com/cosmos/cosmos-sdk/params/manager"
 	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,7 +74,7 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := params.NewKeeper(params.ModuleCdc, keyParams, tKeyParams)
+	keeper := manager.New(params.ModuleCdc, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}

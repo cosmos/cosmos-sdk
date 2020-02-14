@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"encoding/hex"
 
+	"github.com/cosmos/cosmos-sdk/params/manager"
+
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -148,7 +150,7 @@ func createTestInput(
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := manager.New(params.ModuleCdc, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)

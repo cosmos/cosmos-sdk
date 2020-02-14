@@ -57,6 +57,8 @@ flushed to disk or kept as a snapshot. Note, `KeepRecent` is automatically infer
 and provided directly the IAVL store.
 * (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move x/auth/client/utils/ types and functions to x/auth/client/.
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
+* (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
+to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 
 ### Bug Fixes
 

@@ -92,7 +92,7 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(
 	t *testing.T, isCheckTx bool, initPower int64, communityTax sdk.Dec,
-) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, manager.Manager, types.SupplyKeeper,
 ) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)

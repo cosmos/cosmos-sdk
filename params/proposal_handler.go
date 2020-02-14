@@ -3,13 +3,14 @@ package params
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/params/manager"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
-func NewParamChangeProposalHandler(k Keeper) govtypes.Handler {
+func NewParamChangeProposalHandler(k manager.Manager) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case ParameterChangeProposal:
@@ -21,7 +22,7 @@ func NewParamChangeProposalHandler(k Keeper) govtypes.Handler {
 	}
 }
 
-func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeProposal) error {
+func handleParameterChangeProposal(ctx sdk.Context, k manager.Manager, p ParameterChangeProposal) error {
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {

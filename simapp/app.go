@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/params/manager"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -15,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/params/client"
+	"github.com/cosmos/cosmos-sdk/params/manager"
 	"github.com/cosmos/cosmos-sdk/params/simulation"
 	"github.com/cosmos/cosmos-sdk/params/types/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,8 +110,10 @@ type SimApp struct {
 	GovKeeper      gov.Keeper
 	CrisisKeeper   crisis.Keeper
 	UpgradeKeeper  upgrade.Keeper
-	ParamsManager  params.Keeper
 	EvidenceKeeper evidence.Keeper
+
+	// the params manager
+	ParamsManager manager.Manager
 
 	// the module manager
 	mm *module.Manager

@@ -1,4 +1,4 @@
-package slashing
+package slashing_test
 
 import (
 	"errors"
@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -17,8 +18,8 @@ import (
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
-	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
-	slh := NewHandler(keeper)
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())
+	slh := slashing.NewHandler(keeper)
 	amt := sdk.TokensFromConsensusPower(100)
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
 
@@ -36,16 +37,16 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
 	// assert non-jailed validator can't be unjailed
-	res, err = slh(ctx, NewMsgUnjail(addr))
+	res, err = slh(ctx, slashing.NewMsgUnjail(addr))
 	require.Error(t, err)
 	require.Nil(t, res)
-	require.True(t, errors.Is(ErrValidatorNotJailed, err))
+	require.True(t, errors.Is(slashing.ErrValidatorNotJailed, err))
 }
 
 func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
-	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
-	slh := NewHandler(keeper)
+	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())
+	slh := slashing.NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := slashingkeeper.Addrs[0], slashingkeeper.Pks[0], sdk.TokensFromConsensusPower(amtInt)
 	msg := slashingkeeper.NewTestMsgCreateValidator(addr, val, amt)
@@ -71,14 +72,14 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	require.True(t, sk.Validator(ctx, addr).IsJailed())
 
 	// assert non-jailed validator can't be unjailed
-	res, err = slh(ctx, NewMsgUnjail(addr))
+	res, err = slh(ctx, slashing.NewMsgUnjail(addr))
 	require.Error(t, err)
 	require.Nil(t, res)
-	require.True(t, errors.Is(ErrSelfDelegationTooLowToUnjail, err))
+	require.True(t, errors.Is(slashing.ErrSelfDelegationTooLowToUnjail, err))
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {
-	ctx, _, stakingKeeper, _, slashingKeeper := slashingkeeper.CreateTestInput(t, DefaultParams())
+	ctx, _, stakingKeeper, _, slashingKeeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())
 
 	stakingParams := stakingKeeper.GetParams(ctx)
 	stakingKeeper.SetParams(ctx, stakingParams)
@@ -97,7 +98,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	staking.EndBlocker(ctx, stakingKeeper)
 
 	// set dummy signing info
-	newInfo := NewValidatorSigningInfo(consAddr, 0, 0, time.Unix(0, 0), false, 0)
+	newInfo := slashing.NewValidatorSigningInfo(consAddr, 0, 0, time.Unix(0, 0), false, 0)
 	slashingKeeper.SetValidatorSigningInfo(ctx, consAddr, newInfo)
 
 	// delegate tokens to the validator
@@ -124,7 +125,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.True(t, validator.IsJailed())
 
 	// verify the validator cannot unjail itself
-	res, err = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
+	res, err = slashing.NewHandler(slashingKeeper)(ctx, slashing.NewMsgUnjail(valAddr))
 	require.Error(t, err)
 	require.Nil(t, res)
 
@@ -135,14 +136,14 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.NotNil(t, res)
 
 	// verify the validator can now unjail itself
-	res, err = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
+	res, err = slashing.NewHandler(slashingKeeper)(ctx, slashing.NewMsgUnjail(valAddr))
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestInvalidMsg(t *testing.T) {
-	k := Keeper{}
-	h := NewHandler(k)
+	k := slashing.Keeper{}
+	h := slashing.NewHandler(k)
 
 	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
 	require.Error(t, err)
@@ -159,7 +160,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	amt := sdk.TokensFromConsensusPower(power)
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
 	sh := staking.NewHandler(sk)
-	slh := NewHandler(keeper)
+	slh := slashing.NewHandler(keeper)
 
 	res, err := sh(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, val, amt))
 	require.NoError(t, err)

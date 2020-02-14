@@ -3,7 +3,7 @@ package params
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/params/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/params/keeper"
 	"github.com/cosmos/cosmos-sdk/params/types"
 )
 

@@ -4,6 +4,7 @@ package cosmos_sdk.simapp.v1;
 import "third_party/proto/cosmos-proto/cosmos.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
+import "x/supply/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/simapp";
 
@@ -17,5 +18,16 @@ message Account {
     cosmos_sdk.x.auth.vesting.v1.ContinuousVestingAccount continuous_vesting_account = 2;
     cosmos_sdk.x.auth.vesting.v1.DelayedVestingAccount    delayed_vesting_account    = 3;
     cosmos_sdk.x.auth.vesting.v1.PeriodicVestingAccount   periodic_vesting_account   = 4;
+    cosmos_sdk.x.supply.v1.ModuleAccount                  module_account             = 5;
+  }
+}
+
+// Supply defines the application-level Supply type.
+message Supply {
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/supply/exported.SupplyI";
+
+  // sum defines a list of all acceptable concrete Supply implementations.
+  oneof sum {
+    cosmos_sdk.x.supply.v1.Supply supply = 1;
   }
 }

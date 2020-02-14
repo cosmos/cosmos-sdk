@@ -59,6 +59,7 @@ var (
 	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
 
 	// variable aliases
+	ModuleCdc                 = types.ModuleCdc
 	AddressStoreKeyPrefix     = types.AddressStoreKeyPrefix
 	GlobalAccountNumberKey    = types.GlobalAccountNumberKey
 	KeyMaxMemoCharacters      = types.KeyMaxMemoCharacters

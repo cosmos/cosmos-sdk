@@ -6,9 +6,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-var _ auth.AuthCodec = (*Codec)(nil)
+var (
+	_ auth.AuthCodec     = (*Codec)(nil)
+	_ supply.SupplyCodec = (*Codec)(nil)
+)
 
 // AppCodec defines the application-level codec. This codec contains all the
 // required module-specific codecs that are to be provided upon initialization.
@@ -58,6 +63,42 @@ func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
 	}
 
 	return acc.GetAccount(), nil
+}
+
+// MarshalSupply marshals a SupplyI interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (c *Codec) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
+	supply := &Supply{}
+	supply.SetSupplyI(supplyI)
+	return c.Marshaler.MarshalBinaryLengthPrefixed(supply)
+}
+
+// UnmarshalSupply returns a SupplyI interface from raw encoded account bytes
+// of a Proto-based SupplyI type. An error is returned upon decoding failure.
+func (c *Codec) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
+	supply := &Supply{}
+	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, supply); err != nil {
+		return nil, err
+	}
+
+	return supply.GetSupplyI(), nil
+}
+
+// MarshalSupplyJSON JSON encodes a supply object implementing the SupplyI
+// interface.
+func (c *Codec) MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error) {
+	return c.Marshaler.MarshalJSON(supply)
+}
+
+// UnmarshalSupplyJSON returns a SupplyI from JSON encoded bytes.
+func (c *Codec) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
+	supply := &Supply{}
+	if err := c.Marshaler.UnmarshalJSON(bz, supply); err != nil {
+		return nil, err
+	}
+
+	return supply.GetSupplyI(), nil
 }
 
 // ----------------------------------------------------------------------------

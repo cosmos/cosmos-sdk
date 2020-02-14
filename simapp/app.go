@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/params"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -11,8 +13,8 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/params/client"
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -95,7 +97,7 @@ type SimApp struct {
 	tkeys map[string]*sdk.TransientStoreKey
 
 	// subspaces
-	subspaces map[string]params.Subspace
+	subspaces map[string]subspace.Subspace
 
 	// keepers
 	AccountKeeper  auth.AccountKeeper
@@ -146,7 +148,7 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
-		subspaces:      make(map[string]params.Subspace),
+		subspaces:      make(map[string]subspace.Subspace),
 	}
 
 	// init params keeper and subspaces
@@ -358,7 +360,7 @@ func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
+func (app *SimApp) GetSubspace(moduleName string) subspace.Subspace {
 	return app.subspaces[moduleName]
 }
 

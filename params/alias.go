@@ -4,8 +4,8 @@ package params
 
 import (
 	"github.com/cosmos/cosmos-sdk/params/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/params/internal/types"
 	"github.com/cosmos/cosmos-sdk/params/subspace"
+	"github.com/cosmos/cosmos-sdk/params/types"
 )
 
 const (
@@ -43,12 +43,6 @@ type (
 	Keeper = keeper.Keeper
 
 	Codec                   = types.Codec
-	ParamSetPair            = subspace.ParamSetPair
-	ParamSetPairs           = subspace.ParamSetPairs
-	ParamSet                = subspace.ParamSet
-	Subspace                = subspace.Subspace
-	ReadOnlySubspace        = subspace.ReadOnlySubspace
-	KeyTable                = subspace.KeyTable
 	ParameterChangeProposal = types.ParameterChangeProposal
 	ParamChange             = types.ParamChange
 )

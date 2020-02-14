@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/params"
+
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,7 +32,7 @@ type Params struct {
 }
 
 // ParamTable for minting module.
-func ParamKeyTable() params.KeyTable {
+func ParamKeyTable() subspace.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
@@ -106,8 +108,8 @@ func (p Params) String() string {
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
+func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
+	return subspace.ParamSetPairs{
 		params.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
 		params.NewParamSetPair(KeyInflationRateChange, &p.InflationRateChange, validateInflationRateChange),
 		params.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),

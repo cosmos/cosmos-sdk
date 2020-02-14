@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/params"
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -39,7 +40,7 @@ var (
 	KeyHistoricalEntries = []byte("HistoricalEntries")
 )
 
-var _ params.ParamSet = (*Params)(nil)
+var _ subspace.ParamSet = (*Params)(nil)
 
 // NewParams creates a new Params instance
 func NewParams(
@@ -56,8 +57,8 @@ func NewParams(
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
+func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
+	return subspace.ParamSetPairs{
 		params.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
 		params.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
 		params.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),

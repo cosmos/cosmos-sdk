@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/params"
+
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,7 +20,7 @@ var (
 )
 
 // type declaration for parameters
-func ParamKeyTable() params.KeyTable {
+func ParamKeyTable() subspace.KeyTable {
 	return params.NewKeyTable(
 		params.NewParamSetPair(ParamStoreKeyConstantFee, sdk.Coin{}, validateConstantFee),
 	)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/params"
+	"github.com/cosmos/cosmos-sdk/params/subspace"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 var ParamStoreKeySendEnabled = []byte("sendenabled")
 
 // ParamKeyTable type declaration for parameters
-func ParamKeyTable() params.KeyTable {
+func ParamKeyTable() subspace.KeyTable {
 	return params.NewKeyTable(
 		params.NewParamSetPair(ParamStoreKeySendEnabled, false, validateSendEnabled),
 	)

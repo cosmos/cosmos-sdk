@@ -15,4 +15,3 @@ var (
 	ErrUnknownSubspace  = types.ErrUnknownSubspace
 	ErrSettingParameter = types.ErrSettingParameter
 )
-

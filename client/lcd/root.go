@@ -105,5 +105,5 @@ func (rs *RestServer) registerSwaggerUI() {
 		panic(err)
 	}
 	staticServer := http.FileServer(statikFS)
-	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
+	rs.Mux.PathPrefix("/").Handler(staticServer)
 }

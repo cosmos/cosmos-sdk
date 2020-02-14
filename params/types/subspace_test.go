@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/params/types"
 	"testing"
 	"time"
 
@@ -12,9 +11,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params"
+	paramsmod "github.com/cosmos/cosmos-sdk/x/params"
 )
 
 type SubspaceTestSuite struct {
@@ -22,11 +22,11 @@ type SubspaceTestSuite struct {
 
 	cdc codec.Marshaler
 	ctx sdk.Context
-	ss  types.Subspace
+	ss  ptypes.Subspace
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	cdc := ptypes.ModuleCdc
+	cdc := paramsmod.ModuleCdc
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
@@ -34,7 +34,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	ss := types.NewSubspace(cdc, key, tkey, "testsubspace")
+	ss := ptypes.NewSubspace(cdc, key, tkey, "testsubspace")
 
 	suite.cdc = cdc
 	suite.ctx = sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -47,7 +47,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := types.NewSubspace(ptypes.ModuleCdc, key, tkey, "testsubspace2")
+		ss := ptypes.NewSubspace(paramsmod.ModuleCdc, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }
@@ -163,7 +163,7 @@ func (suite *SubspaceTestSuite) TestGetParamSet() {
 func (suite *SubspaceTestSuite) TestSetParamSet() {
 	testCases := []struct {
 		name string
-		ps   types.ParamSet
+		ps   ptypes.ParamSet
 	}{
 		{"invalid unbonding time", &params{time.Hour * 1, 100, "stake"}},
 		{"invalid bond denom", &params{time.Hour * 48, 100, ""}},

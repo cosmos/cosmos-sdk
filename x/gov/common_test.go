@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	valTokens  = sdk.TokensFromConsensusPower(42)
-	initTokens = sdk.TokensFromConsensusPower(100000)
+	valTokens = sdk.TokensFromConsensusPower(42)
 )
 
 // SortAddresses - Sorts Addresses

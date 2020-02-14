@@ -19,7 +19,7 @@ var (
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 
-	// add module accounts to supply manager
+	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
 	maccPerms[types.Burner] = []string{types.Burner}

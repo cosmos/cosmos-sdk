@@ -5,7 +5,7 @@ submission and handling of arbitrary evidence of misbehavior.
 All concrete evidence types must implement the Evidence interface contract. Submitted
 evidence is first routed through the evidence module's Router in which it attempts
 to find a corresponding Handler for that specific evidence type. Each evidence type
-must have a Handler registered with the evidence module's manager in order for it
+must have a Handler registered with the evidence module's keeper in order for it
 to be successfully executed.
 
 Each corresponding handler must also fulfill the Handler interface contract. The
@@ -20,7 +20,7 @@ A full setup of the evidence module may look something as follows:
 	  evidence.AppModuleBasic{},
 	)
 
-	// First, create the manager's subspace for parameters and the manager itself.
+	// First, create the keeper's subspace for parameters and the keeper itself.
 	evidenceParamspace := app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 	evidenceKeeper := evidence.NewKeeper(
 	  app.cdc, keys[evidence.StoreKey], evidenceParamspace, evidence.DefaultCodespace,

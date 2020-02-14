@@ -83,19 +83,19 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 //______________________________________________________________________
 
-// StakingTokenSupply implements an alias call to the underlying staking manager's
+// StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
 func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 	return k.sk.StakingTokenSupply(ctx)
 }
 
-// BondedRatio implements an alias call to the underlying staking manager's
+// BondedRatio implements an alias call to the underlying staking keeper's
 // BondedRatio to be used in BeginBlocker.
 func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 	return k.sk.BondedRatio(ctx)
 }
 
-// MintCoins implements an alias call to the underlying supply manager's
+// MintCoins implements an alias call to the underlying supply keeper's
 // MintCoins to be used in BeginBlocker.
 func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
@@ -106,7 +106,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.supplyKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// AddCollectedFees implements an alias call to the underlying supply manager's
+// AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)

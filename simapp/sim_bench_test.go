@@ -91,7 +91,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// 3. Benchmark each invariant separately
 	//
-	// NOTE: We use the crisis manager as it has all the invariants registered with
+	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
 	for _, cr := range app.CrisisKeeper.Routes() {
 		cr := cr

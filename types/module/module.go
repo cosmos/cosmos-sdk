@@ -7,7 +7,7 @@ The module pattern has been broken down by:
  - inter-dependent module full functionality (AppModule)
 
 inter-dependent module functionality is module functionality which somehow
-depends on other modules, typically through the module manager.  Many of the
+depends on other modules, typically through the module keeper.  Many of the
 module keepers are dependent on each other, thus in order to access the full
 set of module functionality we need to define all the keepers/params-store/keys
 etc. This full set of advanced functionality is defined by the AppModule interface.

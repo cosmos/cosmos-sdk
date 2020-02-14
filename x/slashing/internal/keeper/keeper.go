@@ -19,7 +19,7 @@ type Keeper struct {
 	paramspace types.ParamSubspace
 }
 
-// NewKeeper creates a slashing manager
+// NewKeeper creates a slashing keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
 	return Keeper{
 		storeKey:   key,

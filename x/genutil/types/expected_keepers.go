@@ -11,12 +11,12 @@ import (
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
-// StakingKeeper defines the expected staking manager (noalias)
+// StakingKeeper defines the expected staking keeper (noalias)
 type StakingKeeper interface {
 	ApplyAndReturnValidatorSetUpdates(sdk.Context) (updates []abci.ValidatorUpdate)
 }
 
-// AccountKeeper defines the expected account manager (noalias)
+// AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	NewAccount(sdk.Context, authexported.Account) authexported.Account
 	SetAccount(sdk.Context, authexported.Account)

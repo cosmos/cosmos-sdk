@@ -29,7 +29,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	cdc := app.Codec()
 	cdc.RegisterConcrete(types.TestEquivocationEvidence{}, "test/TestEquivocationEvidence", nil)
 
-	// recreate manager in order to use custom testing types
+	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
 		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
 	)

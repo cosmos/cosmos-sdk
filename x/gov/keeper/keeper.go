@@ -33,7 +33,7 @@ type Keeper struct {
 	router types.Router
 }
 
-// NewKeeper returns a governance manager. It handles:
+// NewKeeper returns a governance keeper. It handles:
 // - submitting governance proposals
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system

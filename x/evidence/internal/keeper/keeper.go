@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
-// Keeper defines the evidence module's manager. The manager is responsible for
+// Keeper defines the evidence module's keeper. The keeper is responsible for
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// default paramspace for params manager
+	// default paramspace for params keeper
 	DefaultParamspace = ModuleName
 )
 

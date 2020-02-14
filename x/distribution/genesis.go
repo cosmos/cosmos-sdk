@@ -56,7 +56,7 @@ func InitGenesis(ctx sdk.Context, bk types.BankKeeper, supplyKeeper types.Supply
 	}
 }
 
-// ExportGenesis returns a GenesisState for a given context and manager.
+// ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
 	params := keeper.GetParams(ctx)

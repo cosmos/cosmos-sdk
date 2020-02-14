@@ -43,13 +43,13 @@ be a matter of minutes and not even require them to be awake at that time.
 Integrating With An App
 
 Setup an upgrade Keeper for the app and then define a BeginBlocker that calls the upgrade
-manager's BeginBlocker method:
+keeper's BeginBlocker method:
     func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
     	app.upgradeKeeper.BeginBlocker(ctx, req)
     	return abci.ResponseBeginBlock{}
     }
 
-The app must then integrate the upgrade manager with its governance module as appropriate. The governance module
+The app must then integrate the upgrade keeper with its governance module as appropriate. The governance module
 should call ScheduleUpgrade to schedule an upgrade and ClearUpgradePlan to cancel a pending upgrade.
 
 Performing Upgrades
@@ -75,7 +75,7 @@ that looks like:
 	UPGRADE "<Name>" NEEDED at height <NNNN>: <Info>
 where Name are Info are the values of the respective fields on the upgrade Plan.
 
-To perform the actual halt of the blockchain, the upgrade manager simply panics which prevents the ABCI state machine
+To perform the actual halt of the blockchain, the upgrade keeper simply panics which prevents the ABCI state machine
 from proceeding but doesn't actually exit the process. Exiting the process can cause issues for other nodes that start
 to lose connectivity with the exiting nodes, thus this module prefers to just halt but not exit.
 

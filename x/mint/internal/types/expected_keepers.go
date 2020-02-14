@@ -5,13 +5,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// StakingKeeper defines the expected staking manager
+// StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
 	StakingTokenSupply(ctx sdk.Context) sdk.Int
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 
-// SupplyKeeper defines the expected supply manager
+// SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 

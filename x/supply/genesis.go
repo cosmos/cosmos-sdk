@@ -25,7 +25,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, bk types.BankKeeper, data Genes
 	keeper.SetSupply(ctx, types.NewSupply(data.Supply))
 }
 
-// ExportGenesis returns a GenesisState for a given context and manager.
+// ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 	return NewGenesisState(keeper.GetSupply(ctx).GetTotal())
 }

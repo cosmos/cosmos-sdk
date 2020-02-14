@@ -19,7 +19,7 @@ import (
 // "{eventAttribute}.{attributeKey} = '{attributeValue}'". Each event is
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
-// If an empty string is provided then it will default the order of the txs by asc
+// If an empty string is provided it will order txs by asc
 func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(events) == 0 {
 		return nil, errors.New("must declare at least one event to search")

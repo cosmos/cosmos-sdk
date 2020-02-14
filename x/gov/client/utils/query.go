@@ -171,7 +171,7 @@ func QueryDepositByTxQuery(cliCtx context.CLIContext, params types.QueryDepositP
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	searchResult, err := authclient.QueryTxsByEvents(cliCtx, events, defaultPage, defaultLimit, "") // query in asc order
+	searchResult, err := authclient.QueryTxsByEvents(cliCtx, events, defaultPage, defaultLimit, "")
 	if err != nil {
 		return nil, err
 	}

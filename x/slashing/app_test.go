@@ -48,7 +48,7 @@ func TestSlashingMsgs(t *testing.T) {
 	}
 	accs := authexported.GenesisAccounts{acc1}
 	balances := []bank.Balance{
-		bank.Balance{
+		{
 			Address: addr1,
 			Coins:   sdk.Coins{genCoin},
 		},

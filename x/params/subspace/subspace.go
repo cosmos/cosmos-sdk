@@ -22,7 +22,7 @@ const (
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {
-	cdc   *codec.Codec
+	cdc   codec.Marshaler
 	key   sdk.StoreKey // []byte -> []byte, stores parameter
 	tkey  sdk.StoreKey // []byte -> bool, stores parameter change
 	name  []byte
@@ -30,7 +30,7 @@ type Subspace struct {
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.Marshaler, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
 	return Subspace{
 		cdc:   cdc,
 		key:   key,
@@ -99,6 +99,8 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
 // value to the provided pointer. If the value does not exist, it will panic.
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+	s.checkType(key, ptr)
+
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 

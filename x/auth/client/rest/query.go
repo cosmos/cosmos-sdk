@@ -99,7 +99,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		searchResult, err := client.QueryTxsByEvents(cliCtx, events, page, limit)
+		searchResult, err := client.QueryTxsByEvents(cliCtx, events, page, limit, "")
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

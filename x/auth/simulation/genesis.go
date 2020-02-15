@@ -97,17 +97,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 // RandomGenesisAccounts returns randomly generated genesis accounts
 func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs exported.GenesisAccounts) {
 	for i, acc := range simState.Accounts {
-		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))}
 		bacc := types.NewBaseAccountWithAddress(acc.Address)
-		if err := bacc.SetCoins(coins); err != nil {
-			panic(err)
-		}
-
 		var gacc exported.GenesisAccount = &bacc
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
 		if int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50 {
+			initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.Rand.Int63n(simState.InitialStake)))
 			var endTime int64
 
 			startTime := simState.GenTimestamp.Unix()
@@ -119,12 +115,15 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs export
 				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
 			}
 
+			bva := vestingtypes.NewBaseVestingAccount(&bacc, initialVesting, endTime)
+
 			if simState.Rand.Intn(100) < 50 {
-				gacc = vestingtypes.NewContinuousVestingAccount(&bacc, startTime, endTime)
+				gacc = vestingtypes.NewContinuousVestingAccountRaw(bva, startTime)
 			} else {
-				gacc = vestingtypes.NewDelayedVestingAccount(&bacc, endTime)
+				gacc = vestingtypes.NewDelayedVestingAccountRaw(bva)
 			}
 		}
+
 		genesisAccs = append(genesisAccs, gacc)
 	}
 

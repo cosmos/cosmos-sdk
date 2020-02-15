@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.x.auth.v1;
 
+import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 
@@ -16,6 +17,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 // Applications may extend account functionality and types by extending the
 // oneof set and using their own AuthCodec (e.g. types/vesting).
 message Account {
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/auth/exported.Account";
+
   // sum defines a list of all acceptable concrete Account implementations. The
   // base Account type only specifies a BaseAccount as the only valid for the sum.
   oneof sum {

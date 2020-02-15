@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"errors"
-	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
@@ -11,9 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
-
-//-----------------------------------------------------------------------------
-// BaseAccount
 
 var _ exported.Account = (*BaseAccount)(nil)
 var _ exported.GenesisAccount = (*BaseAccount)(nil)
@@ -115,30 +111,4 @@ func (acc BaseAccount) Validate() error {
 func (acc BaseAccount) String() string {
 	out, _ := yaml.Marshal(acc)
 	return string(out)
-}
-
-// SetAccount sets the Account's oneof sum type to the provided Account type.
-// The provided Account type must be a reference to a BaseAccount.
-func (acc *Account) SetAccount(value exported.Account) error {
-	if value == nil {
-		acc.Sum = nil
-		return nil
-	}
-
-	baseAcc, ok := value.(*BaseAccount)
-	if ok {
-		acc.Sum = &Account_BaseAccount{baseAcc}
-		return nil
-	}
-
-	return fmt.Errorf("failed to encode value of type %T as message Account", value)
-}
-
-// GetAccount returns an Account based on the internal oneof sum type.
-func (acc *Account) GetAccount() exported.Account {
-	if x := acc.GetBaseAccount(); x != nil {
-		return x
-	}
-
-	return nil
 }

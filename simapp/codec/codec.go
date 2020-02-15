@@ -35,7 +35,10 @@ func NewAppCodec(amino *codec.Codec) *Codec {
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
 	acc := &Account{}
-	acc.SetAccount(accI)
+	if err := acc.SetAccount(accI); err != nil {
+		return nil, err
+	}
+
 	return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
 }
 
@@ -46,6 +49,7 @@ func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
 		return nil, err
 	}
+
 	return acc.GetAccount(), nil
 }
 
@@ -70,7 +74,10 @@ func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
 	supply := &Supply{}
-	supply.SetSupplyI(supplyI)
+	if err := supply.SetSupplyI(supplyI); err != nil {
+		return nil, err
+	}
+
 	return c.Marshaler.MarshalBinaryLengthPrefixed(supply)
 }
 

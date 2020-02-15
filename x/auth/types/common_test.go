@@ -34,7 +34,10 @@ func NewCodec(amino *codec.Codec) *Codec {
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalAccount(accI exported.Account) ([]byte, error) {
 	acc := &types.Account{}
-	acc.SetAccount(accI)
+	if err := acc.SetAccount(accI); err != nil {
+		return nil, err
+	}
+
 	return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
 }
 

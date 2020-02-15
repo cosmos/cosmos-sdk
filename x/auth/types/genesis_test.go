@@ -58,14 +58,14 @@ func TestGenesisAccountIterator(t *testing.T) {
 	authGenState.Accounts = genAccounts
 
 	appGenesis := make(map[string]json.RawMessage)
-	authGenStateBz, err := accountCdc.MarshalJSON(authGenState)
+	authGenStateBz, err := appCodec.MarshalJSON(authGenState)
 	require.NoError(t, err)
 
 	appGenesis[types.ModuleName] = authGenStateBz
 
 	var addresses []sdk.AccAddress
 	types.GenesisAccountIterator{}.IterateGenesisAccounts(
-		accountCdc, appGenesis, func(acc exported.Account) (stop bool) {
+		appCodec, appGenesis, func(acc exported.Account) (stop bool) {
 			addresses = append(addresses, acc.GetAddress())
 			return false
 		},

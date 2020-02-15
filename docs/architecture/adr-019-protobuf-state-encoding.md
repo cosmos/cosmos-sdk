@@ -162,6 +162,38 @@ Since the `Codec` implements `auth.Codec` (and all other required interfaces), i
 the modules and satisfies all the interfaces. Now each module needing to work with interfaces will know
 about all the required types.
 
+Note, the use of `interface_type` allows us to avoid a significant amount of code boilerplate when
+implementing the `Codec`.
+
+Example:
+
+```go
+// app/codec/codec.go
+
+import (
+  authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+  // ...
+)
+
+func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
+  acc := &Account{}
+  if err := acc.SetAccount(accI); err != nil {
+    return nil, err
+  }
+
+  return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
+}
+
+func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
+  acc := &Account{}
+  if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
+    return nil, err
+  }
+
+  return acc.GetAccount(), nil
+}
+```
+
 ### Why Wasn't X Chosen Instead
 
 For a more complete comparison to alternative protocols, see [here](https://codeburst.io/json-vs-protocol-buffers-vs-flatbuffers-a4247f8bda6f).

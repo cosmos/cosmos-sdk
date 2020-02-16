@@ -24,7 +24,7 @@ func Test_validateAuxFuncs(t *testing.T) {
 		{"two dec", args{sdk.NewDec(2)}, true},
 	}
 	for _, tt := range tests {
-		tt = tt
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.wantErr, validateCommunityTax(tt.args.i) != nil)
 			require.Equal(t, tt.wantErr, validateBaseProposerReward(tt.args.i) != nil)

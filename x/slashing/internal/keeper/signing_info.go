@@ -77,13 +77,14 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 	index := int64(0)
 	// Array may be sparse
 	for ; index < k.SignedBlocksWindow(ctx); index++ {
-		var missed bool
+		var missed gogotypes.BoolValue
 		bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
 		if bz == nil {
 			continue
 		}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &gogotypes.BoolValue{Value: missed})
-		if handler(index, missed) {
+
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+		if handler(index, missed.Value) {
 			break
 		}
 	}

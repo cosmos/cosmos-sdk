@@ -49,11 +49,11 @@ func TestStakingMsgs(t *testing.T) {
 	acc2 := &auth.BaseAccount{Address: addr2}
 	accs := authexported.GenesisAccounts{acc1, acc2}
 	balances := []bank.Balance{
-		bank.Balance{
+		{
 			Address: addr1,
 			Coins:   sdk.Coins{genCoin},
 		},
-		bank.Balance{
+		{
 			Address: addr2,
 			Coins:   sdk.Coins{genCoin},
 		},

@@ -1,12 +1,11 @@
 package types
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -32,18 +31,10 @@ var (
 
 var _ subspace.ParamSet = &Params{}
 
-// Params defines the parameters for the auth module.
-type Params struct {
-	MaxMemoCharacters      uint64 `json:"max_memo_characters" yaml:"max_memo_characters"`
-	TxSigLimit             uint64 `json:"tx_sig_limit" yaml:"tx_sig_limit"`
-	TxSizeCostPerByte      uint64 `json:"tx_size_cost_per_byte" yaml:"tx_size_cost_per_byte"`
-	SigVerifyCostED25519   uint64 `json:"sig_verify_cost_ed25519" yaml:"sig_verify_cost_ed25519"`
-	SigVerifyCostSecp256k1 uint64 `json:"sig_verify_cost_secp256k1" yaml:"sig_verify_cost_secp256k1"`
-}
-
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte,
-	sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
+func NewParams(
+	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64,
+) Params {
 
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
@@ -72,13 +63,6 @@ func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
 	}
 }
 
-// Equal returns a boolean determining if two Params types are identical.
-func (p Params) Equal(p2 Params) bool {
-	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p)
-	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p2)
-	return bytes.Equal(bz1, bz2)
-}
-
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
@@ -92,14 +76,8 @@ func DefaultParams() Params {
 
 // String implements the stringer interface.
 func (p Params) String() string {
-	var sb strings.Builder
-	sb.WriteString("Params: \n")
-	sb.WriteString(fmt.Sprintf("MaxMemoCharacters: %d\n", p.MaxMemoCharacters))
-	sb.WriteString(fmt.Sprintf("TxSigLimit: %d\n", p.TxSigLimit))
-	sb.WriteString(fmt.Sprintf("TxSizeCostPerByte: %d\n", p.TxSizeCostPerByte))
-	sb.WriteString(fmt.Sprintf("SigVerifyCostED25519: %d\n", p.SigVerifyCostED25519))
-	sb.WriteString(fmt.Sprintf("SigVerifyCostSecp256k1: %d\n", p.SigVerifyCostSecp256k1))
-	return sb.String()
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 func validateTxSigLimit(i interface{}) error {

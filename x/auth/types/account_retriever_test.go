@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var errFoo = errors.New("dummy")
@@ -17,9 +18,9 @@ func TestAccountRetriever(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockNodeQuerier := mocks.NewMockNodeQuerier(mockCtrl)
-	accRetr := NewAccountRetriever(mockNodeQuerier)
+	accRetr := types.NewAccountRetriever(appCodec, mockNodeQuerier)
 	addr := []byte("test")
-	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
+	bs, err := appCodec.MarshalJSON(types.NewQueryAccountParams(addr))
 	require.NoError(t, err)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq("custom/acc/account"),

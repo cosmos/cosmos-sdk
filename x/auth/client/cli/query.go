@@ -50,7 +50,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			accGetter := types.NewAccountRetriever(cliCtx)
+			accGetter := types.NewAccountRetriever(Codec, cliCtx)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -118,7 +118,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			limit := viper.GetInt(flags.FlagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit)
+			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}

@@ -41,9 +41,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account
 balances or a single balance by denom when the `denom` query parameter is present.
+* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by
+´/´.
 
 ### API Breaking Changes
 
+* (x/params) [\#5619](https://github.com/cosmos/cosmos-sdk/pull/5619) The `x/params` keeper now accepts a `codec.Marshaller` instead of
+a reference to an amino codec. Amino is still used for JSON serialization.
 * (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The `keepRecent` field has been removed from the `PruningOptions` type.
 The `PruningOptions` type now only includes fields `KeepEvery` and `SnapshotEvery`, where `KeepEvery`
 determines which committed heights are flushed to disk and `SnapshotEvery` determines which of these
@@ -53,17 +57,12 @@ flushed to disk or kept as a snapshot. Note, `KeepRecent` is automatically infer
 and provided directly the IAVL store.
 * (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move x/auth/client/utils/ types and functions to x/auth/client/.
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
+* (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
+to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 
 ### Bug Fixes
 
-* (x/gov) [\#5622](https://github.com/cosmos/cosmos-sdk/pull/5622) Track any events emitted from a proposal's handler upon successful execution.
-* (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The IAVL `Store#Commit` method has been refactored to
-delete a flushed version if it is not a snapshot version. The root multi-store now keeps track of `commitInfo` instead
-of `types.CommitID`. During `Commit` of the root multi-store, `lastCommitInfo` is updated from the saved state
-and is only flushed to disk if it is a snapshot version. During `Query` of the root multi-store, if the request height
-is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetch `commitInfo` from disk.
-* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
-* (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set. 
+* (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set.
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 * (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`
 
@@ -75,7 +74,7 @@ is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetc
   * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
   the original vesting amount.
   * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
-* (staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffer for state
+* (x/staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffers for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.
   * `BondStatus` is now of type `int32` instead of `byte`.
@@ -83,7 +82,7 @@ for JSON encoding.
   * Every reference of `crypto.Pubkey` in context of a `Validator` is now of type string. `GetPubKeyFromBech32` must be used to get the `crypto.Pubkey`.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
   provided is specified by `ModuleCdc`.
-* (distr) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffer for state
+* (x/distribution) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffers for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.
   * `ValidatorHistoricalRewards.ReferenceCount` is now of types `uint32` instead of `uint16`.
@@ -92,12 +91,24 @@ for JSON encoding.
   * `ValidatorAccumulatedCommission` is now a struct with `commission`.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
   provided is specified by `ModuleCdc`.
+* (x/auth) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/auth` module to use Protocol Buffers for state
+serialization instead of Amino.
+  * The `BaseAccount.PubKey` field is now represented as a Bech32 string instead of a `crypto.Pubkey`.
+  * `NewBaseAccountWithAddress` now returns a reference to a `BaseAccount`.
+  * The `x/auth` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+  requiring a concrete codec to know how to serialize accounts.
+  * The `AccountRetriever` type now accepts a `Codec` in its constructor in order to know how to
+  serialize accounts.
+* (x/supply) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/supply` module to use Protocol Buffers for state
+serialization instead of Amino.
+  * The `internal` sub-package has been removed in order to expose the types proto file.
+  * The `x/supply` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+  requiring a concrete codec to know how to serialize `SupplyI` types.
+  * The `SupplyI` interface has been modified to no longer return `SupplyI` on methods. Instead the
+  concrete type's receiver should modify the type.
 
 ### Improvements
 
-* (modules) [\#5597](https://github.com/cosmos/cosmos-sdk/pull/5597) Add `amount` event attribute to the `complete_unbonding`
-and `complete_redelegation` events that reflect the total balances of the completed unbondings and redelegations
-respectively.
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
 * (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
 * (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
@@ -106,6 +117,24 @@ respectively.
 * (types) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
   * `Coin` denomination max lenght has been increased to 32.
   * Added `CapabilityKey` alias for `StoreKey` to match IBC spec.
+
+## [v0.38.1] - 2020-02-11
+
+### Improvements
+
+* (modules) [\#5597](https://github.com/cosmos/cosmos-sdk/pull/5597) Add `amount` event attribute to the `complete_unbonding`
+and `complete_redelegation` events that reflect the total balances of the completed unbondings and redelegations
+respectively.
+
+### Bug Fixes
+
+* (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The IAVL `Store#Commit` method has been refactored to
+delete a flushed version if it is not a snapshot version. The root multi-store now keeps track of `commitInfo` instead
+of `types.CommitID`. During `Commit` of the root multi-store, `lastCommitInfo` is updated from the saved state
+and is only flushed to disk if it is a snapshot version. During `Query` of the root multi-store, if the request height
+is the latest height, we'll use the store's `lastCommitInfo`. Otherwise, we fetch `commitInfo` from disk.
+* (x/bank) [\#5531](https://github.com/cosmos/cosmos-sdk/issues/5531) Added missing amount event to MsgMultiSend, emitted for each output.
+* (x/gov) [\#5622](https://github.com/cosmos/cosmos-sdk/pull/5622) Track any events emitted from a proposal's handler upon successful execution.
 
 ## [v0.38.0] - 2020-01-23
 
@@ -2945,7 +2974,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.38.0...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.38.1...HEAD
+[v0.38.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.1
 [v0.38.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.0
 [v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6

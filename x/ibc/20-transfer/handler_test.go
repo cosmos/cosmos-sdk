@@ -174,7 +174,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // sender has insufficient coins
 
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testCoins)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testCoins)
 	res, err = handler(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res, "%+v", res) // successfully executed
@@ -183,7 +183,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	source = false
 
 	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, source)
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins2)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins2)
 
 	res, err = handler(suite.ctx, msg)
 	suite.Require().Error(err)
@@ -191,7 +191,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, source)
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins1)
+	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins1)
 
 	res, err = handler(suite.ctx, msg)
 	suite.Require().NoError(err)

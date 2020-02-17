@@ -84,16 +84,6 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 		return abci.ResponseQuery{}, err
 	}
 
-	// When a client did not provide a query height, manually query for it so it can
-	// be injected downstream into responses.
-	if ctx.Height == 0 {
-		status, err := node.Status()
-		if err != nil {
-			return abci.ResponseQuery{}, err
-		}
-		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
-	}
-
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
 		Prove:  req.Prove || !ctx.TrustNode,
@@ -105,8 +95,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 	}
 
 	if !result.Response.IsOK() {
-		err = errors.New(result.Response.Log)
-		return abci.ResponseQuery{}, err
+		return abci.ResponseQuery{}, errors.New(result.Response.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
@@ -114,8 +103,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 		return result.Response, nil
 	}
 
-	err = ctx.verifyProof(req.Path, result.Response)
-	if err != nil {
+	if err = ctx.verifyProof(req.Path, result.Response); err != nil {
 		return abci.ResponseQuery{}, err
 	}
 
@@ -141,6 +129,9 @@ func (ctx CLIContext) query(path string, key tmbytes.HexBytes) ([]byte, int64, e
 
 // Verify verifies the consensus proof at given height.
 func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
+	if ctx.Verifier == nil {
+		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
+	}
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 	switch {
 	case tmliteErr.IsErrCommitNotFound(err):

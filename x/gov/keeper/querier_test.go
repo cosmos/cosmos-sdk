@@ -142,7 +142,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 }
 
 func TestQueries(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 1000)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 1000) // nolint: dogsled
 	querier := NewQuerier(keeper)
 
 	oneCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))
@@ -285,7 +285,7 @@ func TestQueries(t *testing.T) {
 }
 
 func TestPaginatedVotesQuery(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 1000)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 1000) // nolint: dogsled
 
 	proposal := types.Proposal{
 		ProposalID: 100,

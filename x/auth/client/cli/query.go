@@ -46,7 +46,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account [address]",
-		Short: "Query account balance",
+		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -118,7 +118,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			limit := viper.GetInt(flags.FlagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit)
+			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}

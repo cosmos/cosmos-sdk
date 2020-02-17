@@ -145,7 +145,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 	// end current period and calculate rewards
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 	rewardsRaw := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
-	outstanding := k.GetValidatorOutstandingRewards(ctx, del.GetValidatorAddr())
+	outstanding := k.GetValidatorOutstandingRewardsCoins(ctx, del.GetValidatorAddr())
 
 	// defensive edge case may happen on the very final digits
 	// of the decCoins due to operation order of the distribution mechanism.
@@ -171,7 +171,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 
 	// update the outstanding rewards and the community pool only if the
 	// transaction was successful
-	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
+	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
 	k.SetFeePool(ctx, feePool)

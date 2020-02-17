@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -44,9 +45,9 @@ func Setup(isCheckTx bool) *SimApp {
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new SimApp with the passed in
-// genesis accounts.
-func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
+// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
+// accounts and possible balances.
+func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ...bank.Balance) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
 
@@ -54,15 +55,16 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	genesisState := NewDefaultGenesisState()
 
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
-	genesisStateBz := app.Codec().MustMarshalJSON(authGenesis)
-	genesisState[auth.ModuleName] = genesisStateBz
+	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
+
+	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances)
+	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
 		panic(err)
 	}
 
-	// Initialize the chain
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:    []abci.ValidatorUpdate{},
@@ -92,6 +94,9 @@ func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sd
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		app.AccountKeeper.SetAccount(ctx, acc)
+
 		_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
 		if err != nil {
 			panic(err)

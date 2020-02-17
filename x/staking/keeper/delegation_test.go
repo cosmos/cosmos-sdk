@@ -233,7 +233,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	// should all pass
 	var completionTime time.Time
-	for i := uint16(0); i < maxEntries; i++ {
+	for i := uint32(0); i < maxEntries; i++ {
 		var err error
 		completionTime, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 		require.NoError(t, err)
@@ -414,7 +414,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, blockHeight, validator.UnbondingHeight)
 	params := keeper.GetParams(ctx)
-	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingCompletionTime))
+	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
 	blockHeight2 := int64(20)
 	blockTime2 := time.Unix(444, 0).UTC()
@@ -489,10 +489,10 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), validator.UnbondingHeight)
 	params := keeper.GetParams(ctx)
-	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingCompletionTime))
+	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
 	// unbond the validator
-	ctx = ctx.WithBlockTime(validator.UnbondingCompletionTime)
+	ctx = ctx.WithBlockTime(validator.UnbondingTime)
 	keeper.UnbondAllMatureValidatorQueue(ctx)
 
 	// Make sure validator is still in state because there is still an outstanding delegation
@@ -579,7 +579,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	require.Equal(t, validator.Status, sdk.Unbonding)
 
 	// unbond the validator
-	ctx = ctx.WithBlockTime(validator.UnbondingCompletionTime)
+	ctx = ctx.WithBlockTime(validator.UnbondingTime)
 	keeper.UnbondAllMatureValidatorQueue(ctx)
 
 	// validator should now be deleted from state
@@ -733,7 +733,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 
 	// redelegations should pass
 	var completionTime time.Time
-	for i := uint16(0); i < maxEntries; i++ {
+	for i := uint32(0); i < maxEntries; i++ {
 		var err error
 		completionTime, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
 		require.NoError(t, err)
@@ -863,7 +863,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, blockHeight, validator.UnbondingHeight)
 	params := keeper.GetParams(ctx)
-	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingCompletionTime))
+	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
 	//change the context
 	header = ctx.BlockHeader()
@@ -940,7 +940,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), validator.UnbondingHeight)
 	params := keeper.GetParams(ctx)
-	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingCompletionTime))
+	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
 	// unbond the validator
 	keeper.unbondingToUnbonded(ctx, validator)

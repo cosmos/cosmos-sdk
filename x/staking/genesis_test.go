@@ -25,15 +25,21 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]Validator, 2)
 	var delegations []Delegation
 
+	pk0, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keep.PKs[0])
+	require.NoError(t, err)
+
+	pk1, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keep.PKs[1])
+	require.NoError(t, err)
+
 	// initialize the validators
 	validators[0].OperatorAddress = sdk.ValAddress(keep.Addrs[0])
-	validators[0].ConsPubKey = keep.PKs[0]
+	validators[0].ConsensusPubkey = pk0
 	validators[0].Description = NewDescription("hoop", "", "", "", "")
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = valTokens
 	validators[0].DelegatorShares = valTokens.ToDec()
 	validators[1].OperatorAddress = sdk.ValAddress(keep.Addrs[1])
-	validators[1].ConsPubKey = keep.PKs[1]
+	validators[1].ConsensusPubkey = pk1
 	validators[1].Description = NewDescription("bloop", "", "", "", "")
 	validators[1].Status = sdk.Bonded
 	validators[1].Tokens = valTokens

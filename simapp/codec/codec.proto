@@ -5,7 +5,7 @@ import "third_party/proto/cosmos-proto/cosmos.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
 import "x/supply/types/types.proto";
-// import "x/evidence/types/types.proto";
+import "x/evidence/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/simapp/codec";
 
@@ -33,10 +33,10 @@ message Supply {
   }
 }
 
-// message Evidence {
-//   option (cosmos_proto.interface_type) =
-//       "*github.com/cosmos/cosmos-sdk/x/evidence/exported.EvidenceI";
-//   oneof ev {
-//     cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
-//   }
-// }
+message Evidence {
+  option (cosmos_proto.interface_type) =
+      "*github.com/cosmos/cosmos-sdk/x/evidence/exported.EvidenceI";
+  oneof ev {
+    cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
+  }
+}

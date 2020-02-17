@@ -14,7 +14,7 @@ import (
 	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramsmod "github.com/cosmos/cosmos-sdk/x/params"
+	paramsmod "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {

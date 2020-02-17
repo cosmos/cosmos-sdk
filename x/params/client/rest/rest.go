@@ -9,8 +9,8 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	params "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the param

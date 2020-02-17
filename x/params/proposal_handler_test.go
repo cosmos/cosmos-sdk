@@ -3,6 +3,8 @@ package params_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/params"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,8 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	params2 "github.com/cosmos/cosmos-sdk/x/params"
+	ptypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 func validateNoOp(_ interface{}) error { return nil }
@@ -51,8 +52,8 @@ func (tp *testParams) ParamSetPairs() types.ParamSetPairs {
 	}
 }
 
-func testProposal(changes ...params.ParamChange) params.ParameterChangeProposal {
-	return params.NewParameterChangeProposal(
+func testProposal(changes ...ptypes.ParamChange) ptypes.ParameterChangeProposal {
+	return ptypes.NewParameterChangeProposal(
 		"Test",
 		"description",
 		changes,
@@ -61,7 +62,7 @@ func testProposal(changes ...params.ParamChange) params.ParameterChangeProposal 
 
 func newTestInput(t *testing.T) testInput {
 	cdc := codec.New()
-	params.RegisterCodec(cdc)
+	ptypes.RegisterCodec(cdc)
 
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
@@ -75,7 +76,7 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := manager.New(params.ModuleCdc, keyParams, tKeyParams)
+	keeper := manager.New(ptypes.ModuleCdc, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}
@@ -87,8 +88,8 @@ func TestProposalHandlerPassed(t *testing.T) {
 		types.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "1"))
-	hdlr := params2.NewParamChangeProposalHandler(input.keeper)
+	tp := testProposal(ptypes.NewParamChange(testSubspace, keyMaxValidators, "1"))
+	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.NoError(t, hdlr(input.ctx, tp))
 
 	var param uint16
@@ -102,8 +103,8 @@ func TestProposalHandlerFailed(t *testing.T) {
 		types.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	tp := testProposal(params.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
-	hdlr := params2.NewParamChangeProposalHandler(input.keeper)
+	tp := testProposal(ptypes.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
+	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.Error(t, hdlr(input.ctx, tp))
 
 	require.False(t, ss.Has(input.ctx, []byte(keyMaxValidators)))
@@ -115,16 +116,16 @@ func TestProposalHandlerUpdateOmitempty(t *testing.T) {
 		types.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	hdlr := params2.NewParamChangeProposalHandler(input.keeper)
+	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	var param testParamsSlashingRate
 
-	tp := testProposal(params.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
+	tp := testProposal(ptypes.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
 	require.NoError(t, hdlr(input.ctx, tp))
 
 	ss.Get(input.ctx, []byte(keySlashingRate), &param)
 	require.Equal(t, testParamsSlashingRate{0, 7}, param)
 
-	tp = testProposal(params.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
+	tp = testProposal(ptypes.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
 	require.NoError(t, hdlr(input.ctx, tp))
 
 	ss.Get(input.ctx, []byte(keySlashingRate), &param)

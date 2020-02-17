@@ -50,6 +50,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 				suite.Require().NoError(err, "errored on initialization")
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
 			}
+			// If we were able to initialize clientstate successfully, try persisting it to state
 			if err == nil {
 				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			}

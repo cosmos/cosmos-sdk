@@ -64,19 +64,19 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			height - 1,
 			true,
 		},
-		// {
-		// 	"consensus state's valset hash different from evidence",
-		// 	ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
-		// 	ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: suite.valSet},
-		// 	ibctmtypes.Evidence{
-		// 		Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
-		// 		Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
-		// 		ChainID:  chainID,
-		// 		ClientID: chainID,
-		// 	},
-		// 	height,
-		// 	false,
-		// },
+		{
+			"consensus state's valset hash different from evidence should still pass",
+			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: suite.valSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
+			},
+			height - 1,
+			true,
+		},
 		{
 			"first valset has too much change",
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),

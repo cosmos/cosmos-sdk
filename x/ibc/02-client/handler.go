@@ -16,7 +16,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 	switch clientType {
 	case 0:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
-	case 1:
+	case exported.Tendermint:
 		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
 		if !ok {
 			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")

@@ -66,7 +66,7 @@ func checkMisbehaviour(
 	if height > uint64(evidence.GetHeight()) {
 		return sdkerrors.Wrapf(
 			ibctypes.ErrInvalidHeight,
-			"height > evidence header height (%d ≠ %d)", height, evidence.GetHeight(),
+			"height > evidence header height (%d > %d)", height, evidence.GetHeight(),
 		)
 	}
 

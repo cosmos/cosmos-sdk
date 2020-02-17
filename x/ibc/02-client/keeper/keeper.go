@@ -95,6 +95,13 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 	store.Set(ibctypes.KeyConsensusState(clientID, height), bz)
 }
 
+// HasClientConsensusState returns if keeper has a ConsensusState for a particular
+// client at the given height
+func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(ibctypes.KeyConsensusState(clientID, height))
+}
+
 // GetLatestClientConsensusState gets the latest ConsensusState stored for a given client
 func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) (exported.ConsensusState, bool) {
 	clientState, ok := k.GetClientState(ctx, clientID)
@@ -108,9 +115,9 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 // less than or equal to the given height
 func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight uint64) (exported.ConsensusState, bool) {
 	for i := maxHeight; i > 0; i-- {
-		consState, ok := k.GetClientConsensusState(ctx, clientID, i)
-		if ok {
-			return consState, ok
+		found := k.HasClientConsensusState(ctx, clientID, i)
+		if found {
+			return k.GetClientConsensusState(ctx, clientID, i)
 		}
 	}
 	return nil, false

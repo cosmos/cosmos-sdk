@@ -213,6 +213,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	}
 
 	clientState, err := ibctmtypes.Initialize(clientID, consensusState, trustingPeriod, ubdPeriod)
+	suite.Require().NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.Require().NoError(err)
 }

@@ -3,7 +3,6 @@ package tendermint
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -54,16 +53,7 @@ func CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
-	var newFrozenHeight uint64
-	if tmClientState.IsFrozen() {
-		// freeze at an earlier height if another misbehaviour is discovered
-		newFrozenHeight = uint64(math.Min(float64(tmClientState.FrozenHeight), float64(tmEvidence.GetHeight())))
-	} else {
-		newFrozenHeight = uint64(tmEvidence.GetHeight())
-	}
-
-	tmClientState.FrozenHeight = newFrozenHeight
-
+	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
 	return tmClientState, nil
 }
 

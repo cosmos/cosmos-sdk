@@ -116,33 +116,6 @@ modules using a `oneof` approach.
 
 Example:
 
-```go
-// app/codec/codec.go
-
-import (
-  "github.com/cosmos/cosmos-sdk/codec"
-  "github.com/cosmos/cosmos-sdk/x/auth"
-  "github.com/cosmos/cosmos-sdk/x/supply"
-  // ...
-)
-
-var (
-  _ auth.Codec   = (*Codec)(nil)
-  // ...
-)
-
-type Codec struct {
-  codec.Marshaler
-
-
-  amino *codec.Codec
-}
-
-func NewAppCodec(amino *codec.Codec) *Codec {
-  return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
-}
-```
-
 ```protobuf
 // app/codec/codec.proto
 
@@ -167,22 +140,32 @@ message Account {
 }
 ```
 
-Since the `Codec` implements `auth.Codec` (and all other required interfaces), it is passed to _all_
-the modules and satisfies all the interfaces. Now each module needing to work with interfaces will know
-about all the required types.
-
-Note, the use of `interface_type` allows us to avoid a significant amount of code boilerplate when
-implementing the `Codec`.
-
-Example:
-
 ```go
 // app/codec/codec.go
 
 import (
+  "github.com/cosmos/cosmos-sdk/codec"
+  "github.com/cosmos/cosmos-sdk/x/auth"
+  "github.com/cosmos/cosmos-sdk/x/supply"
   authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
   // ...
 )
+
+var (
+  _ auth.Codec   = (*Codec)(nil)
+  // ...
+)
+
+type Codec struct {
+  codec.Marshaler
+
+
+  amino *codec.Codec
+}
+
+func NewAppCodec(amino *codec.Codec) *Codec {
+  return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
+}
 
 func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
   acc := &Account{}
@@ -202,6 +185,17 @@ func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
   return acc.GetAccount(), nil
 }
 ```
+
+Since the `Codec` implements `auth.Codec` (and all other required interfaces), it is passed to _all_
+the modules and satisfies all the interfaces. Now each module needing to work with interfaces will know
+about all the required types. Note, the use of `interface_type` allows us to avoid a significant
+amount of code boilerplate when implementing the `Codec`.
+
+A similar concept is to be applied for messages that contain interfaces fields. The module will
+define a "base" concrete message type (e.g. `MsgSubmitProposalBase`) that the application-level codec
+will extend via `oneof` (e.g. `MsgSubmitProposal`) that fulfills the required interface
+(e.g. `MsgSubmitProposalI`). Note, however, the module's message handler must now switch on the
+interface rather than the concrete type for this particular message.
 
 ### Why Wasn't X Chosen Instead
 

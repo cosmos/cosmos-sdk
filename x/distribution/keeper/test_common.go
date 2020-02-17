@@ -16,8 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/manager"
 	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -90,7 +90,7 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(
 	t *testing.T, isCheckTx bool, initPower int64, communityTax sdk.Dec,
-) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, manager.Manager, types.SupplyKeeper,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, keeper.Keeper, types.SupplyKeeper,
 ) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
@@ -128,7 +128,7 @@ func CreateTestInputAdvanced(
 	blacklistedAddrs[distrAcc.GetAddress().String()] = true
 
 	cdc := MakeTestCodec()
-	pk := manager.New(params.ModuleCdc, keyParams, tkeyParams)
+	pk := keeper.New(params.ModuleCdc, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)

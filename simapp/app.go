@@ -25,8 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramsmod "github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
-	"github.com/cosmos/cosmos-sdk/x/params/types/manager"
 	"github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -113,7 +113,7 @@ type SimApp struct {
 	EvidenceKeeper evidence.Keeper
 
 	// the params manager
-	ParamsManager manager.Manager
+	ParamsManager keeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -154,7 +154,7 @@ func NewSimApp(
 	}
 
 	// init params manager and subspaces
-	app.ParamsManager = manager.New(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
+	app.ParamsManager = keeper.New(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
 	app.subspaces[auth.ModuleName] = app.ParamsManager.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsManager.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.ParamsManager.Subspace(staking.DefaultParamspace)

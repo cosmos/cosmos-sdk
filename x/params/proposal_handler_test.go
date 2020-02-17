@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	ptypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/manager"
 	"github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
@@ -24,7 +24,7 @@ func validateNoOp(_ interface{}) error { return nil }
 type testInput struct {
 	ctx    sdk.Context
 	cdc    *codec.Codec
-	keeper manager.Manager
+	keeper keeper.Keeper
 }
 
 var (
@@ -76,7 +76,7 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := manager.New(ptypes.ModuleCdc, keyParams, tKeyParams)
+	keeper := keeper.New(ptypes.ModuleCdc, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}

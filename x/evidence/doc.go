@@ -21,7 +21,7 @@ A full setup of the evidence module may look something as follows:
 	)
 
 	// First, create the keeper's subspace for parameters and the keeper itself.
-	evidenceParamspace := app.ParamsManager.Subspace(evidence.DefaultParamspace)
+	evidenceParamspace := app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 	evidenceKeeper := evidence.NewKeeper(
 	  app.cdc, keys[evidence.StoreKey], evidenceParamspace, evidence.DefaultCodespace,
 	)

@@ -113,7 +113,7 @@ type SimApp struct {
 	EvidenceKeeper evidence.Keeper
 
 	// the params manager
-	ParamsManager keeper.Keeper
+	ParamsKeeper keeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -153,17 +153,17 @@ func NewSimApp(
 		subspaces:      make(map[string]subspace.Subspace),
 	}
 
-	// init params manager and subspaces
-	app.ParamsManager = keeper.New(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
-	app.subspaces[auth.ModuleName] = app.ParamsManager.Subspace(auth.DefaultParamspace)
-	app.subspaces[bank.ModuleName] = app.ParamsManager.Subspace(bank.DefaultParamspace)
-	app.subspaces[staking.ModuleName] = app.ParamsManager.Subspace(staking.DefaultParamspace)
-	app.subspaces[mint.ModuleName] = app.ParamsManager.Subspace(mint.DefaultParamspace)
-	app.subspaces[distr.ModuleName] = app.ParamsManager.Subspace(distr.DefaultParamspace)
-	app.subspaces[slashing.ModuleName] = app.ParamsManager.Subspace(slashing.DefaultParamspace)
-	app.subspaces[gov.ModuleName] = app.ParamsManager.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
-	app.subspaces[crisis.ModuleName] = app.ParamsManager.Subspace(crisis.DefaultParamspace)
-	app.subspaces[evidence.ModuleName] = app.ParamsManager.Subspace(evidence.DefaultParamspace)
+	// init params keeper and subspaces
+	app.ParamsKeeper = keeper.New(appCodec.Params, keys[subspace.StoreKey], tkeys[subspace.TStoreKey])
+	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
+	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
+	app.subspaces[staking.ModuleName] = app.ParamsKeeper.Subspace(staking.DefaultParamspace)
+	app.subspaces[mint.ModuleName] = app.ParamsKeeper.Subspace(mint.DefaultParamspace)
+	app.subspaces[distr.ModuleName] = app.ParamsKeeper.Subspace(distr.DefaultParamspace)
+	app.subspaces[slashing.ModuleName] = app.ParamsKeeper.Subspace(slashing.DefaultParamspace)
+	app.subspaces[gov.ModuleName] = app.ParamsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
+	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
+	app.subspaces[evidence.ModuleName] = app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
@@ -206,7 +206,7 @@ func NewSimApp(
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
-		AddRoute(subspace.RouterKey, paramsmod.NewParamChangeProposalHandler(app.ParamsManager)).
+		AddRoute(subspace.RouterKey, paramsmod.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	app.GovKeeper = gov.NewKeeper(

@@ -10,8 +10,10 @@ Accepted
 
 ## Context
 
-Currently, the Cosmos SDK utilizes [go-amino](https://github.com/tendermint/go-amino/) for object encoding
-over the wire bringing parity between logical objects and persistence objects. From the Amino docs:
+Currently, the Cosmos SDK utilizes [go-amino](https://github.com/tendermint/go-amino/) for binary
+and JSON object encoding over the wire bringing parity between logical objects and persistence objects.
+
+From the Amino docs:
 
 > Amino is an object encoding specification. It is a subset of Proto3 with an extension for interface
 > support. See the [Proto3 spec](https://developers.google.com/protocol-buffers/docs/proto3) for more
@@ -33,7 +35,7 @@ compatibility and upgradeability. Furthermore, through profiling and various ben
 been shown to be an extremely large performance bottleneck in the Cosmos SDK <sup>1</sup>. This is
 largely reflected in the performance of simulations and application transaction throughput.
 
-Thus, we need to adopt an encoding protocol that meets the following criteria:
+Thus, we need to adopt an encoding protocol that meets the following criteria for state serialization:
 
 - Language agnostic
 - Platform agnostic
@@ -42,6 +44,10 @@ Thus, we need to adopt an encoding protocol that meets the following criteria:
 - Minimal encoded message size
 - Codegen-based over reflection-based
 - Supports backward and forward compatibility
+
+Note, migrating away from Amino should be viewed as a two-pronged approach, state and client encoding.
+This ADR focuses on state serialization in the Cosmos SDK state machine. A corresponding ADR will be
+made to address client-side encoding.
 
 ## Decision
 
@@ -52,11 +58,14 @@ accept a codec interface, `Marshaler`, instead of a concrete Amino codec. Furthe
 will provide three concrete implementations of the `Marshaler` interface: `AminoCodec`, `ProtoCodec`,
 and `HybridCodec`.
 
-The `AminoCodec` will use Amino for both binary and JSON encoding. The `ProtoCodec` will use Protobuf
-for or both binary and JSON encoding. Finally, `HybridCodec` will use Amino for JSON encoding and
-Protobuf for binary encoding. A module will typically use `HybridCodec` as the concrete codec it
-accepts. This means that all client logic, including genesis serialization, will still use Amino
-for JSON encoding. This may be subject to change in the future.
+- `AminoCodec`: Uses Amino for both binary and JSON encoding.
+- `ProtoCodec`: Uses Protobuf for or both binary and JSON encoding.
+- `HybridCodec`: Uses Amino for JSON encoding and Protobuf for binary encoding.
+
+Until the client migration landscape is fully understood and designed, modules will use a `HybridCodec`
+as the concrete codec it accepts and/or extends. This means that all client JSON encoding, including
+genesis state, will still use Amino. The ultimate goal will be to replace Amino JSON encoding with
+Protbuf encoding and thus have modules accept and/or extend `ProtoCodec`.
 
 ### Module Design
 

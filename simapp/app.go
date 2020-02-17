@@ -11,7 +11,6 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/params"
 	"github.com/cosmos/cosmos-sdk/params/manager"
 	"github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -207,7 +206,7 @@ func NewSimApp(
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
-		AddRoute(params.RouterKey, paramsmod.NewParamChangeProposalHandler(app.ParamsManager)).
+		AddRoute(types.RouterKey, paramsmod.NewParamChangeProposalHandler(app.ParamsManager)).
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	app.GovKeeper = gov.NewKeeper(

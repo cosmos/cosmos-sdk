@@ -4,24 +4,25 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MsgGrant grants the provided capability to the grantee on the granter's
+// MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
 type MsgGrantAuthorization struct {
-	Granter    sdk.AccAddress `json:"granter"`
-	Grantee    sdk.AccAddress `json:"grantee"`
-	Capability Capability     `json:"capability"`
+	Granter       sdk.AccAddress `json:"granter"`
+	Grantee       sdk.AccAddress `json:"grantee"`
+	Authorization Authorization  `json:"authorization"`
 	// Expiration specifies the expiration time of the grant
 	Expiration time.Time `json:"expiration"`
 }
 
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, capability Capability, expiration time.Time) MsgGrantAuthorization {
+func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) MsgGrantAuthorization {
 	return MsgGrantAuthorization{
-		Granter:    granter,
-		Grantee:    grantee,
-		Capability: capability,
-		Expiration: expiration,
+		Granter:       granter,
+		Grantee:       grantee,
+		Authorization: authorization,
+		Expiration:    expiration,
 	}
 }
 
@@ -37,35 +38,35 @@ func (msg MsgGrantAuthorization) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgGrantAuthorization) ValidateBasic() sdk.Error {
+func (msg MsgGrantAuthorization) ValidateBasic() error {
 	if msg.Granter.Empty() {
-		return ErrInvalidGranter(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
 	}
 	if msg.Grantee.Empty() {
-		return ErrInvalidGrantee(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	if msg.Expiration.Unix() < time.Now().Unix() {
-		return ErrInvalidExpirationTime(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidGranter, "Time can't be in the past")
 	}
 
 	return nil
 }
 
-// MsgRevokeAuthorization revokes any capability with the provided sdk.Msg type on the
+// MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 type MsgRevokeAuthorization struct {
 	Granter sdk.AccAddress `json:"granter"`
 	Grantee sdk.AccAddress `json:"grantee"`
-	// CapabilityMsgType is the type of sdk.Msg that the revoked Capability refers to.
-	// i.e. this is what `Capability.MsgType()` returns
-	CapabilityMsgType sdk.Msg `json:"capability_msg_type"`
+	// AuthorizationMsgType is the type of sdk.Msg that the revoked Authorization refers to.
+	// i.e. this is what `Authorization.MsgType()` returns
+	AuthorizationMsgType string `json:"authorization_msg_type"`
 }
 
-func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, capabilityMsgType sdk.Msg) MsgRevokeAuthorization {
+func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType string) MsgRevokeAuthorization {
 	return MsgRevokeAuthorization{
-		Granter:           granter,
-		Grantee:           grantee,
-		CapabilityMsgType: capabilityMsgType,
+		Granter:              granter,
+		Grantee:              grantee,
+		AuthorizationMsgType: authorizationMsgType,
 	}
 }
 
@@ -81,45 +82,46 @@ func (msg MsgRevokeAuthorization) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgRevokeAuthorization) ValidateBasic() sdk.Error {
+func (msg MsgRevokeAuthorization) ValidateBasic() error {
 	if msg.Granter.Empty() {
-		return sdk.ErrInvalidAddress(msg.Granter.String())
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
 	}
 	if msg.Grantee.Empty() {
-		return sdk.ErrInvalidAddress(msg.Grantee.String())
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	return nil
 }
 
-// MsgExecDelegated attempts to execute the provided messages using
-// capabilities granted to the grantee. Each message should have only
-// one signer corresponding to the granter of the capability.
-type MsgExecDelegated struct {
+// MsgExecAuthorized attempts to execute the provided messages using
+// authorizations granted to the grantee. Each message should have only
+// one signer corresponding to the granter of the authorization.
+type MsgExecAuthorized struct {
 	Grantee sdk.AccAddress `json:"grantee"`
-	Msgs    []sdk.Msg      `json:"msg"`
+	Msgs    []sdk.Msg      `json:"msgs"`
 }
 
-func NewMsgExecDelegated(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecDelegated {
-	return MsgExecDelegated{
+func NewMsgExecAuthorized(grantee sdk.AccAddress, msg []sdk.Msg) MsgExecAuthorized {
+	return MsgExecAuthorized{
 		Grantee: grantee,
-		Msgs:    msgs,
+		Msgs:    msg,
 	}
 }
-func (msg MsgExecDelegated) Route() string { return RouterKey }
-func (msg MsgExecDelegated) Type() string  { return "exec_delegated" }
 
-func (msg MsgExecDelegated) GetSigners() []sdk.AccAddress {
+func (msg MsgExecAuthorized) Route() string { return RouterKey }
+func (msg MsgExecAuthorized) Type() string  { return "exec_delegated" }
+
+func (msg MsgExecAuthorized) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Grantee}
 }
 
-func (msg MsgExecDelegated) GetSignBytes() []byte {
+func (msg MsgExecAuthorized) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgExecDelegated) ValidateBasic() sdk.Error {
+func (msg MsgExecAuthorized) ValidateBasic() error {
 	if msg.Grantee.Empty() {
-		return sdk.ErrInvalidAddress(msg.Grantee.String())
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	return nil
 }

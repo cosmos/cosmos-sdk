@@ -7,17 +7,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 )
 
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      *codec.Codec
-	router   sdk.Router
+	router   types.Router
 }
 
 // NewKeeper constructs a message authorisation Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router sdk.Router) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router types.Router) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
@@ -25,11 +26,11 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router sdk.Router) Keepe
 	}
 }
 
-func (k Keeper) getActorCapabilityKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
-	return []byte(fmt.Sprintf("c/%x/%x/%s/%s", grantee, granter, msg.Route(), msg.Type()))
+func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
+	return []byte(fmt.Sprintf("c/%x/%x/%s", grantee, granter, msgType))
 }
 
-func (k Keeper) getCapabilityGrant(ctx sdk.Context, actor []byte) (grant types.CapabilityGrant, found bool) {
+func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(actor)
 	if bz == nil {
@@ -39,66 +40,86 @@ func (k Keeper) getCapabilityGrant(ctx sdk.Context, actor []byte) (grant types.C
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Capability) {
-	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, updated.MsgType()))
+func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
+	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, updated.MsgType()))
 	if !found {
 		return
 	}
-	grant.Capability = updated
+	grant.Authorization = updated
 }
 
-func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result {
-	var res sdk.Result
+// DispatchActions attempts to execute the provided messages via authorization
+// grants from the message signer to the grantee.
+func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
+	var msgResult *sdk.Result
+	var err error
 	for _, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return sdk.ErrUnknownRequest("authorization can be given to msg with only one signer").Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			capability, _ := k.GetCapability(ctx, grantee, granter, msg)
-			if capability == nil {
-				return sdk.ErrUnauthorized("authorization not found").Result()
+			authorization, _ := k.GetAuthorization(ctx, grantee, granter, msg.Type())
+			if authorization == nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
-			allow, updated, del := capability.Accept(msg, ctx.BlockHeader())
+			allow, updated, del := authorization.Accept(msg, ctx.BlockHeader())
+			fmt.Println("inside accept: ", allow, updated, del)
 			if !allow {
-				return sdk.ErrUnauthorized(" ").Result()
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
 			if del {
-				k.Revoke(ctx, grantee, granter, msg)
+				k.Revoke(ctx, grantee, granter, msg.Type())
 			} else if updated != nil {
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		res = k.router.Route(msg.Route())(ctx, msg)
-		if !res.IsOK() {
-			return res
+		handler := k.router.Route(ctx, msg.Route())
+		if handler == nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
+		}
+
+		msgResult, err = handler(ctx, msg)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", msg.Type())
 		}
 	}
 
-	return sdk.Result{}
+	return msgResult, nil
 }
 
-func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, capability types.Capability, expiration time.Time) {
+// Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
+// time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
+// overwrites that.
+func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(types.CapabilityGrant{Capability: capability, Expiration: expiration})
-	actor := k.getActorCapabilityKey(grantee, granter, capability.MsgType())
+	bz := k.cdc.MustMarshalBinaryBare(types.AuthorizationGrant{Authorization: authorization, Expiration: expiration.Unix()})
+	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)
 }
 
-func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) {
+// Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
+func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(k.getActorCapabilityKey(grantee, granter, msgType))
+	_, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
+	if !found {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+	}
+	store.Delete(k.getActorAuthorizationKey(grantee, granter, msgType))
+	return nil
 }
 
-func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Capability, expiration time.Time) {
-	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
+// GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
+// granted to the grantee by the granter for the provided msg type.
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration int64) {
+	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
 	if !found {
-		return nil, time.Time{}
+		return nil, 0
 	}
-	if !grant.Expiration.IsZero() && grant.Expiration.Before(ctx.BlockHeader().Time) {
+	if grant.Expiration != 0 && grant.Expiration < (ctx.BlockHeader().Time.Unix()) {
 		k.Revoke(ctx, grantee, granter, msgType)
-		return nil, time.Time{}
+		return nil, 0
 	}
-	return grant.Capability, grant.Expiration
+	return grant.Authorization, grant.Expiration
 }

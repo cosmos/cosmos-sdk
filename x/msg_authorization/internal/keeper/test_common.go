@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +31,7 @@ func makeTestCodec() *codec.Codec {
 
 	return cdc
 }
-func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.BaseKeeper, Keeper, sdk.Router) {
+func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.BaseKeeper, Keeper, types.Router) {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
@@ -43,12 +42,14 @@ func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.Base
 
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyAuthorization := sdk.NewKVStoreKey(types.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAuthorization, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
@@ -59,12 +60,12 @@ func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.Base
 
 	blacklistedAddrs := make(map[string]bool)
 
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	authKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(authKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
+	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, authKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	bankKeeper.SetSendEnabled(ctx, true)
 
-	router := baseapp.NewRouter()
+	router := types.NewRouter()
 	router.AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	authorizationKeeper := NewKeeper(keyAuthorization, cdc, router)
@@ -78,7 +79,9 @@ var (
 	granteePub    = ed25519.GenPrivKey().PubKey()
 	granterPub    = ed25519.GenPrivKey().PubKey()
 	recepientPub  = ed25519.GenPrivKey().PubKey()
+	randomPub     = ed25519.GenPrivKey().PubKey()
 	granteeAddr   = sdk.AccAddress(granteePub.Address())
 	granterAddr   = sdk.AccAddress(granterPub.Address())
 	recepientAddr = sdk.AccAddress(recepientPub.Address())
+	randomAddr    = sdk.AccAddress(randomPub.Address())
 )

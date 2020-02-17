@@ -235,6 +235,8 @@ func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx
 		return
 	}
 
+	fmt.Printf("this is the json from file %v", stdTx)
+
 	return
 }
 

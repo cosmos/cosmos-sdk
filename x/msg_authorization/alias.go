@@ -11,14 +11,10 @@ import (
 )
 
 const (
-	DefaultCodespace          = types.DefaultCodespace
-	CodeInvalidGranter        = types.CodeInvalidGranter
-	CodeInvalidGrantee        = types.CodeInvalidGrantee
-	CodeInvalidExpirationTime = types.CodeInvalidExpirationTime
-	ModuleName                = types.ModuleName
-	StoreKey                  = types.StoreKey
-	RouterKey                 = types.RouterKey
-	QuerierRoute              = types.QuerierRoute
+	ModuleName   = types.ModuleName
+	StoreKey     = types.StoreKey
+	RouterKey    = types.RouterKey
+	QuerierRoute = types.QuerierRoute
 )
 
 var (
@@ -29,21 +25,21 @@ var (
 	ErrInvalidExpirationTime  = types.ErrInvalidExpirationTime
 	NewMsgGrantAuthorization  = types.NewMsgGrantAuthorization
 	NewMsgRevokeAuthorization = types.NewMsgRevokeAuthorization
-	NewMsgExecDelegated       = types.NewMsgExecDelegated
+	NewMsgExecDelegated       = types.NewMsgExecAuthorized
 	NewKeeper                 = keeper.NewKeeper
+	NewRouter                 = types.NewRouter
 
 	// variable aliases
 	ModuleCdc = types.ModuleCdc
 )
 
 type (
-	Capability             = types.Capability
-	SendCapability         = types.SendCapability
-	CapabilityGrant        = types.CapabilityGrant
-	GenericCapability      = types.GenericCapability
-	CodeType               = types.CodeType
+	Authorization          = types.Authorization
+	SendAuthorization      = types.SendAuthorization
+	AuthorizationGrant     = types.AuthorizationGrant
+	GenericAuthorization   = types.GenericAuthorization
 	MsgGrantAuthorization  = types.MsgGrantAuthorization
 	MsgRevokeAuthorization = types.MsgRevokeAuthorization
-	MsgExecDelegated       = types.MsgExecDelegated
+	MsgExecDelegated       = types.MsgExecAuthorized
 	Keeper                 = keeper.Keeper
 )

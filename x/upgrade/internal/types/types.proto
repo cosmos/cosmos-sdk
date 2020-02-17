@@ -30,12 +30,14 @@ message Plan {
     string info = 4;
 }
 
+// SoftwareUpgradeProposal is a gov Content type for initiating a software upgrade
 message SoftwareUpgradeProposal {
     string title = 1;
     string description = 2;
     Plan plan = 3 [(gogoproto.nullable) = false];
 }
 
+// SoftwareUpgradeProposal is a gov Content type for cancelling a software upgrade
 message CancelSoftwareUpgradeProposal {
     string title = 1;
     string description = 2;

@@ -16,8 +16,10 @@ import (
 // setting the indexes. In addition, it also sets any delegations found in
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper,
-	supplyKeeper types.SupplyKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
+func InitGenesis(
+	ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper, data types.GenesisState,
+) (res []abci.ValidatorUpdate) {
 
 	bondedTokens := sdk.ZeroInt()
 	notBondedTokens := sdk.ZeroInt()
@@ -98,10 +100,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	// add coins if not provided on genesis
-	if bondedPool.GetCoins().IsZero() {
-		if err := bondedPool.SetCoins(bondedCoins); err != nil {
+	if bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()).IsZero() {
+		if err := bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins); err != nil {
 			panic(err)
 		}
+
 		supplyKeeper.SetModuleAccount(ctx, bondedPool)
 	}
 
@@ -110,10 +113,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	if notBondedPool.GetCoins().IsZero() {
-		if err := notBondedPool.SetCoins(notBondedCoins); err != nil {
+	if bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress()).IsZero() {
+		if err := bankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedCoins); err != nil {
 			panic(err)
 		}
+
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
@@ -206,17 +210,20 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 	addrMap := make(map[string]bool, len(validators))
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
-		strKey := string(val.ConsPubKey.Bytes())
+		strKey := string(val.GetConsPubKey().Bytes())
+
 		if _, ok := addrMap[strKey]; ok {
-			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
+			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())
 		}
 		if val.Jailed && val.IsBonded() {
-			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
+			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())
 		}
 		if val.DelegatorShares.IsZero() && !val.IsUnbonding() {
 			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)
 		}
+
 		addrMap[strKey] = true
 	}
+
 	return
 }

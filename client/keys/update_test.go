@@ -37,7 +37,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	defer cleanUp1()
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
 	assert.NoError(t, err)
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
 	assert.NoError(t, err)

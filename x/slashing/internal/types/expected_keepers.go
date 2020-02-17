@@ -15,6 +15,15 @@ type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
 }
 
+// BankKeeper defines the expected interface needed to retrieve account balances.
+type BankKeeper interface {
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
+	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+}
+
 // ParamSubspace defines the expected Subspace interfacace
 type ParamSubspace interface {
 	WithKeyTable(table params.KeyTable) params.Subspace
@@ -42,7 +51,7 @@ type StakingKeeper interface {
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingexported.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint16
+	MaxValidators(sdk.Context) uint32
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

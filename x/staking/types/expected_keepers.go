@@ -19,6 +19,15 @@ type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account // only used for simulation
 }
 
+// BankKeeper defines the expected interface needed to retrieve account balances.
+type BankKeeper interface {
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
+	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+}
+
 // SupplyKeeper defines the expected supply Keeper (noalias)
 type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supplyexported.SupplyI
@@ -65,7 +74,7 @@ type ValidatorSet interface {
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingexported.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint16
+	MaxValidators(sdk.Context) uint32
 }
 
 // DelegationSet expected properties for the set of all delegations for a particular (noalias)

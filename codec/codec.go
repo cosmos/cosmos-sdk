@@ -1,65 +1,64 @@
 package codec
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"encoding/binary"
+	"io"
 
-	amino "github.com/tendermint/go-amino"
-	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/gogo/protobuf/proto"
 )
 
-// amino codec to marshal/unmarshal
-type Codec = amino.Codec
+type (
+	// Marshaler defines the interface module codecs must implement in order to support
+	// backwards compatibility with Amino while allowing custom Protobuf-based
+	// serialization. Note, Amino can still be used without any dependency on
+	// Protobuf. There are three typical implementations that fulfill this contract:
+	//
+	// 1. AminoCodec: Provides full Amino serialization compatibility.
+	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.
+	// 3. HybridCodec: Provides Protobuf serialization for binary encoding and Amino
+	// for JSON encoding.
+	Marshaler interface {
+		MarshalBinaryBare(o ProtoMarshaler) ([]byte, error)
+		MustMarshalBinaryBare(o ProtoMarshaler) []byte
 
-func New() *Codec {
-	return amino.NewCodec()
-}
+		MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, error)
+		MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte
 
-// Register the go-crypto to the codec
-func RegisterCrypto(cdc *Codec) {
-	cryptoamino.RegisterAmino(cdc)
-}
+		UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error
+		MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler)
 
-// RegisterEvidences registers Tendermint evidence types with the provided codec.
-func RegisterEvidences(cdc *Codec) {
-	tmtypes.RegisterEvidences(cdc)
-}
+		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
+		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
-// attempt to make some pretty json
-func MarshalJSONIndent(cdc *Codec, obj interface{}) ([]byte, error) {
-	bz, err := cdc.MarshalJSON(obj)
-	if err != nil {
-		return nil, err
+		JSONMarshaler
 	}
 
-	var out bytes.Buffer
-	err = json.Indent(&out, bz, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-	return out.Bytes(), nil
-}
+	JSONMarshaler interface {
+		MarshalJSON(o interface{}) ([]byte, error) // nolint: stdmethods
+		MustMarshalJSON(o interface{}) []byte
 
-// MustMarshalJSONIndent executes MarshalJSONIndent except it panics upon failure.
-func MustMarshalJSONIndent(cdc *Codec, obj interface{}) []byte {
-	bz, err := MarshalJSONIndent(cdc, obj)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal JSON: %s", err))
+		UnmarshalJSON(bz []byte, ptr interface{}) error // nolint: stdmethods
+		MustUnmarshalJSON(bz []byte, ptr interface{})
 	}
 
-	return bz
-}
+	// ProtoMarshaler defines an interface a type must implement as protocol buffer
+	// defined message.
+	ProtoMarshaler interface {
+		proto.Message // for JSON serialization
 
-//__________________________________________________________________
+		Marshal() ([]byte, error)
+		MarshalTo(data []byte) (n int, err error)
+		MarshalToSizedBuffer(dAtA []byte) (int, error)
+		Size() int
+		Unmarshal(data []byte) error
+	}
+)
 
-// generic sealed codec to be used throughout sdk
-var Cdc *Codec
+func encodeUvarint(w io.Writer, u uint64) (err error) {
+	var buf [10]byte
 
-func init() {
-	cdc := New()
-	RegisterCrypto(cdc)
-	RegisterEvidences(cdc)
-	Cdc = cdc.Seal()
+	n := binary.PutUvarint(buf[:], u)
+	_, err = w.Write(buf[0:n])
+
+	return err
 }

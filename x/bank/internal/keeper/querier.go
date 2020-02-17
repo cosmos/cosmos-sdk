@@ -9,26 +9,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
-const (
-	// query balance path
-	QueryBalance = "balances"
-)
-
 // NewQuerier returns a new sdk.Keeper instance.
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
-		case QueryBalance:
+		case types.QueryBalance:
 			return queryBalance(ctx, req, k)
 
+		case types.QueryAllBalances:
+			return queryAllBalance(ctx, req, k)
+
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }
 
-// queryBalance fetch an account's balance for the supplied height.
-// Height and account address are passed as first and second path components respectively.
 func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryBalanceParams
 
@@ -36,12 +32,26 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	coins := k.GetCoins(ctx, params.Address)
-	if coins == nil {
-		coins = sdk.NewCoins()
+	balance := k.GetBalance(ctx, params.Address, params.Denom)
+
+	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balance)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
-	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, coins)
+	return bz, nil
+}
+
+func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	var params types.QueryAllBalancesParams
+
+	if err := types.ModuleCdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	balances := k.GetAllBalances(ctx, params.Address)
+
+	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, balances)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

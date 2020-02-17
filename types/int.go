@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -52,12 +53,6 @@ func max(i *big.Int, i2 *big.Int) *big.Int {
 	return new(big.Int).Set(i)
 }
 
-// MarshalAmino for custom encoding scheme
-func marshalAmino(i *big.Int) (string, error) {
-	bz, err := i.MarshalText()
-	return string(bz), err
-}
-
 func unmarshalText(i *big.Int, text string) error {
 	if err := i.UnmarshalText([]byte(text)); err != nil {
 		return err
@@ -70,32 +65,7 @@ func unmarshalText(i *big.Int, text string) error {
 	return nil
 }
 
-// UnmarshalAmino for custom decoding scheme
-func unmarshalAmino(i *big.Int, text string) (err error) {
-	return unmarshalText(i, text)
-}
-
-// MarshalJSON for custom encoding scheme
-// Must be encoded as a string for JSON precision
-func marshalJSON(i *big.Int) ([]byte, error) {
-	text, err := i.MarshalText()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(string(text))
-}
-
-// UnmarshalJSON for custom decoding scheme
-// Must be encoded as a string for JSON precision
-func unmarshalJSON(i *big.Int, bz []byte) error {
-	var text string
-	err := json.Unmarshal(bz, &text)
-	if err != nil {
-		return err
-	}
-
-	return unmarshalText(i, text)
-}
+var _ CustomProtobufType = (*Int)(nil)
 
 // Int wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
@@ -341,22 +311,6 @@ func (i Int) String() string {
 	return i.i.String()
 }
 
-// MarshalAmino defines custom encoding scheme
-func (i Int) MarshalAmino() (string, error) {
-	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
-		i.i = new(big.Int)
-	}
-	return marshalAmino(i.i)
-}
-
-// UnmarshalAmino defines custom decoding scheme
-func (i *Int) UnmarshalAmino(text string) error {
-	if i.i == nil { // Necessary since default Int initialization has i.i as nil
-		i.i = new(big.Int)
-	}
-	return unmarshalAmino(i.i, text)
-}
-
 // MarshalJSON defines custom encoding scheme
 func (i Int) MarshalJSON() ([]byte, error) {
 	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
@@ -373,10 +327,97 @@ func (i *Int) UnmarshalJSON(bz []byte) error {
 	return unmarshalJSON(i.i, bz)
 }
 
-// MarshalYAML returns Ythe AML representation.
-func (i Int) MarshalYAML() (interface{}, error) { return i.String(), nil }
+// MarshalJSON for custom encoding scheme
+// Must be encoded as a string for JSON precision
+func marshalJSON(i encoding.TextMarshaler) ([]byte, error) {
+	text, err := i.MarshalText()
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(string(text))
+}
+
+// UnmarshalJSON for custom decoding scheme
+// Must be encoded as a string for JSON precision
+func unmarshalJSON(i *big.Int, bz []byte) error {
+	var text string
+	if err := json.Unmarshal(bz, &text); err != nil {
+		return err
+	}
+
+	return unmarshalText(i, text)
+}
+
+// MarshalYAML returns the YAML representation.
+func (i Int) MarshalYAML() (interface{}, error) {
+	return i.String(), nil
+}
+
+// Marshal implements the gogo proto custom type interface.
+func (i Int) Marshal() ([]byte, error) {
+	if i.i == nil {
+		i.i = new(big.Int)
+	}
+	return i.i.MarshalText()
+}
+
+// MarshalTo implements the gogo proto custom type interface.
+func (i *Int) MarshalTo(data []byte) (n int, err error) {
+	if i.i == nil {
+		i.i = new(big.Int)
+	}
+	if len(i.i.Bytes()) == 0 {
+		copy(data, []byte{0x30})
+		return 1, nil
+	}
+
+	bz, err := i.Marshal()
+	if err != nil {
+		return 0, err
+	}
+
+	copy(data, bz)
+	return len(bz), nil
+}
+
+// Unmarshal implements the gogo proto custom type interface.
+func (i *Int) Unmarshal(data []byte) error {
+	if len(data) == 0 {
+		i = nil
+		return nil
+	}
+
+	if i.i == nil {
+		i.i = new(big.Int)
+	}
+
+	if err := i.i.UnmarshalText(data); err != nil {
+		return err
+	}
+
+	if i.i.BitLen() > maxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", i.i.BitLen(), maxBitLen)
+	}
+
+	return nil
+}
+
+// Size implements the gogo proto custom type interface.
+func (i *Int) Size() int {
+	bz, _ := i.Marshal()
+	return len(bz)
+}
+
+// Override Amino binary serialization by proxying to protobuf.
+func (i Int) MarshalAmino() ([]byte, error)   { return i.Marshal() }
+func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func (ip IntProto) String() string {
+	return ip.Int.String()
 }

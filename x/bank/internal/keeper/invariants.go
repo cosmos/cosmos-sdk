@@ -8,30 +8,33 @@ import (
 )
 
 // RegisterInvariants registers the bank module invariants
-func RegisterInvariants(ir sdk.InvariantRegistry, ak types.AccountKeeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, bk ViewKeeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
-		NonnegativeBalanceInvariant(ak))
+		NonnegativeBalanceInvariant(bk))
 }
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
-func NonnegativeBalanceInvariant(ak types.AccountKeeper) sdk.Invariant {
+func NonnegativeBalanceInvariant(bk ViewKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var msg string
-		var count int
+		var (
+			msg   string
+			count int
+		)
 
-		accts := ak.GetAllAccounts(ctx)
-		for _, acc := range accts {
-			coins := acc.GetCoins()
-			if coins.IsAnyNegative() {
+		bk.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
+			if balance.IsNegative() {
 				count++
-				msg += fmt.Sprintf("\t%s has a negative denomination of %s\n",
-					acc.GetAddress().String(),
-					coins.String())
+				msg += fmt.Sprintf("\t%s has a negative balance of %s\n", addr, balance)
 			}
-		}
+
+			return false
+		})
+
 		broken := count != 0
 
-		return sdk.FormatInvariant(types.ModuleName, "nonnegative-outstanding",
-			fmt.Sprintf("amount of negative accounts found %d\n%s", count, msg)), broken
+		return sdk.FormatInvariant(
+			types.ModuleName, "nonnegative-outstanding",
+			fmt.Sprintf("amount of negative balances found %d\n%s", count, msg),
+		), broken
 	}
 }

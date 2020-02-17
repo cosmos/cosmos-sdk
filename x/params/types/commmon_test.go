@@ -44,7 +44,7 @@ func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey,
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(mkey, tkey)
-	keeper := keeper.New(cdc, mkey, tkey)
+	keeper := keeper.NewKeeper(cdc, mkey, tkey)
 
 	return cdc, ctx, mkey, tkey, keeper
 }

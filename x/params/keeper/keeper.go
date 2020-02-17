@@ -18,8 +18,8 @@ type Keeper struct {
 	spaces map[string]*params.Subspace
 }
 
-// New constructs a params manager
-func New(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
+// NewKeeper constructs a params keeper
+func NewKeeper(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc:    cdc,
 		key:    key,
@@ -50,7 +50,7 @@ func (k Keeper) Subspace(s string) params.Subspace {
 	return space
 }
 
-// Get existing substore from manager
+// Get existing substore from keeper
 func (k Keeper) GetSubspace(s string) (params.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {

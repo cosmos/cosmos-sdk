@@ -16,6 +16,11 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+const (
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
+)
+
 func TestMsgCreateClientValidateBasic(t *testing.T) {
 	validator := tmtypes.NewValidator(tmtypes.NewMockPV().GetPubKey(), 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
@@ -34,12 +39,14 @@ func TestMsgCreateClientValidateBasic(t *testing.T) {
 		expPass bool
 		errMsg  string
 	}{
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, exported.ClientTypeTendermint, cs, signer), true, "success msg should pass"},
-		{types.NewMsgCreateClient("BADCHAIN", exported.ClientTypeTendermint, cs, signer), false, "invalid client id passed"},
-		{types.NewMsgCreateClient("goodchain", "invalid_client_type", cs, signer), false, "unregistered client type passed"},
-		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, nil, signer), false, "nil Consensus State in msg passed"},
-		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, tendermint.ConsensusState{}, signer), false, "invalid Consensus State in msg passed"},
-		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, cs, nil), false, "Empty address passed"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, exported.ClientTypeTendermint, cs, trustingPeriod, ubdPeriod, signer), true, "success msg should pass"},
+		{types.NewMsgCreateClient("BADCHAIN", exported.ClientTypeTendermint, cs, trustingPeriod, ubdPeriod, signer), false, "invalid client id passed"},
+		{types.NewMsgCreateClient("goodchain", "invalid_client_type", cs, trustingPeriod, ubdPeriod, signer), false, "unregistered client type passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, nil, trustingPeriod, ubdPeriod, signer), false, "nil Consensus State in msg passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, tendermint.ConsensusState{}, trustingPeriod, ubdPeriod, signer), false, "invalid Consensus State in msg passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, cs, 0, ubdPeriod, signer), false, "zero trusting period passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, cs, trustingPeriod, 0, signer), false, "zero unbonding period passed"},
+		{types.NewMsgCreateClient("goodchain", exported.ClientTypeTendermint, cs, trustingPeriod, ubdPeriod, nil), false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {

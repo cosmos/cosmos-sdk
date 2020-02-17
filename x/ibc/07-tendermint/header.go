@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 var _ clientexported.Header = Header{}
@@ -23,6 +24,15 @@ type Header struct {
 // ClientType defines that the Header is a Tendermint consensus algorithm
 func (h Header) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
+}
+
+// ConsensusState returns the consensus state associated with the header
+func (h Header) ConsensusState() ConsensusState {
+	return ConsensusState{
+		Timestamp:    h.Time,
+		Root:         commitment.NewRoot(h.AppHash),
+		ValidatorSet: h.ValidatorSet,
+	}
 }
 
 // GetHeight returns the current height

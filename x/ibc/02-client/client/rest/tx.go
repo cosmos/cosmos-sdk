@@ -54,6 +54,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			req.ClientID,
 			req.ConsensusState.ClientType().String(),
 			req.ConsensusState,
+			req.TrustingPeriod, req.UnbondingPeriod,
 			fromAddr,
 		)
 

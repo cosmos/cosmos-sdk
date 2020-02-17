@@ -4,13 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgVerifyInvariant - message struct to verify a particular invariance
-type MsgVerifyInvariant struct {
-	Sender              sdk.AccAddress `json:"sender" yaml:"sender"`
-	InvariantModuleName string         `json:"invariant_module_name" yaml:"invariant_module_name"`
-	InvariantRoute      string         `json:"invariant_route" yaml:"invariant_route"`
-}
-
 // ensure Msg interface compliance at compile time
 var _ sdk.Msg = &MsgVerifyInvariant{}
 

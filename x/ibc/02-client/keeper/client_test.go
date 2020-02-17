@@ -40,10 +40,10 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				suite.keeper.CreateClient(suite.ctx, tc.params.clientID, tc.params.clientType, suite.consensusState)
+				suite.keeper.CreateClient(suite.ctx, tc.params.clientID, tc.params.clientType, suite.consensusState, trustingPeriod, ubdPeriod)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := suite.keeper.CreateClient(suite.ctx, tc.params.clientID, tc.params.clientType, suite.consensusState)
+			clientState, err := suite.keeper.CreateClient(suite.ctx, tc.params.clientID, tc.params.clientType, suite.consensusState, trustingPeriod, ubdPeriod)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
+			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
 			return err
 		}, true},
 		{"client type not found", func() error {
@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
+			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
 			if err != nil {
 				return err
 			}
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
+				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
 				return err
 			},
 			true,
@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
+				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState, trustingPeriod, ubdPeriod)
 				return err
 			},
 			false,

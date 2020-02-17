@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -42,6 +43,9 @@ const (
 
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 type KeeperTestSuite struct {
@@ -200,11 +204,11 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
 	consensusState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSetHash: suite.valSet.Hash(),
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, testClientType, consensusState)
+	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, testClientType, consensusState, trustingPeriod, ubdPeriod)
 	suite.Require().NoError(err)
 }
 

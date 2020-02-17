@@ -118,7 +118,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			limit := viper.GetInt(flags.FlagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit)
+			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}

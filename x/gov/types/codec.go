@@ -4,6 +4,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+type Codec interface {
+	codec.Marshaler
+
+	MarshalProposal(p Proposal) ([]byte, error)
+	UnmarshalProposal(bz []byte, ptr *Proposal) error
+}
+
+
 // module codec
 var ModuleCdc = codec.New()
 
@@ -31,12 +39,6 @@ func init() {
 	RegisterCodec(ModuleCdc)
 }
 
-type GovCodec interface {
-	codec.Marshaler
-	MarshalProposal(p Proposal) ([]byte, error)
-	UnmarshalProposal(bz []byte, ptr *Proposal) error
-}
-
 type AminoGovCodec struct {
 	codec.Marshaler
 	amino *codec.Codec
@@ -54,4 +56,4 @@ func (a AminoGovCodec) UnmarshalProposal(bz []byte, ptr *Proposal) error {
 	return a.amino.UnmarshalBinaryBare(bz, ptr)
 }
 
-var _ GovCodec = AminoGovCodec{}
+var _ Codec = AminoGovCodec{}

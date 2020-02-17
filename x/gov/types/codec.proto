@@ -11,15 +11,6 @@ option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all) = false;
 option (gogoproto.goproto_getters_all) = false;
 
-message MsgCommon {
-    option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
-    option (gogoproto.stringer) = true;
-    oneof sum {
-        MsgDeposit gov_deposit = 1;
-        MsgVote gov_vote = 2;
-    }
-}
-
 message MsgSubmitProposalBase {
     option (gogoproto.stringer) = true;
     repeated cosmos_sdk.v1.Coin intial_deposit = 1 [(gogoproto.nullable) = false

@@ -11,7 +11,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
-// CreateTMClient creates a new tendermint client state and populates it with a given consensus
+// CreateClient creates a new client state and populates it with a given consensus
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 //
 // CONTRACT: ClientState was constructed correctly from given initial consensusState

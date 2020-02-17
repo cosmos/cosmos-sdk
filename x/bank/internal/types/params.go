@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	params "github.com/cosmos/cosmos-sdk/params/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 const (

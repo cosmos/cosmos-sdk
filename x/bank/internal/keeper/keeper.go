@@ -7,12 +7,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	params "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)

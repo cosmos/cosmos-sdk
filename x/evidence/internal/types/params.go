@@ -6,7 +6,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	params "github.com/cosmos/cosmos-sdk/params/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // DONTCOVER

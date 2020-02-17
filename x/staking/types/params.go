@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	yaml "gopkg.in/yaml.v2"
 )
 

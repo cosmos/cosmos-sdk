@@ -2,7 +2,7 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/params/manager"
+	"github.com/cosmos/cosmos-sdk/x/params/types/manager"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"

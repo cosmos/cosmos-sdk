@@ -1,4 +1,4 @@
-package types
+package subspace
 
 const (
 	// ModuleName defines the name of the module

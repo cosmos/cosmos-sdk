@@ -1,4 +1,4 @@
-package types
+package subspace
 
 import (
 	"fmt"

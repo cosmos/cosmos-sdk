@@ -3,12 +3,12 @@ package params
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/params/manager"
-	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/manager"
+	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal

@@ -1,12 +1,12 @@
-package types_test
+package subspace_test
 
 import (
 	"errors"
 	"fmt"
 	"time"
 
-	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 var (

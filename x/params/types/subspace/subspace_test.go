@@ -1,4 +1,4 @@
-package types_test
+package subspace_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	ptypes "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramsmod "github.com/cosmos/cosmos-sdk/x/params/types"
+	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 type SubspaceTestSuite struct {

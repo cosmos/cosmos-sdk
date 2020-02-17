@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 func TestParameterChangeProposal(t *testing.T) {
@@ -15,7 +15,7 @@ func TestParameterChangeProposal(t *testing.T) {
 
 	require.Equal(t, "test title", pcp.GetTitle())
 	require.Equal(t, "test description", pcp.GetDescription())
-	require.Equal(t, types.RouterKey, pcp.ProposalRoute())
+	require.Equal(t, subspace.RouterKey, pcp.ProposalRoute())
 	require.Equal(t, ProposalTypeChange, pcp.ProposalType())
 	require.Nil(t, pcp.ValidateBasic())
 

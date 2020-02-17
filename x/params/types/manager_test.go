@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
-	params "github.com/cosmos/cosmos-sdk/params/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/stretchr/testify/require"
 )
 

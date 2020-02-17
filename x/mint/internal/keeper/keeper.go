@@ -6,9 +6,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // Keeper of the mint store

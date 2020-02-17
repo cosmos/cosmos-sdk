@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // Default parameter namespace

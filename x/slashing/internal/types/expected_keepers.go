@@ -3,9 +3,9 @@
 package types
 
 import (
-	params "github.com/cosmos/cosmos-sdk/params/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 

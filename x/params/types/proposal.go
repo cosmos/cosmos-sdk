@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/params/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 const (
@@ -34,7 +34,7 @@ func (pcp ParameterChangeProposal) GetTitle() string { return pcp.Title }
 func (pcp ParameterChangeProposal) GetDescription() string { return pcp.Description }
 
 // ProposalRoute returns the routing key of a parameter change proposal.
-func (pcp ParameterChangeProposal) ProposalRoute() string { return types.RouterKey }
+func (pcp ParameterChangeProposal) ProposalRoute() string { return subspace.RouterKey }
 
 // ProposalType returns the type of a parameter change proposal.
 func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
@@ -84,18 +84,18 @@ func (pc ParamChange) String() string {
 // returns an error if any ParamChange is invalid.
 func ValidateChanges(changes []ParamChange) error {
 	if len(changes) == 0 {
-		return types.ErrEmptyChanges
+		return subspace.ErrEmptyChanges
 	}
 
 	for _, pc := range changes {
 		if len(pc.Subspace) == 0 {
-			return types.ErrEmptySubspace
+			return subspace.ErrEmptySubspace
 		}
 		if len(pc.Key) == 0 {
-			return types.ErrEmptyKey
+			return subspace.ErrEmptyKey
 		}
 		if len(pc.Value) == 0 {
-			return types.ErrEmptyValue
+			return subspace.ErrEmptyValue
 		}
 	}
 

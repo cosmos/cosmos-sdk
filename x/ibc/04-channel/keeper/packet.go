@@ -231,7 +231,7 @@ func (k Keeper) PacketExecuted(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketDataI,
+	acknowledgement []byte,
 	proof commitment.ProofI,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
@@ -251,17 +251,17 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -286,18 +286,12 @@ func (k Keeper) AcknowledgePacket(
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement.GetBytes(),
+		packet.GetSequence(), acknowledgement,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
 
 	return packet, nil
-}
-
-// AcknowledgementExecuted deletes the commitment send from this chain after it receives the acknowlegement
-// CONTRACT: each acknowledgement handler function should call WriteAcknowledgement at the end of the execution
-func (k Keeper) AcknowledgementExecuted(ctx sdk.Context, packet exported.PacketI) {
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 }
 
 // CleanupPacket is called by a module to remove a received packet commitment

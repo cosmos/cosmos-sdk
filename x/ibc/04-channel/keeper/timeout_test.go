@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(out)
 			} else {
-				out, err := suite.app.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.ctx, packet, mockSuccessPacket{}, ibctypes.ValidProof{}, uint64(suite.ctx.BlockHeader().Height))
+				out, err := suite.app.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.ctx, packet, []byte("ack"), ibctypes.ValidProof{}, uint64(suite.ctx.BlockHeader().Height))
 				fmt.Println(tc.msg, err)
 				suite.Require().NotNil(out)
 				suite.Require().Error(err)

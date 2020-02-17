@@ -3,7 +3,6 @@ package cosmos_sdk.x.evidence.v1;
 
 option go_package = "types";
 
-import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
@@ -11,19 +10,8 @@ import "google/protobuf/duration.proto";
 // MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
 // Evidence.
 message MsgSubmitEvidence {
-  Evidence Evidence  = 1 [(gogoproto.moretags) = "yaml:\"evidence\"", (gogoproto.nullable) = false];
-  bytes    Submitter = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-    (gogoproto.moretags) = "yaml:\"submitter\""
-  ];
-}
-
-message Evidence {
-  option (cosmos_proto.interface_type) =
-      "github.com/cosmos/cosmos-sdk/x/evidence/exported.EvidenceI";
-  oneof ev {
-    Equivocation equivocation = 1;
-  }
+  bytes evidence  = 1;
+  bytes submitter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // Equivocation implements the Evidence interface and defines evidence of double
@@ -32,14 +20,10 @@ message Equivocation {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
-  int64                     height = 1 [(gogoproto.moretags) = "yaml:\"height\""];
-  google.protobuf.Timestamp time   = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime)  = true,
-    (gogoproto.moretags) = "yaml:\"time\""
-  ];
-  int64 power             = 3 [(gogoproto.moretags) = "yaml:\"power\""];
-  bytes consensus_address = 4 [(gogoproto.moretags) = "yaml:\"consensus_address\""];
+  int64                     height = 1;
+  google.protobuf.Timestamp time   = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  int64                     power  = 3;
+  bytes consensus_address          = 4 [(gogoproto.moretags) = "yaml:\"consensus_address\""];
 }
 
 // Params defines the total set of parameters for the evidence module

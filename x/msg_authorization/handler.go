@@ -14,8 +14,8 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgGrantAuthorization(ctx, msg, k)
 		case MsgRevokeAuthorization:
 			return handleMsgRevokeAuthorization(ctx, msg, k)
-		case MsgExecDelegated:
-			return handleMsgExecDelegated(ctx, msg, k)
+		case MsgExecAuthorized:
+			return handleMsgExecAuthorized(ctx, msg, k)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized authorization message type: %T", msg)
 		}
@@ -57,6 +57,6 @@ func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgExecDelegated(ctx sdk.Context, msg MsgExecDelegated, k Keeper) (*sdk.Result, error) {
+func handleMsgExecAuthorized(ctx sdk.Context, msg MsgExecAuthorized, k Keeper) (*sdk.Result, error) {
 	return k.DispatchActions(ctx, msg.Grantee, msg.Msgs)
 }

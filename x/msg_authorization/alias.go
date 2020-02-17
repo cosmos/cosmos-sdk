@@ -25,7 +25,7 @@ var (
 	ErrInvalidExpirationTime  = types.ErrInvalidExpirationTime
 	NewMsgGrantAuthorization  = types.NewMsgGrantAuthorization
 	NewMsgRevokeAuthorization = types.NewMsgRevokeAuthorization
-	NewMsgExecDelegated       = types.NewMsgExecAuthorized
+	NewMsgExecAuthorized      = types.NewMsgExecAuthorized
 	NewKeeper                 = keeper.NewKeeper
 	NewRouter                 = types.NewRouter
 
@@ -40,6 +40,6 @@ type (
 	GenericAuthorization   = types.GenericAuthorization
 	MsgGrantAuthorization  = types.MsgGrantAuthorization
 	MsgRevokeAuthorization = types.MsgRevokeAuthorization
-	MsgExecDelegated       = types.MsgExecAuthorized
+	MsgExecAuthorized      = types.MsgExecAuthorized
 	Keeper                 = keeper.Keeper
 )

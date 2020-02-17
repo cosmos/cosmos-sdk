@@ -13,6 +13,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -131,11 +132,13 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		return nil, false
 	}
 
+	valSet := stakingtypes.Validators(histInfo.Valset)
+
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       height,
 		Timestamp:    ctx.BlockTime(),
 		Root:         commitment.NewRoot(histInfo.Header.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(histInfo.ValSet.ToTmValidators()),
+		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
 	}
 	return consensusState, true
 }

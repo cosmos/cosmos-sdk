@@ -32,7 +32,7 @@ func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, delegatorAddr),
 	}
 
-	return authclient.QueryTxsByEvents(cliCtx, events, page, limit)
+	return authclient.QueryTxsByEvents(cliCtx, events, page, limit, "")
 }
 
 func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {

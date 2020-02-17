@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
-	testHeight += 1
+	testHeight++
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       testHeight,
@@ -149,7 +149,7 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
-	testHeight += 1
+	testHeight++
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       testHeight,

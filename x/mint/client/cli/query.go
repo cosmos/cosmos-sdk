@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.

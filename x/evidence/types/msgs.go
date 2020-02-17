@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Message types for the evidence module
@@ -15,8 +14,7 @@ var (
 	_ sdk.Msg = MsgSubmitEvidence{}
 )
 
-func NewMsgSubmitEvidence(e exported.EvidenceI, s sdk.AccAddress) MsgSubmitEvidence {
-	// Codec.MarshalEvidence(e)
+func NewMsgSubmitEvidence(e []byte, s sdk.AccAddress) MsgSubmitEvidence {
 	return MsgSubmitEvidence{Evidence: e, Submitter: s}
 }
 
@@ -28,10 +26,10 @@ func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) ValidateBasic() error {
-	if m.Evidence.GetEvidenceI() == nil {
+	if m.Evidence == nil {
 		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
 	}
-	if err := m.Evidence.GetEvidenceI().ValidateBasic(); err != nil {
+	if err := m.Evidence.ValidateBasic(); err != nil {
 		return err
 	}
 	if m.Submitter.Empty() {

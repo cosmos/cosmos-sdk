@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // GetQueryCmd returns the CLI command with all evidence module query commands

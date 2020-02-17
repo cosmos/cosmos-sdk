@@ -40,7 +40,6 @@ var (
 	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
 	DoubleSignJailEndTime        = types.DoubleSignJailEndTime
 	ParamKeyTable                = types.ParamKeyTable
-	NewCodec                     = types.NewCodec
 )
 
 type (

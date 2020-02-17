@@ -9,6 +9,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	github_com_cosmos_cosmos_sdk_x_evidence_exported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	types3 "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	github_com_cosmos_cosmos_sdk_x_supply_exported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 	types2 "github.com/cosmos/cosmos-sdk/x/supply/types"
 	proto "github.com/gogo/protobuf/proto"
@@ -16,7 +17,6 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	types3 "x/evidence/types"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

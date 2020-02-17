@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func (suite *KeeperTestSuite) TestParams() {

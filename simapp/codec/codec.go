@@ -8,7 +8,7 @@ import (
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	eviExported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -112,14 +112,14 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
 }
 
 // MarshalEvidence marshals an EvidenceI interface.
-func (c *Codec) MarshalEvidence(eviI exported.EvidenceI) ([]byte, error) {
+func (c *Codec) MarshalEvidence(eviI eviExported.EvidenceI) ([]byte, error) {
 	evi := &Evidence{}
 	evi.SetEvidenceI(eviI)
 	return c.MarshalBinaryLengthPrefixed(evi)
 }
 
 // UnmarshalEvidence returnes an EvidenceI interface.
-func (c *Codec) UnmarshalEvidence(bz []byte) (exported.EvidenceI, error) {
+func (c *Codec) UnmarshalEvidence(bz []byte) (eviExported.EvidenceI, error) {
 	evi := &Evidence{}
 	if err := c.UnmarshalBinaryLengthPrefixed(bz, evi); err != nil {
 		return nil, err
@@ -128,12 +128,12 @@ func (c *Codec) UnmarshalEvidence(bz []byte) (exported.EvidenceI, error) {
 }
 
 // MarshalEvidenceJSON JSON encodes an evidence object implementating the EvidenceI interface
-func (c *Codec) MarshalEvidenceJSON(evi exported.EvidenceI) ([]byte, error) {
+func (c *Codec) MarshalEvidenceJSON(evi eviExported.EvidenceI) ([]byte, error) {
 	return c.MarshalJSON(evi)
 }
 
 // UnmarshalEvidenceJSON returns an EvidenceI from JSON encoded bytes
-func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (exported.EvidenceI, error) {
+func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviExported.EvidenceI, error) {
 	evi := &Evidence{}
 	if err := c.UnmarshalJSON(bz, evi); err != nil {
 		return nil, err

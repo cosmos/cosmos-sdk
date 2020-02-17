@@ -2,10 +2,10 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // Default period for deposits & voting
@@ -29,11 +29,11 @@ var (
 )
 
 // ParamKeyTable - Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		params.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
-		params.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
-		params.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
+func ParamKeyTable() types.KeyTable {
+	return types.NewKeyTable(
+		types.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
+		types.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
+		types.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
 	)
 }
 

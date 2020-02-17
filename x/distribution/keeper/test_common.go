@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
@@ -100,8 +100,8 @@ func CreateTestInputAdvanced(
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyParams := sdk.NewKVStoreKey(ptypes.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(ptypes.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -128,7 +128,7 @@ func CreateTestInputAdvanced(
 	blacklistedAddrs[distrAcc.GetAddress().String()] = true
 
 	cdc := MakeTestCodec()
-	pk := keeper.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)

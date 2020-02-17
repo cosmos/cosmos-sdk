@@ -3,12 +3,12 @@ package keeper
 import (
 	"container/list"
 	"fmt"
+	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -27,14 +27,14 @@ type Keeper struct {
 	bankKeeper         types.BankKeeper
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
-	paramstore         params.Subspace
+	paramstore         types2.Subspace
 	validatorCache     map[string]cachedValidator
 	validatorCacheList *list.List
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps params.Subspace,
+	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps types2.Subspace,
 ) Keeper {
 
 	// ensure bonded and not bonded module accounts are set

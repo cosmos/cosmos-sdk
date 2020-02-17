@@ -3,6 +3,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"math/rand"
 	"os"
 	"testing"
@@ -21,7 +22,6 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -153,7 +153,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
 		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
 		{app.keys[supply.StoreKey], newApp.keys[supply.StoreKey], [][]byte{}},
-		{app.keys[params.StoreKey], newApp.keys[params.StoreKey], [][]byte{}},
+		{app.keys[types.StoreKey], newApp.keys[types.StoreKey], [][]byte{}},
 		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 

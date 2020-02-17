@@ -2,9 +2,9 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // Default parameter namespace
@@ -18,9 +18,9 @@ var (
 )
 
 // type declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		params.NewParamSetPair(ParamStoreKeyConstantFee, sdk.Coin{}, validateConstantFee),
+func ParamKeyTable() types.KeyTable {
+	return types.NewKeyTable(
+		types.NewParamSetPair(ParamStoreKeyConstantFee, sdk.Coin{}, validateConstantFee),
 	)
 }
 

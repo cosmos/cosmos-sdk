@@ -1,4 +1,4 @@
-package subspace
+package proposal
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

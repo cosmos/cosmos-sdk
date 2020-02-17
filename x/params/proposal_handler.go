@@ -8,7 +8,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
@@ -28,7 +27,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p proposal.
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {
-			return sdkerrors.Wrap(ptypes.ErrUnknownSubspace, c.Subspace)
+			return sdkerrors.Wrap(proposal.ErrUnknownSubspace, c.Subspace)
 		}
 
 		k.Logger(ctx).Info(
@@ -36,7 +35,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p proposal.
 		)
 
 		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
-			return sdkerrors.Wrapf(ptypes.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
+			return sdkerrors.Wrapf(proposal.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
 		}
 	}
 

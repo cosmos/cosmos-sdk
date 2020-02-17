@@ -3,6 +3,7 @@ package keeper // noalias
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -23,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -84,8 +84,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	bankKey := sdk.NewKVStoreKey(bank.StoreKey)
-	keyParams := sdk.NewKVStoreKey(ptypes.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(ptypes.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -118,7 +118,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := keeper.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tkeyParams)
 
 	accountKeeper := auth.NewAccountKeeper(
 		cdc,    // amino codec

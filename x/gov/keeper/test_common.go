@@ -6,6 +6,7 @@ package keeper // noalias
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -103,8 +103,8 @@ func createTestInput(
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyParams := sdk.NewKVStoreKey(ptypes.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(ptypes.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -147,7 +147,7 @@ func createTestInput(
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := keeper.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)

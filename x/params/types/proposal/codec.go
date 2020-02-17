@@ -1,8 +1,7 @@
-package types
+package proposal
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 type Codec struct {
@@ -29,5 +28,5 @@ func init() {
 
 // RegisterCodec registers all necessary param module types with a given codec.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(proposal.ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal", nil)
+	cdc.RegisterConcrete(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal", nil)
 }

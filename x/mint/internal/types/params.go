@@ -3,10 +3,10 @@ package types
 import (
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // Parameter store keys
@@ -30,8 +30,8 @@ type Params struct {
 }
 
 // ParamTable for minting module.
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+func ParamKeyTable() types.KeyTable {
+	return types.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 func NewParams(
@@ -106,14 +106,14 @@ func (p Params) String() string {
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
-		params.NewParamSetPair(KeyInflationRateChange, &p.InflationRateChange, validateInflationRateChange),
-		params.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),
-		params.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
-		params.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
-		params.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
+func (p *Params) ParamSetPairs() types.ParamSetPairs {
+	return types.ParamSetPairs{
+		types.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
+		types.NewParamSetPair(KeyInflationRateChange, &p.InflationRateChange, validateInflationRateChange),
+		types.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),
+		types.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
+		types.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
+		types.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
 	}
 }
 

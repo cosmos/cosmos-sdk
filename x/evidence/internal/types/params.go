@@ -2,11 +2,10 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"time"
 
 	"gopkg.in/yaml.v2"
-
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // DONTCOVER
@@ -32,8 +31,8 @@ type Params struct {
 }
 
 // ParamKeyTable returns the parameter key table.
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+func ParamKeyTable() types.KeyTable {
+	return types.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 func (p Params) String() string {
@@ -42,9 +41,9 @@ func (p Params) String() string {
 }
 
 // ParamSetPairs returns the parameter set pairs.
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge, validateMaxEvidenceAge),
+func (p *Params) ParamSetPairs() types.ParamSetPairs {
+	return types.ParamSetPairs{
+		types.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge, validateMaxEvidenceAge),
 	}
 }
 

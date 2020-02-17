@@ -1,4 +1,4 @@
-package subspace
+package proposal
 
 const (
 	// ModuleName defines the name of the module

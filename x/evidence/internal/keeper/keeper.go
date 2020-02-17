@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
@@ -12,7 +13,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
 // Keeper defines the evidence module's keeper. The keeper is responsible for
@@ -21,14 +21,14 @@ import (
 type Keeper struct {
 	cdc            *codec.Codec
 	storeKey       sdk.StoreKey
-	paramSpace     params.Subspace
+	paramSpace     types2.Subspace
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
 }
 
 func NewKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace,
+	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace types2.Subspace,
 	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 

@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -31,7 +31,7 @@ func createTestCodec() codec.Marshaler {
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
-	return types.NewCodec(cdc)
+	return proposal.NewCodec(cdc)
 }
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {

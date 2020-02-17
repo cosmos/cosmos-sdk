@@ -1,9 +1,11 @@
-package subspace_test
+package types_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -13,8 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramsmod "github.com/cosmos/cosmos-sdk/x/params/types"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {
@@ -22,11 +23,11 @@ type SubspaceTestSuite struct {
 
 	cdc codec.Marshaler
 	ctx sdk.Context
-	ss  ptypes.Subspace
+	ss  types.Subspace
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	cdc := paramsmod.ModuleCdc
+	cdc := proposal.ModuleCdc
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
@@ -34,7 +35,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	ss := ptypes.NewSubspace(cdc, key, tkey, "testsubspace")
+	ss := types.NewSubspace(cdc, key, tkey, "testsubspace")
 
 	suite.cdc = cdc
 	suite.ctx = sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -47,7 +48,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := ptypes.NewSubspace(paramsmod.ModuleCdc, key, tkey, "testsubspace2")
+		ss := types.NewSubspace(proposal.ModuleCdc, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }
@@ -163,7 +164,7 @@ func (suite *SubspaceTestSuite) TestGetParamSet() {
 func (suite *SubspaceTestSuite) TestSetParamSet() {
 	testCases := []struct {
 		name string
-		ps   ptypes.ParamSet
+		ps   types.ParamSet
 	}{
 		{"invalid unbonding time", &params{time.Hour * 1, 100, "stake"}},
 		{"invalid bond denom", &params{time.Hour * 48, 100, ""}},

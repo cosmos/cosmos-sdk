@@ -32,7 +32,7 @@ var (
 )
 
 type (
-	UpgradeHandler                = types.UpgradeHandler
+	UpgradeHandler                = types.UpgradeHandler // nolint
 	Plan                          = types.Plan
 	SoftwareUpgradeProposal       = types.SoftwareUpgradeProposal
 	CancelSoftwareUpgradeProposal = types.CancelSoftwareUpgradeProposal

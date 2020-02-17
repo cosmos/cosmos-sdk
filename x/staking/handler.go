@@ -3,6 +3,7 @@ package staking
 import (
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -47,7 +48,12 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return nil, ErrValidatorOwnerExists
 	}
 
-	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
+	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msg.Pubkey)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
 		return nil, ErrValidatorPubKeyExists
 	}
 
@@ -60,21 +66,22 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	if ctx.ConsensusParams() != nil {
-		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
+		tmPubKey := tmtypes.TM2PB.PubKey(pk)
 		if !tmstrings.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
 			return nil, sdkerrors.Wrapf(
 				ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, valid: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
+				"got: %s, expected: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
 			)
 		}
 	}
 
-	validator := NewValidator(msg.ValidatorAddress, msg.PubKey, msg.Description)
+	validator := NewValidator(msg.ValidatorAddress, pk, msg.Description)
 	commission := NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
 	)
-	validator, err := validator.SetInitialCommission(commission)
+
+	validator, err = validator.SetInitialCommission(commission)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +224,12 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		return nil, err
 	}
 
-	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
+	ts, err := gogotypes.TimestampProto(completionTime)
+	if err != nil {
+		return nil, ErrBadRedelegationAddr
+	}
+
+	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeUnbond,
@@ -254,7 +266,12 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return nil, err
 	}
 
-	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
+	ts, err := gogotypes.TimestampProto(completionTime)
+	if err != nil {
+		return nil, ErrBadRedelegationAddr
+	}
+
+	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRedelegate,

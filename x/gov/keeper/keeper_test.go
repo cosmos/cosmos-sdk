@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	proto "github.com/gogo/protobuf/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -45,7 +46,8 @@ func TestProposalQueues(t *testing.T) {
 
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
-	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
-	require.Equal(t, proposalID, proposal.ProposalID)
+	var proposalIdWrapper proto.UInt64Value
+	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalIdWrapper)
+	require.Equal(t, proposalIdWrapper.Value, proposal.ProposalID)
 	activeIterator.Close()
 }

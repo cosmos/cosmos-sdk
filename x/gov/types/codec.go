@@ -11,7 +11,6 @@ type Codec interface {
 	UnmarshalProposal(bz []byte, ptr *Proposal) error
 }
 
-
 // module codec
 var ModuleCdc = codec.New()
 

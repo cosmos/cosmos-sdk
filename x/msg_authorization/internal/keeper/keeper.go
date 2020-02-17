@@ -41,11 +41,15 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
-	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, updated.MsgType()))
+	actor := k.getActorAuthorizationKey(grantee, granter, updated.MsgType())
+	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return
 	}
 	grant.Authorization = updated
+
+	store := ctx.KVStore(k.storeKey)
+	store.Set(actor, k.cdc.MustMarshalBinaryBare(grant))
 }
 
 // DispatchActions attempts to execute the provided messages via authorization

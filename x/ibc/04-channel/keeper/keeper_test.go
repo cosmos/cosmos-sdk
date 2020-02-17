@@ -192,13 +192,18 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
+func (suite *KeeperTestSuite) commitNBlocks(n int) {
+	for i := 0; i < n; i++ {
+		suite.app.Commit()
+		suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+		suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
+	}
+}
+
 func (suite *KeeperTestSuite) createClient(clientID string) {
-	suite.app.Commit()
+	suite.commitNBlocks(1)
+
 	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
-
 	consensusState := tendermint.ConsensusState{
 		Root:             commitment.NewRoot(commitID.Hash),
 		ValidatorSetHash: suite.valSet.Hash(),

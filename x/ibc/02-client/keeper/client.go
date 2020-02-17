@@ -30,7 +30,7 @@ func (k Keeper) CreateClient(
 	}
 
 	height := consensusState.GetHeight()
-	if consensusState == nil {
+	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, height, consensusState)
 	}
 

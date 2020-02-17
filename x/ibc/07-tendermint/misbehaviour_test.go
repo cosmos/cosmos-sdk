@@ -52,17 +52,17 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			true,
 		},
 		{
-			"height doesn't match provided evidence",
-			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.now),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			"valid misbehavior at height greater than last consensusState",
+			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height-1, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			0,
-			false,
+			height - 1,
+			true,
 		},
 		// {
 		// 	"consensus state's valset hash different from evidence",

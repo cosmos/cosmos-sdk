@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -66,7 +65,6 @@ func (k Keeper) TimeoutPacket(
 
 	// check that timeout height has passed on the other end
 	if proofHeight < packet.GetTimeoutHeight() {
-		fmt.Println(proofHeight, packet.GetTimeoutHeight())
 		return nil, types.ErrPacketTimeout
 	}
 

@@ -10,8 +10,8 @@ import (
 	params "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
-// Manager of the global paramstore
-type Manager struct {
+// Keeper of the global paramstore
+type Keeper struct {
 	cdc    codec.Marshaler
 	key    sdk.StoreKey
 	tkey   sdk.StoreKey
@@ -19,8 +19,8 @@ type Manager struct {
 }
 
 // New constructs a params manager
-func New(cdc codec.Marshaler, key, tkey sdk.StoreKey) Manager {
-	return Manager{
+func New(cdc codec.Marshaler, key, tkey sdk.StoreKey) Keeper {
+	return Keeper{
 		cdc:    cdc,
 		key:    key,
 		tkey:   tkey,
@@ -29,12 +29,12 @@ func New(cdc codec.Marshaler, key, tkey sdk.StoreKey) Manager {
 }
 
 // Logger returns a module-specific logger.
-func (k Manager) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", params.ModuleName))
 }
 
 // Allocate subspace used for keepers
-func (k Manager) Subspace(s string) params.Subspace {
+func (k Keeper) Subspace(s string) params.Subspace {
 	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
@@ -51,7 +51,7 @@ func (k Manager) Subspace(s string) params.Subspace {
 }
 
 // Get existing substore from manager
-func (k Manager) GetSubspace(s string) (params.Subspace, bool) {
+func (k Keeper) GetSubspace(s string) (params.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {
 		return params.Subspace{}, false

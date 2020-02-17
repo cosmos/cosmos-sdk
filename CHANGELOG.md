@@ -43,6 +43,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/genutil) [\#5775](https://github.com/cosmos/cosmos-sdk/pull/5775) Fix `ExportGenesis` in `x/genutil` to export default genesis state (`[]`) instead of `null`.
 * (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`.
 
+### Improvements
+
+* (rest) [\#5648](https://github.com/cosmos/cosmos-sdk/pull/5648) Enhance /txs usability:
+  * Add `tx.minheight` key to filter transaction with an inclusive minimum block height
+  * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
+
 ## [v0.37.7] - 2020-02-10
 
 ### Improvements

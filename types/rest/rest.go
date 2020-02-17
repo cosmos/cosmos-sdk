@@ -22,6 +22,8 @@ import (
 const (
 	DefaultPage  = 1
 	DefaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	TxMinHeightKey = "tx.minheight" // Inclusive minimum height filter
+	TxMaxHeightKey = "tx.maxheight" // Inclusive maximum height filter
 )
 
 // ResponseWithHeight defines a response object type that wraps an original
@@ -337,6 +339,10 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 		var tag string
 		if key == types.TxHeightKey {
 			tag = fmt.Sprintf("%s=%s", key, value)
+		} else if key == TxMinHeightKey {
+			tag = fmt.Sprintf("%s>=%s", types.TxHeightKey, value)
+		} else if key == TxMaxHeightKey {
+			tag = fmt.Sprintf("%s<=%s", types.TxHeightKey, value)
 		} else {
 			tag = fmt.Sprintf("%s='%s'", key, value)
 		}

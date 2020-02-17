@@ -58,18 +58,18 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, recepientAddr, granterAddr, bank.MsgMultiSend{}.Type())
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, recipientAddr, granterAddr, bank.MsgMultiSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("")
 
 	s.T().Log("verify revoke fails with wrong information")
-	s.keeper.Revoke(s.ctx, recepientAddr, granterAddr, bank.MsgSend{}.Type())
-	authorization, _ = s.keeper.GetAuthorization(s.ctx, recepientAddr, granterAddr, bank.MsgSend{}.Type())
+	s.keeper.Revoke(s.ctx, recipientAddr, granterAddr, bank.MsgSend{}.Type())
+	authorization, _ = s.keeper.GetAuthorization(s.ctx, recipientAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke executes with correct information")
-	s.keeper.Revoke(s.ctx, recepientAddr, granterAddr, bank.MsgSend{}.Type())
+	s.keeper.Revoke(s.ctx, recipientAddr, granterAddr, bank.MsgSend{}.Type())
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 
@@ -93,7 +93,7 @@ func (s *TestSuite) TestKeeperFees() {
 			bank.MsgSend{
 				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 				FromAddress: granterAddr,
-				ToAddress:   recepientAddr,
+				ToAddress:   recipientAddr,
 			},
 		},
 	}
@@ -126,7 +126,7 @@ func (s *TestSuite) TestKeeperFees() {
 			bank.MsgSend{
 				Amount:      someCoin,
 				FromAddress: granterAddr,
-				ToAddress:   recepientAddr,
+				ToAddress:   recipientAddr,
 			},
 		},
 	}

@@ -69,7 +69,6 @@ func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.Base
 	router.AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	authorizationKeeper := NewKeeper(keyAuthorization, cdc, router)
-
 	authKeeper.SetParams(ctx, auth.DefaultParams())
 
 	return ctx, authKeeper, paramsKeeper, bankKeeper, authorizationKeeper, router
@@ -78,10 +77,9 @@ func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.Base
 var (
 	granteePub    = ed25519.GenPrivKey().PubKey()
 	granterPub    = ed25519.GenPrivKey().PubKey()
-	recepientPub  = ed25519.GenPrivKey().PubKey()
+	recipientPub  = ed25519.GenPrivKey().PubKey()
 	randomPub     = ed25519.GenPrivKey().PubKey()
 	granteeAddr   = sdk.AccAddress(granteePub.Address())
 	granterAddr   = sdk.AccAddress(granterPub.Address())
-	recepientAddr = sdk.AccAddress(recepientPub.Address())
-	randomAddr    = sdk.AccAddress(randomPub.Address())
+	recipientAddr = sdk.AccAddress(recipientPub.Address())
 )

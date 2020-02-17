@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -28,8 +27,6 @@ func (authorization SendAuthorization) Accept(msg sdk.Msg, block abci.Header) (a
 		if limitLeft.IsZero() {
 			return true, nil, true
 		}
-
-		fmt.Println(limitLeft, "limitLeft")
 
 		return true, SendAuthorization{SpendLimit: limitLeft}, false
 	}

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-	"github.com/kr/pretty"
 	"testing"
 	"time"
 
@@ -102,7 +100,6 @@ func (s *TestSuite) TestKeeperFees() {
 
 	s.T().Log("verify dispatch fails with invalid authorization")
 	result, error := s.keeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
-	s.T().Log(error.Error())
 	s.Require().Nil(result)
 	s.Require().NotNil(error)
 
@@ -116,7 +113,6 @@ func (s *TestSuite) TestKeeperFees() {
 	result, error = s.keeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
 	s.Require().NotNil(result)
 	s.Require().Nil(error)
-	fmt.Printf("%# v", pretty.Formatter(result))
 
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
@@ -138,7 +134,6 @@ func (s *TestSuite) TestKeeperFees() {
 	result, error = s.keeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
 	s.Require().Nil(result)
 	s.Require().NotNil(error)
-	fmt.Printf("%# v", pretty.Formatter(error))
 
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{}.Type())
 	s.Require().NotNil(authorization)

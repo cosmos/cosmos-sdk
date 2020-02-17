@@ -1,11 +1,11 @@
 package simulation
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 

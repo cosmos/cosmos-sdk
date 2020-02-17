@@ -1,10 +1,7 @@
 package params_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/stretchr/testify/require"
 
@@ -15,8 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	ptypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 func validateNoOp(_ interface{}) error { return nil }

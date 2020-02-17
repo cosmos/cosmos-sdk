@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	params "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -14,8 +14,8 @@ const (
 )
 
 // ParamTable for staking module
-func ParamKeyTable() types2.KeyTable {
-	return types2.NewKeyTable().RegisterParamSet(&types.Params{})
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&types.Params{})
 }
 
 // UnbondingTime

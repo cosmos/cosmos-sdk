@@ -3,8 +3,9 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"strings"
+
+	params "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -28,7 +29,7 @@ var (
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
 )
 
-var _ types.ParamSet = &Params{}
+var _ params.ParamSet = &Params{}
 
 // Params defines the parameters for the auth module.
 type Params struct {
@@ -53,20 +54,20 @@ func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte,
 }
 
 // ParamKeyTable for auth module
-func ParamKeyTable() types.KeyTable {
-	return types.NewKeyTable().RegisterParamSet(&Params{})
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of auth module's parameters.
 // nolint
-func (p *Params) ParamSetPairs() types.ParamSetPairs {
-	return types.ParamSetPairs{
-		types.NewParamSetPair(KeyMaxMemoCharacters, &p.MaxMemoCharacters, validateMaxMemoCharacters),
-		types.NewParamSetPair(KeyTxSigLimit, &p.TxSigLimit, validateTxSigLimit),
-		types.NewParamSetPair(KeyTxSizeCostPerByte, &p.TxSizeCostPerByte, validateTxSizeCostPerByte),
-		types.NewParamSetPair(KeySigVerifyCostED25519, &p.SigVerifyCostED25519, validateSigVerifyCostED25519),
-		types.NewParamSetPair(KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1, validateSigVerifyCostSecp256k1),
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
+		params.NewParamSetPair(KeyMaxMemoCharacters, &p.MaxMemoCharacters, validateMaxMemoCharacters),
+		params.NewParamSetPair(KeyTxSigLimit, &p.TxSigLimit, validateTxSigLimit),
+		params.NewParamSetPair(KeyTxSizeCostPerByte, &p.TxSizeCostPerByte, validateTxSizeCostPerByte),
+		params.NewParamSetPair(KeySigVerifyCostED25519, &p.SigVerifyCostED25519, validateSigVerifyCostED25519),
+		params.NewParamSetPair(KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1, validateSigVerifyCostSecp256k1),
 	}
 }
 

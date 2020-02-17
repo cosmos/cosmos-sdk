@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -11,6 +10,7 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the param

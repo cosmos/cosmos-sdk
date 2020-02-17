@@ -3,7 +3,6 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	proposal2 "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -16,6 +15,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	params "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // GetCmdSubmitProposal implements a command handler for submitting a parameter
@@ -75,7 +75,7 @@ Where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := proposal2.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
+			content := params.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
 			msg := govtypes.NewMsgSubmitProposal(content, proposal.Deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

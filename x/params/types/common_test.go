@@ -3,10 +3,10 @@ package types_test
 import (
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (

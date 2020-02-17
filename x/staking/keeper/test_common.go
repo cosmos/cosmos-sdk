@@ -3,7 +3,6 @@ package keeper // noalias
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -24,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )

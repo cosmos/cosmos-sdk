@@ -2,7 +2,8 @@ package types
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+
+	params "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 const (
@@ -16,9 +17,9 @@ const (
 var ParamStoreKeySendEnabled = []byte("sendenabled")
 
 // ParamKeyTable type declaration for parameters
-func ParamKeyTable() types.KeyTable {
-	return types.NewKeyTable(
-		types.NewParamSetPair(ParamStoreKeySendEnabled, false, validateSendEnabled),
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
+		params.NewParamSetPair(ParamStoreKeySendEnabled, false, validateSendEnabled),
 	)
 }
 

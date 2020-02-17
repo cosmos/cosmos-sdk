@@ -23,7 +23,7 @@ func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exporte
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClients)
+	route := fmt.Sprintf("custom/%s/%s/%s", "ibc", types.QuerierRoute, types.QueryAllClients)
 	res, height, err := cliCtx.QueryWithData(route, bz)
 	if err != nil {
 		return nil, 0, err

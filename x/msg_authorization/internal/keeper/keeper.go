@@ -47,7 +47,6 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 		return
 	}
 	grant.Authorization = updated
-
 	store := ctx.KVStore(k.storeKey)
 	store.Set(actor, k.cdc.MustMarshalBinaryBare(grant))
 }
@@ -106,11 +105,13 @@ func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAd
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
-	_, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
+	actor := k.getActorAuthorizationKey(grantee, granter, msgType)
+	_, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 	}
-	store.Delete(k.getActorAuthorizationKey(grantee, granter, msgType))
+	store.Delete(actor)
+
 	return nil
 }
 

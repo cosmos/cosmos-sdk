@@ -11,13 +11,6 @@ const (
 	ProposalTypeCancelSoftwareUpgrade string = "CancelSoftwareUpgrade"
 )
 
-// Software Upgrade Proposals
-type SoftwareUpgradeProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
-	Plan        Plan   `json:"plan" yaml:"plan"`
-}
-
 func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Content {
 	return SoftwareUpgradeProposal{title, description, plan}
 }
@@ -49,12 +42,6 @@ func (sup SoftwareUpgradeProposal) String() string {
   Title:       %s
   Description: %s
 `, sup.Title, sup.Description)
-}
-
-// Cancel Software Upgrade Proposals
-type CancelSoftwareUpgradeProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
 }
 
 func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {

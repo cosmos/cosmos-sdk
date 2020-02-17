@@ -1,4 +1,4 @@
-package types
+package proposal
 
 import (
 	"testing"

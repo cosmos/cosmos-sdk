@@ -2,12 +2,12 @@ package params
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
 	ptypes "github.com/cosmos/cosmos-sdk/x/params/types/subspace"
 )
 
@@ -15,7 +15,7 @@ import (
 func NewParamChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case types.ParameterChangeProposal:
+		case proposal.ParameterChangeProposal:
 			return handleParameterChangeProposal(ctx, k, c)
 
 		default:
@@ -24,7 +24,7 @@ func NewParamChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	}
 }
 
-func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p types.ParameterChangeProposal) error {
+func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p proposal.ParameterChangeProposal) error {
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {

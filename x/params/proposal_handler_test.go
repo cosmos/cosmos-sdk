@@ -1,6 +1,7 @@
 package params_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -52,8 +53,8 @@ func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
 	}
 }
 
-func testProposal(changes ...ptypes.ParamChange) ptypes.ParameterChangeProposal {
-	return ptypes.NewParameterChangeProposal(
+func testProposal(changes ...proposal.ParamChange) proposal.ParameterChangeProposal {
+	return proposal.NewParameterChangeProposal(
 		"Test",
 		"description",
 		changes,
@@ -88,7 +89,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 		subspace.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	tp := testProposal(ptypes.NewParamChange(testSubspace, keyMaxValidators, "1"))
+	tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "1"))
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.NoError(t, hdlr(input.ctx, tp))
 
@@ -103,7 +104,7 @@ func TestProposalHandlerFailed(t *testing.T) {
 		subspace.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
-	tp := testProposal(ptypes.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
+	tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	require.Error(t, hdlr(input.ctx, tp))
 
@@ -119,13 +120,13 @@ func TestProposalHandlerUpdateOmitempty(t *testing.T) {
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)
 	var param testParamsSlashingRate
 
-	tp := testProposal(ptypes.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
+	tp := testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
 	require.NoError(t, hdlr(input.ctx, tp))
 
 	ss.Get(input.ctx, []byte(keySlashingRate), &param)
 	require.Equal(t, testParamsSlashingRate{0, 7}, param)
 
-	tp = testProposal(ptypes.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
+	tp = testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
 	require.NoError(t, hdlr(input.ctx, tp))
 
 	ss.Get(input.ctx, []byte(keySlashingRate), &param)

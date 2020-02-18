@@ -1,20 +1,20 @@
-package tendermint_test
+package types_test
 
 import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	testCases := []struct {
 		name    string
-		header  tendermint.Header
+		header  ibctmtypes.Header
 		chainID string
 		expPass bool
 	}{
 		{"valid header", suite.header, chainID, true},
 		{"signed header basic validation failed", suite.header, "chainID", false},
-		{"validator set nil", tendermint.Header{suite.header.SignedHeader, nil}, chainID, false},
+		{"validator set nil", ibctmtypes.Header{suite.header.SignedHeader, nil}, chainID, false},
 	}
 
 	suite.Require().Equal(clientexported.Tendermint, suite.header.ClientType())

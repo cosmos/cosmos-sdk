@@ -1,4 +1,4 @@
-package tendermint
+package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +13,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(Header{}, "ibc/client/tendermint/Header", nil)
 	cdc.RegisterConcrete(Evidence{}, "ibc/client/tendermint/Evidence", nil)
+	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/client/MsgCreateClient", nil)
+	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/client/MsgUpdateClient", nil)
 
 	SetSubModuleCodec(cdc)
 }

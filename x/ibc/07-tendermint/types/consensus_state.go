@@ -1,4 +1,4 @@
-package tendermint
+package types
 
 import (
 	"time"
@@ -14,6 +14,7 @@ import (
 type ConsensusState struct {
 	Timestamp    time.Time             `json:"timestamp" yaml:"timestamp"`
 	Root         commitment.RootI      `json:"root" yaml:"root"`
+	Height       uint64                `json:"height" yaml:"height"`
 	ValidatorSet *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
 }
 
@@ -25,6 +26,11 @@ func (ConsensusState) ClientType() clientexported.ClientType {
 // GetRoot returns the commitment Root for the specific
 func (cs ConsensusState) GetRoot() commitment.RootI {
 	return cs.Root
+}
+
+// GetHeight returns the height for the specific consensus state
+func (cs ConsensusState) GetHeight() uint64 {
+	return cs.Height
 }
 
 // GetTimestamp returns block time at which the consensus state was stored
@@ -39,6 +45,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set cannot be nil")
+	}
+	if cs.Height == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "height cannot be 0")
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")

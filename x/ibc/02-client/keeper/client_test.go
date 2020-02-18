@@ -4,114 +4,144 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const (
-	testClientType exported.ClientType = iota + 2
+	invalidClientType exported.ClientType = 0
 )
 
 func (suite *KeeperTestSuite) TestCreateClient() {
-	// Test Valid CreateClient
-	state, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
-	suite.NoError(err, "CreateClient failed")
-
-	// Test ClientState stored correctly
-	expectedState := types.State{
-		ID:     testClientID,
-		Frozen: false,
+	type params struct {
+		clientID   string
+		clientType exported.ClientType
 	}
-	require.Equal(suite.T(), expectedState, state, "Incorrect ClientState returned")
 
-	// Test ClientType and VerifiedRoot stored correctly
-	clientType, _ := suite.keeper.GetClientType(suite.ctx, testClientID)
-	require.Equal(suite.T(), exported.Tendermint, clientType, "Incorrect ClientType stored")
-	root, _ := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, suite.consensusState.GetHeight())
-	require.Equal(suite.T(), suite.consensusState.GetRoot(), root, "Incorrect root stored")
+	suite.keeper.SetClientType(suite.ctx, testClientID2, exported.Tendermint)
 
-	// Test that trying to CreateClient on existing client fails
-	_, err = suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
-	suite.Error(err, "CreateClient on existing client: %s passed", testClientID)
+	cases := []struct {
+		msg      string
+		clientID string
+		expPass  bool
+		expPanic bool
+	}{
+		{"success", testClientID, true, false},
+		{"client ID exists", testClientID, false, false},
+		{"client type exists", testClientID2, false, true},
+	}
+
+	for i, tc := range cases {
+		tc := tc
+
+		if tc.expPanic {
+			suite.Require().Panics(func() {
+				clientState, err := ibctmtypes.Initialize(tc.clientID, tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				suite.Require().NoError(err, "err on client state initialization")
+				suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			}, "Msg %d didn't panic: %s", i, tc.msg)
+		} else {
+			clientState, err := ibctmtypes.Initialize(tc.clientID, tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			if tc.expPass {
+				suite.Require().NoError(err, "errored on initialization")
+				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
+			}
+			// If we were able to initialize clientstate successfully, try persisting it to state
+			if err == nil {
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			}
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		}
+	}
 }
 
 func (suite *KeeperTestSuite) TestUpdateClient() {
-	privVal := tmtypes.NewMockPV()
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
-	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	altSigners := []tmtypes.PrivValidator{privVal}
-
-	// Test invalid cases all fail and do not update state
 	cases := []struct {
 		name     string
-		malleate func()
-		expErr   bool
+		malleate func() error
+		expPass  bool
 	}{
-		{"valid update", func() {}, false},
-		{"wrong client type", func() {
-			suite.keeper.SetClientType(suite.ctx, testClientID, testClientType)
+		{"valid update", func() error {
+			clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			if err != nil {
+				return err
+			}
+			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			return err
 		}, true},
-		{"frozen client", func() {
-			clientState, _ := suite.keeper.GetClientState(suite.ctx, testClientID)
-			clientState.Frozen = true
+		{"client type not found", func() error {
+			return nil
+		}, false},
+		{"client type and header type mismatch", func() error {
+			suite.keeper.SetClientType(suite.ctx, testClientID, invalidClientType)
+			return nil
+		}, false},
+		{"client state not found", func() error {
+			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			return nil
+		}, false},
+		{"frozen client", func() error {
+			clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LatestHeight: 10}
 			suite.keeper.SetClientState(suite.ctx, clientState)
-		}, true},
-		{"past height", func() {
-			suite.header = tendermint.MakeHeader("gaia", 2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-		}, true},
-		{"validatorHash incorrect", func() {
-			suite.header = tendermint.MakeHeader("gaia", 4, altValSet, suite.valSet, altSigners)
-		}, true},
-		{"nextHash incorrect", func() {
-			suite.header.NextValidatorSet = altValSet
-		}, true},
-		{"header fails validateBasic", func() {
-			suite.header.ChainID = "test"
-		}, true},
-		{"verify future commit fails", func() {
-			suite.consensusState.NextValidatorSet = altValSet
-			suite.keeper.SetConsensusState(suite.ctx, testClientID, suite.consensusState)
-		}, true},
+			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			return nil
+		}, false},
+		{"invalid header", func() error {
+			clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			if err != nil {
+				return err
+			}
+			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			if err != nil {
+				return err
+			}
+			suite.header.Height = suite.ctx.BlockHeight() - 1
+			return nil
+		}, false},
 	}
 
-	for _, tc := range cases {
-		tc := tc // pin for scopelint
+	for i, tc := range cases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			// Reset suite on each subtest
 			suite.SetupTest()
 
-			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
-			suite.NoError(err, "CreateClient failed")
+			err := tc.malleate()
+			suite.Require().NoError(err)
 
-			tc.malleate()
 			err = suite.keeper.UpdateClient(suite.ctx, testClientID, suite.header)
 
-			retrievedConsState, _ := suite.keeper.GetConsensusState(suite.ctx, testClientID)
-			tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
-			tmConsState.ValidatorSet.TotalVotingPower()
-			tmConsState.NextValidatorSet.TotalVotingPower()
-			retrievedRoot, _ := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, suite.consensusState.GetHeight()+1)
-			if tc.expErr {
-				suite.Error(err, "Invalid UpdateClient passed", tc.name)
+			if tc.expPass {
+				expConsensusState := ibctmtypes.ConsensusState{
+					Timestamp:    suite.header.Time,
+					Root:         commitment.NewRoot(suite.header.AppHash),
+					ValidatorSet: suite.header.ValidatorSet,
+				}
 
-				// require no state changes occurred
-				require.Equal(suite.T(), suite.consensusState, tmConsState, "Consensus state changed after invalid UpdateClient")
-				require.Nil(suite.T(), retrievedRoot, "Root added for new height after invalid UpdateClient")
+				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
+				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
+
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(suite.header.GetHeight()))
+				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
+				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
+				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
+				// recalculate cached totalVotingPower field for equality check
+				tmConsState.ValidatorSet.TotalVotingPower()
+
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
+				suite.Require().Equal(suite.header.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
+				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated on case %s", tc.name)
 			} else {
-				suite.NoError(err, "Valid UpdateClient failed", tc.name)
-
-				// require state changes were performed correctly
-				require.Equal(suite.T(), suite.header.GetHeight(), retrievedConsState.GetHeight(), "height not updated correctly")
-				require.Equal(suite.T(), commitment.NewRoot(suite.header.AppHash), retrievedConsState.GetRoot(), "root not updated correctly")
-				require.Equal(suite.T(), suite.header.NextValidatorSet, tmConsState.NextValidatorSet, "NextValidatorSet not updated correctly")
-
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}
-
 		})
 	}
 }
@@ -135,77 +165,128 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	_, err := suite.keeper.CreateClient(suite.ctx, "gaiamainnet", exported.Tendermint, suite.consensusState)
-	suite.NoError(err, "CreateClient failed")
-
 	testCases := []struct {
 		name     string
-		evidence *tendermint.Evidence
-		clientID string
-		expErr   bool
+		evidence ibctmtypes.Evidence
+		malleate func() error
+		expPass  bool
 	}{
 		{
 			"trusting period misbehavior should pass",
-			&tendermint.Evidence{
-				Header1: tendermint.MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
-				Header2: tendermint.MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				ChainID: "gaia",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
 			},
-			"gaiamainnet",
+			func() error {
+				suite.consensusState.ValidatorSet = bothValSet
+				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				if err != nil {
+					return err
+				}
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+
+				return err
+			},
+			true,
+		},
+		{
+			"misbehavior at later height should pass",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
+			},
+			func() error {
+				suite.consensusState.ValidatorSet = bothValSet
+				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				if err != nil {
+					return err
+				}
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+
+				return err
+			},
+			true,
+		},
+		{
+			"client state not found",
+			ibctmtypes.Evidence{},
+			func() error { return nil },
 			false,
 		},
 		{
-			"first valset has too much change",
-			&tendermint.Evidence{
-				Header1: tendermint.MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				Header2: tendermint.MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				ChainID: "gaia",
+			"consensus state not found",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
 			},
-			"gaiamainnet",
-			true,
+			func() error {
+				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LatestHeight: 10}
+				suite.keeper.SetClientState(suite.ctx, clientState)
+				return nil
+			},
+			false,
 		},
 		{
-			"second valset has too much change",
-			&tendermint.Evidence{
-				Header1: tendermint.MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				Header2: tendermint.MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				ChainID: "gaia",
+			"consensus state not found",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
 			},
-			"gaiamainnet",
-			true,
+			func() error {
+				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LatestHeight: 10}
+				suite.keeper.SetClientState(suite.ctx, clientState)
+				return nil
+			},
+			false,
 		},
 		{
-			"both valsets have too much change",
-			&tendermint.Evidence{
-				Header1: tendermint.MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
-				Header2: tendermint.MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				ChainID: "gaia",
+			"misbehaviour check failed",
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(testClientID, testClientHeight, suite.ctx.BlockTime(), altValSet, bothValSet, altSigners),
+				ChainID:  testClientID,
+				ClientID: testClientID,
 			},
-			"gaiamainnet",
-			true,
+			func() error {
+				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				if err != nil {
+					return err
+				}
+				_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+
+				return err
+			},
+			false,
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc // pin for scopelint
+	for i, tc := range testCases {
+		tc := tc
 		suite.Run(tc.name, func() {
-			misbehaviour := tendermint.Misbehaviour{
-				Evidence: tc.evidence,
-				ClientID: tc.clientID,
-			}
+			suite.SetupTest() // reset
 
-			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, misbehaviour)
+			err := tc.malleate()
+			suite.Require().NoError(err)
 
-			if tc.expErr {
-				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
+			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.evidence)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
+
+				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
+				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
+				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
 			} else {
-				suite.NoError(err, "CheckMisbehaviour failed unexpectedly: %v", err)
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}
-
-			// reset Frozen flag to false
-			clientState, _ := suite.keeper.GetClientState(suite.ctx, tc.clientID)
-			clientState.Frozen = false
-			suite.keeper.SetClientState(suite.ctx, clientState)
 		})
 	}
 }

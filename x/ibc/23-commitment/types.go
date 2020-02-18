@@ -14,6 +14,7 @@ package commitment
 type RootI interface {
 	GetCommitmentType() Type
 	GetHash() []byte
+	IsEmpty() bool
 }
 
 // PrefixI implements spec:CommitmentPrefix.
@@ -21,6 +22,7 @@ type RootI interface {
 type PrefixI interface {
 	GetCommitmentType() Type
 	Bytes() []byte
+	IsEmpty() bool
 }
 
 // PathI implements spec:CommitmentPath.
@@ -28,6 +30,7 @@ type PrefixI interface {
 type PathI interface {
 	GetCommitmentType() Type
 	String() string
+	IsEmpty() bool
 }
 
 // ProofI implements spec:CommitmentProof.
@@ -36,8 +39,9 @@ type PathI interface {
 // Proofs includes key but value is provided dynamically at the verification time.
 type ProofI interface {
 	GetCommitmentType() Type
-	VerifyMembership(RootI, PathI, []byte) bool
-	VerifyNonMembership(RootI, PathI) bool
+	VerifyMembership(RootI, PathI, []byte) error
+	VerifyNonMembership(RootI, PathI) error
+	IsEmpty() bool
 
 	ValidateBasic() error
 }

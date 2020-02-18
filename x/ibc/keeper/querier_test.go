@@ -44,22 +44,10 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			"",
 		},
 		{
-			"client - QuerierVerifiedRoot",
-			[]string{client.SubModuleName, client.QueryVerifiedRoot},
-			false,
-			"",
-		},
-		{
 			"client - invalid query",
 			[]string{client.SubModuleName, "foo"},
 			true,
 			fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName),
-		},
-		{
-			"connection - QuerierConnection",
-			[]string{connection.SubModuleName, connection.QueryConnection},
-			false,
-			"",
 		},
 		{
 			"connection - QuerierConnections",

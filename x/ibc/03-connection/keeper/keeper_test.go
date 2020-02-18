@@ -1,56 +1,207 @@
 package keeper_test
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
 	clientType = clientexported.Tendermint
 	storeKey   = ibctypes.StoreKey
-	chainID    = "test"
+	chainID    = "gaia"
 
-	testClientID1     = "testclientid1"
-	testConnectionID1 = "connectionid1"
+	testClientID1     = "testclientidone"
+	testConnectionID1 = "connectionidone"
 
-	testClientID2     = "testclientid2"
-	testConnectionID2 = "connectionid2"
+	testClientID2     = "testclientidtwo"
+	testConnectionID2 = "connectionidtwo"
 
-	testClientID3     = "testclientid3"
-	testConnectionID3 = "connectionid3"
+	testClientID3     = "testclientidthree"
+	testConnectionID3 = "connectionidthree"
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
+
+var testHeight uint64
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	app    *simapp.SimApp
-	valSet *tmtypes.ValidatorSet
+	cdc            *codec.Codec
+	ctx            sdk.Context
+	app            *simapp.SimApp
+	valSet         *tmtypes.ValidatorSet
+	consensusState clientexported.ConsensusState
+	header         ibctmtypes.Header
+	now            time.Time
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
+	testHeight = 1
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
+	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	now2 := suite.now.Add(time.Duration(time.Hour * 1))
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
 	suite.app = app
-
 	privVal := tmtypes.NewMockPV()
-
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, int64(testHeight), now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
+	suite.consensusState = ibctmtypes.ConsensusState{
+		Height:       testHeight,
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot(suite.header.AppHash),
+		ValidatorSet: suite.valSet,
+	}
+
+	var validators staking.Validators
+	for i := 1; i < 11; i++ {
+		privVal := tmtypes.NewMockPV()
+		pk := privVal.GetPubKey()
+		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		validators = append(validators, val)
+
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
+	}
+}
+
+// nolint: unused
+func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
+	res := suite.app.Query(abci.RequestQuery{
+		Path:   fmt.Sprintf("store/%s/key", storeKey),
+		Height: suite.app.LastBlockHeight(),
+		Data:   key,
+		Prove:  true,
+	})
+
+	proof := commitment.Proof{
+		Proof: res.Proof,
+	}
+
+	return proof, res.Height
+}
+
+func (suite *KeeperTestSuite) createClient(clientID string) {
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+	suite.now = suite.now.Add(time.Minute)
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	testHeight++
+
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       testHeight,
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
+	}
+
+	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
+	suite.Require().NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
+	suite.Require().NoError(err)
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	suite.ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
+}
+
+func (suite *KeeperTestSuite) updateClient(clientID string) {
+	// always commit when updateClient and begin a new block
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+	suite.now = suite.now.Add(time.Minute)
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	testHeight++
+
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       testHeight,
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
+	}
+
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(
+		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
+	)
+	suite.app.IBCKeeper.ClientKeeper.SetClientState(
+		suite.ctx, ibctmtypes.NewClientState(clientID, clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
+	)
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	suite.ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgUpdateClient(clientID, suite.header, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
+	// suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) createConnection(
+	connID, counterpartyConnID, clientID, counterpartyClientID string,
+	state exported.State,
+) types.ConnectionEnd {
+	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	connection := types.ConnectionEnd{
+		State:        state,
+		ClientID:     clientID,
+		Counterparty: counterparty,
+		Versions:     types.GetCompatibleVersions(),
+	}
+	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, connID, connection)
+	return connection
+}
+
+func (suite *KeeperTestSuite) createChannel(
+	portID, channelID, counterpartyPortID, counterpartyChannelID string,
+	state channelexported.State, order channelexported.Order, connectionID string,
+) channeltypes.Channel {
+	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	channel := channeltypes.NewChannel(state, order, counterparty,
+		[]string{connectionID}, "1.0",
+	)
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, channelID, channel)
+	return channel
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -59,19 +210,14 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.False(existed)
+	suite.Require().False(existed)
 
 	counterparty := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-	expConn := types.ConnectionEnd{
-		State:        types.INIT,
-		ClientID:     testClientID1,
-		Counterparty: counterparty,
-		Versions:     types.GetCompatibleVersions(),
-	}
+	expConn := types.NewConnectionEnd(exported.INIT, testClientID1, counterparty, types.GetCompatibleVersions())
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConn)
 	conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.True(existed)
-	suite.EqualValues(expConn, conn)
+	suite.Require().True(existed)
+	suite.Require().EqualValues(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
@@ -90,26 +236,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	counterparty2 := types.NewCounterparty(testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 
-	conn1 := types.ConnectionEnd{
-		State:        types.INIT,
-		ClientID:     testClientID1,
-		Counterparty: counterparty3,
-		Versions:     types.GetCompatibleVersions(),
-	}
-
-	conn2 := types.ConnectionEnd{
-		State:        types.INIT,
-		ClientID:     testClientID2,
-		Counterparty: counterparty1,
-		Versions:     types.GetCompatibleVersions(),
-	}
-
-	conn3 := types.ConnectionEnd{
-		State:        types.UNINITIALIZED,
-		ClientID:     testClientID3,
-		Counterparty: counterparty2,
-		Versions:     types.GetCompatibleVersions(),
-	}
+	conn1 := types.NewConnectionEnd(exported.INIT, testClientID1, counterparty3, types.GetCompatibleVersions())
+	conn2 := types.NewConnectionEnd(exported.INIT, testClientID2, counterparty1, types.GetCompatibleVersions())
+	conn3 := types.NewConnectionEnd(exported.UNINITIALIZED, testClientID3, counterparty2, types.GetCompatibleVersions())
 
 	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
 
@@ -119,5 +248,5 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 	connections := suite.app.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.ctx)
 	suite.Require().Len(connections, len(expConnections))
-	suite.Require().Equal(expConnections, connections)
+	suite.Require().ElementsMatch(expConnections, connections)
 }

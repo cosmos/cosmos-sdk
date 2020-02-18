@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetSetProposal(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -27,7 +28,7 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -96,7 +97,7 @@ func registerTestCodec(cdc *codec.Codec) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 
 	registerTestCodec(keeper.cdc)
 
@@ -124,7 +125,7 @@ func TestSubmitProposal(t *testing.T) {
 
 func TestGetProposalsFiltered(t *testing.T) {
 	proposalID := uint64(1)
-	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
 	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
 
 	addr1 := sdk.AccAddress("foo")

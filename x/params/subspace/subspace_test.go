@@ -5,26 +5,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
+	cdc codec.Marshaler
 	ctx sdk.Context
 	ss  subspace.Subspace
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	cdc := codec.New()
+	cdc := types.ModuleCdc
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
@@ -45,7 +47,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := subspace.NewSubspace(codec.New(), key, tkey, "testsubspace2")
+		ss := subspace.NewSubspace(types.ModuleCdc, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }

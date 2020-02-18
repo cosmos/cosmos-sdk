@@ -38,7 +38,7 @@ func TestSimulateGasCost(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -47,17 +47,17 @@ func TestSimulateGasCost(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, acc1.GetAddress(), types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, acc2.GetAddress(), types.NewTestCoins())
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
-	acc3.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc3.SetAccountNumber(2))
 	app.AccountKeeper.SetAccount(ctx, acc3)
+	app.BankKeeper.SetBalances(ctx, acc3.GetAddress(), types.NewTestCoins())
 
 	// set up msgs and fee
 	var tx sdk.Tx
@@ -89,7 +89,7 @@ func TestSimulateGasCost(t *testing.T) {
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -128,8 +128,8 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 	// save the first account, but second is still unrecognized
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(fee.Amount)
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, fee.Amount)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnknownAddress)
 }
 
@@ -138,7 +138,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -146,13 +146,13 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -195,7 +195,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(0)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -203,12 +203,12 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 
 	// set the accounts, we don't need the acc numbers as it is in the genesis block
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -251,7 +251,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -260,17 +260,17 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
-	acc3.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc3.SetAccountNumber(2))
 	app.AccountKeeper.SetAccount(ctx, acc3)
+	app.BankKeeper.SetBalances(ctx, addr3, types.NewTestCoins())
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -327,7 +327,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -347,19 +347,21 @@ func TestAnteHandlerFees(t *testing.T) {
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInsufficientFunds)
 
-	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInsufficientFunds)
 
-	require.True(t, app.SupplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetCoins().Empty())
-	require.True(sdk.IntEq(t, app.AccountKeeper.GetAccount(ctx, addr1).GetCoins().AmountOf("atom"), sdk.NewInt(149)))
+	modAcc := app.SupplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 
-	acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
+	require.True(t, app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).Empty())
+	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, addr1).AmountOf("atom"), sdk.NewInt(149)))
+
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
-	require.True(sdk.IntEq(t, app.SupplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetCoins().AmountOf("atom"), sdk.NewInt(150)))
-	require.True(sdk.IntEq(t, app.AccountKeeper.GetAccount(ctx, addr1).GetCoins().AmountOf("atom"), sdk.NewInt(0)))
+	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
+	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, addr1).AmountOf("atom"), sdk.NewInt(0)))
 }
 
 // Test logic around memo gas consumption.
@@ -367,7 +369,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -407,7 +409,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -416,17 +418,17 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
-	acc3.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc3.SetAccountNumber(2))
 	app.AccountKeeper.SetAccount(ctx, acc3)
+	app.BankKeeper.SetBalances(ctx, addr3, types.NewTestCoins())
 
 	// set up msgs and fee
 	var tx sdk.Tx
@@ -457,7 +459,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -465,13 +467,13 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
 	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
@@ -534,7 +536,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -542,13 +544,13 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
+	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
 	var tx sdk.Tx
 
@@ -652,7 +654,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -669,9 +671,9 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// set the accounts
 	for i, addr := range addrs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		acc.SetCoins(types.NewTestCoins())
 		acc.SetAccountNumber(uint64(i))
 		app.AccountKeeper.SetAccount(ctx, acc)
+		app.BankKeeper.SetBalances(ctx, addr, types.NewTestCoins())
 	}
 
 	var tx sdk.Tx
@@ -692,7 +694,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -705,8 +707,8 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// verify that an secp256k1 account gets rejected
 	priv1, _, addr1 := types.KeyTestPubAddr()
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	_ = acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 
 	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
@@ -721,7 +723,8 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	pub2 := priv2.PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	require.NoError(t, acc2.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
+
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
 	msg = types.NewTestMsg(addr2)
@@ -745,11 +748,11 @@ func TestAnteHandlerReCheck(t *testing.T) {
 
 	// set the accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
 
-	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// test that operations skipped on recheck do not run
 
@@ -806,8 +809,8 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	ctx = ctx.WithMinGasPrices(sdk.DecCoins{})
 
 	// remove funds for account so antehandler fails on recheck
-	acc1.SetCoins(sdk.Coins{})
 	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins())
 
 	_, err = antehandler(ctx, tx, false)
 	require.NotNil(t, err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")

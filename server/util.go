@@ -91,7 +91,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
-		conf.TxIndex.IndexAllTags = true
+		conf.TxIndex.IndexAllKeys = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.
@@ -118,7 +118,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 // add server commands
 func AddCommands(
-	ctx *Context, cdc *codec.Codec,
+	ctx *Context, cdc codec.JSONMarshaler,
 	rootCmd *cobra.Command,
 	appCreator AppCreator, appExport AppExporter) {
 
@@ -154,7 +154,7 @@ func AddCommands(
 //
 // NOTE: The ordering of the keys returned as the resulting JSON message is
 // non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc *codec.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
+func InsertKeyJSON(cdc codec.JSONMarshaler, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
 
 	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {

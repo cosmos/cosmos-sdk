@@ -28,4 +28,4 @@ Cosmos SDK 是目前用于构建自定义的特定应用区块链的最先进的
 ## 开始使用 Cosmos SDK 
 
 * 了解[SDK 应用体系架构](./sdk-app-architecture.md)的详细信息
-* 了解如何从头构建特定应用区块链，参考[SDK教程](/docs/tutorial) 。
+* 了解如何从头构建特定应用区块链，参考[SDK教程](https://tutorials.cosmos.network/) 。

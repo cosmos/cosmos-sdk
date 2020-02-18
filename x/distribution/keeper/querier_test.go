@@ -17,48 +17,17 @@ import (
 
 const custom = "custom"
 
-func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (communityTax sdk.Dec, baseProposerReward sdk.Dec, bonusProposerReward sdk.Dec, withdrawAddrEnabled bool) {
+func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) types.Params {
+	var params types.Params
 
-	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamCommunityTax}, "/"),
-		Data: []byte{},
-	}
-
-	bz, err := querier(ctx, []string{types.QueryParams, types.ParamCommunityTax}, query)
+	bz, err := querier(ctx, []string{types.QueryParams}, abci.RequestQuery{})
 	require.Nil(t, err)
-	require.Nil(t, cdc.UnmarshalJSON(bz, &communityTax))
+	require.Nil(t, cdc.UnmarshalJSON(bz, &params))
 
-	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamBaseProposerReward}, "/"),
-		Data: []byte{},
-	}
-
-	bz, err = querier(ctx, []string{types.QueryParams, types.ParamBaseProposerReward}, query)
-	require.Nil(t, err)
-	require.Nil(t, cdc.UnmarshalJSON(bz, &baseProposerReward))
-
-	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamBonusProposerReward}, "/"),
-		Data: []byte{},
-	}
-
-	bz, err = querier(ctx, []string{types.QueryParams, types.ParamBonusProposerReward}, query)
-	require.Nil(t, err)
-	require.Nil(t, cdc.UnmarshalJSON(bz, &bonusProposerReward))
-
-	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryParams, types.ParamWithdrawAddrEnabled}, "/"),
-		Data: []byte{},
-	}
-
-	bz, err = querier(ctx, []string{types.QueryParams, types.ParamWithdrawAddrEnabled}, query)
-	require.Nil(t, err)
-	require.Nil(t, cdc.UnmarshalJSON(bz, &withdrawAddrEnabled))
-
-	return communityTax, baseProposerReward, bonusProposerReward, withdrawAddrEnabled
+	return params
 }
 
-func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (outstandingRewards sdk.DecCoins) {
+func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) sdk.DecCoins {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorOutstandingRewards}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr)),
@@ -66,12 +35,13 @@ func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *c
 
 	bz, err := querier(ctx, []string{types.QueryValidatorOutstandingRewards}, query)
 	require.Nil(t, err)
+	outstandingRewards := types.ValidatorOutstandingRewards{}
 	require.Nil(t, cdc.UnmarshalJSON(bz, &outstandingRewards))
 
-	return
+	return outstandingRewards.GetRewards()
 }
 
-func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (validatorCommission sdk.DecCoins) {
+func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) sdk.DecCoins {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorCommission}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
@@ -79,9 +49,10 @@ func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Cod
 
 	bz, err := querier(ctx, []string{types.QueryValidatorCommission}, query)
 	require.Nil(t, err)
+	validatorCommission := types.ValidatorAccumulatedCommission{}
 	require.Nil(t, cdc.UnmarshalJSON(bz, &validatorCommission))
 
-	return
+	return validatorCommission.GetCommission()
 }
 
 func getQueriedValidatorSlashes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress, startHeight uint64, endHeight uint64) (slashes []types.ValidatorSlashEvent) {
@@ -140,33 +111,34 @@ func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
 	supply.RegisterCodec(cdc)
-	ctx, _, keeper, sk, _ := CreateTestInputDefault(t, false, 100)
+	ctx, _, _, keeper, sk, _ := CreateTestInputDefault(t, false, 100)
 	querier := NewQuerier(keeper)
 
 	// test param queries
-	communityTax := sdk.NewDecWithPrec(3, 1)
-	baseProposerReward := sdk.NewDecWithPrec(2, 1)
-	bonusProposerReward := sdk.NewDecWithPrec(1, 1)
-	withdrawAddrEnabled := true
-	keeper.SetCommunityTax(ctx, communityTax)
-	keeper.SetBaseProposerReward(ctx, baseProposerReward)
-	keeper.SetBonusProposerReward(ctx, bonusProposerReward)
-	keeper.SetWithdrawAddrEnabled(ctx, withdrawAddrEnabled)
-	retCommunityTax, retBaseProposerReward, retBonusProposerReward, retWithdrawAddrEnabled := getQueriedParams(t, ctx, cdc, querier)
-	require.Equal(t, communityTax, retCommunityTax)
-	require.Equal(t, baseProposerReward, retBaseProposerReward)
-	require.Equal(t, bonusProposerReward, retBonusProposerReward)
-	require.Equal(t, withdrawAddrEnabled, retWithdrawAddrEnabled)
+	params := types.Params{
+		CommunityTax:        sdk.NewDecWithPrec(3, 1),
+		BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
+		BonusProposerReward: sdk.NewDecWithPrec(1, 1),
+		WithdrawAddrEnabled: true,
+	}
+
+	keeper.SetParams(ctx, params)
+
+	paramsRes := getQueriedParams(t, ctx, cdc, querier)
+	require.Equal(t, params.CommunityTax, paramsRes.CommunityTax)
+	require.Equal(t, params.BaseProposerReward, paramsRes.BaseProposerReward)
+	require.Equal(t, params.BonusProposerReward, paramsRes.BonusProposerReward)
+	require.Equal(t, params.WithdrawAddrEnabled, paramsRes.WithdrawAddrEnabled)
 
 	// test outstanding rewards query
 	outstandingRewards := sdk.DecCoins{{Denom: "mytoken", Amount: sdk.NewDec(3)}, {Denom: "myothertoken", Amount: sdk.NewDecWithPrec(3, 7)}}
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, outstandingRewards)
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, types.ValidatorOutstandingRewards{Rewards: outstandingRewards})
 	retOutstandingRewards := getQueriedValidatorOutstandingRewards(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, outstandingRewards, retOutstandingRewards)
 
 	// test validator commission query
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
-	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, commission)
+	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, types.ValidatorAccumulatedCommission{Commission: commission})
 	retCommission := getQueriedValidatorCommission(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, commission, retCommission)
 

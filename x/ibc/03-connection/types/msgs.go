@@ -257,7 +257,8 @@ type MsgConnectionOpenConfirm struct {
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck commitment.ProofI, proofHeight uint64, signer sdk.AccAddress,
+	connectionID string, proofAck commitment.ProofI, proofHeight uint64,
+	signer sdk.AccAddress,
 ) MsgConnectionOpenConfirm {
 	return MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,

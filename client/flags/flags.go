@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // nolint
@@ -19,14 +21,9 @@ const (
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
-)
 
-// Keyring constants
-const (
-	DefaultKeyringBackend = KeyringBackendOS
-	KeyringBackendFile    = "file"
-	KeyringBackendOS      = "os"
-	KeyringBackendTest    = "test"
+	// DefaultKeyringBackend
+	DefaultKeyringBackend = keys.BackendOS
 )
 
 const (
@@ -68,9 +65,9 @@ const (
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 	FlagProve              = "prove"
+	FlagKeyringBackend     = "keyring-backend"
 	FlagPage               = "page"
 	FlagLimit              = "limit"
-	FlagKeyringBackend     = "keyring-backend"
 )
 
 // LineBreak can be included in a command list to provide a blank line

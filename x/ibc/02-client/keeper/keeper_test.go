@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,18 +15,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
 	testClientID  = "gaia"
 	testClientID2 = "ethbridge"
 	testClientID3 = "ethermint"
+
+	testClientHeight = 5
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 type KeeperTestSuite struct {
@@ -32,33 +37,43 @@ type KeeperTestSuite struct {
 	cdc            *codec.Codec
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
-	consensusState tendermint.ConsensusState
-	header         tendermint.Header
+	consensusState ibctmtypes.ConsensusState
+	header         ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
 	privVal        tmtypes.PrivValidator
+	now            time.Time
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
+	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	now2 := suite.now.Add(time.Duration(time.Hour * 1))
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
-
 	suite.privVal = tmtypes.NewMockPV()
-
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight+2, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.consensusState = ibctmtypes.ConsensusState{
+		Height:       testClientHeight,
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot([]byte("hash")),
+		ValidatorSet: suite.valSet,
+	}
 
-	suite.header = tendermint.MakeHeader("gaia", 4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	var validators staking.Validators
+	for i := 1; i < 11; i++ {
+		privVal := tmtypes.NewMockPV()
+		pk := privVal.GetPubKey()
+		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		validators = append(validators, val)
 
-	suite.consensusState = tendermint.ConsensusState{
-		ChainID:          testClientID,
-		Height:           3,
-		Root:             commitment.NewRoot([]byte("hash")),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
 }
 
@@ -67,95 +82,40 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := types.NewClientState(testClientID)
+	clientState := ibctmtypes.NewClientState(testClientID, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
-	retrievedState, ok := suite.keeper.GetClientState(suite.ctx, testClientID)
-	require.True(suite.T(), ok, "GetClientState failed")
-	require.Equal(suite.T(), clientState, retrievedState, "Client states are not equal")
+	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
+	suite.Require().True(found, "GetClientState failed")
+	suite.Require().Equal(clientState, retrievedState, "Client states are not equal")
 }
 
 func (suite *KeeperTestSuite) TestSetClientType() {
 	suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
-	clientType, ok := suite.keeper.GetClientType(suite.ctx, testClientID)
+	clientType, found := suite.keeper.GetClientType(suite.ctx, testClientID)
 
-	require.True(suite.T(), ok, "GetClientType failed")
-	require.Equal(suite.T(), exported.Tendermint, clientType, "ClientTypes not stored correctly")
+	suite.Require().True(found, "GetClientType failed")
+	suite.Require().Equal(exported.Tendermint, clientType, "ClientTypes not stored correctly")
 }
 
-func (suite *KeeperTestSuite) TestSetConsensusState() {
-	suite.keeper.SetConsensusState(suite.ctx, testClientID, suite.consensusState)
+func (suite *KeeperTestSuite) TestSetClientConsensusState() {
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
-	retrievedConsState, ok := suite.keeper.GetConsensusState(suite.ctx, testClientID)
+	retrievedConsState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, testClientHeight)
+	suite.Require().True(found, "GetConsensusState failed")
 
-	require.True(suite.T(), ok, "GetConsensusState failed")
-	tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
-	// force recalculation of unexported totalVotingPower so we can compare consensusState
+	tmConsState, ok := retrievedConsState.(ibctmtypes.ConsensusState)
+	// recalculate cached totalVotingPower field for equality check
 	tmConsState.ValidatorSet.TotalVotingPower()
-	tmConsState.NextValidatorSet.TotalVotingPower()
-	require.Equal(suite.T(), suite.consensusState, tmConsState, "ConsensusState not stored correctly")
-}
-
-func (suite *KeeperTestSuite) TestSetVerifiedRoot() {
-	root := commitment.NewRoot([]byte("hash"))
-	suite.keeper.SetVerifiedRoot(suite.ctx, testClientID, 3, root)
-
-	retrievedRoot, ok := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, 3)
-
-	require.True(suite.T(), ok, "GetVerifiedRoot failed")
-	require.Equal(suite.T(), root, retrievedRoot, "Root stored incorrectly")
-}
-
-func (suite KeeperTestSuite) TestSetCommitter() {
-	committer := tendermint.Committer{
-		ValidatorSet:   suite.valSet,
-		Height:         3,
-		NextValSetHash: suite.valSet.Hash(),
-	}
-	nextCommitter := tendermint.Committer{
-		ValidatorSet:   suite.valSet,
-		Height:         6,
-		NextValSetHash: tmhash.Sum([]byte("next_hash")),
-	}
-
-	suite.keeper.SetCommitter(suite.ctx, "gaia", 3, committer)
-	suite.keeper.SetCommitter(suite.ctx, "gaia", 6, nextCommitter)
-
-	// fetch the commiter on each respective height
-	for i := 0; i < 3; i++ {
-		committer, ok := suite.keeper.GetCommitter(suite.ctx, "gaia", uint64(i))
-		require.False(suite.T(), ok, "GetCommitter passed on nonexistent height: %d", i)
-		require.Nil(suite.T(), committer, "GetCommitter returned committer on nonexistent height: %d", i)
-	}
-
-	for i := 3; i < 6; i++ {
-		recv, ok := suite.keeper.GetCommitter(suite.ctx, "gaia", uint64(i))
-		tmRecv, _ := recv.(tendermint.Committer)
-		if tmRecv.ValidatorSet != nil {
-			// update validator set's power
-			tmRecv.ValidatorSet.TotalVotingPower()
-		}
-		require.True(suite.T(), ok, "GetCommitter failed on existing height: %d", i)
-		require.Equal(suite.T(), committer, recv, "GetCommitter returned committer on nonexistent height: %d", i)
-	}
-
-	for i := 6; i < 9; i++ {
-		recv, ok := suite.keeper.GetCommitter(suite.ctx, "gaia", uint64(i))
-		tmRecv, _ := recv.(tendermint.Committer)
-		if tmRecv.ValidatorSet != nil {
-			// update validator set's power
-			tmRecv.ValidatorSet.TotalVotingPower()
-		}
-		require.True(suite.T(), ok, "GetCommitter failed on existing height: %d", i)
-		require.Equal(suite.T(), nextCommitter, recv, "GetCommitter returned committer on nonexistent height: %d", i)
-	}
+	suite.Require().True(ok)
+	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {
-	expClients := []types.State{
-		types.NewClientState(testClientID2),
-		types.NewClientState(testClientID3),
-		types.NewClientState(testClientID),
+	expClients := []exported.ClientState{
+		ibctmtypes.NewClientState(testClientID2, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		ibctmtypes.NewClientState(testClientID3, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		ibctmtypes.NewClientState(testClientID, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
 	}
 
 	for i := range expClients {
@@ -165,4 +125,62 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)
+}
+
+func (suite KeeperTestSuite) TestGetConsensusState() {
+	suite.ctx = suite.ctx.WithBlockHeight(10)
+	cases := []struct {
+		name    string
+		height  uint64
+		expPass bool
+	}{
+		{"zero height", 0, false},
+		{"height > latest height", uint64(suite.ctx.BlockHeight()) + 1, false},
+		{"latest height - 1", uint64(suite.ctx.BlockHeight()) - 1, true},
+		{"latest height", uint64(suite.ctx.BlockHeight()), true},
+	}
+
+	for i, tc := range cases {
+		tc := tc
+		cs, found := suite.keeper.GetSelfConsensusState(suite.ctx, tc.height)
+		if tc.expPass {
+			suite.Require().True(found, "Case %d should have passed: %s", i, tc.name)
+			suite.Require().NotNil(cs, "Case %d should have passed: %s", i, tc.name)
+		} else {
+			suite.Require().False(found, "Case %d should have failed: %s", i, tc.name)
+			suite.Require().Nil(cs, "Case %d should have failed: %s", i, tc.name)
+		}
+	}
+}
+
+func (suite KeeperTestSuite) TestConsensusStateHelpers() {
+	// initial setup
+	clientState, _ := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+	suite.keeper.SetClientState(suite.ctx, clientState)
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
+
+	nextState := ibctmtypes.ConsensusState{
+		Height:       testClientHeight + 5,
+		Timestamp:    suite.now,
+		Root:         commitment.NewRoot([]byte("next")),
+		ValidatorSet: suite.valSet,
+	}
+
+	// mock update functionality
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+5, nextState)
+	clientState.LatestHeight += 5
+	suite.keeper.SetClientState(suite.ctx, clientState)
+
+	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
+	// recalculate cached totalVotingPower for equality check
+	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower()
+	suite.Require().True(ok)
+	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
+
+	// Should return existing consensusState at latestClientHeight
+	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, testClientHeight+3)
+	// recalculate cached totalVotingPower for equality check
+	lte.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower()
+	suite.Require().True(ok)
+	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", testClientHeight+3)
 }

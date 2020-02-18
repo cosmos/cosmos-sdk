@@ -11,7 +11,7 @@ const (
 
 // QueryAccountParams defines the params for querying accounts.
 type QueryAccountParams struct {
-	Address sdk.AccAddress
+	Address sdk.AccAddress `json:"account"`
 }
 
 // NewQueryAccountParams creates a new instance of QueryAccountParams.

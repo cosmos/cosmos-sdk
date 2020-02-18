@@ -22,8 +22,8 @@ func (k Keeper) AllocateTokens(
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
 	feeCollector := k.supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
-	feesCollectedInt := feeCollector.GetCoins()
-	feesCollected := sdk.NewDecCoins(feesCollectedInt)
+	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
+	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account
 	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
@@ -35,7 +35,7 @@ func (k Keeper) AllocateTokens(
 	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
 	feePool := k.GetFeePool(ctx)
 	if totalPreviousPower == 0 {
-		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected)
+		feePool.CommunityPool = feePool.CommunityPool.Add(feesCollected...)
 		k.SetFeePool(ctx, feePool)
 		return
 	}
@@ -95,7 +95,7 @@ func (k Keeper) AllocateTokens(
 	}
 
 	// allocate community funding
-	feePool.CommunityPool = feePool.CommunityPool.Add(remaining)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
 	k.SetFeePool(ctx, feePool)
 }
 
@@ -114,12 +114,12 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 		),
 	)
 	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-	currentCommission = currentCommission.Add(commission)
+	currentCommission.Commission = currentCommission.Commission.Add(commission...)
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
 
 	// update current rewards
 	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	currentRewards.Rewards = currentRewards.Rewards.Add(shared)
+	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
@@ -131,6 +131,6 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	outstanding = outstanding.Add(tokens)
+	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

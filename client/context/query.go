@@ -3,17 +3,15 @@ package context
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -28,55 +26,6 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	}
 
 	return ctx.Client, nil
-}
-
-// WaitForNBlocks blocks until the node defined on the context has advanced N blocks
-func (ctx CLIContext) WaitForNBlocks(n int64) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		panic(err)
-	}
-
-	resBlock, err := node.Block(nil)
-	var height int64
-	if err != nil || resBlock.Block == nil {
-		// wait for the first block to exist
-		ctx.waitForHeight(1)
-		height = 1 + n
-	} else {
-		height = resBlock.Block.Height + n
-	}
-	ctx.waitForHeight(height)
-}
-
-func (ctx CLIContext) waitForHeight(height int64) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		panic(err)
-	}
-
-	for {
-		// get url, try a few times
-		var resBlock *ctypes.ResultBlock
-		var err error
-	INNER:
-		for i := 0; i < 5; i++ {
-			resBlock, err = node.Block(nil)
-			if err == nil {
-				break INNER
-			}
-			time.Sleep(time.Millisecond * 200)
-		}
-		if err != nil {
-			panic(err)
-		}
-
-		if resBlock.Block != nil && resBlock.Block.Height >= height {
-			return
-		}
-
-		time.Sleep(time.Millisecond * 100)
-	}
 }
 
 // Query performs a query to a Tendermint node with the provided path.
@@ -96,7 +45,7 @@ func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, er
 // QueryStore performs a query to a Tendermint node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, int64, error) {
+func (ctx CLIContext) QueryStore(key tmbytes.HexBytes, storeName string) ([]byte, int64, error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
@@ -135,16 +84,6 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 		return abci.ResponseQuery{}, err
 	}
 
-	// When a client did not provide a query height, manually query for it so it can
-	// be injected downstream into responses.
-	if ctx.Height == 0 {
-		status, err := node.Status()
-		if err != nil {
-			return abci.ResponseQuery{}, err
-		}
-		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
-	}
-
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
 		Prove:  req.Prove || !ctx.TrustNode,
@@ -156,8 +95,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 	}
 
 	if !result.Response.IsOK() {
-		err = errors.New(result.Response.Log)
-		return abci.ResponseQuery{}, err
+		return abci.ResponseQuery{}, errors.New(result.Response.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
@@ -165,8 +103,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 		return result.Response, nil
 	}
 
-	err = ctx.verifyProof(req.Path, result.Response)
-	if err != nil {
+	if err = ctx.verifyProof(req.Path, result.Response); err != nil {
 		return abci.ResponseQuery{}, err
 	}
 
@@ -178,13 +115,13 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 // or an error if the query fails. In addition, it will verify the returned
 // proof if TrustNode is disabled. If proof verification fails or the query
 // height is invalid, an error will be returned.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
+func (ctx CLIContext) query(path string, key tmbytes.HexBytes) ([]byte, int64, error) {
 	resp, err := ctx.queryABCI(abci.RequestQuery{
 		Path: path,
 		Data: key,
 	})
 	if err != nil {
-		return
+		return nil, 0, err
 	}
 
 	return resp.Value, resp.Height, nil
@@ -192,6 +129,9 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 
 // Verify verifies the consensus proof at given height.
 func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
+	if ctx.Verifier == nil {
+		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
+	}
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 	switch {
 	case tmliteErr.IsErrCommitNotFound(err):
@@ -246,7 +186,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 // queryStore performs a query to a Tendermint node with the provided a store
 // name and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, int64, error) {
+func (ctx CLIContext) queryStore(key tmbytes.HexBytes, storeName, endPath string) ([]byte, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

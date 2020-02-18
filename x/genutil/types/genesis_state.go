@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/common"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,8 +20,19 @@ type GenesisState struct {
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(genTxs []json.RawMessage) GenesisState {
+	// Ensure genTxs is never nil, https://github.com/cosmos/cosmos-sdk/issues/5086
+	if len(genTxs) == 0 {
+		genTxs = make([]json.RawMessage, 0)
+	}
 	return GenesisState{
 		GenTxs: genTxs,
+	}
+}
+
+// DefaultGenesisState returns the genutil module's default genesis state.
+func DefaultGenesisState() GenesisState {
+	return GenesisState{
+		GenTxs: []json.RawMessage{},
 	}
 }
 
@@ -73,7 +84,7 @@ func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
 func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
 ) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
 
-	if !common.FileExists(genFile) {
+	if !tmos.FileExists(genFile) {
 		return genesisState, genDoc,
 			fmt.Errorf("%s does not exist, run `init` first", genFile)
 	}

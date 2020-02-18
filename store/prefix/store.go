@@ -2,6 +2,7 @@ package prefix
 
 import (
 	"bytes"
+	"errors"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -174,6 +175,16 @@ func (iter *prefixIterator) Value() []byte {
 // Implements Iterator
 func (iter *prefixIterator) Close() {
 	iter.iter.Close()
+}
+
+// Error returns an error if the prefixIterator is invalid defined by the Valid
+// method.
+func (iter *prefixIterator) Error() error {
+	if !iter.Valid() {
+		return errors.New("invalid prefixIterator")
+	}
+
+	return nil
 }
 
 // copied from github.com/tendermint/tendermint/libs/db/prefix_db.go

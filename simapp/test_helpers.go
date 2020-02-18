@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,16 +13,18 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0, bam.SetPruning(stypes.PruneNothing))
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
@@ -44,25 +45,26 @@ func Setup(isCheckTx bool) *SimApp {
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new SimApp with the passed in
-// genesis accounts.
-func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
+// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
+// accounts and possible balances.
+func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ...bank.Balance) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()
 
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
-	genesisStateBz := app.Codec().MustMarshalJSON(authGenesis)
-	genesisState[auth.ModuleName] = genesisStateBz
+	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
+
+	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances)
+	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
 		panic(err)
 	}
 
-	// Initialize the chain
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:    []abci.ValidatorUpdate{},
@@ -88,10 +90,13 @@ func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sd
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(testAddrs)))))
 	prevSupply := app.SupplyKeeper.GetSupply(ctx)
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply)))
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		app.AccountKeeper.SetAccount(ctx, acc)
+
 		_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
 		if err != nil {
 			panic(err)
@@ -101,11 +106,9 @@ func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sd
 }
 
 // CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins) {
+func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
-	res := app.AccountKeeper.GetAccount(ctxCheck, addr)
-
-	require.True(t, exp.IsEqual(res.GetCoins()))
+	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
 
 // SignCheckDeliver checks a generated signed transaction and simulates a

@@ -6,13 +6,14 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// ModuleCdc defines the IBC transfer codec.
+var ModuleCdc = codec.New()
+
+// RegisterCodec registers the IBC transfer types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTransfer{}, "ibc/transfer/MsgTransfer", nil)
-	cdc.RegisterConcrete(MsgRecvPacket{}, "ibc/transfer/MsgRecvPacket", nil)
-	cdc.RegisterConcrete(PacketData{}, "ibc/transfer/PacketData", nil)
+	cdc.RegisterConcrete(PacketDataTransfer{}, "ibc/transfer/PacketDataTransfer", nil)
 }
-
-var ModuleCdc = codec.New()
 
 func init() {
 	RegisterCodec(ModuleCdc)

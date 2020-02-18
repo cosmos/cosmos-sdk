@@ -6,30 +6,53 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
-func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk.Result, error) {
-	clientType := exported.ClientTypeFromString(msg.ClientType)
-	if clientType == 0 {
-		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.ClientType)
+func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
+	clientType := exported.ClientTypeFromString(msg.GetClientType())
+	var clientState exported.ClientState
+	switch clientType {
+	case 0:
+		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
+	case exported.Tendermint:
+		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
+		if !ok {
+			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
+		}
+		var err error
+		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	}
 
-	_, err := k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
+	_, err := k.CreateClient(
+		ctx, clientState, msg.GetConsensusState(),
+	)
 	if err != nil {
 		return nil, err
+	}
+
+	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
+	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
+	for i, signer := range msg.GetSigners() {
+		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeCreateClient,
-			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
+			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
+			sdk.NewAttribute(AttrbuteKeyClientType, msg.GetClientType()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
+			attributes...,
 		),
 	})
 
@@ -39,21 +62,26 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk
 }
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
-func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk.Result, error) {
-	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
-	if err != nil {
+func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClient) (*sdk.Result, error) {
+	if err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader()); err != nil {
 		return nil, err
+	}
+
+	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
+	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
+	for i, signer := range msg.GetSigners() {
+		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeUpdateClient,
-			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
+			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
+			sdk.NewAttribute(AttrbuteKeyClientType, msg.GetHeader().ClientType().String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
+			attributes...,
 		),
 	})
 
@@ -66,12 +94,11 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk
 // light client misbehaviour.
 func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
 	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
-		switch e := evidence.(type) {
-		case tendermint.Misbehaviour:
-			return k.CheckMisbehaviourAndUpdateState(ctx, evidence)
-
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)
+		misbehaviour, ok := evidence.(exported.Misbehaviour)
+		if !ok {
+			return types.ErrInvalidEvidence
 		}
+
+		return k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)
 	}
 }

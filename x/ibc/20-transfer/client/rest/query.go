@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/utils"
 )
@@ -31,7 +32,7 @@ func queryNextSequenceRecvHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
-		prove := rest.ParseQueryProve(r)
+		prove := rest.ParseQueryParamBool(r, flags.FlagProve)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {

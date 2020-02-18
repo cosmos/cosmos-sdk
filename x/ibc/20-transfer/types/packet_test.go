@@ -6,34 +6,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPacketDataValidation tests ValidateBasic for PacketData
-func TestPacketDataValidation(t *testing.T) {
-	testPacketData := []PacketData{
-		NewPacketData(coins, addr1, addr2, true),             // valid msg
-		NewPacketData(invalidDenomCoins, addr1, addr2, true), // invalid amount
-		NewPacketData(negativeCoins, addr1, addr2, false),    // amount contains negative coin
-		NewPacketData(coins, emptyAddr, addr2, false),        // missing sender address
-		NewPacketData(coins, addr1, emptyAddr, false),        // missing recipient address
+// TestPacketDataTransferValidation tests ValidateBasic for PacketDataTransfer
+func TestPacketDataTransferValidation(t *testing.T) {
+	testPacketDataTransfer := []PacketDataTransfer{
+		NewPacketDataTransfer(coins, addr1, addr2, true, 100),             // valid msg
+		NewPacketDataTransfer(invalidDenomCoins, addr1, addr2, true, 100), // invalid amount
+		NewPacketDataTransfer(negativeCoins, addr1, addr2, false, 100),    // amount contains negative coin
+		NewPacketDataTransfer(coins, emptyAddr, addr2, false, 100),        // missing sender address
+		NewPacketDataTransfer(coins, addr1, emptyAddr, false, 100),        // missing recipient address
 	}
 
 	testCases := []struct {
-		packetData PacketData
+		packetData PacketDataTransfer
 		expPass    bool
 		errMsg     string
 	}{
-		{testPacketData[0], true, ""},
-		{testPacketData[1], false, "invalid amount"},
-		{testPacketData[2], false, "amount contains negative coin"},
-		{testPacketData[3], false, "missing sender address"},
-		{testPacketData[4], false, "missing recipient address"},
+		{testPacketDataTransfer[0], true, ""},
+		{testPacketDataTransfer[1], false, "invalid amount"},
+		{testPacketDataTransfer[2], false, "amount contains negative coin"},
+		{testPacketDataTransfer[3], false, "missing sender address"},
+		{testPacketDataTransfer[4], false, "missing recipient address"},
 	}
 
 	for i, tc := range testCases {
 		err := tc.packetData.ValidateBasic()
 		if tc.expPass {
-			require.NoError(t, err, "PacketData %d failed: %v", i, err)
+			require.NoError(t, err, "PacketDataTransfer %d failed: %v", i, err)
 		} else {
-			require.Error(t, err, "Invalid PacketData %d passed: %s", i, tc.errMsg)
+			require.Error(t, err, "Invalid PacketDataTransfer %d passed: %s", i, tc.errMsg)
 		}
 	}
 }

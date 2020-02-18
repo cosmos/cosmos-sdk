@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // QueryNextSequenceRecv queries the store to get the next receive sequence and
@@ -16,7 +17,7 @@ func QueryNextSequenceRecv(
 ) (channeltypes.RecvResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  channeltypes.KeyNextSequenceRecv(portID, channelID),
+		Data:  ibctypes.KeyNextSequenceRecv(portID, channelID),
 		Prove: prove,
 	}
 

@@ -1,6 +1,7 @@
-// nolint
-package keeper // noalias
+package keeper
 
+// noalias
+// nolint
 // DONTCOVER
 
 import (
@@ -9,16 +10,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -51,6 +51,9 @@ var (
 	TestAddrs = []sdk.AccAddress{
 		delAddr1, delAddr2, delAddr3,
 		valAccAddr1, valAccAddr2, valAccAddr3,
+	}
+	pubkeys = []crypto.PubKey{
+		delPk1, delPk2, delPk3, valOpPk1, valOpPk2, valOpPk3,
 	}
 
 	emptyDelAddr sdk.AccAddress
@@ -88,11 +91,14 @@ func makeTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, types.SupplyKeeper) {
+func createTestInput(
+	t *testing.T, isCheckTx bool, initPower int64,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, types.SupplyKeeper,
+) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
-
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
@@ -104,6 +110,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyGov, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
@@ -118,7 +125,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 			},
 		},
 	)
+
 	cdc := makeTestCodec()
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
@@ -139,12 +148,12 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
+	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bankKeeper, maccPerms)
 
-	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
+	sk := staking.NewKeeper(staking.ModuleCdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	rtr := types.NewRouter().
@@ -163,9 +172,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	for _, addr := range TestAddrs {
-		_, err := bankKeeper.AddCoins(ctx, addr, initCoins)
-		require.Nil(t, err)
+	for i, addr := range TestAddrs {
+		accountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		require.NoError(t, bankKeeper.SetBalances(ctx, addr, initCoins))
 	}
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
@@ -173,7 +182,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	return ctx, accountKeeper, keeper, sk, supplyKeeper
+	return ctx, accountKeeper, bankKeeper, keeper, sk, supplyKeeper
 }
 
 // ProposalEqual checks if two proposals are equal (note: slow, for tests only)

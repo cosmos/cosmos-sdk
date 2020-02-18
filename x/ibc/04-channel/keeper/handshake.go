@@ -1,13 +1,13 @@
 package keeper
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -20,7 +20,7 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 		if !found {
 			return []string{}, false
 		}
-		counterPartyHops[len(counterPartyHops)-1-i] = connection.Counterparty.ConnectionID
+		counterPartyHops[len(counterPartyHops)-1-i] = connection.GetCounterparty().GetConnectionID()
 	}
 	return counterPartyHops, true
 }
@@ -29,14 +29,15 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 // a module on another chain.
 func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
-	order types.Order,
+	order exported.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
 	counterparty types.Counterparty,
 	version string,
 ) error {
-	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
+	// channel identifier and connection hop length checked on msg.ValidateBasic()
+
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return sdkerrors.Wrap(types.ErrChannelExists, channelID)
@@ -47,26 +48,19 @@ func (k Keeper) ChanOpenInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.State == connection.UNINITIALIZED {
+	if connectionEnd.GetState() == connectionexported.UNINITIALIZED {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection state cannot be UNINITIALIZED",
 		)
 	}
 
-	/*
-		// TODO: Maybe not right
-		key := sdk.NewKVStoreKey(portID)
-
-		if !k.portKeeper.Authenticate(key, portID) {
-			return sdkerrors.Wrap(port.ErrInvalidPort, portID)
-		}
-
-	*/
-	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(exported.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	// TODO: generate channel capability key and set it to store
+	// TODO: blocked by #5542
+	// key := ""
+	// k.SetChannelCapability(ctx, portID, channelID, key)
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
@@ -77,7 +71,7 @@ func (k Keeper) ChanOpenInit(
 // handshake initiated by a module on another chain.
 func (k Keeper) ChanOpenTry(
 	ctx sdk.Context,
-	order types.Order,
+	order exported.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -87,37 +81,43 @@ func (k Keeper) ChanOpenTry(
 	proofInit commitment.ProofI,
 	proofHeight uint64,
 ) error {
-	_, found := k.GetChannel(ctx, portID, channelID)
-	if found {
-		return sdkerrors.Wrap(types.ErrChannelExists, channelID)
+	// channel identifier and connection hop length checked on msg.ValidateBasic()
+
+	previousChannel, found := k.GetChannel(ctx, portID, channelID)
+	if found && !(previousChannel.State == exported.INIT &&
+		previousChannel.Ordering == order &&
+		previousChannel.Counterparty.PortID == counterparty.PortID &&
+		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
+		previousChannel.ConnectionHops[0] == connectionHops[0] &&
+		previousChannel.Version == version) {
+		sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
 	}
 
-	// TODO: Maybe not right
-	key := sdk.NewKVStoreKey(portID)
-
-	if !k.portKeeper.Authenticate(key, portID) {
-		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
-	}
+	// TODO: blocked by #5542
+	// key := sdk.NewKVStoreKey(portID)
+	// if !k.portKeeper.Authenticate(key, portID) {
+	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
+	// }
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(types.TRYOPEN, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(exported.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
-		// Should not reach here, connectionEnd was able to be retrieved above
+		// should not reach here, connectionEnd was able to be retrieved above
 		panic("cannot find connection")
 	}
 
@@ -125,26 +125,22 @@ func (k Keeper) ChanOpenTry(
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.INIT, channel.Ordering, expectedCounterparty,
+		exported.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
-	if err != nil {
-		return err
-	}
-
-	if !k.connectionKeeper.VerifyMembership(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
-		bz,
-	) {
-		return sdkerrors.Wrap(types.ErrInvalidCounterparty, "channel membership verification failed")
+		counterparty.PortID, counterparty.ChannelID, expectedChannel,
+	); err != nil {
+		return err
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	// TODO: generate channel capability key and set it to store
+	// TODO: blocked by #5542
+	// key := ""
+	// k.SetChannelCapability(ctx, portID, channelID, key)
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
@@ -166,61 +162,53 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State != types.INIT {
+	if !(channel.State == exported.INIT || channel.State == exported.TRYOPEN) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not INIT (got %s)", channel.State.String(),
+			"channel state should be INIT or TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	// TODO: Maybe not right
-	key := sdk.NewKVStoreKey(portID)
-
-	if !k.portKeeper.Authenticate(key, portID) {
-		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
-	}
+	// TODO: blocked by #5542
+	// key := sdk.NewKVStoreKey(portID)
+	// if !k.portKeeper.Authenticate(key, portID) {
+	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
+	// }
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
-		// Should not reach here, connectionEnd was able to be retrieved above
+		// should not reach here, connectionEnd was able to be retrieved above
 		panic("cannot find connection")
 	}
 
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.TRYOPEN, channel.Ordering, counterparty,
+		exported.TRYOPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
-	if err != nil {
+	if err := k.connectionKeeper.VerifyChannelState(
+		ctx, connectionEnd, proofHeight, proofTry,
+		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		expectedChannel,
+	); err != nil {
 		return err
 	}
 
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proofTry,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
-	) {
-		return sdkerrors.Wrap(
-			types.ErrInvalidCounterparty, "channel membership verification failed",
-		)
-	}
-
-	channel.State = types.OPEN
+	channel.State = exported.OPEN
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
@@ -241,29 +229,33 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State != types.TRYOPEN {
+	if channel.State != exported.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPENTRY (got %s)", channel.State.String(),
+			"channel state is not TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	// TODO: Maybe not right
-	key := sdk.NewKVStoreKey(portID)
+	// TODO: blocked by #5542
+	// capkey, found := k.GetChannelCapability(ctx, portID, channelID)
+	// if !found {
+	// 	return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, channelID)
+	// }
 
-	if !k.portKeeper.Authenticate(key, portID) {
-		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
-	}
+	// key := sdk.NewKVStoreKey(capkey)
+	// if !k.portKeeper.Authenticate(key, portID) {
+	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
+	// }
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
@@ -275,24 +267,19 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.OPEN, channel.Ordering, counterparty,
+		exported.OPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
-	if err != nil {
+	if err := k.connectionKeeper.VerifyChannelState(
+		ctx, connectionEnd, proofHeight, proofAck,
+		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		expectedChannel,
+	); err != nil {
 		return err
 	}
 
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proofAck,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
-	) {
-		return sdkerrors.Wrap(types.ErrInvalidCounterparty, "channel membership verification failed")
-	}
-
-	channel.State = types.OPEN
+	channel.State = exported.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil
@@ -310,19 +297,23 @@ func (k Keeper) ChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	// TODO: Maybe not right
-	key := sdk.NewKVStoreKey(portID)
+	// TODO: blocked by #5542
+	// capkey, found := k.GetChannelCapability(ctx, portID, channelID)
+	// if !found {
+	// 	return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, channelID)
+	// }
 
-	if !k.portKeeper.Authenticate(key, portID) {
-		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
-	}
+	// key := sdk.NewKVStoreKey(capkey)
+	// if !k.portKeeper.Authenticate(key, portID) {
+	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
+	// }
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State == types.CLOSED {
+	if channel.State == exported.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
@@ -331,14 +322,14 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
-	channel.State = types.CLOSED
+	channel.State = exported.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil
@@ -353,19 +344,23 @@ func (k Keeper) ChanCloseConfirm(
 	proofInit commitment.ProofI,
 	proofHeight uint64,
 ) error {
-	// TODO: Maybe not right
-	key := sdk.NewKVStoreKey(portID)
+	// TODO: blocked by #5542
+	// capkey, found := k.GetChannelCapability(ctx, portID, channelID)
+	// if !found {
+	// 	return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, channelID)
+	// }
 
-	if !k.portKeeper.Authenticate(key, portID) {
-		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
-	}
+	// key := sdk.NewKVStoreKey(capkey)
+	// if !k.portKeeper.Authenticate(key, portID) {
+	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
+	// }
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State == types.CLOSED {
+	if channel.State == exported.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
@@ -374,10 +369,10 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State != connection.OPEN {
+	if connectionEnd.GetState() != connectionexported.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
+			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
 		)
 	}
 
@@ -389,24 +384,19 @@ func (k Keeper) ChanCloseConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.CLOSED, channel.Ordering, counterparty,
+		exported.CLOSED, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
-	if err != nil {
-		return errors.New("failed to marshal expected channel")
-	}
-
-	if !k.connectionKeeper.VerifyMembership(
+	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
-	) {
-		return sdkerrors.Wrap(types.ErrInvalidCounterparty, "channel membership verification failed")
+		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		expectedChannel,
+	); err != nil {
+		return err
 	}
 
-	channel.State = types.CLOSED
+	channel.State = exported.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil

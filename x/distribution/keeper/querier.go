@@ -49,38 +49,14 @@ func NewQuerier(k Keeper) sdk.Querier {
 }
 
 func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	switch path[0] {
-	case types.ParamCommunityTax:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetCommunityTax(ctx))
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-		}
-		return bz, nil
+	params := k.GetParams(ctx)
 
-	case types.ParamBaseProposerReward:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetBaseProposerReward(ctx))
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-		}
-		return bz, nil
-
-	case types.ParamBonusProposerReward:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetBonusProposerReward(ctx))
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-		}
-		return bz, nil
-
-	case types.ParamWithdrawAddrEnabled:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetWithdrawAddrEnabled(ctx))
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-		}
-		return bz, nil
-
-	default:
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "%s is not a valid query request path", req.Path)
+	res, err := codec.MarshalJSONIndent(k.cdc, params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
+
+	return res, nil
 }
 
 func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
@@ -91,8 +67,8 @@ func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.R
 	}
 
 	rewards := k.GetValidatorOutstandingRewards(ctx, params.ValidatorAddress)
-	if rewards == nil {
-		rewards = sdk.DecCoins{}
+	if rewards.GetRewards() == nil {
+		rewards.Rewards = sdk.DecCoins{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, rewards)
@@ -111,8 +87,8 @@ func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQu
 	}
 
 	commission := k.GetValidatorAccumulatedCommission(ctx, params.ValidatorAddress)
-	if commission == nil {
-		commission = sdk.DecCoins{}
+	if commission.Commission == nil {
+		commission.Commission = sdk.DecCoins{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, commission)
@@ -202,8 +178,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 			delReward := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
-			total = total.Add(delReward)
-
+			total = total.Add(delReward...)
 			return false
 		},
 	)

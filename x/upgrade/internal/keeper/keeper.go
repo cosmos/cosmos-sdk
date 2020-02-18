@@ -4,26 +4,29 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
-	storeKey        sdk.StoreKey
-	cdc             *codec.Codec
-	upgradeHandlers map[string]types.UpgradeHandler
+	skipUpgradeHeights map[int64]bool
+	storeKey           sdk.StoreKey
+	cdc                *codec.Codec
+	upgradeHandlers    map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	return Keeper{
-		storeKey:        storeKey,
-		cdc:             cdc,
-		upgradeHandlers: map[string]types.UpgradeHandler{},
+		skipUpgradeHeights: skipUpgradeHeights,
+		storeKey:           storeKey,
+		cdc:                cdc,
+		upgradeHandlers:    map[string]types.UpgradeHandler{},
 	}
 }
 
@@ -50,7 +53,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
-	if k.getDoneHeight(ctx, plan.Name) != 0 {
+	if k.GetDoneHeight(ctx, plan.Name) != 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
@@ -61,7 +64,8 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	return nil
 }
 
-func (k Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
+// GetDoneHeight returns the height at which the given upgrade was executed
+func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	bz := store.Get([]byte(name))
 	if len(bz) == 0 {
@@ -120,4 +124,9 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	k.ClearUpgradePlan(ctx)
 	k.setDone(ctx, plan.Name)
+}
+
+// IsSkipHeight checks if the given height is part of skipUpgradeHeights
+func (k Keeper) IsSkipHeight(height int64) bool {
+	return k.skipUpgradeHeights[height]
 }

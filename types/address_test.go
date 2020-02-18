@@ -60,33 +60,33 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
-		mustBech32AccPub := types.MustBech32ifyAccPub(pub)
-		bech32AccPub, err := types.Bech32ifyAccPub(pub)
+		mustBech32AccPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
+		bech32AccPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32AccPub, mustBech32AccPub)
 
-		mustBech32ValPub := types.MustBech32ifyValPub(pub)
-		bech32ValPub, err := types.Bech32ifyValPub(pub)
+		mustBech32ValPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
+		bech32ValPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32ValPub, mustBech32ValPub)
 
-		mustBech32ConsPub := types.MustBech32ifyConsPub(pub)
-		bech32ConsPub, err := types.Bech32ifyConsPub(pub)
+		mustBech32ConsPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
+		bech32ConsPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32ConsPub, mustBech32ConsPub)
 
-		mustAccPub := types.MustGetAccPubKeyBech32(bech32AccPub)
-		accPub, err := types.GetAccPubKeyBech32(bech32AccPub)
+		mustAccPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeAccPub, bech32AccPub)
+		accPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeAccPub, bech32AccPub)
 		require.Nil(t, err)
 		require.Equal(t, accPub, mustAccPub)
 
-		mustValPub := types.MustGetValPubKeyBech32(bech32ValPub)
-		valPub, err := types.GetValPubKeyBech32(bech32ValPub)
+		mustValPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeValPub, bech32ValPub)
+		valPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeValPub, bech32ValPub)
 		require.Nil(t, err)
 		require.Equal(t, valPub, mustValPub)
 
-		mustConsPub := types.MustGetConsPubKeyBech32(bech32ConsPub)
-		consPub, err := types.GetConsPubKeyBech32(bech32ConsPub)
+		mustConsPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, bech32ConsPub)
+		consPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, bech32ConsPub)
 		require.Nil(t, err)
 		require.Equal(t, consPub, mustConsPub)
 
@@ -246,7 +246,7 @@ func TestConfiguredPrefix(t *testing.T) {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := types.MustBech32ifyAccPub(pub)
+			bech32Pub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 			require.True(t, strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -260,7 +260,7 @@ func TestConfiguredPrefix(t *testing.T) {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := types.MustBech32ifyValPub(pub)
+			bech32ValPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
 			require.True(t, strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -274,12 +274,11 @@ func TestConfiguredPrefix(t *testing.T) {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := types.MustBech32ifyConsPub(pub)
+			bech32ConsPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
 			require.True(t, strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))
 		}
-
 	}
 }
 
@@ -345,4 +344,69 @@ func TestCustomAddressVerifier(t *testing.T) {
 	require.Nil(t, err)
 	_, err = types.ConsAddressFromBech32(consBech)
 	require.Nil(t, err)
+}
+
+func TestBech32ifyAddressBytes(t *testing.T) {
+	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	type args struct {
+		prefix string
+		bs     []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"empty address", args{"prefixA", []byte{}}, "", false},
+		{"empty prefix", args{"", addr20byte}, "", true},
+		{"10-byte address", args{"prefixA", addr10byte}, "prefixA1qqqsyqcyq5rqwzqfwvmuzx", false},
+		{"10-byte address", args{"prefixB", addr10byte}, "prefixB1qqqsyqcyq5rqwzqf4xftmx", false},
+		{"20-byte address", args{"prefixA", addr20byte}, "prefixA1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn6j4npq", false},
+		{"20-byte address", args{"prefixB", addr20byte}, "prefixB1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn8e9wka", false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := types.Bech32ifyAddressBytes(tt.args.prefix, tt.args.bs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bech32ifyBytes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestMustBech32ifyAddressBytes(t *testing.T) {
+	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	type args struct {
+		prefix string
+		bs     []byte
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      string
+		wantPanic bool
+	}{
+		{"empty address", args{"prefixA", []byte{}}, "", false},
+		{"empty prefix", args{"", addr20byte}, "", true},
+		{"10-byte address", args{"prefixA", addr10byte}, "prefixA1qqqsyqcyq5rqwzqfwvmuzx", false},
+		{"10-byte address", args{"prefixB", addr10byte}, "prefixB1qqqsyqcyq5rqwzqf4xftmx", false},
+		{"20-byte address", args{"prefixA", addr20byte}, "prefixA1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn6j4npq", false},
+		{"20-byte address", args{"prefixB", addr20byte}, "prefixB1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn8e9wka", false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs) })
+				return
+			}
+			require.Equal(t, tt.want, types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs))
+		})
+	}
 }

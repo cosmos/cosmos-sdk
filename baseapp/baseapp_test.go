@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -82,7 +83,7 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
-	pruningOpt := SetPruning(store.PruneSyncable)
+	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -150,7 +151,7 @@ func useFileUpgradeLoader(upgradeInfoPath string) func(*BaseApp) {
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
-	rs.SetPruning(store.PruneSyncable)
+	rs.SetPruning(store.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -243,7 +244,7 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*BaseApp){SetPruning(store.PruneSyncable)}
+			opts := []func(*BaseApp){SetPruning(store.PruneNothing)}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
@@ -292,7 +293,7 @@ func TestAppVersionSetterGetter(t *testing.T) {
 
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
-	pruningOpt := SetPruning(store.PruneSyncable)
+	pruningOpt := SetPruning(store.PruneNothing)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
@@ -323,6 +324,88 @@ func TestLoadVersionInvalid(t *testing.T) {
 	// require error when loading an invalid version
 	err = app.LoadVersion(2, capKey)
 	require.Error(t, err)
+}
+
+func TestLoadVersionPruning(t *testing.T) {
+	logger := log.NewNopLogger()
+	pruningOptions := store.PruningOptions{
+		KeepEvery:     2,
+		SnapshotEvery: 6,
+	}
+	pruningOpt := SetPruning(pruningOptions)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
+	app.MountStores(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	require.Nil(t, err)
+
+	emptyCommitID := sdk.CommitID{}
+
+	// fresh store has zero/empty last commit
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	require.Equal(t, int64(0), lastHeight)
+	require.Equal(t, emptyCommitID, lastID)
+
+	// execute a block
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Commit()
+
+	// execute a block, collect commit ID
+	header = abci.Header{Height: 2}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
+
+	// execute a block
+	header = abci.Header{Height: 3}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
+
+	// reload with LoadLatestVersion, check it loads last flushed version
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+	err = app.LoadLatestVersion(capKey)
+	require.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(2), commitID2)
+
+	// re-execute block 3 and check it is same CommitID
+	header = abci.Header{Height: 3}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	recommitID3 := sdk.CommitID{Version: 3, Hash: res.Data}
+	require.Equal(t, commitID3, recommitID3, "Commits of identical blocks not equal after reload")
+
+	// execute a block, collect commit ID
+	header = abci.Header{Height: 4}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID4 := sdk.CommitID{Version: 4, Hash: res.Data}
+
+	// execute a block
+	header = abci.Header{Height: 5}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+
+	// reload with LoadLatestVersion, check it loads last flushed version
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+	err = app.LoadLatestVersion(capKey)
+	require.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(4), commitID4)
+
+	// reload with LoadVersion of previous flushed version
+	// and check it fails since previous flush should be pruned
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+	err = app.LoadVersion(2, capKey)
+	require.NotNil(t, err)
 }
 
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
@@ -415,6 +498,9 @@ func TestBaseAppOptionSeal(t *testing.T) {
 	})
 	require.Panics(t, func() {
 		app.SetFauxMerkleMode()
+	})
+	require.Panics(t, func() {
+		app.SetRouter(NewRouter())
 	})
 }
 
@@ -1442,4 +1528,65 @@ func TestGetMaximumBlockGas(t *testing.T) {
 
 	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
 	require.Panics(t, func() { app.getMaximumBlockGas() })
+}
+
+// NOTE: represents a new custom router for testing purposes of WithRouter()
+type testCustomRouter struct {
+	routes sync.Map
+}
+
+func (rtr *testCustomRouter) AddRoute(path string, h sdk.Handler) sdk.Router {
+	rtr.routes.Store(path, h)
+	return rtr
+}
+
+func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
+	if v, ok := rtr.routes.Load(path); ok {
+		if h, ok := v.(sdk.Handler); ok {
+			return h
+		}
+	}
+	return nil
+}
+
+func TestWithRouter(t *testing.T) {
+	// test increments in the ante
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+
+	// test increments in the handler
+	deliverKey := []byte("deliver-key")
+	routerOpt := func(bapp *BaseApp) {
+		bapp.SetRouter(&testCustomRouter{routes: sync.Map{}})
+		bapp.Router().AddRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+	app.InitChain(abci.RequestInitChain{})
+
+	// Create same codec used in txDecoder
+	codec := codec.New()
+	registerTestCodec(codec)
+
+	nBlocks := 3
+	txPerHeight := 5
+
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		header := abci.Header{Height: int64(blockN) + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		for i := 0; i < txPerHeight; i++ {
+			counter := int64(blockN*txPerHeight + i)
+			tx := newTxCounter(counter, counter)
+
+			txBytes, err := codec.MarshalBinaryLengthPrefixed(tx)
+			require.NoError(t, err)
+
+			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+		}
+
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
 }

@@ -6,13 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestHistoricalInfo(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 10)
+	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10)
 	validators := make([]types.Validator, len(addrVals))
 
 	for i, valAddr := range addrVals {
@@ -26,7 +26,7 @@ func TestHistoricalInfo(t *testing.T) {
 	recv, found := keeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
-	require.True(t, sort.IsSorted(types.Validators(recv.ValSet)), "HistoricalInfo validators is not sorted")
+	require.True(t, sort.IsSorted(types.Validators(recv.Valset)), "HistoricalInfo validators is not sorted")
 
 	keeper.DeleteHistoricalInfo(ctx, 2)
 
@@ -36,7 +36,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	ctx, _, k, _ := CreateTestInput(t, false, 10)
+	ctx, _, _, k, _ := CreateTestInput(t, false, 10)
 
 	// set historical entries in params to 5
 	params := types.DefaultParams()
@@ -90,7 +90,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	// Check HistoricalInfo at height 10 is persisted
 	expected := types.HistoricalInfo{
 		Header: header,
-		ValSet: vals,
+		Valset: vals,
 	}
 	recv, found = k.GetHistoricalInfo(ctx, 10)
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")

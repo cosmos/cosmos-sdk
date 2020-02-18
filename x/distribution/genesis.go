@@ -8,22 +8,19 @@ import (
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, bk types.BankKeeper, supplyKeeper types.SupplyKeeper, keeper Keeper, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
 	keeper.SetFeePool(ctx, data.FeePool)
-	keeper.SetCommunityTax(ctx, data.CommunityTax)
-	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
-	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
-	keeper.SetWithdrawAddrEnabled(ctx, data.WithdrawAddrEnabled)
+	keeper.SetParams(ctx, data.Params)
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
 		keeper.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
 	}
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
-		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
-		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards)
+		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
+		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
 		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
@@ -41,7 +38,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Period, evt.Event)
 	}
 
-	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool)
+	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists
@@ -50,10 +47,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	if moduleAcc.GetCoins().IsZero() {
-		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
+	if bk.GetAllBalances(ctx, moduleAcc.GetAddress()).IsZero() {
+		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
 			panic(err)
 		}
+
 		supplyKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
@@ -61,10 +59,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
-	communityTax := keeper.GetCommunityTax(ctx)
-	baseProposerRewards := keeper.GetBaseProposerReward(ctx)
-	bonusProposerRewards := keeper.GetBonusProposerReward(ctx)
-	withdrawAddrEnabled := keeper.GetWithdrawAddrEnabled(ctx)
+	params := keeper.GetParams(ctx)
+
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
 	keeper.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
@@ -73,17 +69,19 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		})
 		return false
 	})
+
 	pp := keeper.GetPreviousProposerConsAddr(ctx)
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 	keeper.IterateValidatorOutstandingRewards(ctx,
 		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
 				ValidatorAddress:   addr,
-				OutstandingRewards: rewards,
+				OutstandingRewards: rewards.Rewards,
 			})
 			return false
 		},
 	)
+
 	acc := make([]types.ValidatorAccumulatedCommissionRecord, 0)
 	keeper.IterateValidatorAccumulatedCommissions(ctx,
 		func(addr sdk.ValAddress, commission types.ValidatorAccumulatedCommission) (stop bool) {
@@ -94,6 +92,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
+
 	his := make([]types.ValidatorHistoricalRewardsRecord, 0)
 	keeper.IterateValidatorHistoricalRewards(ctx,
 		func(val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) (stop bool) {
@@ -105,6 +104,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
+
 	cur := make([]types.ValidatorCurrentRewardsRecord, 0)
 	keeper.IterateValidatorCurrentRewards(ctx,
 		func(val sdk.ValAddress, rewards types.ValidatorCurrentRewards) (stop bool) {
@@ -126,6 +126,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
+
 	slashes := make([]types.ValidatorSlashEventRecord, 0)
 	keeper.IterateValidatorSlashEvents(ctx,
 		func(val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) (stop bool) {
@@ -138,6 +139,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
-	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
-		dwi, pp, outstanding, acc, his, cur, dels, slashes)
+
+	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

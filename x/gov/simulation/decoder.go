@@ -5,14 +5,14 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding gov type
-func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.ProposalsKeyPrefix):
 		var proposalA, proposalB types.Proposal

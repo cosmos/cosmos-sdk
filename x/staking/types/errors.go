@@ -56,4 +56,5 @@ var (
 	ErrNeitherShareMsgsGiven           = sdkerrors.Register(ModuleName, 43, "neither shares amount nor shares percent provided")
 	ErrInvalidHistoricalInfo           = sdkerrors.Register(ModuleName, 44, "invalid historical info")
 	ErrNoHistoricalInfo                = sdkerrors.Register(ModuleName, 45, "no historical info found")
+	ErrEmptyValidatorPubKey            = sdkerrors.Register(ModuleName, 46, "empty validator public key")
 )

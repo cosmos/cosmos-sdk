@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +13,7 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding slashing type
-func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.ValidatorSigningInfoKey):
 		var infoA, infoB types.ValidatorSigningInfo
@@ -31,8 +31,8 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 		var pubKeyA, pubKeyB crypto.PubKey
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &pubKeyA)
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &pubKeyB)
-		bechPKA := sdk.MustBech32ifyAccPub(pubKeyA)
-		bechPKB := sdk.MustBech32ifyAccPub(pubKeyB)
+		bechPKA := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKeyA)
+		bechPKB := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKeyB)
 		return fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPKA, bechPKB)
 
 	default:

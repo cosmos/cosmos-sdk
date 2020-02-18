@@ -100,6 +100,9 @@ for JSON encoding.
 * (types) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
   * `Coin` denomination max lenght has been increased to 32.
   * Added `CapabilityKey` alias for `StoreKey` to match IBC spec.
+* (rest) [\#5648](https://github.com/cosmos/cosmos-sdk/pull/5648) Enhance /txs usability:
+  * Add `tx.minheight` key to filter transaction with an inclusive minimum block height
+  * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
 
 ## [v0.38.1] - 2020-02-11
 

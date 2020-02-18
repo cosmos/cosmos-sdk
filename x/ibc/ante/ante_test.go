@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -145,7 +145,7 @@ func (suite *HandlerTestSuite) queryProof(key string) (proof commitment.Proof, h
 }
 
 func (suite *HandlerTestSuite) newTx(msg sdk.Msg) sdk.Tx {
-	return auth.StdTx{
+	return authtypes.StdTx{
 		Msgs: []sdk.Msg{msg},
 	}
 }

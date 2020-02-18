@@ -1,7 +1,7 @@
 package rest
 
 import (
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
@@ -36,23 +36,23 @@ type (
 	}
 
 	PostCreateClient struct {
-		Msgs       []types.MsgCreateClient `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee             `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature     `json:"signatures" yaml:"signatures"`
-		Memo       string                  `json:"memo" yaml:"memo"`
+		Msgs       []types.MsgCreateClient  `json:"msg" yaml:"msg"`
+		Fee        authtypes.StdFee         `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
+		Memo       string                   `json:"memo" yaml:"memo"`
 	}
 
 	PostUpdateClient struct {
-		Msgs       []types.MsgUpdateClient `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee             `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature     `json:"signatures" yaml:"signatures"`
-		Memo       string                  `json:"memo" yaml:"memo"`
+		Msgs       []types.MsgUpdateClient  `json:"msg" yaml:"msg"`
+		Fee        authtypes.StdFee         `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
+		Memo       string                   `json:"memo" yaml:"memo"`
 	}
 
 	PostSubmitMisbehaviour struct {
 		Msgs       []evidence.MsgSubmitEvidence `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee                  `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature          `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee             `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature     `json:"signatures" yaml:"signatures"`
 		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 )

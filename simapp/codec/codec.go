@@ -16,7 +16,7 @@ var (
 	_ supply.Codec = (*Codec)(nil)
 )
 
-// AppCodec defines the application-level codec. This codec contains all the
+// Codec defines the application-level codec. This codec contains all the
 // required module-specific codecs that are to be provided upon initialization.
 type Codec struct {
 	codec.Marshaler

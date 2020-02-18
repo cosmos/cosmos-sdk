@@ -1,7 +1,9 @@
-package tendermint
+package types
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,18 +23,62 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
+	// Chain ID for Tendermint chain, not guaranteed to be unique
+	ChainID string `json:"chain_id" yaml:"chain_id"`
+	// Duration of the period since the LastestTimestamp during which the
+	// submitted headers are valid for upgrade
+	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`
+	// Duration of the staking unbonding period
+	UnbondingPeriod time.Duration `json:"unbonding_period" yaml:"unbonding_period"`
 	// Latest block height
 	LatestHeight uint64 `json:"latest_height" yaml:"latest_height"`
+	// Latest block time
+	LatestTimestamp time.Time `json:"latest_time" yaml:"latest_time"`
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 }
 
+// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
+func InitializeFromMsg(
+	msg MsgCreateClient,
+) (ClientState, error) {
+	return Initialize(msg.GetClientID(), msg.ChainID, msg.GetConsensusState(), msg.TrustingPeriod, msg.UnbondingPeriod)
+}
+
+// Initialize creates a client state and validates its contents, checking that
+// the provided consensus state is from the same client type.
+func Initialize(
+	id string, chainID string, consensusState clientexported.ConsensusState, trustingPeriod, ubdPeriod time.Duration,
+) (ClientState, error) {
+	tmConsState, ok := consensusState.(ConsensusState)
+	if !ok {
+		return ClientState{}, errors.New("consensus state is not from Tendermint")
+	}
+	latestHeight := tmConsState.GetHeight()
+
+	if trustingPeriod >= ubdPeriod {
+		return ClientState{}, errors.New("trusting period should be < unbonding period")
+	}
+
+	clientState := NewClientState(
+		id, chainID, trustingPeriod, ubdPeriod, latestHeight, tmConsState.Timestamp,
+	)
+	return clientState, nil
+}
+
 // NewClientState creates a new ClientState instance
-func NewClientState(id string, latestHeight uint64) ClientState {
+func NewClientState(
+	id string, chainID string, trustingPeriod, ubdPeriod time.Duration,
+	latestHeight uint64, latestTimestamp time.Time,
+) ClientState {
 	return ClientState{
-		ID:           id,
-		LatestHeight: latestHeight,
-		FrozenHeight: 0,
+		ID:              id,
+		ChainID:         chainID,
+		TrustingPeriod:  trustingPeriod,
+		UnbondingPeriod: ubdPeriod,
+		LatestHeight:    latestHeight,
+		LatestTimestamp: latestTimestamp,
+		FrozenHeight:    0,
 	}
 }
 
@@ -49,6 +95,11 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.LatestHeight
+}
+
+// GetLatestTimestamp returns latest block time.
+func (cs ClientState) GetLatestTimestamp() time.Time {
+	return cs.LatestTimestamp
 }
 
 // IsFrozen returns true if the frozen height has been set.

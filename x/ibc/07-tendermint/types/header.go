@@ -1,4 +1,4 @@
-package tendermint
+package types
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -26,8 +26,9 @@ func (h Header) ClientType() clientexported.ClientType {
 // ConsensusState returns the consensus state associated with the header
 func (h Header) ConsensusState() ConsensusState {
 	return ConsensusState{
-		Root:             commitment.NewRoot(h.AppHash),
-		ValidatorSetHash: h.ValidatorSet.Hash(),
+		Timestamp:    h.Time,
+		Root:         commitment.NewRoot(h.AppHash),
+		ValidatorSet: h.ValidatorSet,
 	}
 }
 

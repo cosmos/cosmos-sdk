@@ -1,10 +1,8 @@
 package rest
 
 import (
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -17,7 +15,7 @@ type (
 
 	QueryHeader struct {
 		Height int64             `json:"height"`
-		Result tendermint.Header `json:"result"`
+		Result ibctmtypes.Header `json:"result"`
 	}
 
 	QueryClientState struct {
@@ -27,32 +25,11 @@ type (
 
 	QueryNodeConsensusState struct {
 		Height int64                     `json:"height"`
-		Result tendermint.ConsensusState `json:"result"`
+		Result ibctmtypes.ConsensusState `json:"result"`
 	}
 
 	QueryPath struct {
 		Height int64             `json:"height"`
 		Result commitment.Prefix `json:"result"`
-	}
-
-	PostCreateClient struct {
-		Msgs       []types.MsgCreateClient  `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee         `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
-		Memo       string                   `json:"memo" yaml:"memo"`
-	}
-
-	PostUpdateClient struct {
-		Msgs       []types.MsgUpdateClient  `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee         `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
-		Memo       string                   `json:"memo" yaml:"memo"`
-	}
-
-	PostSubmitMisbehaviour struct {
-		Msgs       []evidence.MsgSubmitEvidence `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee             `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature     `json:"signatures" yaml:"signatures"`
-		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 )

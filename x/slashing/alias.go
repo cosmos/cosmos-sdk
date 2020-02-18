@@ -34,7 +34,6 @@ const (
 
 var (
 	// functions aliases
-
 	NewKeeper                                = keeper.NewKeeper
 	NewQuerier                               = keeper.NewQuerier
 	RegisterCodec                            = types.RegisterCodec

@@ -163,16 +163,6 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 	return sdk.AccAddress{}
 }
 
-//__________________________________________________________
-
-// StdFee includes the amount of coins paid in fees and the maximum
-// gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
-type StdFee struct {
-	Amount sdk.Coins `json:"amount" yaml:"amount"`
-	Gas    uint64    `json:"gas" yaml:"gas"`
-}
-
 // NewStdFee returns a new instance of StdFee
 func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
@@ -190,10 +180,12 @@ func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.NewCoins()
 	}
-	bz, err := ModuleCdc.MarshalJSON(fee) // TODO
+
+	bz, err := codec.Cdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
+
 	return bz
 }
 
@@ -228,7 +220,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	bz, err := ModuleCdc.MarshalJSON(StdSignDoc{
+
+	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),
@@ -236,9 +229,11 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
 	})
+
 	if err != nil {
 		panic(err)
 	}
+
 	return sdk.MustSortJSON(bz)
 }
 

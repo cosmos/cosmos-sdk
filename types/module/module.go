@@ -48,9 +48,8 @@ type AppModuleBasic interface {
 	Name() string
 	RegisterCodec(*codec.Codec)
 
-	// genesis
-	DefaultGenesis() json.RawMessage
-	ValidateGenesis(json.RawMessage) error
+	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
+	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
 
 	// client functionality
 	RegisterRESTRoutes(context.CLIContext, *mux.Router)
@@ -78,21 +77,23 @@ func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 }
 
 // DefaultGenesis provides default genesis information for all modules
-func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
+func (bm BasicManager) DefaultGenesis(cdc codec.JSONMarshaler) map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
 	for _, b := range bm {
-		genesis[b.Name()] = b.DefaultGenesis()
+		genesis[b.Name()] = b.DefaultGenesis(cdc)
 	}
+
 	return genesis
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
+func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if err := b.ValidateGenesis(genesis[b.Name()]); err != nil {
+		if err := b.ValidateGenesis(cdc, genesis[b.Name()]); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -126,8 +127,9 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, cdc *codec.
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
-	InitGenesis(sdk.Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(sdk.Context) json.RawMessage
+
+	InitGenesis(sdk.Context, codec.JSONMarshaler, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(sdk.Context, codec.JSONMarshaler) json.RawMessage
 }
 
 // AppModule is the standard form for an application module
@@ -256,13 +258,14 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)
 }
 
 // InitGenesis performs init genesis functionality for modules
-func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
+
+		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -273,17 +276,19 @@ func (m *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMe
 			validatorUpdates = moduleValUpdates
 		}
 	}
+
 	return abci.ResponseInitChain{
 		Validators: validatorUpdates,
 	}
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
+func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, moduleName := range m.OrderExportGenesis {
-		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx)
+		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 	}
+
 	return genesisData
 }
 

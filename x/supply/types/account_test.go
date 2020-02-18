@@ -6,15 +6,13 @@ import (
 	"fmt"
 	"testing"
 
-	yaml "gopkg.in/yaml.v2"
-
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestModuleAccountMarshalYAML(t *testing.T) {

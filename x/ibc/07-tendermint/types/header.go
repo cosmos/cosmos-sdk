@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -16,6 +18,7 @@ var _ clientexported.Header = Header{}
 type Header struct {
 	tmtypes.SignedHeader                       // contains the commitment root
 	ValidatorSet         *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
+	NextValidatorSet     *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`
 }
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
@@ -48,35 +51,17 @@ func (h Header) ValidateBasic(chainID string) error {
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
+	if !bytes.Equal(h.ValidatorsHash, h.ValidatorSet.Hash()) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
+	}
+	if !bytes.Equal(h.NextValidatorsHash, h.NextValidatorSet.Hash()) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "next validator set does not match hash")
+	}
 	return nil
 }
 
 // ToABCIHeader parses the header to an ABCI header type.
 // NOTE: only for testing use.
 func (h Header) ToABCIHeader() abci.Header {
-	return abci.Header{
-		Version: abci.Version{
-			App:   h.Version.App.Uint64(),
-			Block: h.Version.Block.Uint64(),
-		},
-		ChainID: h.ChainID,
-		Height:  h.Height,
-		Time:    h.Time,
-		LastBlockId: abci.BlockID{
-			Hash: h.LastBlockID.Hash,
-			PartsHeader: abci.PartSetHeader{
-				Total: int32(h.LastBlockID.PartsHeader.Total),
-				Hash:  h.LastBlockID.PartsHeader.Hash,
-			},
-		},
-		LastCommitHash:     h.LastCommitHash,
-		DataHash:           h.DataHash,
-		ValidatorsHash:     h.ValidatorsHash,
-		NextValidatorsHash: h.NextValidatorsHash,
-		ConsensusHash:      h.ConsensusHash,
-		AppHash:            h.AppHash,
-		LastResultsHash:    h.LastResultsHash,
-		EvidenceHash:       h.EvidenceHash,
-		ProposerAddress:    h.ProposerAddress,
-	}
+	return tmtypes.TM2PB.Header(h.SignedHeader.Header)
 }

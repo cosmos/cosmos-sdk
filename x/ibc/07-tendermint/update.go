@@ -9,6 +9,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	lite "github.com/tendermint/tendermint/lite2"
 )
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates
@@ -53,7 +54,7 @@ func checkValidity(
 	clientState types.ClientState, header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert trusting period has not yet passed
-	if currentTimestamp.Sub(clientState.LatestTimestamp) >= clientState.TrustingPeriod {
+	if currentTimestamp.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
 		return errors.New("trusting period since last client timestamp already passed")
 	}
 
@@ -66,33 +67,29 @@ func checkValidity(
 	}
 
 	// assert header timestamp is past current timestamp
-	if header.Time.Unix() <= clientState.LatestTimestamp.Unix() {
+	if header.Time.Unix() <= clientState.GetLatestTimestamp().Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header blocktime ≤ latest client state block time (%s ≤ %s)",
-			header.Time.String(), clientState.LatestTimestamp.String(),
+			header.Time.String(), clientState.GetLatestTimestamp().String(),
 		)
 	}
 
 	// assert header height is newer than any we know
-	if header.GetHeight() <= clientState.LatestHeight {
+	if header.GetHeight() <= clientState.GetLatestHeight() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height ≤ latest client state height (%d ≤ %d)", header.GetHeight(), clientState.LatestHeight,
+			"header height ≤ latest client state height (%d ≤ %d)", header.GetHeight(), clientState.GetLatestHeight(),
 		)
 	}
 
-	// basic consistency check
-	if err := header.ValidateBasic(clientState.ChainID); err != nil {
-		return err
-	}
-
-	return header.ValidatorSet.VerifyCommit(header.ChainID, header.Commit.BlockID, header.Height, header.Commit)
+	return lite.Verify(clientState.GetChainID(), &clientState.LastHeader.SignedHeader, clientState.LastHeader.NextValidatorSet,
+		&header.SignedHeader, header.ValidatorSet, clientState.TrustingPeriod, currentTimestamp, lite.DefaultTrustLevel)
 }
 
 // update the consensus state from a new header
 func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
-	clientState.LatestHeight = header.GetHeight()
+	clientState.LastHeader = header
 	consensusState := types.ConsensusState{
 		Timestamp:    header.Time,
 		Root:         commitment.NewRoot(header.AppHash),

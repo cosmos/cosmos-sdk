@@ -10,6 +10,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	lite "github.com/tendermint/tendermint/lite2"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -78,19 +79,20 @@ func checkMisbehaviour(
 		return errors.New("unbonding period since last consensus state timestamp is over")
 	}
 
-	// Evidence is within the trusting period. ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
-	// check that the validator sets on both headers are valid given the last trusted validatorset
-	// less than or equal to evidence height
-	if err := consensusState.ValidatorSet.VerifyFutureCommit(
-		evidence.Header1.ValidatorSet, evidence.ChainID,
-		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
+	// TODO: - Evidence must be within trusting period
+
+	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
+	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
+	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
+		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
+		evidence.Header1.Commit, lite.DefaultTrustLevel,
 	); err != nil {
 		return fmt.Errorf("validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
-	if err := consensusState.ValidatorSet.VerifyFutureCommit(
-		evidence.Header2.ValidatorSet, evidence.ChainID,
-		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
+	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
+		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
+		evidence.Header2.Commit, lite.DefaultTrustLevel,
 	); err != nil {
 		return fmt.Errorf("validator set in header 2 has too much change from last known validator set: %v", err)
 	}

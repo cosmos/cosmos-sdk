@@ -49,7 +49,7 @@ func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.A
 	}
 
 	var account exported.Account
-	if err := ModuleCdc.UnmarshalJSON(bz, &account); err != nil {
+	if err := ar.codec.UnmarshalJSON(bz, &account); err != nil {
 		return nil, height, err
 	}
 

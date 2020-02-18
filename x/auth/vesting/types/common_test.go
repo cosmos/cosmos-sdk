@@ -29,7 +29,7 @@ func NewCodec(amino *codec.Codec) *Codec {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
-	acc := &types.VestingAccount{}
+	acc := &types.TestVestingAccount{}
 	acc.SetAccount(accI)
 	return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
 }
@@ -37,7 +37,7 @@ func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
 // UnmarshalAccount returns an Account interface from raw encoded account bytes
 // of a Proto-based Account type. An error is returned upon decoding failure.
 func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
-	acc := &types.VestingAccount{}
+	acc := &types.TestVestingAccount{}
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *Codec) MarshalAccountJSON(acc authexported.Account) ([]byte, error) {
 
 // UnmarshalAccountJSON returns an Account from JSON encoded bytes.
 func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
-	acc := &types.VestingAccount{}
+	acc := &types.TestVestingAccount{}
 	if err := c.Marshaler.UnmarshalJSON(bz, acc); err != nil {
 		return nil, err
 	}

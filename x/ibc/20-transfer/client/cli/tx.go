@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -10,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -30,7 +31,7 @@ var (
 // GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "transfer [src-port] [src-channel] [receiver] [amount]",
+		Use:   "transfer [src-port] [src-channel] [dest-height] [receiver] [amount]",
 		Short: "Transfer fungible token through IBC",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -41,20 +42,24 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			sender := cliCtx.GetFromAddress()
 			srcPort := args[0]
 			srcChannel := args[1]
-			receiver, err := sdk.AccAddressFromBech32(args[2])
+			destHeight, err := strconv.Atoi(args[2])
+			if err != nil {
+				return err
+			}
+			receiver, err := sdk.AccAddressFromBech32(args[3])
 			if err != nil {
 				return err
 			}
 
 			// parse coin trying to be sent
-			coins, err := sdk.ParseCoins(args[3])
+			coins, err := sdk.ParseCoins(args[4])
 			if err != nil {
 				return err
 			}
 
 			source := viper.GetBool(FlagSource)
 
-			msg := types.NewMsgTransfer(srcPort, srcChannel, coins, sender, receiver, source)
+			msg := types.NewMsgTransfer(srcPort, srcChannel, uint64(destHeight), coins, sender, receiver, source)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

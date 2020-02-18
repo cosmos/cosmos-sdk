@@ -82,7 +82,7 @@ for JSON encoding.
   * Every reference of `crypto.Pubkey` in context of a `Validator` is now of type string. `GetPubKeyFromBech32` must be used to get the `crypto.Pubkey`.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
   provided is specified by `ModuleCdc`.
-* (x/slashing) [\#5627](https://github.com/cosmos/cosmos-sdk/pull/5627) Migrate the `x/slashing` module to use Protocol Buffer for state
+* (x/slashing) [\#5627](https://github.com/cosmos/cosmos-sdk/pull/5627) Migrate the `x/slashing` module to use Protocol Buffers for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type

@@ -250,7 +250,7 @@ func (k Keeper) AcknowledgePacket(
 	// NOTE: RecvPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	// packet must come from the channel's counterparty
+	// packet must have been sent to the channel's counterparty
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,

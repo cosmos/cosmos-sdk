@@ -88,7 +88,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mbm.ValidateGenesis(genesisState); err != nil {
+			if err = mbm.ValidateGenesis(cdc, genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 

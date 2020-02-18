@@ -12,6 +12,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -19,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -127,10 +127,11 @@ func CreateTestInputAdvanced(
 	blacklistedAddrs[distrAcc.GetAddress().String()] = true
 
 	cdc := MakeTestCodec()
-	pk := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tkeyParams)
+	appCodec := simappcodec.NewAppCodec(cdc)
+	pk := keeper.NewKeeper(appCodec, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
@@ -138,7 +139,7 @@ func CreateTestInputAdvanced(
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bankKeeper, maccPerms)
 
 	sk := staking.NewKeeper(staking.ModuleCdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())

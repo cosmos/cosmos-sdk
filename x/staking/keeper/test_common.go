@@ -1,4 +1,6 @@
-package keeper // noalias
+package keeper
+
+// noalias
 
 import (
 	"bytes"
@@ -16,6 +18,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -107,7 +110,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 			},
 		},
 	)
+
 	cdc := MakeTestCodec()
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
@@ -121,10 +126,10 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	pk := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tkeyParams)
 
 	accountKeeper := auth.NewAccountKeeper(
-		cdc,    // amino codec
-		keyAcc, // target store
+		appCodec,
+		keyAcc,
 		pk.Subspace(auth.DefaultParamspace),
-		auth.ProtoBaseAccount, // prototype
+		auth.ProtoBaseAccount,
 	)
 
 	bk := bank.NewBaseKeeper(
@@ -140,7 +145,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		types.NotBondedPoolName: {supply.Burner, supply.Staking},
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bk, maccPerms)
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

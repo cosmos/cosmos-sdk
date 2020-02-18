@@ -4,32 +4,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-type Codec struct {
-	codec.Marshaler
-
-	// Keep reference to the amino codec to allow backwards compatibility along
-	// with type, and interface registration.
-	amino *codec.Codec
-}
-
-func NewCodec(amino *codec.Codec) *Codec {
-	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
-}
-
-// ----------------------------------------------------------------------------
-
-// RegisterCodec registers all the necessary crisis module concrete types and
-// interfaces with the provided codec reference.
+// RegisterCodec registers the necessary x/crisis interfaces and concrete types
+// on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgVerifyInvariant{}, "cosmos-sdk/MsgVerifyInvariant", nil)
 }
 
-// ModuleCdc defines a crisis module global Amino codec.
-var ModuleCdc *Codec
+var (
+	amino = codec.New()
+
+	// ModuleCdc references the global x/crisis module codec. Note, the codec should
+	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
+	// still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/crisis and
+	// defined at the application level.
+	ModuleCdc = codec.NewHybridCodec(amino)
+)
 
 func init() {
-	ModuleCdc = NewCodec(codec.New())
-	RegisterCodec(ModuleCdc.amino)
-	codec.RegisterCrypto(ModuleCdc.amino)
-	ModuleCdc.amino.Seal()
+	RegisterCodec(amino)
+	codec.RegisterCrypto(amino)
+	amino.Seal()
 }

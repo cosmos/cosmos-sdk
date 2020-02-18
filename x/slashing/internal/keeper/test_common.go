@@ -1,7 +1,8 @@
+package keeper
+
 // nolint:deadcode,unused
 // DONTCOVER
 // noalias
-package keeper
 
 import (
 	"encoding/hex"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -17,13 +17,13 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	params "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -82,6 +82,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewNopLogger())
 	cdc := createTestCodec()
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
@@ -92,8 +93,8 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	paramsKeeper := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tkeyParams)
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	paramsKeeper := keeper.NewKeeper(appCodec, keyParams, tkeyParams)
+	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
 	bk := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
@@ -101,7 +102,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bk, maccPerms)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, InitTokens.MulRaw(int64(len(Addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))

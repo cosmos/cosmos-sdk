@@ -22,24 +22,8 @@ var (
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 )
 
-// Register the vesting account types on the auth module codec
-func init() {
-	authtypes.RegisterAccountTypeCodec(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount")
-	authtypes.RegisterAccountTypeCodec(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount")
-	authtypes.RegisterAccountTypeCodec(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount")
-	authtypes.RegisterAccountTypeCodec(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount")
-}
-
-// BaseVestingAccount implements the VestingAccount interface. It contains all
-// the necessary fields needed for any vesting account implementation.
-type BaseVestingAccount struct {
-	*authtypes.BaseAccount
-
-	OriginalVesting  sdk.Coins `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
-	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
-	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
-	EndTime          int64     `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
-}
+//-----------------------------------------------------------------------------
+// Base Vesting Account
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
 // callers responsibility to ensure the base account has sufficient funds with
@@ -204,21 +188,13 @@ func (bva BaseVestingAccount) String() string {
 func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
 		Address:          bva.Address,
+		PubKey:           bva.PubKey,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
-	}
-
-	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	bz, err := yaml.Marshal(alias)
@@ -233,21 +209,13 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          bva.Address,
+		PubKey:           bva.PubKey,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
-	}
-
-	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	return json.Marshal(alias)
@@ -286,14 +254,6 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 var _ authexported.GenesisAccount = (*ContinuousVestingAccount)(nil)
-
-// ContinuousVestingAccount implements the VestingAccount interface. It
-// continuously vests by unlocking coins linearly with respect to time.
-type ContinuousVestingAccount struct {
-	*BaseVestingAccount
-
-	StartTime int64 `json:"start_time" yaml:"start_time"` // when the coins start to vest
-}
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
 func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
@@ -386,6 +346,7 @@ func (cva ContinuousVestingAccount) String() string {
 func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
 		Address:          cva.Address,
+		PubKey:           cva.PubKey,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -393,15 +354,6 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedVesting: cva.DelegatedVesting,
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
-	}
-
-	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	bz, err := yaml.Marshal(alias)
@@ -416,6 +368,7 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          cva.Address,
+		PubKey:           cva.PubKey,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -423,15 +376,6 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 		DelegatedVesting: cva.DelegatedVesting,
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
-	}
-
-	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	return json.Marshal(alias)
@@ -473,14 +417,6 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
-
-// PeriodicVestingAccount implements the VestingAccount interface. It
-// periodically vests by unlocking coins during each specified period
-type PeriodicVestingAccount struct {
-	*BaseVestingAccount
-	StartTime      int64   `json:"start_time" yaml:"start_time"`           // when the coins start to vest
-	VestingPeriods Periods `json:"vesting_periods" yaml:"vesting_periods"` // the vesting schedule
-}
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
@@ -602,6 +538,7 @@ func (pva PeriodicVestingAccount) String() string {
 func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
 		Address:          pva.Address,
+		PubKey:           pva.PubKey,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
@@ -610,15 +547,6 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		EndTime:          pva.EndTime,
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
-	}
-
-	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	bz, err := yaml.Marshal(alias)
@@ -633,6 +561,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          pva.Address,
+		PubKey:           pva.PubKey,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
@@ -641,15 +570,6 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 		EndTime:          pva.EndTime,
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
-	}
-
-	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	return json.Marshal(alias)
@@ -692,13 +612,6 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 var _ authexported.GenesisAccount = (*DelayedVestingAccount)(nil)
-
-// DelayedVestingAccount implements the VestingAccount interface. It vests all
-// coins after a specific time, but non prior. In other words, it keeps them
-// locked until a specified time.
-type DelayedVestingAccount struct {
-	*BaseVestingAccount
-}
 
 // NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
 func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
@@ -756,25 +669,22 @@ func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
 }
 
+func (dva DelayedVestingAccount) String() string {
+	out, _ := dva.MarshalYAML()
+	return out.(string)
+}
+
 // MarshalJSON returns the JSON representation of a DelayedVestingAccount.
 func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	alias := vestingAccountPretty{
 		Address:          dva.Address,
+		PubKey:           dva.PubKey,
 		AccountNumber:    dva.AccountNumber,
 		Sequence:         dva.Sequence,
 		OriginalVesting:  dva.OriginalVesting,
 		DelegatedFree:    dva.DelegatedFree,
 		DelegatedVesting: dva.DelegatedVesting,
 		EndTime:          dva.EndTime,
-	}
-
-	if dva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, dva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
 	}
 
 	return json.Marshal(alias)

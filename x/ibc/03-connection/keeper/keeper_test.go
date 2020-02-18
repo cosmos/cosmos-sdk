@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -229,59 +228,4 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	connections := suite.app.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.ctx)
 	suite.Require().Len(connections, len(expConnections))
 	suite.Require().ElementsMatch(expConnections, connections)
-}
-
-// Mocked types
-// TODO: fix tests and replace for real proofs
-
-var (
-	_ commitment.ProofI = validProof{}
-	_ commitment.ProofI = invalidProof{}
-)
-
-type (
-	validProof   struct{}
-	invalidProof struct{}
-)
-
-func (validProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
-}
-
-func (validProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
-	return nil
-}
-
-func (validProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
-	return nil
-}
-
-func (validProof) ValidateBasic() error {
-	return nil
-}
-
-func (validProof) IsEmpty() bool {
-	return false
-}
-
-func (invalidProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
-}
-
-func (invalidProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) ValidateBasic() error {
-	return errors.New("invalid proof")
-}
-
-func (invalidProof) IsEmpty() bool {
-	return true
 }

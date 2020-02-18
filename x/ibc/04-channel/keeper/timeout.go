@@ -134,7 +134,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
 	packet types.Packet,
-	proofNonMembership,
+	proof,
 	proofClosed commitment.ProofI,
 	proofHeight,
 	nextSequenceRecv uint64,
@@ -207,12 +207,12 @@ func (k Keeper) TimeoutOnClose(
 	case exported.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
-			ctx, connectionEnd, proofHeight, proofClosed,
+			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case exported.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
-			ctx, connectionEnd, proofHeight, proofClosed,
+			ctx, connectionEnd, proofHeight, proof,
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
 		)
 	default:

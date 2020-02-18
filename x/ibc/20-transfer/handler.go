@@ -64,6 +64,8 @@ func handlePacketDataTransfer(
 	if err := k.ReceiveTransfer(
 		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,
 	); err != nil {
+		// How do we want to handle this case? Maybe we should be more lenient, it's safe to leave the channel open I think.
+
 		// TODO: handle packet receipt that due to an error (specify)
 		// the receiving chain couldn't process the transfer
 
@@ -97,13 +99,14 @@ func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTi
 	packet := msg.Packet
 	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
 	if err != nil {
-		// TODO: This chain sent invalid packet
+		// This shouldn't happen, since we've already validated that we've sent the packet.
 		panic(err)
 	}
 
 	err = k.TimeoutExecuted(ctx, packet)
 	if err != nil {
-		// TODO: This should not happen
+		// This shouldn't happen, since we've already validated that we've sent the packet.
+		// TODO: Figure out what happens if the capability authorisation changes.
 		panic(err)
 	}
 

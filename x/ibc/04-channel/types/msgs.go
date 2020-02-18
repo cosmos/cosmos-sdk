@@ -504,14 +504,14 @@ var _ sdk.Msg = MsgAcknowledgement{}
 // MsgAcknowledgement receives incoming IBC acknowledgement
 type MsgAcknowledgement struct {
 	Packet          `json:"packet" yaml:"packet"`
-	Acknowledgement exported.PacketDataI `json:"acknowledgement" yaml:"acknowledgement"`
-	Proof           commitment.ProofI    `json:"proof" yaml:"proof"`
-	ProofHeight     uint64               `json:"proof_height" yaml:"proof_height"`
-	Signer          sdk.AccAddress       `json:"signer" yaml:"signer"`
+	Acknowledgement exported.PacketAcknowledgementI `json:"acknowledgement" yaml:"acknowledgement"`
+	Proof           commitment.ProofI               `json:"proof" yaml:"proof"`
+	ProofHeight     uint64                          `json:"proof_height" yaml:"proof_height"`
+	Signer          sdk.AccAddress                  `json:"signer" yaml:"signer"`
 }
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
-func NewMsgAcknowledgement(packet Packet, ack exported.PacketDataI, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
+func NewMsgAcknowledgement(packet Packet, ack exported.PacketAcknowledgementI, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
 	return MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
@@ -534,11 +534,11 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if err := msg.Proof.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
+	if len(msg.Acknowledgement.GetBytes()) > 100 {
+		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
+	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
-	}
-	if err := msg.Acknowledgement.ValidateBasic(); err != nil {
-		return err
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

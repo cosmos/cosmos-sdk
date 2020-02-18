@@ -81,8 +81,6 @@ func (k Keeper) ReceiveTransfer(
 		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Receiver, data.Amount)
 	}
 
-	// unescrow tokens
-
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
 	coins := make(sdk.Coins, len(data.Amount))
@@ -96,6 +94,7 @@ func (k Keeper) ReceiveTransfer(
 		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 	}
 
+	// unescrow tokens
 	escrowAddress := types.GetEscrowAddress(destinationPort, destinationChannel)
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 

@@ -65,7 +65,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccount
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 transfer handler.
-func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error {
+func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketAcknowledgementI) error {
 	return k.channelKeeper.PacketExecuted(ctx, packet, acknowledgement)
 }
 

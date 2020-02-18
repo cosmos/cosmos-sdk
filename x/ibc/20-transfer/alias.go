@@ -43,5 +43,5 @@ type (
 	SupplyKeeper            = types.SupplyKeeper
 	FungibleTokenPacketData = types.FungibleTokenPacketData
 	MsgTransfer             = types.MsgTransfer
-	PacketDataTransfer      = types.PacketDataTransfer
+	AckDataTransfer         = types.AckDataTransfer
 )

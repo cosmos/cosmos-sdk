@@ -4,13 +4,21 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	keep "github.com/cosmos/cosmos-sdk/x/supply/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
-const initialPower = int64(100)
+const (
+	initialPower = int64(100)
+	holder       = "holder"
+	multiPerm    = "multiple permissions account"
+	randomPerm   = "random permission"
+)
 
 // create module accounts for testing
 var (
@@ -36,8 +44,20 @@ func getCoinsByName(ctx sdk.Context, sk keep.Keeper, ak types.AccountKeeper, bk 
 }
 
 func TestSendCoins(t *testing.T) {
-	app, ctx := createTestApp(false)
-	keeper := app.SupplyKeeper
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[types.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+
+	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	ak := app.AccountKeeper
 	bk := app.BankKeeper
 
@@ -85,8 +105,20 @@ func TestSendCoins(t *testing.T) {
 }
 
 func TestMintCoins(t *testing.T) {
-	app, ctx := createTestApp(false)
-	keeper := app.SupplyKeeper
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[types.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+
+	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	ak := app.AccountKeeper
 	bk := app.BankKeeper
 
@@ -121,8 +153,20 @@ func TestMintCoins(t *testing.T) {
 }
 
 func TestBurnCoins(t *testing.T) {
-	app, ctx := createTestApp(false)
-	keeper := app.SupplyKeeper
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[types.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+
+	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	ak := app.AccountKeeper
 	bk := app.BankKeeper
 
@@ -131,7 +175,7 @@ func TestBurnCoins(t *testing.T) {
 	keeper.SetModuleAccount(ctx, burnerAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
-	initialSupply = initialSupply.Inflate(initCoins)
+	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
 	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
@@ -147,7 +191,7 @@ func TestBurnCoins(t *testing.T) {
 
 	// test same functionality on module account with multiple permissions
 	initialSupply = keeper.GetSupply(ctx)
-	initialSupply = initialSupply.Inflate(initCoins)
+	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
 	require.NoError(t, bk.SetBalances(ctx, multiPermAcc.GetAddress(), initCoins))

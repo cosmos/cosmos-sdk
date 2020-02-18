@@ -6,7 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-// ModuleAccountI defines an account interface for modules that hold tokens in an escrow
+// ModuleAccountI defines an account interface for modules that hold tokens in
+// an escrow.
 type ModuleAccountI interface {
 	exported.Account
 
@@ -19,10 +20,10 @@ type ModuleAccountI interface {
 // token supply.
 type SupplyI interface {
 	GetTotal() sdk.Coins
-	SetTotal(total sdk.Coins) SupplyI
+	SetTotal(total sdk.Coins)
 
-	Inflate(amount sdk.Coins) SupplyI
-	Deflate(amount sdk.Coins) SupplyI
+	Inflate(amount sdk.Coins)
+	Deflate(amount sdk.Coins)
 
 	String() string
 	ValidateBasic() error

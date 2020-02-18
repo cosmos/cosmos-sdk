@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"encoding/json"
@@ -9,21 +9,22 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestSanitize(t *testing.T) {
 	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc1 := NewBaseAccountWithAddress(addr1)
+	authAcc1 := types.NewBaseAccountWithAddress(addr1)
 	authAcc1.SetAccountNumber(1)
 
 	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc2 := NewBaseAccountWithAddress(addr2)
+	authAcc2 := types.NewBaseAccountWithAddress(addr2)
 
-	genAccs := exported.GenesisAccounts{&authAcc1, &authAcc2}
+	genAccs := exported.GenesisAccounts{authAcc1, authAcc2}
 
 	require.True(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[1].GetAddress(), addr2)
-	genAccs = SanitizeGenesisAccounts(genAccs)
+	genAccs = types.SanitizeGenesisAccounts(genAccs)
 
 	require.False(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[1].GetAddress(), addr1)
@@ -38,34 +39,33 @@ var (
 
 // require duplicate accounts fails validation
 func TestValidateGenesisDuplicateAccounts(t *testing.T) {
-	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 
 	genAccs := make(exported.GenesisAccounts, 2)
-	genAccs[0] = &acc1
-	genAccs[1] = &acc1
+	genAccs[0] = acc1
+	genAccs[1] = acc1
 
-	require.Error(t, ValidateGenAccounts(genAccs))
+	require.Error(t, types.ValidateGenAccounts(genAccs))
 }
 
 func TestGenesisAccountIterator(t *testing.T) {
-	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc2 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 
-	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
+	genAccounts := exported.GenesisAccounts{acc1, acc2}
 
-	genAccounts := exported.GenesisAccounts{&acc1, &acc2}
-
-	authGenState := DefaultGenesisState()
+	authGenState := types.DefaultGenesisState()
 	authGenState.Accounts = genAccounts
 
 	appGenesis := make(map[string]json.RawMessage)
-	authGenStateBz, err := ModuleCdc.MarshalJSON(authGenState)
+	authGenStateBz, err := appCodec.MarshalJSON(authGenState)
 	require.NoError(t, err)
 
-	appGenesis[ModuleName] = authGenStateBz
+	appGenesis[types.ModuleName] = authGenStateBz
 
 	var addresses []sdk.AccAddress
-	GenesisAccountIterator{}.IterateGenesisAccounts(
-		ModuleCdc, appGenesis, func(acc exported.Account) (stop bool) {
+	types.GenesisAccountIterator{}.IterateGenesisAccounts(
+		appCodec, appGenesis, func(acc exported.Account) (stop bool) {
 			addresses = append(addresses, acc.GetAddress())
 			return false
 		},

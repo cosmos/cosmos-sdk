@@ -37,8 +37,6 @@ var (
 	ErrRootNotFound           = types.ErrRootNotFound
 	ErrInvalidHeader          = types.ErrInvalidHeader
 	ErrInvalidEvidence        = types.ErrInvalidEvidence
-	NewMsgCreateClient        = types.NewMsgCreateClient
-	NewMsgUpdateClient        = types.NewMsgUpdateClient
 
 	// variable aliases
 	SubModuleCdc           = types.SubModuleCdc
@@ -48,8 +46,6 @@ var (
 )
 
 type (
-	Keeper          = keeper.Keeper
-	StakingKeeper   = types.StakingKeeper
-	MsgCreateClient = types.MsgCreateClient
-	MsgUpdateClient = types.MsgUpdateClient
+	Keeper        = keeper.Keeper
+	StakingKeeper = types.StakingKeeper
 )

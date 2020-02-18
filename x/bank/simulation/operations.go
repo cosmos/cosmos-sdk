@@ -53,7 +53,6 @@ func WeightedOperations(
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-// nolint: funlen
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -127,7 +126,6 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-// nolint: funlen
 func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,

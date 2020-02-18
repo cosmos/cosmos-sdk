@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,7 +18,8 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -42,6 +44,11 @@ const (
 
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
+
+	testHeight = 10
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 type KeeperTestSuite struct {
@@ -192,19 +199,27 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
+func (suite *KeeperTestSuite) commitNBlocks(n int) {
+	for i := 0; i < n; i++ {
+		suite.app.Commit()
+		suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+		suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
+	}
+}
+
 func (suite *KeeperTestSuite) createClient(clientID string) {
-	suite.app.Commit()
+	suite.commitNBlocks(1)
+
 	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
-
-	consensusState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSetHash: suite.valSet.Hash(),
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       testHeight,
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, testClientType, consensusState)
+	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
+	suite.Require().NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.Require().NoError(err)
 }
 
@@ -218,13 +233,13 @@ func (suite *KeeperTestSuite) updateClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
 
-	state := tendermint.ConsensusState{
+	state := ibctmtypes.ConsensusState{
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClientID1, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClientID1)
-	cs, _ := csi.(tendermint.ClientState)
+	cs, _ := csi.(ibctmtypes.ClientState)
 	cs.LatestHeight = uint64(height - 1)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }

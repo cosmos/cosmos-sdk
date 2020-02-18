@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -35,11 +36,11 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		malleate   func()
 		expPass    bool
 	}{
-		{"verification success", connection1, validProof{}, func() {
+		{"verification success", connection1, ibctypes.ValidProof{}, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", connection1, validProof{}, func() {}, false},
-		{"verification failed", connection1, invalidProof{}, func() {
+		{"client state not found", connection1, ibctypes.ValidProof{}, func() {}, false},
+		{"verification failed", connection1, ibctypes.InvalidProof{}, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -78,12 +79,12 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 		malleate func()
 		expPass  bool
 	}{
-		{"verification success", validProof{}, func() {
+		{"verification success", ibctypes.ValidProof{}, func() {
 			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
 		}, true},
-		{"client state not found", validProof{}, func() {}, false},
-		{"verification failed", invalidProof{}, func() {
+		{"client state not found", ibctypes.ValidProof{}, func() {}, false},
+		{"verification failed", ibctypes.InvalidProof{}, func() {
 			suite.createClient(testClientID1)
 			suite.createClient(testClientID2)
 		}, false},
@@ -125,14 +126,14 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 		malleate    func()
 		expPass     bool
 	}{
-		{"verification success", validProof{}, 2, func() {
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", validProof{}, 2, func() {}, false},
-		{"consensus state not found", validProof{}, 100, func() {
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
 			suite.createClient(testClientID1)
 		}, false},
-		{"verification failed", invalidProof{}, 2, func() {
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -176,14 +177,14 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 		malleate    func()
 		expPass     bool
 	}{
-		{"verification success", validProof{}, 2, func() {
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", validProof{}, 2, func() {}, false},
-		{"consensus state not found", validProof{}, 100, func() {
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
 			suite.createClient(testClientID1)
 		}, false},
-		{"verification failed", invalidProof{}, 2, func() {
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -224,14 +225,14 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 		malleate    func()
 		expPass     bool
 	}{
-		{"verification success", validProof{}, 2, func() {
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", validProof{}, 2, func() {}, false},
-		{"consensus state not found", validProof{}, 100, func() {
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
 			suite.createClient(testClientID1)
 		}, false},
-		{"verification failed", invalidProof{}, 2, func() {
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -271,14 +272,14 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		malleate    func()
 		expPass     bool
 	}{
-		{"verification success", validProof{}, 2, func() {
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", validProof{}, 2, func() {}, false},
-		{"consensus state not found", validProof{}, 100, func() {
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
 			suite.createClient(testClientID1)
 		}, false},
-		{"verification failed", invalidProof{}, 2, func() {
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}
@@ -318,14 +319,14 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 		malleate    func()
 		expPass     bool
 	}{
-		{"verification success", validProof{}, 2, func() {
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
 			suite.createClient(testClientID1)
 		}, true},
-		{"client state not found", validProof{}, 2, func() {}, false},
-		{"consensus state not found", validProof{}, 100, func() {
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
 			suite.createClient(testClientID1)
 		}, false},
-		{"verification failed", invalidProof{}, 2, func() {
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
 			suite.createClient(testClientID2)
 		}, false},
 	}

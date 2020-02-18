@@ -101,14 +101,14 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.ctx, exported.ORDERED, []string{testConnectionID2},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
-					validProof{}, uint64(suite.ctx.BlockHeight()),
+					validProof{}, uint64(testHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.ctx, exported.ORDERED, []string{testConnectionID2},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
-					invalidProof{}, uint64(suite.ctx.BlockHeight()),
+					invalidProof{}, uint64(testHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -184,13 +184,13 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(
 					suite.ctx, testPort1, testChannel1, testChannelVersion,
-					validProof{}, uint64(suite.ctx.BlockHeight()),
+					validProof{}, uint64(testHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(
 					suite.ctx, testPort1, testChannel1, testChannelVersion,
-					invalidProof{}, uint64(suite.ctx.BlockHeight()),
+					invalidProof{}, uint64(testHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -266,13 +266,13 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 					suite.ctx, testPort2, testChannel2,
-					validProof{}, uint64(suite.ctx.BlockHeight()),
+					validProof{}, uint64(testHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 					suite.ctx, testPort2, testChannel2,
-					invalidProof{}, uint64(suite.ctx.BlockHeight()),
+					invalidProof{}, uint64(testHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -404,13 +404,13 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			if tc.expPass {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 					suite.ctx, testPort2, testChannel2,
-					validProof{}, uint64(suite.ctx.BlockHeight()),
+					validProof{}, uint64(testHeight),
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 					suite.ctx, testPort2, testChannel2,
-					invalidProof{}, uint64(suite.ctx.BlockHeight()),
+					invalidProof{}, uint64(testHeight),
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

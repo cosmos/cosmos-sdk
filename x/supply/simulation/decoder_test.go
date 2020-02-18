@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 func makeTestCodec() (cdc *codec.Codec) {

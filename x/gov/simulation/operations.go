@@ -81,7 +81,6 @@ func WeightedOperations(
 // SimulateSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-// nolint: funlen
 func SimulateSubmitProposal(
 	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn,
 ) simulation.Operation {
@@ -188,7 +187,6 @@ func SimulateSubmitProposal(
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
-// nolint: funlen
 func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -242,7 +240,6 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
-// nolint: funlen
 func SimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(ak, bk, k, simulation.Account{}, -1)
 }

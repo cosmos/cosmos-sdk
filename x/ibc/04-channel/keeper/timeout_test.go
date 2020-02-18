@@ -113,6 +113,7 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
 			tc.malleate()

@@ -76,6 +76,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
 			tc.malleate()
@@ -143,7 +144,6 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 
 	for i, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
-
 			suite.SetupTest() // reset
 			tc.malleate()
 
@@ -192,8 +192,8 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
-
 			suite.SetupTest() // reset
 			tc.malleate()
 
@@ -258,6 +258,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
 			tc.malleate()
@@ -343,6 +344,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
 			tc.malleate()

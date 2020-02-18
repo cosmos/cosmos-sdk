@@ -8,7 +8,7 @@ import (
 )
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, bk types.BankKeeper, supplyKeeper types.SupplyKeeper, keeper Keeper, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
 	keeper.SetFeePool(ctx, data.FeePool)
@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 	}
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
-		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
+		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
@@ -47,10 +47,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	if moduleAcc.GetCoins().IsZero() {
-		if err := moduleAcc.SetCoins(moduleHoldingsInt); err != nil {
+	if bk.GetAllBalances(ctx, moduleAcc.GetAddress()).IsZero() {
+		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
 			panic(err)
 		}
+
 		supplyKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
 }
@@ -75,7 +76,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
 				ValidatorAddress:   addr,
-				OutstandingRewards: rewards,
+				OutstandingRewards: rewards.Rewards,
 			})
 			return false
 		},

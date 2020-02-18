@@ -15,8 +15,9 @@ import (
 // Keeper of the distribution store
 type Keeper struct {
 	storeKey      sdk.StoreKey
-	cdc           *codec.Codec
+	cdc           codec.Marshaler
 	paramSpace    params.Subspace
+	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	supplyKeeper  types.SupplyKeeper
 
@@ -27,7 +28,7 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
+	cdc codec.Marshaler, key sdk.StoreKey, paramSpace params.Subspace, bk types.BankKeeper,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string,
 	blacklistedAddrs map[string]bool,
 ) Keeper {
@@ -46,6 +47,7 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace,
+		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,
@@ -114,16 +116,16 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
 	accumCommission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
-	if accumCommission.IsZero() {
+	if accumCommission.Commission.IsZero() {
 		return nil, types.ErrNoValidatorCommission
 	}
 
-	commission, remainder := accumCommission.TruncateDecimal()
-	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder) // leave remainder to withdraw later
+	commission, remainder := accumCommission.Commission.TruncateDecimal()
+	k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
 
 	// update outstanding
-	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr)
-	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoinsFromCoins(commission...)))
+	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr).Rewards
+	k.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(sdk.NewDecCoinsFromCoins(commission...))})
 
 	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
@@ -148,7 +150,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
 	k.IterateValidatorOutstandingRewards(ctx,
 		func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			totalRewards = totalRewards.Add(rewards...)
+			totalRewards = totalRewards.Add(rewards.Rewards...)
 			return false
 		},
 	)

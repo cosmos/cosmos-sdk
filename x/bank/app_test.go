@@ -49,7 +49,6 @@ var (
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
-	sendMsg2 = types.NewMsgSend(addr1, moduleAccAddr, coins)
 
 	multiSendMsg1 = types.MsgMultiSend{
 		Inputs:  []types.Input{types.NewInput(addr1, coins)},
@@ -93,15 +92,18 @@ var (
 func TestSendNotEnoughBalance(t *testing.T) {
 	acc := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
 	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
+	require.NoError(t, err)
 
-	res1 := app.AccountKeeper.GetAccount(ctxCheck, addr1)
+	app.Commit()
+
+	res1 := app.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
@@ -157,15 +159,18 @@ func TestSendToModuleAcc(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			acc := &auth.BaseAccount{
 				Address: test.msg.FromAddress,
-				Coins:   test.fromBalance,
 			}
 
 			genAccs := []authexported.GenesisAccount{acc}
 			app := simapp.SetupWithGenesisAccounts(genAccs)
+			ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-			ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+			err := app.BankKeeper.SetBalances(ctx, test.msg.FromAddress, test.fromBalance)
+			require.NoError(t, err)
 
-			res1 := app.AccountKeeper.GetAccount(ctxCheck, test.msg.FromAddress)
+			app.Commit()
+
+			res1 := app.AccountKeeper.GetAccount(ctx, test.msg.FromAddress)
 			require.NotNil(t, res1)
 			require.Equal(t, acc, res1.(*auth.BaseAccount))
 
@@ -190,15 +195,18 @@ func TestSendToModuleAcc(t *testing.T) {
 func TestMsgMultiSendWithAccounts(t *testing.T) {
 	acc := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
 	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
+	require.NoError(t, err)
 
-	res1 := app.AccountKeeper.GetAccount(ctxCheck, addr1)
+	app.Commit()
+
+	res1 := app.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
@@ -244,18 +252,24 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 }
 
 func TestMsgMultiSendMultipleOut(t *testing.T) {
-
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 	acc2 := &auth.BaseAccount{
 		Address: addr2,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
 	genAccs := []authexported.GenesisAccount{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+
+	app.Commit()
 
 	testCases := []appTestCase{
 		{
@@ -284,22 +298,30 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 }
 
 func TestMsgMultiSendMultipleInOut(t *testing.T) {
-
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 	acc2 := &auth.BaseAccount{
 		Address: addr2,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 	acc4 := &auth.BaseAccount{
 		Address: addr4,
-		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
 	genAccs := []authexported.GenesisAccount{acc1, acc2, acc4}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	err := app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SetBalances(ctx, addr4, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+
+	app.Commit()
 
 	testCases := []appTestCase{
 		{
@@ -331,13 +353,17 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 func TestMsgMultiSendDependent(t *testing.T) {
 	acc1 := auth.NewBaseAccountWithAddress(addr1)
 	acc2 := auth.NewBaseAccountWithAddress(addr2)
-	err := acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
-	require.NoError(t, err)
-	err = acc2.SetAccountNumber(1)
+	err := acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
 	genAccs := []authexported.GenesisAccount{&acc1, &acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	err = app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
+	require.NoError(t, err)
+
+	app.Commit()
 
 	testCases := []appTestCase{
 		{

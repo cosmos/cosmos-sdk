@@ -123,6 +123,7 @@ var (
 	ErrNeitherShareMsgsGiven           = types.ErrNeitherShareMsgsGiven
 	ErrInvalidHistoricalInfo           = types.ErrInvalidHistoricalInfo
 	ErrNoHistoricalInfo                = types.ErrNoHistoricalInfo
+	ErrEmptyValidatorPubKey            = types.ErrEmptyValidatorPubKey
 	NewGenesisState                    = types.NewGenesisState
 	DefaultGenesisState                = types.DefaultGenesisState
 	NewMultiStakingHooks               = types.NewMultiStakingHooks
@@ -175,6 +176,7 @@ var (
 	NewDescription                     = types.NewDescription
 
 	// variable aliases
+	NewCodec                         = types.NewCodec
 	ModuleCdc                        = types.ModuleCdc
 	LastValidatorPowerKey            = types.LastValidatorPowerKey
 	LastTotalPowerKey                = types.LastTotalPowerKey
@@ -199,6 +201,7 @@ var (
 
 type (
 	Keeper                    = keeper.Keeper
+	Codec                     = types.Codec
 	Commission                = types.Commission
 	CommissionRates           = types.CommissionRates
 	DVPair                    = types.DVPair

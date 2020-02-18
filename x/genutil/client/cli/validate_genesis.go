@@ -41,7 +41,7 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicM
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			if err = mbm.ValidateGenesis(genState); err != nil {
+			if err = mbm.ValidateGenesis(cdc, genState); err != nil {
 				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
 			}
 

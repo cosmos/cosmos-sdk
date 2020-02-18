@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // nolint:deadcode,unused,varcheck

@@ -52,18 +52,18 @@ func TestImportExportQueues(t *testing.T) {
 
 	// export the state and import it into a new app
 	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
-
-	db := dbm.NewMemDB()
-	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
 	genesisState := simapp.NewDefaultGenesisState()
 
 	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenState)
 	genesisState[gov.ModuleName] = app.Codec().MustMarshalJSON(govGenState)
 
-	stateBytes, err := codec.MarshalJSONIndent(app2.Codec(), genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
 		panic(err)
 	}
+
+	db := dbm.NewMemDB()
+	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
 
 	app2.InitChain(
 		abci.RequestInitChain{

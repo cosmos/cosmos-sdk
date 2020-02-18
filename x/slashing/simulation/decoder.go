@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding slashing type

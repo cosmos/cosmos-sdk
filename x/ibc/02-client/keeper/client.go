@@ -82,7 +82,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	switch clientType {
 	case exported.Tendermint:
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, header, ctx.ChainID(), ctx.BlockTime(),
+			clientState, header, ctx.BlockTime(),
 		)
 	default:
 		err = types.ErrInvalidClientType

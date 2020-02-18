@@ -11,4 +11,5 @@ const (
 var (
 	ErrInvalidTrustingPeriod  = sdkerrors.Register(SubModuleName, 1, "invalid trusting period")
 	ErrInvalidUnbondingPeriod = sdkerrors.Register(SubModuleName, 2, "invalid unbonding period")
+	ErrInvalidChainID         = sdkerrors.Register(SubModuleName, 3, "invalid chain ID")
 )

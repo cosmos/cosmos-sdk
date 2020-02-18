@@ -212,7 +212,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 		ValidatorSet: suite.valSet,
 	}
 
-	clientState, err := ibctmtypes.Initialize(clientID, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
 	suite.Require().NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.Require().NoError(err)

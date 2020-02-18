@@ -10,25 +10,21 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	testCases := []struct {
 		name        string
 		clientState ibctmtypes.ClientState
-		chainID     string
 		expPass     bool
 	}{
 		{
 			name:        "successful update",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.clientTime),
-			chainID:     chainID,
+			clientState: ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height, suite.clientTime),
 			expPass:     true,
 		},
 		{
 			name:        "header basic validation failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height, suite.clientTime),
-			chainID:     "cosmoshub",
+			clientState: ibctmtypes.NewClientState(chainID, "cosmoshub", trustingPeriod, ubdPeriod, height, suite.clientTime),
 			expPass:     false,
 		},
 		{
 			name:        "header height < latest client height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, height+1, suite.clientTime),
-			chainID:     chainID,
+			clientState: ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height+1, suite.clientTime),
 			expPass:     false,
 		},
 	}
@@ -42,7 +38,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			ValidatorSet: suite.header.ValidatorSet,
 		}
 
-		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, suite.header, tc.chainID, suite.now)
+		clientState, consensusState, err := tendermint.CheckValidityAndUpdateState(tc.clientState, suite.header, suite.now)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

@@ -21,7 +21,7 @@ import (
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
-	clientState clientexported.ClientState, header clientexported.Header, chainID string,
+	clientState clientexported.ClientState, header clientexported.Header,
 	currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(types.ClientState)
@@ -38,7 +38,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmHeader, chainID, currentTimestamp); err != nil {
+	if err := checkValidity(tmClientState, tmHeader, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -50,7 +50,7 @@ func CheckValidityAndUpdateState(
 //
 // CONTRACT: assumes header.Height > consensusState.Height
 func checkValidity(
-	clientState types.ClientState, header types.Header, chainID string, currentTimestamp time.Time,
+	clientState types.ClientState, header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(clientState.LatestTimestamp) >= clientState.TrustingPeriod {
@@ -83,7 +83,7 @@ func checkValidity(
 	}
 
 	// basic consistency check
-	if err := header.ValidateBasic(chainID); err != nil {
+	if err := header.ValidateBasic(clientState.ChainID); err != nil {
 		return err
 	}
 

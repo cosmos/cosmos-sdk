@@ -27,7 +27,7 @@ import (
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
+		Use:   "create [client-id] [chain-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
 		Short: "create new client with a consensus state",
 		Long: strings.TrimSpace(fmt.Sprintf(`create new client with a specified identifier and consensus state:
 
@@ -42,11 +42,12 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
+			chainID := args[1]
 
 			var state ibctmtypes.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &state); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[2]), &state); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(args[2])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
@@ -55,18 +56,18 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 				}
 			}
 
-			trustingPeriod, err := time.ParseDuration(args[2])
+			trustingPeriod, err := time.ParseDuration(args[3])
 			if err != nil {
 				return err
 			}
 
-			ubdPeriod, err := time.ParseDuration(args[3])
+			ubdPeriod, err := time.ParseDuration(args[4])
 			if err != nil {
 				return err
 			}
 
 			msg := ibctmtypes.NewMsgCreateClient(
-				clientID, state,
+				clientID, chainID, state,
 				trustingPeriod, ubdPeriod, cliCtx.GetFromAddress(),
 			)
 

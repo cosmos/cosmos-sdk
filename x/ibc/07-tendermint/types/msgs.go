@@ -24,6 +24,7 @@ var _ clientexported.MsgUpdateClient = MsgUpdateClient{}
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
 	ClientID        string         `json:"client_id" yaml:"client_id"`
+	ChainID         string         `json:"chain_id" yaml:"chain_id"`
 	ConsensusState  ConsensusState `json:"consensus_state" yaml:"consensus_state"`
 	TrustingPeriod  time.Duration  `json:"trusting_period" yaml:"trusting_period"`
 	UnbondingPeriod time.Duration  `json:"unbonding_period" yaml:"unbonding_period"`
@@ -32,11 +33,12 @@ type MsgCreateClient struct {
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, consensusState ConsensusState,
+	id string, chainID string, consensusState ConsensusState,
 	trustingPeriod, unbondingPeriod time.Duration, signer sdk.AccAddress,
 ) MsgCreateClient {
 	return MsgCreateClient{
 		ClientID:        id,
+		ChainID:         chainID,
 		ConsensusState:  consensusState,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
@@ -56,6 +58,9 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
+	if msg.ChainID == "" {
+		return sdkerrors.Wrap(ErrInvalidChainID, "cannot have empty chain-id")
+	}
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {
 		return err
 	}

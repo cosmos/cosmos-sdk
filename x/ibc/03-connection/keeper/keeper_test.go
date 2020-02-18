@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 		ValidatorSet: suite.valSet,
 	}
 
-	clientState, err := ibctmtypes.Initialize(clientID, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
 	suite.Require().NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.Require().NoError(err)
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
 	)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(
-		suite.ctx, ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
+		suite.ctx, ibctmtypes.NewClientState(clientID, clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

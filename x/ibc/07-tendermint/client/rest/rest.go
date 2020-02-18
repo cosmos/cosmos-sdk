@@ -26,6 +26,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string)
 type CreateClientReq struct {
 	BaseReq         rest.BaseReq              `json:"base_req" yaml:"base_req"`
 	ClientID        string                    `json:"client_id" yaml:"client_id"`
+	ChainID         string                    `json:"chain_id" yaml:"chain_id"`
 	ConsensusState  ibctmtypes.ConsensusState `json:"consensus_state" yaml:"consensus_state"`
 	TrustingPeriod  time.Duration             `json:"trusting_period" yaml:"trusting_period"`
 	UnbondingPeriod time.Duration             `json:"unbonding_period" yaml:"unbonding_period"`

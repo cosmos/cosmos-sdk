@@ -23,6 +23,8 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
+	// Chain ID for Tendermint chain, not guaranteed to be unique
+	ChainID string `json:"chain_id" yaml:"chain_id"`
 	// Duration of the period since the LastestTimestamp during which the
 	// submitted headers are valid for upgrade
 	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`
@@ -40,13 +42,13 @@ type ClientState struct {
 func InitializeFromMsg(
 	msg MsgCreateClient,
 ) (ClientState, error) {
-	return Initialize(msg.GetClientID(), msg.GetConsensusState(), msg.TrustingPeriod, msg.UnbondingPeriod)
+	return Initialize(msg.GetClientID(), msg.ChainID, msg.GetConsensusState(), msg.TrustingPeriod, msg.UnbondingPeriod)
 }
 
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, consensusState clientexported.ConsensusState, trustingPeriod, ubdPeriod time.Duration,
+	id string, chainID string, consensusState clientexported.ConsensusState, trustingPeriod, ubdPeriod time.Duration,
 ) (ClientState, error) {
 	tmConsState, ok := consensusState.(ConsensusState)
 	if !ok {
@@ -57,20 +59,24 @@ func Initialize(
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
+	if chainID == "" {
+		return ClientState{}, errors.New("client state cannot have empty chain id")
+	}
 
 	clientState := NewClientState(
-		id, trustingPeriod, ubdPeriod, latestHeight, tmConsState.Timestamp,
+		id, chainID, trustingPeriod, ubdPeriod, latestHeight, tmConsState.Timestamp,
 	)
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustingPeriod, ubdPeriod time.Duration,
+	id string, chainID string, trustingPeriod, ubdPeriod time.Duration,
 	latestHeight uint64, latestTimestamp time.Time,
 ) ClientState {
 	return ClientState{
 		ID:              id,
+		ChainID:         chainID,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
 		LatestHeight:    latestHeight,

@@ -40,12 +40,12 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				clientState, err := ibctmtypes.Initialize(tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(tc.clientID, tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
 				suite.Require().NoError(err, "err on client state initialization")
 				suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := ibctmtypes.Initialize(tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(tc.clientID, tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
 			if tc.expPass {
 				suite.Require().NoError(err, "errored on initialization")
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
 			if err != nil {
 				return err
 			}
@@ -181,7 +181,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
 				if err != nil {
 					return err
 				}
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
 				if err != nil {
 					return err
 				}
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState, err := ibctmtypes.Initialize(testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
 				if err != nil {
 					return err
 				}

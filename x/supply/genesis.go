@@ -2,7 +2,7 @@ package supply
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // InitGenesis sets supply information for genesis.

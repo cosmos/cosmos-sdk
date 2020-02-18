@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -32,6 +33,9 @@ const (
 
 	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 // define variables used for testing

@@ -7,6 +7,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -31,92 +32,86 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 
 	testCases := []struct {
 		name           string
-		clientState    tendermint.ClientState
-		consensusState tendermint.ConsensusState
-		evidence       tendermint.Evidence
+		clientState    ibctmtypes.ClientState
+		consensusState ibctmtypes.ConsensusState
+		evidence       ibctmtypes.Evidence
 		height         uint64
 		expPass        bool
 	}{
 		{
 			"valid misbehavior evidence",
-			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
-			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
-			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, suite.valSet, bothSigners),
-				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          chainID,
-				ClientID:         chainID,
+			ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
 			},
 			height,
 			true,
 		},
 		{
-			"height doesn't match provided evidence",
-			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
-			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
-			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, suite.valSet, bothSigners),
-				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          chainID,
-				ClientID:         chainID,
+			"valid misbehavior at height greater than last consensusState",
+			ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height-1, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
 			},
-			0,
-			false,
+			height - 1,
+			true,
 		},
 		{
-			"consensus state's valset hash different from evidence",
-			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
-			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: suite.valSet.Hash()},
-			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, suite.valSet, bothSigners),
-				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          chainID,
-				ClientID:         chainID,
+			"consensus state's valset hash different from evidence should still pass",
+			ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: suite.valSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
 			},
-			height,
-			false,
+			height - 1,
+			true,
 		},
 		{
 			"first valset has too much change",
-			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
-			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
-			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(chainID, height, altValSet, bothValSet, altSigners),
-				Header2:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          chainID,
-				ClientID:         chainID,
+			ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, bothValSet, altSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
 			},
 			height,
 			false,
 		},
 		{
 			"second valset has too much change",
-			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
-			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
-			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(chainID, height, bothValSet, bothValSet, bothSigners),
-				Header2:          tendermint.CreateTestHeader(chainID, height, altValSet, bothValSet, altSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          chainID,
-				ClientID:         chainID,
+			ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, bothValSet, altSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
 			},
 			height,
 			false,
 		},
 		{
 			"both valsets have too much change",
-			tendermint.ClientState{ID: chainID, LatestHeight: height, FrozenHeight: 0},
-			tendermint.ConsensusState{Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSetHash: bothValSet.Hash()},
-			tendermint.Evidence{
-				Header1:          tendermint.CreateTestHeader(chainID, height, altValSet, altValSet, altSigners),
-				Header2:          tendermint.CreateTestHeader(chainID, height, altValSet, bothValSet, altSigners),
-				FromValidatorSet: bothValSet,
-				ChainID:          chainID,
-				ClientID:         chainID,
+			ibctmtypes.NewClientState(chainID, chainID, trustingPeriod, ubdPeriod, height, suite.now),
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitment.NewRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.Evidence{
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, altValSet, altSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, bothValSet, altSigners),
+				ChainID:  chainID,
+				ClientID: chainID,
 			},
 			height,
 			false,
@@ -126,7 +121,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	for i, tc := range testCases {
 		tc := tc
 
-		clientState, err := tendermint.CheckMisbehaviourAndUpdateState(tc.clientState, tc.consensusState, tc.evidence, tc.height)
+		clientState, err := tendermint.CheckMisbehaviourAndUpdateState(tc.clientState, tc.consensusState, tc.evidence, tc.height, suite.now)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

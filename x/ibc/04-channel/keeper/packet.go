@@ -231,7 +231,7 @@ func (k Keeper) PacketExecuted(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketDataI,
+	acknowledgement []byte,
 	proof commitment.ProofI,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
@@ -250,7 +250,8 @@ func (k Keeper) AcknowledgePacket(
 	// NOTE: RecvPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	// packet's destination must be the channel's counterparty
+
+	// packet must have been sent to the channel's counterparty
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
@@ -286,18 +287,12 @@ func (k Keeper) AcknowledgePacket(
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement.GetBytes(),
+		packet.GetSequence(), acknowledgement,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
 
 	return packet, nil
-}
-
-// AcknowledgementExecuted deletes the commitment send from this chain after it receives the acknowlegement
-// CONTRACT: each acknowledgement handler function should call WriteAcknowledgement at the end of the execution
-func (k Keeper) AcknowledgementExecuted(ctx sdk.Context, packet exported.PacketI) {
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 }
 
 // CleanupPacket is called by a module to remove a received packet commitment

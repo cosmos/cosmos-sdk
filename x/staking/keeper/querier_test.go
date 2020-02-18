@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,22 +15,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	addrAcc1, addrAcc2 = Addrs[0], Addrs[1]
-	addrVal1, addrVal2 = sdk.ValAddress(Addrs[0]), sdk.ValAddress(Addrs[1])
-	pk1, pk2           = PKs[0], PKs[1]
-)
-
 func TestNewQuerier(t *testing.T) {
 	cdc := codec.New()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
+	_, addrAcc2 := addrs[0], addrs[1]
+	addrVal1, _ := sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
 
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
-		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
+		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
 		app.StakingKeeper.SetValidator(ctx, validators[i])
 		app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[i])
@@ -143,12 +141,15 @@ func TestQueryValidators(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
 
+	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
+	addrVal1, _ := sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
+
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	status := []sdk.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
 	var validators [3]types.Validator
 	for i, amt := range amts {
-		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
+		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
 		validators[i] = validators[i].UpdateStatus(status[i])
 	}

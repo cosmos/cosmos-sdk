@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -15,9 +16,6 @@ import (
 
 // regular expression to check string is lowercase alphabetic characters only
 var isAlphaLower = regexp.MustCompile(`^[a-z]+$`).MatchString
-
-// regular expression to check string is alphanumeric
-var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
@@ -75,7 +73,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 		for _, p := range pathArr {
 			// Each path element must either be valid identifier or alphanumeric
 			err := idValidator(p)
-			if err != nil && !isAlphaNumeric(p) {
+			if err != nil && !sdk.IsAlphaNumeric(p) {
 				return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains invalid identifier or non-alphanumeric path element: %s", path, p)
 			}
 		}
@@ -94,7 +92,7 @@ func DefaultPathValidator(path string) error {
 
 	for _, p := range pathArr {
 		// Each path element must be alphanumeric and non-blank
-		if strings.TrimSpace(p) == "" || !isAlphaNumeric(p) {
+		if strings.TrimSpace(p) == "" || !sdk.IsAlphaNumeric(p) {
 			return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains an invalid non-alphanumeric character: '%s'", path, p)
 		}
 	}

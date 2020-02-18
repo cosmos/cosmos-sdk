@@ -26,21 +26,3 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	)...)
 	return ics02ClientQueryCmd
 }
-
-// GetTxCmd returns the transaction commands for IBC clients
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics02ClientTxCmd := &cobra.Command{
-		Use:                        "client",
-		Short:                      "Client transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-
-	ics02ClientTxCmd.AddCommand(flags.PostCommands(
-		GetCmdCreateClient(cdc),
-		GetCmdUpdateClient(cdc),
-		GetCmdSubmitMisbehaviour(cdc),
-	)...)
-
-	return ics02ClientTxCmd
-}

@@ -19,7 +19,8 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/ante"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -76,14 +77,15 @@ func (suite *HandlerTestSuite) createClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: now2}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	consensusState := tendermint.ConsensusState{
+	consensusState := ibctmtypes.ConsensusState{
 		Timestamp:    suite.now,
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState, trustingPeriod, ubdPeriod)
-	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(suite.app.LastBlockHeight()), consensusState)
+	clientState, err := ibctmtypes.Initialize(testClient, testClient, consensusState, trustingPeriod, ubdPeriod)
+	suite.NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)
 }
 
@@ -98,13 +100,13 @@ func (suite *HandlerTestSuite) updateClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height, Time: suite.now}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	state := tendermint.ConsensusState{
+	state := ibctmtypes.ConsensusState{
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClient)
-	cs, _ := csi.(tendermint.ClientState)
+	cs, _ := csi.(ibctmtypes.ClientState)
 	cs.LatestHeight = uint64(height - 1)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }

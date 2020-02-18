@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -30,7 +30,6 @@ const (
 	clientType = clientexported.Tendermint
 	storeKey   = ibctypes.StoreKey
 	chainID    = "gaia"
-	testHeight = 10
 
 	testClientID1     = "testclientidone"
 	testConnectionID1 = "connectionidone"
@@ -45,6 +44,8 @@ const (
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
+var testHeight uint64
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -53,11 +54,12 @@ type KeeperTestSuite struct {
 	app            *simapp.SimApp
 	valSet         *tmtypes.ValidatorSet
 	consensusState clientexported.ConsensusState
-	header         tendermint.Header
+	header         ibctmtypes.Header
 	now            time.Time
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
+	testHeight = 1
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
@@ -69,8 +71,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	privVal := tmtypes.NewMockPV()
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.header = tendermint.CreateTestHeader(chainID, testHeight, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
-	suite.consensusState = tendermint.ConsensusState{
+	suite.header = ibctmtypes.CreateTestHeader(chainID, int64(testHeight), now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
+	suite.consensusState = ibctmtypes.ConsensusState{
+		Height:       testHeight,
 		Timestamp:    suite.now,
 		Root:         commitment.NewRoot(suite.header.AppHash),
 		ValidatorSet: suite.valSet,
@@ -112,14 +115,18 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	testHeight++
 
-	consensusState := tendermint.ConsensusState{
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       testHeight,
 		Timestamp:    suite.now,
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
+	suite.Require().NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.Require().NoError(err)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -142,8 +149,10 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	testHeight++
 
-	consensusState := tendermint.ConsensusState{
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       testHeight,
 		Timestamp:    suite.now,
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
@@ -153,7 +162,7 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
 	)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(
-		suite.ctx, tendermint.NewClientState(clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
+		suite.ctx, ibctmtypes.NewClientState(clientID, clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

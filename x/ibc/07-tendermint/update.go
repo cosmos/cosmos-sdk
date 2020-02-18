@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -20,24 +21,24 @@ import (
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func CheckValidityAndUpdateState(
-	clientState clientexported.ClientState, header clientexported.Header, chainID string,
+	clientState clientexported.ClientState, header clientexported.Header,
 	currentTimestamp time.Time,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	tmClientState, ok := clientState.(ClientState)
+	tmClientState, ok := clientState.(types.ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
 			clienttypes.ErrInvalidClientType, "light client is not from Tendermint",
 		)
 	}
 
-	tmHeader, ok := header.(Header)
+	tmHeader, ok := header.(types.Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader, "header is not from Tendermint",
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmHeader, chainID, currentTimestamp); err != nil {
+	if err := checkValidity(tmClientState, tmHeader, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
@@ -49,7 +50,7 @@ func CheckValidityAndUpdateState(
 //
 // CONTRACT: assumes header.Height > consensusState.Height
 func checkValidity(
-	clientState ClientState, header Header, chainID string, currentTimestamp time.Time,
+	clientState types.ClientState, header types.Header, currentTimestamp time.Time,
 ) error {
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(clientState.LatestTimestamp) >= clientState.TrustingPeriod {
@@ -82,7 +83,7 @@ func checkValidity(
 	}
 
 	// basic consistency check
-	if err := header.ValidateBasic(chainID); err != nil {
+	if err := header.ValidateBasic(clientState.ChainID); err != nil {
 		return err
 	}
 
@@ -90,9 +91,9 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState ClientState, header Header) (ClientState, ConsensusState) {
+func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
 	clientState.LatestHeight = header.GetHeight()
-	consensusState := ConsensusState{
+	consensusState := types.ConsensusState{
 		Timestamp:    header.Time,
 		Root:         commitment.NewRoot(header.AppHash),
 		ValidatorSet: header.ValidatorSet,

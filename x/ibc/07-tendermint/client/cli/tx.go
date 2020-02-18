@@ -20,15 +20,14 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
+		Use:   "create [client-id] [chain-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
 		Short: "create new client with a consensus state",
 		Long: strings.TrimSpace(fmt.Sprintf(`create new client with a specified identifier and consensus state:
 
@@ -43,11 +42,12 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
+			chainID := args[1]
 
-			var state exported.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &state); err != nil {
+			var state ibctmtypes.ConsensusState
+			if err := cdc.UnmarshalJSON([]byte(args[2]), &state); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(args[2])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
@@ -56,18 +56,18 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 				}
 			}
 
-			trustingPeriod, err := time.ParseDuration(args[2])
+			trustingPeriod, err := time.ParseDuration(args[3])
 			if err != nil {
 				return err
 			}
 
-			ubdPeriod, err := time.ParseDuration(args[3])
+			ubdPeriod, err := time.ParseDuration(args[4])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateClient(
-				clientID, state.ClientType().String(), state,
+			msg := ibctmtypes.NewMsgCreateClient(
+				clientID, chainID, state,
 				trustingPeriod, ubdPeriod, cliCtx.GetFromAddress(),
 			)
 
@@ -101,7 +101,7 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 
 			clientID := args[0]
 
-			var header exported.Header
+			var header ibctmtypes.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -113,7 +113,7 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
+			msg := ibctmtypes.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -2,22 +2,23 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
+//
+// CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
-	ctx sdk.Context, clientID string,
-	clientType exported.ClientType, consensusState exported.ConsensusState,
-	trustingPeriod, unbondingPeriod time.Duration,
+	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) (exported.ClientState, error) {
+	clientID := clientState.GetID()
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return nil, sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
@@ -28,13 +29,13 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
 	}
 
-	clientState, err := k.initialize(ctx, clientID, clientType, consensusState, trustingPeriod, unbondingPeriod)
-	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot create client with ID %s", clientID)
+	height := consensusState.GetHeight()
+	if consensusState != nil {
+		k.SetClientConsensusState(ctx, clientID, height, consensusState)
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.SetClientType(ctx, clientID, clientType)
+	k.SetClientType(ctx, clientID, clientState.ClientType())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -81,7 +82,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	switch clientType {
 	case exported.Tendermint:
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, header, ctx.ChainID(), ctx.BlockTime(),
+			clientState, header, ctx.BlockTime(),
 		)
 	default:
 		err = types.ErrInvalidClientType
@@ -117,16 +118,16 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrap(types.ErrClientNotFound, misbehaviour.GetClientID())
 	}
 
-	consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
+	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
 	if !found {
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}
 
 	var err error
 	switch e := misbehaviour.(type) {
-	case tendermint.Evidence:
+	case ibctmtypes.Evidence:
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()), ctx.BlockTime(),
+			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(),
 		)
 
 	default:

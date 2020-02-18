@@ -21,21 +21,6 @@ var (
 	_ exported.ModuleAccountI     = (*ModuleAccount)(nil)
 )
 
-func init() {
-	// Register the ModuleAccount type as a GenesisAccount so that when no
-	// concrete GenesisAccount types exist and **default** genesis state is used,
-	// the genesis state will serialize correctly.
-	authtypes.RegisterAccountTypeCodec(&ModuleAccount{}, "cosmos-sdk/ModuleAccount")
-}
-
-// ModuleAccount defines an account for modules that holds coins on a pool
-type ModuleAccount struct {
-	*authtypes.BaseAccount
-
-	Name        string   `json:"name" yaml:"name"`               // name of the module
-	Permissions []string `json:"permissions" yaml:"permissions"` // permissions of module account
-}
-
 // NewModuleAddress creates an AccAddress from the hash of the module's name
 func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
@@ -51,16 +36,14 @@ func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	}
 
 	return &ModuleAccount{
-		BaseAccount: &baseAcc,
+		BaseAccount: baseAcc,
 		Name:        name,
 		Permissions: permissions,
 	}
 }
 
 // NewModuleAccount creates a new ModuleAccount instance
-func NewModuleAccount(ba *authtypes.BaseAccount,
-	name string, permissions ...string) *ModuleAccount {
-
+func NewModuleAccount(ba *authtypes.BaseAccount, name string, permissions ...string) *ModuleAccount {
 	if err := validatePermissions(permissions...); err != nil {
 		panic(err)
 	}

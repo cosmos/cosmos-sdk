@@ -14,16 +14,10 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-<<<<<<< HEAD
 			types.EventTypeConnectionOpenInit,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
-=======
-			EventTypeConnectionOpenInit,
-			sdk.NewAttribute(AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
->>>>>>> efb28d7e4e69923fb79a494d00b151e4cb344df2
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -49,16 +43,10 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-<<<<<<< HEAD
 			types.EventTypeConnectionOpenTry,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
-=======
-			EventTypeConnectionOpenTry,
-			sdk.NewAttribute(AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
->>>>>>> efb28d7e4e69923fb79a494d00b151e4cb344df2
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

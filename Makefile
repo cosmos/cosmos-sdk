@@ -240,7 +240,7 @@ proto-check-breaking:
 
 # Origin
 # TODO: Update to the version of Tendermint that is being used in go.mod
-version_branch = v0.33.0
+version_branch = v0.33.1
 tendermint = https://raw.githubusercontent.com/tendermint/tendermint/$(version_branch)
 
 # Outputs
@@ -252,11 +252,8 @@ tmabci = third_party/proto/tendermint/abci/types/types.proto
 proto-update-tendermint:
 	@curl $(tendermint)/abci/types/types.proto > $(tmabci)
 	sed -i '' '8,9 s|github.com/tendermint|third_party/proto|g' $(tmabci)
-	sed -i '' '7 s|github.com/gogo/protobuf|third_party/proto|' $(tmabci)
 	@curl $(tendermint)/libs/kv/types.proto > $(tmkv)
-	sed -i '' 's|github.com/gogo/protobuf|third_party/proto|' $(tmkv)
 	@curl $(tendermint)/crypto/merkle/merkle.proto > $(tmmerkle)
-	sed -i '' '7 s|github.com/gogo/protobuf|third_party/proto|' $(tmmerkle)
 
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-tendermint

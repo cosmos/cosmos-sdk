@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
@@ -22,6 +23,8 @@ import (
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
+
+const FlagAllowCORS = "cors"
 
 // RestServer represents the Light Client Rest server
 type RestServer struct {
@@ -46,7 +49,7 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 }
 
 // Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint) (err error) {
+func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint, cors bool) (err error) {
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
@@ -68,7 +71,12 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 		),
 	)
 
-	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
+	var h http.Handler = rs.Mux
+	if cors {
+		h = handlers.CORS()(h)
+	}
+
+	return rpcserver.StartHTTPServer(rs.listener, h, rs.log, cfg)
 }
 
 // ServeCommand will start the application REST service as a blocking process. It
@@ -90,12 +98,14 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 				viper.GetInt(flags.FlagMaxOpenConnections),
 				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
 				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
+				viper.GetBool(FlagAllowCORS),
 			)
 
 			return err
 		},
 	}
 
+	cmd.Flags().Bool(FlagAllowCORS, false, "Allows CORS requests from all domains")
 	return flags.RegisterRestServerFlags(cmd)
 }
 

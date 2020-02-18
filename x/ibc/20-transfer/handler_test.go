@@ -164,7 +164,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	handler := transfer.NewHandler(suite.app.TransferKeeper)
 
-	msg := transfer.NewMsgTransfer(testPort1, testChannel1, testCoins, testAddr1, testAddr2, source)
+	msg := transfer.NewMsgTransfer(testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, source)
 	res, err := handler(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // channel does not exist
@@ -188,14 +188,14 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	// test when the source is false
 	source = false
 
-	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, source)
+	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2, source)
 	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins2)
 
 	res, err = handler(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // incorrect denom prefix
 
-	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, source)
+	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins1, testAddr1, testAddr2, source)
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins1)
 

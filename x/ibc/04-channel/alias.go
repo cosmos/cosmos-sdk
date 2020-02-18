@@ -12,10 +12,6 @@ import (
 )
 
 const (
-	AttributeKeySenderPort   = types.AttributeKeySenderPort
-	AttributeKeyReceiverPort = types.AttributeKeyReceiverPort
-	AttributeKeyChannelID    = types.AttributeKeyChannelID
-	AttributeKeySequence     = types.AttributeKeySequence
 	SubModuleName            = types.SubModuleName
 	StoreKey                 = types.StoreKey
 	RouterKey                = types.RouterKey

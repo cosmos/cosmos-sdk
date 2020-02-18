@@ -5,8 +5,55 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
+
+func (suite *KeeperTestSuite) createClient() {
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+
+	consensusState := ibctmtypes.ConsensusState{
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
+	}
+
+	clientState, err := ibctmtypes.Initialize(testClient, testClient, consensusState, trustingPeriod, ubdPeriod)
+	suite.NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
+	suite.NoError(err)
+}
+
+func (suite *KeeperTestSuite) updateClient() {
+	// always commit and begin a new block on updateClient
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+
+	state := ibctmtypes.ConsensusState{
+		Root: commitment.NewRoot(commitID.Hash),
+	}
+
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, 1, state)
+}
+
+func (suite *KeeperTestSuite) createConnection(state connectionexported.State) {
+	connection := connection.ConnectionEnd{
+		State:    state,
+		ClientID: testClient,
+		Counterparty: connection.Counterparty{
+			ClientID:     testClient,
+			ConnectionID: testConnection,
+			Prefix:       suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		},
+		Versions: connection.GetCompatibleVersions(),
+	}
+}
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	testCases := []struct {

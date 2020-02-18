@@ -4,7 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// Register concrete types on codec codec
+// RegisterCodec registers the necessary x/staking interfaces and concrete types
+// on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgCreateValidator{}, "cosmos-sdk/MsgCreateValidator", nil)
 	cdc.RegisterConcrete(MsgEditValidator{}, "cosmos-sdk/MsgEditValidator", nil)
@@ -13,12 +14,20 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate", nil)
 }
 
-// generic sealed codec to be used throughout this module
-var ModuleCdc *codec.Codec
+var (
+	amino = codec.New()
+
+	// ModuleCdc references the global x/staking module codec. Note, the codec should
+	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
+	// still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/staking and
+	// defined at the application level.
+	ModuleCdc = codec.NewHybridCodec(amino)
+)
 
 func init() {
-	ModuleCdc = codec.New()
-	RegisterCodec(ModuleCdc)
-	codec.RegisterCrypto(ModuleCdc)
-	ModuleCdc.Seal()
+	RegisterCodec(amino)
+	codec.RegisterCrypto(amino)
+	amino.Seal()
 }

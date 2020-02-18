@@ -1,4 +1,6 @@
-package keeper // noalias
+package keeper
+
+// noalias
 
 import (
 	"bytes"
@@ -8,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -17,6 +18,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -50,7 +52,7 @@ var (
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
+	return t, exp.MinEqual(got), "expected:\n%v\ngot:\n%v", exp, got
 }
 
 //_______________________________________________________________________________________
@@ -106,7 +108,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 			},
 		},
 	)
+
 	cdc := MakeTestCodec()
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
@@ -117,13 +121,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
 
 	accountKeeper := auth.NewAccountKeeper(
-		cdc,    // amino codec
-		keyAcc, // target store
+		appCodec,
+		keyAcc,
 		pk.Subspace(auth.DefaultParamspace),
-		auth.ProtoBaseAccount, // prototype
+		auth.ProtoBaseAccount,
 	)
 
 	bk := bank.NewBaseKeeper(
@@ -139,7 +143,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		types.NotBondedPoolName: {supply.Burner, supply.Staking},
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bk, maccPerms)
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -147,7 +151,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, bk, supplyKeeper, pk.Subspace(DefaultParamspace))
+	keeper := NewKeeper(types.ModuleCdc, keyStaking, bk, supplyKeeper, pk.Subspace(DefaultParamspace))
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts
@@ -273,12 +277,15 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 		}
 		return validator
 	}
+
 	cachectx, _ := ctx.CacheContext()
 	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
+
 	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddress)
 	if !found {
 		panic("validator expected but not found")
 	}
+
 	return validator
 }
 

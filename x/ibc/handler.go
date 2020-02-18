@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 )
@@ -14,11 +15,11 @@ func NewHandler(k Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		// IBC client msgs
-		case client.MsgCreateClient:
+		// IBC client msg interface types
+		case clientexported.MsgCreateClient:
 			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
 
-		case client.MsgUpdateClient:
+		case clientexported.MsgUpdateClient:
 			return &sdk.Result{}, nil
 
 		// IBC connection  msgs

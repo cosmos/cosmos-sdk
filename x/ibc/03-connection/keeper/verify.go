@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -20,7 +21,7 @@ func (k Keeper) VerifyClientConsensusState(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	return clientState.VerifyClientConsensusState(
@@ -40,7 +41,7 @@ func (k Keeper) VerifyConnectionState(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502
@@ -48,7 +49,10 @@ func (k Keeper) VerifyConnectionState(
 		ctx, connectionEnd.GetClientID(), height,
 	)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound,
+			"clientID (%s), height (%d)", connectionEnd.GetClientID(), height,
+		)
 	}
 
 	return clientState.VerifyConnectionState(
@@ -69,7 +73,7 @@ func (k Keeper) VerifyChannelState(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502
@@ -77,7 +81,10 @@ func (k Keeper) VerifyChannelState(
 		ctx, connection.GetClientID(), height,
 	)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound,
+			"clientID (%s), height (%d)", connection.GetClientID(), height,
+		)
 	}
 
 	return clientState.VerifyChannelState(
@@ -100,7 +107,7 @@ func (k Keeper) VerifyPacketCommitment(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502
@@ -108,7 +115,10 @@ func (k Keeper) VerifyPacketCommitment(
 		ctx, connection.GetClientID(), height,
 	)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound,
+			"clientID (%s), height (%d)", connection.GetClientID(), height,
+		)
 	}
 
 	return clientState.VerifyPacketCommitment(
@@ -131,7 +141,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502
@@ -139,7 +149,10 @@ func (k Keeper) VerifyPacketAcknowledgement(
 		ctx, connection.GetClientID(), height,
 	)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound,
+			"clientID (%s), height (%d)", connection.GetClientID(), height,
+		)
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
@@ -162,7 +175,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502
@@ -170,7 +183,10 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		ctx, connection.GetClientID(), height,
 	)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound,
+			"clientID (%s), height (%d)", connection.GetClientID(), height,
+		)
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
@@ -192,7 +208,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienttypes.ErrClientNotFound
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502
@@ -200,7 +216,10 @@ func (k Keeper) VerifyNextSequenceRecv(
 		ctx, connection.GetClientID(), height,
 	)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound,
+			"clientID (%s), height (%d)", connection.GetClientID(), height,
+		)
 	}
 
 	return clientState.VerifyNextSequenceRecv(

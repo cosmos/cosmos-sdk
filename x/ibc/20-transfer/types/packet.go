@@ -91,5 +91,5 @@ type AckDataTransfer struct{}
 
 // GetBytes implements channelexported.PacketAcknowledgementI
 func (ack AckDataTransfer) GetBytes() []byte {
-	return []byte("ok")
+	return []byte("fungible token transfer ack")
 }

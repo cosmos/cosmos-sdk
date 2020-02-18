@@ -48,12 +48,12 @@ func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.A
 		return nil, height, err
 	}
 
-	acc, err := ar.codec.UnmarshalAccountJSON(bz)
-	if err != nil {
+	var account exported.Account
+	if err := ar.codec.UnmarshalJSON(bz, &account); err != nil {
 		return nil, height, err
 	}
 
-	return acc, height, nil
+	return account, height, nil
 }
 
 // EnsureExists returns an error if no account exists for the given address else nil.

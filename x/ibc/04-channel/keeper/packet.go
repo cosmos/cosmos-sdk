@@ -232,7 +232,6 @@ func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	acknowledgement exported.PacketAcknowledgementI,
-	acknowledgement []byte,
 	proof commitment.ProofI,
 	proofHeight uint64,
 ) (exported.PacketI, error) {

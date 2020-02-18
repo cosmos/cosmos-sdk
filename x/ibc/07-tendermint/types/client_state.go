@@ -59,9 +59,6 @@ func Initialize(
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
-	if chainID == "" {
-		return ClientState{}, errors.New("client state cannot have empty chain id")
-	}
 
 	clientState := NewClientState(
 		id, chainID, trustingPeriod, ubdPeriod, latestHeight, tmConsState.Timestamp,

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,7 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
-	if msg.ChainID == "" {
+	if strings.TrimSpace(msg.ChainID) == "" {
 		return sdkerrors.Wrap(ErrInvalidChainID, "cannot have empty chain-id")
 	}
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {

@@ -12,7 +12,7 @@ import (
 
 func validateNoOp(_ interface{}) error { return nil }
 
-func TestManager(t *testing.T) {
+func TestKeeper(t *testing.T) {
 	kvs := []struct {
 		key   string
 		param int64

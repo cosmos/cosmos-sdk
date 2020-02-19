@@ -8,14 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper of the mint store
 type Keeper struct {
 	cdc              *codec.Codec
 	storeKey         sdk.StoreKey
-	paramSpace       params.Subspace
+	paramSpace       paramtypes.Subspace
 	sk               types.StakingKeeper
 	supplyKeeper     types.SupplyKeeper
 	feeCollectorName string
@@ -23,7 +23,7 @@ type Keeper struct {
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
+	cdc *codec.Codec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string,
 ) Keeper {
 

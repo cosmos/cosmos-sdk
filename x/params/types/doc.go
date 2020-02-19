@@ -10,4 +10,4 @@ respective parameters safely. Keeper can be treated as master permission for all
 Subspaces (via Keeper.GetSubspace), so should be passed to proper modules
 (ex. x/governance).
 */
-package subspace
+package types

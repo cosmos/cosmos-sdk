@@ -66,7 +66,7 @@ func checkValidity(
 		)
 	}
 
-	// assert header timestamp is past current timestamp
+	// assert header timestamp is past latest clientstate timestamp
 	if header.Time.Unix() <= clientState.GetLatestTimestamp().Unix() {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,

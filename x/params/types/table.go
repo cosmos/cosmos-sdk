@@ -1,4 +1,4 @@
-package subspace
+package types
 
 import (
 	"reflect"

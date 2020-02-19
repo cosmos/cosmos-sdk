@@ -1,4 +1,4 @@
-package types
+package proposal
 
 const (
 	// ModuleName defines the name of the module

@@ -9,8 +9,8 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // ProposalRESTHandler returns a ProposalRESTHandler that exposes the param
@@ -34,7 +34,7 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		content := params.NewParameterChangeProposal(req.Title, req.Description, req.Changes.ToParamChanges())
+		content := proposal.NewParameterChangeProposal(req.Title, req.Description, req.Changes.ToParamChanges())
 
 		msg := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
 		if err := msg.ValidateBasic(); err != nil {

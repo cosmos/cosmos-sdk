@@ -9,14 +9,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper of the distribution store
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           codec.Marshaler
-	paramSpace    params.Subspace
+	paramSpace    paramtypes.Subspace
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	supplyKeeper  types.SupplyKeeper
@@ -28,7 +28,7 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, paramSpace params.Subspace, bk types.BankKeeper,
+	cdc codec.Marshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string,
 	blacklistedAddrs map[string]bool,
 ) Keeper {

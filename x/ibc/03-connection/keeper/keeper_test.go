@@ -109,23 +109,15 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 
 func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
 	suite.now = suite.now.Add(time.Minute)
 
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 	testHeight++
 
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       testHeight,
-		Timestamp:    suite.now,
-		Root:         commitment.NewRoot(commitID.Hash),
-		ValidatorSet: suite.valSet,
-	}
-
-	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(clientID, trustingPeriod, ubdPeriod, suite.header)
 	suite.Require().NoError(err)
-	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, suite.header.ConsensusState())
 	suite.Require().NoError(err)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -161,7 +153,7 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
 	)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(
-		suite.ctx, ibctmtypes.NewClientState(clientID, clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
+		suite.ctx, ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, suite.header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

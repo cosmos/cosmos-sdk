@@ -45,6 +45,8 @@ const (
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
 
+	chainID = "gaia"
+
 	testHeight = 10
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
@@ -57,13 +59,16 @@ type KeeperTestSuite struct {
 	cdc    *codec.Codec
 	ctx    sdk.Context
 	app    *simapp.SimApp
+	header ibctmtypes.Header
 	valSet *tmtypes.ValidatorSet
+	now    time.Time
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
-
+	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	now2 := suite.now.Add(time.Duration(time.Hour * 1))
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
@@ -72,6 +77,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, int64(testHeight), now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
 }
 
 func (suite *KeeperTestSuite) TestSetChannel() {
@@ -210,16 +216,9 @@ func (suite *KeeperTestSuite) commitNBlocks(n int) {
 func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.commitNBlocks(1)
 
-	commitID := suite.app.LastCommitID()
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       testHeight,
-		Root:         commitment.NewRoot(commitID.Hash),
-		ValidatorSet: suite.valSet,
-	}
-
-	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(clientID, trustingPeriod, ubdPeriod, suite.header)
 	suite.Require().NoError(err)
-	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, suite.header.ConsensusState())
 	suite.Require().NoError(err)
 }
 
@@ -240,7 +239,6 @@ func (suite *KeeperTestSuite) updateClient() {
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClientID1, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClientID1)
 	cs, _ := csi.(ibctmtypes.ClientState)
-	cs.LatestHeight = uint64(height - 1)
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }
 

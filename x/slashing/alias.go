@@ -62,7 +62,6 @@ var (
 	NewValidatorSigningInfo                  = types.NewValidatorSigningInfo
 
 	// variable aliases
-	NewCodec                        = types.NewCodec
 	ModuleCdc                       = types.ModuleCdc
 	ValidatorSigningInfoKey         = types.ValidatorSigningInfoKey
 	ValidatorMissedBlockBitArrayKey = types.ValidatorMissedBlockBitArrayKey
@@ -80,7 +79,6 @@ var (
 type (
 	Hooks                   = keeper.Hooks
 	Keeper                  = keeper.Keeper
-	Codec                   = types.Codec
 	GenesisState            = types.GenesisState
 	MissedBlock             = types.MissedBlock
 	MsgUnjail               = types.MsgUnjail

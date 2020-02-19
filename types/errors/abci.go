@@ -154,9 +154,10 @@ func errIsNil(err error) bool {
 	return false
 }
 
-// Redact replaces an error that is not initialized as an ABCI Error with a
-// generic internal error instance. If the error is an ABCI Error, that error is
-// simply returned.
+// Redact replace all errors that do not initialize with a weave error with a
+// generic internal error instance. This function is supposed to hide
+// implementation details errors and leave only those that weave framework
+// originates.
 func Redact(err error) error {
 	if ErrPanic.Is(err) {
 		return errors.New(internalABCILog)

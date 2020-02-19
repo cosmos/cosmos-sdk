@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
+	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types/types"
 )
 
 // GetPlanCmd returns the query upgrade plan command

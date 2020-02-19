@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			tc.malleate()
 
 			err := suite.app.TransferKeeper.SendTransfer(
-				suite.ctx, tc.sourcePort, tc.sourceChannel, tc.amount, tc.sender, tc.receiver, tc.isSourceChain,
+				suite.ctx, tc.sourcePort, tc.sourceChannel, 100, tc.amount, tc.sender, tc.receiver, tc.isSourceChain,
 			)
 
 			if tc.expPass {

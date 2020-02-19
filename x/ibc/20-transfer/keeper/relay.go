@@ -14,6 +14,7 @@ func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
 	sourceChannel string,
+	destHeight uint64,
 	amount sdk.Coins,
 	sender,
 	receiver sdk.AccAddress,
@@ -46,7 +47,7 @@ func (k Keeper) SendTransfer(
 		coins = amount
 	}
 
-	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, coins, sender, receiver, isSourceChain)
+	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, coins, sender, receiver, isSourceChain)
 }
 
 // ReceiveTransfer handles transfer receiving logic
@@ -142,6 +143,7 @@ func (k Keeper) createOutgoingPacket(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string,
+	destHeight uint64,
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver sdk.AccAddress,
@@ -199,7 +201,7 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender, receiver, isSourceChain, uint64(ctx.BlockHeight())+DefaultPacketTimeout,
+		amount, sender, receiver, isSourceChain, destHeight+DefaultPacketTimeout,
 	)
 
 	packet := channel.NewPacket(

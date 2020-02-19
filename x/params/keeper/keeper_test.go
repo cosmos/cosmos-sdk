@@ -12,11 +12,6 @@ import (
 
 func validateNoOp(_ interface{}) error { return nil }
 
-/* TODO find a way to test params/manager without being dependant on this package.
-   // In summary this test would belong to params/manager/manager_test.go instead of here.
-   // The test now causes an import cycle due to the dependency.
-*/
-
 func TestManager(t *testing.T) {
 	kvs := []struct {
 		key   string

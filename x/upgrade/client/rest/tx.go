@@ -1,7 +1,7 @@
 package rest
 
 import (
-	types2 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"net/http"
 	"time"
 

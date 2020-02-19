@@ -251,7 +251,8 @@ tmabci = third_party/proto/tendermint/abci/types/types.proto
 # You *only* need to run this to rebuild protobufs from the tendermint source
 proto-update-tendermint:
 	@curl $(tendermint)/abci/types/types.proto > $(tmabci)
-	sed -i '' '8,9 s|github.com/tendermint|third_party/proto|g' $(tmabci)
+	sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(tmabci)
+	sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(tmabci)
 	@curl $(tendermint)/libs/kv/types.proto > $(tmkv)
 	@curl $(tendermint)/crypto/merkle/merkle.proto > $(tmmerkle)
 

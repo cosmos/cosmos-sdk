@@ -45,6 +45,8 @@ const (
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
 
+	chainID = "gaia"
+
 	testHeight = 1
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2

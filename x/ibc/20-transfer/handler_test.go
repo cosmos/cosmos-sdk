@@ -37,6 +37,8 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
+	chainID = "gaia"
+
 	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
 
@@ -61,6 +63,7 @@ type HandlerTestSuite struct {
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	valSet *tmtypes.ValidatorSet
+	header ibctmtypes.Header
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -75,7 +78,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
+	suite.header = ibctmtypes.CreateTestHeader(chainID, app.LastBlockHeight(), time.Now(), suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
 	suite.createClient()
 	suite.createConnection(connectionexported.OPEN)
 }
@@ -92,7 +95,7 @@ func (suite *HandlerTestSuite) createClient() {
 		ValidatorSet: suite.valSet,
 	}
 
-	clientState, err := ibctmtypes.Initialize(testClient, testClient, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, suite.header)
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)

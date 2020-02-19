@@ -16,6 +16,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	tmclienttypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -33,6 +34,8 @@ const (
 
 	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
+
+	chainID = "gaia"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -55,6 +58,7 @@ type KeeperTestSuite struct {
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	valSet *tmtypes.ValidatorSet
+	header tmclienttypes.Header
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -70,6 +74,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
+	suite.header = tmclienttypes.CreateTestHeader(chainID, app.LastBlockHeight(), time.Now(), suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
 	suite.createClient()
 	suite.createConnection(connectionexported.OPEN)
 }

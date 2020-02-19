@@ -4,7 +4,7 @@ package upgrade
 
 import (
 	 "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	types2 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (

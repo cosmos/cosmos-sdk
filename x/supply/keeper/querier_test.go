@@ -7,13 +7,16 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	keep "github.com/cosmos/cosmos-sdk/x/supply/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 func TestNewQuerier(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+
 	keeper := app.SupplyKeeper
 	cdc := app.Codec()
 
@@ -59,7 +62,9 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQuerySupply(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+
 	keeper := app.SupplyKeeper
 	cdc := app.Codec()
 

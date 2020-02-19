@@ -11,6 +11,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -78,7 +79,6 @@ var (
 	}
 )
 
-// Verify app interface at compile time
 var _ App = (*SimApp)(nil)
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
@@ -124,10 +124,10 @@ func NewSimApp(
 	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
 ) *SimApp {
 
-	appCodec := NewAppCodec()
-
 	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
-	cdc := MakeCodec()
+	cdc := simappcodec.MakeCodec(ModuleBasics)
+
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -150,7 +150,7 @@ func NewSimApp(
 	}
 
 	// init params keeper and subspaces
-	app.ParamsKeeper = params.NewKeeper(appCodec.Params, keys[params.StoreKey], tkeys[params.TStoreKey])
+	app.ParamsKeeper = params.NewKeeper(appCodec, keys[params.StoreKey], tkeys[params.TStoreKey])
 	app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
 	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
 	app.subspaces[staking.ModuleName] = app.ParamsKeeper.Subspace(staking.DefaultParamspace)
@@ -163,23 +163,23 @@ func NewSimApp(
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
-		app.cdc, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
+		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
 		app.cdc, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
 	)
 	app.SupplyKeeper = supply.NewKeeper(
-		app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
+		appCodec, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
 	)
 	stakingKeeper := staking.NewKeeper(
-		appCodec.Staking, keys[staking.StoreKey], app.BankKeeper, app.SupplyKeeper, app.subspaces[staking.ModuleName],
+		appCodec, keys[staking.StoreKey], app.BankKeeper, app.SupplyKeeper, app.subspaces[staking.ModuleName],
 	)
 	app.MintKeeper = mint.NewKeeper(
 		app.cdc, keys[mint.StoreKey], app.subspaces[mint.ModuleName], &stakingKeeper,
 		app.SupplyKeeper, auth.FeeCollectorName,
 	)
 	app.DistrKeeper = distr.NewKeeper(
-		appCodec.Distribution, keys[distr.StoreKey], app.subspaces[distr.ModuleName], app.BankKeeper, &stakingKeeper,
+		appCodec, keys[distr.StoreKey], app.subspaces[distr.ModuleName], app.BankKeeper, &stakingKeeper,
 		app.SupplyKeeper, auth.FeeCollectorName, app.ModuleAccountAddrs(),
 	)
 	app.SlashingKeeper = slashing.NewKeeper(
@@ -305,7 +305,7 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
-	return app.mm.InitGenesis(ctx, genesisState)
+	return app.mm.InitGenesis(ctx, app.cdc, genesisState)
 }
 
 // LoadHeight loads a particular height

@@ -137,7 +137,7 @@ func TestAppImportExport(t *testing.T) {
 
 	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
-	newApp.mm.InitGenesis(ctxB, genesisState)
+	newApp.mm.InitGenesis(ctxB, app.Codec(), genesisState)
 
 	fmt.Printf("comparing stores...\n")
 

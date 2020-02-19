@@ -7,8 +7,8 @@ import (
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding supply type
@@ -19,6 +19,7 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &supplyA)
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &supplyB)
 		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
+
 	default:
 		panic(fmt.Sprintf("invalid supply key %X", kvA.Key))
 	}

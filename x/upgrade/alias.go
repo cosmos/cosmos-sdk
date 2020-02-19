@@ -3,7 +3,7 @@ package upgrade
 // nolint
 
 import (
-	keeper2 "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	 "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	types2 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 

@@ -68,7 +68,7 @@ const (
 	FlagKeyringBackend     = "keyring-backend"
 	FlagPage               = "page"
 	FlagLimit              = "limit"
-	FlagUnsafeCORS         = "unsafe_cors"
+	FlagUnsafeCORS         = "unsafe-cors"
 )
 
 // LineBreak can be included in a command list to provide a blank line

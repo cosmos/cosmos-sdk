@@ -202,215 +202,218 @@ func TestQueryValidators(t *testing.T) {
 	require.Equal(t, queriedValidators[0], validator)
 }
 
-//func TestQueryDelegation(t *testing.T) {
-//	cdc := codec.New()
-//	app := simapp.Setup(false)
-//	ctx := app.BaseApp.NewContext(false, abci.Header{})
-//	params := app.StakingKeeper.GetParams(ctx)
-//	querier := staking.NewQuerier(app.StakingKeeper)
-//
-//	// Create Validators and Delegation
-//	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
-//	app.StakingKeeper.SetValidator(ctx, val1)
-//	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-//
-//	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
-//	app.StakingKeeper.SetValidator(ctx, val2)
-//	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
-//
-//	delTokens := sdk.TokensFromConsensusPower(20)
-//	app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
-//
-//	// apply TM updates
-//	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-//	// Query Delegator bonded validators
-//	queryParams := types.NewQueryDelegatorParams(addrAcc2)
-//	bz, errRes := cdc.MarshalJSON(queryParams)
-//	require.NoError(t, errRes)
-//
-//	query := abci.RequestQuery{
-//		Path: "/custom/staking/delegatorValidators",
-//		Data: bz,
-//	}
-//
-//	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrAcc2, params.MaxValidators)
-//
-//	res, err := querier(ctx, []string{types.QueryDelegatorValidators}, query)
-//	require.NoError(t, err)
-//
-//	var validatorsResp []types.Validator
-//	errRes = cdc.UnmarshalJSON(res, &validatorsResp)
-//	require.NoError(t, errRes)
-//
-//	require.Equal(t, len(delValidators), len(validatorsResp))
-//	require.ElementsMatch(t, delValidators, validatorsResp)
-//
-//	// error unknown request
-//	query.Data = bz[:len(bz)-1]
-//
-//	res, err = querier(ctx, []string{types.QueryDelegatorValidators}, query)
-//	require.Error(t, err)
-//
-//	// Query bonded validator
-//	queryBondParams := types.NewQueryBondsParams(addrAcc2, addrVal1)
-//	bz, errRes = cdc.MarshalJSON(queryBondParams)
-//	require.NoError(t, errRes)
-//
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/delegatorValidator",
-//		Data: bz,
-//	}
-//
-//	res, err = querier(ctx, []string{types.QueryDelegatorValidator}, query)
-//	require.NoError(t, err)
-//
-//	var validator types.Validator
-//	errRes = cdc.UnmarshalJSON(res, &validator)
-//	require.NoError(t, errRes)
-//
-//	require.Equal(t, delValidators[0], validator)
-//
-//	// error unknown request
-//	query.Data = bz[:len(bz)-1]
-//
-//	res, err = querier(ctx, []string{types.QueryDelegatorValidator}, query)
-//	require.Error(t, err)
-//
-//	// Query delegation
-//
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/delegation",
-//		Data: bz,
-//	}
-//
-//	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
-//	require.True(t, found)
-//
-//	res, err = querier(ctx, []string{types.QueryDelegation}, query)
-//	require.NoError(t, err)
-//
-//	var delegationRes types.DelegationResponse
-//	errRes = cdc.UnmarshalJSON(res, &delegationRes)
-//	require.NoError(t, errRes)
-//
-//	require.Equal(t, delegation.ValidatorAddress, delegationRes.ValidatorAddress)
-//	require.Equal(t, delegation.DelegatorAddress, delegationRes.DelegatorAddress)
-//	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationRes.Balance)
-//
-//	// Query Delegator Delegations
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/delegatorDelegations",
-//		Data: bz,
-//	}
-//
-//	res, err = querier(ctx, []string{types.QueryDelegatorDelegations}, query)
-//	require.NoError(t, err)
-//
-//	var delegatorDelegations types.DelegationResponses
-//	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
-//	require.NoError(t, errRes)
-//	require.Len(t, delegatorDelegations, 1)
-//	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].ValidatorAddress)
-//	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].DelegatorAddress)
-//	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegations[0].Balance)
-//
-//	// error unknown request
-//	query.Data = bz[:len(bz)-1]
-//
-//	res, err = querier(ctx, []string{types.QueryDelegation}, query)
-//	require.Error(t, err)
-//
-//	// Query validator delegations
-//
-//	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1))
-//	require.NoError(t, errRes)
-//
-//	query = abci.RequestQuery{
-//		Path: "custom/staking/validatorDelegations",
-//		Data: bz,
-//	}
-//
-//	res, err = querier(ctx, []string{types.QueryValidatorDelegations}, query)
-//	require.NoError(t, err)
-//
-//	var delegationsRes types.DelegationResponses
-//	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
-//	require.NoError(t, errRes)
-//	require.Len(t, delegatorDelegations, 1)
-//	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].ValidatorAddress)
-//	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].DelegatorAddress)
-//	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes[0].Balance)
-//
-//	// Query unbonging delegation
-//	unbondingTokens := sdk.TokensFromConsensusPower(10)
-//	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
-//	require.NoError(t, err)
-//
-//	queryBondParams = types.NewQueryBondsParams(addrAcc2, addrVal1)
-//	bz, errRes = cdc.MarshalJSON(queryBondParams)
-//	require.NoError(t, errRes)
-//
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/unbondingDelegation",
-//		Data: bz,
-//	}
-//
-//	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
-//	require.True(t, found)
-//
-//	res, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
-//	require.NoError(t, err)
-//
-//	var unbondRes types.UnbondingDelegation
-//	errRes = cdc.UnmarshalJSON(res, &unbondRes)
-//	require.NoError(t, errRes)
-//
-//	require.Equal(t, unbond, unbondRes)
-//
-//	// error unknown request
-//	query.Data = bz[:len(bz)-1]
-//
-//	_, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
-//	require.Error(t, err)
-//
-//	// Query Delegator Delegations
-//
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/delegatorUnbondingDelegations",
-//		Data: bz,
-//	}
-//
-//	res, err = querier(ctx, []string{types.QueryDelegatorUnbondingDelegations}, query)
-//	require.NoError(t, err)
-//
-//	var delegatorUbds []types.UnbondingDelegation
-//	errRes = cdc.UnmarshalJSON(res, &delegatorUbds)
-//	require.NoError(t, errRes)
-//	require.Equal(t, unbond, delegatorUbds[0])
-//
-//	// error unknown request
-//	query.Data = bz[:len(bz)-1]
-//
-//	_, err = querier(ctx, []string{types.QueryDelegatorUnbondingDelegations}, query)
-//	require.Error(t, err)
-//
-//	// Query redelegation
-//	redelegationTokens := sdk.TokensFromConsensusPower(10)
-//	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
-//		val2.OperatorAddress, redelegationTokens.ToDec())
-//	require.NoError(t, err)
-//	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
-//	require.True(t, found)
-//
-//	bz, errRes = cdc.MarshalJSON(types.NewQueryRedelegationParams(addrAcc2, val1.OperatorAddress, val2.OperatorAddress))
-//	require.NoError(t, errRes)
-//
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/redelegations",
-//		Data: bz,
-//	}
-//
+func TestQueryDelegation(t *testing.T) {
+	cdc := codec.New()
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	params := app.StakingKeeper.GetParams(ctx)
+	querier := staking.NewQuerier(app.StakingKeeper)
+
+	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
+
+
+	// Create Validators and Delegation
+	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+
+	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
+	app.StakingKeeper.SetValidator(ctx, val2)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
+
+	delTokens := sdk.TokensFromConsensusPower(20)
+	app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// Query Delegator bonded validators
+	queryParams := types.NewQueryDelegatorParams(addrAcc2)
+	bz, errRes := cdc.MarshalJSON(queryParams)
+	require.NoError(t, errRes)
+
+	query := abci.RequestQuery{
+		Path: "/custom/staking/delegatorValidators",
+		Data: bz,
+	}
+
+	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrAcc2, params.MaxValidators)
+
+	res, err := querier(ctx, []string{types.QueryDelegatorValidators}, query)
+	require.NoError(t, err)
+
+	var validatorsResp []types.Validator
+	errRes = cdc.UnmarshalJSON(res, &validatorsResp)
+	require.NoError(t, errRes)
+
+	require.Equal(t, len(delValidators), len(validatorsResp))
+	require.ElementsMatch(t, delValidators, validatorsResp)
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	res, err = querier(ctx, []string{types.QueryDelegatorValidators}, query)
+	require.Error(t, err)
+
+	// Query bonded validator
+	queryBondParams := types.NewQueryBondsParams(addrAcc2, addrVal1)
+	bz, errRes = cdc.MarshalJSON(queryBondParams)
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "/custom/staking/delegatorValidator",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryDelegatorValidator}, query)
+	require.NoError(t, err)
+
+	var validator types.Validator
+	errRes = cdc.UnmarshalJSON(res, &validator)
+	require.NoError(t, errRes)
+
+	require.Equal(t, delValidators[0], validator)
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	res, err = querier(ctx, []string{types.QueryDelegatorValidator}, query)
+	require.Error(t, err)
+
+	// Query delegation
+
+	query = abci.RequestQuery{
+		Path: "/custom/staking/delegation",
+		Data: bz,
+	}
+
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
+	require.True(t, found)
+
+	res, err = querier(ctx, []string{types.QueryDelegation}, query)
+	require.NoError(t, err)
+
+	var delegationRes types.DelegationResponse
+	errRes = cdc.UnmarshalJSON(res, &delegationRes)
+	require.NoError(t, errRes)
+
+	require.Equal(t, delegation.ValidatorAddress, delegationRes.ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationRes.DelegatorAddress)
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationRes.Balance)
+
+	// Query Delegator Delegations
+	query = abci.RequestQuery{
+		Path: "/custom/staking/delegatorDelegations",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryDelegatorDelegations}, query)
+	require.NoError(t, err)
+
+	var delegatorDelegations types.DelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
+	require.NoError(t, errRes)
+	require.Len(t, delegatorDelegations, 1)
+	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].DelegatorAddress)
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegations[0].Balance)
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	res, err = querier(ctx, []string{types.QueryDelegation}, query)
+	require.Error(t, err)
+
+	// Query validator delegations
+
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1))
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "custom/staking/validatorDelegations",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryValidatorDelegations}, query)
+	require.NoError(t, err)
+
+	var delegationsRes types.DelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
+	require.NoError(t, errRes)
+	require.Len(t, delegatorDelegations, 1)
+	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].ValidatorAddress)
+	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].DelegatorAddress)
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes[0].Balance)
+
+	// Query unbonging delegation
+	unbondingTokens := sdk.TokensFromConsensusPower(10)
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
+	require.NoError(t, err)
+
+	queryBondParams = types.NewQueryBondsParams(addrAcc2, addrVal1)
+	bz, errRes = cdc.MarshalJSON(queryBondParams)
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "/custom/staking/unbondingDelegation",
+		Data: bz,
+	}
+
+	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
+	require.True(t, found)
+
+	res, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
+	require.NoError(t, err)
+
+	var unbondRes types.UnbondingDelegation
+	errRes = cdc.UnmarshalJSON(res, &unbondRes)
+	require.NoError(t, errRes)
+
+	require.Equal(t, unbond, unbondRes)
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
+	require.Error(t, err)
+
+	// Query Delegator Delegations
+
+	query = abci.RequestQuery{
+		Path: "/custom/staking/delegatorUnbondingDelegations",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryDelegatorUnbondingDelegations}, query)
+	require.NoError(t, err)
+
+	var delegatorUbds []types.UnbondingDelegation
+	errRes = cdc.UnmarshalJSON(res, &delegatorUbds)
+	require.NoError(t, errRes)
+	require.Equal(t, unbond, delegatorUbds[0])
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = querier(ctx, []string{types.QueryDelegatorUnbondingDelegations}, query)
+	require.Error(t, err)
+
+	// Query redelegation
+	redelegationTokens := sdk.TokensFromConsensusPower(10)
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
+		val2.OperatorAddress, redelegationTokens.ToDec())
+	require.NoError(t, err)
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	require.True(t, found)
+
+	bz, errRes = cdc.MarshalJSON(types.NewQueryRedelegationParams(addrAcc2, val1.OperatorAddress, val2.OperatorAddress))
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "/custom/staking/redelegations",
+		Data: bz,
+	}
+
 //	res, err = querier(ctx, []string{types.QueryRedelegations}, query)
 //	require.NoError(t, err)
 //

@@ -59,6 +59,7 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
 		buffer.Reset()
 	}
+
 	return publicKeys
 }
 
@@ -75,11 +76,11 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 
 // for incode address generation
 func CreateTestAddr(addr string, bech string) sdk.AccAddress {
-
 	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
 		panic(err)
 	}
+
 	bechexpected := res.String()
 	if bech != bechexpected {
 		panic("Bech encoding doesn't match reference")

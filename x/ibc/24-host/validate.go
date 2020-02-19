@@ -1,7 +1,6 @@
 package host
 
 import (
-	"regexp"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +12,6 @@ import (
 // This file defines ValidateFn to validate identifier and path strings
 // The spec for ICS 024 can be located here:
 // https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements
-
-// regular expression to check string is lowercase alphabetic characters only
-var isAlphaLower = regexp.MustCompile(`^[a-z]+$`).MatchString
 
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
@@ -30,7 +26,7 @@ func defaultIdentifierValidator(id string, min, max int) error {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}
 	// valid id must contain only lower alphabetic characters
-	if !isAlphaLower(id) {
+	if !sdk.IsAlphaLower(id) {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s must contain only lowercase alphabetic characters", id)
 	}
 	return nil

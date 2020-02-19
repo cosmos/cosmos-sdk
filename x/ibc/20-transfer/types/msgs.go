@@ -7,7 +7,7 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// MsgTransfer is for transfering packets between ICS20 enabled chains
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
 // See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type MsgTransfer struct {
 	SourcePort    string         `json:"source_port" yaml:"source_port"`       // the port on which the packet will be sent

@@ -8,7 +8,6 @@ import (
 )
 
 // NewHandler returns sdk.Handler for IBC token transfer module messages
-// See NewHandler function in ADR15: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		switch msg := msg.(type) {
@@ -64,7 +63,8 @@ func handlePacketDataTransfer(
 	if err := k.ReceiveTransfer(
 		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,
 	); err != nil {
-		// How do we want to handle this case? Maybe we should be more lenient, it's safe to leave the channel open I think.
+		// NOTE (cwgoes): How do we want to handle this case? Maybe we should be more lenient,
+		// it's safe to leave the channel open I think.
 
 		// TODO: handle packet receipt that due to an error (specify)
 		// the receiving chain couldn't process the transfer

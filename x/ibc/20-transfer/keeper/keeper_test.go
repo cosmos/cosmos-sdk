@@ -18,7 +18,7 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -79,21 +79,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.createConnection(connectionexported.OPEN)
 }
 
-func (suite *KeeperTestSuite) TestGetTransferAccount() {
-	expectedMaccName := types.GetModuleAccountName()
-	expectedMaccAddr := sdk.AccAddress(crypto.AddressHash([]byte(expectedMaccName)))
-
-	macc := suite.app.TransferKeeper.GetTransferAccount(suite.ctx)
-
-	suite.NotNil(macc)
-	suite.Equal(expectedMaccName, macc.GetName())
-	suite.Equal(expectedMaccAddr, macc.GetAddress())
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
 func (suite *KeeperTestSuite) createClient() {
 	suite.app.Commit()
 	commitID := suite.app.LastCommitID()
@@ -101,15 +86,18 @@ func (suite *KeeperTestSuite) createClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	consensusState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSetHash: suite.valSet.Hash(),
+	consensusState := ibctmtypes.ConsensusState{
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
 	}
 
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
+	clientState, err := ibctmtypes.Initialize(testClient, testClient, consensusState, trustingPeriod, ubdPeriod)
+	suite.NoError(err)
+	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)
 }
 
+// nolint: unused
 func (suite *KeeperTestSuite) updateClient() {
 	// always commit and begin a new block on updateClient
 	suite.app.Commit()
@@ -118,7 +106,7 @@ func (suite *KeeperTestSuite) updateClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	state := tendermint.ConsensusState{
+	state := ibctmtypes.ConsensusState{
 		Root: commitment.NewRoot(commitID.Hash),
 	}
 
@@ -168,4 +156,19 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, he
 	}
 
 	return
+}
+
+func (suite *KeeperTestSuite) TestGetTransferAccount() {
+	expectedMaccName := types.GetModuleAccountName()
+	expectedMaccAddr := sdk.AccAddress(crypto.AddressHash([]byte(expectedMaccName)))
+
+	macc := suite.app.TransferKeeper.GetTransferAccount(suite.ctx)
+
+	suite.NotNil(macc)
+	suite.Equal(expectedMaccName, macc.GetName())
+	suite.Equal(expectedMaccAddr, macc.GetAddress())
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

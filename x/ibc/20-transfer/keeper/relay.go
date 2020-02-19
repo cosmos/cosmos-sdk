@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,7 +153,6 @@ func (k Keeper) createOutgoingPacket(
 
 		// construct receiving denominations, check correctness
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
-		fmt.Println(prefix)
 		coins := make(sdk.Coins, len(amount))
 		for i, coin := range amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
@@ -166,13 +164,12 @@ func (k Keeper) createOutgoingPacket(
 			coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 		}
 
-		// escrow source tokens (assumed to fail if balance insufficient)
+		// escrow source tokens. It fails if balance insufficient.
 		if err := k.bankKeeper.SendCoins(
 			ctx, sender, escrowAddress, coins,
 		); err != nil {
 			return err
 		}
-
 	} else {
 		// burn vouchers from the sender's balance if the source is from another chain
 		// construct receiving denomination, check correctness

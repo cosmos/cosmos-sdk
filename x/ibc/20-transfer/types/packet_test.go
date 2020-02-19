@@ -13,7 +13,8 @@ func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
 		NewFungibleTokenPacketData(invalidDenomCoins, addr1, addr2, true, 100), // invalid amount
 		NewFungibleTokenPacketData(negativeCoins, addr1, addr2, false, 100),    // amount contains negative coin
 		NewFungibleTokenPacketData(coins, emptyAddr, addr2, false, 100),        // missing sender address
-		NewFungibleTokenPacketData(coins, addr1, emptyAddr, false, 100),        // missing recipient address
+		NewFungibleTokenPacketData(coins, addr1, emptyAddr, false, 100),
+		NewFungibleTokenPacketData(coins, addr1, emptyAddr, false, 0), // missing recipient address
 	}
 
 	testCases := []struct {
@@ -26,6 +27,7 @@ func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
 		{testPacketDataTransfer[2], false, "amount contains negative coin"},
 		{testPacketDataTransfer[3], false, "missing sender address"},
 		{testPacketDataTransfer[4], false, "missing recipient address"},
+		{testPacketDataTransfer[5], false, "timeout is 0"},
 	}
 
 	for i, tc := range testCases {

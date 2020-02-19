@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	ptypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
@@ -27,7 +27,7 @@ type testInput struct {
 }
 
 var (
-	_ ptypes.ParamSet = (*testParams)(nil)
+	_ types.ParamSet = (*testParams)(nil)
 
 	keyMaxValidators = "MaxValidators"
 	keySlashingRate  = "SlashingRate"
@@ -44,10 +44,10 @@ type testParams struct {
 	SlashingRate  testParamsSlashingRate `json:"slashing_rate" yaml:"slashing_rate"`
 }
 
-func (tp *testParams) ParamSetPairs() ptypes.ParamSetPairs {
-	return ptypes.ParamSetPairs{
-		ptypes.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
-		ptypes.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
+func (tp *testParams) ParamSetPairs() types.ParamSetPairs {
+	return types.ParamSetPairs{
+		types.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
+		types.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
 	}
 }
 
@@ -84,7 +84,7 @@ func newTestInput(t *testing.T) testInput {
 func TestProposalHandlerPassed(t *testing.T) {
 	input := newTestInput(t)
 	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		ptypes.NewKeyTable().RegisterParamSet(&testParams{}),
+		types.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
 	tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "1"))
@@ -99,7 +99,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 func TestProposalHandlerFailed(t *testing.T) {
 	input := newTestInput(t)
 	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		ptypes.NewKeyTable().RegisterParamSet(&testParams{}),
+		types.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
 	tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
@@ -112,7 +112,7 @@ func TestProposalHandlerFailed(t *testing.T) {
 func TestProposalHandlerUpdateOmitempty(t *testing.T) {
 	input := newTestInput(t)
 	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		ptypes.NewKeyTable().RegisterParamSet(&testParams{}),
+		types.NewKeyTable().RegisterParamSet(&testParams{}),
 	)
 
 	hdlr := params.NewParamChangeProposalHandler(input.keeper)

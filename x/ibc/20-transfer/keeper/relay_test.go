@@ -99,20 +99,20 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	// test the situation where the source is true
 	isSourceChain := true
 
-	err := suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
+	err := suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // channel does not exist
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
+	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // next send sequence not found
 
 	nextSeqSend := uint64(1)
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, nextSeqSend)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
+	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // sender has insufficient coins
 
 	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testCoins)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
+	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, isSourceChain)
 	suite.NoError(err) // successfully executed
 
 	senderCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, testAddr1)
@@ -132,12 +132,12 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	isSourceChain = false
 
 	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins2)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, isSourceChain)
+	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2, isSourceChain)
 	suite.Error(err) // incorrect denom prefix
 
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins1)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, isSourceChain)
+	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, 10, testPrefixedCoins1, testAddr1, testAddr2, isSourceChain)
 	suite.NoError(err) // successfully executed
 
 	senderCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, testAddr1)

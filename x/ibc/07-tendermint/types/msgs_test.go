@@ -1,61 +1,43 @@
 package types_test
 
 import (
-	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-func TestMsgCreateClientValidateBasic(t *testing.T) {
-	validator := tmtypes.NewValidator(tmtypes.NewMockPV().GetPubKey(), 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	cs := ibctmtypes.ConsensusState{
-		Height:       height,
-		Timestamp:    now,
-		Root:         commitment.NewRoot([]byte("root")),
-		ValidatorSet: valSet,
-	}
+func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
-	chainID := "gaia"
 
 	cases := []struct {
 		msg     ibctmtypes.MsgCreateClient
 		expPass bool
 		errMsg  string
 	}{
-		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, chainID, cs, trustingPeriod, ubdPeriod, signer), true, "success msg should pass"},
-		{ibctmtypes.NewMsgCreateClient("BADCHAIN", chainID, cs, trustingPeriod, ubdPeriod, signer), false, "invalid client id passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", chainID, cs, trustingPeriod, ubdPeriod, signer), false, "unregistered client type passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", chainID, ibctmtypes.ConsensusState{}, trustingPeriod, ubdPeriod, signer), false, "invalid Consensus State in msg passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", chainID, cs, 0, ubdPeriod, signer), false, "zero trusting period passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", chainID, cs, trustingPeriod, 0, signer), false, "zero unbonding period passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", chainID, cs, trustingPeriod, ubdPeriod, nil), false, "Empty address passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", "", cs, trustingPeriod, ubdPeriod, nil), false, "Empty chain ID"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, trustingPeriod, ubdPeriod, signer), true, "success msg should pass"},
+		{ibctmtypes.NewMsgCreateClient("BADCHAIN", suite.header, trustingPeriod, ubdPeriod, signer), false, "invalid client id passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, signer), false, "unregistered client type passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, signer), false, "invalid Consensus State in msg passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, 0, ubdPeriod, signer), false, "zero trusting period passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, 0, signer), false, "zero unbonding period passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, nil), false, "Empty address passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, nil), false, "Empty chain ID"},
 	}
 
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.NoError(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %v", i, err)
 		} else {
-			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
 
-func TestMsgUpdateClient(t *testing.T) {
+func (suite *TendermintTestSuite) TestMsgUpdateClient() {
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
 
@@ -72,9 +54,9 @@ func TestMsgUpdateClient(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.NoError(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %v", i, err)
 		} else {
-			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }

@@ -23,8 +23,6 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
-	// Chain ID for Tendermint chain, not guaranteed to be unique
-	ChainID string `json:"chain_id" yaml:"chain_id"`
 	// Duration of the period since the LastestTimestamp during which the
 	// submitted headers are valid for upgrade
 	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`

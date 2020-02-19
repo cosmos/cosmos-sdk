@@ -87,7 +87,6 @@ serialization instead of Amino. The exact codec used is `codec.HybridCodec` whic
 for JSON encoding.
   * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
   provided is specified by `ModuleCdc`.
-* (distr) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffer for state
 * (x/distribution) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffers for state
 serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
 for JSON encoding.

@@ -9,22 +9,20 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
 }
 
-type Codec struct {
-	codec.Marshaler
-	// Keep reference to the amino codec to allow backwards compatibility along
-	// with type, and interface registration.
+var (
+	amino = codec.New()
 
-	amino *codec.Codec
-}
-
-func NewCodec(amino *codec.Codec) *Codec {
-	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
-}
-
-var ModuleCdc *Codec
+	// ModuleCdc references the global x/slashing module codec. Note, the codec
+	// should ONLY be used in certain instances of tests and for JSON encoding as Amino
+	// is still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/slashing and
+	// defined at the application level.
+	ModuleCdc = codec.NewHybridCodec(amino)
+)
 
 func init() {
-	ModuleCdc = NewCodec(codec.New())
-	RegisterCodec(ModuleCdc.amino)
-	ModuleCdc.amino.Seal()
+	RegisterCodec(amino)
+	codec.RegisterCrypto(amino)
+	amino.Seal()
 }

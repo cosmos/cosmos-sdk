@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"time"
 
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -15,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types/types"
 )
 
 const (
@@ -65,8 +65,8 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 		return nil, err
 	}
 
-	plan := upgrade.Plan{Name: name, Time: upgradeTime, Height: height, Info: info}
-	content := upgrade.NewSoftwareUpgradeProposal(title, description, plan)
+	plan := types.Plan{Name: name, Time: upgradeTime, Height: height, Info: info}
+	content := types.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
 }
 
@@ -151,7 +151,7 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			content := upgrade.NewCancelSoftwareUpgradeProposal(title, description)
+			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
 			msg := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

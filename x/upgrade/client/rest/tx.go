@@ -1,6 +1,7 @@
 package rest
 
 import (
+	types2 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"net/http"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types/types"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
@@ -76,8 +76,8 @@ func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 		}
 
-		plan := types.Plan{Name: req.UpgradeName, Time: t, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
-		content := types.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
+		plan := types2.Plan{Name: req.UpgradeName, Time: t, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
+		content := types2.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
 		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -107,7 +107,7 @@ func cancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		content := types.NewCancelSoftwareUpgradeProposal(req.Title, req.Description)
+		content := types2.NewCancelSoftwareUpgradeProposal(req.Title, req.Description)
 		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

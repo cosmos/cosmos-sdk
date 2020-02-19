@@ -4,7 +4,7 @@ package cosmos_sdk.x.upgrade.v1;
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/params/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.goproto_getters_all) = false;
 

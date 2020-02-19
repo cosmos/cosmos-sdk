@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"encoding/binary"
+	types2 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types/types"
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
@@ -15,14 +15,14 @@ func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 
-		case types.QueryCurrent:
+		case types2.QueryCurrent:
 			return queryCurrent(ctx, req, k)
 
-		case types.QueryApplied:
+		case types2.QueryApplied:
 			return queryApplied(ctx, req, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types2.ModuleName, path[0])
 		}
 	}
 }
@@ -42,7 +42,7 @@ func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 }
 
 func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAppliedParams
+	var params types2.QueryAppliedParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {

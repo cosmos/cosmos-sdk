@@ -3,7 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
-	types2 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -17,7 +17,7 @@ type Keeper struct {
 	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
 	cdc                codec.Marshaler
-	upgradeHandlers    map[string]types2.UpgradeHandler
+	upgradeHandlers    map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
@@ -26,21 +26,21 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
-		upgradeHandlers:    map[string]types2.UpgradeHandler{},
+		upgradeHandlers:    map[string]types.UpgradeHandler{},
 	}
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
 // with this name is applied. In order for an upgrade with the given name to proceed, a handler for this upgrade
 // must be set even if it is a no-op function.
-func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types2.UpgradeHandler) {
+func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandler) {
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
-func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types2.Plan) error {
+func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
@@ -59,14 +59,14 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types2.Plan) error {
 
 	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types2.PlanKey(), bz)
+	store.Set(types.PlanKey(), bz)
 
 	return nil
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types2.DoneByte})
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	bz := store.Get([]byte(name))
 	if len(bz) == 0 {
 		return 0
@@ -78,19 +78,19 @@ func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 // ClearUpgradePlan clears any schedule upgrade
 func (k Keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types2.PlanKey())
+	store.Delete(types.PlanKey())
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types2.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled
 // upgrade or false if there is none
-func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types2.Plan, havePlan bool) {
+func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types2.PlanKey())
+	bz := store.Get(types.PlanKey())
 	if bz == nil {
 		return plan, false
 	}
@@ -101,7 +101,7 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types2.Plan, havePlan bool
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types2.DoneByte})
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
 	store.Set([]byte(name), bz)
@@ -114,7 +114,7 @@ func (k Keeper) HasHandler(name string) bool {
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
-func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types2.Plan) {
+func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")

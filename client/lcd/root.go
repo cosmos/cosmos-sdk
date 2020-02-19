@@ -24,8 +24,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
-const FlagAllowCORS = "cors"
-
 // RestServer represents the Light Client Rest server
 type RestServer struct {
 	Mux    *mux.Router
@@ -98,14 +96,14 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 				viper.GetInt(flags.FlagMaxOpenConnections),
 				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
 				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
-				viper.GetBool(FlagAllowCORS),
+				viper.GetBool(flags.FlagUnsafeCORS),
 			)
 
 			return err
 		},
 	}
 
-	cmd.Flags().Bool(FlagAllowCORS, false, "Allows CORS requests from all domains")
+	cmd.Flags().Bool(flags.FlagUnsafeCORS, false, "Allows CORS requests from all domains")
 	return flags.RegisterRestServerFlags(cmd)
 }
 

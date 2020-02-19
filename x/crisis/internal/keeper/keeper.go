@@ -28,9 +28,14 @@ func NewKeeper(
 	feeCollectorName string,
 ) Keeper {
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		routes:           make([]types.InvarRoute, 0),
-		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
+		paramSpace:       paramSpace,
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,

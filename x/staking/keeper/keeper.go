@@ -46,12 +46,17 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
+	// set KeyTable if it has not already been set
+	if !ps.HasKeyTable() {
+		ps = ps.WithKeyTable(ParamKeyTable())
+	}
+
 	return Keeper{
 		storeKey:           key,
 		cdc:                cdc,
 		bankKeeper:         bk,
 		supplyKeeper:       sk,
-		paramstore:         ps.WithKeyTable(ParamKeyTable()),
+		paramstore:         ps,
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),

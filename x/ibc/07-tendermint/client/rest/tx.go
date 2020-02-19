@@ -52,8 +52,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		// create the message
 		msg := ibctmtypes.NewMsgCreateClient(
 			req.ClientID,
-			req.ChainID,
-			req.ConsensusState,
+			req.Header,
 			req.TrustingPeriod, req.UnbondingPeriod,
 			fromAddr,
 		)

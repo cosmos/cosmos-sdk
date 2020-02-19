@@ -322,7 +322,7 @@ func validateVerificationArgs(
 	if cs.GetLatestHeight() < height {
 		return sdkerrors.Wrap(
 			ibctypes.ErrInvalidHeight,
-			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.LatestHeight, height),
+			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
 		)
 	}
 

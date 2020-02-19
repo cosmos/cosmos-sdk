@@ -15,15 +15,15 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
 			switch data := msg.Data.(type) {
-			case FungibleTokenPacketData: // i.e fulfills the Data interface
-				return handlePacketDataTransfer(ctx, k, msg, data)
+			case FungibleTokenPacketData:
+				return handlePacketDataTransfer(ctx, k, msg)
 			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", msg)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.Data.(type) {
 			case FungibleTokenPacketData:
-				return handleTimeoutDataTransfer(ctx, k, msg, data)
+				return handleTimeoutDataTransfer(ctx, k, msg)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
@@ -57,12 +57,9 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 
 // See onRecvPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handlePacketDataTransfer(
-	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data FungibleTokenPacketData,
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket,
 ) (*sdk.Result, error) {
-	packet := msg.Packet
-	if err := k.ReceiveTransfer(
-		ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data,
-	); err != nil {
+	if err := k.ReceiveTransfer(ctx, msg.Packet); err != nil {
 		// NOTE (cwgoes): How do we want to handle this case? Maybe we should be more lenient,
 		// it's safe to leave the channel open I think.
 
@@ -70,14 +67,14 @@ func handlePacketDataTransfer(
 		// the receiving chain couldn't process the transfer
 
 		// source chain sent invalid packet, shutdown our channel end
-		if err := k.ChanCloseInit(ctx, packet.DestinationPort, packet.DestinationChannel); err != nil {
+		if err := k.ChanCloseInit(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
 
 	acknowledgement := AckDataTransfer{}
-	if err := k.PacketExecuted(ctx, packet, acknowledgement); err != nil {
+	if err := k.PacketExecuted(ctx, msg.Packet, acknowledgement); err != nil {
 		return nil, err
 	}
 
@@ -95,15 +92,14 @@ func handlePacketDataTransfer(
 }
 
 // See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data FungibleTokenPacketData) (*sdk.Result, error) {
-	packet := msg.Packet
-	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
+func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout) (*sdk.Result, error) {
+	err := k.TimeoutTransfer(ctx, msg.Packet)
 	if err != nil {
 		// This shouldn't happen, since we've already validated that we've sent the packet.
 		panic(err)
 	}
 
-	err = k.TimeoutExecuted(ctx, packet)
+	err = k.TimeoutExecuted(ctx, msg.Packet)
 	if err != nil {
 		// This shouldn't happen, since we've already validated that we've sent the packet.
 		// TODO: Figure out what happens if the capability authorisation changes.

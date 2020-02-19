@@ -11,43 +11,43 @@ import (
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	testCases := []struct {
 		msg           string
-		sourcePort    string
-		sourceChannel string
 		amount        sdk.Coins
-		sender        sdk.AccAddress
-		receiver      sdk.AccAddress
 		isSourceChain bool
 		malleate      func()
 		expPass       bool
 	}{
-		// {"sucess transfer from source chain", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
+		// {"sucess transfer from source chain", testCoins,
 		// 	true, func() {}, true},
-		// {"sucess transfer from external chain", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
-		// 	true, func() {}, true},
-		{"source channel not found", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
+		// {"sucess transfer from external chain", testCoins,
+		// 	false, func() {}, true},
+		{"source channel not found", testCoins,
 			true, func() {}, false},
-		{"next seq send not found", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
+		{"next seq send not found", testCoins,
 			true, func() {
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 			}, false},
 		// createOutgoingPacket tests
 		// - source chain
-		{"no prefix on transfer amount", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
+		{"no prefix on transfer amount", testCoins,
+			true, func() {
+
+				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
+				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
+			}, true},
+		{"send coins failed", testCoins,
 			true, func() {
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			}, false},
-		{"send coins failed", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
-			true, func() {
+		// - receiving chain
+		{"no prefix on transfer amount", testCoins,
+			false, func() {
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
-			}, true},
-		// - receiving chain
-		// {"no prefix on transfer amount", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
+			}, false},
+		// {"send from module account dailed", testCoins,
 		// 	false, func() {}, false},
-		// {"send from module account dailed", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
-		// 	false, func() {}, false},
-		// {"tokens burn failed", testPort1, testChannel1, testCoins, testAddr1, testAddr2,
+		// {"tokens burn failed", testCoins,
 		// 	false, func() {}, false},
 	}
 
@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			tc.malleate()
 
 			err := suite.app.TransferKeeper.SendTransfer(
-				suite.ctx, tc.sourcePort, tc.sourceChannel, 100, tc.amount, tc.sender, tc.receiver, tc.isSourceChain,
+				suite.ctx, testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2, tc.isSourceChain,
 			)
 
 			if tc.expPass {

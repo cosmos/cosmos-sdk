@@ -242,14 +242,27 @@ proto-check-breaking:
 # TODO: Update to the version of Tendermint that is being used in go.mod
 version_branch = v0.33.1
 tendermint = https://raw.githubusercontent.com/tendermint/tendermint/$(version_branch)
+GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 
 # Outputs
 tmkv = third_party/proto/tendermint/libs/kv/types.proto
 tmmerkle = third_party/proto/tendermint/crypto/merkle/merkle.proto
 tmabci = third_party/proto/tendermint/abci/types/types.proto
+GOGO_PROTO_TYPES    = third_party/proto/gogoproto
+COSMOS_PROTO_TYPES  = third_party/proto/cosmos-proto
+SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types
+AUTH_PROTO_TYPES    = third_party/proto/cosmos-sdk/x/auth/types
+VESTING_PROTO_TYPES = third_party/proto/cosmos-sdk/x/auth/vesting/types
+SUPPLY_PROTO_TYPES  = third_party/proto/cosmos-sdk/x/supply/types
 
-# You *only* need to run this to rebuild protobufs from the tendermint source
-proto-update-tendermint:
+proto-update-deps:
+	@mkdir -p $(GOGO_PROTO_TYPES)
+	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
+
+	@mkdir -p $(COSMOS_PROTO_TYPES)
+	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto
+
 	@curl $(tendermint)/abci/types/types.proto > $(tmabci)
 	sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(tmabci)
 	sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(tmabci)

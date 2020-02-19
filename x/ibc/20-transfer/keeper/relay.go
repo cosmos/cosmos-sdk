@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
-// SendTransfer handles transfer sending logic
+// SendTransfer handles transfer sending logic.
+// The amount MUST be prefixed if it
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
@@ -37,11 +38,13 @@ func (k Keeper) SendTransfer(
 
 	coins := make(sdk.Coins, len(amount))
 	switch {
-	case isSourceChain:
+	case !isSourceChain:
 		// build the receiving denomination prefix
-		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
+		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
 		for i, coin := range amount {
-			coins[i] = sdk.NewCoin(prefix+coin.Denom, coin.Amount)
+			if !strings.HasPrefix(coin.Denom, prefix) {
+				coins[i] = sdk.NewCoin(prefix+coin.Denom, coin.Amount)
+			}
 		}
 	default:
 		coins = amount
@@ -55,7 +58,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet channel.Packet) error {
 	return k.onRecvPacket(ctx, packet)
 }
 
-// TimeoutTransfer handles transfer timeout logic
+// TimeoutTransfer handles transfer timeout logic.
 func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channel.Packet) error {
 	return k.onTimeoutPacket(ctx, packet)
 }
@@ -78,37 +81,20 @@ func (k Keeper) createOutgoingPacket(
 		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
-		// construct receiving denominations, check correctness
-		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
-		coins := make(sdk.Coins, len(amount))
-		for i, coin := range amount {
-			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdkerrors.Wrapf(
-					sdkerrors.ErrInvalidCoins,
-					"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
-				)
-			}
-			coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
-		}
+		// NOTE: we can omit the destination prefix correctness since it's already populated
+		// internally on the SendTransfer function.
 
 		// escrow source tokens. It fails if balance insufficient.
 		if err := k.bankKeeper.SendCoins(
-			ctx, sender, escrowAddress, coins,
+			ctx, sender, escrowAddress, amount,
 		); err != nil {
 			return err
 		}
 	} else {
 		// burn vouchers from the sender's balance if the source is from another chain
-		// construct receiving denomination, check correctness
-		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
-		for _, coin := range amount {
-			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdkerrors.Wrapf(
-					sdkerrors.ErrInvalidCoins,
-					"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
-				)
-			}
-		}
+
+		// NOTE: we can omit the source prefix correctness since it's already populated
+		// internally on the SendTransfer function.
 
 		// transfer the coins to the module account and burn them
 		if err := k.supplyKeeper.SendCoinsFromAccountToModule(
@@ -121,6 +107,9 @@ func (k Keeper) createOutgoingPacket(
 		if err := k.supplyKeeper.BurnCoins(
 			ctx, types.GetModuleAccountName(), amount,
 		); err != nil {
+			// NOTE: should not happen as the module account was
+			// retrieved on the step above and it has enough balace
+			// to burn.
 			return err
 		}
 	}

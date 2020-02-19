@@ -49,6 +49,7 @@ var (
 	testAddr2 = sdk.AccAddress([]byte("testaddr2"))
 
 	testCoins, _          = sdk.ParseCoins("100atom")
+	destCoins             = sdk.NewCoins(sdk.NewInt64Coin("bank/firstchannel/atom", 1000))
 	testPrefixedCoins1, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort1, testChannel1)))
 	testPrefixedCoins2, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort2, testChannel2)))
 )

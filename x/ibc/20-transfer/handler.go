@@ -93,14 +93,12 @@ func handlePacketDataTransfer(
 
 // See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout) (*sdk.Result, error) {
-	err := k.TimeoutTransfer(ctx, msg.Packet)
-	if err != nil {
+	if err := k.TimeoutTransfer(ctx, msg.Packet); err != nil {
 		// This shouldn't happen, since we've already validated that we've sent the packet.
 		panic(err)
 	}
 
-	err = k.TimeoutExecuted(ctx, msg.Packet)
-	if err != nil {
+	if err := k.TimeoutExecuted(ctx, msg.Packet); err != nil {
 		// This shouldn't happen, since we've already validated that we've sent the packet.
 		// TODO: Figure out what happens if the capability authorisation changes.
 		panic(err)

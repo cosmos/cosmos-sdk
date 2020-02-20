@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -19,7 +19,7 @@ import (
 type AccountKeeper struct {
 	key           sdk.StoreKey
 	cdc           types.Codec
-	paramSubspace subspace.Subspace
+	paramSubspace paramtypes.Subspace
 
 	// The prototypical Account constructor.
 	proto func() exported.Account
@@ -28,7 +28,7 @@ type AccountKeeper struct {
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 func NewAccountKeeper(
-	cdc types.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
+	cdc types.Codec, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() exported.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{

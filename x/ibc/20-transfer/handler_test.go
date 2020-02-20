@@ -37,6 +37,8 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
+	height = 10
+
 	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
 
@@ -57,10 +59,11 @@ var (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	app    *simapp.SimApp
-	valSet *tmtypes.ValidatorSet
+	cdc     *codec.Codec
+	ctx     sdk.Context
+	app     *simapp.SimApp
+	privVal tmtypes.PrivValidator
+	valSet  *tmtypes.ValidatorSet
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -71,9 +74,9 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
 
-	privVal := tmtypes.NewMockPV()
+	suite.privVal = tmtypes.NewMockPV()
 
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
@@ -91,8 +94,10 @@ func (suite *HandlerTestSuite) createClient() {
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
 	}
+	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	header := ibctmtypes.CreateTestHeader(testChainID, height, now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
-	clientState, err := ibctmtypes.Initialize(testClient, testClient, consensusState, trustingPeriod, ubdPeriod)
+	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, header)
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)

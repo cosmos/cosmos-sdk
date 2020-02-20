@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -65,10 +66,16 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateClient() {
+	validUpdateHeader := ibctmtypes.CreateTestHeader(testClientID, suite.header.Height+1, suite.header.Time.Add(time.Minute),
+		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	invalidUpdateHeader := ibctmtypes.CreateTestHeader(testClientID, suite.header.Height-3, suite.header.Time.Add(time.Minute),
+		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+
 	cases := []struct {
-		name     string
-		malleate func() error
-		expPass  bool
+		name         string
+		malleate     func() error
+		updateHeader ibctmtypes.Header
+		expPass      bool
 	}{
 		{"valid update", func() error {
 			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
@@ -77,24 +84,24 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			}
 			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			return err
-		}, true},
+		}, validUpdateHeader, true},
 		{"client type not found", func() error {
 			return nil
-		}, false},
+		}, validUpdateHeader, false},
 		{"client type and header type mismatch", func() error {
 			suite.keeper.SetClientType(suite.ctx, testClientID, invalidClientType)
 			return nil
-		}, false},
+		}, validUpdateHeader, false},
 		{"client state not found", func() error {
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			return nil
-		}, false},
+		}, validUpdateHeader, false},
 		{"frozen client", func() error {
 			clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
 			suite.keeper.SetClientState(suite.ctx, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			return nil
-		}, false},
+		}, validUpdateHeader, false},
 		{"invalid header", func() error {
 			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 			if err != nil {
@@ -104,9 +111,8 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			if err != nil {
 				return err
 			}
-			suite.header.Height = suite.ctx.BlockHeight() - 1
 			return nil
-		}, false},
+		}, invalidUpdateHeader, false},
 	}
 
 	for i, tc := range cases {
@@ -117,19 +123,24 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			err = suite.keeper.UpdateClient(suite.ctx, testClientID, suite.header)
+			suite.ctx = suite.ctx.WithBlockTime(tc.updateHeader.Time.Add(time.Minute))
+
+			err = suite.keeper.UpdateClient(suite.ctx, testClientID, tc.updateHeader)
 
 			if tc.expPass {
+				suite.Require().NoError(err, err)
+
 				expConsensusState := ibctmtypes.ConsensusState{
-					Timestamp:    suite.header.Time,
-					Root:         commitment.NewRoot(suite.header.AppHash),
-					ValidatorSet: suite.header.ValidatorSet,
+					Height:       uint64(tc.updateHeader.Height),
+					Timestamp:    tc.updateHeader.Time,
+					Root:         commitment.NewRoot(tc.updateHeader.AppHash),
+					ValidatorSet: tc.updateHeader.ValidatorSet,
 				}
 
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
-				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(suite.header.GetHeight()))
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(tc.updateHeader.GetHeight()))
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")

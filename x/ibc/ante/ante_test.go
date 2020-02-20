@@ -36,6 +36,8 @@ const (
 
 	testChannelVersion = "1.0"
 
+	height = 10
+
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
@@ -44,11 +46,12 @@ const (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	app    *simapp.SimApp
-	valSet *tmtypes.ValidatorSet
-	now    time.Time
+	cdc     *codec.Codec
+	ctx     sdk.Context
+	app     *simapp.SimApp
+	privVal tmtypes.PrivValidator
+	valSet  *tmtypes.ValidatorSet
+	now     time.Time
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -60,9 +63,9 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
 
-	privVal := tmtypes.NewMockPV()
+	suite.privVal = tmtypes.NewMockPV()
 
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
@@ -83,7 +86,9 @@ func (suite *HandlerTestSuite) createClient() {
 		ValidatorSet: suite.valSet,
 	}
 
-	clientState, err := ibctmtypes.Initialize(testClient, testClient, consensusState, trustingPeriod, ubdPeriod)
+	header := ibctmtypes.CreateTestHeader(testChainID, height, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+
+	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, header)
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)
@@ -107,7 +112,7 @@ func (suite *HandlerTestSuite) updateClient() {
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClient)
 	cs, _ := csi.(ibctmtypes.ClientState)
-	cs.LatestHeight = uint64(height - 1)
+	// TODO: can i get away with not updating height?
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }
 

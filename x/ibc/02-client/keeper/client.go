@@ -93,6 +93,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetClientState(ctx, clientState)
+	fmt.Println(clientID)
+	fmt.Println(header.GetHeight())
 	k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
 

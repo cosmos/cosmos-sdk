@@ -24,6 +24,7 @@ const (
 	testChainID    = "test-chain-id"
 	testClient     = "test-client"
 	testClientType = clientexported.Tendermint
+	height         = 10
 
 	testConnection = "testconnection"
 	testPort1      = "bank"
@@ -51,10 +52,11 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	app    *simapp.SimApp
-	valSet *tmtypes.ValidatorSet
+	cdc     *codec.Codec
+	ctx     sdk.Context
+	app     *simapp.SimApp
+	privVal tmtypes.PrivValidator
+	valSet  *tmtypes.ValidatorSet
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -65,9 +67,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
 
-	privVal := tmtypes.NewMockPV()
+	suite.privVal = tmtypes.NewMockPV()
 
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()

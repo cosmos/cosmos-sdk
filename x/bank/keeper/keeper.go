@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,7 +36,7 @@ type BaseKeeper struct {
 }
 
 func NewBaseKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -146,7 +147,7 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc        *codec.Codec
+	cdc        codec.Marshaler
 	ak         types.AccountKeeper
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
@@ -156,7 +157,7 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -341,7 +342,10 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	bz := k.cdc.MustMarshalBinaryBare(balance)
+	bz, err := balance.Marshal()
+	if err != nil {
+		return err
+	}
 	accountStore.Set([]byte(balance.Denom), bz)
 
 	return nil
@@ -349,14 +353,15 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 // GetSendEnabled returns the current SendEnabled
 func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
-	var enabled bool
+	var enabled gogotypes.BoolValue
 	k.paramSpace.Get(ctx, types.ParamStoreKeySendEnabled, &enabled)
-	return enabled
+	return enabled.Value
 }
 
 // SetSendEnabled sets the send enabled
 func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
-	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
+	enabledProto := gogotypes.BoolValue{Value: enabled}
+	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabledProto)
 }
 
 // BlacklistedAddr checks if a given address is blacklisted (i.e restricted from
@@ -385,13 +390,13 @@ type ViewKeeper interface {
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc      *codec.Codec
+	cdc      codec.Marshaler
 	storeKey sdk.StoreKey
 	ak       types.AccountKeeper
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
 	return BaseViewKeeper{
 		cdc:      cdc,
 		storeKey: storeKey,

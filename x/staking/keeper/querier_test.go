@@ -205,7 +205,7 @@ func TestQueryValidators(t *testing.T) {
 	}
 }
 
-func TestQueryDelegations(t *testing.T) {
+func TestQueryDelegation(t *testing.T) {
 	cdc := codec.New()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})

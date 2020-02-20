@@ -96,7 +96,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	paramsKeeper := keeper.NewKeeper(appCodec, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
-	bk := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	bk := bank.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},

@@ -167,7 +167,7 @@ func NewSimApp(
 		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
-		app.cdc, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
+		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
 	)
 	app.SupplyKeeper = supply.NewKeeper(
 		appCodec, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,

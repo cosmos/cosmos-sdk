@@ -133,7 +133,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	)
 
 	bk := bank.NewBaseKeeper(
-		cdc,
+		appCodec,
 		bankKey,
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),

@@ -101,6 +101,7 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 func (acc BaseAccount) Validate() error {
 	if len(acc.PubKey) != 0 && acc.Address != nil &&
 		!bytes.Equal(acc.GetPubKey().Address().Bytes(), acc.Address.Bytes()) {
+		return errors.New("account address and pubkey address do not match")
 	}
 
 	return nil

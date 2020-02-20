@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -13,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -224,11 +223,11 @@ func TestQueryDelegation(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal1, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal2, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal2, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	delTokens := sdk.TokensFromConsensusPower(20)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
@@ -437,71 +436,79 @@ func TestQueryDelegation(t *testing.T) {
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 
-//func TestQueryRedelegations(t *testing.T) {
-//	cdc := codec.New()
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)
-//
-//	// Create Validators and Delegation
-//	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
-//	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
-//	keeper.SetValidator(ctx, val1)
-//	keeper.SetValidator(ctx, val2)
-//
-//	delAmount := sdk.TokensFromConsensusPower(100)
-//	keeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
-//	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-//	rdAmount := sdk.TokensFromConsensusPower(20)
-//	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
-//	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-//	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
-//	require.True(t, found)
-//
-//	// delegator redelegations
-//	queryDelegatorParams := types.NewQueryDelegatorParams(addrAcc2)
-//	bz, errRes := cdc.MarshalJSON(queryDelegatorParams)
-//	require.NoError(t, errRes)
-//
-//	query := abci.RequestQuery{
-//		Path: "/custom/staking/redelegations",
-//		Data: bz,
-//	}
-//
-//	res, err := queryRedelegations(ctx, query, keeper)
-//	require.NoError(t, err)
-//
-//	var redelRes types.RedelegationResponses
-//	errRes = cdc.UnmarshalJSON(res, &redelRes)
-//	require.NoError(t, errRes)
-//	require.Len(t, redelRes, 1)
-//	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
-//	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
-//	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
-//	require.Len(t, redel.Entries, len(redelRes[0].Entries))
-//
-//	// validator redelegations
-//	queryValidatorParams := types.NewQueryValidatorParams(val1.GetOperator())
-//	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
-//	require.NoError(t, errRes)
-//
-//	query = abci.RequestQuery{
-//		Path: "/custom/staking/redelegations",
-//		Data: bz,
-//	}
-//
-//	res, err = queryRedelegations(ctx, query, keeper)
-//	require.NoError(t, err)
-//
-//	errRes = cdc.UnmarshalJSON(res, &redelRes)
-//	require.NoError(t, errRes)
-//	require.Len(t, redelRes, 1)
-//	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
-//	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
-//	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
-//	require.Len(t, redel.Entries, len(redelRes[0].Entries))
-//}
-//
+func TestQueryRedelegations(t *testing.T) {
+	cdc := codec.New()
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	querier := staking.NewQuerier(app.StakingKeeper)
+
+	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
+	addrAcc1, addrAcc2 := addrs[0], addrs[1]
+	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
+
+	// Create Validators and Delegation
+	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
+	val2 := types.NewValidator(addrVal2, PKs[1], types.Description{})
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidator(ctx, val2)
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal1, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal2, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
+
+	delAmount := sdk.TokensFromConsensusPower(100)
+	app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
+	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	rdAmount := sdk.TokensFromConsensusPower(20)
+	app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	require.True(t, found)
+
+	// delegator redelegations
+	queryDelegatorParams := types.NewQueryDelegatorParams(addrAcc2)
+	bz, errRes := cdc.MarshalJSON(queryDelegatorParams)
+	require.NoError(t, errRes)
+
+	query := abci.RequestQuery{
+		Path: "/custom/staking/redelegations",
+		Data: bz,
+	}
+
+	res, err := querier(ctx, []string{types.QueryRedelegations}, query)
+	require.NoError(t, err)
+
+	var redelRes types.RedelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
+	require.NoError(t, errRes)
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
+
+	// validator redelegations
+	queryValidatorParams := types.NewQueryValidatorParams(val1.GetOperator())
+	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "/custom/staking/redelegations",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryRedelegations}, query)
+	require.NoError(t, err)
+
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
+	require.NoError(t, errRes)
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
+}
+
 //func TestQueryUnbondingDelegation(t *testing.T) {
 //	cdc := codec.New()
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)

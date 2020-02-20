@@ -195,6 +195,7 @@ func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data typ
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	coins := make(sdk.Coins, len(data.Amount))
+
 	for i, coin := range data.Amount {
 		coin := coin
 		if !strings.HasPrefix(coin.Denom, prefix) {
@@ -204,11 +205,12 @@ func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data typ
 	}
 
 	if data.Source {
+		// unescrow tokens back to sender
 		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
 	}
 
-	// mint from supply
+	// mint vouchers back to sender
 	if err := k.supplyKeeper.MintCoins(
 		ctx, types.GetModuleAccountName(), data.Amount,
 	); err != nil {

@@ -19,20 +19,20 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		isSourceChain bool
 		expPass       bool
 	}{
-		{"success transfer from source chain", testCoins,
+		{"successful transfer from source chain", testCoins,
 			func() {
 				suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, testCoins)
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			}, true, true},
-		{"success transfer from source chain with denom prefix", testCoins2,
+		{"successful transfer from source chain with denom prefix", testCoins2,
 			func() {
 				_, err := suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, testCoins)
 				suite.Require().NoError(err)
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			}, true, true},
-		{"success transfer from external chain", testCoins,
+		{"successful transfer from external chain", testCoins,
 			func() {
 				suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(prefixCoins))
 				_, err := suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, prefixCoins)
@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
-	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2, 100)
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2, true, 100)
 
 	testCases := []struct {
 		msg      string
@@ -99,13 +99,15 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			}, false},
 		{"mint failed",
 			func() {
+				data.Source = true
 				data.Amount = prefixCoins2
 				data.Amount[0].Amount = sdk.ZeroInt()
 			}, false},
 		// - receiving chain
-		{"no source prefix on coin denom",
+		{"incorrect dest prefix on coin denom",
 			func() {
 				data.Source = false
+				data.Amount = prefixCoins2
 			}, false},
 		{"success receive from external chain",
 			func() {
@@ -126,6 +128,60 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			tc.malleate()
 
 			err := suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, packet, data)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestTimeoutTransfer() {
+	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2, true, 100)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"successful timeout from source chain",
+			func() {
+				escrow := types.GetEscrowAddress(testPort2, testChannel2)
+				_, err := suite.app.BankKeeper.AddCoins(suite.ctx, escrow, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
+				suite.Require().NoError(err)
+			}, true},
+		{"successful timeout from external chain",
+			func() {
+				data.Source = false
+			}, true},
+		{"no source prefix on coin denom",
+			func() {
+				data.Source = true
+				data.Amount = prefixCoins2
+			}, false},
+		{"unescrow failed",
+			func() {
+				data.Source = true
+			}, false},
+		{"mint failed",
+			func() {
+				data.Source = false
+				data.Amount[0].Denom = prefixCoins[0].Denom
+				data.Amount[0].Amount = sdk.ZeroInt()
+			}, false},
+	}
+
+	packet := channeltypes.NewPacket(data, 1, testPort1, testChannel1, testPort2, testChannel2)
+
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			tc.malleate()
+
+			err := suite.app.TransferKeeper.TimeoutTransfer(suite.ctx, packet, data)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)

@@ -125,9 +125,6 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	// NOTE: isSourceChain is negated since the counterparty chain
-	//
-
 	packetData := types.NewFungibleTokenPacketData(
 		amount, sender, receiver, !isSourceChain, destHeight+DefaultPacketTimeout,
 	)

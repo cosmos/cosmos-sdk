@@ -1,7 +1,7 @@
 package types
 
 import (
-	_ "github.com/gogo/protobuf/gogoproto" // nolint
+	_ "github.com/gogo/protobuf/gogoproto"    // nolint
 	_ "github.com/regen-network/cosmos-proto" // nolint
 )
 

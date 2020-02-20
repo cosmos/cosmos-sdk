@@ -141,8 +141,7 @@ func TestQueryValidators(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
 
-	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
-	addrVal1, _ := sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
+	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
 
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
@@ -160,6 +159,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query Validators
 	queriedValidators := app.StakingKeeper.GetValidators(ctx, params.MaxValidators)
+	require.Len(t, queriedValidators, 3)
 
 	for i, s := range status {
 		queryValsParams := types.NewQueryValidatorsParams(1, int(params.MaxValidators), s.String())
@@ -180,26 +180,27 @@ func TestQueryValidators(t *testing.T) {
 
 		require.Equal(t, 1, len(validatorsResp))
 		require.ElementsMatch(t, validators[i].OperatorAddress, validatorsResp[0].OperatorAddress)
-
 	}
 
 	// Query each validator
-	queryParams := types.NewQueryValidatorParams(addrVal1)
-	bz, err := cdc.MarshalJSON(queryParams)
-	require.NoError(t, err)
+	for _, validator := range validators {
+		queryParams := types.NewQueryValidatorParams(validator.OperatorAddress)
+		bz, err := cdc.MarshalJSON(queryParams)
+		require.NoError(t, err)
 
-	query := abci.RequestQuery{
-		Path: "/custom/staking/validator",
-		Data: bz,
+		query := abci.RequestQuery{
+			Path: "/custom/staking/validator",
+			Data: bz,
+		}
+		res, err := querier(ctx, []string{types.QueryValidator}, query)
+		require.NoError(t, err)
+
+		var queriedValidator types.Validator
+		err = cdc.UnmarshalJSON(res, &queriedValidator)
+		require.NoError(t, err)
+
+		require.Equal(t, validator, queriedValidator)
 	}
-	res, err := querier(ctx, []string{types.QueryValidator}, query)
-	require.NoError(t, err)
-
-	var validator types.Validator
-	err = cdc.UnmarshalJSON(res, &validator)
-	require.NoError(t, err)
-
-	require.Equal(t, queriedValidators[0], validator)
 }
 
 func TestQueryDelegation(t *testing.T) {
@@ -209,8 +210,12 @@ func TestQueryDelegation(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
 
-	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
+	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
+	addrAcc1, addrAcc2 := addrs[0], addrs[1]
+	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
+	pubKeys := simapp.CreateTestPubKeys(2)
+	pk1, pk2 := pubKeys[0], pubKeys[1]
 
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
@@ -222,7 +227,8 @@ func TestQueryDelegation(t *testing.T) {
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
 
 	delTokens := sdk.TokensFromConsensusPower(20)
-	app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
+	require.NoError(t, err)
 
 	// apply TM updates
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -414,19 +420,19 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-//	res, err = querier(ctx, []string{types.QueryRedelegations}, query)
-//	require.NoError(t, err)
-//
-//	var redelRes types.RedelegationResponses
-//	errRes = cdc.UnmarshalJSON(res, &redelRes)
-//	require.NoError(t, errRes)
-//	require.Len(t, redelRes, 1)
-//	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
-//	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
-//	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
-//	require.Len(t, redel.Entries, len(redelRes[0].Entries))
-//}
-//
+	res, err = querier(ctx, []string{types.QueryRedelegations}, query)
+	require.NoError(t, err)
+
+	var redelRes types.RedelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
+	require.NoError(t, errRes)
+	require.Len(t, redelRes, 1)
+	require.Equal(t, redel.DelegatorAddress, redelRes[0].DelegatorAddress)
+	require.Equal(t, redel.ValidatorSrcAddress, redelRes[0].ValidatorSrcAddress)
+	require.Equal(t, redel.ValidatorDstAddress, redelRes[0].ValidatorDstAddress)
+	require.Len(t, redel.Entries, len(redelRes[0].Entries))
+}
+
 //func TestQueryRedelegations(t *testing.T) {
 //	cdc := codec.New()
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 10000)

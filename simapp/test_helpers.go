@@ -1,6 +1,9 @@
 package simapp
 
 import (
+	"bytes"
+	"encoding/hex"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -186,4 +189,31 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	for i := 0; i < len(initSeqNums); i++ {
 		initSeqNums[i]++
 	}
+}
+
+func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
+	var publicKeys []crypto.PubKey
+	var buffer bytes.Buffer
+
+	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 100; i < (numPubKeys + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
+		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
+		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
+		buffer.Reset()
+	}
+
+	return publicKeys
+}
+
+func NewPubKey(pk string) (res crypto.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	//res, err = crypto.PubKeyFromBytes(pkBytes)
+	var pkEd ed25519.PubKeyEd25519
+	copy(pkEd[:], pkBytes)
+	return pkEd
 }

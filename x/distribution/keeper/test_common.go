@@ -18,7 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -88,7 +89,7 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initPower int64) (
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(
 	t *testing.T, isCheckTx bool, initPower int64, communityTax sdk.Dec,
-) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, params.Keeper, types.SupplyKeeper,
+) (sdk.Context, auth.AccountKeeper, bank.Keeper, Keeper, staking.Keeper, keeper.Keeper, types.SupplyKeeper,
 ) {
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
@@ -98,8 +99,8 @@ func CreateTestInputAdvanced(
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
-	keyParams := sdk.NewKVStoreKey(params.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
+	keyParams := sdk.NewKVStoreKey(paramtypes.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -127,7 +128,7 @@ func CreateTestInputAdvanced(
 
 	cdc := MakeTestCodec()
 	appCodec := simappcodec.NewAppCodec(cdc)
-	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := keeper.NewKeeper(appCodec, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)

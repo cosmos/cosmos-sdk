@@ -1,4 +1,4 @@
-package types
+package proposal
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

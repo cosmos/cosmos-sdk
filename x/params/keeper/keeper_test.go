@@ -1,13 +1,13 @@
-package params
+package keeper_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/stretchr/testify/require"
 )
 
 func validateNoOp(_ interface{}) error { return nil }
@@ -26,16 +26,16 @@ func TestKeeper(t *testing.T) {
 		{"key7", 9058701},
 	}
 
-	table := NewKeyTable(
-		NewParamSetPair([]byte("key1"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("key2"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("key3"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("key4"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("key5"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("key6"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("key7"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("extra1"), bool(false), validateNoOp),
-		NewParamSetPair([]byte("extra2"), string(""), validateNoOp),
+	table := types.NewKeyTable(
+		types.NewParamSetPair([]byte("key1"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("key2"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("key3"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("key4"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("key5"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("key6"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("key7"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("extra1"), bool(false), validateNoOp),
+		types.NewParamSetPair([]byte("extra2"), string(""), validateNoOp),
 	)
 
 	cdc, ctx, skey, _, keeper := testComponents()
@@ -136,19 +136,19 @@ func TestSubspace(t *testing.T) {
 		{"struct", s{1}, s{0}, new(s)},
 	}
 
-	table := NewKeyTable(
-		NewParamSetPair([]byte("string"), string(""), validateNoOp),
-		NewParamSetPair([]byte("bool"), bool(false), validateNoOp),
-		NewParamSetPair([]byte("int16"), int16(0), validateNoOp),
-		NewParamSetPair([]byte("int32"), int32(0), validateNoOp),
-		NewParamSetPair([]byte("int64"), int64(0), validateNoOp),
-		NewParamSetPair([]byte("uint16"), uint16(0), validateNoOp),
-		NewParamSetPair([]byte("uint32"), uint32(0), validateNoOp),
-		NewParamSetPair([]byte("uint64"), uint64(0), validateNoOp),
-		NewParamSetPair([]byte("int"), sdk.Int{}, validateNoOp),
-		NewParamSetPair([]byte("uint"), sdk.Uint{}, validateNoOp),
-		NewParamSetPair([]byte("dec"), sdk.Dec{}, validateNoOp),
-		NewParamSetPair([]byte("struct"), s{}, validateNoOp),
+	table := types.NewKeyTable(
+		types.NewParamSetPair([]byte("string"), "", validateNoOp),
+		types.NewParamSetPair([]byte("bool"), false, validateNoOp),
+		types.NewParamSetPair([]byte("int16"), int16(0), validateNoOp),
+		types.NewParamSetPair([]byte("int32"), int32(0), validateNoOp),
+		types.NewParamSetPair([]byte("int64"), int64(0), validateNoOp),
+		types.NewParamSetPair([]byte("uint16"), uint16(0), validateNoOp),
+		types.NewParamSetPair([]byte("uint32"), uint32(0), validateNoOp),
+		types.NewParamSetPair([]byte("uint64"), uint64(0), validateNoOp),
+		types.NewParamSetPair([]byte("int"), sdk.Int{}, validateNoOp),
+		types.NewParamSetPair([]byte("uint"), sdk.Uint{}, validateNoOp),
+		types.NewParamSetPair([]byte("dec"), sdk.Dec{}, validateNoOp),
+		types.NewParamSetPair([]byte("struct"), s{}, validateNoOp),
 	)
 
 	store := prefix.NewStore(ctx.KVStore(key), []byte("test/"))
@@ -202,7 +202,7 @@ func TestJSONUpdate(t *testing.T) {
 
 	key := []byte("key")
 
-	space := keeper.Subspace("test").WithKeyTable(NewKeyTable(NewParamSetPair(key, paramJSON{}, validateNoOp)))
+	space := keeper.Subspace("test").WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
 
 	var param paramJSON
 

@@ -12,7 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -31,18 +31,22 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	paramSpace params.Subspace
+	paramSpace paramtypes.Subspace
 }
 
 func NewBaseKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
+	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
-	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, ps, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blacklistedAddrs),
 		ak:             ak,
-		paramSpace:     ps,
+		paramSpace:     paramSpace,
 	}
 }
 
@@ -149,14 +153,14 @@ type BaseSendKeeper struct {
 	cdc        *codec.Codec
 	ak         types.AccountKeeper
 	storeKey   sdk.StoreKey
-	paramSpace params.Subspace
+	paramSpace paramtypes.Subspace
 
 	// list of addresses that are restricted from receiving transactions
 	blacklistedAddrs map[string]bool
 }
 
 func NewBaseSendKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
+	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{

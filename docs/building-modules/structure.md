@@ -85,9 +85,9 @@ allows for greater freedom of development while maintaining API stability.
 - `module.go`: The module's implementation of the `AppModule` and `AppModuleBasic`
 interfaces.
 - `simulation/`: The module's simulation package defines all the required functions
-used on the blockchain simulator: randomized genesis state, parameters, weigthed
+used on the blockchain simulator: randomized genesis state, parameters, weighted
 operations, proposal contents and types decoders.
 
 ## Next {hide}
 
-Learn about [interfaces](../interfaces/interfaces-intro.md) {hide}
+Learn about [Errors](./errors.md) {hide}

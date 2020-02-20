@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -21,7 +19,7 @@ var ParamStoreKeySendEnabled = []byte("sendenabled")
 // ParamKeyTable type declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable(
-		paramtypes.NewParamSetPair(ParamStoreKeySendEnabled, gogotypes.BoolValue{Value: false}, validateSendEnabled),
+		paramtypes.NewParamSetPair(ParamStoreKeySendEnabled, false, validateSendEnabled),
 	)
 }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -353,15 +352,14 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 // GetSendEnabled returns the current SendEnabled
 func (k BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
-	var enabled gogotypes.BoolValue
+	var enabled bool
 	k.paramSpace.Get(ctx, types.ParamStoreKeySendEnabled, &enabled)
-	return enabled.Value
+	return enabled
 }
 
 // SetSendEnabled sets the send enabled
 func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
-	enabledProto := gogotypes.BoolValue{Value: enabled}
-	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabledProto)
+	k.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
 }
 
 // BlacklistedAddr checks if a given address is blacklisted (i.e restricted from

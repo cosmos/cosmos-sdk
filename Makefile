@@ -238,25 +238,37 @@ proto-lint:
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=master'
 
-# Origin
-# TODO: Update to the version of Tendermint that is being used in go.mod
-version_branch = v0.33.0
-tendermint = https://raw.githubusercontent.com/tendermint/tendermint/$(version_branch)
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
+GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 
-# Outputs
-tmkv = third_party/proto/tendermint/libs/kv/types.proto
-tmmerkle = third_party/proto/tendermint/crypto/merkle/merkle.proto
-tmabci = third_party/proto/tendermint/abci/types/types.proto
+TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
+TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
+TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
+GOGO_PROTO_TYPES    = third_party/proto/gogoproto
+COSMOS_PROTO_TYPES  = third_party/proto/cosmos-proto
+SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types
+AUTH_PROTO_TYPES    = third_party/proto/cosmos-sdk/x/auth/types
+VESTING_PROTO_TYPES = third_party/proto/cosmos-sdk/x/auth/vesting/types
+SUPPLY_PROTO_TYPES  = third_party/proto/cosmos-sdk/x/supply/types
 
-# You *only* need to run this to rebuild protobufs from the tendermint source
-proto-update-tendermint:
-	@curl $(tendermint)/abci/types/types.proto > $(tmabci)
-	sed -i '' '8,9 s|github.com/tendermint|third_party/proto|g' $(tmabci)
-	sed -i '' '7 s|github.com/gogo/protobuf|third_party/proto|' $(tmabci)
-	@curl $(tendermint)/libs/kv/types.proto > $(tmkv)
-	sed -i '' 's|github.com/gogo/protobuf|third_party/proto|' $(tmkv)
-	@curl $(tendermint)/crypto/merkle/merkle.proto > $(tmmerkle)
-	sed -i '' '7 s|github.com/gogo/protobuf|third_party/proto|' $(tmmerkle)
+proto-update-deps:
+	@mkdir -p $(GOGO_PROTO_TYPES)
+	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
+
+	@mkdir -p $(COSMOS_PROTO_TYPES)
+	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto
+
+	@mkdir -p $(TM_ABCI_TYPES)
+	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+
+	@mkdir -p $(TM_KV_TYPES)
+	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto
+
+	@mkdir -p $(TM_MERKLE_TYPES)
+	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
 
 
-.PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-tendermint
+.PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps

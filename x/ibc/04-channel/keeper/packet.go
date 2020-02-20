@@ -178,7 +178,7 @@ func (k Keeper) RecvPacket(
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketDataI,
+	acknowledgement exported.PacketAcknowledgementI,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -231,7 +231,7 @@ func (k Keeper) PacketExecuted(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement []byte,
+	acknowledgement exported.PacketAcknowledgementI,
 	proof commitment.ProofI,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
@@ -286,7 +286,7 @@ func (k Keeper) AcknowledgePacket(
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement,
+		packet.GetSequence(), acknowledgement.GetBytes(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}

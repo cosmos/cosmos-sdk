@@ -30,7 +30,6 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	ics20TransferTxCmd.AddCommand(flags.PostCommands(
 		GetTransferTxCmd(cdc),
-		// GetMsgRecvPacketCmd(cdc),
 	)...)
 
 	return ics20TransferTxCmd

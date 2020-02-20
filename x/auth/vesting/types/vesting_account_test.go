@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/json"
-	"errors"
 	"testing"
 	"time"
 
@@ -589,58 +588,59 @@ func TestGenesisAccountValidate(t *testing.T) {
 	tests := []struct {
 		name   string
 		acc    authexported.GenesisAccount
-		expErr error
+		expErr bool
 	}{
 		{
 			"valid base account",
 			baseAcc,
-			nil,
+			false,
 		},
 		{
 			"invalid base valid account",
 			authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
-			errors.New("pubkey and address pair is invalid"),
+			true,
 		},
 		{
 			"valid base vesting account",
 			baseVestingWithCoins,
-			nil,
+			false,
 		},
 		{
 			"valid continuous vesting account",
 			types.NewContinuousVestingAccount(baseAcc, initialVesting, 100, 200),
-			nil,
+			false,
 		},
 		{
 			"invalid vesting times",
 			types.NewContinuousVestingAccount(baseAcc, initialVesting, 1654668078, 1554668078),
-			errors.New("vesting start-time cannot be before end-time"),
+			true,
 		},
 		{
 			"valid periodic vesting account",
 			types.NewPeriodicVestingAccount(baseAcc, initialVesting, 0, types.Periods{types.Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
-			nil,
+			false,
 		},
 		{
 			"invalid vesting period lengths",
 			types.NewPeriodicVestingAccountRaw(
 				baseVestingWithCoins,
 				0, types.Periods{types.Period{Length: int64(50), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
-			errors.New("vesting end time does not match length of all vesting periods"),
+			true,
 		},
 		{
 			"invalid vesting period amounts",
 			types.NewPeriodicVestingAccountRaw(
 				baseVestingWithCoins,
 				0, types.Periods{types.Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)}}}),
-			errors.New("original vesting coins does not match the sum of all coins in vesting periods"),
+			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
+
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.acc.Validate()
-			require.Equal(t, tt.expErr, err)
+			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
 	}
 }

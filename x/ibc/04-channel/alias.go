@@ -37,6 +37,7 @@ var (
 	ErrPacketTimeout             = types.ErrPacketTimeout
 	ErrInvalidChannel            = types.ErrInvalidChannel
 	ErrInvalidChannelState       = types.ErrInvalidChannelState
+	ErrAcknowledgementTooLong    = types.ErrAcknowledgementTooLong
 	NewMsgChannelOpenInit        = types.NewMsgChannelOpenInit
 	NewMsgChannelOpenTry         = types.NewMsgChannelOpenTry
 	NewMsgChannelOpenAck         = types.NewMsgChannelOpenAck

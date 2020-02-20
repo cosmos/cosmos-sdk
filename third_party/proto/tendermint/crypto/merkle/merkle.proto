@@ -1,17 +1,17 @@
 syntax = "proto3";
 package tendermint.crypto.merkle;
-option go_package = "github.com/tendermint/tendermint/crypto/merkle";
+option  go_package = "github.com/tendermint/tendermint/crypto/merkle";
 
 // For more information on gogo.proto, see:
 // https://github.com/gogo/protobuf/blob/master/extensions.md
 import "third_party/proto/gogoproto/gogo.proto";
 
-option (gogoproto.marshaler_all) = true;
+option (gogoproto.marshaler_all)   = true;
 option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.sizer_all) = true;
+option (gogoproto.sizer_all)       = true;
 
 option (gogoproto.populate_all) = true;
-option (gogoproto.equal_all) = true;
+option (gogoproto.equal_all)    = true;
 
 //----------------------------------------
 // Message types
@@ -21,11 +21,11 @@ option (gogoproto.equal_all) = true;
 // for example neighbouring node hash
 message ProofOp {
   string type = 1;
-  bytes key = 2;
-  bytes data = 3;
+  bytes  key  = 2;
+  bytes  data = 3;
 }
 
 // Proof is Merkle proof defined by the list of ProofOps
 message Proof {
-  repeated ProofOp ops = 1 [(gogoproto.nullable)=false];
+  repeated ProofOp ops = 1 [(gogoproto.nullable) = false];
 }

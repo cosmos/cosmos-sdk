@@ -8,13 +8,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper - crisis keeper
 type Keeper struct {
 	routes         []types.InvarRoute
-	paramSpace     params.Subspace
+	paramSpace     paramtypes.Subspace
 	invCheckPeriod uint
 
 	supplyKeeper types.SupplyKeeper
@@ -24,13 +24,18 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper object
 func NewKeeper(
-	paramSpace params.Subspace, invCheckPeriod uint, supplyKeeper types.SupplyKeeper,
+	paramSpace paramtypes.Subspace, invCheckPeriod uint, supplyKeeper types.SupplyKeeper,
 	feeCollectorName string,
 ) Keeper {
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		routes:           make([]types.InvarRoute, 0),
-		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
+		paramSpace:       paramSpace,
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,

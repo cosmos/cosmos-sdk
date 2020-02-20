@@ -331,7 +331,7 @@ func (k Keeper) ChanCloseInit(
 
 	channel.State = exported.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
-
+	k.Logger(ctx).Info("channel close initialized: portID (%s), channelID (%s)", portID, channelID)
 	return nil
 }
 

@@ -1,9 +1,9 @@
 package host
 
 import (
-	"regexp"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -12,12 +12,6 @@ import (
 // This file defines ValidateFn to validate identifier and path strings
 // The spec for ICS 024 can be located here:
 // https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements
-
-// regular expression to check string is lowercase alphabetic characters only
-var isAlphaLower = regexp.MustCompile(`^[a-z]+$`).MatchString
-
-// regular expression to check string is alphanumeric
-var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
@@ -32,7 +26,7 @@ func defaultIdentifierValidator(id string, min, max int) error {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}
 	// valid id must contain only lower alphabetic characters
-	if !isAlphaLower(id) {
+	if !sdk.IsAlphaLower(id) {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s must contain only lowercase alphabetic characters", id)
 	}
 	return nil
@@ -75,7 +69,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 		for _, p := range pathArr {
 			// Each path element must either be valid identifier or alphanumeric
 			err := idValidator(p)
-			if err != nil && !isAlphaNumeric(p) {
+			if err != nil && !sdk.IsAlphaNumeric(p) {
 				return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains invalid identifier or non-alphanumeric path element: %s", path, p)
 			}
 		}
@@ -94,7 +88,7 @@ func DefaultPathValidator(path string) error {
 
 	for _, p := range pathArr {
 		// Each path element must be alphanumeric and non-blank
-		if strings.TrimSpace(p) == "" || !isAlphaNumeric(p) {
+		if strings.TrimSpace(p) == "" || !sdk.IsAlphaNumeric(p) {
 			return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains an invalid non-alphanumeric character: '%s'", path, p)
 		}
 	}

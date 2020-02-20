@@ -12,7 +12,7 @@ var ModuleCdc = codec.New()
 // RegisterCodec registers the IBC transfer types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTransfer{}, "ibc/transfer/MsgTransfer", nil)
-	cdc.RegisterConcrete(PacketDataTransfer{}, "ibc/transfer/PacketDataTransfer", nil)
+	cdc.RegisterConcrete(FungibleTokenPacketData{}, "ibc/transfer/PacketDataTransfer", nil)
 }
 
 func init() {

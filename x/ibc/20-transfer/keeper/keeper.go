@@ -55,7 +55,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.ModuleName))
 }
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
@@ -64,7 +64,19 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccount
 }
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function
-// in order to expose it to the ICS20 trasfer handler.
-func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error {
+// in order to expose it to the ICS20 transfer handler.
+func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketAcknowledgementI) error {
 	return k.channelKeeper.PacketExecuted(ctx, packet, acknowledgement)
+}
+
+// ChanCloseInit defines a wrapper function for the channel Keeper's function
+// in order to expose it to the ICS20 trasfer handler.
+func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
+	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID)
+}
+
+// TimeoutExecuted defines a wrapper function for the channel Keeper's function
+// in order to expose it to the ICS20 transfer handler.
+func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error {
+	return k.channelKeeper.TimeoutExecuted(ctx, packet)
 }

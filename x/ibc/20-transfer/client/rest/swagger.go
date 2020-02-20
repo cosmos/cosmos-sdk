@@ -12,16 +12,9 @@ type (
 	}
 
 	PostTransfer struct {
-		Msgs       []types.MsgTransfer `json:"msg" yaml:"msg"`
+		Msgs       []types.MsgTransfer      `json:"msg" yaml:"msg"`
 		Fee        authtypes.StdFee         `json:"fee" yaml:"fee"`
 		Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
-		Memo       string              `json:"memo" yaml:"memo"`
-	}
-
-	PostRecvPacket struct {
-		Msgs       []types.MsgRecvPacket `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee           `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature   `json:"signatures" yaml:"signatures"`
-		Memo       string                `json:"memo" yaml:"memo"`
+		Memo       string                   `json:"memo" yaml:"memo"`
 	}
 )

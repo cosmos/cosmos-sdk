@@ -341,10 +341,7 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	bz, err := balance.Marshal()
-	if err != nil {
-		return err
-	}
+	bz := k.cdc.MustMarshalBinaryBare(&balance)
 	accountStore.Set([]byte(balance.Denom), bz)
 
 	return nil

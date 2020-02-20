@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,11 +12,11 @@ import (
 // SendTransfer handles transfer sending logic. There are 2 possible cases:
 //
 // 1. Sender chain is the source chain of the coins (i.e where they were minted): the coins
-// are transfered to an escrow address (i.e locked) on the sender chain and then
-// transfered to the destination chain (i.e not the source chain) via a packet
+// are transferred to an escrow address (i.e locked) on the sender chain and then
+// transferred to the destination chain (i.e not the source chain) via a packet
 // with the corresponding fungible token data.
 //
-// 2. Coins are not native from the sender chain (i.e tokens sent where transfered over
+// 2. Coins are not native from the sender chain (i.e tokens sent where transferred over
 // through IBC already): the coins are burned and then a packet is sent to the
 // source chain of the tokens.
 func (k Keeper) SendTransfer(
@@ -72,7 +71,7 @@ func (k Keeper) createOutgoingPacket(
 	// - Coins transferred from the destination chain should have their denomination
 	// prefixed with source port and channel IDs.
 	// - Coins transferred from the source chain can have their denomination
-	// clear from prefixes when transfered to the escrow account (i.e when they are
+	// clear from prefixes when transferred to the escrow account (i.e when they are
 	// locked) BUT MUST have the destination port and channel ID when constructing
 	// the packet data.
 	var prefix string
@@ -88,8 +87,6 @@ func (k Keeper) createOutgoingPacket(
 				coins[i] = coin
 			}
 		}
-
-		fmt.Println(coins)
 
 		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)

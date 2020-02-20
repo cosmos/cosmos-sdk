@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -57,7 +56,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.privVal = tmtypes.NewMockPV()
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	fmt.Printf("suite: %v\n", suite.valSet)
 	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:       testClientHeight,

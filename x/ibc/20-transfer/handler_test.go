@@ -37,11 +37,8 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
-<<<<<<< HEAD
-	height = 10
-=======
+	height  = 10
 	chainID = "gaia"
->>>>>>> 8c5d6ab2a97d5202aa88646db21afd303cf385bd
 
 	testChannelOrder   = channelexported.UNORDERED
 	testChannelVersion = "1.0"
@@ -63,19 +60,11 @@ var (
 type HandlerTestSuite struct {
 	suite.Suite
 
-<<<<<<< HEAD
-	cdc     *codec.Codec
-	ctx     sdk.Context
-	app     *simapp.SimApp
-	privVal tmtypes.PrivValidator
-	valSet  *tmtypes.ValidatorSet
-=======
 	cdc    *codec.Codec
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	valSet *tmtypes.ValidatorSet
 	header ibctmtypes.Header
->>>>>>> 8c5d6ab2a97d5202aa88646db21afd303cf385bd
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -86,9 +75,9 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
 
-	suite.privVal = tmtypes.NewMockPV()
+	privVal := tmtypes.NewMockPV()
 
-	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = ibctmtypes.CreateTestHeader(chainID, app.LastBlockHeight(), time.Now(), suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
 	suite.createClient()
@@ -106,14 +95,8 @@ func (suite *HandlerTestSuite) createClient() {
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: suite.valSet,
 	}
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	header := ibctmtypes.CreateTestHeader(testChainID, height, now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
-<<<<<<< HEAD
-	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, header)
-=======
 	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, suite.header)
->>>>>>> 8c5d6ab2a97d5202aa88646db21afd303cf385bd
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)

@@ -64,9 +64,9 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
 
-	suite.privVal = tmtypes.NewMockPV()
+	privVal := tmtypes.NewMockPV()
 
-	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = ibctmtypes.CreateTestHeader(chainID, app.LastBlockHeight(), time.Now(), suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
 

@@ -66,16 +66,21 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateClient() {
-	validUpdateHeader := ibctmtypes.CreateTestHeader(testClientID, suite.header.Height+1, suite.header.Time.Add(time.Minute),
-		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-	invalidUpdateHeader := ibctmtypes.CreateTestHeader(testClientID, suite.header.Height-3, suite.header.Time.Add(time.Minute),
-		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	// Must create header creation functions since suite.header gets recreated on each test case
+	createValidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height+1, suite.header.Time.Add(time.Minute),
+			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	}
+	createInvalidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height-3, suite.header.Time.Add(time.Minute),
+			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	}
+	var updateHeader ibctmtypes.Header
 
 	cases := []struct {
-		name         string
-		malleate     func() error
-		updateHeader ibctmtypes.Header
-		expPass      bool
+		name     string
+		malleate func() error
+		expPass  bool
 	}{
 		{"valid update", func() error {
 			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
@@ -83,25 +88,34 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				return err
 			}
 			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			updateHeader = createValidUpdateFn(suite)
 			return err
-		}, validUpdateHeader, true},
+		}, true},
 		{"client type not found", func() error {
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
-		}, validUpdateHeader, false},
+		}, false},
 		{"client type and header type mismatch", func() error {
 			suite.keeper.SetClientType(suite.ctx, testClientID, invalidClientType)
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
-		}, validUpdateHeader, false},
+		}, false},
 		{"client state not found", func() error {
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
-		}, validUpdateHeader, false},
+		}, false},
 		{"frozen client", func() error {
 			clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
 			suite.keeper.SetClientState(suite.ctx, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
-		}, validUpdateHeader, false},
+		}, false},
 		{"invalid header", func() error {
 			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 			if err != nil {
@@ -111,8 +125,10 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			if err != nil {
 				return err
 			}
+			updateHeader = createInvalidUpdateFn(suite)
+
 			return nil
-		}, invalidUpdateHeader, false},
+		}, false},
 	}
 
 	for i, tc := range cases {
@@ -123,24 +139,24 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			suite.ctx = suite.ctx.WithBlockTime(tc.updateHeader.Time.Add(time.Minute))
+			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
 
-			err = suite.keeper.UpdateClient(suite.ctx, testClientID, tc.updateHeader)
+			err = suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
 			if tc.expPass {
 				suite.Require().NoError(err, err)
 
 				expConsensusState := ibctmtypes.ConsensusState{
-					Height:       uint64(tc.updateHeader.Height),
-					Timestamp:    tc.updateHeader.Time,
-					Root:         commitment.NewRoot(tc.updateHeader.AppHash),
-					ValidatorSet: tc.updateHeader.ValidatorSet,
+					Height:       uint64(updateHeader.Height),
+					Timestamp:    updateHeader.Time,
+					Root:         commitment.NewRoot(updateHeader.AppHash),
+					ValidatorSet: updateHeader.ValidatorSet,
 				}
 
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
-				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(tc.updateHeader.GetHeight()))
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(updateHeader.GetHeight()))
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
@@ -148,7 +164,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				tmConsState.ValidatorSet.TotalVotingPower()
 
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(suite.header.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
+				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
 				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated on case %s", tc.name)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)

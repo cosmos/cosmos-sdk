@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,20 +30,20 @@ func (k Keeper) SendTransfer(
 	receiver sdk.AccAddress,
 	isSourceChain bool, // is the packet sender the source chain of the token?
 ) error {
-	// get the port and channel of the counterparty
-	sourceChan, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		return sdkerrors.Wrap(channel.ErrChannelNotFound, sourceChannel)
 	}
 
-	destinationPort := sourceChan.Counterparty.PortID
-	destinationChannel := sourceChan.Counterparty.ChannelID
+	destinationPort := sourceChannelEnd.Counterparty.PortID
+	destinationChannel := sourceChannelEnd.Counterparty.ChannelID
 
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
 		return channel.ErrSequenceSendNotFound
 	}
+
 	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver, isSourceChain)
 }
 
@@ -60,14 +61,11 @@ func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channel.Packet, data typ
 func (k Keeper) createOutgoingPacket(
 	ctx sdk.Context,
 	seq uint64,
-	sourcePort,
-	sourceChannel,
-	destinationPort,
-	destinationChannel string,
+	sourcePort, sourceChannel,
+	destinationPort, destinationChannel string,
 	destHeight uint64,
 	amount sdk.Coins,
-	sender sdk.AccAddress,
-	receiver sdk.AccAddress,
+	sender, receiver sdk.AccAddress,
 	isSourceChain bool,
 ) error {
 	// NOTE:
@@ -87,9 +85,11 @@ func (k Keeper) createOutgoingPacket(
 			if strings.HasPrefix(coin.Denom, prefix) {
 				coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 			} else {
-				coins[i] = amount[i]
+				coins[i] = coin
 			}
 		}
+
+		fmt.Println(coins)
 
 		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
@@ -151,7 +151,7 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	// NOTE: packet data type already checked in handler.go
 
 	if data.Source {
-		prefix := types.GetDenomPrefix(packet.GetDestChannel(), packet.GetDestChannel())
+		prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 		for _, coin := range data.Amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
 				return sdkerrors.Wrapf(

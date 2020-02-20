@@ -48,11 +48,9 @@ var (
 	testAddr1 = sdk.AccAddress([]byte("testaddr1"))
 	testAddr2 = sdk.AccAddress([]byte("testaddr2"))
 
-	testCoins, _          = sdk.ParseCoins("100atom")
-	destCoins             = sdk.NewCoins(sdk.NewInt64Coin("bank/firstchannel/atom", 1000))
-	destCoins2            = sdk.NewCoins(sdk.NewInt64Coin("testportid/secondchannel/atom", 100))
-	testPrefixedCoins1, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort1, testChannel1)))
-	testPrefixedCoins2, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort2, testChannel2)))
+	testCoins, _ = sdk.ParseCoins("100atom")
+	prefixCoins  = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
+	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
 )
 
 type KeeperTestSuite struct {

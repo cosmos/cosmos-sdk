@@ -5,13 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MsgSend - high level transaction of the coin module
-type MsgSend struct {
-	FromAddress sdk.AccAddress `json:"from_address" yaml:"from_address"`
-	ToAddress   sdk.AccAddress `json:"to_address" yaml:"to_address"`
-	Amount      sdk.Coins      `json:"amount" yaml:"amount"`
-}
-
 var _ sdk.Msg = MsgSend{}
 
 // NewMsgSend - construct arbitrary multi-in, multi-out send msg.
@@ -50,12 +43,6 @@ func (msg MsgSend) GetSignBytes() []byte {
 // GetSigners Implements Msg.
 func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
-}
-
-// MsgMultiSend - high level transaction of the coin module
-type MsgMultiSend struct {
-	Inputs  []Input  `json:"inputs" yaml:"inputs"`
-	Outputs []Output `json:"outputs" yaml:"outputs"`
 }
 
 var _ sdk.Msg = MsgMultiSend{}
@@ -99,12 +86,6 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 	return addrs
 }
 
-// Input models transaction input
-type Input struct {
-	Address sdk.AccAddress `json:"address" yaml:"address"`
-	Coins   sdk.Coins      `json:"coins" yaml:"coins"`
-}
-
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
 	if len(in.Address) == 0 {
@@ -125,12 +106,6 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 		Address: addr,
 		Coins:   coins,
 	}
-}
-
-// Output models transaction outputs
-type Output struct {
-	Address sdk.AccAddress `json:"address" yaml:"address"`
-	Coins   sdk.Coins      `json:"coins" yaml:"coins"`
 }
 
 // ValidateBasic - validate transaction output

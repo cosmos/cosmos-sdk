@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -20,7 +18,7 @@ func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keySendEnabled,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%v", gogotypes.BoolValue{Value: GenSendEnabled(r)})
+				return fmt.Sprintf("%v", GenSendEnabled(r))
 			},
 		),
 	}

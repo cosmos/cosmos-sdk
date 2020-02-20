@@ -16,14 +16,14 @@ func NewHandler(k Keeper) sdk.Handler {
 		case channeltypes.MsgPacket:
 			switch data := msg.Data.(type) {
 			case FungibleTokenPacketData:
-				return handlePacketDataTransfer(ctx, k, msg)
+				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.Data.(type) {
 			case FungibleTokenPacketData:
-				return handleTimeoutDataTransfer(ctx, k, msg)
+				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
@@ -57,9 +57,9 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 
 // See onRecvPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handlePacketDataTransfer(
-	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket,
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data FungibleTokenPacketData,
 ) (*sdk.Result, error) {
-	if err := k.ReceiveTransfer(ctx, msg.Packet); err != nil {
+	if err := k.ReceiveTransfer(ctx, msg.Packet, data); err != nil {
 		// NOTE (cwgoes): How do we want to handle this case? Maybe we should be more lenient,
 		// it's safe to leave the channel open I think.
 
@@ -92,8 +92,10 @@ func handlePacketDataTransfer(
 }
 
 // See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout) (*sdk.Result, error) {
-	if err := k.TimeoutTransfer(ctx, msg.Packet); err != nil {
+func handleTimeoutDataTransfer(
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data FungibleTokenPacketData,
+) (*sdk.Result, error) {
+	if err := k.TimeoutTransfer(ctx, msg.Packet, data); err != nil {
 		// This shouldn't happen, since we've already validated that we've sent the packet.
 		panic(err)
 	}

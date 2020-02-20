@@ -9,8 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
-// SendTransfer handles transfer sending logic.
-// The amount MUST be prefixed if it
+// SendTransfer handles transfer sending logic. There are 2 possible cases:
+//
+// 1. Sender chain is the source chain of the coins (i.e where they were minted): the coins
+// are transfered to an escrow address (i.e locked) on the sender chain and then
+// transfered to the destination chain (i.e not the source chain) via a packet
+// with the corresponding fungible token data.
+//
+// 2. Coins are not native from the sender chain (i.e tokens sent where transfered over
+// through IBC already): the coins are burned and then a packet is sent to the
+// source chain of the tokens.
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
@@ -19,7 +27,7 @@ func (k Keeper) SendTransfer(
 	amount sdk.Coins,
 	sender,
 	receiver sdk.AccAddress,
-	isSourceChain bool,
+	isSourceChain bool, // is the packet sender the source chain of the token?
 ) error {
 	// get the port and channel of the counterparty
 	sourceChan, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
@@ -35,32 +43,17 @@ func (k Keeper) SendTransfer(
 	if !found {
 		return channel.ErrSequenceSendNotFound
 	}
-
-	coins := make(sdk.Coins, len(amount))
-	switch {
-	case !isSourceChain:
-		// build the receiving denomination prefix
-		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
-		for i, coin := range amount {
-			if !strings.HasPrefix(coin.Denom, prefix) {
-				coins[i] = sdk.NewCoin(prefix+coin.Denom, coin.Amount)
-			}
-		}
-	default:
-		coins = amount
-	}
-
-	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, coins, sender, receiver, isSourceChain)
+	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver, isSourceChain)
 }
 
 // ReceiveTransfer handles transfer receiving logic.
-func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet channel.Packet) error {
-	return k.onRecvPacket(ctx, packet)
+func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+	return k.onRecvPacket(ctx, packet, data)
 }
 
 // TimeoutTransfer handles transfer timeout logic.
-func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channel.Packet) error {
-	return k.onTimeoutPacket(ctx, packet)
+func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+	return k.onTimeoutPacket(ctx, packet, data)
 }
 
 // See spec for this function: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
@@ -77,24 +70,45 @@ func (k Keeper) createOutgoingPacket(
 	receiver sdk.AccAddress,
 	isSourceChain bool,
 ) error {
+	// NOTE:
+	// - Coins transferred from the destination chain should have their denomination
+	// prefixed with source port and channel IDs.
+	// - Coins transferred from the source chain can have their denomination
+	// clear from prefixes when transfered to the escrow account (i.e when they are
+	// locked) BUT MUST have the destination port and channel ID when constructing
+	// the packet data.
+	var prefix string
+
 	if isSourceChain {
+		// clear the denomination from the prefix to send the coins to the escrow account
+		coins := make(sdk.Coins, len(amount))
+		prefix = types.GetDenomPrefix(destinationPort, destinationChannel)
+		for i, coin := range amount {
+			if strings.HasPrefix(coin.Denom, prefix) {
+				coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+			} else {
+				coins[i] = amount[i]
+			}
+		}
+
 		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
-		// NOTE: we can omit the destination prefix correctness since it's already populated
-		// internally on the SendTransfer function.
-
 		// escrow source tokens. It fails if balance insufficient.
 		if err := k.bankKeeper.SendCoins(
-			ctx, sender, escrowAddress, amount,
+			ctx, sender, escrowAddress, coins,
 		); err != nil {
 			return err
 		}
-	} else {
-		// burn vouchers from the sender's balance if the source is from another chain
 
-		// NOTE: we can omit the source prefix correctness since it's already populated
-		// internally on the SendTransfer function.
+	} else {
+		// build the receiving denomination prefix if it's not present
+		prefix = types.GetDenomPrefix(sourcePort, sourceChannel)
+		for i, coin := range amount {
+			if !strings.HasPrefix(coin.Denom, prefix) {
+				amount[i] = sdk.NewCoin(prefix+coin.Denom, coin.Amount)
+			}
+		}
 
 		// transfer the coins to the module account and burn them
 		if err := k.supplyKeeper.SendCoinsFromAccountToModule(
@@ -103,7 +117,7 @@ func (k Keeper) createOutgoingPacket(
 			return err
 		}
 
-		// burn from supply
+		// burn vouchers from the sender's balance if the source is from another chain
 		if err := k.supplyKeeper.BurnCoins(
 			ctx, types.GetModuleAccountName(), amount,
 		); err != nil {
@@ -114,8 +128,11 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
+	// NOTE: isSourceChain is negated since the counterparty chain
+	//
+
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender, receiver, isSourceChain, destHeight+DefaultPacketTimeout,
+		amount, sender, receiver, !isSourceChain, destHeight+DefaultPacketTimeout,
 	)
 
 	packet := channel.NewPacket(
@@ -130,14 +147,8 @@ func (k Keeper) createOutgoingPacket(
 	return k.channelKeeper.SendPacket(ctx, packet)
 }
 
-func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet) error {
-	data, ok := packet.GetData().(types.FungibleTokenPacketData)
-	if !ok {
-		return sdkerrors.Wrap(
-			channel.ErrInvalidPacket,
-			"data doesn't correspond to fungible token transfer",
-		)
-	}
+func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+	// NOTE: packet data type already checked in handler.go
 
 	if data.Source {
 		prefix := types.GetDenomPrefix(packet.GetDestChannel(), packet.GetDestChannel())
@@ -181,14 +192,8 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet) error {
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 }
 
-func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet) error {
-	data, ok := packet.GetData().(types.FungibleTokenPacketData)
-	if !ok {
-		return sdkerrors.Wrap(
-			channel.ErrInvalidPacket,
-			"data doesn't correspond to fungible token transfer",
-		)
-	}
+func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+	// NOTE: packet data type already checked in handler.go
 
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())

@@ -50,6 +50,7 @@ var (
 
 	testCoins, _          = sdk.ParseCoins("100atom")
 	destCoins             = sdk.NewCoins(sdk.NewInt64Coin("bank/firstchannel/atom", 1000))
+	destCoins2            = sdk.NewCoins(sdk.NewInt64Coin("testportid/secondchannel/atom", 100))
 	testPrefixedCoins1, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort1, testChannel1)))
 	testPrefixedCoins2, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort2, testChannel2)))
 )
@@ -144,6 +145,7 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
 }
 
+// nolint: unused
 func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),

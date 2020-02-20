@@ -5,7 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -18,6 +19,12 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		expPass       bool
 	}{
 		{"sucess transfer from source chain", testCoins,
+			true, func() {
+				suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, testCoins)
+				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
+				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
+			}, true},
+		{"sucess transfer from source chain with denom prefix", destCoins2,
 			true, func() {
 				suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, testCoins)
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
@@ -72,7 +79,8 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
-	var packet channel.Packet
+	var packet channeltypes.Packet
+	var data types.FungibleTokenPacketData
 	testCases := []struct {
 		msg      string
 		malleate func()
@@ -85,7 +93,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
-			err := suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, packet)
+			err := suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, packet, data)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)

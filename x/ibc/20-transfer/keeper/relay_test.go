@@ -60,12 +60,12 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			}, false, false},
 	}
-  
+
 	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, suite.header)
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
-  suite.NoError(err)
-  
+	suite.NoError(err)
+
 	for i, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {

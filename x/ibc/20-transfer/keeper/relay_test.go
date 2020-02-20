@@ -97,6 +97,11 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			func() {
 				data.Amount = testCoins
 			}, false},
+		{"incorrect dest prefix on coin denom",
+			func() {
+				data.Source = false
+				data.Amount = prefixCoins2
+			}, false},
 		{"mint failed",
 			func() {
 				data.Amount = prefixCoins2

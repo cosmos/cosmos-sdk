@@ -113,7 +113,6 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
 
 // MarshalEvidence marshals an EvidenceI interface.
 func (c *Codec) MarshalEvidence(eviI eviExported.EvidenceI) ([]byte, error) {
-	evi := &Evidence{}
 	evi.SetEvidenceI(eviI)
 	return c.MarshalBinaryLengthPrefixed(evi)
 }
@@ -142,8 +141,6 @@ func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviExported.EvidenceI, error) 
 }
 
 // ----------------------------------------------------------------------------
-
-// MakeCodec creates and returns a reference to an Amino codec that has all the
 // necessary types and interfaces registered. This codec is provided to all the
 // modules the application depends on.
 //

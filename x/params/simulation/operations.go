@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -21,7 +21,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		}
 
 		numChanges := simulation.RandIntBetween(r, 1, lenParamChange)
-		paramChanges := make([]types.ParamChange, numChanges)
+		paramChanges := make([]proposal.ParamChange, numChanges)
 
 		// map from key to empty struct; used only for look-up of the keys of the
 		// parameters that are already in the random set of changes.
@@ -40,10 +40,10 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 			// add a new distinct parameter to the set of changes and register the key
 			// to avoid further duplicates
 			paramChangesKeys[spc.ComposedKey()] = struct{}{}
-			paramChanges[i] = types.NewParamChange(spc.Subspace, spc.Key, spc.SimValue(r))
+			paramChanges[i] = proposal.NewParamChange(spc.Subspace, spc.Key, spc.SimValue(r))
 		}
 
-		return types.NewParameterChangeProposal(
+		return proposal.NewParameterChangeProposal(
 			simulation.RandStringOfLength(r, 140),  // title
 			simulation.RandStringOfLength(r, 5000), // description
 			paramChanges,                           // set of changes

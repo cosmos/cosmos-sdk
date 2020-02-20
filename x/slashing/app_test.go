@@ -20,7 +20,6 @@ import (
 var (
 	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 )
 
 func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.AccAddress, expFound bool) staking.Validator {

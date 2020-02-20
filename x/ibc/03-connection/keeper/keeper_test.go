@@ -20,6 +20,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
@@ -157,7 +158,24 @@ func (target *TestChain) CreateClient(client *TestChain) error {
 	client.Header = nextHeader(client)
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
+	commitID := client.App.LastCommitID()
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+
+	// Set HistoricalInfo on client chain after Commit
+	ctxClient := client.GetContext()
+	validator := staking.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	)
+	validator.Status = sdk.Bonded
+	validator.Tokens = sdk.NewInt(1000000) // get one voting power
+	validators := []staking.Validator{validator}
+	histInfo := staking.HistoricalInfo{
+		Header: abci.Header{
+			AppHash: commitID.Hash,
+		},
+		Valset: validators,
+	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
 
 	// Create target ctx
 	ctxTarget := target.GetContext()
@@ -202,8 +220,23 @@ func (target *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+
+	// Set HistoricalInfo on client chain after Commit
+	ctxClient := client.GetContext()
+	validator := staking.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	)
+	validator.Status = sdk.Bonded
+	validator.Tokens = sdk.NewInt(1000000)
+	validators := []staking.Validator{validator}
+	histInfo := staking.HistoricalInfo{
+		Header: abci.Header{
+			AppHash: commitID.Hash,
+		},
+		Valset: validators,
+	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       uint64(client.Header.Height),

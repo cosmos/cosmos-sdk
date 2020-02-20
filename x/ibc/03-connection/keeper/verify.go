@@ -19,9 +19,10 @@ func (k Keeper) VerifyClientConsensusState(
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
+	clientID := connection.GetCounterparty().GetClientID()
+	clientState, found := k.clientKeeper.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
 	return clientState.VerifyClientConsensusState(
@@ -39,9 +40,9 @@ func (k Keeper) VerifyConnectionState(
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
+	clientState, found := k.clientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
 	if !found {
-		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connectionEnd.GetClientID())
 	}
 
 	// TODO: move to specific clients; blocked by #5502

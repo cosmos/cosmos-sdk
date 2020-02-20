@@ -151,7 +151,7 @@ func createTestInput(
 
 	pk := keeper.NewKeeper(appCodec, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(appCodec, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
+	bankKeeper := bank.NewBaseKeeper(appCodec, keyBank, accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bankKeeper, maccPerms)
 
 	sk := staking.NewKeeper(staking.ModuleCdc, keyStaking, bankKeeper, supplyKeeper, pk.Subspace(staking.DefaultParamspace))

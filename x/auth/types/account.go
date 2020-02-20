@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
@@ -16,17 +17,14 @@ var _ exported.GenesisAccount = (*BaseAccount)(nil)
 
 // NewBaseAccount creates a new BaseAccount object
 func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
-	var pkStr string
-	if pubKey != nil {
-		pkStr = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	}
-
-	return &BaseAccount{
+	acc := &BaseAccount{
 		Address:       address,
-		PubKey:        pkStr,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
+
+	acc.SetPubKey(pubKey)
+	return acc
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
@@ -57,22 +55,23 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // GetPubKey - Implements sdk.Account.
-func (acc BaseAccount) GetPubKey() crypto.PubKey {
-	if acc.PubKey == "" {
+func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
+	if len(acc.PubKey) == 0 {
 		return nil
 	}
 
-	return sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, acc.PubKey)
+	codec.Cdc.MustUnmarshalBinaryBare(acc.PubKey, &pk)
+	return pk
 }
 
 // SetPubKey - Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	pkStr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	if err != nil {
-		return err
+	if pubKey == nil {
+		acc.PubKey = nil
+	} else {
+		acc.PubKey = pubKey.Bytes()
 	}
 
-	acc.PubKey = pkStr
 	return nil
 }
 
@@ -100,15 +99,47 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 
 // Validate checks for errors on the account fields
 func (acc BaseAccount) Validate() error {
-	if acc.PubKey != "" && acc.Address != nil &&
+	if len(acc.PubKey) != 0 && acc.Address != nil &&
 		!bytes.Equal(acc.GetPubKey().Address().Bytes(), acc.Address.Bytes()) {
-		return errors.New("pubkey and address pair is invalid")
+		return errors.New("account address and pubkey address do not match")
 	}
 
 	return nil
 }
 
 func (acc BaseAccount) String() string {
-	out, _ := yaml.Marshal(acc)
-	return string(out)
+	out, _ := acc.MarshalYAML()
+	return out.(string)
+}
+
+type baseAccountPretty struct {
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	PubKey        string         `json:"public_key" yaml:"public_key"`
+	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+}
+
+// MarshalYAML returns the YAML representation of an account.
+func (acc BaseAccount) MarshalYAML() (interface{}, error) {
+	alias := baseAccountPretty{
+		Address:       acc.Address,
+		AccountNumber: acc.AccountNumber,
+		Sequence:      acc.Sequence,
+	}
+
+	if acc.PubKey != nil {
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.GetPubKey())
+		if err != nil {
+			return nil, err
+		}
+
+		alias.PubKey = pks
+	}
+
+	bz, err := yaml.Marshal(alias)
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
 }

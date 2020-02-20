@@ -3,8 +3,10 @@ package keeper
 import (
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
@@ -31,7 +33,7 @@ func (k Keeper) HasValidatorSigningInfo(ctx sdk.Context, consAddr sdk.ConsAddres
 // SetValidatorSigningInfo sets the validator signing info to a consensus address key
 func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&info)
 	store.Set(types.GetValidatorSigningInfoKey(address), bz)
 }
 
@@ -53,16 +55,17 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 }
 
 // GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
-func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
+func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) bool {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
+	var missed gogotypes.BoolValue
 	if bz == nil {
 		// lazy: treat empty key as not missed
-		missed = false
-		return
+		return false
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
-	return
+
+	return missed.Value
 }
 
 // IterateValidatorMissedBlockBitArray iterates over the signed blocks window
@@ -74,13 +77,14 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 	index := int64(0)
 	// Array may be sparse
 	for ; index < k.SignedBlocksWindow(ctx); index++ {
-		var missed bool
+		var missed gogotypes.BoolValue
 		bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
 		if bz == nil {
 			continue
 		}
+
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
-		if handler(index, missed) {
+		if handler(index, missed.Value) {
 			break
 		}
 	}
@@ -128,7 +132,7 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 // missed a block in the current window
 func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.BoolValue{Value: missed})
 	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 

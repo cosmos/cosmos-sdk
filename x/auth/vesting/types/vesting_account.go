@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -406,7 +405,7 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals raw JSON bytes into a ContinuousVestingAccount.
 func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -597,7 +596,7 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals raw JSON bytes into a PeriodicVestingAccount.
 func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 
@@ -700,7 +699,7 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals raw JSON bytes into a DelayedVestingAccount.
 func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	var alias vestingAccountJSON
-	if err := json.Unmarshal(bz, &alias); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(bz, &alias); err != nil {
 		return err
 	}
 

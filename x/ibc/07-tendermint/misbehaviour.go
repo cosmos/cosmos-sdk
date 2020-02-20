@@ -79,7 +79,8 @@ func checkMisbehaviour(
 		return errors.New("unbonding period since last consensus state timestamp is over")
 	}
 
-	// TODO: - Evidence must be within trusting period
+	// TODO: Evidence must be within trusting period
+	// Blocked on https://github.com/cosmos/ics/issues/379
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet

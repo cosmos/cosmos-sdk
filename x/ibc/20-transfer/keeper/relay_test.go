@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -16,8 +15,6 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func (suite *KeeperTestSuite) createClient() {
@@ -32,10 +29,7 @@ func (suite *KeeperTestSuite) createClient() {
 		ValidatorSet: suite.valSet,
 	}
 
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	header := ibctmtypes.CreateTestHeader(testChainID, height, now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-
-	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, header)
+	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, suite.header)
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)

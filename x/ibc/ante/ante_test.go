@@ -32,6 +32,7 @@ const (
 	testClient     = "test-client"
 	testClientType = clientexported.Tendermint
 
+	chainID        = "gaia"
 	testConnection = "testconnection"
 
 	testChannelVersion = "1.0"
@@ -46,12 +47,12 @@ const (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	cdc     *codec.Codec
-	ctx     sdk.Context
-	app     *simapp.SimApp
-	privVal tmtypes.PrivValidator
-	valSet  *tmtypes.ValidatorSet
-	now     time.Time
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	app    *simapp.SimApp
+	valSet *tmtypes.ValidatorSet
+	now    time.Time
+	header ibctmtypes.Header
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -67,6 +68,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, app.LastBlockHeight(), time.Now(), suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.createClient()
 	suite.createConnection(connectionexported.OPEN)
@@ -86,9 +88,7 @@ func (suite *HandlerTestSuite) createClient() {
 		ValidatorSet: suite.valSet,
 	}
 
-	header := ibctmtypes.CreateTestHeader(testChainID, height, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
-
-	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, header)
+	clientState, err := ibctmtypes.Initialize(testClient, trustingPeriod, ubdPeriod, suite.header)
 	suite.NoError(err)
 	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
 	suite.NoError(err)
@@ -112,7 +112,6 @@ func (suite *HandlerTestSuite) updateClient() {
 	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, uint64(height-1), state)
 	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClient)
 	cs, _ := csi.(ibctmtypes.ClientState)
-	// TODO: can i get away with not updating height?
 	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
 }
 

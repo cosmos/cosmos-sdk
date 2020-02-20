@@ -19,17 +19,20 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		malleate      func()
 		expPass       bool
 	}{
+		{"successful transfer from source chain", testCoins,
 			true, func() {
 				suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, testCoins)
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			}, true},
+		{"successful transfer from source chain with denom prefix", testCoins2,
 			true, func() {
 				_, err := suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, testCoins)
 				suite.Require().NoError(err)
 				suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
 				suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, 1)
 			}, true},
+		{"successful transfer from external chain", testCoins,
 			false, func() {
 				suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(prefixCoins))
 				_, err := suite.app.BankKeeper.AddCoins(suite.ctx, testAddr1, prefixCoins)

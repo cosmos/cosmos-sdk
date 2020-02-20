@@ -13,8 +13,11 @@ import (
 // SendTransfer handles transfer sending logic. There are 2 possible cases:
 //
 // 1. Sender chain is the source chain of the coins (i.e where they were minted): the coins
+// are transferred to an escrow address (i.e locked) on the sender chain and then
+// transferred to the destination chain (i.e not the source chain) via a packet
 // with the corresponding fungible token data.
 //
+// 2. Coins are not native from the sender chain (i.e tokens sent where transferred over
 // through IBC already): the coins are burned and then a packet is sent to the
 // source chain of the tokens.
 func (k Keeper) SendTransfer(

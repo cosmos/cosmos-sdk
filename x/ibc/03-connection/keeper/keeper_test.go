@@ -114,6 +114,7 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 	testHeight++
+	fmt.Println("TestHeight:", testHeight)
 
 	clientState, err := ibctmtypes.Initialize(clientID, trustingPeriod, ubdPeriod, suite.header)
 	suite.Require().NoError(err)

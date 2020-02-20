@@ -392,10 +392,19 @@ func (invalidPacketT) Type() string {
 	return "invalid"
 }
 
+var _ exported.PacketAcknowledgementI = invalidAckT{}
+
+type invalidAckT struct{}
+
+func (invalidAckT) GetBytes() []byte {
+	return []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
+}
+
 // define variables used for testing
 var (
 	packet        = NewPacket(validPacketT{}, 1, portid, chanid, cpportid, cpchanid)
 	invalidPacket = NewPacket(invalidPacketT{}, 0, portid, chanid, cpportid, cpchanid)
+	invalidAck    = invalidAckT{}
 
 	emptyProof     = commitment.Proof{Proof: nil}
 	invalidProofs1 = commitment.ProofI(nil)
@@ -521,7 +530,7 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, emptyAddr),
 		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
 		NewMsgAcknowledgement(invalidPacket, packet.GetData(), proof, 1, addr),
-		NewMsgAcknowledgement(packet, invalidPacket.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(packet, invalidAck, proof, 1, addr),
 		NewMsgAcknowledgement(packet, packet.GetData(), invalidProofs1, 1, addr),
 	}
 

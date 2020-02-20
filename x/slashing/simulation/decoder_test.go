@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -12,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // nolint:deadcode,unused,varcheck
@@ -36,11 +38,11 @@ func TestDecodeStore(t *testing.T) {
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
 	bechPK := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, delPk1)
-	missed := true
+	missed := gogotypes.BoolValue{Value: true}
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		tmkv.Pair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
+		tmkv.Pair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(&missed)},
 		tmkv.Pair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
@@ -50,7 +52,7 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
-		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed, missed)},
+		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed.Value, missed.Value)},
 		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPK, bechPK)},
 		{"other", ""},
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -68,7 +68,11 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			}
 
 			var signingInfo types.ValidatorSigningInfo
-			cdc.MustUnmarshalBinaryLengthPrefixed(res, &signingInfo)
+			signingInfo, err = types.UnmarshalValSigningInfo(types.ModuleCdc, res)
+			if err != nil {
+				return err
+			}
+
 			return cliCtx.PrintOutput(signingInfo)
 		},
 	}

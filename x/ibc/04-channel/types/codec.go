@@ -22,6 +22,7 @@ func init() {
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.PacketI)(nil), nil)
 	cdc.RegisterInterface((*exported.PacketDataI)(nil), nil)
+	cdc.RegisterInterface((*exported.PacketAcknowledgementI)(nil), nil)
 	cdc.RegisterConcrete(Channel{}, "ibc/channel/Channel", nil)
 	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 

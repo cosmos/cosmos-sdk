@@ -3,7 +3,6 @@ package transfer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -16,36 +15,38 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
 			switch data := msg.Data.(type) {
-			case PacketDataTransfer: // i.e fulfills the Data interface
+			case FungibleTokenPacketData:
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", msg)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.Data.(type) {
-			case PacketDataTransfer:
+			case FungibleTokenPacketData:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", data)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 message type: %T", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer message type: %T", msg)
 		}
 	}
 }
 
+// See createOutgoingPacket in spec:https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
-	err := k.SendTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.DestHeight, msg.Amount, msg.Sender, msg.Receiver, msg.Source)
-	if err != nil {
+	if err := k.SendTransfer(
+		ctx, msg.SourcePort, msg.SourceChannel, msg.DestHeight, msg.Amount, msg.Sender, msg.Receiver, msg.Source,
+	); err != nil {
 		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
-			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver.String()),
+			sdk.NewAttribute(AttributeKeyReceiver, msg.Receiver.String()),
 		),
 	)
 
@@ -54,43 +55,57 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 	}, nil
 }
 
-func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer) (*sdk.Result, error) {
-	packet := msg.Packet
-	err := k.ReceiveTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
-	if err != nil {
-		panic(err)
-		// TODO: Source chain sent invalid packet, shutdown channel
+// See onRecvPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
+func handlePacketDataTransfer(
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data FungibleTokenPacketData,
+) (*sdk.Result, error) {
+	if err := k.ReceiveTransfer(ctx, msg.Packet, data); err != nil {
+		// NOTE (cwgoes): How do we want to handle this case? Maybe we should be more lenient,
+		// it's safe to leave the channel open I think.
+
+		// TODO: handle packet receipt that due to an error (specify)
+		// the receiving chain couldn't process the transfer
+
+		// source chain sent invalid packet, shutdown our channel end
+		if err := k.ChanCloseInit(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel); err != nil {
+			return nil, err
+		}
+		return nil, err
 	}
 
-	acknowledgement := types.AckDataTransfer{}
-	err = k.PacketExecuted(ctx, packet, acknowledgement)
-	if err != nil {
-		panic(err)
-		// TODO: This should not happen
+	acknowledgement := AckDataTransfer{}
+	if err := k.PacketExecuted(ctx, msg.Packet, acknowledgement); err != nil {
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
 		),
 	)
 
-	// packet receiving should not fail
 	return &sdk.Result{
 		Events: ctx.EventManager().Events(),
 	}, nil
 }
 
-func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) (*sdk.Result, error) {
-	packet := msg.Packet
-	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
-	if err != nil {
-		// This chain sent invalid packet
+// See onTimeoutPacket in spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
+func handleTimeoutDataTransfer(
+	ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data FungibleTokenPacketData,
+) (*sdk.Result, error) {
+	if err := k.TimeoutTransfer(ctx, msg.Packet, data); err != nil {
+		// This shouldn't happen, since we've already validated that we've sent the packet.
 		panic(err)
 	}
-	// packet timeout should not fail
+
+	if err := k.TimeoutExecuted(ctx, msg.Packet); err != nil {
+		// This shouldn't happen, since we've already validated that we've sent the packet.
+		// TODO: Figure out what happens if the capability authorisation changes.
+		panic(err)
+	}
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events(),
 	}, nil

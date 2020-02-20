@@ -6,6 +6,7 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -212,7 +213,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
 
-	ack := []byte("ack")
+	ack := transfertypes.AckDataTransfer{}
 
 	testCases := []testCase{
 		{"success", func() {

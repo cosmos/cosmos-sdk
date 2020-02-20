@@ -53,7 +53,7 @@ func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.A
 		return nil, height, err
 	}
 
-	return acc, height, nil
+	return account, height, nil
 }
 
 // EnsureExists returns an error if no account exists for the given address else nil.

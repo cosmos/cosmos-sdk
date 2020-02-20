@@ -186,6 +186,17 @@ func (target *TestChain) CreateClient(client *TestChain) error {
 }
 
 func (target *TestChain) updateClient(client *TestChain) {
+	// Create target ctx
+	ctxTarget := target.GetContext()
+
+	// if clientState does not already exist, return without updating
+	_, found := target.App.IBCKeeper.ClientKeeper.GetClientState(
+		ctxTarget, client.ClientID,
+	)
+	if !found {
+		return
+	}
+
 	// always commit when updateClient and begin a new block
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
@@ -201,11 +212,6 @@ func (target *TestChain) updateClient(client *TestChain) {
 		ValidatorSet: client.Vals,
 	}
 
-	// Create target ctx
-	ctxTarget := target.GetContext()
-
-	fmt.Println("ClientID:", client.ClientID)
-	fmt.Println("Height:", client.Header.Height)
 	target.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
 		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
 	)

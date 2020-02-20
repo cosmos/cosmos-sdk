@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -44,6 +45,8 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		}, false},
 	}
 
+	// Create Client of chain B on Chain App
+	// Check that we can verify B's consensus state on chain A
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
@@ -88,20 +91,30 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 		}, false},
 	}
 
+	// Chains A and B create clients for each other
+	// A creates connectionEnd for chain B and stores it in state
+	// Check that B can verify connection is stored after some updates
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
+
+			// create and store connection on chain A
 			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+
+			// create expected connection
+			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitment.NewPrefix([]byte("ibc")))
+			expectedConnection := types.NewConnectionEnd(exported.INIT, testClientIDA, counterparty, []string{"1.0.0"})
+
+			// perform a couple updates of chain A on chain B
 			suite.chainB.updateClient(suite.chainA)
-			counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitment.NewPrefix([]byte("ibc")))
-			expectedConnection := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty, []string{"1.0.0"})
 			suite.chainB.updateClient(suite.chainA)
 			proofHeight := uint64(suite.chainA.Header.Height)
 			// proof, proofHeight := suite.queryProof(connectionKey)
 
+			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainB.GetContext(), connection, proofHeight, tc.proof, testConnectionIDA, expectedConnection,
 			)
@@ -115,241 +128,254 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	}
 }
 
-// func (suite *KeeperTestSuite) TestVerifyChannelState() {
-// 	// channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
-// 	cases := []struct {
-// 		msg         string
-// 		proof       commitment.ProofI
-// 		proofHeight uint64
-// 		malleate    func()
-// 		expPass     bool
-// 	}{
-// 		{"verification success", ibctypes.ValidProof{}, 2, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, true},
-// 		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
-// 		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, false},
-// 		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
-// 			suite.createClient(testClientIDB)
-// 		}, false},
-// 	}
+func (suite *KeeperTestSuite) TestVerifyChannelState() {
+	// channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
+	cases := []struct {
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
+	}{
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, true},
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, false},
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainB)
+		}, false},
+	}
 
-// 	for i, tc := range cases {
-// 		tc := tc
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+	// Chain A creates channel for chain B and stores in its state
+	// Check that chainB can verify channel is stored in chain A
+	for i, tc := range cases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 			tc.malleate()
-// 			connection := suite.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-// 			channel := suite.createChannel(
-// 				testPort1, testChannel1, testPort2, testChannel2,
-// 				channelexported.OPEN, channelexported.ORDERED, testConnectionIDA,
-// 			)
-// 			suite.updateClient(testClientIDA)
+			tc.malleate()
+			// Create and store channel on chain A
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			channel := suite.chainA.createChannel(
+				testPort1, testChannel1, testPort2, testChannel2,
+				channelexported.OPEN, channelexported.ORDERED, testConnectionIDA,
+			)
 
-// 			// proof, proofHeight := suite.queryProof(channelKey)
-// 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-// 				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
-// 				testChannel1, channel,
-// 			)
+			// Update chainA client on chainB
+			suite.chainB.updateClient(suite.chainA)
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+			// Check that Chain B can verify channel is stored on chainA
+			// proof, proofHeight := suite.queryProof(channelKey)
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyChannelState(
+				suite.chainB.GetContext(), connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, channel,
+			)
 
-// func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
-// 	// commitmentKey := ibctypes.KeyPacketCommitment(testPort1, testChannel1, 1)
-// 	commitmentBz := []byte("commitment")
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
-// 	cases := []struct {
-// 		msg         string
-// 		proof       commitment.ProofI
-// 		proofHeight uint64
-// 		malleate    func()
-// 		expPass     bool
-// 	}{
-// 		{"verification success", ibctypes.ValidProof{}, 2, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, true},
-// 		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
-// 		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, false},
-// 		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
-// 			suite.createClient(testClientIDB)
-// 		}, false},
-// 	}
+func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
+	// commitmentKey := ibctypes.KeyPacketCommitment(testPort1, testChannel1, 1)
+	commitmentBz := []byte("commitment")
 
-// 	for i, tc := range cases {
-// 		tc := tc
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+	cases := []struct {
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
+	}{
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, true},
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, false},
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, false},
+	}
 
-// 			tc.malleate()
-// 			connection := suite.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-// 			suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, 1, commitmentBz)
-// 			suite.updateClient(testClientIDA)
+	// ChainA sets packet commitment on channel with chainB in its state
+	// Check that ChainB can verify the PacketCommitment
+	for i, tc := range cases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 			// proof, proofHeight := suite.queryProof(commitmentKey)
-// 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
-// 				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
-// 				testChannel1, 1, commitmentBz,
-// 			)
+			tc.malleate()
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+			// Set PacketCommitment on chainA
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), testPort1, testChannel1, 1, commitmentBz)
 
-// func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
-// 	// packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
-// 	ack := []byte("acknowledgement")
+			// Update ChainA client on chainB
+			suite.chainB.updateClient(suite.chainA)
 
-// 	cases := []struct {
-// 		msg         string
-// 		proof       commitment.ProofI
-// 		proofHeight uint64
-// 		malleate    func()
-// 		expPass     bool
-// 	}{
-// 		{"verification success", ibctypes.ValidProof{}, 2, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, true},
-// 		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
-// 		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, false},
-// 		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
-// 			suite.createClient(testClientIDB)
-// 		}, false},
-// 	}
+			// Check that ChainB can verify PacketCommitment stored in chainA
+			// proof, proofHeight := suite.queryProof(commitmentKey)
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
+				suite.chainB.GetContext(), connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1, commitmentBz,
+			)
 
-// 	for i, tc := range cases {
-// 		tc := tc
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
-// 			tc.malleate()
-// 			connection := suite.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-// 			suite.app.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, 1, ack)
-// 			suite.updateClient(testClientIDA)
-// 			// proof, proofHeight := suite.queryProof(packetAckKey)
+func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
+	// packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
+	ack := []byte("acknowledgement")
 
-// 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
-// 				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
-// 				testChannel1, 1, ack,
-// 			)
+	cases := []struct {
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
+	}{
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, true},
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, false},
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainB)
+		}, false},
+	}
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+	for i, tc := range cases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-// 	// packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
+			tc.malleate()
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort1, testChannel1, 1, ack)
+			suite.chainB.updateClient(suite.chainA)
+			// proof, proofHeight := suite.queryProof(packetAckKey)
 
-// 	cases := []struct {
-// 		msg         string
-// 		proof       commitment.ProofI
-// 		proofHeight uint64
-// 		malleate    func()
-// 		expPass     bool
-// 	}{
-// 		{"verification success", ibctypes.ValidProof{}, 2, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, true},
-// 		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
-// 		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, false},
-// 		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
-// 			suite.createClient(testClientIDB)
-// 		}, false},
-// 	}
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgement(
+				suite.chainB.GetContext(), connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1, ack,
+			)
 
-// 	for i, tc := range cases {
-// 		tc := tc
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
-// 			tc.malleate()
-// 			connection := suite.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-// 			suite.updateClient(testClientIDA)
+func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+	// packetAckKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
 
-// 			// proof, proofHeight := suite.queryProof(packetAckKey)
+	cases := []struct {
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
+	}{
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, true},
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, false},
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainB)
+		}, false},
+	}
 
-// 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
-// 				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
-// 				testChannel1, 1,
-// 			)
+	for i, tc := range cases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+			tc.malleate()
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			suite.chainB.updateClient(suite.chainA)
 
-// func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
-// 	// nextSeqRcvKey := ibctypes.KeyNextSequenceRecv(testPort1, testChannel1)
+			// proof, proofHeight := suite.queryProof(packetAckKey)
 
-// 	cases := []struct {
-// 		msg         string
-// 		proof       commitment.ProofI
-// 		proofHeight uint64
-// 		malleate    func()
-// 		expPass     bool
-// 	}{
-// 		{"verification success", ibctypes.ValidProof{}, 2, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, true},
-// 		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
-// 		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
-// 			suite.createClient(testClientIDA)
-// 		}, false},
-// 		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
-// 			suite.createClient(testClientIDB)
-// 		}, false},
-// 	}
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
+				suite.chainB.GetContext(), connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1,
+			)
 
-// 	for i, tc := range cases {
-// 		tc := tc
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
-// 			tc.malleate()
-// 			connection := suite.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-// 			suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, testPort1, testChannel1, 1)
-// 			suite.updateClient(testClientIDA)
+func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
+	// nextSeqRcvKey := ibctypes.KeyNextSequenceRecv(testPort1, testChannel1)
 
-// 			// proof, proofHeight := suite.queryProof(nextSeqRcvKey)
-// 			err := suite.app.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
-// 				suite.ctx, connection, tc.proofHeight, tc.proof, testPort1,
-// 				testChannel1, 1,
-// 			)
+	cases := []struct {
+		msg         string
+		proof       commitment.ProofI
+		proofHeight uint64
+		malleate    func()
+		expPass     bool
+	}{
+		{"verification success", ibctypes.ValidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, true},
+		{"client state not found", ibctypes.ValidProof{}, 2, func() {}, false},
+		{"consensus state not found", ibctypes.ValidProof{}, 100, func() {
+			suite.chainB.CreateClient(suite.chainA)
+		}, false},
+		{"verification failed", ibctypes.InvalidProof{}, 2, func() {
+			suite.chainB.CreateClient(suite.chainB)
+		}, false},
+	}
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-// 			} else {
-// 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-// 			}
-// 		})
-// 	}
-// }
+	for i, tc := range cases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+			suite.chainB.updateClient(suite.chainA)
+
+			// proof, proofHeight := suite.queryProof(nextSeqRcvKey)
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyNextSequenceRecv(
+				suite.chainB.GetContext(), connection, tc.proofHeight, tc.proof, testPort1,
+				testChannel1, 1,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}

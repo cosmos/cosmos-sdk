@@ -37,7 +37,7 @@ func (k Keeper) VerifyConnectionState(
 	height uint64,
 	proof commitment.ProofI,
 	connectionID string,
-	connectionEnd exported.ConnectionI, // oposite connection
+	connectionEnd exported.ConnectionI, // opposite connection
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {

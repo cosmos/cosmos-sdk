@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -203,14 +205,14 @@ func TestQueryValidators(t *testing.T) {
 	}
 }
 
-func TestQueryDelegation(t *testing.T) {
+func TestQueryDelegations(t *testing.T) {
 	cdc := codec.New()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
 
-	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
+	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
@@ -221,6 +223,8 @@ func TestQueryDelegation(t *testing.T) {
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal1, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
+	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal2, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val2)
@@ -351,7 +355,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].DelegatorAddress)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes[0].Balance)
 
-	// Query unbonging delegation
+	// Query unbonding delegation
 	unbondingTokens := sdk.TokensFromConsensusPower(10)
 	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.NoError(t, err)

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -141,7 +142,7 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToDisk adds plan height to upgrade-info.json
+// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
@@ -163,21 +164,17 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
-	upgradeInfoFileDir := path.Join(k.GetHomeDir(), "data")
-
-	if _, err := os.Stat(upgradeInfoFileDir); os.IsNotExist(err) {
-		err = os.Mkdir(upgradeInfoFileDir, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
+	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
+	if err != nil {
+		return "", err
 	}
 
 	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
 }
 
-// GetHomeDir returns the height at which the given upgrade was executed
-func (k Keeper) GetHomeDir() string {
+// getHomeDir returns the height at which the given upgrade was executed
+func (k Keeper) getHomeDir() string {
 	return k.homePath
 }
 
@@ -185,21 +182,19 @@ func (k Keeper) GetHomeDir() string {
 // which is written to disk by the old binary when panic'ing
 // if there's an error in reading the info,
 // it assumes that the upgrade info is not available
-func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeName string, upgradeHeight int64) {
+func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeInfo store.UpgradeInfo) {
 	upgradeInfoPath, err := k.GetUpgradeInfoPath()
 	// if error in reading the path, assume there are no upgrades
 	if err != nil {
-		return "", -1
+		return upgradeInfo
 	}
 
 	data, err := ioutil.ReadFile(upgradeInfoPath)
-
 	// if error in reading the file, assume there are no upgrades
 	if err != nil {
-		return "", -1
+		return upgradeInfo
 	}
 
-	var upgradeInfo store.UpgradeInfo
 	json.Unmarshal(data, &upgradeInfo)
-	return upgradeInfo.Name, upgradeInfo.Height
+	return
 }

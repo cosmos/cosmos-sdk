@@ -154,7 +154,6 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 		Height: height,
 	}
 	info, err := json.Marshal(upgradeInfo)
-
 	if err != nil {
 		return err
 	}

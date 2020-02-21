@@ -10,6 +10,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/golang/protobuf v1.3.3
+	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mattn/go-isatty v0.0.12
@@ -18,7 +19,7 @@ require (
 	github.com/rakyll/statik v0.1.6
 	github.com/regen-network/cosmos-proto v0.1.1-0.20200213154359-02baa11ea7c2
 	github.com/spf13/afero v1.2.1 // indirect
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.6
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.2

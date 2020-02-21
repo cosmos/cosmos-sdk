@@ -37,7 +37,7 @@ message Supply {
 
 message Evidence {
   option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
 
   oneof sum {
     cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;

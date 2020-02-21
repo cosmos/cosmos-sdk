@@ -111,7 +111,7 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 		return err
 	}
 
-	var evidence exported.EvidenceI
+	var evidence exported.Evidence
 	err = cdc.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)
@@ -133,7 +133,7 @@ func queryAllEvidence(cdc *codec.Codec, cliCtx context.CLIContext) error {
 		return err
 	}
 
-	var evidence []exported.EvidenceI
+	var evidence []exported.Evidence
 	err = cdc.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)

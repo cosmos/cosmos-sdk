@@ -26,7 +26,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.GetHeight(), e.Height)
 	require.Equal(t, e.Type(), types.TypeEquivocation)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
-	require.Equal(t, e.Hash().String(), "808DA679674C9C0599965D02EBC5D4DCFD5E700D03035BBCD2DECCBBF44386F7")
+	require.Equal(t, e.Hash().String(), "16337536D55FB6DB93360AED8FDB9B615BFACAF0440C28C46B89F167D042154A")
 	require.Equal(t, e.String(), "height: 100\ntime: 2006-01-02T15:04:05Z\npower: 1000000\nconsensus_address: cosmosvalcons1vehk7pqt5u4\n")
 	require.NoError(t, e.ValidateBasic())
 }

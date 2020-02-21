@@ -8,7 +8,7 @@ import (
 
 // Evidence defines the contract which concrete evidence types of misbehavior
 // must implement.
-type EvidenceI interface {
+type Evidence interface {
 	Route() string
 	Type() string
 	String() string
@@ -26,4 +26,14 @@ type EvidenceI interface {
 
 	// The total validator set power at time of infraction
 	GetTotalPower() int64
+}
+
+// MsgSubmitEvidence defines the specific interface a concrete message must
+// implement in order to process submitted evidence. The concrete MsgSubmitEvidence
+// must be defined at the application-level.
+type MsgSubmitEvidence interface {
+	sdk.Msg
+
+	GetEvidence() Evidence
+	GetSubmitter() sdk.AccAddress
 }

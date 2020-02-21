@@ -2,41 +2,32 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-var _ exported.EvidenceI = (*testEvidence)(nil)
-
-type testEvidence struct{}
-
-func (te testEvidence) Route() string                        { return "" }
-func (te testEvidence) Type() string                         { return "" }
-func (te testEvidence) String() string                       { return "" }
-func (te testEvidence) ValidateBasic() error                 { return nil }
-func (te testEvidence) GetConsensusAddress() sdk.ConsAddress { return nil }
-func (te testEvidence) Hash() tmbytes.HexBytes               { return nil }
-func (te testEvidence) GetHeight() int64                     { return 0 }
-func (te testEvidence) GetValidatorPower() int64             { return 0 }
-func (te testEvidence) GetTotalPower() int64                 { return 0 }
-
 func TestCodec(t *testing.T) {
-	cdc := codec.New()
-	types.RegisterCodec(cdc)
-	types.RegisterEvidenceTypeCodec(testEvidence{}, "cosmos-sdk/testEvidence")
+	app := simapp.Setup(false)
+	appCodec := simappcodec.NewAppCodec(app.Codec())
+	pk := ed25519.GenPrivKey()
 
-	var e exported.EvidenceI = testEvidence{}
-	bz, err := cdc.MarshalBinaryBare(e)
+	var e exported.Evidence = &types.Equivocation{
+		Height:           10,
+		Time:             time.Now().UTC(),
+		Power:            100000,
+		ConsensusAddress: pk.PubKey().Address().Bytes(),
+	}
+	bz, err := appCodec.MarshalEvidence(e)
 	require.NoError(t, err)
 
-	var te testEvidence
-	require.NoError(t, cdc.UnmarshalBinaryBare(bz, &te))
-
-	require.Panics(t, func() { types.RegisterEvidenceTypeCodec(testEvidence{}, "cosmos-sdk/testEvidence") })
+	other, err := appCodec.UnmarshalEvidence(bz)
+	require.NoError(t, err)
+	require.Equal(t, e, other)
 }

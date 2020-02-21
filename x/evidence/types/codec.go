@@ -9,35 +9,34 @@ import (
 type Codec interface {
 	codec.Marshaler
 
-	MarshalEvidence(acc exported.EvidenceI) ([]byte, error)
-	UnmarshalEvidence(bz []byte) (exported.EvidenceI, error)
-	MarshalEvidenceJSON(acc exported.EvidenceI) ([]byte, error)
-	UnmarshalEvidenceJSON(bz []byte) (exported.EvidenceI, error)
+	MarshalEvidence(exported.Evidence) ([]byte, error)
+	UnmarshalEvidence([]byte) (exported.Evidence, error)
+	MarshalEvidenceJSON(exported.Evidence) ([]byte, error)
+	UnmarshalEvidenceJSON([]byte) (exported.Evidence, error)
 }
-
-var (
-	// Keep reference to the amino codec to allow backwards compatibility along
-	// with type, and interface registration.
-	amino *codec.Codec
-
-	ModuleCdc = codec.NewHybridCodec(amino)
-)
 
 // RegisterCodec registers all the necessary types and interfaces for the
 // evidence module.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*exported.EvidenceI)(nil), nil)
-	cdc.RegisterConcrete(MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
+	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
+	cdc.RegisterConcrete(MsgSubmitEvidenceBase{}, "cosmos-sdk/MsgSubmitEvidenceBase", nil)
 	cdc.RegisterConcrete(Equivocation{}, "cosmos-sdk/Equivocation", nil)
 }
 
-// RegisterEvidenceTypeCodec registers an external concrete Evidence type defined
-// in another module for the internal ModuleCdc. This allows the MsgSubmitEvidence
-// to be correctly Amino encoded and decoded.
-func RegisterEvidenceTypeCodec(o interface{}, name string) {
-	ModuleCdc.amino.RegisterConcrete(o, name, nil)
-}
+var (
+	amino = codec.New()
+
+	// ModuleCdc references the global x/evidence module codec. Note, the codec should
+	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
+	// still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/evidence and
+	// defined at the application level.
+	ModuleCdc = codec.NewHybridCodec(amino)
+)
 
 func init() {
 	RegisterCodec(amino)
+	codec.RegisterCrypto(amino)
+	amino.Seal()
 }

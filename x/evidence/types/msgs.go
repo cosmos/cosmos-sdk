@@ -11,27 +11,24 @@ const (
 )
 
 var (
-	_ sdk.Msg = MsgSubmitEvidence{}
+	_ sdk.Msg = MsgSubmitEvidenceBase{}
 )
 
-func NewMsgSubmitEvidence(e []byte, s sdk.AccAddress) MsgSubmitEvidence {
-	return MsgSubmitEvidence{Evidence: e, Submitter: s}
+// NewMsgSubmitEvidenceBase returns a new MsgSubmitEvidenceBase with a signer/submitter.
+// Note, the MsgSubmitEvidenceBase is not to be used as an actual message, but
+// rather to be extended with Evidence.
+func NewMsgSubmitEvidenceBase(s sdk.AccAddress) MsgSubmitEvidenceBase {
+	return MsgSubmitEvidenceBase{Submitter: s}
 }
 
-// Route returns the MsgSubmitEvidence's route.
-func (m MsgSubmitEvidence) Route() string { return RouterKey }
+// Route returns the MsgSubmitEvidenceBase's route.
+func (m MsgSubmitEvidenceBase) Route() string { return RouterKey }
 
-// Type returns the MsgSubmitEvidence's type.
-func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
+// Type returns the MsgSubmitEvidenceBase's type.
+func (m MsgSubmitEvidenceBase) Type() string { return TypeMsgSubmitEvidence }
 
-// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
-func (m MsgSubmitEvidence) ValidateBasic() error {
-	if m.Evidence == nil {
-		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
-	}
-	if err := m.Evidence.ValidateBasic(); err != nil {
-		return err
-	}
+// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidenceBase.
+func (m MsgSubmitEvidenceBase) ValidateBasic() error {
 	if m.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String())
 	}
@@ -40,12 +37,12 @@ func (m MsgSubmitEvidence) ValidateBasic() error {
 }
 
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
-// a MsgSubmitEvidence message.
-func (m MsgSubmitEvidence) GetSignBytes() []byte {
+// a MsgSubmitEvidenceBase message.
+func (m MsgSubmitEvidenceBase) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(m))
 }
 
-// GetSigners returns the single expected signer for a MsgSubmitEvidence.
-func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
+// GetSigners returns the single expected signer for a MsgSubmitEvidenceBase.
+func (m MsgSubmitEvidenceBase) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Submitter}
 }

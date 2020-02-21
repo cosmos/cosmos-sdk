@@ -11,11 +11,11 @@ import (
 
 // GenesisState defines the evidence module's genesis state.
 type GenesisState struct {
-	Params   Params               `json:"params" yaml:"params"`
-	Evidence []exported.EvidenceI `json:"evidence" yaml:"evidence"`
+	Params   Params              `json:"params" yaml:"params"`
+	Evidence []exported.Evidence `json:"evidence" yaml:"evidence"`
 }
 
-func NewGenesisState(p Params, e []exported.EvidenceI) GenesisState {
+func NewGenesisState(p Params, e []exported.Evidence) GenesisState {
 	return GenesisState{
 		Params:   p,
 		Evidence: e,
@@ -26,7 +26,7 @@ func NewGenesisState(p Params, e []exported.EvidenceI) GenesisState {
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params:   DefaultParams(),
-		Evidence: []exported.EvidenceI{},
+		Evidence: []exported.Evidence{},
 	}
 }
 

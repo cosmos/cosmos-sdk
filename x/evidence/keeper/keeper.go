@@ -6,7 +6,6 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -19,7 +18,7 @@ import (
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
-	cdc            codec.Marshaler
+	cdc            types.Codec
 	storeKey       sdk.StoreKey
 	paramSpace     paramtypes.Subspace
 	router         types.Router
@@ -28,7 +27,7 @@ type Keeper struct {
 }
 
 func NewKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace,
+	cdc types.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 
@@ -83,7 +82,7 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.EvidenceI) error {
+func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
 		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
 	}
@@ -108,15 +107,14 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.EvidenceI) err
 }
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
-func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.EvidenceI) {
+func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(evidence)
-	store.Set(evidence.Hash(), bz)
+	store.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (evidence exported.EvidenceI, found bool) {
+func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)
@@ -124,21 +122,19 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (evidence ex
 		return nil, false
 	}
 
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &evidence)
-	return evidence, true
+	return k.MustUnmarshalEvidence(bz), true
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For
 // each Evidence object, cb will be called. If the cb returns true, the iterator
 // will close and stop.
-func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.EvidenceI) bool) {
+func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var evidence exported.EvidenceI
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &evidence)
+		evidence := k.MustUnmarshalEvidence(iterator.Value())
 
 		if cb(evidence) {
 			break
@@ -147,10 +143,33 @@ func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.EvidenceI) boo
 }
 
 // GetAllEvidence returns all stored Evidence objects.
-func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.EvidenceI) {
-	k.IterateEvidence(ctx, func(e exported.EvidenceI) bool {
+func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.Evidence) {
+	k.IterateEvidence(ctx, func(e exported.Evidence) bool {
 		evidence = append(evidence, e)
 		return false
 	})
+
 	return evidence
+}
+
+// MustUnmarshalEvidence attempts to decode and return an Evidence object from
+// raw encoded bytes. It panics on error.
+func (k Keeper) MustUnmarshalEvidence(bz []byte) exported.Evidence {
+	evidence, err := k.cdc.UnmarshalEvidence(bz)
+	if err != nil {
+		panic(fmt.Errorf("failed to decode evidence: %w", err))
+	}
+
+	return evidence
+}
+
+// MustMarshalEvidence attempts to encode an Evidence object and returns the
+// raw encoded bytes. It panics on error.
+func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
+	bz, err := k.cdc.MarshalEvidence(evidence)
+	if err != nil {
+		panic(fmt.Errorf("failed to encode evidence: %w", err))
+	}
+
+	return bz
 }

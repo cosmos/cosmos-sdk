@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-func testHandler(sdk.Context, exported.EvidenceI) error { return nil }
+func testHandler(sdk.Context, exported.Evidence) error { return nil }
 
 func TestRouterSeal(t *testing.T) {
 	r := types.NewRouter()

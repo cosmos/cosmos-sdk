@@ -7,8 +7,7 @@ import (
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
-// NewMsgSubmitEvidence returns a new MsgSubmitEvidence. The evidence adhering
-// to the Evidence interface must be a reference.
+// NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
 func NewMsgSubmitEvidence(evidenceI eviexported.Evidence, s sdk.AccAddress) MsgSubmitEvidence {
 	e := &Evidence{}
 	e.SetEvidence(evidenceI)

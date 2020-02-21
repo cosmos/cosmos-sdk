@@ -11,6 +11,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // MsgCreateValidator defines an SDK message for creating a new validator.
 message MsgCreateValidator {
+  option (gogoproto.equal) = true;
+
   Description     description         = 1 [(gogoproto.nullable) = false];
   CommissionRates commission          = 2 [(gogoproto.nullable) = false];
   string          min_self_delegation = 3 [
@@ -32,6 +34,8 @@ message MsgCreateValidator {
 
 // MsgEditValidator defines an SDK message for editing an existing validator.
 message MsgEditValidator {
+  option (gogoproto.equal) = true;
+
   Description description       = 1 [(gogoproto.nullable) = false];
   bytes       validator_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -56,6 +60,8 @@ message MsgEditValidator {
 // MsgDelegate defines an SDK message for performing a delegation from a
 // delegate to a validator.
 message MsgDelegate {
+  option (gogoproto.equal) = true;
+
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
@@ -70,6 +76,8 @@ message MsgDelegate {
 // MsgBeginRedelegate defines an SDK message for performing a redelegation from
 // a delegate and source validator to a destination validator.
 message MsgBeginRedelegate {
+  option (gogoproto.equal) = true;
+
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
@@ -88,6 +96,8 @@ message MsgBeginRedelegate {
 // MsgUndelegate defines an SDK message for performing an undelegation from a
 // delegate and a validator.
 message MsgUndelegate {
+  option (gogoproto.equal) = true;
+
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""

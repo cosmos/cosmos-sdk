@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/stretchr/testify/require"
 
@@ -34,7 +34,6 @@ func TestDelegation(t *testing.T) {
 	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
 
 	// first add a validators[0] to delegate too
-
 	bond1to1 := types.NewDelegation(addrDels[0], addrVals[0], sdk.NewDec(9))
 
 	// check the empty keeper first
@@ -181,6 +180,15 @@ func TestUnbondDelegation(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
+	codec := simapp.NewAppCodec()
+	app.StakingKeeper = keeper.NewKeeper(
+		codec.Staking,
+		app.GetKey(staking.StoreKey),
+		app.BankKeeper,
+		app.SupplyKeeper,
+		app.GetSubspace(staking.ModuleName),
+	)
+
 	startTokens := sdk.TokensFromConsensusPower(10)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
@@ -204,15 +212,11 @@ func TestUnbondDelegation(t *testing.T) {
 
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, addrVals[0], addrDels[0], distribution.DelegatorStartingInfo{})
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVals[0], 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	bondTokens := sdk.TokensFromConsensusPower(6)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], bondTokens.ToDec())
+	amount, err := app.StakingKeeper.Unbond(ctx, addrDels[0], addrVals[0], bondTokens.ToDec())
 	require.NoError(t, err)
-
-	notBondedPoolBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), app.StakingKeeper.BondDenom(ctx))
-	require.Equal(t, bondTokens, notBondedPoolBalance.Amount) // shares to be added to an unbonding delegation
+	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
 	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -225,15 +229,26 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 //func TestUnbondingDelegationsMaxEntries(t *testing.T) {
-//	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 1)
+//	app := simapp.Setup(false)
+//	ctx := app.BaseApp.NewContext(false, abci.Header{})
+//
+//	codec := simapp.NewAppCodec()
+//	app.StakingKeeper = keeper.NewKeeper(
+//		codec.Staking,
+//		app.GetKey(staking.StoreKey),
+//		app.BankKeeper,
+//		app.SupplyKeeper,
+//		app.GetSubspace(staking.ModuleName),
+//	)
+//
 //	startTokens := sdk.TokensFromConsensusPower(10)
 //
-//	bondDenom := keeper.BondDenom(ctx)
-//	notBondedPool := keeper.GetNotBondedPool(ctx)
+//	bondDenom := app.StakingKeeper.BondDenom(ctx)
+//	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 //
-//	err := bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens)))
+//	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens)))
 //	require.NoError(t, err)
-//	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+//	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 //
 //	// create a validator and a delegator to that validator
 //	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -241,62 +256,62 @@ func TestUnbondDelegation(t *testing.T) {
 //	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 //	require.Equal(t, startTokens, issuedShares.RoundInt())
 //
-//	validator = TestingUpdateValidator(keeper, ctx, validator, true)
+//	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 //	require.True(sdk.IntEq(t, startTokens, validator.BondedTokens()))
 //	require.True(t, validator.IsBonded())
 //
 //	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
-//	keeper.SetDelegation(ctx, delegation)
+//	app.StakingKeeper.SetDelegation(ctx, delegation)
 //
-//	maxEntries := keeper.MaxEntries(ctx)
+//	maxEntries := app.StakingKeeper.MaxEntries(ctx)
 //
-//	oldBonded := bk.GetBalance(ctx, keeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-//	oldNotBonded := bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	oldBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	oldNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //
 //	// should all pass
 //	var completionTime time.Time
 //	for i := uint32(0); i < maxEntries; i++ {
 //		var err error
-//		completionTime, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+//		completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 //		require.NoError(t, err)
 //	}
 //
-//	newBonded := bk.GetBalance(ctx, keeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-//	newNotBonded := bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
 //	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
 //
-//	oldBonded = bk.GetBalance(ctx, keeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-//	oldNotBonded = bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	oldBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //
 //	// an additional unbond should fail due to max entries
-//	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+//	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 //	require.Error(t, err)
 //
-//	newBonded = bk.GetBalance(ctx, keeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-//	newNotBonded = bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //
 //	require.True(sdk.IntEq(t, newBonded, oldBonded))
 //	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded))
 //
 //	// mature unbonding delegations
 //	ctx = ctx.WithBlockTime(completionTime)
-//	err = keeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
+//	err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 //	require.NoError(t, err)
 //
-//	newBonded = bk.GetBalance(ctx, keeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-//	newNotBonded = bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //	require.True(sdk.IntEq(t, newBonded, oldBonded))
 //	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
 //
-//	oldNotBonded = bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //
 //	// unbonding  should work again
-//	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+//	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
 //	require.NoError(t, err)
 //
-//	newBonded = bk.GetBalance(ctx, keeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-//	newNotBonded = bk.GetBalance(ctx, keeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+//	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 //	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(1)))
 //	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 //}

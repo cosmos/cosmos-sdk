@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -210,6 +211,15 @@ func TestQueryDelegation(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
+
+	codec := simapp.NewAppCodec()
+	app.StakingKeeper = keeper.NewKeeper(
+		codec.Staking,
+		app.GetKey(staking.StoreKey),
+		app.BankKeeper,
+		app.SupplyKeeper,
+		app.GetSubspace(staking.ModuleName),
+	)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]

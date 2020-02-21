@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-)å
+)
 
 // Parameter store keys
 var (
@@ -82,8 +84,8 @@ func (p Params) Validate() error {
 }
 
 // String implements the Stringer interface.
-func (pc Params) String() string {
-	out, _ := yaml.Marshal(pc)
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
 	return string(out)
 }
 

@@ -1,7 +1,8 @@
 syntax = "proto3";
 package cosmos_sdk.x.ditribution.v1;
 
-option go_package = "types";
+option go_package            = "types";
+option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
@@ -175,8 +176,6 @@ message DelegatorStartingInfo {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  uint64 height = 3 [
-    (gogoproto.moretags) = "yaml:\"creation_height\"",
-    (gogoproto.jsontag) = "creation_height"
-    ];
+  uint64 height = 3
+      [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
 }

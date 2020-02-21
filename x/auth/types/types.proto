@@ -13,8 +13,8 @@ message BaseAccount {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes  address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes  pub_key = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  bytes  address        = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes  pub_key        = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
   uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
   uint64 sequence       = 4;
 }
@@ -25,10 +25,8 @@ message BaseAccount {
 message StdFee {
   option (gogoproto.equal) = true;
 
-  repeated cosmos_sdk.v1.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos_sdk.v1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   uint64 gas = 2;
 }
 
@@ -40,12 +38,8 @@ message Params {
   uint64 max_memo_characters     = 1 [(gogoproto.moretags) = "yaml:\"max_memo_characters\""];
   uint64 tx_sig_limit            = 2 [(gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
   uint64 tx_size_cost_per_byte   = 3 [(gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
-  uint64 sig_verify_cost_ed25519 = 4 [
-    (gogoproto.customname) = "SigVerifyCostED25519",
-    (gogoproto.moretags)   = "yaml:\"sig_verify_cost_ed25519\""
-  ];
-  uint64 sig_verify_cost_secp256k1 = 5 [
-    (gogoproto.customname) = "SigVerifyCostSecp256k1",
-    (gogoproto.moretags)   = "yaml:\"sig_verify_cost_secp256k1\""
-  ];
+  uint64 sig_verify_cost_ed25519 = 4
+      [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
+  uint64 sig_verify_cost_secp256k1 = 5
+      [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
 }

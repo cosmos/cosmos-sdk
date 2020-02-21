@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos_sdk.simapp.codec.v1;
 
 import "third_party/proto/cosmos-proto/cosmos.proto";
+import "third_party/proto/gogoproto/gogo.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
 import "x/supply/types/types.proto";
@@ -25,6 +26,7 @@ message Account {
 
 // Supply defines the application-level Supply type.
 message Supply {
+  option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/supply/exported.SupplyI";
 
   // sum defines a list of all acceptable concrete Supply implementations.
@@ -34,9 +36,19 @@ message Supply {
 }
 
 message Evidence {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/evidence/exported.EvidenceI";
+  option (gogoproto.equal)             = true;
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
 
   oneof sum {
     cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
   }
+}
+
+// MsgSubmitEvidence defines the application-level message type for handling
+// evidence submission.
+message MsgSubmitEvidence {
+  option (gogoproto.equal) = true;
+
+  Evidence                                       evidence = 1;
+  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
 }

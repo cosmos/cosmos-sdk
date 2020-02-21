@@ -111,44 +111,44 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (supplyexported.SupplyI, error) {
 	return supply.GetSupplyI(), nil
 }
 
-// MarshalEvidence marshals an EvidenceI interface. If the given type implements
+// MarshalEvidence marshals an Evidence interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalEvidence(evidenceI eviexported.EvidenceI) ([]byte, error) {
+func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
 	evidence := &Evidence{}
-	if err := evidence.SetEvidenceI(evidenceI); err != nil {
+	if err := evidence.SetEvidence(evidenceI); err != nil {
 		return nil, err
 	}
 
 	return c.Marshaler.MarshalBinaryLengthPrefixed(evidence)
 }
 
-// UnmarshalEvidence returns an EvidenceI interface from raw encoded evidence
-// bytes of a Proto-based EvidenceI type. An error is returned upon decoding
+// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
+// bytes of a Proto-based Evidence type. An error is returned upon decoding
 // failure.
-func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.EvidenceI, error) {
+func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
 	evidence := &Evidence{}
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, evidence); err != nil {
 		return nil, err
 	}
 
-	return evidence.GetEvidenceI(), nil
+	return evidence.GetEvidence(), nil
 }
 
-// MarshalEvidenceJSON JSON encodes an evidence object implementing the EvidenceI
+// MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
 // interface.
-func (c *Codec) MarshalEvidenceJSON(evidence eviexported.EvidenceI) ([]byte, error) {
+func (c *Codec) MarshalEvidenceJSON(evidence eviexported.Evidence) ([]byte, error) {
 	return c.Marshaler.MarshalJSON(evidence)
 }
 
-// UnmarshalEvidenceJSON returns an EvidenceI from JSON encoded bytes
-func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.EvidenceI, error) {
+// UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
+func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
 	evidence := &Evidence{}
 	if err := c.Marshaler.UnmarshalJSON(bz, evidence); err != nil {
 		return nil, err
 	}
 
-	return evidence.GetEvidenceI(), nil
+	return evidence.GetEvidence(), nil
 }
 
 // ----------------------------------------------------------------------------

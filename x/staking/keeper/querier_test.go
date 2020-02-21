@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -143,6 +142,15 @@ func TestQueryValidators(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
 
+	codec := simapp.NewAppCodec()
+	app.StakingKeeper = keeper.NewKeeper(
+		codec.Staking,
+		app.GetKey(staking.StoreKey),
+		app.BankKeeper,
+		app.SupplyKeeper,
+		app.GetSubspace(staking.ModuleName),
+	)
+
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
 
 	// Create Validators
@@ -232,12 +240,10 @@ func TestQueryDelegation(t *testing.T) {
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal1, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal2, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	delTokens := sdk.TokensFromConsensusPower(20)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
@@ -344,7 +350,6 @@ func TestQueryDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Query validator delegations
-
 	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1))
 	require.NoError(t, errRes)
 
@@ -452,6 +457,15 @@ func TestQueryRedelegations(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	querier := staking.NewQuerier(app.StakingKeeper)
 
+	codec := simapp.NewAppCodec()
+	app.StakingKeeper = keeper.NewKeeper(
+		codec.Staking,
+		app.GetKey(staking.StoreKey),
+		app.BankKeeper,
+		app.SupplyKeeper,
+		app.GetSubspace(staking.ModuleName),
+	)
+
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
@@ -461,8 +475,6 @@ func TestQueryRedelegations(t *testing.T) {
 	val2 := types.NewValidator(addrVal2, PKs[1], types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal1, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal2, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	delAmount := sdk.TokensFromConsensusPower(100)
 	app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
@@ -525,6 +537,15 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	querier := staking.NewQuerier(app.StakingKeeper)
 
+	codec := simapp.NewAppCodec()
+	app.StakingKeeper = keeper.NewKeeper(
+		codec.Staking,
+		app.GetKey(staking.StoreKey),
+		app.BankKeeper,
+		app.SupplyKeeper,
+		app.GetSubspace(staking.ModuleName),
+	)
+
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	addrVal1 := sdk.ValAddress(addrAcc1)
@@ -532,7 +553,6 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, PKs[0], types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, addrVal1, 18446744073709551615, distribution.ValidatorHistoricalRewards{ReferenceCount: 1})
 
 	// delegate
 	delAmount := sdk.TokensFromConsensusPower(100)

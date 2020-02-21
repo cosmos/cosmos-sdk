@@ -9,6 +9,8 @@ import "types/types.proto";
 
 // MsgSend - high level transaction of the coin module
 message MsgSend {
+  option (gogoproto.equal) = true;
+
   bytes from_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"from_address\""
@@ -25,6 +27,8 @@ message MsgSend {
 
 // Input models transaction input
 message Input {
+  option (gogoproto.equal) = true;
+
   bytes    address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
@@ -34,6 +38,8 @@ message Input {
 
 // Output models transaction outputs
 message Output {
+  option (gogoproto.equal) = true;
+
   bytes    address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
@@ -43,6 +49,8 @@ message Output {
 
 // MsgMultiSend - high level transaction of the coin module
 message MsgMultiSend {
+  option (gogoproto.equal) = true;
+
   repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
   repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }

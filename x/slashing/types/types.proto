@@ -1,7 +1,8 @@
 syntax = "proto3";
 package cosmos_sdk.x.slashing.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";

@@ -62,7 +62,7 @@ func (k Keeper) ConnOpenTry(
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return clienttypes.ErrSelfConsensusStateNotFound
 	}
 
 	// expectedConnection defines Chain A's ConnectionEnd
@@ -160,7 +160,7 @@ func (k Keeper) ConnOpenAck(
 	// Retrieve chainA's consensus state at consensusheight
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return clienttypes.ErrConsensusStateNotFound
+		return clienttypes.ErrSelfConsensusStateNotFound
 	}
 
 	prefix := k.GetCommitmentPrefix()

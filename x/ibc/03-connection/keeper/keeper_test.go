@@ -2,13 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,11 +28,11 @@ const (
 	storeKey   = ibctypes.StoreKey
 	chainID    = "gaia"
 
-	testClientID1     = "testclientidone"
-	testConnectionID1 = "connectionidone"
+	testClientIDA     = "testclientida" // chainid for chainA also chainB's clientID for A's liteclient
+	testConnectionIDA = "connectionidatob"
 
-	testClientID2     = "testclientidtwo"
-	testConnectionID2 = "connectionidtwo"
+	testClientIDB     = "testclientidb" // chainid for chainB also chainA's clientID for B's liteclient
+	testConnectionIDB = "connectionidbtoa"
 
 	testClientID3     = "testclientidthree"
 	testConnectionID3 = "connectionidthree"
@@ -43,59 +41,30 @@ const (
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
-var testHeight uint64
-
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc            *codec.Codec
-	ctx            sdk.Context
-	app            *simapp.SimApp
-	valSet         *tmtypes.ValidatorSet
-	consensusState clientexported.ConsensusState
-	header         ibctmtypes.Header
-	now            time.Time
+	cdc *codec.Codec
+
+	// ChainA testing fields
+	chainA *TestChain
+
+	// ChainB testing fields
+	chainB *TestChain
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	testHeight = 1
-	isCheckTx := false
-	app := simapp.Setup(isCheckTx)
-	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	now2 := suite.now.Add(time.Duration(time.Hour * 1))
+	suite.chainA = NewTestChain(testClientIDA)
+	suite.chainB = NewTestChain(testClientIDB)
 
-	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{ChainID: chainID, Height: 1})
-	suite.app = app
-	privVal := tmtypes.NewMockPV()
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.header = ibctmtypes.CreateTestHeader(chainID, int64(testHeight), now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{privVal})
-	suite.consensusState = ibctmtypes.ConsensusState{
-		Height:       testHeight,
-		Timestamp:    suite.now,
-		Root:         commitment.NewRoot(suite.header.AppHash),
-		ValidatorSet: suite.valSet,
-	}
-
-	var validators staking.Validators
-	for i := 1; i < 11; i++ {
-		privVal := tmtypes.NewMockPV()
-		pk := privVal.GetPubKey()
-		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
-		val.Status = sdk.Bonded
-		val.Tokens = sdk.NewInt(rand.Int63())
-		validators = append(validators, val)
-
-		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
-	}
+	suite.cdc = suite.chainA.App.Codec()
 }
 
 // nolint: unused
 func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
-	res := suite.app.Query(abci.RequestQuery{
+	res := suite.chainA.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
-		Height: suite.app.LastBlockHeight(),
+		Height: suite.chainA.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
 	})
@@ -106,27 +75,121 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 
 	return proof, res.Height
 }
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
-func (suite *KeeperTestSuite) createClient(clientID string) {
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
-	suite.now = suite.now.Add(time.Minute)
+func (suite *KeeperTestSuite) TestSetAndGetConnection() {
+	_, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
+	suite.Require().False(existed)
 
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
-	testHeight++
+	counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	expConn := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty, types.GetCompatibleVersions())
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConn)
+	conn, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
+	suite.Require().True(existed)
+	suite.Require().EqualValues(expConn, conn)
+}
 
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       testHeight,
-		Timestamp:    suite.now,
-		Root:         commitment.NewRoot(commitID.Hash),
-		ValidatorSet: suite.valSet,
+func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
+	_, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), testClientIDA)
+	suite.False(existed)
+
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), testClientIDB, types.GetCompatibleVersions())
+	paths, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), testClientIDB)
+	suite.True(existed)
+	suite.EqualValues(types.GetCompatibleVersions(), paths)
+}
+
+func (suite KeeperTestSuite) TestGetAllConnections() {
+	// Connection (Counterparty): A(C) -> C(B) -> B(A)
+	counterparty1 := types.NewCounterparty(testClientIDA, testConnectionIDA, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty2 := types.NewCounterparty(testClientIDB, testConnectionIDB, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+
+	conn1 := types.NewConnectionEnd(exported.INIT, testClientIDA, counterparty3, types.GetCompatibleVersions())
+	conn2 := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty1, types.GetCompatibleVersions())
+	conn3 := types.NewConnectionEnd(exported.UNINITIALIZED, testClientID3, counterparty2, types.GetCompatibleVersions())
+
+	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
+
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConnections[0])
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDB, expConnections[1])
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionID3, expConnections[2])
+
+	connections := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
+	suite.Require().Len(connections, len(expConnections))
+	suite.Require().ElementsMatch(expConnections, connections)
+}
+
+type TestChain struct {
+	ClientID string
+	App      *simapp.SimApp
+	Header   ibctmtypes.Header
+	Vals     *tmtypes.ValidatorSet
+	Signers  []tmtypes.PrivValidator
+}
+
+func NewTestChain(clientID string) *TestChain {
+	privVal := tmtypes.NewMockPV()
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	signers := []tmtypes.PrivValidator{privVal}
+	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+
+	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, valSet, signers)
+
+	return &TestChain{
+		ClientID: clientID,
+		App:      simapp.Setup(false),
+		Header:   header,
+		Vals:     valSet,
+		Signers:  signers,
 	}
+}
 
-	clientState, err := ibctmtypes.Initialize(clientID, clientID, consensusState, trustingPeriod, ubdPeriod)
-	suite.Require().NoError(err)
-	_, err = suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientState, consensusState)
-	suite.Require().NoError(err)
+// Creates simple context for testing purposes
+func (chain *TestChain) GetContext() sdk.Context {
+	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
+}
+
+// createClient will create a client for clientChain on targetChain
+func (chain *TestChain) CreateClient(client *TestChain) error {
+	client.Header = nextHeader(client)
+	// Commit and create a new block on appTarget to get a fresh CommitID
+	client.App.Commit()
+	commitID := client.App.LastCommitID()
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+
+	// Set HistoricalInfo on client chain after Commit
+	ctxClient := client.GetContext()
+	validator := staking.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	)
+	validator.Status = sdk.Bonded
+	validator.Tokens = sdk.NewInt(1000000) // get one voting power
+	validators := []staking.Validator{validator}
+	histInfo := staking.HistoricalInfo{
+		Header: abci.Header{
+			AppHash: commitID.Hash,
+		},
+		Valset: validators,
+	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+
+	// Create target ctx
+	ctxTarget := chain.GetContext()
+
+	// create client
+	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, client.Header)
+	if err != nil {
+		return err
+	}
+	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
+	if err != nil {
+		return err
+	}
+	return nil
 
 	// _, _, err := simapp.SignCheckDeliver(
 	// 	suite.T(),
@@ -140,28 +203,53 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	// )
 }
 
-func (suite *KeeperTestSuite) updateClient(clientID string) {
-	// always commit when updateClient and begin a new block
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
-	suite.now = suite.now.Add(time.Minute)
+func (chain *TestChain) updateClient(client *TestChain) {
+	// Create chain ctx
+	ctxTarget := chain.GetContext()
 
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1, Time: suite.now}})
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
-	testHeight++
-
-	consensusState := ibctmtypes.ConsensusState{
-		Height:       testHeight,
-		Timestamp:    suite.now,
-		Root:         commitment.NewRoot(commitID.Hash),
-		ValidatorSet: suite.valSet,
+	// if clientState does not already exist, return without updating
+	_, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(
+		ctxTarget, client.ClientID,
+	)
+	if !found {
+		return
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		suite.ctx, clientID, uint64(suite.app.LastBlockHeight()), consensusState,
+	// always commit when updateClient and begin a new block
+	client.App.Commit()
+	commitID := client.App.LastCommitID()
+
+	client.Header = nextHeader(client)
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+
+	// Set HistoricalInfo on client chain after Commit
+	ctxClient := client.GetContext()
+	validator := staking.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
 	)
-	suite.app.IBCKeeper.ClientKeeper.SetClientState(
-		suite.ctx, ibctmtypes.NewClientState(clientID, clientID, trustingPeriod, ubdPeriod, uint64(suite.app.LastBlockHeight()), suite.now),
+	validator.Status = sdk.Bonded
+	validator.Tokens = sdk.NewInt(1000000)
+	validators := []staking.Validator{validator}
+	histInfo := staking.HistoricalInfo{
+		Header: abci.Header{
+			AppHash: commitID.Hash,
+		},
+		Valset: validators,
+	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       uint64(client.Header.Height),
+		Timestamp:    client.Header.Time,
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: client.Vals,
+	}
+
+	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
+		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
+	)
+	chain.App.IBCKeeper.ClientKeeper.SetClientState(
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -177,22 +265,23 @@ func (suite *KeeperTestSuite) updateClient(clientID string) {
 	// suite.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) createConnection(
+func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state exported.State,
 ) types.ConnectionEnd {
-	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	connection := types.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     types.GetCompatibleVersions(),
 	}
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, connID, connection)
+	ctx := chain.GetContext()
+	chain.App.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connID, connection)
 	return connection
 }
 
-func (suite *KeeperTestSuite) createChannel(
+func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
 	state channelexported.State, order channelexported.Order, connectionID string,
 ) channeltypes.Channel {
@@ -200,53 +289,12 @@ func (suite *KeeperTestSuite) createChannel(
 	channel := channeltypes.NewChannel(state, order, counterparty,
 		[]string{connectionID}, "1.0",
 	)
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, channelID, channel)
+	ctx := chain.GetContext()
+	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
 	return channel
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
-func (suite *KeeperTestSuite) TestSetAndGetConnection() {
-	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.Require().False(existed)
-
-	counterparty := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-	expConn := types.NewConnectionEnd(exported.INIT, testClientID1, counterparty, types.GetCompatibleVersions())
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConn)
-	conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-	suite.Require().True(existed)
-	suite.Require().EqualValues(expConn, conn)
-}
-
-func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
-	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.ctx, testClientID1)
-	suite.False(existed)
-
-	suite.app.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.ctx, testClientID1, types.GetCompatibleVersions())
-	paths, existed := suite.app.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.ctx, testClientID1)
-	suite.True(existed)
-	suite.EqualValues(types.GetCompatibleVersions(), paths)
-}
-
-func (suite KeeperTestSuite) TestGetAllConnections() {
-	// Connection (Counterparty): A(C) -> C(B) -> B(A)
-	counterparty1 := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-	counterparty2 := types.NewCounterparty(testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-
-	conn1 := types.NewConnectionEnd(exported.INIT, testClientID1, counterparty3, types.GetCompatibleVersions())
-	conn2 := types.NewConnectionEnd(exported.INIT, testClientID2, counterparty1, types.GetCompatibleVersions())
-	conn3 := types.NewConnectionEnd(exported.UNINITIALIZED, testClientID3, counterparty2, types.GetCompatibleVersions())
-
-	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
-
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConnections[0])
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID2, expConnections[1])
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID3, expConnections[2])
-
-	connections := suite.app.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.ctx)
-	suite.Require().Len(connections, len(expConnections))
-	suite.Require().ElementsMatch(expConnections, connections)
+func nextHeader(chain *TestChain) ibctmtypes.Header {
+	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
+		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Vals, chain.Signers)
 }

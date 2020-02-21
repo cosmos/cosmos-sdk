@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -40,12 +41,12 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				clientState, err := ibctmtypes.Initialize(tc.clientID, tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, suite.header)
 				suite.Require().NoError(err, "err on client state initialization")
 				suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := ibctmtypes.Initialize(tc.clientID, tc.clientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, suite.header)
 			if tc.expPass {
 				suite.Require().NoError(err, "errored on initialization")
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
@@ -65,38 +66,58 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateClient() {
+	// Must create header creation functions since suite.header gets recreated on each test case
+	createValidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height+1, suite.header.Time.Add(time.Minute),
+			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	}
+	createInvalidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height-3, suite.header.Time.Add(time.Minute),
+			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	}
+	var updateHeader ibctmtypes.Header
+
 	cases := []struct {
 		name     string
 		malleate func() error
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 			if err != nil {
 				return err
 			}
 			_, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+			updateHeader = createValidUpdateFn(suite)
 			return err
 		}, true},
 		{"client type not found", func() error {
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
 		}, false},
 		{"client type and header type mismatch", func() error {
 			suite.keeper.SetClientType(suite.ctx, testClientID, invalidClientType)
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
 		}, false},
 		{"client state not found", func() error {
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
 		}, false},
 		{"frozen client", func() error {
-			clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LatestHeight: 10}
+			clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
 			suite.keeper.SetClientState(suite.ctx, clientState)
 			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+			updateHeader = createValidUpdateFn(suite)
+
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 			if err != nil {
 				return err
 			}
@@ -104,7 +125,8 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			if err != nil {
 				return err
 			}
-			suite.header.Height = suite.ctx.BlockHeight() - 1
+			updateHeader = createInvalidUpdateFn(suite)
+
 			return nil
 		}, false},
 	}
@@ -117,19 +139,24 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			err = suite.keeper.UpdateClient(suite.ctx, testClientID, suite.header)
+			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
+
+			err = suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
 			if tc.expPass {
+				suite.Require().NoError(err, err)
+
 				expConsensusState := ibctmtypes.ConsensusState{
-					Timestamp:    suite.header.Time,
-					Root:         commitment.NewRoot(suite.header.AppHash),
-					ValidatorSet: suite.header.ValidatorSet,
+					Height:       uint64(updateHeader.Height),
+					Timestamp:    updateHeader.Time,
+					Root:         commitment.NewRoot(updateHeader.AppHash),
+					ValidatorSet: updateHeader.ValidatorSet,
 				}
 
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
-				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(suite.header.GetHeight()))
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(updateHeader.GetHeight()))
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
@@ -137,7 +164,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				tmConsState.ValidatorSet.TotalVotingPower()
 
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(suite.header.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
+				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
 				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated on case %s", tc.name)
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -181,7 +208,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 				if err != nil {
 					return err
 				}
@@ -201,7 +228,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 				if err != nil {
 					return err
 				}
@@ -226,7 +253,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LatestHeight: 10}
+				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
 				suite.keeper.SetClientState(suite.ctx, clientState)
 				return nil
 			},
@@ -241,7 +268,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LatestHeight: 10}
+				clientState := ibctmtypes.ClientState{FrozenHeight: 1, ID: testClientID, LastHeader: suite.header}
 				suite.keeper.SetClientState(suite.ctx, clientState)
 				return nil
 			},
@@ -256,7 +283,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState, err := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 				if err != nil {
 					return err
 				}

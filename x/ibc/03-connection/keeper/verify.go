@@ -19,9 +19,10 @@ func (k Keeper) VerifyClientConsensusState(
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
+	clientID := connection.GetClientID()
+	clientState, found := k.clientKeeper.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
+		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
 	return clientState.VerifyClientConsensusState(
@@ -37,7 +38,7 @@ func (k Keeper) VerifyConnectionState(
 	height uint64,
 	proof commitment.ProofI,
 	connectionID string,
-	connectionEnd exported.ConnectionI, // oposite connection
+	connectionEnd exported.ConnectionI, // opposite connection
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
@@ -46,7 +47,7 @@ func (k Keeper) VerifyConnectionState(
 
 	// TODO: move to specific clients; blocked by #5502
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connectionEnd.GetClientID(), height,
+		ctx, connection.GetClientID(), height,
 	)
 	if !found {
 		return sdkerrors.Wrapf(

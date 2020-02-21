@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.privVal = tmtypes.NewMockPV()
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight+2, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:       testClientHeight,
 		Timestamp:    suite.now,
@@ -82,7 +82,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := ibctmtypes.NewClientState(testClientID, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now)
+	clientState := ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, ibctmtypes.Header{})
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -113,9 +113,9 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testClientID2, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
-		ibctmtypes.NewClientState(testClientID3, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
-		ibctmtypes.NewClientState(testClientID, testClientID, trustingPeriod, ubdPeriod, testClientHeight, suite.now),
+		ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
 	}
 
 	for i := range expClients {
@@ -155,7 +155,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, _ := ibctmtypes.Initialize(testClientID, testClientID, suite.consensusState, trustingPeriod, ubdPeriod)
+	clientState, _ := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
@@ -166,9 +166,11 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		ValidatorSet: suite.valSet,
 	}
 
+	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.Time.Add(time.Minute), suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+
 	// mock update functionality
+	clientState.LastHeader = header
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+5, nextState)
-	clientState.LatestHeight += 5
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)

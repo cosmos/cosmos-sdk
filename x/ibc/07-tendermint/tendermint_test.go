@@ -38,13 +38,18 @@ func (suite *TendermintTestSuite) SetupTest() {
 	ibctmtypes.RegisterCodec(suite.cdc)
 	commitment.RegisterCodec(suite.cdc)
 
+	// now is the time of the current chain, must be after the updating header
+	// mocks ctx.BlockTime()
 	suite.now = time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC)
 	suite.clientTime = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	// Header time is intended to be time for any new header used for updates
 	suite.headerTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()
 	val := tmtypes.NewValidator(suite.privVal.GetPubKey(), 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	// Suite header is intended to be header passed in for initial ClientState
+	// Thus it should have same height and time as ClientState
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.clientTime, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 }
 
 func TestTendermintTestSuite(t *testing.T) {

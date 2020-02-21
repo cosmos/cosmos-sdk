@@ -54,7 +54,8 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 	}
 
 	return Header{
-		SignedHeader: signedHeader,
-		ValidatorSet: valSet,
+		SignedHeader:     signedHeader,
+		ValidatorSet:     valSet,
+		NextValidatorSet: nextValSet,
 	}
 }

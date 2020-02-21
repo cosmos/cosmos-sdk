@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -27,7 +27,7 @@ import (
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [chain-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
+		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period]",
 		Short: "create new client with a consensus state",
 		Long: strings.TrimSpace(fmt.Sprintf(`create new client with a specified identifier and consensus state:
 
@@ -42,34 +42,30 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
-			chainID := args[1]
 
-			var state ibctmtypes.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[2]), &state); err != nil {
+			var header ibctmtypes.Header
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[2])
+				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &state); err != nil {
-					return errors.Wrap(err, "error unmarshalling consensus state file")
+				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+					return errors.Wrap(err, "error unmarshalling consensus header file")
 				}
 			}
 
-			trustingPeriod, err := time.ParseDuration(args[3])
+			trustingPeriod, err := time.ParseDuration(args[2])
 			if err != nil {
 				return err
 			}
 
-			ubdPeriod, err := time.ParseDuration(args[4])
+			ubdPeriod, err := time.ParseDuration(args[3])
 			if err != nil {
 				return err
 			}
 
-			msg := ibctmtypes.NewMsgCreateClient(
-				clientID, chainID, state,
-				trustingPeriod, ubdPeriod, cliCtx.GetFromAddress(),
-			)
+			msg := ibctmtypes.NewMsgCreateClient(clientID, header, trustingPeriod, ubdPeriod, cliCtx.GetFromAddress())
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err

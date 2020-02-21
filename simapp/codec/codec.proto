@@ -34,8 +34,7 @@ message Supply {
 }
 
 message Evidence {
-  option (cosmos_proto.interface_type) =
-      "*github.com/cosmos/cosmos-sdk/x/evidence/exported.EvidenceI";
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/evidence/exported.EvidenceI";
 
   oneof sum {
     cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;

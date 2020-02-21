@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"gopkg.in/yaml.v2"
+
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // DONTCOVER
@@ -32,8 +32,8 @@ type Params struct {
 }
 
 // ParamKeyTable returns the parameter key table.
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 func (p Params) String() string {
@@ -42,9 +42,9 @@ func (p Params) String() string {
 }
 
 // ParamSetPairs returns the parameter set pairs.
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge, validateMaxEvidenceAge),
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge, validateMaxEvidenceAge),
 	}
 }
 

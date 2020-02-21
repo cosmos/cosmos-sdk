@@ -9,12 +9,6 @@ import (
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
 
-// msg struct for changing the withdraw address for a delegator (or validator self-delegation)
-type MsgSetWithdrawAddress struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
-	WithdrawAddress  sdk.AccAddress `json:"withdraw_address" yaml:"withdraw_address"`
-}
-
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdrawAddress {
 	return MsgSetWithdrawAddress{
 		DelegatorAddress: delAddr,
@@ -46,12 +40,6 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// msg struct for delegation withdraw from a single validator
-type MsgWithdrawDelegatorReward struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
 }
 
 func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
@@ -86,11 +74,6 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 	return nil
 }
 
-// msg struct for validator withdraw
-type MsgWithdrawValidatorCommission struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
-}
-
 func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) MsgWithdrawValidatorCommission {
 	return MsgWithdrawValidatorCommission{
 		ValidatorAddress: valAddr,
@@ -120,13 +103,6 @@ func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 }
 
 const TypeMsgFundCommunityPool = "fund_community_pool"
-
-// MsgFundCommunityPool defines a Msg type that allows an account to directly
-// fund the community pool.
-type MsgFundCommunityPool struct {
-	Amount    sdk.Coins      `json:"amount" yaml:"amount"`
-	Depositor sdk.AccAddress `json:"depositor" yaml:"depositor"`
-}
 
 // NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
 // a funding amount.

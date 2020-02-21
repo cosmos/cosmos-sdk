@@ -92,7 +92,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
-// nolint: funlen interfacer
+// nolint: interfacer
 func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -171,7 +171,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
-// nolint: funlen interfacer
+// nolint: interfacer
 func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -238,7 +238,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 }
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
-// nolint: funlen interfacer
+// nolint: interfacer
 func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -305,7 +305,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 }
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
-// nolint: funlen,interfacer
+// nolint: interfacer
 func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
@@ -387,7 +387,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 }
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
-// nolint: funlen,interfacer
+// nolint: interfacer
 func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,

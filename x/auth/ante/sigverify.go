@@ -299,6 +299,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params,
 ) error {
+
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -321,11 +322,13 @@ func DefaultSigVerificationGasConsumer(
 }
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
-func ConsumeMultisignatureVerificationGas(meter sdk.GasMeter,
-	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
-	params types.Params) {
+func ConsumeMultisignatureVerificationGas(
+	meter sdk.GasMeter, sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold, params types.Params,
+) {
+
 	size := sig.BitArray.Size()
 	sigIndex := 0
+
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
 			DefaultSigVerificationGasConsumer(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
@@ -340,5 +343,6 @@ func GetSignerAcc(ctx sdk.Context, ak keeper.AccountKeeper, addr sdk.AccAddress)
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, nil
 	}
+
 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 }

@@ -8,18 +8,15 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestNewQuerier(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
+
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.NewInt(10000))
 	_, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, _ := sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
@@ -109,9 +106,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParametersPool(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
 	querier := staking.NewQuerier(app.StakingKeeper)
 
 	bondDenom := sdk.DefaultBondDenom
@@ -136,20 +131,9 @@ func TestQueryParametersPool(t *testing.T) {
 }
 
 func TestQueryValidators(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
-
-	codec := simapp.NewAppCodec()
-	app.StakingKeeper = keeper.NewKeeper(
-		codec.Staking,
-		app.GetKey(staking.StoreKey),
-		app.BankKeeper,
-		app.SupplyKeeper,
-		app.GetSubspace(staking.ModuleName),
-	)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 500, sdk.TokensFromConsensusPower(10000))
 
@@ -214,20 +198,9 @@ func TestQueryValidators(t *testing.T) {
 }
 
 func TestQueryDelegation(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
 	params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
-
-	codec := simapp.NewAppCodec()
-	app.StakingKeeper = keeper.NewKeeper(
-		codec.Staking,
-		app.GetKey(staking.StoreKey),
-		app.BankKeeper,
-		app.SupplyKeeper,
-		app.GetSubspace(staking.ModuleName),
-	)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -452,19 +425,8 @@ func TestQueryDelegation(t *testing.T) {
 }
 
 func TestQueryRedelegations(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
 	querier := staking.NewQuerier(app.StakingKeeper)
-
-	codec := simapp.NewAppCodec()
-	app.StakingKeeper = keeper.NewKeeper(
-		codec.Staking,
-		app.GetKey(staking.StoreKey),
-		app.BankKeeper,
-		app.SupplyKeeper,
-		app.GetSubspace(staking.ModuleName),
-	)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -532,19 +494,8 @@ func TestQueryRedelegations(t *testing.T) {
 }
 
 func TestQueryUnbondingDelegation(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
 	querier := staking.NewQuerier(app.StakingKeeper)
-
-	codec := simapp.NewAppCodec()
-	app.StakingKeeper = keeper.NewKeeper(
-		codec.Staking,
-		app.GetKey(staking.StoreKey),
-		app.BankKeeper,
-		app.SupplyKeeper,
-		app.GetSubspace(staking.ModuleName),
-	)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
 	addrAcc1, addrAcc2 := addrs[0], addrs[1]
@@ -638,9 +589,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 }
 
 func TestQueryHistoricalInfo(t *testing.T) {
-	cdc := codec.New()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	cdc, app, ctx := getBaseSimappWithCustomKeeper()
 	querier := staking.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))

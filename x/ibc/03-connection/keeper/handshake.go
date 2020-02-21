@@ -31,7 +31,7 @@ func (k Keeper) ConnOpenInit(
 	connection := types.NewConnectionEnd(exported.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
-	if err := k.addConnectionToClient(ctx, counterparty.GetClientID(), connectionID); err != nil {
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot initialize connection")
 	}
 
@@ -108,7 +108,7 @@ func (k Keeper) ConnOpenTry(
 
 	// Set connection state to TRYOPEN and store in chainB state
 	connection.State = exported.TRYOPEN
-	if err := k.addConnectionToClient(ctx, counterparty.GetClientID(), connectionID); err != nil {
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
 

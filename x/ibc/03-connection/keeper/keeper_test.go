@@ -28,10 +28,10 @@ const (
 	storeKey   = ibctypes.StoreKey
 	chainID    = "gaia"
 
-	testClientIDA     = "testclientida"
+	testClientIDA     = "testclientida" // chainid for chainA also chainB's clientID for A's liteclient
 	testConnectionIDA = "connectionidatob"
 
-	testClientIDB     = "testclientidb"
+	testClientIDB     = "testclientidb" // chainid for chainB also chainA's clientID for B's liteclient
 	testConnectionIDB = "connectionidbtoa"
 
 	testClientID3     = "testclientidthree"
@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	suite.Require().False(existed)
 
 	counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-	expConn := types.NewConnectionEnd(exported.INIT, testClientIDA, counterparty, types.GetCompatibleVersions())
+	expConn := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty, types.GetCompatibleVersions())
 	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConn)
 	conn, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
 	suite.Require().True(existed)
@@ -95,8 +95,8 @@ func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 	_, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), testClientIDA)
 	suite.False(existed)
 
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), testClientIDA, types.GetCompatibleVersions())
-	paths, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), testClientIDA)
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), testClientIDB, types.GetCompatibleVersions())
+	paths, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), testClientIDB)
 	suite.True(existed)
 	suite.EqualValues(types.GetCompatibleVersions(), paths)
 }

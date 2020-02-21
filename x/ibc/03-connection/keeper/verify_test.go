@@ -20,8 +20,8 @@ const (
 
 func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	counterparty := types.NewCounterparty(
-		testClientIDB, testConnectionIDB,
-		suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		testClientIDA, testConnectionIDA,
+		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
 	)
 
 	connection1 := types.NewConnectionEnd(
@@ -102,11 +102,10 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			tc.malleate()
 
 			// create and store connection on chain A
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			expectedConnection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
 
-			// create expected connection
-			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitment.NewPrefix([]byte("ibc")))
-			expectedConnection := types.NewConnectionEnd(exported.INIT, testClientIDA, counterparty, []string{"1.0.0"})
+			// // create expected connection
+			// expectedConnection := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty, []string{"1.0.0"})
 
 			// perform a couple updates of chain A on chain B
 			suite.chainB.updateClient(suite.chainA)
@@ -114,6 +113,8 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			proofHeight := uint64(suite.chainA.Header.Height)
 			// proof, proofHeight := suite.queryProof(connectionKey)
 
+			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitment.NewPrefix([]byte("ibc")))
+			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainB.GetContext(), connection, proofHeight, tc.proof, testConnectionIDA, expectedConnection,

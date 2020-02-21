@@ -80,14 +80,51 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 	return app
 }
 
-// AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt
-func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+type GenerateAccountStrategy func(int) []sdk.AccAddress
+
+func Random(accNum int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, accNum)
 	for i := 0; i < accNum; i++ {
 		pk := ed25519.GenPrivKey().PubKey()
 		testAddrs[i] = sdk.AccAddress(pk.Address())
 	}
+
+	return testAddrs
+}
+
+func Incremental(accNum int) []sdk.AccAddress {
+	var addresses []sdk.AccAddress
+	var buffer bytes.Buffer
+
+	// start at 100 so we can make up to 999 test addresses with valid test addresses
+	for i := 100; i < (accNum + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
+
+		buffer.WriteString(numString) //adding on final two digits to make addresses unique
+		res, _ := sdk.AccAddressFromHex(buffer.String())
+		bech := res.String()
+		addresses = append(addresses, TestAddr(buffer.String(), bech))
+		buffer.Reset()
+	}
+
+	return addresses
+}
+
+// AddTestAddrs constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+	return addTestAddrs(app, ctx, accNum, accAmt, Random)
+}
+
+// AddTestAddrs constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+	return addTestAddrs(app, ctx, accNum, accAmt, Incremental)
+}
+
+func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(testAddrs)))))
@@ -105,6 +142,27 @@ func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sd
 		}
 	}
 	return testAddrs
+}
+
+func TestAddr(addr string, bech string) sdk.AccAddress {
+	res, err := sdk.AccAddressFromHex(addr)
+	if err != nil {
+		panic(err)
+	}
+	bechexpected := res.String()
+	if bech != bechexpected {
+		panic("Bech encoding doesn't match reference")
+	}
+
+	bechres, err := sdk.AccAddressFromBech32(bech)
+	if err != nil {
+		panic(err)
+	}
+	if !bytes.Equal(bechres, res) {
+		panic("Bech decode and hex decode don't match")
+	}
+
+	return res
 }
 
 // CheckBalance checks the balance of an account.

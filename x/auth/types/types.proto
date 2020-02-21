@@ -14,7 +14,7 @@ message BaseAccount {
   option (gogoproto.goproto_stringer) = false;
 
   bytes  address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  string pub_key = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  bytes  pub_key = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
   uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
   uint64 sequence       = 4;
 }
@@ -23,6 +23,8 @@ message BaseAccount {
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 message StdFee {
+  option (gogoproto.equal) = true;
+
   repeated cosmos_sdk.v1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

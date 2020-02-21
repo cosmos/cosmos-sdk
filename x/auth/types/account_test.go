@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -86,17 +85,17 @@ func TestGenesisAccountValidate(t *testing.T) {
 	tests := []struct {
 		name   string
 		acc    exported.GenesisAccount
-		expErr error
+		expErr bool
 	}{
 		{
 			"valid base account",
 			baseAcc,
-			nil,
+			false,
 		},
 		{
 			"invalid base valid account",
 			types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
-			errors.New("pubkey and address pair is invalid"),
+			true,
 		},
 	}
 
@@ -104,8 +103,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.acc.Validate()
-			require.Equal(t, tt.expErr, err)
+			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
 	}
 }

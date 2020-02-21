@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -35,7 +35,7 @@ type BaseKeeper struct {
 }
 
 func NewBaseKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -146,7 +146,7 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc        *codec.Codec
+	cdc        codec.Marshaler
 	ak         types.AccountKeeper
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
@@ -156,7 +156,7 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -341,7 +341,7 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	bz := k.cdc.MustMarshalBinaryBare(balance)
+	bz := k.cdc.MustMarshalBinaryBare(&balance)
 	accountStore.Set([]byte(balance.Denom), bz)
 
 	return nil
@@ -385,13 +385,13 @@ type ViewKeeper interface {
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	cdc      *codec.Codec
+	cdc      codec.Marshaler
 	storeKey sdk.StoreKey
 	ak       types.AccountKeeper
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) BaseViewKeeper {
 	return BaseViewKeeper{
 		cdc:      cdc,
 		storeKey: storeKey,

@@ -69,12 +69,11 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 		),
 	)
 
-	var h http.Handler = rs.Mux
 	if cors {
-		h = handlers.CORS()(h)
+		return rpcserver.StartHTTPServer(rs.listener, handlers.CORS()(h), rs.log, cfg)
 	}
 
-	return rpcserver.StartHTTPServer(rs.listener, h, rs.log, cfg)
+	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
 // ServeCommand will start the application REST service as a blocking process. It
@@ -103,7 +102,6 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 		},
 	}
 
-	cmd.Flags().Bool(flags.FlagUnsafeCORS, false, "Allows CORS requests from all domains")
 	return flags.RegisterRestServerFlags(cmd)
 }
 

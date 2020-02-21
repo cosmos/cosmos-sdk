@@ -59,13 +59,13 @@ This function is specific to the application and passed in to the `ServeCommand`
 rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
 ```
 
-## Cors
+## Cross-Origin Resource Sharing (CORS)
 
-Cors are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://www.nginx.com/). For testing and development purposes there is an `unsafe_cors` flag that can be passed to the cmd to enable accepting cors from everyone.
+[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://www.nginx.com/). For testing and development purposes there is an `unsafe_cors` flag that can be passed to the cmd to enable accepting cors from everyone.
 
 ```sh
 gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
-    --trust-node=true --unsafe_cors
+    --trust-node=true --unsafe-cors
 ```

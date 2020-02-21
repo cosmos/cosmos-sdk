@@ -144,6 +144,14 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 	return testAddrs
 }
 
+func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) (valAddrs []sdk.ValAddress) {
+	for _, addr := range addrs {
+		valAddrs = append(valAddrs, sdk.ValAddress(addr))
+	}
+
+	return
+}
+
 func TestAddr(addr string, bech string) sdk.AccAddress {
 	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {

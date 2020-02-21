@@ -52,6 +52,9 @@ func (h Header) ValidateBasic(chainID string) error {
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
+	if h.NextValidatorSet == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "next validator set is nil")
+	}
 	if !bytes.Equal(h.ValidatorsHash, h.ValidatorSet.Hash()) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
 	}

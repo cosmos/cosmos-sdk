@@ -7,6 +7,8 @@ import (
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
+var _ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
+
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
 func NewMsgSubmitEvidence(evidenceI eviexported.Evidence, s sdk.AccAddress) MsgSubmitEvidence {
 	e := &Evidence{}
@@ -30,3 +32,7 @@ func (msg MsgSubmitEvidence) ValidateBasic() error {
 
 	return nil
 }
+
+// nolint
+func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence { return msg.Evidence.GetEvidence() }
+func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress      { return msg.Submitter }

@@ -4,77 +4,12 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-// test undelegating self delegation from a validator pushing it below MinSelfDelegation
-// shift it from the bonded to unbonding state and jailed
-func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-	delTokens := sdk.TokensFromConsensusPower(10)
-	delCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), delTokens))
-
-	//create a validator with a self-delegation
-	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-
-	validator.MinSelfDelegation = delTokens
-	validator, issuedShares := validator.AddTokensFromDel(delTokens)
-	require.Equal(t, delTokens, issuedShares.RoundInt())
-
-	// add bonded tokens to pool for delegations
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-	oldNotBonded := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := bk.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
-	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-	require.True(t, validator.IsBonded())
-
-	selfDelegation := types.NewDelegation(sdk.AccAddress(addrVals[0].Bytes()), addrVals[0], issuedShares)
-	keeper.SetDelegation(ctx, selfDelegation)
-
-	// add bonded tokens to pool for delegations
-	bondedPool := keeper.GetBondedPool(ctx)
-	oldBonded := bk.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = bk.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
-	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-
-	// create a second delegation to this validator
-	keeper.DeleteValidatorByPowerIndex(ctx, validator)
-	validator, issuedShares = validator.AddTokensFromDel(delTokens)
-	require.True(t, validator.IsBonded())
-	require.Equal(t, delTokens, issuedShares.RoundInt())
-
-	// add bonded tokens to pool for delegations
-	oldBonded = bk.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = bk.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
-	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-
-	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
-	keeper.SetDelegation(ctx, delegation)
-
-	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.TokensFromConsensusPower(6).ToDec())
-	require.NoError(t, err)
-
-	// end block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
-
-	validator, found := keeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	require.Equal(t, sdk.TokensFromConsensusPower(14), validator.Tokens)
-	require.Equal(t, sdk.Unbonding, validator.Status)
-	require.True(t, validator.Jailed)
-}
 
 func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)

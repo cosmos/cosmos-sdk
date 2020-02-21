@@ -750,6 +750,10 @@ func (d *Dec) Size() int {
 func (d Dec) MarshalAmino() ([]byte, error)   { return d.Marshal() }
 func (d *Dec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
 
+func (dp DecProto) String() string {
+	return dp.Dec.String()
+}
+
 //___________________________________________________________________________________
 // helpers
 

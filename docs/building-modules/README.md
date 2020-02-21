@@ -19,3 +19,4 @@ This repository contains documentation on concepts developers need to know in or
 9. [Genesis](./genesis.md)
 10. [Module Interfaces](./module-interfaces.md)
 11. [Standard Module Structure](./structure.md)
+12. [Errors](./errors.md)

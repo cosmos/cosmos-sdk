@@ -42,3 +42,5 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 015: IBC Packet Receiver](./adr-015-ibc-packet-receiver.md)
 - [ADR 016: Validator Consensus Key Rotation](./adr-016-validator-consensus-key-rotation.md)
 - [ADR 017: Historical Header Module](./adr-017-historical-header-module.md)
+- [ADR 018: Extendable Voting Periods](./adr-018-extendable-voting-period.md)
+- [ADR 019: Protocol Buffer State Encoding](./adr-019-protobuf-state-encoding.md)

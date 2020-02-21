@@ -27,7 +27,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	return params
 }
 
-func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (outstandingRewards sdk.DecCoins) {
+func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) sdk.DecCoins {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorOutstandingRewards}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr)),
@@ -35,12 +35,13 @@ func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *c
 
 	bz, err := querier(ctx, []string{types.QueryValidatorOutstandingRewards}, query)
 	require.Nil(t, err)
+	outstandingRewards := types.ValidatorOutstandingRewards{}
 	require.Nil(t, cdc.UnmarshalJSON(bz, &outstandingRewards))
 
-	return
+	return outstandingRewards.GetRewards()
 }
 
-func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (validatorCommission sdk.DecCoins) {
+func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) sdk.DecCoins {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryValidatorCommission}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
@@ -48,9 +49,10 @@ func getQueriedValidatorCommission(t *testing.T, ctx sdk.Context, cdc *codec.Cod
 
 	bz, err := querier(ctx, []string{types.QueryValidatorCommission}, query)
 	require.Nil(t, err)
+	validatorCommission := types.ValidatorAccumulatedCommission{}
 	require.Nil(t, cdc.UnmarshalJSON(bz, &validatorCommission))
 
-	return
+	return validatorCommission.GetCommission()
 }
 
 func getQueriedValidatorSlashes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress, startHeight uint64, endHeight uint64) (slashes []types.ValidatorSlashEvent) {
@@ -130,13 +132,13 @@ func TestQueries(t *testing.T) {
 
 	// test outstanding rewards query
 	outstandingRewards := sdk.DecCoins{{Denom: "mytoken", Amount: sdk.NewDec(3)}, {Denom: "myothertoken", Amount: sdk.NewDecWithPrec(3, 7)}}
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, outstandingRewards)
+	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, types.ValidatorOutstandingRewards{Rewards: outstandingRewards})
 	retOutstandingRewards := getQueriedValidatorOutstandingRewards(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, outstandingRewards, retOutstandingRewards)
 
 	// test validator commission query
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
-	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, commission)
+	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, types.ValidatorAccumulatedCommission{Commission: commission})
 	retCommission := getQueriedValidatorCommission(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, commission, retCommission)
 

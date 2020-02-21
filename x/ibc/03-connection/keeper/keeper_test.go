@@ -154,7 +154,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 }
 
 // createClient will create a client for clientChain on targetChain
-func (target *TestChain) CreateClient(client *TestChain) error {
+func (chain *TestChain) CreateClient(client *TestChain) error {
 	client.Header = nextHeader(client)
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
@@ -178,14 +178,14 @@ func (target *TestChain) CreateClient(client *TestChain) error {
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
 
 	// Create target ctx
-	ctxTarget := target.GetContext()
+	ctxTarget := chain.GetContext()
 
 	// create client
 	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, client.Header)
 	if err != nil {
 		return err
 	}
-	_, err = target.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
+	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
 	if err != nil {
 		return err
 	}
@@ -203,12 +203,12 @@ func (target *TestChain) CreateClient(client *TestChain) error {
 	// )
 }
 
-func (target *TestChain) updateClient(client *TestChain) {
-	// Create target ctx
-	ctxTarget := target.GetContext()
+func (chain *TestChain) updateClient(client *TestChain) {
+	// Create chain ctx
+	ctxTarget := chain.GetContext()
 
 	// if clientState does not already exist, return without updating
-	_, found := target.App.IBCKeeper.ClientKeeper.GetClientState(
+	_, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(
 		ctxTarget, client.ClientID,
 	)
 	if !found {
@@ -245,10 +245,10 @@ func (target *TestChain) updateClient(client *TestChain) {
 		ValidatorSet: client.Vals,
 	}
 
-	target.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
+	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
 		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
 	)
-	target.App.IBCKeeper.ClientKeeper.SetClientState(
+	chain.App.IBCKeeper.ClientKeeper.SetClientState(
 		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, client.Header),
 	)
 

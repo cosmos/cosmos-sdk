@@ -92,7 +92,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		// Iterate through redelegations from slashed source validator
 		redelegations := k.GetRedelegationsFromSrcValidator(ctx, operatorAddress)
 		for _, redelegation := range redelegations {
-			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
+			amountSlashed := k.SlashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
 				continue
 			}
@@ -215,7 +215,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) slashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time

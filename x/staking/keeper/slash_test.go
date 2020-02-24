@@ -112,3 +112,71 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances)
 	require.Equal(t, int64(5), diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Int64())
 }
+
+// tests slashRedelegation
+func TestSlashRedelegation(t *testing.T) {
+	app, ctx, addrDels, addrVals := initConfig(t, 10)
+	fraction := sdk.NewDecWithPrec(5, 1)
+
+	// add bonded tokens to pool for (re)delegations
+	startCoins := sdk.NewCoins(sdk.NewInt64Coin(app.StakingKeeper.BondDenom(ctx), 15))
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(startCoins...)))
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+
+	// set a redelegation with an expiration timestamp beyond which the
+	// redelegation shouldn't be slashed
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
+		time.Unix(5, 0), sdk.NewInt(10), sdk.NewDec(10))
+
+	app.StakingKeeper.SetRedelegation(ctx, rd)
+
+	// set the associated delegation
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10))
+	app.StakingKeeper.SetDelegation(ctx, del)
+
+	// started redelegating prior to the current height, stake didn't contribute to infraction
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[1])
+	require.True(t, found)
+	slashAmount := app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 1, fraction)
+	require.Equal(t, int64(0), slashAmount.Int64())
+
+	// after the expiration time, no longer eligible for slashing
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(10, 0)})
+	app.StakingKeeper.SetRedelegation(ctx, rd)
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
+	require.True(t, found)
+	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
+	require.Equal(t, int64(0), slashAmount.Int64())
+
+	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+
+	// test valid slash, before expiration timestamp and to which stake contributed
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
+	app.StakingKeeper.SetRedelegation(ctx, rd)
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
+	require.True(t, found)
+	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
+	require.Equal(t, int64(5), slashAmount.Int64())
+	rd, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+	require.Len(t, rd.Entries, 1)
+
+	// end block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// initialbalance unchanged
+	require.Equal(t, sdk.NewInt(10), rd.Entries[0].InitialBalance)
+
+	// shares decreased
+	del, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], addrVals[1])
+	require.True(t, found)
+	require.Equal(t, int64(5), del.Shares.RoundInt64())
+
+	// pool bonded tokens should decrease
+	burnedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), slashAmount))
+	require.Equal(t, balances.Sub(burnedCoins), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
+}

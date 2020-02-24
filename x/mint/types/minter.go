@@ -69,7 +69,6 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 // NextAnnualProvisions returns the annual provisions based on current total
 // supply and inflation rate.
 func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
-
 	return m.Inflation.MulInt(totalSupply)
 }
 

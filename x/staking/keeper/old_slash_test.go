@@ -37,14 +37,6 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 
 //_________________________________________________________________________________
 
-// tests Slash at a future height (must panic)
-func TestSlashAtFutureHeight(t *testing.T) {
-	ctx, keeper, _ := setupHelper(t, 10)
-	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(t, func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
-}
-
 // test slash at a negative height
 // this just represents pre-genesis and should have the same effect as slashing at height 0
 func TestSlashAtNegativeHeight(t *testing.T) {

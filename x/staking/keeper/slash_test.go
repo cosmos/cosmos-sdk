@@ -180,3 +180,12 @@ func TestSlashRedelegation(t *testing.T) {
 	burnedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), slashAmount))
 	require.Equal(t, balances.Sub(burnedCoins), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
 }
+
+// tests Slash at a future height (must panic)
+func TestSlashAtFutureHeight(t *testing.T) {
+	app, ctx, _, _ := initConfig(t, 10)
+
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	fraction := sdk.NewDecWithPrec(5, 1)
+	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction) })
+}

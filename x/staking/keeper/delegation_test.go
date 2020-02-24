@@ -17,8 +17,8 @@ import (
 func TestDelegation(t *testing.T) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	//construct the validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
@@ -33,31 +33,31 @@ func TestDelegation(t *testing.T) {
 	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
 
 	// first add a validators[0] to delegate too
-	bond1to1 := types.NewDelegation(addrs[0], valAddrs[0], sdk.NewDec(9))
+	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(9))
 
 	// check the empty keeper first
-	_, found := app.StakingKeeper.GetDelegation(ctx, addrs[0], valAddrs[0])
+	_, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.False(t, found)
 
 	// set and retrieve a record
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrs[0], valAddrs[0])
+	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.True(t, bond1to1.Equal(resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewDec(99)
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrs[0], valAddrs[0])
+	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.True(t, bond1to1.Equal(resBond))
 
 	// add some more records
-	bond1to2 := types.NewDelegation(addrs[0], valAddrs[1], sdk.NewDec(9))
-	bond1to3 := types.NewDelegation(addrs[0], valAddrs[2], sdk.NewDec(9))
-	bond2to1 := types.NewDelegation(addrs[1], valAddrs[0], sdk.NewDec(9))
-	bond2to2 := types.NewDelegation(addrs[1], valAddrs[1], sdk.NewDec(9))
-	bond2to3 := types.NewDelegation(addrs[1], valAddrs[2], sdk.NewDec(9))
+	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(9))
+	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9))
+	bond2to1 := types.NewDelegation(addrDels[1], valAddrs[0], sdk.NewDec(9))
+	bond2to2 := types.NewDelegation(addrDels[1], valAddrs[1], sdk.NewDec(9))
+	bond2to3 := types.NewDelegation(addrDels[1], valAddrs[2], sdk.NewDec(9))
 	app.StakingKeeper.SetDelegation(ctx, bond1to2)
 	app.StakingKeeper.SetDelegation(ctx, bond1to3)
 	app.StakingKeeper.SetDelegation(ctx, bond2to1)
@@ -65,16 +65,16 @@ func TestDelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := app.StakingKeeper.GetDelegatorDelegations(ctx, addrs[0], 5)
+	resBonds := app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
 	require.True(t, bond1to1.Equal(resBonds[0]))
 	require.True(t, bond1to2.Equal(resBonds[1]))
 	require.True(t, bond1to3.Equal(resBonds[2]))
-	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrs[0])
+	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[0])
 	require.Equal(t, 3, len(resBonds))
-	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrs[0], 2)
+	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrs[1], 5)
+	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
@@ -88,17 +88,17 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond2to2.Equal(allBonds[4]))
 	require.True(t, bond2to3.Equal(allBonds[5]))
 
-	resVals := app.StakingKeeper.GetDelegatorValidators(ctx, addrs[0], 3)
+	resVals := app.StakingKeeper.GetDelegatorValidators(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resVals))
-	resVals = app.StakingKeeper.GetDelegatorValidators(ctx, addrs[1], 4)
+	resVals = app.StakingKeeper.GetDelegatorValidators(ctx, addrDels[1], 4)
 	require.Equal(t, 3, len(resVals))
 
 	for i := 0; i < 3; i++ {
-		resVal, err := app.StakingKeeper.GetDelegatorValidator(ctx, addrs[0], valAddrs[i])
+		resVal, err := app.StakingKeeper.GetDelegatorValidator(ctx, addrDels[0], valAddrs[i])
 		require.Nil(t, err)
 		require.Equal(t, valAddrs[i], resVal.GetOperator())
 
-		resVal, err = app.StakingKeeper.GetDelegatorValidator(ctx, addrs[1], valAddrs[i])
+		resVal, err = app.StakingKeeper.GetDelegatorValidator(ctx, addrDels[1], valAddrs[i])
 		require.Nil(t, err)
 		require.Equal(t, valAddrs[i], resVal.GetOperator())
 
@@ -108,22 +108,22 @@ func TestDelegation(t *testing.T) {
 
 	// delete a record
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
-	_, found = app.StakingKeeper.GetDelegation(ctx, addrs[1], valAddrs[2])
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
 	require.False(t, found)
-	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrs[1], 5)
+	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
 
-	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrs[1])
+	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
-	_, found = app.StakingKeeper.GetDelegation(ctx, addrs[1], valAddrs[0])
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
 	require.False(t, found)
-	_, found = app.StakingKeeper.GetDelegation(ctx, addrs[1], valAddrs[1])
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))

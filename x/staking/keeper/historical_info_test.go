@@ -15,8 +15,10 @@ import (
 )
 
 func TestHistoricalInfo(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	validators := make([]types.Validator, len(addrVals))
 
@@ -41,8 +43,10 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	// set historical entries in params to 5
 	params := types.DefaultParams()
@@ -60,8 +64,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 		Height:  5,
 	}
 	valSet := []types.Validator{
-		types.NewValidator(sdk.ValAddress(Addrs[0]), PKs[0], types.Description{}),
-		types.NewValidator(sdk.ValAddress(Addrs[1]), PKs[1], types.Description{}),
+		types.NewValidator(addrVals[0], PKs[0], types.Description{}),
+		types.NewValidator(addrVals[1], PKs[1], types.Description{}),
 	}
 	hi4 := types.NewHistoricalInfo(h4, valSet)
 	hi5 := types.NewHistoricalInfo(h5, valSet)
@@ -75,10 +79,10 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.Equal(t, hi5, recv)
 
 	// Set last validators in keeper
-	val1 := types.NewValidator(sdk.ValAddress(Addrs[2]), PKs[2], types.Description{})
+	val1 := types.NewValidator(addrVals[2], PKs[2], types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.OperatorAddress, 10)
-	val2 := types.NewValidator(sdk.ValAddress(Addrs[3]), PKs[3], types.Description{})
+	val2 := types.NewValidator(addrVals[3], PKs[3], types.Description{})
 	vals := []types.Validator{val1, val2}
 	sort.Sort(types.Validators(vals))
 	app.StakingKeeper.SetValidator(ctx, val2)

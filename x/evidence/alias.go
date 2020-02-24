@@ -1,8 +1,8 @@
 package evidence
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // nolint
@@ -27,12 +27,11 @@ var (
 	NewKeeper  = keeper.NewKeeper
 	NewQuerier = keeper.NewQuerier
 
-	NewMsgSubmitEvidence         = types.NewMsgSubmitEvidence
+	NewMsgSubmitEvidenceBase     = types.NewMsgSubmitEvidenceBase
 	NewRouter                    = types.NewRouter
 	NewQueryEvidenceParams       = types.NewQueryEvidenceParams
 	NewQueryAllEvidenceParams    = types.NewQueryAllEvidenceParams
 	RegisterCodec                = types.RegisterCodec
-	RegisterEvidenceTypeCodec    = types.RegisterEvidenceTypeCodec
 	ModuleCdc                    = types.ModuleCdc
 	NewGenesisState              = types.NewGenesisState
 	DefaultGenesisState          = types.DefaultGenesisState
@@ -40,14 +39,19 @@ var (
 	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
 	DoubleSignJailEndTime        = types.DoubleSignJailEndTime
 	ParamKeyTable                = types.ParamKeyTable
+	ErrNoEvidenceHandlerExists   = types.ErrNoEvidenceHandlerExists
+	ErrInvalidEvidence           = types.ErrInvalidEvidence
+	ErrNoEvidenceExists          = types.ErrNoEvidenceExists
+	ErrEvidenceExists            = types.ErrEvidenceExists
 )
 
 type (
 	Keeper = keeper.Keeper
 
-	GenesisState      = types.GenesisState
-	MsgSubmitEvidence = types.MsgSubmitEvidence
-	Handler           = types.Handler
-	Router            = types.Router
-	Equivocation      = types.Equivocation
+	GenesisState          = types.GenesisState
+	MsgSubmitEvidenceBase = types.MsgSubmitEvidenceBase
+	Handler               = types.Handler
+	Router                = types.Router
+	Equivocation          = types.Equivocation
+	Codec                 = types.Codec
 )

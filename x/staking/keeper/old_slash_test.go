@@ -39,49 +39,6 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 
 //_________________________________________________________________________________
 
-// tests slashUnbondingDelegation
-func TestSlashUnbondingDelegation(t *testing.T) {
-	ctx, keeper, _ := setupHelper(t, 10)
-	fraction := sdk.NewDecWithPrec(5, 1)
-
-	// set an unbonding delegation with expiration timestamp (beyond which the
-	// unbonding delegation shouldn't be slashed)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(5, 0), sdk.NewInt(10))
-
-	keeper.SetUnbondingDelegation(ctx, ubd)
-
-	// unbonding started prior to the infraction height, stakw didn't contribute
-	slashAmount := keeper.slashUnbondingDelegation(ctx, ubd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
-
-	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(10, 0)})
-	keeper.SetUnbondingDelegation(ctx, ubd)
-	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
-
-	// test valid slash, before expiration timestamp and to which stake contributed
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-	oldUnbondedPoolBalances := keeper.bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
-	keeper.SetUnbondingDelegation(ctx, ubd)
-	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Int64())
-	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
-	require.True(t, found)
-	require.Len(t, ubd.Entries, 1)
-
-	// initial balance unchanged
-	require.Equal(t, sdk.NewInt(10), ubd.Entries[0].InitialBalance)
-
-	// balance decreased
-	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
-	newUnbondedPoolBalances := keeper.bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances)
-	require.Equal(t, int64(5), diffTokens.AmountOf(keeper.BondDenom(ctx)).Int64())
-}
-
 // tests slashRedelegation
 func TestSlashRedelegation(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t, 10)

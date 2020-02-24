@@ -29,16 +29,19 @@ message Supply {
   option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/supply/exported.SupplyI";
 
-  // sum defines a list of all acceptable concrete Supply implementations.
+  // sum defines a set of all acceptable concrete Supply implementations.
   oneof sum {
     cosmos_sdk.x.supply.v1.Supply supply = 1;
   }
 }
 
+// Evidence defines the application-level allowed Evidence to be submitted via a
+// MsgSubmitEvidence message.
 message Evidence {
   option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
 
+  // sum defines a set of all acceptable concrete Evidence implementations.
   oneof sum {
     cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
   }

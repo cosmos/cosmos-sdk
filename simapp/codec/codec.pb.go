@@ -160,7 +160,7 @@ func (*Account) XXX_OneofWrappers() []interface{} {
 
 // Supply defines the application-level Supply type.
 type Supply struct {
-	// sum defines a list of all acceptable concrete Supply implementations.
+	// sum defines a set of all acceptable concrete Supply implementations.
 	//
 	// Types that are valid to be assigned to Sum:
 	//	*Supply_Supply
@@ -234,7 +234,11 @@ func (*Supply) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// Evidence defines the application-level allowed Evidence to be submitted via a
+// MsgSubmitEvidence message.
 type Evidence struct {
+	// sum defines a set of all acceptable concrete Evidence implementations.
+	//
 	// Types that are valid to be assigned to Sum:
 	//	*Evidence_Equivocation
 	Sum isEvidence_Sum `protobuf_oneof:"sum"`

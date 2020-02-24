@@ -547,78 +547,81 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	require.False(t, found, "%v", validator)
 }
 
-//func TestUnbondingAllDelegationFromValidator(t *testing.T) {
-//	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-//	delTokens := sdk.TokensFromConsensusPower(10)
-//	delCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), delTokens))
-//
-//	// add bonded tokens to pool for delegations
-//	notBondedPool := keeper.GetNotBondedPool(ctx)
-//	oldNotBonded := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
-//	err := bk.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
-//	require.NoError(t, err)
-//	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-//
-//	//create a validator with a self-delegation
-//	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-//
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	validator, issuedShares := validator.AddTokensFromDel(valTokens)
-//	require.Equal(t, valTokens, issuedShares.RoundInt())
-//
-//	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-//	require.True(t, validator.IsBonded())
-//	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-//
-//	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
-//	keeper.SetDelegation(ctx, selfDelegation)
-//
-//	// create a second delegation to this validator
-//	keeper.DeleteValidatorByPowerIndex(ctx, validator)
-//	validator, issuedShares = validator.AddTokensFromDel(delTokens)
-//	require.Equal(t, delTokens, issuedShares.RoundInt())
-//
-//	bondedPool := keeper.GetBondedPool(ctx)
-//	oldBonded := bk.GetAllBalances(ctx, bondedPool.GetAddress())
-//	err = bk.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
-//	require.NoError(t, err)
-//	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-//
-//	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-//	require.True(t, validator.IsBonded())
-//
-//	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
-//	keeper.SetDelegation(ctx, delegation)
-//
-//	ctx = ctx.WithBlockHeight(10)
-//	ctx = ctx.WithBlockTime(time.Unix(333, 0))
-//
-//	// unbond the all self-delegation to put validator in unbonding state
-//	_, err = keeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
-//	require.NoError(t, err)
-//
-//	// end block
-//	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//	require.Equal(t, 1, len(updates))
-//
-//	// unbond all the remaining delegation
-//	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], delTokens.ToDec())
-//	require.NoError(t, err)
-//
-//	// validator should still be in state and still be in unbonding state
-//	validator, found := keeper.GetValidator(ctx, addrVals[0])
-//	require.True(t, found)
-//	require.Equal(t, validator.Status, sdk.Unbonding)
-//
-//	// unbond the validator
-//	ctx = ctx.WithBlockTime(validator.UnbondingTime)
-//	keeper.UnbondAllMatureValidatorQueue(ctx)
-//
-//	// validator should now be deleted from state
-//	_, found = keeper.GetValidator(ctx, addrVals[0])
-//	require.False(t, found)
-//}
-//
+func TestUnbondingAllDelegationFromValidator(t *testing.T) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+	delTokens := sdk.TokensFromConsensusPower(10)
+	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	// add bonded tokens to pool for delegations
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	//create a validator with a self-delegation
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+
+	valTokens := sdk.TokensFromConsensusPower(10)
+	validator, issuedShares := validator.AddTokensFromDel(valTokens)
+	require.Equal(t, valTokens, issuedShares.RoundInt())
+
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	require.True(t, validator.IsBonded())
+	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
+
+	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
+
+	// create a second delegation to this validator
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validator)
+	validator, issuedShares = validator.AddTokensFromDel(delTokens)
+	require.Equal(t, delTokens, issuedShares.RoundInt())
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	oldBonded := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	require.True(t, validator.IsBonded())
+
+	delegation := types.NewDelegation(addrDels[1], addrVals[0], issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, delegation)
+
+	ctx = ctx.WithBlockHeight(10)
+	ctx = ctx.WithBlockTime(time.Unix(333, 0))
+
+	// unbond the all self-delegation to put validator in unbonding state
+	_, err = app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], valTokens.ToDec())
+	require.NoError(t, err)
+
+	// end block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// unbond all the remaining delegation
+	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], delTokens.ToDec())
+	require.NoError(t, err)
+
+	// validator should still be in state and still be in unbonding state
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, validator.Status, sdk.Unbonding)
+
+	// unbond the validator
+	ctx = ctx.WithBlockTime(validator.UnbondingTime)
+	app.StakingKeeper.UnbondAllMatureValidatorQueue(ctx)
+
+	// validator should now be deleted from state
+	_, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.False(t, found)
+}
+
 //// Make sure that that the retrieving the delegations doesn't affect the state
 //func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 0)

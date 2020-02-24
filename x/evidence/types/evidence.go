@@ -48,8 +48,7 @@ func (e Equivocation) ValidateBasic() error {
 	if e.Power < 1 {
 		return fmt.Errorf("invalid equivocation validator power: %d", e.Power)
 	}
-	consaddr := sdk.ConsAddress(e.ConsensusAddress)
-	if consaddr.Empty() {
+	if e.ConsensusAddress.Empty() {
 		return fmt.Errorf("invalid equivocation validator consensus address: %s", e.ConsensusAddress)
 	}
 

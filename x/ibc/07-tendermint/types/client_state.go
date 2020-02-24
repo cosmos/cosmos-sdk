@@ -151,7 +151,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(connectionEnd)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(connectionEnd)
 	if err != nil {
 		return err
 	}

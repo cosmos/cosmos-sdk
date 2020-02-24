@@ -11,60 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestRedelegationMaxEntries(t *testing.T) {
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-	startTokens := sdk.TokensFromConsensusPower(20)
-	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), startTokens))
-
-	// add bonded tokens to pool for delegations
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-	oldNotBonded := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := bk.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
-	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	// create a validator with a self-delegation
-	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	valTokens := sdk.TokensFromConsensusPower(10)
-	validator, issuedShares := validator.AddTokensFromDel(valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
-	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
-	keeper.SetDelegation(ctx, selfDelegation)
-
-	// create a second validator
-	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
-	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
-
-	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
-
-	maxEntries := keeper.MaxEntries(ctx)
-
-	// redelegations should pass
-	var completionTime time.Time
-	for i := uint32(0); i < maxEntries; i++ {
-		var err error
-		completionTime, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
-		require.NoError(t, err)
-	}
-
-	// an additional redelegation should fail due to max entries
-	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
-	require.Error(t, err)
-
-	// mature redelegations
-	ctx = ctx.WithBlockTime(completionTime)
-	err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
-	require.NoError(t, err)
-
-	// redelegation should work again
-	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
-	require.NoError(t, err)
-}
-
 func TestRedelegateSelfDelegation(t *testing.T) {
 	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromConsensusPower(30)

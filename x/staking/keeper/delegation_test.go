@@ -744,6 +744,64 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestRedelegationMaxEntries(t *testing.T) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	startTokens := sdk.TokensFromConsensusPower(20)
+	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
+
+	// add bonded tokens to pool for delegations
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// create a validator with a self-delegation
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	valTokens := sdk.TokensFromConsensusPower(10)
+	validator, issuedShares := validator.AddTokensFromDel(valTokens)
+	require.Equal(t, valTokens, issuedShares.RoundInt())
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
+	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
+
+	// create a second validator
+	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
+	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
+	require.Equal(t, valTokens, issuedShares.RoundInt())
+
+	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
+	require.Equal(t, sdk.Bonded, validator2.Status)
+
+	maxEntries := app.StakingKeeper.MaxEntries(ctx)
+
+	// redelegations should pass
+	var completionTime time.Time
+	for i := uint32(0); i < maxEntries; i++ {
+		var err error
+		completionTime, err = app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+		require.NoError(t, err)
+	}
+
+	// an additional redelegation should fail due to max entries
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+	require.Error(t, err)
+
+	// mature redelegations
+	ctx = ctx.WithBlockTime(completionTime)
+	err = app.StakingKeeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	require.NoError(t, err)
+
+	// redelegation should work again
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+	require.NoError(t, err)
+}
+
 //func TestRedelegationMaxEntries(t *testing.T) {
 //	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 //	startTokens := sdk.TokensFromConsensusPower(20)

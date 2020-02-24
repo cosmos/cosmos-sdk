@@ -649,67 +649,67 @@ func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 	require.True(t, redelegations[0].Equal(resBond))
 }
 
-//// tests Get/Set/Remove/Has UnbondingDelegation
-//func TestRedelegation(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 0)
-//
-//	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-//		time.Unix(0, 0), sdk.NewInt(5),
-//		sdk.NewDec(5))
-//
-//	// test shouldn't have and redelegations
-//	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
-//	require.False(t, has)
-//
-//	// set and retrieve a record
-//	keeper.SetRedelegation(ctx, rd)
-//	resRed, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-//	require.True(t, found)
-//
-//	redelegations := keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resRed))
-//
-//	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resRed))
-//
-//	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resRed))
-//
-//	// check if has the redelegation
-//	has = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
-//	require.True(t, has)
-//
-//	// modify a records, save, and retrieve
-//	rd.Entries[0].SharesDst = sdk.NewDec(21)
-//	keeper.SetRedelegation(ctx, rd)
-//
-//	resRed, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-//	require.True(t, found)
-//	require.True(t, rd.Equal(resRed))
-//
-//	redelegations = keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resRed))
-//
-//	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resRed))
-//
-//	// delete a record
-//	keeper.RemoveRedelegation(ctx, rd)
-//	_, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-//	require.False(t, found)
-//
-//	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
-//	require.Equal(t, 0, len(redelegations))
-//
-//	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
-//	require.Equal(t, 0, len(redelegations))
-//}
-//
+// tests Get/Set/Remove/Has UnbondingDelegation
+func TestRedelegation(t *testing.T) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
+		time.Unix(0, 0), sdk.NewInt(5),
+		sdk.NewDec(5))
+
+	// test shouldn't have and redelegations
+	has := app.StakingKeeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
+	require.False(t, has)
+
+	// set and retrieve a record
+	app.StakingKeeper.SetRedelegation(ctx, rd)
+	resRed, found := app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+
+	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = app.StakingKeeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = app.StakingKeeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	// check if has the redelegation
+	has = app.StakingKeeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
+	require.True(t, has)
+
+	// modify a records, save, and retrieve
+	rd.Entries[0].SharesDst = sdk.NewDec(21)
+	app.StakingKeeper.SetRedelegation(ctx, rd)
+
+	resRed, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+	require.True(t, rd.Equal(resRed))
+
+	redelegations = app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = app.StakingKeeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	// delete a record
+	app.StakingKeeper.RemoveRedelegation(ctx, rd)
+	_, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.False(t, found)
+
+	redelegations = app.StakingKeeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 0, len(redelegations))
+
+	redelegations = app.StakingKeeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
+	require.Equal(t, 0, len(redelegations))
+}
+
 //func TestRedelegateToSameValidator(t *testing.T) {
 //	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 //	valTokens := sdk.TokensFromConsensusPower(10)

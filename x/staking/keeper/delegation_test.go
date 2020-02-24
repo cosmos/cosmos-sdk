@@ -653,6 +653,9 @@ func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 func TestRedelegation(t *testing.T) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), sdk.NewInt(5),
 		sdk.NewDec(5))
@@ -710,33 +713,37 @@ func TestRedelegation(t *testing.T) {
 	require.Equal(t, 0, len(redelegations))
 }
 
-//func TestRedelegateToSameValidator(t *testing.T) {
-//	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens))
-//
-//	// add bonded tokens to pool for delegations
-//	notBondedPool := keeper.GetNotBondedPool(ctx)
-//	oldNotBonded := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
-//	err := bk.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
-//	require.NoError(t, err)
-//	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-//
-//	// create a validator with a self-delegation
-//	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-//	validator, issuedShares := validator.AddTokensFromDel(valTokens)
-//	require.Equal(t, valTokens, issuedShares.RoundInt())
-//	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-//	require.True(t, validator.IsBonded())
-//
-//	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-//	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
-//	keeper.SetDelegation(ctx, selfDelegation)
-//
-//	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
-//	require.Error(t, err)
-//}
-//
+func TestRedelegateToSameValidator(t *testing.T) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	valTokens := sdk.TokensFromConsensusPower(10)
+	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens))
+
+	// add bonded tokens to pool for delegations
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// create a validator with a self-delegation
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, issuedShares := validator.AddTokensFromDel(valTokens)
+	require.Equal(t, valTokens, issuedShares.RoundInt())
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	require.True(t, validator.IsBonded())
+
+	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
+	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
+
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
+	require.Error(t, err)
+}
+
 //func TestRedelegationMaxEntries(t *testing.T) {
 //	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 //	startTokens := sdk.TokensFromConsensusPower(20)

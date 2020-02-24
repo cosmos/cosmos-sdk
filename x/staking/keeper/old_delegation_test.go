@@ -11,33 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestRedelegateToSameValidator(t *testing.T) {
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-	valTokens := sdk.TokensFromConsensusPower(10)
-	startCoins := sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens))
-
-	// add bonded tokens to pool for delegations
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-	oldNotBonded := bk.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := bk.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
-	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	// create a validator with a self-delegation
-	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	validator, issuedShares := validator.AddTokensFromDel(valTokens)
-	require.Equal(t, valTokens, issuedShares.RoundInt())
-	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-	require.True(t, validator.IsBonded())
-
-	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
-	keeper.SetDelegation(ctx, selfDelegation)
-
-	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
-	require.Error(t, err)
-}
-
 func TestRedelegationMaxEntries(t *testing.T) {
 	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
 	startTokens := sdk.TokensFromConsensusPower(20)

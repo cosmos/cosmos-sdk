@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/supply"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -34,6 +36,8 @@ func initConfig(t *testing.T, power int64) (*simapp.SimApp, sdk.Context, []sdk.A
 	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins)
 	require.NoError(t, err)
 	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
@@ -188,4 +192,37 @@ func TestSlashAtFutureHeight(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction) })
+}
+
+// test slash at a negative height
+// this just represents pre-genesis and should have the same effect as slashing at height 0
+func TestSlashAtNegativeHeight(t *testing.T) {
+	app, ctx, _, _ := initConfig(t, 10)
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	fraction := sdk.NewDecWithPrec(5, 1)
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction)
+
+	// read updated state
+	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+
+	// end block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validator.OperatorAddress)
+	require.True(t, found)
+	// power decreased
+	require.Equal(t, int64(5), validator.GetConsensusPower())
+
+	// pool bonded shares decreased
+	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromConsensusPower(5).String(), diffTokens.String())
 }

@@ -37,38 +37,6 @@ func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) 
 
 //_________________________________________________________________________________
 
-// test slash at a negative height
-// this just represents pre-genesis and should have the same effect as slashing at height 0
-func TestSlashAtNegativeHeight(t *testing.T) {
-	ctx, keeper, _ := setupHelper(t, 10)
-	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
-
-	bondedPool := keeper.GetBondedPool(ctx)
-	oldBondedPoolBalances := keeper.bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-
-	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.True(t, found)
-	keeper.Slash(ctx, consAddr, -2, 10, fraction)
-
-	// read updated state
-	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.True(t, found)
-
-	// end block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
-
-	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
-	// power decreased
-	require.Equal(t, int64(5), validator.GetConsensusPower())
-
-	// pool bonded shares decreased
-	newBondedPoolBalances := keeper.bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(keeper.BondDenom(ctx))
-	require.Equal(t, sdk.TokensFromConsensusPower(5).String(), diffTokens.String())
-}
-
 // tests Slash at the current height
 func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t, 10)

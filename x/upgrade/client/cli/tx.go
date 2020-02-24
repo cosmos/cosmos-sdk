@@ -3,7 +3,6 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"time"
 
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -16,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (

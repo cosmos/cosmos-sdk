@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"net/http"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {

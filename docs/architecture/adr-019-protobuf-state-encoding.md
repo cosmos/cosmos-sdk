@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020 Feb 15: Initial Draft
+- 2020 Feb 24: Updates to handle messages with interface fields
 
 ## Status
 
@@ -143,19 +144,6 @@ message Account {
 ```go
 // app/codec/codec.go
 
-import (
-  "github.com/cosmos/cosmos-sdk/codec"
-  "github.com/cosmos/cosmos-sdk/x/auth"
-  "github.com/cosmos/cosmos-sdk/x/supply"
-  authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-  // ...
-)
-
-var (
-  _ auth.Codec   = (*Codec)(nil)
-  // ...
-)
-
 type Codec struct {
   codec.Marshaler
 
@@ -192,10 +180,91 @@ about all the required types. Note, the use of `interface_type` allows us to avo
 amount of code boilerplate when implementing the `Codec`.
 
 A similar concept is to be applied for messages that contain interfaces fields. The module will
-define a "base" concrete message type (e.g. `MsgSubmitProposalBase`) that the application-level codec
-will extend via `oneof` (e.g. `MsgSubmitProposal`) that fulfills the required interface
-(e.g. `MsgSubmitProposalI`). Note, however, the module's message handler must now switch on the
-interface rather than the concrete type for this particular message.
+define a "base" concrete message type that the application-level codec will extend via `oneof` that
+fulfills the required message interface.
+
+Example:
+
+The `MsgSubmitEvidence` defined by the `x/evidence` module contains a field `Evidence` which is an
+interface.
+
+```go
+type MsgSubmitEvidence struct {
+  Evidence  exported.Evidence
+  Submitter sdk.AccAddress
+}
+```
+
+Instead, we will implement a "base" message type and an interface which the concrete message type
+must implement.
+
+```protobuf
+// x/evidence/types/types.proto
+
+message MsgSubmitEvidenceBase {
+  bytes submitter = 1
+    [
+      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+    ];
+}
+```
+
+```go
+// x/evidence/exported/evidence.go
+
+type MsgSubmitEvidence interface {
+  sdk.Msg
+
+  GetEvidence() Evidence
+  GetSubmitter() sdk.AccAddress
+}
+```
+
+Notice the `MsgSubmitEvidence` interface extends `sdk.Msg` and allows for the `Evidence` interface
+to be retrieved from the concrete message type.
+
+Now, the application-level codec will define the concrete `MsgSubmitEvidence` type and will have it
+fulfill the `MsgSubmitEvidence` interface defined by `x/evidence`.
+
+```protobuf
+// app/codec/codec.proto
+
+message Evidence {
+  option (gogoproto.equal)             = true;
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
+
+  oneof sum {
+    cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
+  }
+}
+
+message MsgSubmitEvidence {
+  option (gogoproto.equal)           = true;
+  option (gogoproto.goproto_getters) = false;
+
+  Evidence                                       evidence = 1;
+  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 2
+    [
+      (gogoproto.nullable) = false,
+      (gogoproto.embed)    = true
+    ];
+}
+```
+
+```go
+// app/codec/msgs.go
+
+func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence {
+  return msg.Evidence.GetEvidence()
+}
+
+func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
+  return msg.Submitter
+}
+```
+
+Note, however, the module's message handler must now handle the interface `MsgSubmitEvidence` in
+addition to any concrete types.
 
 ### Why Wasn't X Chosen Instead
 

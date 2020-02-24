@@ -622,30 +622,33 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	require.False(t, found)
 }
 
-//// Make sure that that the retrieving the delegations doesn't affect the state
-//func TestGetRedelegationsFromSrcValidator(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 0)
-//
-//	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-//		time.Unix(0, 0), sdk.NewInt(5),
-//		sdk.NewDec(5))
-//
-//	// set and retrieve a record
-//	keeper.SetRedelegation(ctx, rd)
-//	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-//	require.True(t, found)
-//
-//	// get the redelegations one time
-//	redelegations := keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resBond))
-//
-//	// get the redelegations a second time, should be exactly the same
-//	redelegations = keeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-//	require.Equal(t, 1, len(redelegations))
-//	require.True(t, redelegations[0].Equal(resBond))
-//}
-//
+// Make sure that that the retrieving the delegations doesn't affect the state
+func TestGetRedelegationsFromSrcValidator(t *testing.T) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
+		time.Unix(0, 0), sdk.NewInt(5),
+		sdk.NewDec(5))
+
+	// set and retrieve a record
+	app.StakingKeeper.SetRedelegation(ctx, rd)
+	resBond, found := app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+
+	// get the redelegations one time
+	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+
+	// get the redelegations a second time, should be exactly the same
+	redelegations = app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+}
+
 //// tests Get/Set/Remove/Has UnbondingDelegation
 //func TestRedelegation(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 0)

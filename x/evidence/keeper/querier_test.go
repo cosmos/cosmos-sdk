@@ -3,8 +3,9 @@ package keeper_test
 import (
 	"strings"
 
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -16,30 +17,32 @@ const (
 func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
+	cdc := simappcodec.NewAppCodec(suite.app.Codec())
 
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryEvidence}, "/"),
-		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryEvidenceParams(evidence[0].Hash().String())),
+		Data: cdc.MustMarshalJSON(types.NewQueryEvidenceParams(evidence[0].Hash().String())),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryEvidence}, query)
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e exported.EvidenceI
-	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
+	var e exported.Evidence
+	suite.Nil(cdc.UnmarshalJSON(bz, &e))
 	suite.Equal(evidence[0], e)
 }
 
 func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
+	cdc := simappcodec.NewAppCodec(suite.app.Codec())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryEvidence}, "/"),
-		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryEvidenceParams("0000000000000000000000000000000000000000000000000000000000000000")),
+		Data: cdc.MustMarshalJSON(types.NewQueryEvidenceParams("0000000000000000000000000000000000000000000000000000000000000000")),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryEvidence}, query)
@@ -49,39 +52,41 @@ func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
+	cdc := simappcodec.NewAppCodec(suite.app.Codec())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryAllEvidence}, "/"),
-		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(1, numEvidence)),
+		Data: cdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(1, numEvidence)),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryAllEvidence}, query)
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e []exported.EvidenceI
-	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
+	var e []exported.Evidence
+	suite.Nil(cdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, numEvidence)
 }
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
+	cdc := simappcodec.NewAppCodec(suite.app.Codec())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryAllEvidence}, "/"),
-		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(0, numEvidence)),
+		Data: cdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(0, numEvidence)),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryAllEvidence}, query)
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e []exported.EvidenceI
-	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
+	var e []exported.Evidence
+	suite.Nil(cdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
 }
 

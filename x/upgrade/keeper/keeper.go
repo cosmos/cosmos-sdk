@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -10,18 +11,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 )
 
 type Keeper struct {
 	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
-	cdc                *codec.Codec
+	cdc                codec.Marshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.Marshaler) Keeper {
 	return Keeper{
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
@@ -57,7 +57,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(plan)
+	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.PlanKey(), bz)
 

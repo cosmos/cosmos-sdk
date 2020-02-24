@@ -126,6 +126,10 @@ serialization instead of Amino.
   * The `MsgSubmitEvidence` message has been removed in favor of `MsgSubmitEvidenceBase`. The application-level
   codec must now define the concrete `MsgSubmitEvidence` type which must implement the module's `MsgSubmitEvidence`
   interface.
+* (x/upgrade) [\#5659](https://github.com/cosmos/cosmos-sdk/pull/5659) Migrate the `x/upgrade` module to use Protocol
+Buffers for state serialization instead of Amino.
+  * The `internal` sub-package has been removed in order to expose the types proto file.
+  * The `x/upgrade` module now accepts a `codec.Marshaler` interface.
 
 ### Improvements
 

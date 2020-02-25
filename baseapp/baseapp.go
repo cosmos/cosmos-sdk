@@ -641,15 +641,16 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	jsonTags, _ := codec.Cdc.MarshalJSON(sdk.TagsToStringTags(result.Tags))
 	jsonMsgs := MsgsToString(sdktx.GetMsgs())
 	jsonFee, _ := codec.Cdc.MarshalJSON(sdktx.Fee)
+	jsonMemo, _ := codec.Cdc.MarshalJSON(sdktx.GetMemo())
 
 	for idx, msg := range sdktx.GetMsgs() {
 		f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/messages.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		msgString, _ := codec.Cdc.MarshalJSON(msg)
-		f.WriteString(fmt.Sprintf("%s,%d,%s,\"%s\",%s,%s\n",
+		f.WriteString(fmt.Sprintf("%s,%d,%s,$%s$,%s,%s\n",
 			txHash,
 			idx,
 			msg.Type(),
-			strings.ReplaceAll(string(msgString), "\"", "\"\""),
+			strings.ReplaceAll(string(msgString), "$", "\\$"),
 			ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"),
 			ctx.ChainID()))
 		f.Close()
@@ -657,17 +658,17 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 
 	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/txs.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	f.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,\"%s\",%s,\"%s\",\"%s\",\"%s\",%s,%s\n",
+	f.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,$%s$,$%s$,$%s$,$%s$,$%s$,%s,%s\n",
 		txHash,
 		ctx.BlockHeight(),
 		uint32(result.Code),
 		int64(result.GasWanted),
 		int64(result.GasUsed),
-		strings.ReplaceAll(result.Log, "\"", "\"\""),
-		sdktx.GetMemo(),
-		strings.ReplaceAll(string(jsonFee), "\"", "\"\""),
-		strings.ReplaceAll(string(jsonTags), "\"", "\"\""),
-		strings.ReplaceAll(string(jsonMsgs), "\"", "\"\""),
+		strings.ReplaceAll(result.Log, "$", "\\$"),
+		strings.ReplaceAll(string(jsonMemo), "$", "\\$"),
+		strings.ReplaceAll(string(jsonFee), "$", "\\$"),
+		strings.ReplaceAll(string(jsonTags), "$", "\\$"),
+		strings.ReplaceAll(string(jsonMsgs), "$", "\\$"),
 		ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"),
 		ctx.ChainID()))
 	f.Close()
@@ -676,19 +677,30 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 }
 
-func extractAddresses(msg sdk.Msg, hash string, height int64, idx int, chainid string) {
+func getAddresses(msg sdk.Msg) []sdk.Address {
+	var addrs []sdk.Address
 	m := BasicMsgStruct{}
 	_ = json.Unmarshal(msg.GetSignBytes(), &m)
 	ref := reflect.ValueOf(&m.Value).Elem()
-	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/addresses.%d.%s", height, chainid), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	for i := 0; i < ref.NumField(); i++ {
 		addr := ref.Field(i).Interface()
 		sdkAddr, ok := addr.(sdk.Address) // cast to address interface so we have access to the String() method, which bech32ifies the address
 		if ok && !sdkAddr.Empty() {
-			f.WriteString(fmt.Sprintf("%s,%d,%s,%s\n", hash, idx, sdkAddr.String(), chainid))
+			addrs = append(addrs, sdkAddr)
 		}
 	}
-	f.Close()
+	return addrs
+}
+
+func extractAddresses(msg sdk.Msg, hash string, height int64, idx int, chainid string) {
+	addrs := getAddresses(msg)
+	if len(addrs) != 0 {
+		f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/addresses.%d.%s", height, chainid), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		for _, addr := range addrs {
+			f.WriteString(fmt.Sprintf("%s,%d,%s,%s\n", hash, idx, addr.String(), chainid))
+		}
+		f.Close()
+	}
 }
 
 type (
@@ -844,6 +856,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
+	if mode == runTxModeDeliver {
+		ctx.WithValue("deliverMode", true)
+	} else {
+		ctx.WithValue("deliverMode", false)
+	}
+
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
@@ -858,6 +876,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	defer func() {
 		if r := recover(); r != nil {
+			if mode == runTxModeDeliver {
+				app.deleteUncheckedFiles(ctx)
+			}
+
 			switch rType := r.(type) {
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
@@ -895,6 +917,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	var msgs = tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
+		if mode == runTxModeDeliver {
+			app.deleteUncheckedFiles(ctx)
+		}
 		return err.Result()
 	}
 
@@ -926,6 +951,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		gasWanted = result.GasWanted
 
 		if abort {
+			if mode == runTxModeDeliver {
+				app.deleteUncheckedFiles(ctx)
+			}
 			return result
 		}
 
@@ -949,9 +977,28 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
+		app.commitUncheckedFiles(ctx)
+	} else {
+		if mode == runTxModeDeliver {
+			app.deleteUncheckedFiles(ctx)
+		}
 	}
 
 	return
+}
+
+func (app *BaseApp) commitUncheckedFiles(ctx sdk.Context) {
+	os.Rename(fmt.Sprintf("./extract/unchecked/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/progress/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+	os.Rename(fmt.Sprintf("./extract/unchecked/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/progress/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+	os.Rename(fmt.Sprintf("./extract/unchecked/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/process/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+	os.Rename(fmt.Sprintf("./extract/unchecked/rewards.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/progress/rewards.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+}
+
+func (app *BaseApp) deleteUncheckedFiles(ctx sdk.Context) {
+	os.Remove(fmt.Sprintf("./extract/unchecked/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+	os.Remove(fmt.Sprintf("./extract/unchecked/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+	os.Remove(fmt.Sprintf("./extract/unchecked/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+	os.Remove(fmt.Sprintf("./extract/unchecked/rewards.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
 }
 
 // EndBlock implements the ABCI interface.

@@ -14,36 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestSlashToZeroPowerRemoved(t *testing.T) {
-	// initialize setup
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 100)
-
-	// add a validator
-	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	valTokens := sdk.TokensFromConsensusPower(100)
-
-	bondedPool := keeper.GetBondedPool(ctx)
-	err := bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), valTokens)))
-	require.NoError(t, err)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-
-	validator, _ = validator.AddTokensFromDel(valTokens)
-	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, valTokens, validator.Tokens)
-	keeper.SetValidatorByConsAddr(ctx, validator)
-	validator = TestingUpdateValidator(keeper, ctx, validator, true)
-	require.Equal(t, valTokens, validator.Tokens, "\nvalidator %v\npool %v", validator, valTokens)
-
-	// slash the validator by 100%
-	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-	keeper.Slash(ctx, consAddr0, 0, 100, sdk.OneDec())
-	// apply TM updates
-	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	// validator should be unbonding
-	validator, _ = keeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
-}
-
 // This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
 func TestValidatorBasics(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)

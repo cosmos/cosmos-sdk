@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/supply"
+
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -15,10 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func bootstrapValidatorTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrDels, addrVals := generateAddresses(app, ctx, 100)
+	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
 
 	amt := sdk.TokensFromConsensusPower(power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
@@ -28,11 +30,13 @@ func bootstrapValidatorTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Cont
 	require.NoError(t, err)
 	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+
 	return app, ctx, addrDels, addrVals
 }
 
 func TestSetValidator(t *testing.T) {
-	app, ctx, _, _ := bootstrapValidatorTest(t, 10)
+	app, ctx, _, _ := bootstrapValidatorTest(t, 10, 100)
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
@@ -85,7 +89,7 @@ func TestSetValidator(t *testing.T) {
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
-	app, ctx, _, _ := bootstrapValidatorTest(t, 0)
+	app, ctx, _, _ := bootstrapValidatorTest(t, 0, 100)
 	_, addrVals := generateAddresses(app, ctx, 1)
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
@@ -127,8 +131,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	maxVals := 5
 
 	// create context, keeper, and pool for tests
-	app, ctx, _, _ := bootstrapValidatorTest(t, 0)
-	_, valAddrs := generateAddresses(app, ctx, 10)
+	app, ctx, _, valAddrs := bootstrapValidatorTest(t, 0, 100)
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -179,4 +182,33 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 			fmt.Sprintf("expected validator at index %v to have status: %s", valIdx, status),
 		)
 	}
+}
+
+func TestSlashToZeroPowerRemoved(t *testing.T) {
+	// initialize setup
+	app, ctx, _, addrVals := bootstrapValidatorTest(t, 100, 20)
+
+	// add a validator
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	valTokens := sdk.TokensFromConsensusPower(100)
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens)))
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+
+	validator, _ = validator.AddTokensFromDel(valTokens)
+	require.Equal(t, sdk.Unbonded, validator.Status)
+	require.Equal(t, valTokens, validator.Tokens)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	require.Equal(t, valTokens, validator.Tokens, "\nvalidator %v\npool %v", validator, valTokens)
+
+	// slash the validator by 100%
+	app.StakingKeeper.Slash(ctx, sdk.ConsAddress(PKs[0].Address()), 0, 100, sdk.OneDec())
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	// validator should be unbonding
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }

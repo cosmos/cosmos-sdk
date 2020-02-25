@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/stretchr/testify/assert"
@@ -79,4 +81,42 @@ func TestSetValidator(t *testing.T) {
 
 	allVals := app.StakingKeeper.GetAllValidators(ctx)
 	require.Equal(t, 1, len(allVals))
+}
+
+func TestUpdateValidatorByPowerIndex(t *testing.T) {
+	app, ctx, _, _ := bootstrapValidatorTest(t, 0)
+	_, addrVals := generateAddresses(app, ctx, 1)
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
+	app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// add a validator
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, delSharesCreated := validator.AddTokensFromDel(sdk.TokensFromConsensusPower(100))
+	require.Equal(t, sdk.Unbonded, validator.Status)
+	require.Equal(t, sdk.TokensFromConsensusPower(100), validator.Tokens)
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, sdk.TokensFromConsensusPower(100), validator.Tokens)
+
+	power := types.GetValidatorsByPowerIndexKey(validator)
+	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
+
+	// burn half the delegator shares
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validator)
+	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(sdk.NewDec(2)))
+	require.Equal(t, sdk.TokensFromConsensusPower(50), burned)
+	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true) // update the validator, possibly kicking it out
+	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+
+	power = types.GetValidatorsByPowerIndexKey(validator)
+	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 }

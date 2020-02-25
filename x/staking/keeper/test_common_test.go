@@ -80,4 +80,3 @@ func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk
 
 	return addrDels, addrVals
 }
-

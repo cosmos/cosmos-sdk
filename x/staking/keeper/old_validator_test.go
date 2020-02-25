@@ -14,43 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestUpdateValidatorByPowerIndex(t *testing.T) {
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-
-	bondedPool := keeper.GetBondedPool(ctx)
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-	bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	// add a validator
-	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	validator, delSharesCreated := validator.AddTokensFromDel(sdk.TokensFromConsensusPower(100))
-	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, sdk.TokensFromConsensusPower(100), validator.Tokens)
-	TestingUpdateValidator(keeper, ctx, validator, true)
-	validator, found := keeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	require.Equal(t, sdk.TokensFromConsensusPower(100), validator.Tokens)
-
-	power := types.GetValidatorsByPowerIndexKey(validator)
-	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
-
-	// burn half the delegator shares
-	keeper.DeleteValidatorByPowerIndex(ctx, validator)
-	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(sdk.NewDec(2)))
-	require.Equal(t, sdk.TokensFromConsensusPower(50), burned)
-	TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
-	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
-
-	validator, found = keeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-
-	power = types.GetValidatorsByPowerIndexKey(validator)
-	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
-}
-
 func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	numVals := 10
 	maxVals := 5

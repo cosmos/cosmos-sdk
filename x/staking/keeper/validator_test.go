@@ -212,3 +212,102 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }
+
+// This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
+func TestValidatorBasics(t *testing.T) {
+	app, ctx, _, addrVals := bootstrapValidatorTest(t, 1000, 20)
+
+	//construct the validators
+	var validators [3]types.Validator
+	powers := []int64{9, 8, 7}
+	for i, power := range powers {
+		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
+		validators[i].Status = sdk.Unbonded
+		validators[i].Tokens = sdk.ZeroInt()
+		tokens := sdk.TokensFromConsensusPower(power)
+
+		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+	}
+	assert.Equal(t, sdk.TokensFromConsensusPower(9), validators[0].Tokens)
+	assert.Equal(t, sdk.TokensFromConsensusPower(8), validators[1].Tokens)
+	assert.Equal(t, sdk.TokensFromConsensusPower(7), validators[2].Tokens)
+
+	// check the empty keeper first
+	_, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.False(t, found)
+	resVals := app.StakingKeeper.GetLastValidators(ctx)
+	require.Zero(t, len(resVals))
+
+	resVals = app.StakingKeeper.GetValidators(ctx, 2)
+	require.Zero(t, len(resVals))
+
+	// set and retrieve a record
+	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validators[0])
+	resVal, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+
+	// retrieve from consensus
+	resVal, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.ConsAddress(PKs[0].Address()))
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+	resVal, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+
+	resVals = app.StakingKeeper.GetLastValidators(ctx)
+	require.Equal(t, 1, len(resVals))
+	assert.True(ValEq(t, validators[0], resVals[0]))
+	assert.Equal(t, sdk.Bonded, validators[0].Status)
+	assert.True(sdk.IntEq(t, sdk.TokensFromConsensusPower(9), validators[0].BondedTokens()))
+
+	// modify a records, save, and retrieve
+	validators[0].Status = sdk.Bonded
+	validators[0].Tokens = sdk.TokensFromConsensusPower(10)
+	validators[0].DelegatorShares = validators[0].Tokens.ToDec()
+	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
+	resVal, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+
+	resVals = app.StakingKeeper.GetLastValidators(ctx)
+	require.Equal(t, 1, len(resVals))
+	assert.True(ValEq(t, validators[0], resVals[0]))
+
+	// add other validators
+	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], true)
+	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
+	resVal, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
+	require.True(t, found)
+	assert.True(ValEq(t, validators[1], resVal))
+	resVal, found = app.StakingKeeper.GetValidator(ctx, addrVals[2])
+	require.True(t, found)
+	assert.True(ValEq(t, validators[2], resVal))
+
+	resVals = app.StakingKeeper.GetLastValidators(ctx)
+	require.Equal(t, 3, len(resVals))
+	assert.True(ValEq(t, validators[0], resVals[0])) // order doesn't matter here
+	assert.True(ValEq(t, validators[1], resVals[1]))
+	assert.True(ValEq(t, validators[2], resVals[2]))
+
+	// remove a record
+
+	// shouldn't be able to remove if status is not unbonded
+	assert.PanicsWithValue(t,
+		"cannot call RemoveValidator on bonded or unbonding validators",
+		func() { app.StakingKeeper.RemoveValidator(ctx, validators[1].OperatorAddress) })
+
+	// shouldn't be able to remove if there are still tokens left
+	validators[1].Status = sdk.Unbonded
+	app.StakingKeeper.SetValidator(ctx, validators[1])
+	assert.PanicsWithValue(t,
+		"attempting to remove a validator which still contains tokens",
+		func() { app.StakingKeeper.RemoveValidator(ctx, validators[1].OperatorAddress) })
+
+	validators[1].Tokens = sdk.ZeroInt()                                  // ...remove all tokens
+	app.StakingKeeper.SetValidator(ctx, validators[1])                    // ...set the validator
+	app.StakingKeeper.RemoveValidator(ctx, validators[1].OperatorAddress) // Now it can be removed.
+	_, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
+	require.False(t, found)
+}

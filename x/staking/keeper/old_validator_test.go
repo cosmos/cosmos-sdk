@@ -14,63 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
-	numVals := 10
-	maxVals := 5
-
-	// create context, keeper, and pool for tests
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 0)
-	bondedPool := keeper.GetBondedPool(ctx)
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-
-	// create keeper parameters
-	params := keeper.GetParams(ctx)
-	params.MaxValidators = uint32(maxVals)
-	keeper.SetParams(ctx, params)
-
-	// create a random pool
-	bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-
-	validators := make([]types.Validator, numVals)
-	for i := 0; i < len(validators); i++ {
-		moniker := fmt.Sprintf("val#%d", int64(i))
-		val := types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{Moniker: moniker})
-		delTokens := sdk.TokensFromConsensusPower(int64((i + 1) * 10))
-		val, _ = val.AddTokensFromDel(delTokens)
-
-		val = TestingUpdateValidator(keeper, ctx, val, true)
-		validators[i] = val
-	}
-
-	nextCliffVal := validators[numVals-maxVals+1]
-
-	// remove enough tokens to kick out the validator below the current cliff
-	// validator and next in line cliff validator
-	keeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
-	shares := sdk.TokensFromConsensusPower(21)
-	nextCliffVal, _ = nextCliffVal.RemoveDelShares(shares.ToDec())
-	nextCliffVal = TestingUpdateValidator(keeper, ctx, nextCliffVal, true)
-
-	expectedValStatus := map[int]sdk.BondStatus{
-		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
-		0: sdk.Unbonding, 1: sdk.Unbonding, 2: sdk.Unbonding, 3: sdk.Unbonding, 6: sdk.Unbonding,
-	}
-
-	// require all the validators have their respective statuses
-	for valIdx, status := range expectedValStatus {
-		valAddr := validators[valIdx].OperatorAddress
-		val, _ := keeper.GetValidator(ctx, valAddr)
-
-		assert.Equal(
-			t, status, val.GetStatus(),
-			fmt.Sprintf("expected validator at index %v to have status: %s", valIdx, status),
-		)
-	}
-}
-
 func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// initialize setup
 	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 100)

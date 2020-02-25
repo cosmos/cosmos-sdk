@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -119,4 +120,63 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	power = types.GetValidatorsByPowerIndexKey(validator)
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
+}
+
+func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
+	numVals := 10
+	maxVals := 5
+
+	// create context, keeper, and pool for tests
+	app, ctx, _, _ := bootstrapValidatorTest(t, 0)
+	_, valAddrs := generateAddresses(app, ctx, 10)
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	// create keeper parameters
+	params := app.StakingKeeper.GetParams(ctx)
+	params.MaxValidators = uint32(maxVals)
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// create a random pool
+	app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
+	app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	validators := make([]types.Validator, numVals)
+	for i := 0; i < len(validators); i++ {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		val := types.NewValidator(valAddrs[i], PKs[i], types.Description{Moniker: moniker})
+		delTokens := sdk.TokensFromConsensusPower(int64((i + 1) * 10))
+		val, _ = val.AddTokensFromDel(delTokens)
+
+		val = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, val, true)
+		validators[i] = val
+	}
+
+	nextCliffVal := validators[numVals-maxVals+1]
+
+	// remove enough tokens to kick out the validator below the current cliff
+	// validator and next in line cliff validator
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
+	shares := sdk.TokensFromConsensusPower(21)
+	nextCliffVal, _ = nextCliffVal.RemoveDelShares(shares.ToDec())
+	nextCliffVal = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
+
+	expectedValStatus := map[int]sdk.BondStatus{
+		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
+		0: sdk.Unbonding, 1: sdk.Unbonding, 2: sdk.Unbonding, 3: sdk.Unbonding, 6: sdk.Unbonding,
+	}
+
+	// require all the validators have their respective statuses
+	for valIdx, status := range expectedValStatus {
+		valAddr := validators[valIdx].OperatorAddress
+		val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
+
+		assert.Equal(
+			t, status, val.GetStatus(),
+			fmt.Sprintf("expected validator at index %v to have status: %s", valIdx, status),
+		)
+	}
 }

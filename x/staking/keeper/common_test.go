@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	cdc "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -53,19 +54,20 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
 func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context) {
-	cdc := codec.New()
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
+	appCodec := cdc.NewAppCodec(codec.New())
+
 	app.StakingKeeper = keeper.NewKeeper(
-		simapp.NewAppCodec().Staking,
+		appCodec,
 		app.GetKey(staking.StoreKey),
 		app.BankKeeper,
 		app.SupplyKeeper,
 		app.GetSubspace(staking.ModuleName),
 	)
 
-	return cdc, app, ctx
+	return codec.New(), app, ctx
 }
 
 // intended to be used with require/assert:  require.True(ValEq(...))

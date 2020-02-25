@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type (
@@ -356,7 +356,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	err := acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
-	genAccs := []authexported.GenesisAccount{&acc1, &acc2}
+	genAccs := []authexported.GenesisAccount{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 

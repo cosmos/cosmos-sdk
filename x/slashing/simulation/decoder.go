@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"fmt"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding slashing type
@@ -22,10 +23,10 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 		return fmt.Sprintf("%v\n%v", infoA, infoB)
 
 	case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKey):
-		var missedA, missedB bool
+		var missedA, missedB gogotypes.BoolValue
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
-		return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA, missedB)
+		return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA.Value, missedB.Value)
 
 	case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKey):
 		var pubKeyA, pubKeyB crypto.PubKey

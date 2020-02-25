@@ -13,6 +13,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 	if err != nil {
 		panic(err)
 	}
+
 	return ak.NewAccount(ctx, acc)
 }
 
@@ -21,6 +22,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc exported.Account) export
 	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
 		panic(err)
 	}
+
 	return acc
 }
 
@@ -31,17 +33,17 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) exporte
 	if bz == nil {
 		return nil
 	}
-	acc := ak.decodeAccount(bz)
-	return acc
+
+	return ak.decodeAccount(bz)
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
 func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []exported.Account) {
-	ak.IterateAccounts(ctx,
-		func(acc exported.Account) (stop bool) {
-			accounts = append(accounts, acc)
-			return false
-		})
+	ak.IterateAccounts(ctx, func(acc exported.Account) (stop bool) {
+		accounts = append(accounts, acc)
+		return false
+	})
+
 	return accounts
 }
 
@@ -49,10 +51,12 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []exported.Acc
 func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc exported.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
-	bz, err := ak.cdc.MarshalBinaryBare(acc)
+
+	bz, err := ak.cdc.MarshalAccount(acc)
 	if err != nil {
 		panic(err)
 	}
+
 	store.Set(types.AddressStoreKey(addr), bz)
 }
 

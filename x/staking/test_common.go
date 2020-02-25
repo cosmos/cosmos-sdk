@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"testing"
 
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -102,6 +104,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		},
 	)
 	cdc := MakeTestCodec()
+	appCodec := simappcodec.NewAppCodec(cdc)
 
 	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
@@ -112,17 +115,17 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := params.NewKeeper(params.ModuleCdc, keyParams, tkeyParams)
+	pk := params.NewKeeper(appCodec, keyParams, tkeyParams)
 
 	accountKeeper := auth.NewAccountKeeper(
-		cdc,    // amino codec
+		appCodec,
 		keyAcc, // target store
 		pk.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	bk := bank.NewBaseKeeper(
-		cdc,
+		appCodec,
 		bankKey,
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
@@ -134,7 +137,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		types.NotBondedPoolName: {supply.Burner, supply.Staking},
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
+	supplyKeeper := supply.NewKeeper(appCodec, keySupply, accountKeeper, bk, maccPerms)
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

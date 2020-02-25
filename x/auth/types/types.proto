@@ -1,0 +1,45 @@
+syntax = "proto3";
+package cosmos_sdk.x.auth.v1;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "types/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+
+// BaseAccount defines a base account type. It contains all the necessary fields
+// for basic account functionality. Any custom account type should extend this
+// type for additional functionality (e.g. vesting).
+message BaseAccount {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes  address        = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes  pub_key        = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
+  uint64 sequence       = 4;
+}
+
+// StdFee includes the amount of coins paid in fees and the maximum
+// gas to be used by the transaction. The ratio yields an effective "gasprice",
+// which must be above some miminum to be accepted into the mempool.
+message StdFee {
+  option (gogoproto.equal) = true;
+
+  repeated cosmos_sdk.v1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  uint64 gas = 2;
+}
+
+// Params defines the parameters for the auth module.
+message Params {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 max_memo_characters     = 1 [(gogoproto.moretags) = "yaml:\"max_memo_characters\""];
+  uint64 tx_sig_limit            = 2 [(gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
+  uint64 tx_size_cost_per_byte   = 3 [(gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
+  uint64 sig_verify_cost_ed25519 = 4
+      [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
+  uint64 sig_verify_cost_secp256k1 = 5
+      [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
+}

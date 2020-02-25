@@ -136,7 +136,7 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 	}
 
 	// TODO: Clean this up a bit, some unnecessary conversion.
-	keysBytes, err := merkle.KeyPathToKeys(path)
+	keysBytes, err := merkle.KeyPathToKeys("/" + path)
 	if err != nil {
 		return Path{}, err
 	}

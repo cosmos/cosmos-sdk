@@ -127,7 +127,7 @@ func TestApplyPrefix(t *testing.T) {
 	require.Nil(t, err, "valid prefix returns error")
 
 	require.Equal(t, "/storePrefixKey/path1/path2/path3/key", prefixedPath.Pretty(), "Prefixed path incorrect")
-	require.Equal(t, "/storePrefixKey/path1%2Fpath2%2Fpath3%2Fkey", prefixedPath.String(), "Prefixed scaped path incorrect")
+	require.Equal(t, "/storePrefixKey/path1/path2/path3/key", prefixedPath.String(), "Prefixed string path incorrect")
 
 	// invalid prefix contains non-alphanumeric character
 	invalidPathStr := "invalid-path/doesitfail?/hopefully"

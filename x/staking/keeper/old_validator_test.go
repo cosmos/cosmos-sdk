@@ -14,48 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestFullValidatorSetPowerChange(t *testing.T) {
-	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-	params := keeper.GetParams(ctx)
-	max := 2
-	params.MaxValidators = uint32(2)
-	keeper.SetParams(ctx, params)
-
-	// initialize some validators into the state
-	powers := []int64{0, 100, 400, 400, 200}
-	var validators [5]types.Validator
-	for i, power := range powers {
-		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
-		tokens := sdk.TokensFromConsensusPower(power)
-		validators[i], _ = validators[i].AddTokensFromDel(tokens)
-		TestingUpdateValidator(keeper, ctx, validators[i], true)
-	}
-	for i := range powers {
-		var found bool
-		validators[i], found = keeper.GetValidator(ctx, validators[i].OperatorAddress)
-		require.True(t, found)
-	}
-	assert.Equal(t, sdk.Unbonded, validators[0].Status)
-	assert.Equal(t, sdk.Unbonding, validators[1].Status)
-	assert.Equal(t, sdk.Bonded, validators[2].Status)
-	assert.Equal(t, sdk.Bonded, validators[3].Status)
-	assert.Equal(t, sdk.Unbonded, validators[4].Status)
-	resValidators := keeper.GetBondedValidatorsByPower(ctx)
-	assert.Equal(t, max, len(resValidators))
-	assert.True(ValEq(t, validators[2], resValidators[0])) // in the order of txs
-	assert.True(ValEq(t, validators[3], resValidators[1]))
-
-	// test a swap in voting power
-
-	tokens := sdk.TokensFromConsensusPower(600)
-	validators[0], _ = validators[0].AddTokensFromDel(tokens)
-	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], true)
-	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	assert.Equal(t, max, len(resValidators))
-	assert.True(ValEq(t, validators[0], resValidators[0]))
-	assert.True(ValEq(t, validators[2], resValidators[1]))
-}
-
 func TestApplyAndReturnValidatorSetUpdatesAllNone(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 

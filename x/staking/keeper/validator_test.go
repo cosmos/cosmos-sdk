@@ -615,3 +615,45 @@ func TestValidatorBondHeight(t *testing.T) {
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
 }
+
+func TestFullValidatorSetPowerChange(t *testing.T) {
+	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
+	params := app.StakingKeeper.GetParams(ctx)
+	max := 2
+	params.MaxValidators = uint32(2)
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// initialize some validators into the state
+	powers := []int64{0, 100, 400, 400, 200}
+	var validators [5]types.Validator
+	for i, power := range powers {
+		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})
+		tokens := sdk.TokensFromConsensusPower(power)
+		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
+	}
+	for i := range powers {
+		var found bool
+		validators[i], found = app.StakingKeeper.GetValidator(ctx, validators[i].OperatorAddress)
+		require.True(t, found)
+	}
+	assert.Equal(t, sdk.Unbonded, validators[0].Status)
+	assert.Equal(t, sdk.Unbonding, validators[1].Status)
+	assert.Equal(t, sdk.Bonded, validators[2].Status)
+	assert.Equal(t, sdk.Bonded, validators[3].Status)
+	assert.Equal(t, sdk.Unbonded, validators[4].Status)
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	assert.Equal(t, max, len(resValidators))
+	assert.True(ValEq(t, validators[2], resValidators[0])) // in the order of txs
+	assert.True(ValEq(t, validators[3], resValidators[1]))
+
+	// test a swap in voting power
+
+	tokens := sdk.TokensFromConsensusPower(600)
+	validators[0], _ = validators[0].AddTokensFromDel(tokens)
+	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	assert.Equal(t, max, len(resValidators))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
+}

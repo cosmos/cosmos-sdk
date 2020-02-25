@@ -450,3 +450,121 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
 	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
 }
+
+// TODO separate out into multiple tests
+func TestGetValidatorsEdgeCases(t *testing.T) {
+	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
+
+	// set max validators to 2
+	params := app.StakingKeeper.GetParams(ctx)
+	nMax := uint32(2)
+	params.MaxValidators = nMax
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// initialize some validators into the state
+	powers := []int64{0, 100, 400, 400}
+	var validators [4]types.Validator
+	for i, power := range powers {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{Moniker: moniker})
+
+		tokens := sdk.TokensFromConsensusPower(power)
+		validators[i], _ = validators[i].AddTokensFromDel(tokens)
+
+		notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+		balances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+		require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, tokens))))
+
+		app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+		validators[i] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
+	}
+
+	// ensure that the first two bonded validators are the largest validators
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint32(len(resValidators)))
+	assert.True(ValEq(t, validators[2], resValidators[0]))
+	assert.True(ValEq(t, validators[3], resValidators[1]))
+
+	// delegate 500 tokens to validator 0
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[0])
+	delTokens := sdk.TokensFromConsensusPower(500)
+	validators[0], _ = validators[0].AddTokensFromDel(delTokens)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	newTokens := sdk.NewCoins()
+	balances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// test that the two largest validators are
+	//   a) validator 0 with 500 tokens
+	//   b) validator 2 with 400 tokens (delegated before validator 3)
+	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint32(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
+
+	// A validator which leaves the bonded validator set due to a decrease in voting power,
+	// then increases to the original voting power, does not get its spot back in the
+	// case of a tie.
+	//
+	// Order of operations for this test:
+	//  - validator 3 enter validator set with 1 new token
+	//  - validator 3 removed validator set by removing 201 tokens (validator 2 enters)
+	//  - validator 3 adds 200 tokens (equal to validator 2 now) and does not get its spot back
+
+	// validator 3 enters bonded validator set
+	ctx = ctx.WithBlockHeight(40)
+
+	var found bool
+	validators[3], found = app.StakingKeeper.GetValidator(ctx, validators[3].OperatorAddress)
+	assert.True(t, found)
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[3])
+	validators[3], _ = validators[3].AddTokensFromDel(sdk.TokensFromConsensusPower(1))
+
+	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
+	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.TokensFromConsensusPower(1)))
+	balances = app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint32(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[3], resValidators[1]))
+
+	// validator 3 kicked out temporarily
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[3])
+	rmTokens := validators[3].TokensFromShares(sdk.NewDec(201)).TruncateInt()
+	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, rmTokens))))
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+
+	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint32(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
+
+	// validator 3 does not get spot back
+	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[3])
+	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
+
+	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
+	balances = app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
+	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint32(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
+	_, exists := app.StakingKeeper.GetValidator(ctx, validators[3].OperatorAddress)
+	require.True(t, exists)
+}

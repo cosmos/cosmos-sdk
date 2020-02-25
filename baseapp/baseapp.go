@@ -877,7 +877,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	defer func() {
 		if r := recover(); r != nil {
 			if mode == runTxModeDeliver {
-				app.deleteUncheckedFiles(ctx)
+				deleteUncheckedFiles(ctx)
 			}
 
 			switch rType := r.(type) {
@@ -918,7 +918,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	var msgs = tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
 		if mode == runTxModeDeliver {
-			app.deleteUncheckedFiles(ctx)
+			deleteUncheckedFiles(ctx)
 		}
 		return err.Result()
 	}
@@ -952,7 +952,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 		if abort {
 			if mode == runTxModeDeliver {
-				app.deleteUncheckedFiles(ctx)
+				deleteUncheckedFiles(ctx)
 			}
 			return result
 		}
@@ -977,28 +977,53 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
-		app.commitUncheckedFiles(ctx)
+		commitUncheckedFiles(ctx)
 	} else {
 		if mode == runTxModeDeliver {
-			app.deleteUncheckedFiles(ctx)
+			deleteUncheckedFiles(ctx)
 		}
 	}
 
 	return
 }
 
-func (app *BaseApp) commitUncheckedFiles(ctx sdk.Context) {
-	os.Rename(fmt.Sprintf("./extract/unchecked/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/progress/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
-	os.Rename(fmt.Sprintf("./extract/unchecked/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/progress/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
-	os.Rename(fmt.Sprintf("./extract/unchecked/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/process/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
-	os.Rename(fmt.Sprintf("./extract/unchecked/rewards.%d.%s", ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/progress/rewards.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+func copyFile(destination string, source string) error {
+	sourceFile, err := os.OpenFile(source, os.O_RDONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destinationFile, err := os.OpenFile(destination, os.O_WRONLY | os.O_CREATE | os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
+
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (app *BaseApp) deleteUncheckedFiles(ctx sdk.Context) {
-	os.Remove(fmt.Sprintf("./extract/unchecked/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
-	os.Remove(fmt.Sprintf("./extract/unchecked/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
-	os.Remove(fmt.Sprintf("./extract/unchecked/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
-	os.Remove(fmt.Sprintf("./extract/unchecked/rewards.%d.%s", ctx.BlockHeight(), ctx.ChainID()))
+func commitUncheckedFiles(ctx sdk.Context) {
+	for _, key := range []string{"delegations", "unbond", "balance", "rewards"} {
+		err := copyFile(fmt.Sprintf("./extract/progress/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()))
+		if err != nil {
+			// TODO: Handle error instead of panicking
+			panic(err)
+		}
+		// No need for the file now
+		os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()))
+	}
+}
+
+func deleteUncheckedFiles(ctx sdk.Context) {
+	for _, key := range []string{"delegations", "unbond", "balance", "rewards"} {
+		os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()))
+	}
 }
 
 // EndBlock implements the ABCI interface.

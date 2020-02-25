@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos_sdk.x.v1;
+
+import "gov/types/types.proto";
+import "params/types/proposal/types.proto";
+import "upgrade/types/types.proto";
+
+message StdProposal {
+    oneof sum {
+        cosmos_sdk.x.gov.v1.TextProposal text = 1;
+        cosmos_sdk.x.params.v1.ParameterChangeProposal parameter_change = 2;
+        cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal software_upgrade = 3;
+        cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal cancel_software_upgrade = 4;
+    }
+}

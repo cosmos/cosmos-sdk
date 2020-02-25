@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -15,12 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// initConfig creates 3 validators and bootstrap the app.
-func initConfig(t *testing.T, power int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+// bootstrapSlashTest creates 3 validators and bootstrap the app.
+func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 100, sdk.NewInt(10000))
-	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+	addrDels, addrVals := generateAddresses(app, ctx, 100)
 
 	amt := sdk.TokensFromConsensusPower(power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
@@ -49,9 +50,17 @@ func initConfig(t *testing.T, power int64) (*simapp.SimApp, sdk.Context, []sdk.A
 	return app, ctx, addrDels, addrVals
 }
 
+// generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	return addrDels, addrVals
+}
+
 // tests Jail, Unjail
 func TestRevocation(t *testing.T) {
-	app, ctx, _, addrVals := initConfig(t, 5)
+	app, ctx, _, addrVals := bootstrapSlashTest(t, 5)
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 
@@ -75,7 +84,7 @@ func TestRevocation(t *testing.T) {
 
 // tests slashUnbondingDelegation
 func TestSlashUnbondingDelegation(t *testing.T) {
-	app, ctx, addrDels, addrVals := initConfig(t, 10)
+	app, ctx, addrDels, addrVals := bootstrapSlashTest(t, 10)
 
 	fraction := sdk.NewDecWithPrec(5, 1)
 
@@ -119,7 +128,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 // tests slashRedelegation
 func TestSlashRedelegation(t *testing.T) {
-	app, ctx, addrDels, addrVals := initConfig(t, 10)
+	app, ctx, addrDels, addrVals := bootstrapSlashTest(t, 10)
 	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// add bonded tokens to pool for (re)delegations
@@ -187,7 +196,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 // tests Slash at a future height (must panic)
 func TestSlashAtFutureHeight(t *testing.T) {
-	app, ctx, _, _ := initConfig(t, 10)
+	app, ctx, _, _ := bootstrapSlashTest(t, 10)
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
@@ -197,7 +206,7 @@ func TestSlashAtFutureHeight(t *testing.T) {
 // test slash at a negative height
 // this just represents pre-genesis and should have the same effect as slashing at height 0
 func TestSlashAtNegativeHeight(t *testing.T) {
-	app, ctx, _, _ := initConfig(t, 10)
+	app, ctx, _, _ := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 
@@ -225,4 +234,164 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, sdk.TokensFromConsensusPower(5).String(), diffTokens.String())
+}
+
+// tests Slash at the current height
+func TestSlashValidatorAtCurrentHeight(t *testing.T) {
+	app, ctx, _, _ := bootstrapSlashTest(t, 10)
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	fraction := sdk.NewDecWithPrec(5, 1)
+
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
+
+	// read updated state
+	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+
+	// end block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validator.OperatorAddress)
+	assert.True(t, found)
+	// power decreased
+	require.Equal(t, int64(5), validator.GetConsensusPower())
+
+	// pool bonded shares decreased
+	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromConsensusPower(5).String(), diffTokens.String())
+}
+
+// tests Slash at a previous height with an unbonding delegation
+func TestSlashWithUnbondingDelegation(t *testing.T) {
+	app, ctx, addrDels, addrVals := bootstrapSlashTest(t, 10)
+
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	fraction := sdk.NewDecWithPrec(5, 1)
+
+	// set an unbonding delegation with expiration timestamp beyond which the
+	// unbonding delegation shouldn't be slashed
+	ubdTokens := sdk.TokensFromConsensusPower(4)
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
+		time.Unix(0, 0), ubdTokens)
+	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+
+	// slash validator for the first time
+	ctx = ctx.WithBlockHeight(12)
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
+
+	// end block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// read updating unbonding delegation
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// balance decreased
+	require.Equal(t, sdk.TokensFromConsensusPower(2), ubd.Entries[0].Balance)
+
+	// bonded tokens burned
+	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromConsensusPower(3), diffTokens)
+
+	// read updated validator
+	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+
+	// power decreased by 3 - 6 stake originally bonded at the time of infraction
+	// was still bonded at the time of discovery and was slashed by half, 4 stake
+	// bonded at the time of discovery hadn't been bonded at the time of infraction
+	// and wasn't slashed
+	require.Equal(t, int64(7), validator.GetConsensusPower())
+
+	// slash validator again
+	ctx = ctx.WithBlockHeight(13)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// balance decreased again
+	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+
+	// bonded tokens burned again
+	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromConsensusPower(6), diffTokens)
+
+	// read updated validator
+	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+
+	// power decreased by 3 again
+	require.Equal(t, int64(4), validator.GetConsensusPower())
+
+	// slash validator again
+	// all originally bonded stake has been slashed, so this will have no effect
+	// on the unbonding delegation, but it will slash stake bonded since the infraction
+	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
+	ctx = ctx.WithBlockHeight(13)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// balance unchanged
+	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+
+	// bonded tokens burned again
+	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromConsensusPower(9), diffTokens)
+
+	// read updated validator
+	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+
+	// power decreased by 3 again
+	require.Equal(t, int64(1), validator.GetConsensusPower())
+
+	// slash validator again
+	// all originally bonded stake has been slashed, so this will have no effect
+	// on the unbonding delegation, but it will slash stake bonded since the infraction
+	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
+	ctx = ctx.WithBlockHeight(13)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// balance unchanged
+	require.Equal(t, sdk.NewInt(0), ubd.Entries[0].Balance)
+
+	// just 1 bonded token burned again since that's all the validator now has
+	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	require.Equal(t, sdk.TokensFromConsensusPower(10), diffTokens)
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// read updated validator
+	// power decreased by 1 again, validator is out of stake
+	// validator should be in unbonding period
+	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }

@@ -11,12 +11,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestInitGenesis(t *testing.T) {
-	ctx, accKeeper, bk, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, bk, keeper, supplyKeeper := CreateTestInput(t, false, 1000)
 
 	valTokens := sdk.TokensFromConsensusPower(1)
 
@@ -24,20 +23,20 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]Validator, 2)
 	var delegations []Delegation
 
-	pk0, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keep.PKs[0])
+	pk0, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, PKs[0])
 	require.NoError(t, err)
 
-	pk1, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keep.PKs[1])
+	pk1, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, PKs[1])
 	require.NoError(t, err)
 
 	// initialize the validators
-	validators[0].OperatorAddress = sdk.ValAddress(keep.Addrs[0])
+	validators[0].OperatorAddress = sdk.ValAddress(Addrs[0])
 	validators[0].ConsensusPubkey = pk0
 	validators[0].Description = NewDescription("hoop", "", "", "", "")
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = valTokens
 	validators[0].DelegatorShares = valTokens.ToDec()
-	validators[1].OperatorAddress = sdk.ValAddress(keep.Addrs[1])
+	validators[1].OperatorAddress = sdk.ValAddress(Addrs[1])
 	validators[1].ConsensusPubkey = pk1
 	validators[1].Description = NewDescription("bloop", "", "", "", "")
 	validators[1].Status = sdk.Bonded
@@ -53,11 +52,11 @@ func TestInitGenesis(t *testing.T) {
 	require.EqualValues(t, keeper.GetAllValidators(ctx), actualGenesis.Validators)
 
 	// now make sure the validators are bonded and intra-tx counters are correct
-	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
+	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[0]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
 
-	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[1]))
+	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(Addrs[1]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
 
@@ -73,15 +72,15 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	ctx, accKeeper, bk, keeper, supplyKeeper := keep.CreateTestInput(t, false, 1000)
+	ctx, accKeeper, bk, keeper, supplyKeeper := CreateTestInput(t, false, 1000)
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
 	validators := make([]Validator, size)
 
 	for i := range validators {
-		validators[i] = NewValidator(sdk.ValAddress(keep.Addrs[i]),
-			keep.PKs[i], NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
+		validators[i] = NewValidator(sdk.ValAddress(Addrs[i]),
+			PKs[i], NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
 
 		validators[i].Status = sdk.Bonded
 

@@ -392,3 +392,61 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 	assert.True(ValEq(t, validators[4], resValidators[1]))
 }
+
+func TestGetValidatorSortingMixed(t *testing.T) {
+	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
+	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
+	app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
+
+	// now 2 max resValidators
+	params := app.StakingKeeper.GetParams(ctx)
+	params.MaxValidators = 2
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// initialize some validators into the state
+	amts := []int64{
+		0,
+		100 * sdk.PowerReduction.Int64(),
+		1 * sdk.PowerReduction.Int64(),
+		400 * sdk.PowerReduction.Int64(),
+		200 * sdk.PowerReduction.Int64()}
+
+	var validators [5]types.Validator
+	for i, amt := range amts {
+		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})
+		validators[i].DelegatorShares = sdk.NewDec(amt)
+		validators[i].Status = sdk.Bonded
+		validators[i].Tokens = sdk.NewInt(amt)
+		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
+	}
+
+	val0, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
+	require.True(t, found)
+	val1, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[1]))
+	require.True(t, found)
+	val2, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[2]))
+	require.True(t, found)
+	val3, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[3]))
+	require.True(t, found)
+	val4, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[4]))
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, val0.Status)
+	require.Equal(t, sdk.Unbonding, val1.Status)
+	require.Equal(t, sdk.Unbonding, val2.Status)
+	require.Equal(t, sdk.Bonded, val3.Status)
+	require.Equal(t, sdk.Bonded, val4.Status)
+
+	// first make sure everything made it in to the gotValidator group
+	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	// The validators returned should match the max validators
+	assert.Equal(t, 2, len(resValidators))
+	assert.Equal(t, sdk.NewInt(400).Mul(sdk.PowerReduction), resValidators[0].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, sdk.NewInt(200).Mul(sdk.PowerReduction), resValidators[1].BondedTokens(), "%v", resValidators)
+	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
+	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
+}

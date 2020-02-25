@@ -14,64 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestGetValidatorSortingMixed(t *testing.T) {
-	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 1000)
-	bondedPool := keeper.GetBondedPool(ctx)
-	notBondedPool := keeper.GetNotBondedPool(ctx)
-
-	bk.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
-	bk.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(keeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
-	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
-	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
-
-	// now 2 max resValidators
-	params := keeper.GetParams(ctx)
-	params.MaxValidators = 2
-	keeper.SetParams(ctx, params)
-
-	// initialize some validators into the state
-	amts := []int64{
-		0,
-		100 * sdk.PowerReduction.Int64(),
-		1 * sdk.PowerReduction.Int64(),
-		400 * sdk.PowerReduction.Int64(),
-		200 * sdk.PowerReduction.Int64()}
-
-	var validators [5]types.Validator
-	for i, amt := range amts {
-		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
-		validators[i].DelegatorShares = sdk.NewDec(amt)
-		validators[i].Status = sdk.Bonded
-		validators[i].Tokens = sdk.NewInt(amt)
-		TestingUpdateValidator(keeper, ctx, validators[i], true)
-	}
-
-	val0, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[0]))
-	require.True(t, found)
-	val1, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[1]))
-	require.True(t, found)
-	val2, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[2]))
-	require.True(t, found)
-	val3, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[3]))
-	require.True(t, found)
-	val4, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[4]))
-	require.True(t, found)
-	require.Equal(t, sdk.Bonded, val0.Status)
-	require.Equal(t, sdk.Unbonding, val1.Status)
-	require.Equal(t, sdk.Unbonding, val2.Status)
-	require.Equal(t, sdk.Bonded, val3.Status)
-	require.Equal(t, sdk.Bonded, val4.Status)
-
-	// first make sure everything made it in to the gotValidator group
-	resValidators := keeper.GetBondedValidatorsByPower(ctx)
-	// The validators returned should match the max validators
-	assert.Equal(t, 2, len(resValidators))
-	assert.Equal(t, sdk.NewInt(400).Mul(sdk.PowerReduction), resValidators[0].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, sdk.NewInt(200).Mul(sdk.PowerReduction), resValidators[1].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, validators[3].OperatorAddress, resValidators[0].OperatorAddress, "%v", resValidators)
-	assert.Equal(t, validators[4].OperatorAddress, resValidators[1].OperatorAddress, "%v", resValidators)
-}
-
 // TODO separate out into multiple tests
 func TestGetValidatorsEdgeCases(t *testing.T) {
 	ctx, _, bk, keeper, _ := CreateTestInput(t, false, 1000)

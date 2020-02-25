@@ -50,14 +50,6 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	return app, ctx, addrDels, addrVals
 }
 
-// generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
-func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
-	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
-
-	return addrDels, addrVals
-}
-
 // tests Jail, Unjail
 func TestRevocation(t *testing.T) {
 	app, ctx, _, addrVals := bootstrapSlashTest(t, 5)

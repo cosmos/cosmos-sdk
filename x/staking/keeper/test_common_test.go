@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"strconv"
+	"testing"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -13,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -65,3 +67,17 @@ func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context)
 
 	return cdc, app, ctx
 }
+
+// intended to be used with require/assert:  require.True(ValEq(...))
+func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
+	return t, exp.MinEqual(got), "expected:\n%v\ngot:\n%v", exp, got
+}
+
+// generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	return addrDels, addrVals
+}
+

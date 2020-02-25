@@ -134,7 +134,19 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 	if prefix == nil || prefix.IsEmpty() {
 		return Path{}, errors.New("prefix can't be empty")
 	}
-	return NewPath([]string{string(prefix.Bytes()), path}), nil
+
+	// TODO: Clean this up a bit, some unnecessary conversion.
+	keysBytes, err := merkle.KeyPathToKeys(path)
+	if err != nil {
+		return Path{}, err
+	}
+
+	fullPath := []string{string(prefix.Bytes())}
+	for _, keyBytes := range keysBytes {
+		fullPath = append(fullPath, string(keyBytes))
+	}
+
+	return NewPath(fullPath), nil
 }
 
 var _ ProofI = Proof{}

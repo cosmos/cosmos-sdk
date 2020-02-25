@@ -31,28 +31,7 @@ import (
 var (
 	Addrs = createTestAddrs(500)
 	PKs   = createTestPubKeys(500)
-
-	addrDels = []sdk.AccAddress{
-		Addrs[0],
-		Addrs[1],
-	}
-	addrVals = []sdk.ValAddress{
-		sdk.ValAddress(Addrs[2]),
-		sdk.ValAddress(Addrs[3]),
-		sdk.ValAddress(Addrs[4]),
-		sdk.ValAddress(Addrs[5]),
-		sdk.ValAddress(Addrs[6]),
-	}
 )
-
-//_______________________________________________________________________________________
-
-// intended to be used with require/assert:  require.True(ValEq(...))
-func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.MinEqual(got), "expected:\n%v\ngot:\n%v", exp, got
-}
-
-//_______________________________________________________________________________________
 
 // create a codec used only for testing
 func MakeTestCodec() *codec.Codec {

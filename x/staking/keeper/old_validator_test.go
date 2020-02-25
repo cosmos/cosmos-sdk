@@ -14,53 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestValidatorBondHeight(t *testing.T) {
-	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-
-	// now 2 max resValidators
-	params := keeper.GetParams(ctx)
-	params.MaxValidators = 2
-	keeper.SetParams(ctx, params)
-
-	// initialize some validators into the state
-	var validators [3]types.Validator
-	validators[0] = types.NewValidator(sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0], types.Description{})
-	validators[1] = types.NewValidator(sdk.ValAddress(Addrs[1]), PKs[1], types.Description{})
-	validators[2] = types.NewValidator(sdk.ValAddress(Addrs[2]), PKs[2], types.Description{})
-
-	tokens0 := sdk.TokensFromConsensusPower(200)
-	tokens1 := sdk.TokensFromConsensusPower(100)
-	tokens2 := sdk.TokensFromConsensusPower(100)
-	validators[0], _ = validators[0].AddTokensFromDel(tokens0)
-	validators[1], _ = validators[1].AddTokensFromDel(tokens1)
-	validators[2], _ = validators[2].AddTokensFromDel(tokens2)
-
-	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], true)
-
-	////////////////////////////////////////
-	// If two validators both increase to the same voting power in the same block,
-	// the one with the first transaction should become bonded
-	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], true)
-	validators[2] = TestingUpdateValidator(keeper, ctx, validators[2], true)
-
-	resValidators := keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, uint32(len(resValidators)), params.MaxValidators)
-
-	assert.True(ValEq(t, validators[0], resValidators[0]))
-	assert.True(ValEq(t, validators[1], resValidators[1]))
-	keeper.DeleteValidatorByPowerIndex(ctx, validators[1])
-	keeper.DeleteValidatorByPowerIndex(ctx, validators[2])
-	delTokens := sdk.TokensFromConsensusPower(50)
-	validators[1], _ = validators[1].AddTokensFromDel(delTokens)
-	validators[2], _ = validators[2].AddTokensFromDel(delTokens)
-	validators[2] = TestingUpdateValidator(keeper, ctx, validators[2], true)
-	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, params.MaxValidators, uint32(len(resValidators)))
-	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], true)
-	assert.True(ValEq(t, validators[0], resValidators[0]))
-	assert.True(ValEq(t, validators[2], resValidators[1]))
-}
-
 func TestFullValidatorSetPowerChange(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)

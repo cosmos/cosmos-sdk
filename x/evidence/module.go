@@ -51,14 +51,14 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
 	var gs GenesisState
-	if err := ModuleCdc.UnmarshalJSON(bz, &gs); err != nil {
+	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
 
@@ -140,9 +140,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, bz json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
 	var gs GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &gs)
+	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
 	}
@@ -152,8 +152,8 @@ func (am AppModule) InitGenesis(ctx sdk.Context, bz json.RawMessage) []abci.Vali
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(ExportGenesis(ctx, am.keeper))
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(ExportGenesis(ctx, am.keeper))
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.

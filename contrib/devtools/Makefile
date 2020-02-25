@@ -48,7 +48,7 @@ UNAME_M ?= $(shell uname -m)
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
 
-BUF_VERSION ?= 0.4.0
+BUF_VERSION ?= 0.7.0
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 STATIK         = $(TOOLS_DESTDIR)/statik

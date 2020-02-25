@@ -5,13 +5,12 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 //_______________________________________________________
@@ -117,7 +116,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	// create keeper parameters
 	params := keeper.GetParams(ctx)
-	params.MaxValidators = uint16(maxVals)
+	params.MaxValidators = uint32(maxVals)
 	keeper.SetParams(ctx, params)
 
 	// create a random pool
@@ -437,7 +436,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// set max validators to 2
 	params := keeper.GetParams(ctx)
-	nMax := uint16(2)
+	nMax := uint32(2)
 	params.MaxValidators = nMax
 	keeper.SetParams(ctx, params)
 
@@ -461,7 +460,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// ensure that the first two bonded validators are the largest validators
 	resValidators := keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, nMax, uint16(len(resValidators)))
+	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[2], resValidators[0]))
 	assert.True(ValEq(t, validators[3], resValidators[1]))
 
@@ -481,7 +480,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	//   b) validator 2 with 400 tokens (delegated before validator 3)
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, nMax, uint16(len(resValidators)))
+	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
 
@@ -509,7 +508,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, nMax, uint16(len(resValidators)))
+	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[3], resValidators[1]))
 
@@ -525,7 +524,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, nMax, uint16(len(resValidators)))
+	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
 
@@ -540,7 +539,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, nMax, uint16(len(resValidators)))
+	require.Equal(t, nMax, uint32(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
 	_, exists := keeper.GetValidator(ctx, validators[3].OperatorAddress)
@@ -577,7 +576,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[2] = TestingUpdateValidator(keeper, ctx, validators[2], true)
 
 	resValidators := keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, uint16(len(resValidators)), params.MaxValidators)
+	require.Equal(t, uint32(len(resValidators)), params.MaxValidators)
 
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[1], resValidators[1]))
@@ -588,7 +587,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[2], _ = validators[2].AddTokensFromDel(delTokens)
 	validators[2] = TestingUpdateValidator(keeper, ctx, validators[2], true)
 	resValidators = keeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, params.MaxValidators, uint16(len(resValidators)))
+	require.Equal(t, params.MaxValidators, uint32(len(resValidators)))
 	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], true)
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
@@ -598,7 +597,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	max := 2
-	params.MaxValidators = uint16(2)
+	params.MaxValidators = uint32(2)
 	keeper.SetParams(ctx, params)
 
 	// initialize some validators into the state
@@ -881,7 +880,7 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
-	params.MaxValidators = uint16(3)
+	params.MaxValidators = uint32(3)
 
 	keeper.SetParams(ctx, params)
 
@@ -962,7 +961,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
-	params.MaxValidators = uint16(2)
+	params.MaxValidators = uint32(2)
 
 	keeper.SetParams(ctx, params)
 

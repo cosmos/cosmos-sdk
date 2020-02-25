@@ -3,8 +3,8 @@ package upgrade
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -32,7 +32,7 @@ var (
 )
 
 type (
-	UpgradeHandler                = types.UpgradeHandler
+	UpgradeHandler                = types.UpgradeHandler // nolint
 	Plan                          = types.Plan
 	SoftwareUpgradeProposal       = types.SoftwareUpgradeProposal
 	CancelSoftwareUpgradeProposal = types.CancelSoftwareUpgradeProposal

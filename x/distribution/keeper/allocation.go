@@ -114,7 +114,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 		),
 	)
 	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
-	currentCommission = currentCommission.Add(commission...)
+	currentCommission.Commission = currentCommission.Commission.Add(commission...)
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
 
 	// update current rewards
@@ -131,6 +131,6 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	outstanding = outstanding.Add(tokens...)
+	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

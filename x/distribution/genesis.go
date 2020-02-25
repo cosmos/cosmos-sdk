@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, bk types.BankKeeper, supplyKeeper types.Supply
 	}
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
-		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
+		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})
 		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
@@ -76,7 +76,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			outstanding = append(outstanding, types.ValidatorOutstandingRewardsRecord{
 				ValidatorAddress:   addr,
-				OutstandingRewards: rewards,
+				OutstandingRewards: rewards.Rewards,
 			})
 			return false
 		},

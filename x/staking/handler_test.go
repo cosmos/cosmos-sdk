@@ -756,120 +756,120 @@ func TestJailValidator(t *testing.T) {
 	require.NotNil(t, res)
 }
 
-//func TestValidatorQueue(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//	validatorAddr, delegatorAddr := sdk.ValAddress(Addrs[0]), Addrs[1]
-//
-//	// set the unbonding time
-//	params := keeper.GetParams(ctx)
-//	params.UnbondingTime = 7 * time.Second
-//	keeper.SetParams(ctx, params)
-//
-//	// create the validator
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], valTokens)
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// bond a delegator
-//	delTokens := sdk.TokensFromConsensusPower(10)
-//	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, delTokens)
-//	res, err = handler(ctx, msgDelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	EndBlocker(ctx, keeper)
-//
-//	// unbond the all self-delegation to put validator in unbonding state
-//	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, delTokens)
-//	msgUndelegateValidator := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
-//	res, err = handler(ctx, msgUndelegateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	ts := &gogotypes.Timestamp{}
-//	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-//
-//	finishTime, err := gogotypes.TimestampFromProto(ts)
-//	require.NoError(t, err)
-//
-//	ctx = ctx.WithBlockTime(finishTime)
-//	EndBlocker(ctx, keeper)
-//
-//	origHeader := ctx.BlockHeader()
-//
-//	validator, found := keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	require.True(t, validator.IsUnbonding(), "%v", validator)
-//
-//	// should still be unbonding at time 6 seconds later
-//	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
-//	EndBlocker(ctx, keeper)
-//
-//	validator, found = keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	require.True(t, validator.IsUnbonding(), "%v", validator)
-//
-//	// should be in unbonded state at time 7 seconds later
-//	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
-//	EndBlocker(ctx, keeper)
-//
-//	validator, found = keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	require.True(t, validator.IsUnbonded(), "%v", validator)
-//}
-//
-//func TestUnbondingPeriod(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//	validatorAddr := sdk.ValAddress(Addrs[0])
-//
-//	// set the unbonding time
-//	params := keeper.GetParams(ctx)
-//	params.UnbondingTime = 7 * time.Second
-//	keeper.SetParams(ctx, params)
-//
-//	// create the validator
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], valTokens)
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	EndBlocker(ctx, keeper)
-//
-//	// begin unbonding
-//	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))
-//	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
-//	res, err = handler(ctx, msgUndelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	origHeader := ctx.BlockHeader()
-//
-//	_, found := keeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-//	require.True(t, found, "should not have unbonded")
-//
-//	// cannot complete unbonding at same time
-//	EndBlocker(ctx, keeper)
-//	_, found = keeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-//	require.True(t, found, "should not have unbonded")
-//
-//	// cannot complete unbonding at time 6 seconds later
-//	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
-//	EndBlocker(ctx, keeper)
-//	_, found = keeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-//	require.True(t, found, "should not have unbonded")
-//
-//	// can complete unbonding at time 7 seconds later
-//	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
-//	EndBlocker(ctx, keeper)
-//	_, found = keeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-//	require.False(t, found, "should have unbonded")
-//}
-//
+func TestValidatorQueue(t *testing.T) {
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
+
+	// set the unbonding time
+	params := app.StakingKeeper.GetParams(ctx)
+	params.UnbondingTime = 7 * time.Second
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// create the validator
+	valTokens := sdk.TokensFromConsensusPower(10)
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], valTokens)
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// bond a delegator
+	delTokens := sdk.TokensFromConsensusPower(10)
+	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, delTokens)
+	res, err = handler(ctx, msgDelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// unbond the all self-delegation to put validator in unbonding state
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, delTokens)
+	msgUndelegateValidator := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+	res, err = handler(ctx, msgUndelegateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(finishTime)
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	origHeader := ctx.BlockHeader()
+
+	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
+
+	// should still be unbonding at time 6 seconds later
+	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.IsUnbonding(), "%v", validator)
+
+	// should be in unbonded state at time 7 seconds later
+	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.IsUnbonded(), "%v", validator)
+}
+
+func TestUnbondingPeriod(t *testing.T) {
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+	validatorAddr := valAddrs[0]
+
+	// set the unbonding time
+	params := app.StakingKeeper.GetParams(ctx)
+	params.UnbondingTime = 7 * time.Second
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// create the validator
+	valTokens := sdk.TokensFromConsensusPower(10)
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], valTokens)
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// begin unbonding
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))
+	msgUndelegate := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+	res, err = handler(ctx, msgUndelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	origHeader := ctx.BlockHeader()
+
+	_, found := app.StakingKeeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found, "should not have unbonded")
+
+	// cannot complete unbonding at same time
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	_, found = app.StakingKeeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found, "should not have unbonded")
+
+	// cannot complete unbonding at time 6 seconds later
+	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	_, found = app.StakingKeeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found, "should not have unbonded")
+
+	// can complete unbonding at time 7 seconds later
+	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	_, found = app.StakingKeeper.GetUnbondingDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.False(t, found, "should have unbonded")
+}
+
 //func TestUnbondingFromUnbondingValidator(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 //	handler := NewHandler(keeper)

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -22,6 +23,12 @@ type HandlerTestSuite struct {
 
 	handler sdk.Handler
 	app     *simapp.SimApp
+}
+
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) simappcodec.MsgSubmitEvidence {
+	msg, err := simappcodec.NewMsgSubmitEvidence(e, s)
+	r.NoError(err)
+	return msg
 }
 
 func testEquivocationHandler(k interface{}) types.Handler {
@@ -70,7 +77,8 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 		expectErr bool
 	}{
 		{
-			simappcodec.NewMsgSubmitEvidence(
+			testMsgSubmitEvidence(
+				suite.Require(),
 				&types.Equivocation{
 					Height:           11,
 					Time:             time.Now().UTC(),
@@ -82,7 +90,8 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			false,
 		},
 		{
-			simappcodec.NewMsgSubmitEvidence(
+			testMsgSubmitEvidence(
+				suite.Require(),
 				&types.Equivocation{
 					Height:           10,
 					Time:             time.Now().UTC(),

@@ -21,6 +21,7 @@ const (
 	DefaultSigVerifyCostED25519   = types.DefaultSigVerifyCostED25519
 	DefaultSigVerifyCostSecp256k1 = types.DefaultSigVerifyCostSecp256k1
 	QueryAccount                  = types.QueryAccount
+	QueryParams                   = types.QueryParams
 )
 
 var (

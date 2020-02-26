@@ -358,6 +358,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
+	app.deliverState.ctx = app.deliverState.ctx.WithValue("deliverMode", true)
+
 	res = app.initChainer(app.deliverState.ctx, req)
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
@@ -856,10 +858,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
-	if mode == runTxModeDeliver {
-		ctx.WithValue("deliverMode", true)
-	} else {
-		ctx.WithValue("deliverMode", false)
+	if mode != runTxModeDeliver {
+		ctx = ctx.WithValue("deliverMode", false)
 	}
 
 

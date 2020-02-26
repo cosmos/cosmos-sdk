@@ -315,77 +315,78 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, bondAmount.MulRaw(3), validator.DelegatorShares.RoundInt())
 }
 
-//func TestIncrementsMsgDelegate(t *testing.T) {
-//	initPower := int64(1000)
-//	initBond := sdk.TokensFromConsensusPower(initPower)
-//	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 2, 10000000)
-//	handler := staking.NewHandler(app.StakingKeeper)
-//
-//	params := app.StakingKeeper.GetParams(ctx)
-//
-//	bondAmount := sdk.TokensFromConsensusPower(10)
-//	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
-//
-//	// first create validator
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], bondAmount)
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// apply TM updates
-//	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-//	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	require.Equal(t, sdk.Bonded, validator.Status)
-//	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
-//	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
-//
-//	_, found = app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
-//	require.False(t, found)
-//
-//	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-//	require.True(t, found)
-//	require.Equal(t, bondAmount, bond.Shares.RoundInt())
-//
-//	bondedTokens := app.StakingKeeper.TotalBondedTokens(ctx)
-//	require.Equal(t, bondAmount.Int64(), bondedTokens.Int64())
-//
-//	// just send the same msgbond multiple times
-//	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
-//
-//	for i := int64(0); i < 5; i++ {
-//		ctx = ctx.WithBlockHeight(i)
-//
-//		res, err := handler(ctx, msgDelegate)
-//		require.NoError(t, err)
-//		require.NotNil(t, res)
-//
-//		//Check that the accounts and the bond account have the appropriate values
-//		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
-//		require.True(t, found)
-//		bond, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
-//		require.True(t, found)
-//
-//		expBond := bondAmount.MulRaw(i + 1)
-//		expDelegatorShares := bondAmount.MulRaw(i + 2) // (1 self delegation)
-//		expDelegatorAcc := initBond.Sub(expBond)
-//
-//		gotBond := bond.Shares.RoundInt()
-//		gotDelegatorShares := validator.DelegatorShares.RoundInt()
-//		gotDelegatorAcc := app.BankKeeper.GetBalance(ctx, delegatorAddr, params.BondDenom).Amount
-//
-//		require.Equal(t, expBond, gotBond,
-//			"i: %v\nexpBond: %v\ngotBond: %v\nvalidator: %v\nbond: %v\n",
-//			i, expBond, gotBond, validator, bond)
-//		require.Equal(t, expDelegatorShares, gotDelegatorShares,
-//			"i: %v\nexpDelegatorShares: %v\ngotDelegatorShares: %v\nvalidator: %v\nbond: %v\n",
-//			i, expDelegatorShares, gotDelegatorShares, validator, bond)
-//		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
-//			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\nvalidator: %v\nbond: %v\n",
-//			i, expDelegatorAcc, gotDelegatorAcc, validator, bond)
-//	}
-//}
+func TestIncrementsMsgDelegate(t *testing.T) {
+	initPower := int64(1000)
+	initBond := sdk.TokensFromConsensusPower(initPower)
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 2, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	params := app.StakingKeeper.GetParams(ctx)
+
+	bondAmount := sdk.TokensFromConsensusPower(10)
+	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
+
+	// first create validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], bondAmount)
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, validator.Status)
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
+	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
+
+	_, found = app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	require.False(t, found)
+
+	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found)
+	require.Equal(t, bondAmount, bond.Shares.RoundInt())
+
+	bondedTokens := app.StakingKeeper.TotalBondedTokens(ctx)
+	require.Equal(t, bondAmount.Int64(), bondedTokens.Int64())
+
+	// just send the same msgbond multiple times
+	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
+
+	for i := int64(0); i < 5; i++ {
+		ctx = ctx.WithBlockHeight(i)
+
+		res, err := handler(ctx, msgDelegate)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+
+		//Check that the accounts and the bond account have the appropriate values
+		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
+		require.True(t, found)
+		bond, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
+		require.True(t, found)
+
+		expBond := bondAmount.MulRaw(i + 1)
+		expDelegatorShares := bondAmount.MulRaw(i + 2) // (1 self delegation)
+		expDelegatorAcc := initBond.Sub(expBond)
+
+		gotBond := bond.Shares.RoundInt()
+		gotDelegatorShares := validator.DelegatorShares.RoundInt()
+		gotDelegatorAcc := app.BankKeeper.GetBalance(ctx, delegatorAddr, params.BondDenom).Amount
+
+		require.Equal(t, expBond, gotBond,
+			"i: %v\nexpBond: %v\ngotBond: %v\nvalidator: %v\nbond: %v\n",
+			i, expBond, gotBond, validator, bond)
+		require.Equal(t, expDelegatorShares, gotDelegatorShares,
+			"i: %v\nexpDelegatorShares: %v\ngotDelegatorShares: %v\nvalidator: %v\nbond: %v\n",
+			i, expDelegatorShares, gotDelegatorShares, validator, bond)
+		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
+			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\nvalidator: %v\nbond: %v\n",
+			i, expDelegatorAcc, gotDelegatorAcc, validator, bond)
+	}
+}
+
 //
 //func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 //	validatorAddr := sdk.ValAddress(Addrs[0])

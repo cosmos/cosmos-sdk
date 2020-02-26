@@ -5,6 +5,14 @@ package codec
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/regen-network/cosmos-proto"
+
 	github_com_cosmos_cosmos_sdk_x_auth_exported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -12,12 +20,6 @@ import (
 	types3 "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	github_com_cosmos_cosmos_sdk_x_supply_exported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 	types2 "github.com/cosmos/cosmos-sdk/x/supply/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/regen-network/cosmos-proto"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

@@ -983,116 +983,116 @@ func TestRedelegationPeriod(t *testing.T) {
 	require.False(t, found, "should have unbonded")
 }
 
-//func TestTransitiveRedelegation(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//
-//	validatorAddr := sdk.ValAddress(Addrs[0])
-//	validatorAddr2 := sdk.ValAddress(Addrs[1])
-//	validatorAddr3 := sdk.ValAddress(Addrs[2])
-//
-//	blockTime := time.Now().UTC()
-//	ctx = ctx.WithBlockTime(blockTime)
-//
-//	// create the validators
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], sdk.NewInt(10))
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr2, PKs[1], sdk.NewInt(10))
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, PKs[2], sdk.NewInt(10))
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// begin redelegate
-//	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
-//	msgBeginRedelegate := NewMsgBeginRedelegate(sdk.AccAddress(validatorAddr), validatorAddr, validatorAddr2, redAmt)
-//	res, err = handler(ctx, msgBeginRedelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// cannot redelegation to next validator while first delegation exists
-//	msgBeginRedelegate = NewMsgBeginRedelegate(sdk.AccAddress(validatorAddr), validatorAddr2, validatorAddr3, redAmt)
-//	res, err = handler(ctx, msgBeginRedelegate)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	params := keeper.GetParams(ctx)
-//	ctx = ctx.WithBlockTime(blockTime.Add(params.UnbondingTime))
-//
-//	// complete first redelegation
-//	EndBlocker(ctx, keeper)
-//
-//	// now should be able to redelegate from the second validator to the third
-//	res, err = handler(ctx, msgBeginRedelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//}
-//
-//func TestMultipleRedelegationAtSameTime(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//
-//	valAddr := sdk.ValAddress(Addrs[0])
-//	valAddr2 := sdk.ValAddress(Addrs[1])
-//
-//	// set the unbonding time
-//	params := keeper.GetParams(ctx)
-//	params.UnbondingTime = 1 * time.Second
-//	keeper.SetParams(ctx, params)
-//
-//	// create the validators
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	msgCreateValidator := NewTestMsgCreateValidator(valAddr, PKs[0], valTokens)
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgCreateValidator = NewTestMsgCreateValidator(valAddr2, PKs[1], valTokens)
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// end block to bond them
-//	EndBlocker(ctx, keeper)
-//
-//	// begin a redelegate
-//	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
-//	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, valTokens.QuoRaw(2))
-//	msgBeginRedelegate := NewMsgBeginRedelegate(selfDelAddr, valAddr, valAddr2, redAmt)
-//	res, err = handler(ctx, msgBeginRedelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// there should only be one entry in the redelegation object
-//	rd, found := keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
-//	require.True(t, found)
-//	require.Len(t, rd.Entries, 1)
-//
-//	// start a second redelegation at this same time as the first
-//	res, err = handler(ctx, msgBeginRedelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// now there should be two entries
-//	rd, found = keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
-//	require.True(t, found)
-//	require.Len(t, rd.Entries, 2)
-//
-//	// move forward in time, should complete both redelegations
-//	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(1 * time.Second))
-//	EndBlocker(ctx, keeper)
-//
-//	rd, found = keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
-//	require.False(t, found)
-//}
-//
+func TestTransitiveRedelegation(t *testing.T) {
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 3, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	validatorAddr := valAddrs[0]
+	validatorAddr2 := valAddrs[1]
+	validatorAddr3 := valAddrs[2]
+
+	blockTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(blockTime)
+
+	// create the validators
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], sdk.NewInt(10))
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr2, PKs[1], sdk.NewInt(10))
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, PKs[2], sdk.NewInt(10))
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// begin redelegate
+	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
+	msgBeginRedelegate := types.NewMsgBeginRedelegate(sdk.AccAddress(validatorAddr), validatorAddr, validatorAddr2, redAmt)
+	res, err = handler(ctx, msgBeginRedelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// cannot redelegation to next validator while first delegation exists
+	msgBeginRedelegate = types.NewMsgBeginRedelegate(sdk.AccAddress(validatorAddr), validatorAddr2, validatorAddr3, redAmt)
+	res, err = handler(ctx, msgBeginRedelegate)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	params := app.StakingKeeper.GetParams(ctx)
+	ctx = ctx.WithBlockTime(blockTime.Add(params.UnbondingTime))
+
+	// complete first redelegation
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// now should be able to redelegate from the second validator to the third
+	res, err = handler(ctx, msgBeginRedelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestMultipleRedelegationAtSameTime(t *testing.T) {
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	valAddr := valAddrs[0]
+	valAddr2 := valAddrs[1]
+
+	// set the unbonding time
+	params := app.StakingKeeper.GetParams(ctx)
+	params.UnbondingTime = 1 * time.Second
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// create the validators
+	valTokens := sdk.TokensFromConsensusPower(10)
+	msgCreateValidator := NewTestMsgCreateValidator(valAddr, PKs[0], valTokens)
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgCreateValidator = NewTestMsgCreateValidator(valAddr2, PKs[1], valTokens)
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// end block to bond them
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// begin a redelegate
+	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
+	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, valTokens.QuoRaw(2))
+	msgBeginRedelegate := types.NewMsgBeginRedelegate(selfDelAddr, valAddr, valAddr2, redAmt)
+	res, err = handler(ctx, msgBeginRedelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// there should only be one entry in the redelegation object
+	rd, found := app.StakingKeeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.True(t, found)
+	require.Len(t, rd.Entries, 1)
+
+	// start a second redelegation at this same time as the first
+	res, err = handler(ctx, msgBeginRedelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// now there should be two entries
+	rd, found = app.StakingKeeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.True(t, found)
+	require.Len(t, rd.Entries, 2)
+
+	// move forward in time, should complete both redelegations
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(1 * time.Second))
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	rd, found = app.StakingKeeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.False(t, found)
+}
+
 //func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 //	handler := NewHandler(keeper)

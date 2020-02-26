@@ -12,6 +12,12 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
+func testMsgSubmitEvidence(t *testing.T, e *types.Equivocation, s sdk.AccAddress) simappcodec.MsgSubmitEvidence {
+	msg, err := simappcodec.NewMsgSubmitEvidence(e, s)
+	require.NoError(t, err)
+	return msg
+}
+
 func TestMsgSubmitEvidence(t *testing.T) {
 	pk := ed25519.GenPrivKey()
 	submitter := sdk.AccAddress("test")
@@ -27,7 +33,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 			false,
 		},
 		{
-			simappcodec.NewMsgSubmitEvidence(&types.Equivocation{
+			testMsgSubmitEvidence(t, &types.Equivocation{
 				Height:           0,
 				Power:            100,
 				Time:             time.Now().UTC(),
@@ -37,7 +43,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 			true,
 		},
 		{
-			simappcodec.NewMsgSubmitEvidence(&types.Equivocation{
+			testMsgSubmitEvidence(t, &types.Equivocation{
 				Height:           10,
 				Power:            100,
 				Time:             time.Now().UTC(),

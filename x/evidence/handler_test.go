@@ -25,7 +25,7 @@ type HandlerTestSuite struct {
 	app     *simapp.SimApp
 }
 
-func testMsgSubmitEvidence(r *require.Assertions, e *types.Equivocation, s sdk.AccAddress) simappcodec.MsgSubmitEvidence {
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) simappcodec.MsgSubmitEvidence {
 	msg, err := simappcodec.NewMsgSubmitEvidence(e, s)
 	r.NoError(err)
 	return msg

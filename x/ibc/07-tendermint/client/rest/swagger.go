@@ -2,7 +2,6 @@ package rest
 
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
@@ -23,7 +22,7 @@ type (
 	}
 
 	PostSubmitMisbehaviour struct {
-		Msgs       []evidence.MsgSubmitEvidence `json:"msg" yaml:"msg"`
+		Msgs       []ibctmtypes.MsgSubmitClientMisbehaviour `json:"msg" yaml:"msg"`
 		Fee        authtypes.StdFee                  `json:"fee" yaml:"fee"`
 		Signatures []authtypes.StdSignature          `json:"signatures" yaml:"signatures"`
 		Memo       string                       `json:"memo" yaml:"memo"`

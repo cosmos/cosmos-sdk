@@ -36,9 +36,43 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(GetAccountCmd(cdc))
+	cmd.AddCommand(
+		flags.GetCommands(
+			GetAccountCmd(cdc),
+			QueryParamsCmd(cdc),
+		)...,
+	)
 
 	return cmd
+}
+
+// QueryParamsCmd returns the command handler for evidence parameter querying.
+func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "params",
+		Short: "Query the current auth parameters",
+		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(`Query the current auth parameters:
+
+$ <appcli> query auth params
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
+			res, _, err := cliCtx.QueryWithData(route, nil)
+			if err != nil {
+				return err
+			}
+
+			var params types.Params
+			if err := cdc.UnmarshalJSON(res, &params); err != nil {
+				return fmt.Errorf("failed to unmarshal params: %w", err)
+			}
+
+			return cliCtx.PrintOutput(params)
+		},
+	}
 }
 
 // GetAccountCmd returns a query account that will display the state of the

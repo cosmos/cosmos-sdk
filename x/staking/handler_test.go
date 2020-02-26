@@ -1,6 +1,7 @@
 package staking_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -1327,178 +1328,179 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.Equal(t, sdk.Bonded, val1.Status, "%v", val1)
 }
 
-//func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//
-//	valA, valB, del := sdk.ValAddress(Addrs[0]), sdk.ValAddress(Addrs[1]), Addrs[2]
-//	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-//
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	msgCreateValidator := NewTestMsgCreateValidator(valA, PKs[0], valTokens)
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgCreateValidator = NewTestMsgCreateValidator(valB, PKs[1], valTokens)
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// delegate 10 stake
-//	msgDelegate := NewTestMsgDelegate(del, valA, valTokens)
-//	res, err = handler(ctx, msgDelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// apply Tendermint updates
-//	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//	require.Equal(t, 2, len(updates))
-//
-//	// a block passes
-//	ctx = ctx.WithBlockHeight(1)
-//
-//	// begin unbonding 4 stake
-//	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4))
-//	msgUndelegate := NewMsgUndelegate(del, valA, unbondAmt)
-//	res, err = handler(ctx, msgUndelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// begin redelegate 6 stake
-//	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(6))
-//	msgBeginRedelegate := NewMsgBeginRedelegate(del, valA, valB, redAmt)
-//	res, err = handler(ctx, msgBeginRedelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// destination delegation should have 6 shares
-//	delegation, found := keeper.GetDelegation(ctx, del, valB)
-//	require.True(t, found)
-//	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount), delegation.Shares)
-//
-//	// must apply validator updates
-//	updates = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//	require.Equal(t, 2, len(updates))
-//
-//	// slash the validator by half
-//	keeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))
-//
-//	// unbonding delegation should have been slashed by half
-//	ubd, found := keeper.GetUnbondingDelegation(ctx, del, valA)
-//	require.True(t, found)
-//	require.Len(t, ubd.Entries, 1)
-//	require.Equal(t, unbondAmt.Amount.QuoRaw(2), ubd.Entries[0].Balance)
-//
-//	// redelegation should have been slashed by half
-//	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
-//	require.True(t, found)
-//	require.Len(t, redelegation.Entries, 1)
-//
-//	// destination delegation should have been slashed by half
-//	delegation, found = keeper.GetDelegation(ctx, del, valB)
-//	require.True(t, found)
-//	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount.QuoRaw(2)), delegation.Shares)
-//
-//	// validator power should have been reduced by half
-//	validator, found := keeper.GetValidator(ctx, valA)
-//	require.True(t, found)
-//	require.Equal(t, valTokens.QuoRaw(2), validator.GetBondedTokens())
-//
-//	// slash the validator for an infraction committed after the unbonding and redelegation begin
-//	ctx = ctx.WithBlockHeight(3)
-//	keeper.Slash(ctx, consAddr0, 2, 10, sdk.NewDecWithPrec(5, 1))
-//
-//	// unbonding delegation should be unchanged
-//	ubd, found = keeper.GetUnbondingDelegation(ctx, del, valA)
-//	require.True(t, found)
-//	require.Len(t, ubd.Entries, 1)
-//	require.Equal(t, unbondAmt.Amount.QuoRaw(2), ubd.Entries[0].Balance)
-//
-//	// redelegation should be unchanged
-//	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
-//	require.True(t, found)
-//	require.Len(t, redelegation.Entries, 1)
-//
-//	// destination delegation should be unchanged
-//	delegation, found = keeper.GetDelegation(ctx, del, valB)
-//	require.True(t, found)
-//	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount.QuoRaw(2)), delegation.Shares)
-//
-//	// end blocker
-//	EndBlocker(ctx, keeper)
-//
-//	// validator power should have been reduced to zero
-//	// validator should be in unbonding state
-//	validator, _ = keeper.GetValidator(ctx, valA)
-//	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
-//}
-//
-//func TestInvalidMsg(t *testing.T) {
-//	k := Keeper{}
-//	h := NewHandler(k)
-//
-//	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//	require.True(t, strings.Contains(err.Error(), "unrecognized staking message type"))
-//}
-//
-//func TestInvalidCoinDenom(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//
-//	valA, valB, delAddr := sdk.ValAddress(Addrs[0]), sdk.ValAddress(Addrs[1]), Addrs[2]
-//
-//	valTokens := sdk.TokensFromConsensusPower(100)
-//	invalidCoin := sdk.NewCoin("churros", valTokens)
-//	validCoin := sdk.NewCoin(sdk.DefaultBondDenom, valTokens)
-//	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
-//
-//	commission := types.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.ZeroDec())
-//
-//	msgCreate := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, Description{}, commission, sdk.OneInt())
-//	res, err := handler(ctx, msgCreate)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	msgCreate = types.NewMsgCreateValidator(valA, PKs[0], validCoin, Description{}, commission, sdk.OneInt())
-//	res, err = handler(ctx, msgCreate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgCreate = types.NewMsgCreateValidator(valB, PKs[1], validCoin, Description{}, commission, sdk.OneInt())
-//	res, err = handler(ctx, msgCreate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgDelegate := types.NewMsgDelegate(delAddr, valA, invalidCoin)
-//	res, err = handler(ctx, msgDelegate)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	msgDelegate = types.NewMsgDelegate(delAddr, valA, validCoin)
-//	res, err = handler(ctx, msgDelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgUndelegate := types.NewMsgUndelegate(delAddr, valA, invalidCoin)
-//	res, err = handler(ctx, msgUndelegate)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	msgUndelegate = types.NewMsgUndelegate(delAddr, valA, oneCoin)
-//	res, err = handler(ctx, msgUndelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	msgRedelegate := types.NewMsgBeginRedelegate(delAddr, valA, valB, invalidCoin)
-//	res, err = handler(ctx, msgRedelegate)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	msgRedelegate = types.NewMsgBeginRedelegate(delAddr, valA, valB, oneCoin)
-//	res, err = handler(ctx, msgRedelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//}
+func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 3, 1000000000)
+
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	valA, valB, del := valAddrs[0], valAddrs[1], delAddrs[2]
+	consAddr0 := sdk.ConsAddress(PKs[0].Address())
+
+	valTokens := sdk.TokensFromConsensusPower(10)
+	msgCreateValidator := NewTestMsgCreateValidator(valA, PKs[0], valTokens)
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgCreateValidator = NewTestMsgCreateValidator(valB, PKs[1], valTokens)
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// delegate 10 stake
+	msgDelegate := NewTestMsgDelegate(del, valA, valTokens)
+	res, err = handler(ctx, msgDelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// apply Tendermint updates
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+
+	// a block passes
+	ctx = ctx.WithBlockHeight(1)
+
+	// begin unbonding 4 stake
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4))
+	msgUndelegate := types.NewMsgUndelegate(del, valA, unbondAmt)
+	res, err = handler(ctx, msgUndelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// begin redelegate 6 stake
+	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(6))
+	msgBeginRedelegate := types.NewMsgBeginRedelegate(del, valA, valB, redAmt)
+	res, err = handler(ctx, msgBeginRedelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// destination delegation should have 6 shares
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, del, valB)
+	require.True(t, found)
+	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount), delegation.Shares)
+
+	// must apply validator updates
+	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+
+	// slash the validator by half
+	app.StakingKeeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))
+
+	// unbonding delegation should have been slashed by half
+	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, del, valA)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, unbondAmt.Amount.QuoRaw(2), ubd.Entries[0].Balance)
+
+	// redelegation should have been slashed by half
+	redelegation, found := app.StakingKeeper.GetRedelegation(ctx, del, valA, valB)
+	require.True(t, found)
+	require.Len(t, redelegation.Entries, 1)
+
+	// destination delegation should have been slashed by half
+	delegation, found = app.StakingKeeper.GetDelegation(ctx, del, valB)
+	require.True(t, found)
+	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount.QuoRaw(2)), delegation.Shares)
+
+	// validator power should have been reduced by half
+	validator, found := app.StakingKeeper.GetValidator(ctx, valA)
+	require.True(t, found)
+	require.Equal(t, valTokens.QuoRaw(2), validator.GetBondedTokens())
+
+	// slash the validator for an infraction committed after the unbonding and redelegation begin
+	ctx = ctx.WithBlockHeight(3)
+	app.StakingKeeper.Slash(ctx, consAddr0, 2, 10, sdk.NewDecWithPrec(5, 1))
+
+	// unbonding delegation should be unchanged
+	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, del, valA)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, unbondAmt.Amount.QuoRaw(2), ubd.Entries[0].Balance)
+
+	// redelegation should be unchanged
+	redelegation, found = app.StakingKeeper.GetRedelegation(ctx, del, valA, valB)
+	require.True(t, found)
+	require.Len(t, redelegation.Entries, 1)
+
+	// destination delegation should be unchanged
+	delegation, found = app.StakingKeeper.GetDelegation(ctx, del, valB)
+	require.True(t, found)
+	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount.QuoRaw(2)), delegation.Shares)
+
+	// end blocker
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// validator power should have been reduced to zero
+	// validator should be in unbonding state
+	validator, _ = app.StakingKeeper.GetValidator(ctx, valA)
+	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
+}
+
+func TestInvalidMsg(t *testing.T) {
+	k := staking.Keeper{}
+	h := staking.NewHandler(k)
+
+	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.True(t, strings.Contains(err.Error(), "unrecognized staking message type"))
+}
+
+func TestInvalidCoinDenom(t *testing.T) {
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 3, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	valA, valB, delAddr := valAddrs[0], valAddrs[1], delAddrs[2]
+
+	valTokens := sdk.TokensFromConsensusPower(100)
+	invalidCoin := sdk.NewCoin("churros", valTokens)
+	validCoin := sdk.NewCoin(sdk.DefaultBondDenom, valTokens)
+	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
+
+	commission := types.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.ZeroDec())
+
+	msgCreate := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission, sdk.OneInt())
+	res, err := handler(ctx, msgCreate)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	msgCreate = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission, sdk.OneInt())
+	res, err = handler(ctx, msgCreate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgCreate = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission, sdk.OneInt())
+	res, err = handler(ctx, msgCreate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgDelegate := types.NewMsgDelegate(delAddr, valA, invalidCoin)
+	res, err = handler(ctx, msgDelegate)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	msgDelegate = types.NewMsgDelegate(delAddr, valA, validCoin)
+	res, err = handler(ctx, msgDelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgUndelegate := types.NewMsgUndelegate(delAddr, valA, invalidCoin)
+	res, err = handler(ctx, msgUndelegate)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	msgUndelegate = types.NewMsgUndelegate(delAddr, valA, oneCoin)
+	res, err = handler(ctx, msgUndelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	msgRedelegate := types.NewMsgBeginRedelegate(delAddr, valA, valB, invalidCoin)
+	res, err = handler(ctx, msgRedelegate)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	msgRedelegate = types.NewMsgBeginRedelegate(delAddr, valA, valB, oneCoin)
+	res, err = handler(ctx, msgRedelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}

@@ -1,0 +1,71 @@
+syntax = "proto3";
+package cosmos_sdk.x.ibc.04channel.v1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
+option (gogoproto.equal_all) = true;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "x/ibc/20-transfer/types/types.proto";
+
+message Channel {
+  byte state = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State",
+  ];
+  byte ordering = 2 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.Order",
+  ];
+  Counterparty counterparty = 3 [
+    (gogoproto.nullable)    = false,
+  ];
+  repeated string connection_hops = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"connection_hops\""
+  ];
+  string version = 5 [
+    (gogoproto.nullable)    = false,
+  ];
+}
+
+message Counterparty {
+	string port_id = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.moretags)    = "yaml:\"port_id\""
+  ];
+	string channel_id = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
+}
+
+
+message Packet {
+  uint64 sequence = 1;
+  string source_port = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"source_port\""
+  ];
+  string source_channel = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"source_channel\""
+  ];
+  string destination_port = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"destination_port\""
+  ];
+  string destination_channel = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"destination_channel\""
+  ];
+  PacketData data = 6 [
+    (gogoproto.nullable) = false,
+  ];
+}
+
+message PacketData {
+  oneof value {
+    cosmos_sdk.x.ibc.20transfer.v1.FungibleTokenPacketData fungible_token = 1;
+  }
+}
+

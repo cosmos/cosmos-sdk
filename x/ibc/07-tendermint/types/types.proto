@@ -2,12 +2,12 @@ syntax = "proto3";
 package cosmos_sdk.x.ibc.07tendermint.v1;
 
 option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
-option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "github.com/tendermint/tendermint/types/proto3";
+import "x/ibc/23-commitment/types.proto";
 
 message ClientState {
   string id = 1;
@@ -39,7 +39,7 @@ message ConsensusState {
     (gogoproto.nullable) = false,
   ];
   uint64 height = 3;
-	cosmos_sdk.v1.ValidatorSet validator_set = 4 [
+	ValidatorSet validator_set = 4 [
     (gogoproto.moretags)   = "yaml:\"validator_set\""
   ];
 }

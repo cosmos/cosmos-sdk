@@ -413,10 +413,10 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	data, err := ioutil.ReadFile(upgradeInfoFilePath)
 	require.NoError(t, err)
 
-	var upgrades storetypes.UpgradeInfo
-	err = json.Unmarshal(data, &upgrades)
+	var upgradeInfo storetypes.UpgradeInfo
+	err = json.Unmarshal(data, &upgradeInfo)
 	require.Nil(t, err)
 
 	t.Log("Verify upgrade height from file matches ")
-	require.Equal(t, upgrades.Height, planHeight)
+	require.Equal(t, upgradeInfo.Height, planHeight)
 }

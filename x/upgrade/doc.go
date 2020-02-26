@@ -71,10 +71,12 @@ switching the binaries is an ops task and not handled inside the sdk / abci app.
 Here is a sample code to set store migrations with an upgrade:
 
 	// this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
-	app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", upgradeHandlerFunc)
+	app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx sdk.Context, plan upgrade.Plan) {
+		// upgrade changes here
+	})
 
-	upgradeName, upgradeHeight := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if upgradeName == "my-fancy-upgrade" && !app.UpgradeKeeper.IsSkipHeight(upgradeHeight) {
+	upgradeInfo := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if upgradeInfo.Name == "my-fancy-upgrade" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Renamed: []store.StoreRename{{
 				OldKey: "foo",
@@ -84,7 +86,7 @@ Here is a sample code to set store migrations with an upgrade:
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeHeight, &storeUpgrades))
+		app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 
 Halt Behavior

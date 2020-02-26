@@ -45,7 +45,7 @@ type StoreUpgrades struct {
 }
 
 // UpgradeInfo defines height and name of the upgrade
-// to ensure multistore upgrades happens only at matching height
+// to ensure multistore upgrades happen only at matching height.
 type UpgradeInfo struct {
 	Name   string `json:"name"`
 	Height int64  `json:"height"`

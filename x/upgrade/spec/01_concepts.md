@@ -57,6 +57,7 @@ During each `EndBlock` execution, the `x/upgrade` module checks if there exists 
 or if the binary was upgraded too early, the node will gracefully panic and exit.
 
 ## StoreLoader
+
 The `x/upgrade` module also facilitates store migrations as part of the upgrade. The
 `StoreLoader` sets the migrations that need to occur before the new binary can 
 successfully run the chain. This `StoreLoader` is also application specific and 

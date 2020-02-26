@@ -697,65 +697,65 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	}
 }
 
-//func TestJailValidator(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//	validatorAddr, delegatorAddr := sdk.ValAddress(Addrs[0]), Addrs[1]
-//
-//	// create the validator
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], sdk.NewInt(10))
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// bond a delegator
-//	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, sdk.NewInt(10))
-//	res, err = handler(ctx, msgDelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// unbond the validators bond portion
-//	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
-//	msgUndelegateValidator := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
-//	res, err = handler(ctx, msgUndelegateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	ts := &gogotypes.Timestamp{}
-//	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-//
-//	finishTime, err := gogotypes.TimestampFromProto(ts)
-//	require.NoError(t, err)
-//
-//	ctx = ctx.WithBlockTime(finishTime)
-//	EndBlocker(ctx, keeper)
-//
-//	validator, found := keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	require.True(t, validator.Jailed, "%v", validator)
-//
-//	// test that the delegator can still withdraw their bonds
-//	msgUndelegateDelegator := NewMsgUndelegate(delegatorAddr, validatorAddr, unbondAmt)
-//
-//	res, err = handler(ctx, msgUndelegateDelegator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	ts = &gogotypes.Timestamp{}
-//	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-//
-//	finishTime, err = gogotypes.TimestampFromProto(ts)
-//	require.NoError(t, err)
-//
-//	ctx = ctx.WithBlockTime(finishTime)
-//	EndBlocker(ctx, keeper)
-//
-//	// verify that the pubkey can now be reused
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//}
-//
+func TestJailValidator(t *testing.T) {
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
+
+	// create the validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], sdk.NewInt(10))
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// bond a delegator
+	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, sdk.NewInt(10))
+	res, err = handler(ctx, msgDelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// unbond the validators bond portion
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
+	msgUndelegateValidator := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+	res, err = handler(ctx, msgUndelegateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(finishTime)
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.Jailed, "%v", validator)
+
+	// test that the delegator can still withdraw their bonds
+	msgUndelegateDelegator := types.NewMsgUndelegate(delegatorAddr, validatorAddr, unbondAmt)
+
+	res, err = handler(ctx, msgUndelegateDelegator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	ts = &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err = gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(finishTime)
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// verify that the pubkey can now be reused
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
 //func TestValidatorQueue(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 //	handler := NewHandler(keeper)

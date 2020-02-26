@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"reflect"
 
@@ -158,11 +158,13 @@ func errIsNil(err error) bool {
 // generic internal error instance. If the error is an ABCI Error, that error is
 // simply returned.
 func Redact(err error) error {
-	if ErrPanic.Is(err) {
-		return errors.New(internalABCILog)
-	}
-	if abciCode(err) == internalABCICode {
-		return errors.New(internalABCILog)
-	}
+	/*
+		if ErrPanic.Is(err) {
+			return errors.New(internalABCILog)
+		}
+		if abciCode(err) == internalABCICode {
+			return errors.New(internalABCILog)
+		}
+	*/
 	return err
 }

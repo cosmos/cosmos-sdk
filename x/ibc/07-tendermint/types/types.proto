@@ -1,0 +1,97 @@
+syntax = "proto3";
+package cosmos_sdk.x.ibc.07tendermint.v1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
+option (gogoproto.equal_all) = true;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "github.com/tendermint/tendermint/types/proto3";
+
+message ClientState {
+  string id = 1;
+  google.protobuf.Duration trusting_period = 2 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"trusting_period\""
+  ];
+  google.protobuf.Duration unbonding_period = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"unbonding_period\""
+  ];
+  uint64 frozen_height = 3 [
+    (gogoproto.moretags)     = "yaml:\"frozen_height\""
+  ];
+  Header last_header = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"last_header\""
+  ];
+}
+
+message ConsensusState {
+  google.protobuf.Timestamp timestamp = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];             
+  cosmos_sdk.x.ibc.23commitment.v1.Root root = 2 [
+    (gogoproto.nullable) = false,
+  ];
+  uint64 height = 3;
+	cosmos_sdk.v1.ValidatorSet validator_set = 4 [
+    (gogoproto.moretags)   = "yaml:\"validator_set\""
+  ];
+}
+
+message Evidence {
+  string client_id = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"client_id\""
+  ];
+  string chain_id = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"chain_id\""
+  ];
+  Header header_1 = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"header_1\""
+  ];
+  Header header_2 = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags)    = "yaml:\"header_2\""
+  ];
+}
+
+message Header {
+  SignedHeader signed_header = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"signed_header\""
+  ];
+      
+  ValidatorSet validator_set = 2 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"validator_set\""
+  ];
+  ValidatorSet next_validator_set = 3 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"next_validator_set\""
+  ];
+}
+
+message ValidatorSet {
+  repeated tendermint.abci.types.Validator validators = 1 [
+    (gogoproto.nullable)   = false
+  ];
+  tendermint.abci.types.Validator proposer = 2 [
+    (gogoproto.nullable)   = false
+  ];
+  int64 total_voting_power = 3 [
+    (gogoproto.moretags)    = "yaml:\"total_voting_power\""
+  ];
+}
+
+message SignedHeader {
+  tendermint.abci.types.Header header = 1;
+  // TODO: Commit
+}

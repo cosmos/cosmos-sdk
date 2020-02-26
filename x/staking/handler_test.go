@@ -2,6 +2,7 @@ package staking_test
 
 import (
 	"testing"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -566,87 +567,88 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	require.NotNil(t, res, "msgUnbond: %v\nshares: %s\nleftBonded: %s\n", msgUndelegate, unbondAmt, leftBonded)
 }
 
-//func TestMultipleMsgCreateValidator(t *testing.T) {
-//	initPower := int64(1000)
-//	initTokens := sdk.TokensFromConsensusPower(initPower)
-//	ctx, _, bk, keeper, _ := CreateTestInput(t, false, initPower)
-//	handler := NewHandler(keeper)
-//
-//	params := keeper.GetParams(ctx)
-//	blockTime := time.Now().UTC()
-//	ctx = ctx.WithBlockTime(blockTime)
-//
-//	validatorAddrs := []sdk.ValAddress{
-//		sdk.ValAddress(Addrs[0]),
-//		sdk.ValAddress(Addrs[1]),
-//		sdk.ValAddress(Addrs[2]),
-//	}
-//	delegatorAddrs := []sdk.AccAddress{
-//		Addrs[0],
-//		Addrs[1],
-//		Addrs[2],
-//	}
-//
-//	// bond them all
-//	for i, validatorAddr := range validatorAddrs {
-//		valTokens := sdk.TokensFromConsensusPower(10)
-//		msgCreateValidatorOnBehalfOf := NewTestMsgCreateValidator(validatorAddr, PKs[i], valTokens)
-//
-//		res, err := handler(ctx, msgCreateValidatorOnBehalfOf)
-//		require.NoError(t, err)
-//		require.NotNil(t, res)
-//
-//		// verify that the account is bonded
-//		validators := keeper.GetValidators(ctx, 100)
-//		require.Equal(t, (i + 1), len(validators))
-//
-//		val := validators[i]
-//		balanceExpd := initTokens.Sub(valTokens)
-//		balanceGot := bk.GetBalance(ctx, delegatorAddrs[i], params.BondDenom).Amount
-//
-//		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
-//		require.Equal(t, valTokens, val.DelegatorShares.RoundInt(), "expected %d shares, got %d", 10, val.DelegatorShares)
-//		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
-//	}
-//
-//	EndBlocker(ctx, keeper)
-//
-//	// unbond them all by removing delegation
-//	for i, validatorAddr := range validatorAddrs {
-//		_, found := keeper.GetValidator(ctx, validatorAddr)
-//		require.True(t, found)
-//
-//		unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))
-//		msgUndelegate := NewMsgUndelegate(delegatorAddrs[i], validatorAddr, unbondAmt) // remove delegation
-//		res, err := handler(ctx, msgUndelegate)
-//		require.NoError(t, err)
-//		require.NotNil(t, res)
-//
-//		ts := &gogotypes.Timestamp{}
-//		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-//
-//		_, err = gogotypes.TimestampFromProto(ts)
-//		require.NoError(t, err)
-//
-//		// adds validator into unbonding queue
-//		EndBlocker(ctx, keeper)
-//
-//		// removes validator from queue and set
-//		EndBlocker(ctx.WithBlockTime(blockTime.Add(params.UnbondingTime)), keeper)
-//
-//		// Check that the validator is deleted from state
-//		validators := keeper.GetValidators(ctx, 100)
-//		require.Equal(t, len(validatorAddrs)-(i+1), len(validators),
-//			"expected %d validators got %d", len(validatorAddrs)-(i+1), len(validators))
-//
-//		_, found = keeper.GetValidator(ctx, validatorAddr)
-//		require.False(t, found)
-//
-//		gotBalance := bk.GetBalance(ctx, delegatorAddrs[i], params.BondDenom).Amount
-//		require.Equal(t, initTokens, gotBalance, "expected account to have %d, got %d", initTokens, gotBalance)
-//	}
-//}
-//
+func TestMultipleMsgCreateValidator(t *testing.T) {
+	initPower := int64(1000)
+	initTokens := sdk.TokensFromConsensusPower(initPower)
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, 1000000000)
+
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	params := app.StakingKeeper.GetParams(ctx)
+	blockTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(blockTime)
+
+	validatorAddrs := []sdk.ValAddress{
+		valAddrs[0],
+		valAddrs[1],
+		valAddrs[2],
+	}
+	delegatorAddrs := []sdk.AccAddress{
+		delAddrs[0],
+		delAddrs[1],
+		delAddrs[2],
+	}
+
+	// bond them all
+	for i, validatorAddr := range validatorAddrs {
+		valTokens := sdk.TokensFromConsensusPower(10)
+		msgCreateValidatorOnBehalfOf := NewTestMsgCreateValidator(validatorAddr, PKs[i], valTokens)
+
+		res, err := handler(ctx, msgCreateValidatorOnBehalfOf)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+
+		// verify that the account is bonded
+		validators := app.StakingKeeper.GetValidators(ctx, 100)
+		require.Equal(t, (i + 1), len(validators))
+
+		val := validators[i]
+		balanceExpd := initTokens.Sub(valTokens)
+		balanceGot := app.BankKeeper.GetBalance(ctx, delegatorAddrs[i], params.BondDenom).Amount
+
+		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
+		require.Equal(t, valTokens, val.DelegatorShares.RoundInt(), "expected %d shares, got %d", 10, val.DelegatorShares)
+		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
+	}
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// unbond them all by removing delegation
+	for i, validatorAddr := range validatorAddrs {
+		_, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
+		require.True(t, found)
+
+		unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))
+		msgUndelegate := types.NewMsgUndelegate(delegatorAddrs[i], validatorAddr, unbondAmt) // remove delegation
+		res, err := handler(ctx, msgUndelegate)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+
+		ts := &gogotypes.Timestamp{}
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+		_, err = gogotypes.TimestampFromProto(ts)
+		require.NoError(t, err)
+
+		// adds validator into unbonding queue
+		staking.EndBlocker(ctx, app.StakingKeeper)
+
+		// removes validator from queue and set
+		staking.EndBlocker(ctx.WithBlockTime(blockTime.Add(params.UnbondingTime)), app.StakingKeeper)
+
+		// Check that the validator is deleted from state
+		validators := app.StakingKeeper.GetValidators(ctx, 100)
+		require.Equal(t, len(validatorAddrs)-(i+1), len(validators),
+			"expected %d validators got %d", len(validatorAddrs)-(i+1), len(validators))
+
+		_, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
+		require.False(t, found)
+
+		gotBalance := app.BankKeeper.GetBalance(ctx, delegatorAddrs[i], params.BondDenom).Amount
+		require.Equal(t, initTokens, gotBalance, "expected account to have %d, got %d", initTokens, gotBalance)
+	}
+}
+
 //func TestMultipleMsgDelegate(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 //	handler := NewHandler(keeper)

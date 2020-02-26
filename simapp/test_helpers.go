@@ -151,10 +151,10 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 
 //ConvertAddrsToValAddrs converts the provided addresses to
 func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
-	var valAddrs []sdk.ValAddress
+	valAddrs := make([]sdk.ValAddress, len(addrs))
 
-	for _, addr := range addrs {
-		valAddrs = append(valAddrs, sdk.ValAddress(addr))
+	for i, addr := range addrs {
+		valAddrs[i] = sdk.ValAddress(addr)
 	}
 
 	return valAddrs

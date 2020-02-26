@@ -1015,8 +1015,8 @@ func commitUncheckedFiles(ctx sdk.Context) {
 	for _, key := range []string{"delegations", "unbond", "balance", "rewards"} {
 		err := copyFile(fmt.Sprintf("./extract/progress/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()))
 		if err != nil {
-			// TODO: Handle error instead of panicking
-			panic(err)
+			fmt.Errorf("error: %v while commiting unchecked file\n", err)
+			continue
 		}
 		// No need for the file now
 		os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()))

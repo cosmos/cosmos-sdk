@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,8 +38,8 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 				return err
 			}
 
-			if isEmptyState(db) || appExporter == nil {
-				if _, err := fmt.Fprintln(os.Stderr, "WARNING: State is not initialized. Returning genesis file."); err != nil {
+			if appExporter == nil {
+				if _, err := fmt.Fprintln(os.Stderr, "WARNING: App exporter not defined. Returning genesis file."); err != nil {
 					return err
 				}
 
@@ -88,9 +87,6 @@ func ExportCmd(ctx *Context, cdc codec.JSONMarshaler, appExporter AppExporter) *
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
-	return cmd
-}
 
-func isEmptyState(db dbm.DB) bool {
-	return db.Stats()["leveldb.sstables"] == ""
+	return cmd
 }

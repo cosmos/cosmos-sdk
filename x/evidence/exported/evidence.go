@@ -33,3 +33,13 @@ type ValidatorEvidence interface {
 	// The total validator set power at time of infraction
 	GetTotalPower() int64
 }
+
+// MsgSubmitEvidence defines the specific interface a concrete message must
+// implement in order to process submitted evidence. The concrete MsgSubmitEvidence
+// must be defined at the application-level.
+type MsgSubmitEvidence interface {
+	sdk.Msg
+
+	GetEvidence() Evidence
+	GetSubmitter() sdk.AccAddress
+}

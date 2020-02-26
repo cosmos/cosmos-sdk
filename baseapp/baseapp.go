@@ -362,6 +362,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	res = app.initChainer(app.deliverState.ctx, req)
 
+	// Commit genesis changes
+	commitUncheckedFiles(app.deliverState.ctx)
+
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
 	return

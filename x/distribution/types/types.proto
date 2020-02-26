@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos_sdk.x.ditribution.v1;
+package cosmos_sdk.x.distribution.v1;
 
 option go_package            = "types";
 option (gogoproto.equal_all) = true;

@@ -3,6 +3,8 @@ package staking_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
@@ -124,63 +126,65 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power3))
 }
 
-//
-//func TestDuplicatesMsgCreateValidator(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//
-//	addr1, addr2 := sdk.ValAddress(Addrs[0]), sdk.ValAddress(Addrs[1])
-//	pk1, pk2 := PKs[0], PKs[1]
-//
-//	valTokens := sdk.TokensFromConsensusPower(10)
-//	msgCreateValidator1 := NewTestMsgCreateValidator(addr1, pk1, valTokens)
-//	res, err := handler(ctx, msgCreateValidator1)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-//	validator, found := keeper.GetValidator(ctx, addr1)
-//	require.True(t, found)
-//	assert.Equal(t, sdk.Bonded, validator.Status)
-//	assert.Equal(t, addr1, validator.OperatorAddress)
-//	assert.Equal(t, pk1, validator.GetConsPubKey())
-//	assert.Equal(t, valTokens, validator.BondedTokens())
-//	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
-//	assert.Equal(t, Description{}, validator.Description)
-//
-//	// two validators can't have the same operator address
-//	msgCreateValidator2 := NewTestMsgCreateValidator(addr1, pk2, valTokens)
-//	res, err = handler(ctx, msgCreateValidator2)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	// two validators can't have the same pubkey
-//	msgCreateValidator3 := NewTestMsgCreateValidator(addr2, pk1, valTokens)
-//	res, err = handler(ctx, msgCreateValidator3)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	// must have different pubkey and operator
-//	msgCreateValidator4 := NewTestMsgCreateValidator(addr2, pk2, valTokens)
-//	res, err = handler(ctx, msgCreateValidator4)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// must end-block
-//	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//	require.Equal(t, 1, len(updates))
-//
-//	validator, found = keeper.GetValidator(ctx, addr2)
-//
-//	require.True(t, found)
-//	assert.Equal(t, sdk.Bonded, validator.Status)
-//	assert.Equal(t, addr2, validator.OperatorAddress)
-//	assert.Equal(t, pk2, validator.GetConsPubKey())
-//	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
-//	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
-//	assert.Equal(t, Description{}, validator.Description)
-//}
+func TestDuplicatesMsgCreateValidator(t *testing.T) {
+	initPower := int64(1000000)
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 10, 10000000000000)
+
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	addr1, addr2 := valAddrs[0], valAddrs[1]
+	pk1, pk2 := PKs[0], PKs[1]
+
+	valTokens := sdk.TokensFromConsensusPower(10)
+	msgCreateValidator1 := NewTestMsgCreateValidator(addr1, pk1, valTokens)
+	res, err := handler(ctx, msgCreateValidator1)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	validator, found := app.StakingKeeper.GetValidator(ctx, addr1)
+	require.True(t, found)
+	assert.Equal(t, sdk.Bonded, validator.Status)
+	assert.Equal(t, addr1, validator.OperatorAddress)
+	assert.Equal(t, pk1, validator.GetConsPubKey())
+	assert.Equal(t, valTokens, validator.BondedTokens())
+	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
+	assert.Equal(t, types.Description{}, validator.Description)
+
+	// two validators can't have the same operator address
+	msgCreateValidator2 := NewTestMsgCreateValidator(addr1, pk2, valTokens)
+	res, err = handler(ctx, msgCreateValidator2)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	// two validators can't have the same pubkey
+	msgCreateValidator3 := NewTestMsgCreateValidator(addr2, pk1, valTokens)
+	res, err = handler(ctx, msgCreateValidator3)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	// must have different pubkey and operator
+	msgCreateValidator4 := NewTestMsgCreateValidator(addr2, pk2, valTokens)
+	res, err = handler(ctx, msgCreateValidator4)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// must end-block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, addr2)
+
+	require.True(t, found)
+	assert.Equal(t, sdk.Bonded, validator.Status)
+	assert.Equal(t, addr2, validator.OperatorAddress)
+	assert.Equal(t, pk2, validator.GetConsPubKey())
+	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
+	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
+	assert.Equal(t, types.Description{}, validator.Description)
+}
+
 //
 //func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)

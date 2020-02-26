@@ -275,7 +275,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger).WithValue("deliverMode", true),
 	}
 }
 
@@ -357,8 +357,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
-
-	app.deliverState.ctx = app.deliverState.ctx.WithValue("deliverMode", true)
 
 	res = app.initChainer(app.deliverState.ctx, req)
 
@@ -861,9 +859,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
-	if mode != runTxModeDeliver {
-		ctx = ctx.WithValue("deliverMode", false)
-	}
 
 
 	// only run the tx if there is block gas remaining

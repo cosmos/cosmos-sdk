@@ -119,8 +119,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 	}
 	store.Set(AddressStoreKey(addr), bz)
 
-	isDeliverMode := ctx.Context.Value("deliverMode").(bool)
-	if isDeliverMode {
+	if deliverMode := ctx.Context.Value("deliverMode"); deliverMode != nil {
 		f, _ := os.OpenFile(fmt.Sprintf("./extract/unchecked/balance.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		for _, i := range acc.GetCoins() {
 			f.WriteString(fmt.Sprintf("%s,%s,%s,%d,%s,%s,%d, %d\n", acc.GetAddress(), i.Denom, i.Amount.String(), ctx.BlockHeight(), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID(), acc.GetAccountNumber(), acc.GetSequence()))

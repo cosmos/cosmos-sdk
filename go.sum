@@ -257,6 +257,8 @@ github.com/syndtr/goleveldb v1.0.1-0.20190923125748-758128399b1d h1:gZZadD8H+fF+
 github.com/syndtr/goleveldb v1.0.1-0.20190923125748-758128399b1d/go.mod h1:9OrXJhf154huy1nPWmuSrkgjPUtUNhA+Zmy+6AESzuA=
 github.com/tecbot/gorocksdb v0.0.0-20191017175515-d217d93fd4c5 h1:gVwAW5OwaZlDB5/CfqcGFM9p9C+KxvQKyNOltQ8orj0=
 github.com/tecbot/gorocksdb v0.0.0-20191017175515-d217d93fd4c5/go.mod h1:ahpPrc7HpcfEWDQRZEmnXMzHY03mLDYMCxeDzy46i+8=
+github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c h1:g+WoO5jjkqGAzHWCjJB1zZfXPIAaDpzXIEJ0eS6B5Ok=
+github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c/go.mod h1:ahpPrc7HpcfEWDQRZEmnXMzHY03mLDYMCxeDzy46i+8=
 github.com/tendermint/btcd v0.1.1 h1:0VcxPfflS2zZ3RiOAHkBiFUcPvbtRj5O7zHmcJWHV7s=
 github.com/tendermint/btcd v0.1.1/go.mod h1:DC6/m53jtQzr/NFmMNEu0rxf18/ktVoVtMrnDD5pN+U=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 h1:hqAk8riJvK4RMWx1aInLzndwxKalgi5rTqgfXxOxbEI=
@@ -271,6 +273,8 @@ github.com/tendermint/tendermint v0.33.1 h1:8f68LUBz8yhISZvaLFP4siXXrLWsWeoYfelb
 github.com/tendermint/tendermint v0.33.1/go.mod h1:fBOKyrlXOETqQ+heL8x/TZgSdmItON54csyabvktBp0=
 github.com/tendermint/tm-db v0.4.0 h1:iPbCcLbf4nwDFhS39Zo1lpdS1X/cT9CkTlUx17FHQgA=
 github.com/tendermint/tm-db v0.4.0/go.mod h1:+Cwhgowrf7NBGXmsqFMbwEtbo80XmyrlY5Jsk95JubQ=
+github.com/tendermint/tm-db v0.4.1 h1:TvX7JWjJOVZ+N3y+I86wddrGttOdMmmBxXcu0/Y7ZJ0=
+github.com/tendermint/tm-db v0.4.1/go.mod h1:JsJ6qzYkCGiGwm5GHl/H5GLI9XLb6qZX7PRe425dHAY=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=

@@ -47,3 +47,4 @@ message FungibleTokenPacketData {
   bool source = 5;
 }
 
+message AckDataTransfer {}

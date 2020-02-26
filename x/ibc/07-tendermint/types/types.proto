@@ -8,6 +8,49 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "github.com/tendermint/tendermint/types/proto3";
 import "x/ibc/23-commitment/types.proto";
+import "types/types.proto";
+
+
+message MsgCreateClient {
+  string client_id = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"client_id\""
+  ];
+  Header header = 2;
+  google.protobuf.Duration trusting_period = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"trusting_period\""
+  ];
+  google.protobuf.Duration unbonding_period = 4 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"unbonding_period\""
+  ];
+  bytes signer = 5 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+  ];
+}
+
+message MsgUpdateClient {
+  string client_id = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"client_id\""
+  ];
+  Header header = 2;
+	bytes signer = 3 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+  ];
+}
+
+message MsgSubmitClientMisbehaviour {	
+  Evidence evidence = 1 [
+    (gogoproto.nullable)    = false,
+  ];
+	bytes submitter = 2 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+  ];
+}
 
 message ClientState {
   string id = 1;

@@ -549,7 +549,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 		Path: "/custom/staking/unbondingDelegation",
 		Data: bz,
 	}
-	res, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
+	_, err = querier(ctx, []string{types.QueryUnbondingDelegation}, query)
 	require.Error(t, err)
 
 	//

@@ -250,7 +250,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	res, err = querier(ctx, []string{types.QueryDelegatorValidators}, query)
+	_, err = querier(ctx, []string{types.QueryDelegatorValidators}, query)
 	require.Error(t, err)
 
 	// Query bonded validator
@@ -275,7 +275,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	res, err = querier(ctx, []string{types.QueryDelegatorValidator}, query)
+	_, err = querier(ctx, []string{types.QueryDelegatorValidator}, query)
 	require.Error(t, err)
 
 	// Query delegation
@@ -319,7 +319,7 @@ func TestQueryDelegation(t *testing.T) {
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	res, err = querier(ctx, []string{types.QueryDelegation}, query)
+	_, err = querier(ctx, []string{types.QueryDelegation}, query)
 	require.Error(t, err)
 
 	// Query validator delegations

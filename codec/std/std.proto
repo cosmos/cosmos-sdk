@@ -1,9 +1,10 @@
 syntax = "proto3";
 package cosmos_sdk.x.v1;
 
-import "gov/types/types.proto";
-import "params/types/proposal/types.proto";
-import "upgrade/types/types.proto";
+import "x/gov/types/types.proto";
+import "x/params/types/proposal/types.proto";
+import "x/upgrade/types/types.proto";
+import "x/distribution/types/types.proto";
 
 message StdProposal {
     oneof sum {
@@ -11,5 +12,6 @@ message StdProposal {
         cosmos_sdk.x.params.v1.ParameterChangeProposal parameter_change = 2;
         cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal software_upgrade = 3;
         cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal cancel_software_upgrade = 4;
+        cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend = 5;
     }
 }

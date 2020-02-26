@@ -37,7 +37,7 @@ message MsgChannelOpenTry {
   string counterparty_version = 4 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof_init = 5 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_init = 5 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 6;
@@ -56,7 +56,7 @@ message MsgChannelOpenAck {
   string counterparty_version = 3 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof_try = 4 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_try = 4 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 5;
@@ -72,7 +72,7 @@ message MsgChannelOpenConfirm {
 	string channel_id = 2 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof_ack = 3 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_ack = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;
@@ -100,7 +100,7 @@ message MsgChannelCloseConfirm {
 	string channel_id = 2 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof_init = 3 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_init = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;
@@ -113,7 +113,7 @@ message MsgPacket {
   Packet packet = 1 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof = 2 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof = 2 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 3;
@@ -126,7 +126,7 @@ message MsgTimeout {
   Packet packet = 1 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof = 2 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof = 2 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 3;
@@ -143,7 +143,7 @@ message MsgAcknowledgement {
   PacketAck acknowledgement = 2 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.Proof proof = 3 [
+  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;

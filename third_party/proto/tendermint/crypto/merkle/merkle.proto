@@ -29,3 +29,11 @@ message ProofOp {
 message Proof {
   repeated ProofOp ops = 1 [(gogoproto.nullable) = false];
 }
+
+
+message Key {
+  bytes name = 1;
+  byte enc = 2 [
+    (gogoproto.castrepeated) = "github.com/tendermint/tendermint/crypto/merkle.keyEncoding"
+  ];
+}

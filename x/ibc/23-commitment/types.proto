@@ -1,0 +1,52 @@
+syntax = "proto3";
+package cosmos_sdk.x.ibc.23commitment.v1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
+import "types/types.proto";
+
+
+message RootI {
+  oneof value {
+    Root merkle = 1;
+  }
+}
+
+message PrefixI {
+  oneof value {
+    Prefix merkle = 1;
+  }
+}
+
+message PathI {
+  oneof value {
+    Path merkle = 1;
+  }
+}
+
+message ProofI {
+  oneof value {
+    Proof merkle = 1;
+  }
+}
+
+message Root {
+	bytes hash = 1;
+}
+
+message Prefix {
+	bytes key_prefix = 1;
+}
+
+message Path {
+	repeated tendermint.crypto.merkle.Key key_path = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/tendermint/tendermint/crypto/merkle.KeyPath"
+  ];
+}
+
+message Proof {
+  tendermint.crypto.merkle.Proof proof = 1
+}

@@ -1,0 +1,44 @@
+syntax = "proto3";
+package cosmos_sdk.x.ibc.02client.v1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
+option (gogoproto.equal_all) = true;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "x/ibc/07-tendermint/types/types.proto";
+
+message ClientState {
+  oneof value {
+    cosmos_sdk.x.ibc.07tendermint.v1.ClientState tendermint = 1;
+  }
+}
+
+message ConsensusState {
+  oneof value {
+    cosmos_sdk.x.ibc.07tendermint.v1.ConsensusState tendermint = 1;
+  }
+}
+
+message Misbehaviour {
+  oneof value {
+    cosmos_sdk.x.ibc.07tendermint.v1.Evidence tendermint = 1;
+  }
+}
+
+message Header {
+  oneof value {
+    cosmos_sdk.x.ibc.07tendermint.v1.Header tendermint = 1;
+  }
+}
+
+message MsgCreateClient {
+  oneof value {
+    cosmos_sdk.x.ibc.07tendermint.v1.MsgCreateClient tendermint = 1;
+  }
+}
+
+message MsgUpdateClient {
+  oneof value {
+    cosmos_sdk.x.ibc.07tendermint.v1.MsgUpdateClient tendermint = 1;
+  }
+}

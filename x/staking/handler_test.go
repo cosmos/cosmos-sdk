@@ -215,13 +215,13 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {
-	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 100000000)
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 100000000)
 	handler := staking.NewHandler(app.StakingKeeper)
 
 	bondAmount := sdk.TokensFromConsensusPower(10)
 	valAddr := valAddrs[0]
 	valConsPubKey, valConsAddr := PKs[0], sdk.ConsAddress(PKs[0].Address())
-	delAddr := delAddrs[0]
+	delAddr := delAddrs[1]
 
 	// create validator
 	msgCreateVal := NewTestMsgCreateValidator(valAddr, valConsPubKey, bondAmount)

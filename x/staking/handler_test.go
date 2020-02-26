@@ -3,6 +3,10 @@ package staking_test
 import (
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/stretchr/testify/assert"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -185,28 +189,31 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, types.Description{}, validator.Description)
 }
 
-//
-//func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//
-//	addr := sdk.ValAddress(Addrs[0])
-//	invalidPk := secp256k1.GenPrivKey().PubKey()
-//
-//	// invalid pukKey type should not be allowed
-//	msgCreateValidator := NewTestMsgCreateValidator(addr, invalidPk, sdk.NewInt(10))
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.Error(t, err)
-//	require.Nil(t, res)
-//
-//	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
-//		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeSecp256k1}},
-//	})
-//
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//}
+func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000)
+	handler := staking.NewHandler(app.StakingKeeper)
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}},
+	})
+
+	addr := valAddrs[0]
+	invalidPk := secp256k1.GenPrivKey().PubKey()
+
+	// invalid pukKey type should not be allowed
+	msgCreateValidator := NewTestMsgCreateValidator(addr, invalidPk, sdk.NewInt(10))
+	res, err := handler(ctx, msgCreateValidator)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeSecp256k1}},
+	})
+
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
 //
 //func TestLegacyValidatorDelegations(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, int64(1000))

@@ -97,14 +97,22 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 }
 
 func (k Keeper) ExportDelegationsForAccount(ctx sdk.Context, account sdk.AccAddress) {
-	delegations := k.GetDelegatorDelegations(ctx, account, math.MaxUint16)
-	if deliverMode := ctx.Context.Value("deliverMode"); deliverMode != nil {
-		f, _ := os.OpenFile(fmt.Sprintf("./extract/unchecked/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		for _, delegation := range delegations {
-			f.WriteString(fmt.Sprintf("%s,%s,%d,%d,%s,%s\n", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(ctx.BlockHeight()), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID()))
-		}
-		defer f.Close()
+	// No need to export if we are in checktx
+	if deliverMode := ctx.Context.Value("deliverMode"); deliverMode == nil {
+		return
 	}
+	cacheCtx, _ := ctx.CacheContext()
+	infiniteGasCtx := cacheCtx.WithGasMeter(sdk.NewInfiniteGasMeter()).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	delegations := k.GetDelegatorDelegations(infiniteGasCtx, account, math.MaxUint16)
+	f, _ := os.OpenFile(fmt.Sprintf("./extract/unchecked/delegations.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	for _, delegation := range delegations {
+		validator, ok := k.GetValidator(infiniteGasCtx, delegation.GetValidatorAddr())
+		if !ok {
+			panic("Unable to retrieve validator.")
+		}
+		f.WriteString(fmt.Sprintf("%s,%s,%d,%d,%s,%s\n", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), validator.TokensFromShares(delegation.GetShares()), uint64(ctx.BlockHeight()), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID()))
+	}
+	defer f.Close()
 }
 
 // return a given amount of all the delegator unbonding-delegations
@@ -190,14 +198,7 @@ func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDeleg
 	key := GetUBDKey(ubd.DelegatorAddress, ubd.ValidatorAddress)
 	store.Set(key, bz)
 	store.Set(GetUBDByValIndexKey(ubd.DelegatorAddress, ubd.ValidatorAddress), []byte{}) // index, store empty bytes
-
-	if deliverMode := ctx.Context.Value("deliverMode"); deliverMode != nil {
-		f, _ := os.OpenFile(fmt.Sprintf("./extract/unchecked/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		for _, entry := range ubd.Entries {
-			f.WriteString(fmt.Sprintf("%s,%s,%d,%d,%s,%s,%s\n", ubd.DelegatorAddress, ubd.ValidatorAddress, entry.Balance.Int64(), uint64(ctx.BlockHeight()), entry.CompletionTime.Format("2006-01-02 15:04:05"), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID()))
-		}
-		defer f.Close()
-	}
+	k.ExportUnbondingsForAccount(ctx, ubd.DelegatorAddress)
 }
 
 // remove the unbonding delegation object and associated index
@@ -206,6 +207,24 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 	key := GetUBDKey(ubd.DelegatorAddress, ubd.ValidatorAddress)
 	store.Delete(key)
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddress, ubd.ValidatorAddress))
+	k.ExportUnbondingsForAccount(ctx, ubd.DelegatorAddress)
+}
+
+func (k Keeper) ExportUnbondingsForAccount(ctx sdk.Context, account sdk.AccAddress) {
+	// No need to export if we are in checktx
+	if deliverMode := ctx.Context.Value("deliverMode"); deliverMode == nil {
+		return
+	}
+	infiniteGasCtx, _ := ctx.CacheContext()
+	infiniteGasCtx = infiniteGasCtx.WithGasMeter(sdk.NewInfiniteGasMeter()).WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	unbondings := k.GetUnbondingDelegations(infiniteGasCtx, account, math.MaxUint16)
+	f, _ := os.OpenFile(fmt.Sprintf("./extract/unchecked/unbond.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	for _, ubd := range unbondings {
+		for _, entry := range ubd.Entries {
+			f.WriteString(fmt.Sprintf("%s,%s,%d,%d,%s,%s,%s\n", ubd.DelegatorAddress, ubd.ValidatorAddress, entry.Balance.Int64(), uint64(ctx.BlockHeight()), entry.CompletionTime.Format("2006-01-02 15:04:05"), ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"), ctx.ChainID()))
+		}
+	}
+	defer f.Close()
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at

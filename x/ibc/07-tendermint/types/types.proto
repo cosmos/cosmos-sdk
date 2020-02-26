@@ -1,12 +1,12 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.07tendermint.v1;
+package cosmos_sdk.x.ibc.tendermint.v1;
 
 option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/abci/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "github.com/tendermint/tendermint/types/proto3";
 import "x/ibc/23-commitment/types.proto";
 import "types/types.proto";
 
@@ -28,7 +28,7 @@ message MsgCreateClient {
     (gogoproto.moretags)    = "yaml:\"unbonding_period\""
   ];
   bytes signer = 5 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
@@ -39,16 +39,16 @@ message MsgUpdateClient {
   ];
   Header header = 2;
 	bytes signer = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
 message MsgSubmitClientMisbehaviour {	
   Evidence evidence = 1 [
-    (gogoproto.nullable)    = false,
+    (gogoproto.nullable)    = false
   ];
 	bytes submitter = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
@@ -64,10 +64,10 @@ message ClientState {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags)    = "yaml:\"unbonding_period\""
   ];
-  uint64 frozen_height = 3 [
+  uint64 frozen_height = 4 [
     (gogoproto.moretags)     = "yaml:\"frozen_height\""
   ];
-  Header last_header = 4 [
+  Header last_header = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"last_header\""
   ];
@@ -78,8 +78,8 @@ message ConsensusState {
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];             
-  cosmos_sdk.x.ibc.23commitment.v1.Root root = 2 [
-    (gogoproto.nullable) = false,
+  cosmos_sdk.x.ibc.commitment.v1.Root root = 2 [
+    (gogoproto.nullable) = false
   ];
   uint64 height = 3;
 	ValidatorSet validator_set = 4 [

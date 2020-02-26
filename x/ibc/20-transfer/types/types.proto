@@ -1,7 +1,7 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.20transfer.v1;
+package cosmos_sdk.x.ibc.transfer.v1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
@@ -24,10 +24,10 @@ message MsgTransfer {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   bytes sender = 5 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   bytes receiver = 6 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   bool source = 7;
 }
@@ -38,10 +38,10 @@ message FungibleTokenPacketData {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   bytes sender = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   bytes receiver = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   uint64 timeout = 4;
   bool source = 5;

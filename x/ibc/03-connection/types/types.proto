@@ -1,8 +1,7 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.03connection.v1;
+package cosmos_sdk.x.ibc.connection.v1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
-option (gogoproto.equal_all) = true;
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types.proto";
@@ -11,7 +10,7 @@ import "types/types.proto";
 
 message MsgConnectionOpenInit {
   string client_id = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable) = false
   ];
   string connection_id = 2 [
     (gogoproto.nullable)    = false
@@ -26,7 +25,7 @@ message MsgConnectionOpenInit {
 
 message MsgConnectionOpenTry {
   string client_id = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable) = false
   ];
   string connection_id = 2 [
     (gogoproto.nullable)    = false
@@ -37,11 +36,11 @@ message MsgConnectionOpenTry {
   repeated string counterparty_versions = 4 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_init = 5 [
+  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_init = 5 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 6;
-  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_consensus = 7 [
+  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_consensus = 7 [
     (gogoproto.nullable)    = false
   ];
   uint64 consensus_height = 8;
@@ -55,11 +54,11 @@ message MsgConnectionOpenAck {
     (gogoproto.nullable)    = false
   ];
   string version = 2;
-  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_try = 3 [
+  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_try = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;
-  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_consensus = 5 [
+  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_consensus = 5 [
     (gogoproto.nullable)    = false
   ];
   uint64 consensus_height = 6;
@@ -72,7 +71,7 @@ message MsgConnectionOpenConfirm {
   string connection_id = 1 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.ProofI proof_ack = 2 [
+  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_ack = 2 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 3;
@@ -89,9 +88,9 @@ message ConnectionEnd {
   repeated string versions = 2 [
     (gogoproto.nullable) = false
   ];
-  byte state = 3 [
+  bytes state = 3 [
     (gogoproto.nullable)    = false,
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State",
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State"
   ];
   Counterparty counterparty = 4 [
     (gogoproto.nullable) = false
@@ -107,7 +106,7 @@ message Counterparty {
     (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"connection_id\""
   ];
-  cosmos_sdk.x.ibc.23commitment.v1.PrefixI prefix = 3 [
+  cosmos_sdk.x.ibc.commitment.v1.PrefixI prefix = 3 [
     (gogoproto.nullable) = false
   ];
 }

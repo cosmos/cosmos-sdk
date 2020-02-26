@@ -33,7 +33,7 @@ message Proof {
 
 message Key {
   bytes name = 1;
-  byte enc = 2 [
+  bytes enc = 2 [
     (gogoproto.castrepeated) = "github.com/tendermint/tendermint/crypto/merkle.keyEncoding"
   ];
 }

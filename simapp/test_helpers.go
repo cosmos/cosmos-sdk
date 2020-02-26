@@ -3,6 +3,7 @@ package simapp
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -106,7 +107,9 @@ func incremental(accNum int) []sdk.AccAddress {
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
 		res, _ := sdk.AccAddressFromHex(buffer.String())
 		bech := res.String()
-		addresses = append(addresses, TestAddr(buffer.String(), bech))
+		addr, _ := TestAddr(buffer.String(), bech)
+
+		addresses = append(addresses, addr)
 		buffer.Reset()
 	}
 
@@ -146,33 +149,36 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 	return testAddrs
 }
 
-func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) (valAddrs []sdk.ValAddress) {
+//ConvertAddrsToValAddrs converts the provided addresses to
+func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
+	var valAddrs []sdk.ValAddress
+
 	for _, addr := range addrs {
 		valAddrs = append(valAddrs, sdk.ValAddress(addr))
 	}
 
-	return
+	return valAddrs
 }
 
-func TestAddr(addr string, bech string) sdk.AccAddress {
+func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	bechexpected := res.String()
 	if bech != bechexpected {
-		panic("Bech encoding doesn't match reference")
+		return nil, fmt.Errorf("bech encoding doesn't match reference")
 	}
 
 	bechres, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if !bytes.Equal(bechres, res) {
-		panic("Bech decode and hex decode don't match")
+		return nil, err
 	}
 
-	return res
+	return res, nil
 }
 
 // CheckBalance checks the balance of an account.
@@ -268,14 +274,14 @@ func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
 		numString := strconv.Itoa(i)
 		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
 		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
-		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
+		publicKeys = append(publicKeys, NewPubKeyFromHex(buffer.String()))
 		buffer.Reset()
 	}
 
 	return publicKeys
 }
 
-func NewPubKey(pk string) (res crypto.PubKey) {
+func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	pkBytes, err := hex.DecodeString(pk)
 	if err != nil {
 		panic(err)

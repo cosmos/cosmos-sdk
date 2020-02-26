@@ -1,94 +1,129 @@
 package staking_test
 
-//func TestValidatorByPowerIndex(t *testing.T) {
-//	validatorAddr, validatorAddr3 := sdk.ValAddress(Addrs[0]), sdk.ValAddress(Addrs[1])
-//
-//	initPower := int64(1000000)
-//	initBond := sdk.TokensFromConsensusPower(initPower)
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, initPower)
-//	handler := NewHandler(keeper)
-//
-//	// create validator
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], initBond)
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// must end-block
-//	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//	require.Equal(t, 1, len(updates))
-//
-//	// verify the self-delegation exists
-//	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-//	require.True(t, found)
-//	gotBond := bond.Shares.RoundInt()
-//	require.Equal(t, initBond, gotBond)
-//
-//	// verify that the by power index exists
-//	validator, found := keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	power := GetValidatorsByPowerIndexKey(validator)
-//	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
-//
-//	// create a second validator keep it bonded
-//	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, PKs[2], initBond)
-//	res, err = handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// must end-block
-//	updates = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//	require.Equal(t, 1, len(updates))
-//
-//	// slash and jail the first validator
-//	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-//	keeper.Slash(ctx, consAddr0, 0, initPower, sdk.NewDecWithPrec(5, 1))
-//	keeper.Jail(ctx, consAddr0)
-//	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-//
-//	validator, found = keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	require.Equal(t, sdk.Unbonding, validator.Status)      // ensure is unbonding
-//	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
-//	keeper.Unjail(ctx, consAddr0)
-//
-//	// the old power record should have been deleted as the power changed
-//	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
-//
-//	// but the new power record should have been created
-//	validator, found = keeper.GetValidator(ctx, validatorAddr)
-//	require.True(t, found)
-//	power2 := GetValidatorsByPowerIndexKey(validator)
-//	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power2))
-//
-//	// now the new record power index should be the same as the original record
-//	power3 := GetValidatorsByPowerIndexKey(validator)
-//	require.Equal(t, power2, power3)
-//
-//	// unbond self-delegation
-//	totalBond := validator.TokensFromShares(bond.GetShares()).TruncateInt()
-//	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, totalBond)
-//	msgUndelegate := NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
-//
-//	res, err = handler(ctx, msgUndelegate)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	ts := &gogotypes.Timestamp{}
-//	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-//
-//	finishTime, err := gogotypes.TimestampFromProto(ts)
-//	require.NoError(t, err)
-//
-//	ctx = ctx.WithBlockTime(finishTime)
-//	EndBlocker(ctx, keeper)
-//	EndBlocker(ctx, keeper)
-//
-//	// verify that by power key nolonger exists
-//	_, found = keeper.GetValidator(ctx, validatorAddr)
-//	require.False(t, found)
-//	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power3))
-//}
+import (
+	"testing"
+
+	gogotypes "github.com/gogo/protobuf/types"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
+)
+
+func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
+
+	addrDels, addrVals := generateAddresses(app, ctx, numAddrs, accAmount)
+
+	amt := sdk.TokensFromConsensusPower(power)
+	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
+
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+
+	return app, ctx, addrDels, addrVals
+}
+
+func TestValidatorByPowerIndex(t *testing.T) {
+	initPower := int64(1000000)
+	initBond := sdk.TokensFromConsensusPower(initPower)
+
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 10, 10000000000000)
+
+	validatorAddr, validatorAddr3 := valAddrs[0], valAddrs[1]
+
+	handler := staking.NewHandler(app.StakingKeeper)
+
+	// create validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], initBond)
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// must end-block
+	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// verify the self-delegation exists
+	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found)
+	gotBond := bond.Shares.RoundInt()
+	require.Equal(t, initBond, gotBond)
+
+	// verify that the by power index exists
+	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	power := staking.GetValidatorsByPowerIndexKey(validator)
+	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
+
+	// create a second validator keep it bonded
+	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, PKs[2], initBond)
+	res, err = handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// must end-block
+	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// slash and jail the first validator
+	consAddr0 := sdk.ConsAddress(PKs[0].Address())
+	app.StakingKeeper.Slash(ctx, consAddr0, 0, initPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Jail(ctx, consAddr0)
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.Equal(t, sdk.Unbonding, validator.Status)      // ensure is unbonding
+	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
+	app.StakingKeeper.Unjail(ctx, consAddr0)
+
+	// the old power record should have been deleted as the power changed
+	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
+
+	// but the new power record should have been created
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	power2 := staking.GetValidatorsByPowerIndexKey(validator)
+	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power2))
+
+	// now the new record power index should be the same as the original record
+	power3 := staking.GetValidatorsByPowerIndexKey(validator)
+	require.Equal(t, power2, power3)
+
+	// unbond self-delegation
+	totalBond := validator.TokensFromShares(bond.GetShares()).TruncateInt()
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, totalBond)
+	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+
+	res, err = handler(ctx, msgUndelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	ts := &gogotypes.Timestamp{}
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+	finishTime, err := gogotypes.TimestampFromProto(ts)
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(finishTime)
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// verify that by power key nolonger exists
+	_, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
+	require.False(t, found)
+	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power3))
+}
+
 //
 //func TestDuplicatesMsgCreateValidator(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)

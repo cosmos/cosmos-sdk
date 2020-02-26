@@ -649,54 +649,54 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	}
 }
 
-//func TestMultipleMsgDelegate(t *testing.T) {
-//	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
-//	handler := NewHandler(keeper)
-//	validatorAddr, delegatorAddrs := sdk.ValAddress(Addrs[0]), Addrs[1:]
-//
-//	// first make a validator
-//	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], sdk.NewInt(10))
-//	res, err := handler(ctx, msgCreateValidator)
-//	require.NoError(t, err)
-//	require.NotNil(t, res)
-//
-//	// delegate multiple parties
-//	for _, delegatorAddr := range delegatorAddrs {
-//		msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, sdk.NewInt(10))
-//		res, err := handler(ctx, msgDelegate)
-//		require.NoError(t, err)
-//		require.NotNil(t, res)
-//
-//		// check that the account is bonded
-//		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
-//		require.True(t, found)
-//		require.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
-//	}
-//
-//	// unbond them all
-//	for _, delegatorAddr := range delegatorAddrs {
-//		unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
-//		msgUndelegate := NewMsgUndelegate(delegatorAddr, validatorAddr, unbondAmt)
-//
-//		res, err := handler(ctx, msgUndelegate)
-//		require.NoError(t, err)
-//		require.NotNil(t, res)
-//
-//		ts := &gogotypes.Timestamp{}
-//		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-//
-//		finishTime, err := gogotypes.TimestampFromProto(ts)
-//		require.NoError(t, err)
-//
-//		ctx = ctx.WithBlockTime(finishTime)
-//		EndBlocker(ctx, keeper)
-//
-//		// check that the account is unbonded
-//		_, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
-//		require.False(t, found)
-//	}
-//}
-//
+func TestMultipleMsgDelegate(t *testing.T) {
+	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 50, 1000000000)
+	handler := staking.NewHandler(app.StakingKeeper)
+	validatorAddr, delegatorAddrs := valAddrs[0], delAddrs[1:]
+
+	// first make a validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, PKs[0], sdk.NewInt(10))
+	res, err := handler(ctx, msgCreateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// delegate multiple parties
+	for _, delegatorAddr := range delegatorAddrs {
+		msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, sdk.NewInt(10))
+		res, err := handler(ctx, msgDelegate)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+
+		// check that the account is bonded
+		bond, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
+		require.True(t, found)
+		require.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
+	}
+
+	// unbond them all
+	for _, delegatorAddr := range delegatorAddrs {
+		unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
+		msgUndelegate := types.NewMsgUndelegate(delegatorAddr, validatorAddr, unbondAmt)
+
+		res, err := handler(ctx, msgUndelegate)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+
+		ts := &gogotypes.Timestamp{}
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+
+		finishTime, err := gogotypes.TimestampFromProto(ts)
+		require.NoError(t, err)
+
+		ctx = ctx.WithBlockTime(finishTime)
+		staking.EndBlocker(ctx, app.StakingKeeper)
+
+		// check that the account is unbonded
+		_, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
+		require.False(t, found)
+	}
+}
+
 //func TestJailValidator(t *testing.T) {
 //	ctx, _, _, keeper, _ := CreateTestInput(t, false, 1000)
 //	handler := NewHandler(keeper)

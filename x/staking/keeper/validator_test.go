@@ -18,7 +18,7 @@ import (
 )
 
 func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
-	_, app, ctx := getBaseSimappWithCustomKeeper()
+	_, app, ctx := createTestInput()
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
 

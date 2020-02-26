@@ -15,7 +15,7 @@ import (
 )
 
 func TestHistoricalInfo(t *testing.T) {
-	_, app, ctx := getBaseSimappWithCustomKeeper()
+	_, app, ctx := createTestInput()
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -43,7 +43,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	_, app, ctx := getBaseSimappWithCustomKeeper()
+	_, app, ctx := createTestInput()
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)

@@ -83,6 +83,8 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
+	cmd.Flags().Int64(flagPruningKeepEvery, 0, "Define the state number that will be kept")
+	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for pruning")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
@@ -101,7 +103,7 @@ which accepts a path for the resulting pprof file.
 // checkPruningParams checks that the provided pruning params are correct
 func checkPruningParams() error {
 	if !viper.IsSet(flagPruning) && !viper.IsSet(flagPruningKeepEvery) && !viper.IsSet(flagPruningSnapshotEvery) {
-		return errPruningOptionsRequired
+		return nil // Use default
 	}
 
 	if viper.IsSet(flagPruning) {

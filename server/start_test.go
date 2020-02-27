@@ -17,10 +17,10 @@ func TestPruningOptions(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "none set",
+			name:        "none set, returns nil and will use default from flags",
 			paramInit:   func() {},
-			returnsErr:  true,
-			expectedErr: errPruningOptionsRequired,
+			returnsErr:  false,
+			expectedErr: nil,
 		},
 		{
 			name: "only keep-every provided",

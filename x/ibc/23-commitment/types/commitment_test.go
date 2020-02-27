@@ -1,4 +1,4 @@
-package commitment_test
+package types_test
 
 import (
 	"testing"

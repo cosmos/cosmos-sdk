@@ -2,12 +2,14 @@ package commitment
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // CalculateRoot returns the application Hash at the curretn block height as a commitment
 // root for proof verification.
-func CalculateRoot(ctx sdk.Context) RootI {
-	return NewRoot(ctx.BlockHeader().AppHash)
+func CalculateRoot(ctx sdk.Context) exported.Root {
+	return types.NewMerkleRoot(ctx.BlockHeader().AppHash)
 }
 
 // BatchVerifyMembership verifies a proof that many paths have been set to
@@ -16,14 +18,14 @@ func CalculateRoot(ctx sdk.Context) RootI {
 // Returns false on the first failed membership verification.
 func BatchVerifyMembership(
 	ctx sdk.Context,
-	proof ProofI,
-	prefix PrefixI,
+	proof exported.Proof,
+	prefix exported.Prefix,
 	items map[string][]byte,
 ) error {
 	root := CalculateRoot(ctx)
 
 	for pathStr, value := range items {
-		path, err := ApplyPrefix(prefix, pathStr)
+		path, err := types.ApplyPrefix(prefix, pathStr)
 		if err != nil {
 			return err
 		}
@@ -42,13 +44,13 @@ func BatchVerifyMembership(
 // Returns false on the first failed non-membership verification.
 func BatchVerifyNonMembership(
 	ctx sdk.Context,
-	proof ProofI,
-	prefix PrefixI,
+	proof exported.Proof,
+	prefix exported.Prefix,
 	paths []string,
 ) error {
 	root := CalculateRoot(ctx)
 	for _, pathStr := range paths {
-		path, err := ApplyPrefix(prefix, pathStr)
+		path, err := types.ApplyPrefix(prefix, pathStr)
 		if err != nil {
 			return err
 		}

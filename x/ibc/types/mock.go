@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"errors"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -10,12 +11,16 @@ import (
 // TODO: fix tests and replace for real proofs
 
 var (
-	_ commitment.ProofI = ValidProof{}
+	_ commitment.ProofI = ValidProof{nil, nil, nil}
 	_ commitment.ProofI = InvalidProof{}
 )
 
 type (
-	ValidProof   struct{}
+	ValidProof struct {
+		root  commitment.RootI
+		path  commitment.PathI
+		value []byte
+	}
 	InvalidProof struct{}
 )
 
@@ -23,9 +28,15 @@ func (ValidProof) GetCommitmentType() commitment.Type {
 	return commitment.Merkle
 }
 
-func (ValidProof) VerifyMembership(
+func (proof ValidProof) VerifyMembership(
 	root commitment.RootI, path commitment.PathI, value []byte) error {
-	return nil
+	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
+		(path.String() == proof.path.String()) &&
+		bytes.Equal(value, proof.value) {
+		return nil
+	} else {
+		return errors.New("invalid proof")
+	}
 }
 
 func (ValidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {

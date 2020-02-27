@@ -25,6 +25,7 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		cdc *codec.Codec,
 		height uint64,
+		consensusHeight uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
 		consensusState ConsensusState,

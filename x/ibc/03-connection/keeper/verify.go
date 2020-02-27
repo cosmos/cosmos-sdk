@@ -16,6 +16,7 @@ func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
+	consensusHeight uint64,
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
 ) error {
@@ -26,7 +27,7 @@ func (k Keeper) VerifyClientConsensusState(
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, consensusState,
+		k.cdc, height, consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 }
 

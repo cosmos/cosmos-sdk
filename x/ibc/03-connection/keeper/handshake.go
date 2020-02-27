@@ -88,7 +88,7 @@ func (k Keeper) ConnOpenTry(
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(
-		ctx, connection, consensusHeight, proofConsensus, expectedConsensusState,
+		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (k Keeper) ConnOpenAck(
 
 	// Ensure that ChainB has stored the correct ConsensusState for chainA at the consensusHeight
 	if err := k.VerifyClientConsensusState(
-		ctx, connection, consensusHeight, proofConsensus, expectedConsensusState,
+		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
 		return err
 	}

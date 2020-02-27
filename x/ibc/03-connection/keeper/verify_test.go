@@ -55,11 +55,12 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			proofHeight := uint64(suite.chainB.Header.Height)
 
 			// TODO: is this the right consensus height
-			consensusKey := ibctypes.KeyConsensusState(testClientIDA, uint64(suite.chainA.App.LastBlockHeight()))
+			consensusHeight := uint64(suite.chainA.App.LastBlockHeight())
+			consensusKey := ibctypes.KeyConsensusState(testClientIDA, consensusHeight)
 			proof, proofHeight := suite.queryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-				suite.chainA.GetContext(), tc.connection, proofHeight, proof, suite.chainB.Header.ConsensusState(),
+				suite.chainA.GetContext(), tc.connection, proofHeight, consensusHeight, proof, suite.chainB.Header.ConsensusState(),
 			)
 
 			if tc.expPass {

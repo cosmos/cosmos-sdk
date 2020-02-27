@@ -106,11 +106,12 @@ func (cs ClientState) IsFrozen() bool {
 func (cs ClientState) VerifyClientConsensusState(
 	cdc *codec.Codec,
 	height uint64,
+	consensusHeight uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), height))
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), consensusHeight))
 	if err != nil {
 		return err
 	}

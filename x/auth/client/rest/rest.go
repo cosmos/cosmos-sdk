@@ -6,11 +6,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
+// REST query and parameter values
+const (
+	MethodGet = "GET"
+)
+
 // RegisterRoutes registers the auth module REST routes.
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}", QueryAccountRequestHandlerFn(storeName, cliCtx),
-	).Methods("GET")
+	).Methods(MethodGet)
+
+	r.HandleFunc(
+		"/auth/params",
+		queryParamsHandler(cliCtx),
+	).Methods(MethodGet)
 }
 
 // RegisterTxRoutes registers all transaction routes on the provided router.

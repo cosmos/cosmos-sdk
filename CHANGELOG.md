@@ -41,8 +41,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account
 balances or a single balance by denom when the `denom` query parameter is present.
-* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by
-´/´.
+* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
+* (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
 
 ### API Breaking Changes
 
@@ -115,9 +115,25 @@ serialization instead of Amino.
   requiring a concrete codec to know how to serialize `SupplyI` types.
   * The `SupplyI` interface has been modified to no longer return `SupplyI` on methods. Instead the
   concrete type's receiver should modify the type.
+* (x/mint) [\#5634](https://github.com/cosmos/cosmos-sdk/pull/5634) Migrate the `x/mint` module to use Protocol Buffers for state
+serialization instead of Amino.
+  * The `internal` sub-package has been removed in order to expose the types proto file.
+* (x/evidence) [\#5634](https://github.com/cosmos/cosmos-sdk/pull/5634) Migrate the `x/evidence` module to use Protocol Buffers for state
+serialization instead of Amino.
+  * The `internal` sub-package has been removed in order to expose the types proto file.
+  * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+  requiring a concrete codec to know how to serialize `Evidence` types.
+  * The `MsgSubmitEvidence` message has been removed in favor of `MsgSubmitEvidenceBase`. The application-level
+  codec must now define the concrete `MsgSubmitEvidence` type which must implement the module's `MsgSubmitEvidence`
+  interface.
+* (x/upgrade) [\#5659](https://github.com/cosmos/cosmos-sdk/pull/5659) Migrate the `x/upgrade` module to use Protocol
+Buffers for state serialization instead of Amino.
+  * The `internal` sub-package has been removed in order to expose the types proto file.
+  * The `x/upgrade` module now accepts a `codec.Marshaler` interface.
 
 ### Improvements
 
+* (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
 * (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
 * (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:

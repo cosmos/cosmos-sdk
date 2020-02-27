@@ -176,7 +176,7 @@ func NewSimApp(
 		appCodec, keys[staking.StoreKey], app.BankKeeper, app.SupplyKeeper, app.subspaces[staking.ModuleName],
 	)
 	app.MintKeeper = mint.NewKeeper(
-		app.cdc, keys[mint.StoreKey], app.subspaces[mint.ModuleName], &stakingKeeper,
+		appCodec, keys[mint.StoreKey], app.subspaces[mint.ModuleName], &stakingKeeper,
 		app.SupplyKeeper, auth.FeeCollectorName,
 	)
 	app.DistrKeeper = distr.NewKeeper(
@@ -189,11 +189,11 @@ func NewSimApp(
 	app.CrisisKeeper = crisis.NewKeeper(
 		app.subspaces[crisis.ModuleName], invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName,
 	)
-	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], app.cdc, homePath)
+	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], appCodec, homePath)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidence.NewKeeper(
-		app.cdc, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], &app.StakingKeeper, app.SlashingKeeper,
+		appCodec, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], &app.StakingKeeper, app.SlashingKeeper,
 	)
 	evidenceRouter := evidence.NewRouter()
 	// TODO: Register evidence routes.

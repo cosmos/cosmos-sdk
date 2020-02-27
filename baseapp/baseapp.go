@@ -640,6 +640,11 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		Tags:      result.Tags,
 	}
 
+	// No need to record tx and msgs if tx is failed
+	if !result.IsOK() {
+		return response
+	}
+
 	ctx := app.getContextForTx(runTxModeDeliver, txBytes)
 
 	sdktx, _ := tx.(auth.StdTx)

@@ -83,8 +83,8 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
-// random is a strategy used by addTestAddrs() in order to generated addresses in random order.
-func random(accNum int) []sdk.AccAddress {
+// createRandomAccounts is a strategy used by addTestAddrs() in order to generated addresses in random order.
+func createRandomAccounts(accNum int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, accNum)
 	for i := 0; i < accNum; i++ {
 		pk := ed25519.GenPrivKey().PubKey()
@@ -94,8 +94,8 @@ func random(accNum int) []sdk.AccAddress {
 	return testAddrs
 }
 
-// incremental is a strategy used by addTestAddrs() in order to generated addresses in ascending order.
-func incremental(accNum int) []sdk.AccAddress {
+// createIncrementalAccounts is a strategy used by addTestAddrs() in order to generated addresses in ascending order.
+func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	var addresses []sdk.AccAddress
 	var buffer bytes.Buffer
 
@@ -119,13 +119,13 @@ func incremental(accNum int) []sdk.AccAddress {
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
 func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, random)
+	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
 func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, incremental)
+	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
 func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {

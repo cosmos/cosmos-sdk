@@ -1,10 +1,8 @@
 package baseapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -22,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the consensus params in the main store.

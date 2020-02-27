@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"io"
 	"os"
@@ -24,13 +25,12 @@ func recordTxData(app *BaseApp, txBytes []byte, tx sdk.Tx, result abci.ResponseD
 	jsonMemo, _ := codec.Cdc.MarshalJSON(sdktx.GetMemo())
 
 	if err := recordMsgData(ctx, tx, txHash); err != nil {
-		fmt.Printf("error: (%v) while trying to record message data\n", err)
+		panic(fmt.Sprintf("error: (%v) while trying to record message data\n", err))
 	}
 
 	f, err := os.OpenFile(fmt.Sprintf("./extract/progress/txs.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Printf("error: (%v) while opening progress/txs file\n", err)
-		return
+		panic(fmt.Sprintf("error: (%v) while opening progress/txs file\n", err))
 	}
 	defer f.Close()
 
@@ -134,8 +134,7 @@ func commitUncheckedFiles(ctx sdk.Context) {
 	for _, key := range []string{"delegations", "unbond", "balance", "rewards"} {
 		err := copyFile(fmt.Sprintf("./extract/progress/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()), fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID()))
 		if err != nil {
-			fmt.Printf("error: (%v) while commiting unchecked file\n", err)
-			continue
+			panic(fmt.Sprintf("error: (%v) while commiting unchecked file\n", err))
 		}
 		// No need for the file now
 		if err := os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID())); err != nil && os.IsNotExist(err) {

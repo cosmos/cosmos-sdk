@@ -161,16 +161,17 @@ func (c *Codec) MarshalProposal(p types.Proposal) ([]byte, error) {
 	return c.Marshaler.MarshalBinaryBare(stdProposal)
 }
 
-func (c *Codec) UnmarshalProposal(bz []byte) (types.Proposal, error) {
+func (c *Codec) UnmarshalProposal(bz []byte, p *types.Proposal) error {
 	stdProposal := &cosmos_sdk_x_v1.StdProposal{}
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, stdProposal); err != nil {
-		return nil, err
+		return err
 	}
 
-	return types.Proposal{
-		//Content:      stdProposal.Content.GetContent(),
+	*p = types.Proposal{
+		Content:      stdProposal.Content.GetContent(),
 		ProposalBase: stdProposal.ProposalBase,
-	}, nil
+	}
+	return nil
 }
 
 // ----------------------------------------------------------------------------

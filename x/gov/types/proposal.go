@@ -17,29 +17,21 @@ const DefaultStartingProposalID uint64 = 1
 // on network changes.
 type Proposal struct {
 	Content `json:"content" yaml:"content"` // Proposal content interface
-
-	ProposalID       uint64         `json:"id" yaml:"id"`                                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
-
-	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
-
-	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	ProposalBase
 }
 
 // NewProposal creates a new Proposal instance
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
 	return Proposal{
-		Content:          content,
-		ProposalID:       id,
-		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.NewCoins(),
-		SubmitTime:       submitTime,
-		DepositEndTime:   depositEndTime,
+		Content: content,
+		ProposalBase: ProposalBase{
+			ProposalID:       id,
+			Status:           StatusDepositPeriod,
+			FinalTallyResult: EmptyTallyResult(),
+			TotalDeposit:     sdk.NewCoins(),
+			SubmitTime:       submitTime,
+			DepositEndTime:   depositEndTime,
+		},
 	}
 }
 
@@ -78,7 +70,6 @@ func (p Proposals) String() string {
 type (
 	// ProposalQueue defines a queue for proposal ids
 	ProposalQueue []uint64
-
 )
 
 // ProposalStatusFromString turns a string into a ProposalStatus

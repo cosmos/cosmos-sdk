@@ -69,14 +69,25 @@ message ProposalBase {
     option (gogoproto.goproto_stringer) = true;
     option (gogoproto.face) = true;
     uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"
-                           ,(gogoproto.moretags) = "yaml:\"proposal_id\""];
-    ProposalStatus status = 2;
-    TallyResult final_tally_result = 3 [(gogoproto.nullable) = false];
-    google.protobuf.Timestamp submit_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    google.protobuf.Timestamp deposit_end_time = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    repeated cosmos_sdk.v1.Coin total_deposit = 6 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-    google.protobuf.Timestamp voting_start_time = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    google.protobuf.Timestamp voting_end_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+                           ,(gogoproto.moretags) = "yaml:\"id\""];
+    ProposalStatus status = 2 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
+    TallyResult final_tally_result = 3 [(gogoproto.nullable) = false
+                                       ,(gogoproto.moretags) = "yaml:\"final_tally_result\""];
+    google.protobuf.Timestamp submit_time = 4 [(gogoproto.stdtime) = true
+                                              ,(gogoproto.nullable) = false
+                                              ,(gogoproto.moretags) = "yaml:\"submit_time\""];
+    google.protobuf.Timestamp deposit_end_time = 5 [(gogoproto.stdtime) = true
+                                                   ,(gogoproto.nullable) = false
+                                                   ,(gogoproto.moretags) = "yaml:\"deposit_end_time\""];
+    repeated cosmos_sdk.v1.Coin total_deposit = 6 [(gogoproto.nullable) = false
+                                                  ,(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+                                                  ,(gogoproto.moretags) = "yaml:\"total_deposit\""];
+    google.protobuf.Timestamp voting_start_time = 7 [(gogoproto.stdtime) = true
+                                                    ,(gogoproto.nullable) = false
+                                                    ,(gogoproto.moretags) = "yaml:\"voting_start_time\""];
+    google.protobuf.Timestamp voting_end_time = 8 [(gogoproto.stdtime) = true
+                                                  ,(gogoproto.nullable) = false
+                                                  ,(gogoproto.moretags) = "yaml:\"voting_end_time\""];
 }
 
 // ProposalStatus is a type alias that represents a proposal status as a byte

@@ -1,10 +1,8 @@
 package baseapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -22,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the consensus params in the main store.
@@ -275,7 +272,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger).WithValue("deliverMode", true),
 	}
 }
 
@@ -359,6 +356,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
+
+	// Commit genesis changes
+	commitUncheckedFiles(app.deliverState.ctx)
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
@@ -581,6 +581,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
+		// Commit changes introduced in beginBlocker
+		commitUncheckedFiles(app.deliverState.ctx)
 	}
 
 	// set the signed validators for addition to context in deliverTx
@@ -618,7 +620,6 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	var result sdk.Result
 	tx, err := app.txDecoder(txBytes)
-	txHash := fmt.Sprintf("%X", tmhash.Sum(txBytes))
 	if err != nil {
 		result = err.Result()
 	} else {
@@ -635,60 +636,10 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		Tags:      result.Tags,
 	}
 
-	ctx := app.getContextForTx(runTxModeDeliver, txBytes)
-
-	sdktx, _ := tx.(auth.StdTx)
-	jsonTags, _ := codec.Cdc.MarshalJSON(sdk.TagsToStringTags(result.Tags))
-	jsonMsgs := MsgsToString(sdktx.GetMsgs())
-	jsonFee, _ := codec.Cdc.MarshalJSON(sdktx.Fee)
-
-	for idx, msg := range sdktx.GetMsgs() {
-		f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/messages.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		msgString, _ := codec.Cdc.MarshalJSON(msg)
-		f.WriteString(fmt.Sprintf("%s,%d,%s,\"%s\",%s,%s\n",
-			txHash,
-			idx,
-			msg.Type(),
-			strings.ReplaceAll(string(msgString), "\"", "\"\""),
-			ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"),
-			ctx.ChainID()))
-		f.Close()
-		extractAddresses(msg, string(txHash), ctx.BlockHeight(), idx, ctx.ChainID())
-	}
-
-	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/txs.%d.%s", ctx.BlockHeight(), ctx.ChainID()), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	f.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,\"%s\",%s,\"%s\",\"%s\",\"%s\",%s,%s\n",
-		txHash,
-		ctx.BlockHeight(),
-		uint32(result.Code),
-		int64(result.GasWanted),
-		int64(result.GasUsed),
-		strings.ReplaceAll(result.Log, "\"", "\"\""),
-		sdktx.GetMemo(),
-		strings.ReplaceAll(string(jsonFee), "\"", "\"\""),
-		strings.ReplaceAll(string(jsonTags), "\"", "\"\""),
-		strings.ReplaceAll(string(jsonMsgs), "\"", "\"\""),
-		ctx.BlockHeader().Time.Format("2006-01-02 15:04:05"),
-		ctx.ChainID()))
-	f.Close()
+	recordTxData(app, txBytes, tx, response)
 
 	return response
 
-}
-
-func extractAddresses(msg sdk.Msg, hash string, height int64, idx int, chainid string) {
-	m := BasicMsgStruct{}
-	_ = json.Unmarshal(msg.GetSignBytes(), &m)
-	ref := reflect.ValueOf(&m.Value).Elem()
-	f, _ := os.OpenFile(fmt.Sprintf("./extract/progress/addresses.%d.%s", height, chainid), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	for i := 0; i < ref.NumField(); i++ {
-		addr := ref.Field(i).Interface()
-		sdkAddr, ok := addr.(sdk.Address) // cast to address interface so we have access to the String() method, which bech32ifies the address
-		if ok && !sdkAddr.Empty() {
-			f.WriteString(fmt.Sprintf("%s,%d,%s,%s\n", hash, idx, sdkAddr.String(), chainid))
-		}
-	}
-	f.Close()
 }
 
 type (
@@ -845,6 +796,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
 
+
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
 		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
@@ -858,6 +810,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	defer func() {
 		if r := recover(); r != nil {
+			if mode == runTxModeDeliver {
+				deleteUncheckedFiles(ctx)
+			}
+
 			switch rType := r.(type) {
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
@@ -895,6 +851,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	var msgs = tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
+		if mode == runTxModeDeliver {
+			deleteUncheckedFiles(ctx)
+		}
 		return err.Result()
 	}
 
@@ -926,6 +885,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		gasWanted = result.GasWanted
 
 		if abort {
+			if mode == runTxModeDeliver {
+				deleteUncheckedFiles(ctx)
+			}
 			return result
 		}
 
@@ -949,6 +911,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
+		commitUncheckedFiles(ctx)
+	} else {
+		if mode == runTxModeDeliver {
+			deleteUncheckedFiles(ctx)
+		}
 	}
 
 	return
@@ -962,6 +929,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+		// Commit changes introduced in endBlocker
+		commitUncheckedFiles(app.deliverState.ctx)
 	}
 
 	return

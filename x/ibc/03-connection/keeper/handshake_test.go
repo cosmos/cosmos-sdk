@@ -52,48 +52,53 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 	testCases := []struct {
 		msg      string
-		malleate func()
+		malleate func() uint64
 		expPass  bool
 	}{
-		{"success", func() {
+		{"success", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
+			return uint64(suite.chainB.Header.Height)
 		}, true},
-		{"consensus height > latest height", func() {
+		{"consensus height > latest height", func() uint64 {
+			return 0
 		}, false},
-		// {"self consensus state not found", func() {
-		// 	consensusHeight = 100
-		// 	suite.ctx = suite.ctx.WithBlockHeight(100)
-		// }, false},
-		{"connection state verification invalid", func() {
+		{"self consensus state not found", func() uint64 {
+			//suite.ctx = suite.ctx.WithBlockHeight(100)
+			return 100
+		}, false},
+		{"connection state verification invalid", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
+			return 0
 		}, false},
-		{"consensus state verification invalid", func() {
+		{"consensus state verification invalid", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			//consensusHeight = suite.chainB.Header.Height
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
+			return uint64(suite.chainB.Header.Height)
 		}, false},
-		{"invalid previous connection", func() {
+		{"invalid previous connection", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
+			return 0
 		}, false},
-		{"couldn't add connection to client", func() {
+		{"couldn't add connection to client", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
+			return 0
 		}, false},
 	}
 
@@ -102,25 +107,24 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			tc.malleate()
+			consensusHeight := tc.malleate()
 
 			connectionKey := ibctypes.KeyConnection(testConnectionIDA)
 			proofInit, proofHeight := suite.queryProof(connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientIDA, uint64(proofHeight))
-			proofConsensus, consensusHeight := suite.queryProof(consensusKey)
-			// TODO: This consensus height seems wrong, it should be the height of the last header for B.
+			consensusKey := ibctypes.KeyConsensusState(testClientIDA, consensusHeight)
+			proofConsensus, _ := suite.queryProof(consensusKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), testConnectionIDB, counterparty, testClientIDA,
 				connection.GetCompatibleVersions(), proofInit, proofConsensus,
-				uint64(proofHeight), uint64(consensusHeight),
+				uint64(proofHeight), consensusHeight,
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err, "valid test case %d failed with consensus height %d: %s", i, consensusHeight, tc.msg)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err, "invalid test case %d passed with consensus height %d: %s", i, consensusHeight, tc.msg)
 			}
 		})
 	}
@@ -134,49 +138,57 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	testCases := []struct {
 		msg      string
 		version  string
-		malleate func()
+		malleate func() uint64
 		expPass  bool
 	}{
-		{"success", version, func() {
+		{"success", version, func() uint64 {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.TRYOPEN)
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
+			return uint64(suite.chainB.Header.Height)
 		}, true},
-		{"consensus height > latest height", version, func() {
+		{"consensus height > latest height", version, func() uint64 {
+			return 10
 		}, false},
-		{"connection not found", version, func() {
+		{"connection not found", version, func() uint64 {
+			return 2
 		}, false},
-		{"connection state is not INIT", version, func() {
+		{"connection state is not INIT", version, func() uint64 {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
+			return uint64(suite.chainB.Header.Height)
 		}, false},
-		{"incompatible IBC versions", "2.0", func() {
+		{"incompatible IBC versions", "2.0", func() uint64 {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.INIT)
 			suite.chainB.updateClient(suite.chainA)
+			return uint64(suite.chainB.Header.Height)
 		}, false},
-		{"self consensus state not found", version, func() {
+		{"self consensus state not found", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.TRYOPEN)
 			suite.chainB.updateClient(suite.chainA)
+			return uint64(suite.chainB.Header.Height)
 		}, false},
-		{"connection state verification failed", version, func() {
+		{"connection state verification failed", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
+			return uint64(suite.chainB.Header.Height)
 		}, false},
-		{"consensus state verification failed", version, func() {
+		{"consensus state verification failed", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
+			return uint64(suite.chainB.Header.Height)
 		}, false},
 	}
 
@@ -185,25 +197,23 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			tc.malleate()
+			consensusHeight := tc.malleate()
 
 			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := suite.queryProof(connectionKey)
 
-			// TODO: This consensus height seems wrong, it should be the height of the client of A?
-			consensusHeight := uint64(1)
 			consensusKey := ibctypes.KeyConsensusState(testClientIDB, uint64(consensusHeight))
 			proofConsensus, _ := suite.queryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), testConnectionIDA, tc.version, proofTry, proofConsensus,
-				uint64(proofHeight), uint64(consensusHeight),
+				uint64(proofHeight), consensusHeight,
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().NoError(err, "valid test case %d failed with consensus height %d: %s", i, consensusHeight, tc.msg)
 			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+				suite.Require().Error(err, "invalid test case %d passed with consensus height %d: %s", i, consensusHeight, tc.msg)
 			}
 		})
 	}

@@ -36,7 +36,6 @@ const (
 
 var errPruningWithGranularOptions = fmt.Errorf("%s flag is not compatible with granular options as %s or %s", flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery)
 var errPruningGranularOptions = fmt.Errorf("%s and %s must be set together", flagPruningSnapshotEvery, flagPruningKeepEvery)
-var errPruningOptionsRequired = fmt.Errorf("pruning options required")
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.

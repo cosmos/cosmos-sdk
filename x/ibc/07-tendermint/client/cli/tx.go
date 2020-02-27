@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
@@ -151,7 +150,7 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 				}
 			}
 
-			msg := evidence.NewMsgSubmitEvidence(ev, cliCtx.GetFromAddress())
+			msg := ibctmtypes.NewMsgSubmitClientMisbehaviour(ev, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

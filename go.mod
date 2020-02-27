@@ -16,7 +16,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/pelletier/go-toml v1.6.0
 	github.com/pkg/errors v0.9.1
-	github.com/rakyll/statik v0.1.6
+	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.1.1-0.20200213154359-02baa11ea7c2
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.6
@@ -29,7 +29,7 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.0
 	github.com/tendermint/tendermint v0.33.1
-	github.com/tendermint/tm-db v0.4.0
+	github.com/tendermint/tm-db v0.4.1
 	gopkg.in/yaml.v2 v2.2.8
 )
 

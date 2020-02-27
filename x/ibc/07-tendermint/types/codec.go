@@ -15,6 +15,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(Evidence{}, "ibc/client/tendermint/Evidence", nil)
 	cdc.RegisterConcrete(MsgCreateClient{}, "ibc/client/MsgCreateClient", nil)
 	cdc.RegisterConcrete(MsgUpdateClient{}, "ibc/client/MsgUpdateClient", nil)
+	cdc.RegisterConcrete(MsgSubmitClientMisbehaviour{}, "ibc/client/MsgSubmitClientMisbehaviour", nil)
 
 	SetSubModuleCodec(cdc)
 }

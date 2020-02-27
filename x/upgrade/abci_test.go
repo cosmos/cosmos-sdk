@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ var s TestSuite
 
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, 0)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0)
 	genesisState := simapp.NewDefaultGenesisState()
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
@@ -419,4 +420,8 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 
 	t.Log("Verify upgrade height from file matches ")
 	require.Equal(t, upgradeInfo.Height, planHeight)
+
+	// clear the test file
+	err = os.Remove(upgradeInfoFilePath)
+	require.Nil(t, err)
 }

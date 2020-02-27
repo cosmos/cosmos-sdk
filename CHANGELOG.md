@@ -43,8 +43,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 balances or a single balance by denom when the `denom` query parameter is present.
 * (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
 * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
-* (server) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
-and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
 
 ### API Breaking Changes
 
@@ -147,6 +145,8 @@ Buffers for state serialization instead of Amino.
 * (rest) [\#5648](https://github.com/cosmos/cosmos-sdk/pull/5648) Enhance /txs usability:
   * Add `tx.minheight` key to filter transaction with an inclusive minimum block height
   * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
+* (server) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
+and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
 
 ## [v0.38.1] - 2020-02-11
 

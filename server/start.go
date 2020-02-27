@@ -46,7 +46,9 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		Long: `Run the full node application with Tendermint in or out of process. By
 default, the application will run with Tendermint in process.
 
-Pruning options can be provided via the '--pruning' flag. The options are as follows:
+Pruning options can be provided via the '--pruning' flag or with '--pruning-snapshot-every' and 'pruning-keep-every' together.
+
+For '--pruning' the options are as follows:
 
 syncable: only those states not needed for state syncing will be deleted (flushes every 100th to disk and keeps every 10000th)
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)

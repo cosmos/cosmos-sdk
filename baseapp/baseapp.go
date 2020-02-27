@@ -975,7 +975,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
-		commitUncheckedFiles(ctx)
 	} else {
 		if mode == runTxModeDeliver {
 			deleteUncheckedFiles(ctx)
@@ -1045,6 +1044,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
+
+	commitUncheckedFiles(app.deliverState.ctx)
 
 	// Reset the Check state to the latest committed.
 	//

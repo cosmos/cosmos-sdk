@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+//GetPruningOptionsFromFlags parses start command flags and returns the correct PruningOptions.
 func GetPruningOptionsFromFlags() store.PruningOptions {
 	if viper.IsSet(flagPruning) {
 		return store.NewPruningOptionsFromString(viper.GetString(flagPruning))

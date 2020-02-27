@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/tendermint/tendermint/libs/log"

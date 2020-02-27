@@ -4,10 +4,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/stretchr/testify/require"
 )
 
 func validateNoOp(_ interface{}) error { return nil }

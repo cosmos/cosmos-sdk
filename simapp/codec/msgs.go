@@ -10,11 +10,13 @@ import (
 var _ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
-func NewMsgSubmitEvidence(evidenceI eviexported.Evidence, s sdk.AccAddress) MsgSubmitEvidence {
+func NewMsgSubmitEvidence(evidenceI eviexported.Evidence, s sdk.AccAddress) (MsgSubmitEvidence, error) {
 	e := &Evidence{}
-	e.SetEvidence(evidenceI)
+	if err := e.SetEvidence(evidenceI); err != nil {
+		return MsgSubmitEvidence{}, err
+	}
 
-	return MsgSubmitEvidence{Evidence: e, MsgSubmitEvidenceBase: evidence.NewMsgSubmitEvidenceBase(s)}
+	return MsgSubmitEvidence{Evidence: e, MsgSubmitEvidenceBase: evidence.NewMsgSubmitEvidenceBase(s)}, nil
 }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a

@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/spf13/cobra"

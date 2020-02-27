@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"testing"
@@ -403,12 +404,16 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 // TODO: fix tests and replace for real proofs
 
 var (
-	_ commitment.ProofI = validProof{}
+	_ commitment.ProofI = validProof{nil, nil, nil}
 	_ commitment.ProofI = invalidProof{}
 )
 
 type (
-	validProof   struct{}
+	validProof struct {
+		root  commitment.RootI
+		path  commitment.PathI
+		value []byte
+	}
 	invalidProof struct{}
 )
 
@@ -416,9 +421,15 @@ func (validProof) GetCommitmentType() commitment.Type {
 	return commitment.Merkle
 }
 
-func (validProof) VerifyMembership(
+func (proof validProof) VerifyMembership(
 	root commitment.RootI, path commitment.PathI, value []byte) error {
-	return nil
+	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
+		(path.String() == proof.path.String()) &&
+		bytes.Equal(value, proof.value) {
+		return nil
+	} else {
+		return errors.New("invalid proof")
+	}
 }
 
 func (validProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {

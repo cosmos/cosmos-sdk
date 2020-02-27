@@ -584,6 +584,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
+		// Commit changes introduced in beginBlocker
+		commitUncheckedFiles(app.deliverState.ctx)
 	}
 
 	// set the signed validators for addition to context in deliverTx
@@ -975,6 +977,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
+		commitUncheckedFiles(ctx)
 	} else {
 		if mode == runTxModeDeliver {
 			deleteUncheckedFiles(ctx)
@@ -1031,6 +1034,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+		// Commit changes introduced in endBlocker
+		commitUncheckedFiles(app.deliverState.ctx)
 	}
 
 	return
@@ -1044,8 +1049,6 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
-
-	commitUncheckedFiles(app.deliverState.ctx)
 
 	// Reset the Check state to the latest committed.
 	//

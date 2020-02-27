@@ -138,7 +138,7 @@ func commitUncheckedFiles(ctx sdk.Context) {
 		}
 		// No need for the file now
 		if err := os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID())); err != nil && !os.IsNotExist(err) {
-			fmt.Printf("error: (%v) while removing unchecked file after commiting\n", err)
+			panic(fmt.Sprintf("error: (%v) while removing unchecked file after commiting\n", err))
 		}
 	}
 }
@@ -146,7 +146,7 @@ func commitUncheckedFiles(ctx sdk.Context) {
 func deleteUncheckedFiles(ctx sdk.Context) {
 	for _, key := range []string{"delegations", "unbond", "balance", "rewards"} {
 		if err := os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID())); err != nil && !os.IsNotExist(err) {
-			fmt.Printf("error: (%v) while removing unchecked file\n", err)
+			panic(fmt.Sprintf("error: (%v) while removing unchecked file\n", err))
 		}
 	}
 }

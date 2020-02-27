@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		}, true},
 		{"consensus height > latest height", func() {
 		}, false},
-		// {"self consensus state not found", ibctypes.ValidProof{}, ibctypes.ValidProof{}, func() {
+		// {"self consensus state not found", func() {
 		// 	consensusHeight = 100
 		// 	suite.ctx = suite.ctx.WithBlockHeight(100)
 		// }, false},
@@ -190,9 +190,10 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := suite.queryProof(connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientIDB, uint64(proofHeight))
-			proofConsensus, consensusHeight := suite.queryProof(consensusKey)
 			// TODO: This consensus height seems wrong, it should be the height of the client of A?
+			consensusHeight := uint64(1)
+			consensusKey := ibctypes.KeyConsensusState(testClientIDB, uint64(consensusHeight))
+			proofConsensus, _ := suite.queryProof(consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), testConnectionIDA, tc.version, proofTry, proofConsensus,
@@ -244,7 +245,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 			tc.malleate()
 
-			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
+			connectionKey := ibctypes.KeyConnection(testConnectionIDA)
 			proofAck, proofHeight := suite.queryProof(connectionKey)
 
 			if tc.expPass {

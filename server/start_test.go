@@ -17,6 +17,12 @@ func TestPruningOptions(t *testing.T) {
 		expectedErr error
 	}{
 		{
+			name:        "none set",
+			paramInit:   func() {},
+			returnsErr:  true,
+			expectedErr: errPruningOptionsRequired,
+		},
+		{
 			name: "only keep-every provided",
 			paramInit: func() {
 				viper.Set(flagPruningKeepEvery, 12345)

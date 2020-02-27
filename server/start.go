@@ -36,6 +36,7 @@ const (
 
 var errPruningWithGranularOptions = fmt.Errorf("%s flag is not compatible with granular options as %s or %s", flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery)
 var errPruningGranularOptions = fmt.Errorf("%s and %s must be set together", flagPruningSnapshotEvery, flagPruningKeepEvery)
+var errPruningOptionsRequired = fmt.Errorf("pruning options required")
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
@@ -62,6 +63,10 @@ For profiling and benchmarking purposes, CPU profiling can be enabled via the '-
 which accepts a path for the resulting pprof file.
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !viper.IsSet(flagPruning) && !viper.IsSet(flagPruningKeepEvery) && !viper.IsSet(flagPruningSnapshotEvery) {
+				return errPruningOptionsRequired
+			}
+
 			if viper.IsSet(flagPruning) {
 				if viper.IsSet(flagPruningKeepEvery) || viper.IsSet(flagPruningSnapshotEvery) {
 					return errPruningWithGranularOptions

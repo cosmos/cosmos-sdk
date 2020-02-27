@@ -9,6 +9,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
@@ -17,7 +19,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeInfoFileName file to store upgrade information

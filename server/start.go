@@ -63,23 +63,7 @@ For profiling and benchmarking purposes, CPU profiling can be enabled via the '-
 which accepts a path for the resulting pprof file.
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if !viper.IsSet(flagPruning) && !viper.IsSet(flagPruningKeepEvery) && !viper.IsSet(flagPruningSnapshotEvery) {
-				return errPruningOptionsRequired
-			}
-
-			if viper.IsSet(flagPruning) {
-				if viper.IsSet(flagPruningKeepEvery) || viper.IsSet(flagPruningSnapshotEvery) {
-					return errPruningWithGranularOptions
-				}
-
-				return nil
-			}
-
-			if !(viper.IsSet(flagPruningKeepEvery) && viper.IsSet(flagPruningSnapshotEvery)) {
-				return errPruningGranularOptions
-			}
-
-			return nil
+			return checkPruningParams()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
@@ -112,6 +96,27 @@ which accepts a path for the resulting pprof file.
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
+}
+
+// checkPruningParams checks that the provided pruning params are correct
+func checkPruningParams() error {
+	if !viper.IsSet(flagPruning) && !viper.IsSet(flagPruningKeepEvery) && !viper.IsSet(flagPruningSnapshotEvery) {
+		return errPruningOptionsRequired
+	}
+
+	if viper.IsSet(flagPruning) {
+		if viper.IsSet(flagPruningKeepEvery) || viper.IsSet(flagPruningSnapshotEvery) {
+			return errPruningWithGranularOptions
+		}
+
+		return nil
+	}
+
+	if !(viper.IsSet(flagPruningKeepEvery) && viper.IsSet(flagPruningSnapshotEvery)) {
+		return errPruningGranularOptions
+	}
+
+	return nil
 }
 
 func startStandAlone(ctx *Context, appCreator AppCreator) error {

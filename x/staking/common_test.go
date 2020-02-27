@@ -1,18 +1,13 @@
 package staking_test
 
 import (
-	"bytes"
-	"encoding/hex"
-	"strconv"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	cdc "github.com/cosmos/cosmos-sdk/simapp/codec"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -28,7 +23,7 @@ var (
 
 	commissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	PKs = createTestPubKeys(500)
+	PKs = simapp.CreateTestPubKeys(500)
 )
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
@@ -40,33 +35,6 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) staking.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
 	return staking.NewMsgDelegate(delAddr, valAddr, amount)
-}
-
-// nolint: unparam
-func createTestPubKeys(numPubKeys int) []crypto.PubKey {
-	var publicKeys []crypto.PubKey
-	var buffer bytes.Buffer
-
-	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
-	for i := 100; i < (numPubKeys + 100); i++ {
-		numString := strconv.Itoa(i)
-		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
-		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
-		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
-		buffer.Reset()
-	}
-	return publicKeys
-}
-
-func NewPubKey(pk string) (res crypto.PubKey) {
-	pkBytes, err := hex.DecodeString(pk)
-	if err != nil {
-		panic(err)
-	}
-	//res, err = crypto.PubKeyFromBytes(pkBytes)
-	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes)
-	return pkEd
 }
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper

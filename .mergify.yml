@@ -1,0 +1,10 @@
+pull_request_rules:
+  - name: automatic merge for master when CI passes and 1 reviews and has label S:merge
+    conditions:
+      - "#approved-reviews-by>=1"
+      - "status-success=ci/circleci: test-sim-nondeterminism"
+      - base=master
+      - label=automerge
+    actions:
+      merge:
+        method: squash

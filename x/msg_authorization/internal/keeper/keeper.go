@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,11 +15,11 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      *codec.Codec
-	router   types.Router
+	router   baseapp.Router
 }
 
 // NewKeeper constructs a message authorisation Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router types.Router) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router baseapp.Router) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,

@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func makeTestCodec() *codec.Codec {
 
 	return cdc
 }
-func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.BaseKeeper, Keeper, types.Router) {
+func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.BaseKeeper, Keeper, baseapp.Router) {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
@@ -65,7 +66,7 @@ func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.Base
 	bankKeeper := bank.NewBaseKeeper(cdc, keyBank, authKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	bankKeeper.SetSendEnabled(ctx, true)
 
-	router := types.NewRouter()
+	router := *baseapp.NewRouter()
 	router.AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	authorizationKeeper := NewKeeper(keyAuthorization, cdc, router)
@@ -78,7 +79,6 @@ var (
 	granteePub    = ed25519.GenPrivKey().PubKey()
 	granterPub    = ed25519.GenPrivKey().PubKey()
 	recipientPub  = ed25519.GenPrivKey().PubKey()
-	randomPub     = ed25519.GenPrivKey().PubKey()
 	granteeAddr   = sdk.AccAddress(granteePub.Address())
 	granterAddr   = sdk.AccAddress(granterPub.Address())
 	recipientAddr = sdk.AccAddress(recipientPub.Address())

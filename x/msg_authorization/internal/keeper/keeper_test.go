@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -20,7 +21,7 @@ type TestSuite struct {
 	paramsKeeper  params.Keeper
 	bankKeeper    bank.Keeper
 	keeper        Keeper
-	router        types.Router
+	router        baseapp.Router
 }
 
 func (s *TestSuite) SetupTest() {

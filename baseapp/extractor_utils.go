@@ -137,7 +137,7 @@ func commitUncheckedFiles(ctx sdk.Context) {
 			panic(fmt.Sprintf("error: (%v) while commiting unchecked file\n", err))
 		}
 		// No need for the file now
-		if err := os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID())); err != nil && os.IsNotExist(err) {
+		if err := os.Remove(fmt.Sprintf("./extract/unchecked/%s.%d.%s", key, ctx.BlockHeight(), ctx.ChainID())); err != nil && !os.IsNotExist(err) {
 			fmt.Printf("error: (%v) while removing unchecked file after commiting\n", err)
 		}
 	}

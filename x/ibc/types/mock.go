@@ -3,15 +3,15 @@ package types
 import (
 	"errors"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // Mocked types
 // TODO: fix tests and replace for real proofs
 
 var (
-	_ commitment.ProofI = ValidProof{}
-	_ commitment.ProofI = InvalidProof{}
+	_ commitmentexported.Proof = ValidProof{}
+	_ commitmentexported.Proof = InvalidProof{}
 )
 
 type (
@@ -19,16 +19,16 @@ type (
 	InvalidProof struct{}
 )
 
-func (ValidProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
+func (ValidProof) GetCommitmentType() commitmentexported.Type {
+	return commitmentexported.Merkle
 }
 
 func (ValidProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
+	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
 	return nil
 }
 
-func (ValidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+func (ValidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
 	return nil
 }
 
@@ -40,16 +40,16 @@ func (ValidProof) IsEmpty() bool {
 	return false
 }
 
-func (InvalidProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
+func (InvalidProof) GetCommitmentType() commitmentexported.Type {
+	return commitmentexported.Merkle
 }
 
 func (InvalidProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
+	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
 	return errors.New("proof failed")
 }
 
-func (InvalidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+func (InvalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
 	return errors.New("proof failed")
 }
 

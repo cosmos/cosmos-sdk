@@ -6,7 +6,7 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
@@ -21,55 +21,55 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		name           string
 		clientState    ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
 		// 	name:        "successful verification",
 		// 	clientState: ibctmtypes.NewClientState(chainID, chainID, height),
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}
@@ -90,7 +90,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *TendermintTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitment.NewPrefix([]byte("ibc")))
+	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
 	conn := connection.NewConnectionEnd(connectionexported.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
@@ -98,8 +98,8 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		clientState    ibctmtypes.ClientState
 		connection     connection.ConnectionEnd
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
@@ -107,9 +107,9 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
@@ -117,9 +117,9 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
@@ -127,9 +127,9 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -137,9 +137,9 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -147,11 +147,11 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}
@@ -180,8 +180,8 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		clientState    ibctmtypes.ClientState
 		channel        channel.Channel
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
@@ -189,9 +189,9 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		// 	clientState:  ibctmtypes.NewClientState(chainID, height),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
@@ -199,9 +199,9 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
@@ -209,9 +209,9 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -219,9 +219,9 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -229,11 +229,11 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}
@@ -259,8 +259,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		clientState    ibctmtypes.ClientState
 		commitment     []byte
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
@@ -268,9 +268,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		// 	clientState:  ibctmtypes.NewClientState(chainID, height),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
@@ -278,9 +278,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
@@ -288,9 +288,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -298,9 +298,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -308,11 +308,11 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}
@@ -338,8 +338,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		clientState    ibctmtypes.ClientState
 		ack            []byte
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
@@ -347,9 +347,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
@@ -357,9 +357,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
@@ -367,9 +367,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -377,9 +377,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
@@ -387,11 +387,11 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}
@@ -416,8 +416,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		name           string
 		clientState    ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
@@ -425,47 +425,47 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}
@@ -490,8 +490,8 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		name           string
 		clientState    ibctmtypes.ClientState
 		consensusState ibctmtypes.ConsensusState
-		prefix         commitment.Prefix
-		proof          commitment.Proof
+		prefix         commitmenttypes.MerklePrefix
+		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
 		// {
@@ -499,47 +499,47 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
 		// 	connection:   conn,
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitment.NewRoot(suite.header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
-		// 	prefix:  commitment.NewPrefix([]byte("ibc")),
+		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.Prefix{},
+			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
 			clientState: ibctmtypes.ClientState{ID: chainID, LastHeader: suite.header, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitment.NewRoot(suite.header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitment.NewRoot(suite.header.AppHash),
+				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
 			},
-			prefix:  commitment.NewPrefix([]byte("ibc")),
-			proof:   commitment.Proof{},
+			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:   commitmenttypes.MerkleProof{},
 			expPass: false,
 		},
 	}

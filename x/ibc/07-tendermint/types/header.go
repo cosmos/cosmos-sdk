@@ -9,7 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 var _ clientexported.Header = Header{}
@@ -31,7 +31,7 @@ func (h Header) ConsensusState() ConsensusState {
 	return ConsensusState{
 		Height:       uint64(h.Height),
 		Timestamp:    h.Time,
-		Root:         commitment.NewRoot(h.AppHash),
+		Root:         commitmenttypes.NewMerkleRoot(h.AppHash),
 		ValidatorSet: h.ValidatorSet,
 	}
 }

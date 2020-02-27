@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -18,10 +18,10 @@ const (
 // ChannelResponse defines the client query response for a channel which also
 // includes a proof,its path and the height from which the proof was retrieved.
 type ChannelResponse struct {
-	Channel     Channel          `json:"channel" yaml:"channel"`
-	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	Channel     Channel                     `json:"channel" yaml:"channel"`
+	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewChannelResponse creates a new ChannelResponse instance
@@ -30,8 +30,8 @@ func NewChannelResponse(
 ) ChannelResponse {
 	return ChannelResponse{
 		Channel:     channel,
-		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ibctypes.ChannelPath(portID, channelID), "/")),
+		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(portID, channelID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -54,10 +54,10 @@ func NewQueryAllChannelsParams(page, limit int) QueryAllChannelsParams {
 // PacketResponse defines the client query response for a packet which also
 // includes a proof, its path and the height form which the proof was retrieved
 type PacketResponse struct {
-	Packet      Packet           `json:"packet" yaml:"packet"`
-	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	Packet      Packet                      `json:"packet" yaml:"packet"`
+	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewPacketResponse creates a new PacketResponswe instance
@@ -66,8 +66,8 @@ func NewPacketResponse(
 ) PacketResponse {
 	return PacketResponse{
 		Packet:      packet,
-		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ibctypes.PacketCommitmentPath(portID, channelID, sequence), "/")),
+		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.PacketCommitmentPath(portID, channelID, sequence), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -76,10 +76,10 @@ func NewPacketResponse(
 // number which also includes a proof, its path and the height form which the
 // proof was retrieved
 type RecvResponse struct {
-	NextSequenceRecv uint64           `json:"next_sequence_recv" yaml:"next_sequence_recv"`
-	Proof            commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath        commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight      uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	NextSequenceRecv uint64                      `json:"next_sequence_recv" yaml:"next_sequence_recv"`
+	Proof            commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath        commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight      uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewRecvResponse creates a new RecvResponse instance
@@ -88,8 +88,8 @@ func NewRecvResponse(
 ) RecvResponse {
 	return RecvResponse{
 		NextSequenceRecv: sequenceRecv,
-		Proof:            commitment.Proof{Proof: proof},
-		ProofPath:        commitment.NewPath(strings.Split(ibctypes.NextSequenceRecvPath(portID, channelID), "/")),
+		Proof:            commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(ibctypes.NextSequenceRecvPath(portID, channelID), "/")),
 		ProofHeight:      uint64(height),
 	}
 }

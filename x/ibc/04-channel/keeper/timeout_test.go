@@ -6,7 +6,7 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -135,9 +135,9 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64
-		proofHeight uint64            = 1
-		proof       commitment.ProofI = ibctypes.InvalidProof{}
-		proofClosed commitment.ProofI = ibctypes.InvalidProof{}
+		proofHeight uint64                   = 1
+		proof       commitmentexported.Proof = ibctypes.InvalidProof{}
+		proofClosed commitmentexported.Proof = ibctypes.InvalidProof{}
 	)
 
 	testCases := []testCase{

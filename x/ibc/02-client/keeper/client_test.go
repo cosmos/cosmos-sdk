@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
@@ -149,7 +149,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				expConsensusState := ibctmtypes.ConsensusState{
 					Height:       uint64(updateHeader.Height),
 					Timestamp:    updateHeader.Time,
-					Root:         commitment.NewRoot(updateHeader.AppHash),
+					Root:         commitmenttypes.NewMerkleRoot(updateHeader.AppHash),
 					ValidatorSet: updateHeader.ValidatorSet,
 				}
 

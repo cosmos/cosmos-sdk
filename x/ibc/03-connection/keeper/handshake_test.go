@@ -5,7 +5,7 @@ import (
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -57,8 +57,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	)
 	testCases := []struct {
 		msg            string
-		proofInit      commitment.ProofI
-		proofConsensus commitment.ProofI
+		proofInit      commitmentexported.Proof
+		proofConsensus commitmentexported.Proof
 		malleate       func()
 		expPass        bool
 	}{
@@ -151,8 +151,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	testCases := []struct {
 		msg            string
 		version        string
-		proofTry       commitment.ProofI
-		proofConsensus commitment.ProofI
+		proofTry       commitmentexported.Proof
+		proofConsensus commitmentexported.Proof
 		malleate       func()
 		expPass        bool
 	}{

@@ -1,11 +1,11 @@
-package commitment
+package types
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // SubModuleName is the error codespace
-const SubModuleName string = "ibc/commitment"
+const SubModuleName string = "commitment"
 
 // IBC connection sentinel errors
 var (

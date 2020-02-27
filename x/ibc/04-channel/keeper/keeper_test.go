@@ -19,10 +19,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // define constants used for testing
@@ -207,7 +207,7 @@ func commitNBlocks(chain *TestChain, n int) {
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
+func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProof, int64) {
 	res := suite.chainB.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
 		Height: suite.chainB.App.LastBlockHeight(),
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 		Prove:  true,
 	})
 
-	proof := commitment.Proof{
+	proof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
 
@@ -341,7 +341,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       uint64(client.Header.Height),
 		Timestamp:    client.Header.Time,
-		Root:         commitment.NewRoot(commitID.Hash),
+		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 
@@ -403,8 +403,8 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 // TODO: fix tests and replace for real proofs
 
 var (
-	_ commitment.ProofI = validProof{}
-	_ commitment.ProofI = invalidProof{}
+	_ commitmentexported.Proof = validProof{}
+	_ commitmentexported.Proof = invalidProof{}
 )
 
 type (
@@ -412,16 +412,16 @@ type (
 	invalidProof struct{}
 )
 
-func (validProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
+func (validProof) GetCommitmentType() commitmentexported.Type {
+	return commitmentexported.Merkle
 }
 
 func (validProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
+	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
 	return nil
 }
 
-func (validProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+func (validProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
 	return nil
 }
 
@@ -433,16 +433,16 @@ func (validProof) IsEmpty() bool {
 	return false
 }
 
-func (invalidProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
+func (invalidProof) GetCommitmentType() commitmentexported.Type {
+	return commitmentexported.Merkle
 }
 
 func (invalidProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
+	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
 	return errors.New("proof failed")
 }
 
-func (invalidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+func (invalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
 	return errors.New("proof failed")
 }
 

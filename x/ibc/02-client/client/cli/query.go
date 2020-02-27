@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // GetCmdQueryClientStates defines the command to query all the light clients
@@ -173,7 +173,7 @@ func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			path := commitment.NewPrefix([]byte("ibc"))
+			path := commitmenttypes.NewMerklePrefix([]byte("ibc"))
 			return ctx.PrintOutput(path)
 		},
 	}

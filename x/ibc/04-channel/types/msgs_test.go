@@ -192,17 +192,17 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 // TestMsgChannelOpenAck tests ValidateBasic for MsgChannelOpenAck
 func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 	testMsgs := []MsgChannelOpenAck{
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 1, addr),                  // valid msg
-		NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", suite.proof, 1, addr),              // too short port id
-		NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", suite.proof, 1, addr),               // too long port id
-		NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", suite.proof, 1, addr),                   // port id contains non-alpha
-		NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", suite.proof, 1, addr),            // too short channel id
-		NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, 1, addr),             // too long channel id
-		NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, 1, addr),                 // channel id contains non-alpha
-		NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, 1, addr),                     // empty counterparty version
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", nil, 1, addr),                          // empty proof
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 1, addr),                             // valid msg
+		NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", suite.proof, 1, addr),                         // too short port id
+		NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", suite.proof, 1, addr),                          // too long port id
+		NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", suite.proof, 1, addr),                              // port id contains non-alpha
+		NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", suite.proof, 1, addr),                       // too short channel id
+		NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, 1, addr),                        // too long channel id
+		NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, 1, addr),                            // channel id contains non-alpha
+		NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, 1, addr),                                // empty counterparty version
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", nil, 1, addr),                                     // empty proof
 		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 0, addr),                  // proof height is zero
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 0, addr),                             // proof height is zero
 	}
 
 	testCases := []struct {
@@ -236,16 +236,16 @@ func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 // TestMsgChannelOpenConfirm tests ValidateBasic for MsgChannelOpenConfirm
 func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 	testMsgs := []MsgChannelOpenConfirm{
-		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 1, addr),                  // valid msg
-		NewMsgChannelOpenConfirm(invalidShortPort, "testchannel", suite.proof, 1, addr),              // too short port id
-		NewMsgChannelOpenConfirm(invalidLongPort, "testchannel", suite.proof, 1, addr),               // too long port id
-		NewMsgChannelOpenConfirm(invalidPort, "testchannel", suite.proof, 1, addr),                   // port id contains non-alpha
-		NewMsgChannelOpenConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),            // too short channel id
-		NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),             // too long channel id
-		NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, 1, addr),                 // channel id contains non-alpha
-		NewMsgChannelOpenConfirm("testportid", "testchannel", nil, 1, addr),                          // empty proof
+		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 1, addr),                             // valid msg
+		NewMsgChannelOpenConfirm(invalidShortPort, "testchannel", suite.proof, 1, addr),                         // too short port id
+		NewMsgChannelOpenConfirm(invalidLongPort, "testchannel", suite.proof, 1, addr),                          // too long port id
+		NewMsgChannelOpenConfirm(invalidPort, "testchannel", suite.proof, 1, addr),                              // port id contains non-alpha
+		NewMsgChannelOpenConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),                       // too short channel id
+		NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),                        // too long channel id
+		NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, 1, addr),                            // channel id contains non-alpha
+		NewMsgChannelOpenConfirm("testportid", "testchannel", nil, 1, addr),                                     // empty proof
 		NewMsgChannelOpenConfirm("testportid", "testchannel", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
-		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 0, addr),                  // proof height is zero
+		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 0, addr),                             // proof height is zero
 	}
 
 	testCases := []struct {
@@ -314,16 +314,16 @@ func (suite *MsgTestSuite) TestMsgChannelCloseInit() {
 // TestMsgChannelCloseConfirm tests ValidateBasic for MsgChannelCloseConfirm
 func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 	testMsgs := []MsgChannelCloseConfirm{
-		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 1, addr),                  // valid msg
-		NewMsgChannelCloseConfirm(invalidShortPort, "testchannel", suite.proof, 1, addr),              // too short port id
-		NewMsgChannelCloseConfirm(invalidLongPort, "testchannel", suite.proof, 1, addr),               // too long port id
-		NewMsgChannelCloseConfirm(invalidPort, "testchannel", suite.proof, 1, addr),                   // port id contains non-alpha
-		NewMsgChannelCloseConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),            // too short channel id
-		NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),             // too long channel id
-		NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, 1, addr),                 // channel id contains non-alpha
-		NewMsgChannelCloseConfirm("testportid", "testchannel", nil, 1, addr),                          // empty proof
+		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 1, addr),                             // valid msg
+		NewMsgChannelCloseConfirm(invalidShortPort, "testchannel", suite.proof, 1, addr),                         // too short port id
+		NewMsgChannelCloseConfirm(invalidLongPort, "testchannel", suite.proof, 1, addr),                          // too long port id
+		NewMsgChannelCloseConfirm(invalidPort, "testchannel", suite.proof, 1, addr),                              // port id contains non-alpha
+		NewMsgChannelCloseConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),                       // too short channel id
+		NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),                        // too long channel id
+		NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, 1, addr),                            // channel id contains non-alpha
+		NewMsgChannelCloseConfirm("testportid", "testchannel", nil, 1, addr),                                     // empty proof
 		NewMsgChannelCloseConfirm("testportid", "testchannel", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
-		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 0, addr),                  // proof height is zero
+		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 0, addr),                             // proof height is zero
 	}
 
 	testCases := []struct {

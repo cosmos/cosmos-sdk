@@ -18,29 +18,29 @@ type (
 
 	PostConnectionOpenInit struct {
 		Msgs       []types.MsgConnectionOpenInit `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                   `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature           `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee              `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature      `json:"signatures" yaml:"signatures"`
 		Memo       string                        `json:"memo" yaml:"memo"`
 	}
 
 	PostConnectionOpenTry struct {
 		Msgs       []types.MsgConnectionOpenTry `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                  `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature          `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee             `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature     `json:"signatures" yaml:"signatures"`
 		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 
 	PostConnectionOpenAck struct {
 		Msgs       []types.MsgConnectionOpenAck `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                  `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature          `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee             `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature     `json:"signatures" yaml:"signatures"`
 		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 
 	PostConnectionOpenConfirm struct {
 		Msgs       []types.MsgConnectionOpenConfirm `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                      `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature              `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee                 `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature         `json:"signatures" yaml:"signatures"`
 		Memo       string                           `json:"memo" yaml:"memo"`
 	}
 )

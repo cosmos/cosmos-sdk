@@ -18,10 +18,10 @@ const (
 // ConnectionResponse defines the client query response for a connection which
 // also includes a proof and the height from which the proof was retrieved.
 type ConnectionResponse struct {
-	Connection  ConnectionEnd    `json:"connection" yaml:"connection"`
+	Connection  ConnectionEnd               `json:"connection" yaml:"connection"`
 	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
 	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConnectionResponse creates a new ConnectionResponse instance
@@ -55,10 +55,10 @@ func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
 // connection paths which also includes a proof and the height from which the
 // proof was retrieved.
 type ClientConnectionsResponse struct {
-	ConnectionPaths []string         `json:"connection_paths" yaml:"connection_paths"`
+	ConnectionPaths []string                    `json:"connection_paths" yaml:"connection_paths"`
 	Proof           commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
 	ProofPath       commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight     uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ProofHeight     uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewClientConnectionsResponse creates a new ConnectionPaths instance

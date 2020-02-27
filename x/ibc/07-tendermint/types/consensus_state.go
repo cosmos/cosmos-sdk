@@ -3,19 +3,20 @@ package types
 import (
 	"time"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
-	Timestamp    time.Time             `json:"timestamp" yaml:"timestamp"`
-	Root         commitmentexported.Root      `json:"root" yaml:"root"`
-	Height       uint64                `json:"height" yaml:"height"`
-	ValidatorSet *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
+	Timestamp    time.Time               `json:"timestamp" yaml:"timestamp"`
+	Root         commitmentexported.Root `json:"root" yaml:"root"`
+	Height       uint64                  `json:"height" yaml:"height"`
+	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
 }
 
 // ClientType returns Tendermint

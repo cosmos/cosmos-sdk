@@ -71,13 +71,13 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelOpenTry{}
 
 type MsgChannelOpenTry struct {
-	PortID              string            `json:"port_id"`
-	ChannelID           string            `json:"channel_id"`
-	Channel             Channel           `json:"channel"`
-	CounterpartyVersion string            `json:"counterparty_version"`
+	PortID              string                   `json:"port_id"`
+	ChannelID           string                   `json:"channel_id"`
+	Channel             Channel                  `json:"channel"`
+	CounterpartyVersion string                   `json:"counterparty_version"`
 	ProofInit           commitmentexported.Proof `json:"proof_init"`
-	ProofHeight         uint64            `json:"proof_height"`
-	Signer              sdk.AccAddress    `json:"signer"`
+	ProofHeight         uint64                   `json:"proof_height"`
+	Signer              sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
@@ -146,12 +146,12 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelOpenAck{}
 
 type MsgChannelOpenAck struct {
-	PortID              string            `json:"port_id"`
-	ChannelID           string            `json:"channel_id"`
-	CounterpartyVersion string            `json:"counterparty_version"`
+	PortID              string                   `json:"port_id"`
+	ChannelID           string                   `json:"channel_id"`
+	CounterpartyVersion string                   `json:"counterparty_version"`
 	ProofTry            commitmentexported.Proof `json:"proof_try"`
-	ProofHeight         uint64            `json:"proof_height"`
-	Signer              sdk.AccAddress    `json:"signer"`
+	ProofHeight         uint64                   `json:"proof_height"`
+	Signer              sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
@@ -216,11 +216,11 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelOpenConfirm{}
 
 type MsgChannelOpenConfirm struct {
-	PortID      string            `json:"port_id"`
-	ChannelID   string            `json:"channel_id"`
+	PortID      string                   `json:"port_id"`
+	ChannelID   string                   `json:"channel_id"`
 	ProofAck    commitmentexported.Proof `json:"proof_ack"`
-	ProofHeight uint64            `json:"proof_height"`
-	Signer      sdk.AccAddress    `json:"signer"`
+	ProofHeight uint64                   `json:"proof_height"`
+	Signer      sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
@@ -330,11 +330,11 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelCloseConfirm{}
 
 type MsgChannelCloseConfirm struct {
-	PortID      string            `json:"port_id"`
-	ChannelID   string            `json:"channel_id"`
+	PortID      string                   `json:"port_id"`
+	ChannelID   string                   `json:"channel_id"`
 	ProofInit   commitmentexported.Proof `json:"proof_init"`
-	ProofHeight uint64            `json:"proof_height"`
-	Signer      sdk.AccAddress    `json:"signer"`
+	ProofHeight uint64                   `json:"proof_height"`
+	Signer      sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
@@ -396,8 +396,8 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 type MsgPacket struct {
 	Packet      `json:"packet" yaml:"packet"`
 	Proof       commitmentexported.Proof `json:"proof" yaml:"proof"`
-	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
-	Signer      sdk.AccAddress    `json:"signer" yaml:"signer"`
+	ProofHeight uint64                   `json:"proof_height" yaml:"proof_height"`
+	Signer      sdk.AccAddress           `json:"signer" yaml:"signer"`
 }
 
 var _ sdk.Msg = MsgPacket{}
@@ -450,10 +450,10 @@ var _ sdk.Msg = MsgTimeout{}
 // MsgTimeout receives timed-out packet
 type MsgTimeout struct {
 	Packet           `json:"packet" yaml:"packet"`
-	NextSequenceRecv uint64            `json:"next_sequence_recv" yaml:"next_sequence_recv"`
+	NextSequenceRecv uint64                   `json:"next_sequence_recv" yaml:"next_sequence_recv"`
 	Proof            commitmentexported.Proof `json:"proof" yaml:"proof"`
-	ProofHeight      uint64            `json:"proof_height" yaml:"proof_height"`
-	Signer           sdk.AccAddress    `json:"signer" yaml:"signer"`
+	ProofHeight      uint64                   `json:"proof_height" yaml:"proof_height"`
+	Signer           sdk.AccAddress           `json:"signer" yaml:"signer"`
 }
 
 // NewMsgTimeout constructs new MsgTimeout
@@ -506,7 +506,7 @@ var _ sdk.Msg = MsgAcknowledgement{}
 type MsgAcknowledgement struct {
 	Packet          `json:"packet" yaml:"packet"`
 	Acknowledgement exported.PacketAcknowledgementI `json:"acknowledgement" yaml:"acknowledgement"`
-	Proof           commitmentexported.Proof               `json:"proof" yaml:"proof"`
+	Proof           commitmentexported.Proof        `json:"proof" yaml:"proof"`
 	ProofHeight     uint64                          `json:"proof_height" yaml:"proof_height"`
 	Signer          sdk.AccAddress                  `json:"signer" yaml:"signer"`
 }

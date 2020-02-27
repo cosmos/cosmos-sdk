@@ -29,7 +29,7 @@ type (
 	}
 
 	QueryPath struct {
-		Height int64             `json:"height"`
+		Height int64                     `json:"height"`
 		Result commitmentexported.Prefix `json:"result"`
 	}
 )

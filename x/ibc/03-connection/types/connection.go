@@ -79,8 +79,8 @@ var _ exported.CounterpartyI = Counterparty{}
 
 // Counterparty defines the counterparty chain associated with a connection end.
 type Counterparty struct {
-	ClientID     string             `json:"client_id" yaml:"client_id"`
-	ConnectionID string             `json:"connection_id" yaml:"connection_id"`
+	ClientID     string                    `json:"client_id" yaml:"client_id"`
+	ConnectionID string                    `json:"connection_id" yaml:"connection_id"`
 	Prefix       commitmentexported.Prefix `json:"prefix" yaml:"prefix"`
 }
 

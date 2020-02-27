@@ -35,10 +35,10 @@ func NewQueryAllClientsParams(page, limit int) QueryAllClientsParams {
 // StateResponse defines the client response for a client state query.
 // It includes the commitment proof and the height of the proof.
 type StateResponse struct {
-	ClientState exported.ClientState `json:"client_state" yaml:"client_state"`
-	Proof       commitmenttypes.MerkleProof     `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitmenttypes.MerklePath      `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64               `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ClientState exported.ClientState        `json:"client_state" yaml:"client_state"`
+	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewClientStateResponse creates a new StateResponse instance.
@@ -56,10 +56,10 @@ func NewClientStateResponse(
 // ConsensusStateResponse defines the client response for a Consensus state query.
 // It includes the commitment proof and the height of the proof.
 type ConsensusStateResponse struct {
-	ConsensusState exported.ConsensusState `json:"consensus_state" yaml:"consensus_state"`
-	Proof          commitmenttypes.MerkleProof        `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath      commitmenttypes.MerklePath         `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight    uint64                  `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ConsensusState exported.ConsensusState     `json:"consensus_state" yaml:"consensus_state"`
+	Proof          commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath      commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight    uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.

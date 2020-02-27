@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"time"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func (suite *TendermintTestSuite) TestCheckValidity() {

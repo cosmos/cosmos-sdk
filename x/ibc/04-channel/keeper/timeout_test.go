@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64
-		proofHeight uint64            = 1
+		proofHeight uint64                   = 1
 		proof       commitmentexported.Proof = ibctypes.InvalidProof{}
 		proofClosed commitmentexported.Proof = ibctypes.InvalidProof{}
 	)

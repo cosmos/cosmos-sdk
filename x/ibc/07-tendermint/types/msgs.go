@@ -15,14 +15,14 @@ import (
 
 // Message types for the IBC client
 const (
-	TypeMsgCreateClient    string = "create_client"
-	TypeMsgUpdateClient    string = "update_client"
+	TypeMsgCreateClient             string = "create_client"
+	TypeMsgUpdateClient             string = "update_client"
 	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
 )
 
 var (
-	_ clientexported.MsgCreateClient = MsgCreateClient{}
-	_ clientexported.MsgUpdateClient = MsgUpdateClient{}
+	_ clientexported.MsgCreateClient     = MsgCreateClient{}
+	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
 	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
 )
 
@@ -163,49 +163,49 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 	return msg.Header
 }
 
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting	
-// Evidence for client misbehaviour.	
-type MsgSubmitClientMisbehaviour struct {	
-	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`	
-	Submitter sdk.AccAddress    				`json:"submitter" yaml:"submitter"`	
+// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
+// Evidence for client misbehaviour.
+type MsgSubmitClientMisbehaviour struct {
+	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
+	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
 }
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {	
-	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}	
-}	
+func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
+	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+}
 
-// Route returns the MsgSubmitClientMisbehaviour's route.	
-func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }	
+// Route returns the MsgSubmitClientMisbehaviour's route.
+func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }
 
-// Type returns the MsgSubmitClientMisbehaviour's type.	
-func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }	
+// Type returns the MsgSubmitClientMisbehaviour's type.
+func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }
 
-// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.	
-func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {	
-	if msg.Evidence == nil {	
-		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")	
-	}	
-	if err := msg.Evidence.ValidateBasic(); err != nil {	
-		return err	
-	}	
-	if msg.Submitter.Empty() {	
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())	
-	}	
+// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
+func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
+	if msg.Evidence == nil {
+		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
+	}
+	if err := msg.Evidence.ValidateBasic(); err != nil {
+		return err
+	}
+	if msg.Submitter.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
+	}
 
-	return nil	
-}	
+	return nil
+}
 
-// GetSignBytes returns the raw bytes a signer is expected to sign when submitting	
-// a MsgSubmitClientMisbehaviour message.	
-func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {	
+// GetSignBytes returns the raw bytes a signer is expected to sign when submitting
+// a MsgSubmitClientMisbehaviour message.
+func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
-}	
+}
 
-// GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.	
-func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {	
-	return []sdk.AccAddress{msg.Submitter}	
+// GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.
+func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Submitter}
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {

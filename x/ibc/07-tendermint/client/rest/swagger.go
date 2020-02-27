@@ -9,22 +9,22 @@ import (
 type (
 	PostCreateClient struct {
 		Msgs       []ibctmtypes.MsgCreateClient `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                  `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature          `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee             `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature     `json:"signatures" yaml:"signatures"`
 		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 
 	PostUpdateClient struct {
 		Msgs       []ibctmtypes.MsgUpdateClient `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                  `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature          `json:"signatures" yaml:"signatures"`
+		Fee        authtypes.StdFee             `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature     `json:"signatures" yaml:"signatures"`
 		Memo       string                       `json:"memo" yaml:"memo"`
 	}
 
 	PostSubmitMisbehaviour struct {
 		Msgs       []ibctmtypes.MsgSubmitClientMisbehaviour `json:"msg" yaml:"msg"`
-		Fee        authtypes.StdFee                  `json:"fee" yaml:"fee"`
-		Signatures []authtypes.StdSignature          `json:"signatures" yaml:"signatures"`
-		Memo       string                       `json:"memo" yaml:"memo"`
+		Fee        authtypes.StdFee                         `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature                 `json:"signatures" yaml:"signatures"`
+		Memo       string                                   `json:"memo" yaml:"memo"`
 	}
 )

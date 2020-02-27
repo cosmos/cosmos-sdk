@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	SubModuleName            = types.SubModuleName
-	StoreKey                 = types.StoreKey
-	RouterKey                = types.RouterKey
-	QuerierRoute             = types.QuerierRoute
-	QueryAllChannels         = types.QueryAllChannels
-	QueryChannel             = types.QueryChannel
+	SubModuleName    = types.SubModuleName
+	StoreKey         = types.StoreKey
+	RouterKey        = types.RouterKey
+	QuerierRoute     = types.QuerierRoute
+	QueryAllChannels = types.QueryAllChannels
+	QueryChannel     = types.QueryChannel
 )
 
 var (

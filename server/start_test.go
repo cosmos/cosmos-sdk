@@ -86,9 +86,9 @@ func TestPruningOptions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt := tt
+		tt := tt
 
+		t.Run(tt.name, func(t *testing.T) {
 			viper.Reset()
 			tt.paramInit()
 

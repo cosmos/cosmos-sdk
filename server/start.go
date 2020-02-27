@@ -20,17 +20,22 @@ import (
 
 // Tendermint full-node start flags
 const (
-	flagWithTendermint     = "with-tendermint"
-	flagAddress            = "address"
-	flagTraceStore         = "trace-store"
-	flagPruning            = "pruning"
-	flagCPUProfile         = "cpu-profile"
-	FlagMinGasPrices       = "minimum-gas-prices"
-	FlagHaltHeight         = "halt-height"
-	FlagHaltTime           = "halt-time"
-	FlagInterBlockCache    = "inter-block-cache"
-	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
+	flagWithTendermint       = "with-tendermint"
+	flagAddress              = "address"
+	flagTraceStore           = "trace-store"
+	flagPruning              = "pruning"
+	flagPruningKeepEvery     = "pruning-keep-every"
+	flagPruningSnapshotEvery = "pruning-snapshot-every"
+	flagCPUProfile           = "cpu-profile"
+	FlagMinGasPrices         = "minimum-gas-prices"
+	FlagHaltHeight           = "halt-height"
+	FlagHaltTime             = "halt-time"
+	FlagInterBlockCache      = "inter-block-cache"
+	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
 )
+
+var errPruningWithGranularOptions = fmt.Errorf("%s flag is not compatible with granular options as %s or %s", flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery)
+var errPruningGranularOptions = fmt.Errorf("%s and %s must be set together", flagPruningSnapshotEvery, flagPruningKeepEvery)
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
@@ -56,6 +61,21 @@ will not be able to commit subsequent blocks.
 For profiling and benchmarking purposes, CPU profiling can be enabled via the '--cpu-profile' flag
 which accepts a path for the resulting pprof file.
 `,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if viper.IsSet(flagPruning) {
+				if viper.IsSet(flagPruningKeepEvery) || viper.IsSet(flagPruningSnapshotEvery) {
+					return errPruningWithGranularOptions
+				}
+
+				return nil
+			}
+
+			if !(viper.IsSet(flagPruningKeepEvery) && viper.IsSet(flagPruningSnapshotEvery)) {
+				return errPruningGranularOptions
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
 				ctx.Logger.Info("starting ABCI without Tendermint")

@@ -5,6 +5,7 @@ package std
 
 import (
 	fmt "fmt"
+	types2 "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	github_com_cosmos_cosmos_sdk_x_gov_types "github.com/cosmos/cosmos-sdk/x/gov/types"
 	types "github.com/cosmos/cosmos-sdk/x/gov/types"
 	proposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -15,7 +16,6 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	types2 "x/distribution/types"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

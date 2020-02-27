@@ -7,13 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 var (
-	_ auth.Codec   = (*Codec)(nil)
-	_ supply.Codec = (*Codec)(nil)
+	_ auth.Codec     = (*Codec)(nil)
+	_ supply.Codec   = (*Codec)(nil)
+	_ evidence.Codec = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -72,7 +75,7 @@ func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
 // MarshalSupply marshals a SupplyI interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
+func (c *Codec) MarshalSupply(supplyI supplyexported.SupplyI) ([]byte, error) {
 	supply := &Supply{}
 	if err := supply.SetSupplyI(supplyI); err != nil {
 		return nil, err
@@ -83,7 +86,7 @@ func (c *Codec) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
 
 // UnmarshalSupply returns a SupplyI interface from raw encoded account bytes
 // of a Proto-based SupplyI type. An error is returned upon decoding failure.
-func (c *Codec) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
+func (c *Codec) UnmarshalSupply(bz []byte) (supplyexported.SupplyI, error) {
 	supply := &Supply{}
 	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, supply); err != nil {
 		return nil, err
@@ -94,12 +97,12 @@ func (c *Codec) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
 
 // MarshalSupplyJSON JSON encodes a supply object implementing the SupplyI
 // interface.
-func (c *Codec) MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error) {
+func (c *Codec) MarshalSupplyJSON(supply supplyexported.SupplyI) ([]byte, error) {
 	return c.Marshaler.MarshalJSON(supply)
 }
 
 // UnmarshalSupplyJSON returns a SupplyI from JSON encoded bytes.
-func (c *Codec) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
+func (c *Codec) UnmarshalSupplyJSON(bz []byte) (supplyexported.SupplyI, error) {
 	supply := &Supply{}
 	if err := c.Marshaler.UnmarshalJSON(bz, supply); err != nil {
 		return nil, err
@@ -108,9 +111,47 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
 	return supply.GetSupplyI(), nil
 }
 
-// ----------------------------------------------------------------------------
+// MarshalEvidence marshals an Evidence interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
+	evidence := &Evidence{}
+	if err := evidence.SetEvidence(evidenceI); err != nil {
+		return nil, err
+	}
 
-// MakeCodec creates and returns a reference to an Amino codec that has all the
+	return c.Marshaler.MarshalBinaryLengthPrefixed(evidence)
+}
+
+// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
+// bytes of a Proto-based Evidence type. An error is returned upon decoding
+// failure.
+func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
+	evidence := &Evidence{}
+	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, evidence); err != nil {
+		return nil, err
+	}
+
+	return evidence.GetEvidence(), nil
+}
+
+// MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
+// interface.
+func (c *Codec) MarshalEvidenceJSON(evidence eviexported.Evidence) ([]byte, error) {
+	return c.Marshaler.MarshalJSON(evidence)
+}
+
+// UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
+func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
+	evidence := &Evidence{}
+	if err := c.Marshaler.UnmarshalJSON(bz, evidence); err != nil {
+		return nil, err
+	}
+
+	return evidence.GetEvidence(), nil
+}
+
+// ----------------------------------------------------------------------------
 // necessary types and interfaces registered. This codec is provided to all the
 // modules the application depends on.
 //

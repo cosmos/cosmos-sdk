@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
@@ -46,7 +47,7 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 }
 
 // Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint) (err error) {
+func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint, cors bool) (err error) {
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
@@ -67,6 +68,11 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 			viper.GetString(flags.FlagChainID),
 		),
 	)
+
+	var h http.Handler = rs.Mux
+	if cors {
+		return rpcserver.StartHTTPServer(rs.listener, handlers.CORS()(h), rs.log, cfg)
+	}
 
 	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
@@ -90,6 +96,7 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 				viper.GetInt(flags.FlagMaxOpenConnections),
 				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
 				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
+				viper.GetBool(flags.FlagUnsafeCORS),
 			)
 
 			return err

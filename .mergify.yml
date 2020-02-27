@@ -2,7 +2,7 @@ pull_request_rules:
   - name: automatic merge for master when CI passes and 1 reviews and has label S:merge
     conditions:
       - "#approved-reviews-by>=1"
-      - "status-success=ci/circleci: test-sim-nondeterminism"
+      - "status-success=ci/circleci - Pull Request"
       - base=master
       - label=automerge
     actions:

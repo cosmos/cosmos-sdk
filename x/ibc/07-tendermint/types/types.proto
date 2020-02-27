@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "x/ibc/23-commitment/types.proto";
 import "types/types.proto";
 
-
+// MsgCreateClient defines a message to create a tendermint client state.
 message MsgCreateClient {
   string client_id = 1 [
     (gogoproto.nullable)     = false,
@@ -32,6 +32,8 @@ message MsgCreateClient {
   ];
 }
 
+// MsgCreateClient defines an sdk.Msg to update a tendermint client state to
+// the given header.
 message MsgUpdateClient {
   string client_id = 1 [
     (gogoproto.nullable)     = false,
@@ -43,6 +45,8 @@ message MsgUpdateClient {
   ];
 }
 
+// MsgSubmitClientMisbehaviour defines an sdk.Msg type that submits Evidence for
+// light client misbehaviour.
 message MsgSubmitClientMisbehaviour {	
   Evidence evidence = 1 [
     (gogoproto.nullable)    = false
@@ -52,41 +56,54 @@ message MsgSubmitClientMisbehaviour {
   ];
 }
 
+// ClientState defines a Tendermint consensus light client state.
 message ClientState {
   string id = 1;
+  // duration of the period since the LastestTimestamp during which the submitted
+	// headers are valid for upgrade
   google.protobuf.Duration trusting_period = 2 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags)    = "yaml:\"trusting_period\""
   ];
+  // duration of the staking unbonding period
   google.protobuf.Duration unbonding_period = 3 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags)    = "yaml:\"unbonding_period\""
   ];
+  // Block height when the client was frozen due to a misbehaviour
   uint64 frozen_height = 4 [
     (gogoproto.moretags)     = "yaml:\"frozen_height\""
   ];
+  // Last Header that was stored by the client
   Header last_header = 5 [
     (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"last_header\""
   ];
 }
 
+// ConsensusState defines the consensus state from Tendermint.
 message ConsensusState {
+  // timestamp that corresponds to the block height in which the ConsensusState
+  // was stored.
   google.protobuf.Timestamp timestamp = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
-  ];             
+  ];
+  // commitment root (i.e app hash)
   cosmos_sdk.x.ibc.commitment.v1.Root root = 2 [
     (gogoproto.nullable) = false
   ];
+  // height at which the consensus state was stored.
   uint64 height = 3;
 	ValidatorSet validator_set = 4 [
     (gogoproto.moretags)   = "yaml:\"validator_set\""
   ];
 }
 
+// Evidence defines two distinct headers at the same hight, chain id and client.
+// It is used to verify and penalize light client misbehaviour.
 message Evidence {
   string client_id = 1 [
     (gogoproto.nullable) = false,
@@ -106,6 +123,8 @@ message Evidence {
   ];
 }
 
+// Header defines a tendermint signed header and the validator set that
+// corresponds to the header.
 message Header {
   SignedHeader signed_header = 1 [
     (gogoproto.nullable)   = false,
@@ -122,6 +141,7 @@ message Header {
   ];
 }
 
+// TODO: move to tendermint
 message ValidatorSet {
   repeated tendermint.abci.types.Validator validators = 1 [
     (gogoproto.nullable)   = false
@@ -134,6 +154,7 @@ message ValidatorSet {
   ];
 }
 
+// TODO: move to tendermint
 message SignedHeader {
   tendermint.abci.types.Header header = 1;
   // TODO: Commit

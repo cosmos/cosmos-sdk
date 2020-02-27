@@ -86,15 +86,19 @@ func TestPruningOptions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		viper.Reset()
-		tt.paramInit()
+		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
 
-		err := startCommand.PreRunE(nil, nil)
+			viper.Reset()
+			tt.paramInit()
 
-		if tt.returnsErr {
-			require.EqualError(t, err, tt.expectedErr.Error())
-		} else {
-			require.NoError(t, err)
-		}
+			err := startCommand.PreRunE(nil, nil)
+
+			if tt.returnsErr {
+				require.EqualError(t, err, tt.expectedErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

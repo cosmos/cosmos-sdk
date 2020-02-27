@@ -42,6 +42,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(j *testing.T) {
+			tt := tt
 			viper.Reset()
 			tt.initParams()
 			require.Equal(t, tt.expectedOptions, GetPruningOptionsFromFlags())

@@ -61,9 +61,6 @@ func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 }
 
 func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
-	if app.sealed {
-		panic("SetEndBlocker() on sealed BaseApp")
-	}
 	app.endBlocker = endBlocker
 }
 

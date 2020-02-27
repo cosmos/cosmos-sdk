@@ -6,7 +6,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment";
 import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
-import "types/types.proto";
 
 
 message RootI {

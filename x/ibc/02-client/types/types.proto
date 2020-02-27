@@ -4,7 +4,6 @@ package cosmos_sdk.x.ibc.client.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 
 import "third_party/proto/cosmos-proto/cosmos.proto";
-import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/07-tendermint/types/types.proto";
 
 message ClientState {

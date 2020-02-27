@@ -5,16 +5,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types.proto";
-import "types/types.proto";
 
 
 message MsgConnectionOpenInit {
-  string client_id = 1 [
-    (gogoproto.nullable) = false
-  ];
-  string connection_id = 2 [
-    (gogoproto.nullable)    = false
-  ];
+  string client_id = 1;
+  string connection_id = 2;
   Counterparty counterparty = 3 [
     (gogoproto.nullable) = false
   ];
@@ -24,18 +19,12 @@ message MsgConnectionOpenInit {
 }
 
 message MsgConnectionOpenTry {
-  string client_id = 1 [
-    (gogoproto.nullable) = false
-  ];
-  string connection_id = 2 [
-    (gogoproto.nullable)    = false
-  ];
+  string client_id = 1;
+  string connection_id = 2;
   Counterparty counterparty = 3 [
     (gogoproto.nullable) = false
   ];
-  repeated string counterparty_versions = 4 [
-    (gogoproto.nullable)    = false
-  ];
+  repeated string counterparty_versions = 4;
   cosmos_sdk.x.ibc.commitment.v1.ProofI proof_init = 5 [
     (gogoproto.nullable)    = false
   ];
@@ -50,9 +39,7 @@ message MsgConnectionOpenTry {
 }
 
 message MsgConnectionOpenAck {
-  string connection_id = 1 [
-    (gogoproto.nullable)    = false
-  ];
+  string connection_id = 1;
   string version = 2;
   cosmos_sdk.x.ibc.commitment.v1.ProofI proof_try = 3 [
     (gogoproto.nullable)    = false
@@ -68,9 +55,7 @@ message MsgConnectionOpenAck {
 }
 
 message MsgConnectionOpenConfirm {
-  string connection_id = 1 [
-    (gogoproto.nullable)    = false
-  ];
+  string connection_id = 1;
   cosmos_sdk.x.ibc.commitment.v1.ProofI proof_ack = 2 [
     (gogoproto.nullable)    = false
   ];
@@ -82,14 +67,10 @@ message MsgConnectionOpenConfirm {
 
 message ConnectionEnd {
   string client_id = 1 [
-    (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
-  repeated string versions = 2 [
-    (gogoproto.nullable) = false
-  ];
+  repeated string versions = 2;
   bytes state = 3 [
-    (gogoproto.nullable)    = false,
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State"
   ];
   Counterparty counterparty = 4 [
@@ -99,11 +80,9 @@ message ConnectionEnd {
 
 message Counterparty {
   string client_id = 1 [
-    (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
   string connection_id = 2 [
-    (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"connection_id\""
   ];
   cosmos_sdk.x.ibc.commitment.v1.PrefixI prefix = 3 [

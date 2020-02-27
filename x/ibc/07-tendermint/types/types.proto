@@ -8,12 +8,10 @@ import "third_party/proto/tendermint/abci/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "x/ibc/23-commitment/types.proto";
-import "types/types.proto";
 
 // MsgCreateClient defines a message to create a tendermint client state.
 message MsgCreateClient {
   string client_id = 1 [
-    (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"client_id\""
   ];
   Header header = 2;
@@ -36,7 +34,6 @@ message MsgCreateClient {
 // the given header.
 message MsgUpdateClient {
   string client_id = 1 [
-    (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"client_id\""
   ];
   Header header = 2;
@@ -106,11 +103,9 @@ message ConsensusState {
 // It is used to verify and penalize light client misbehaviour.
 message Evidence {
   string client_id = 1 [
-    (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
   string chain_id = 2 [
-    (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"chain_id\""
   ];
   Header header_1 = 3 [
@@ -143,10 +138,10 @@ message Header {
 
 // TODO: move to tendermint
 message ValidatorSet {
-  repeated tendermint.abci.types.Validator validators = 1 [
+  repeated .tendermint.abci.types.Validator validators = 1 [
     (gogoproto.nullable)   = false
   ];
-  tendermint.abci.types.Validator proposer = 2 [
+  .tendermint.abci.types.Validator proposer = 2 [
     (gogoproto.nullable)   = false
   ];
   int64 total_voting_power = 3 [
@@ -156,6 +151,6 @@ message ValidatorSet {
 
 // TODO: move to tendermint
 message SignedHeader {
-  tendermint.abci.types.Header header = 1;
+  .tendermint.abci.types.Header header = 1;
   // TODO: Commit
 }

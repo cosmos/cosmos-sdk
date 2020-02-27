@@ -8,15 +8,12 @@ import "types/types.proto";
 
 message MsgTransfer {
   string source_port = 1 [
-    (gogoproto.nullable)     = false,
     (gogoproto.moretags) = "yaml:\"source_port\""
   ];
   string source_channel = 2 [
-    (gogoproto.nullable)     = false,
     (gogoproto.moretags) = "yaml:\"source_channel\""
   ];
   uint64 destination_height = 3 [
-    (gogoproto.nullable)     = false,
     (gogoproto.moretags) = "yaml:\"destination_height\""
   ];
   repeated cosmos_sdk.v1.Coin amount = 4 [

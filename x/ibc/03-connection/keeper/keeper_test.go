@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
+func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, uint64) {
 	res := suite.chainA.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
 		Height: suite.chainA.App.LastBlockHeight(),
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
 		Proof: res.Proof,
 	}
 
-	return proof, res.Height
+	return proof, uint64(res.Height)
 }
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))

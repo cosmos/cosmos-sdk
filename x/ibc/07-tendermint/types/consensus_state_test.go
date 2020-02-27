@@ -5,7 +5,7 @@ import (
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
@@ -18,7 +18,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Height:       height,
-				Root:         commitment.NewRoot([]byte("app_hash")),
+				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},
 			true},
@@ -34,7 +34,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Height:       height,
-				Root:         commitment.Root{},
+				Root:         commitmenttypes.MerkleRoot{},
 				ValidatorSet: suite.valSet,
 			},
 			false},
@@ -42,7 +42,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Height:       height,
-				Root:         commitment.NewRoot([]byte("app_hash")),
+				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				ValidatorSet: nil,
 			},
 			false},
@@ -50,7 +50,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 			ibctmtypes.ConsensusState{
 				Timestamp:    suite.now,
 				Height:       0,
-				Root:         commitment.NewRoot([]byte("app_hash")),
+				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},
 			false},
@@ -58,7 +58,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 			ibctmtypes.ConsensusState{
 				Timestamp:    time.Time{},
 				Height:       height,
-				Root:         commitment.NewRoot([]byte("app_hash")),
+				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				ValidatorSet: suite.valSet,
 			},
 			false},

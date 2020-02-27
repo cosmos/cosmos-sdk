@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
@@ -34,7 +34,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.cdc = codec.New()
 	codec.RegisterCrypto(suite.cdc)
 	ibctmtypes.RegisterCodec(suite.cdc)
-	commitment.RegisterCodec(suite.cdc)
+	commitmenttypes.RegisterCodec(suite.cdc)
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()

@@ -62,7 +62,7 @@ func NewMerklePrefix(keyPrefix []byte) MerklePrefix {
 	}
 }
 
-// GetCommitmentType implements PrefixI
+// GetCommitmentType implements Prefix interface
 func (MerklePrefix) GetCommitmentType() exported.Type {
 	return exported.Merkle
 }

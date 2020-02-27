@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // nolint
@@ -30,6 +30,6 @@ type (
 
 	QueryPath struct {
 		Height int64             `json:"height"`
-		Result commitment.Prefix `json:"result"`
+		Result commitmentexported.Prefix `json:"result"`
 	}
 )

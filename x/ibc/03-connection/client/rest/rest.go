@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 const (
@@ -26,7 +26,7 @@ type ConnectionOpenInitReq struct {
 	ClientID                 string             `json:"client_id" yaml:"client_id"`
 	CounterpartyClientID     string             `json:"counterparty_client_id" yaml:"counterparty_client_id"`
 	CounterpartyConnectionID string             `json:"counterparty_connection_id" yaml:"counterparty_connection_id"`
-	CounterpartyPrefix       commitment.PrefixI `json:"counterparty_prefix" yaml:"counterparty_prefix"`
+	CounterpartyPrefix       commitmentexported.Prefix `json:"counterparty_prefix" yaml:"counterparty_prefix"`
 }
 
 // ConnectionOpenTryReq defines the properties of a connection open try request's body.
@@ -36,10 +36,10 @@ type ConnectionOpenTryReq struct {
 	ClientID                 string             `json:"client_id" yaml:"client_id"`
 	CounterpartyClientID     string             `json:"counterparty_client_id" yaml:"counterparty_client_id"`
 	CounterpartyConnectionID string             `json:"counterparty_connection_id" yaml:"counterparty_connection_id"`
-	CounterpartyPrefix       commitment.PrefixI `json:"counterparty_prefix" yaml:"counterparty_prefix"`
+	CounterpartyPrefix       commitmentexported.Prefix `json:"counterparty_prefix" yaml:"counterparty_prefix"`
 	CounterpartyVersions     []string           `json:"counterparty_versions" yaml:"counterparty_versions"`
-	ProofInit                commitment.ProofI  `json:"proof_init" yaml:"proof_init"`
-	ProofConsensus           commitment.ProofI  `json:"proof_consensus" yaml:"proof_consensus"`
+	ProofInit                commitmentexported.Proof  `json:"proof_init" yaml:"proof_init"`
+	ProofConsensus           commitmentexported.Proof  `json:"proof_consensus" yaml:"proof_consensus"`
 	ProofHeight              uint64             `json:"proof_height" yaml:"proof_height"`
 	ConsensusHeight          uint64             `json:"consensus_height" yaml:"consensus_height"`
 }
@@ -47,8 +47,8 @@ type ConnectionOpenTryReq struct {
 // ConnectionOpenAckReq defines the properties of a connection open ack request's body.
 type ConnectionOpenAckReq struct {
 	BaseReq         rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	ProofTry        commitment.ProofI `json:"proof_try" yaml:"proof_try"`
-	ProofConsensus  commitment.ProofI `json:"proof_consensus" yaml:"proof_consensus"`
+	ProofTry        commitmentexported.Proof `json:"proof_try" yaml:"proof_try"`
+	ProofConsensus  commitmentexported.Proof `json:"proof_consensus" yaml:"proof_consensus"`
 	ProofHeight     uint64            `json:"proof_height" yaml:"proof_height"`
 	ConsensusHeight uint64            `json:"consensus_height" yaml:"consensus_height"`
 	Version         string            `json:"version" yaml:"version"`
@@ -57,6 +57,6 @@ type ConnectionOpenAckReq struct {
 // ConnectionOpenConfirmReq defines the properties of a connection open confirm request's body.
 type ConnectionOpenConfirmReq struct {
 	BaseReq     rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	ProofAck    commitment.ProofI `json:"proof_ack" yaml:"proof_ack"`
+	ProofAck    commitmentexported.Proof `json:"proof_ack" yaml:"proof_ack"`
 	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 }

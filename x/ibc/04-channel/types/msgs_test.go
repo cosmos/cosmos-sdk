@@ -17,7 +17,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // define constants used for testing
@@ -42,7 +43,7 @@ var (
 	invalidShortConnHops = []string{invalidShortConnection}
 	invalidLongConnHops  = []string{invalidLongConnection}
 
-	proof = commitment.Proof{Proof: &merkle.Proof{}}
+	proof = commitmenttypes.MerkleProof{Proof: &merkle.Proof{}}
 
 	addr = sdk.AccAddress("testaddr")
 )
@@ -50,7 +51,7 @@ var (
 type MsgTestSuite struct {
 	suite.Suite
 
-	proof commitment.Proof
+	proof commitmenttypes.MerkleProof
 }
 
 func (suite *MsgTestSuite) SetupTest() {
@@ -71,7 +72,7 @@ func (suite *MsgTestSuite) SetupTest() {
 		Prove: true,
 	})
 
-	suite.proof = commitment.Proof{Proof: res.Proof}
+	suite.proof = commitmenttypes.MerkleProof{Proof: res.Proof}
 }
 
 func TestMsgTestSuite(t *testing.T) {
@@ -200,7 +201,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 		NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, 1, addr),                 // channel id contains non-alpha
 		NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, 1, addr),                     // empty counterparty version
 		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", nil, 1, addr),                          // empty proof
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", commitment.Proof{Proof: nil}, 1, addr), // empty proof
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
 		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 0, addr),                  // proof height is zero
 	}
 
@@ -243,7 +244,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 		NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),             // too long channel id
 		NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, 1, addr),                 // channel id contains non-alpha
 		NewMsgChannelOpenConfirm("testportid", "testchannel", nil, 1, addr),                          // empty proof
-		NewMsgChannelOpenConfirm("testportid", "testchannel", commitment.Proof{Proof: nil}, 1, addr), // empty proof
+		NewMsgChannelOpenConfirm("testportid", "testchannel", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
 		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 0, addr),                  // proof height is zero
 	}
 
@@ -321,7 +322,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 		NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),             // too long channel id
 		NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, 1, addr),                 // channel id contains non-alpha
 		NewMsgChannelCloseConfirm("testportid", "testchannel", nil, 1, addr),                          // empty proof
-		NewMsgChannelCloseConfirm("testportid", "testchannel", commitment.Proof{Proof: nil}, 1, addr), // empty proof
+		NewMsgChannelCloseConfirm("testportid", "testchannel", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
 		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 0, addr),                  // proof height is zero
 	}
 
@@ -406,8 +407,8 @@ var (
 	invalidPacket = NewPacket(invalidPacketT{}, 0, portid, chanid, cpportid, cpchanid)
 	invalidAck    = invalidAckT{}
 
-	emptyProof     = commitment.Proof{Proof: nil}
-	invalidProofs1 = commitment.ProofI(nil)
+	emptyProof     = commitmenttypes.MerkleProof{Proof: nil}
+	invalidProofs1 = commitmentexported.Proof(nil)
 	invalidProofs2 = emptyProof
 
 	addr1     = sdk.AccAddress("testaddr1")
@@ -475,7 +476,7 @@ func TestMsgPacketGetSignBytes(t *testing.T) {
 	SubModuleCdc.RegisterConcrete(validPacketT{}, "test/validPacketT", nil)
 	res := msg.GetSignBytes()
 
-	expected := `{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/merkle/Proof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`
+	expected := `{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`
 	require.Equal(t, expected, string(res))
 }
 

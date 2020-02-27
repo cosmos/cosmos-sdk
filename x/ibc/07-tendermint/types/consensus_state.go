@@ -6,14 +6,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
 	Timestamp    time.Time             `json:"timestamp" yaml:"timestamp"`
-	Root         commitment.RootI      `json:"root" yaml:"root"`
+	Root         commitmentexported.Root      `json:"root" yaml:"root"`
 	Height       uint64                `json:"height" yaml:"height"`
 	ValidatorSet *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
 }
@@ -24,7 +24,7 @@ func (ConsensusState) ClientType() clientexported.ClientType {
 }
 
 // GetRoot returns the commitment Root for the specific
-func (cs ConsensusState) GetRoot() commitment.RootI {
+func (cs ConsensusState) GetRoot() commitmentexported.Root {
 	return cs.Root
 }
 

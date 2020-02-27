@@ -21,7 +21,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -73,7 +73,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.cdc = suite.chainA.App.Codec()
 }
 
-func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
+func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitmenttypes.MerkleProof, height int64) {
 	res := suite.chainA.App.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
 		Data:  key,
@@ -81,7 +81,7 @@ func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitment.Proof, h
 	})
 
 	height = res.Height
-	proof = commitment.Proof{
+	proof = commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
 
@@ -261,7 +261,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       uint64(client.Header.Height),
 		Timestamp:    client.Header.Time,
-		Root:         commitment.NewRoot(commitID.Hash),
+		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 

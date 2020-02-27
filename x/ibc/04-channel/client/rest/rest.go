@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 const (
@@ -44,7 +44,7 @@ type ChannelOpenTryReq struct {
 	CounterpartyPortID    string            `json:"counterparty_port_id" yaml:"counterparty_port_id"`
 	CounterpartyChannelID string            `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`
 	CounterpartyVersion   string            `json:"counterparty_version" yaml:"counterparty_version"`
-	ProofInit             commitment.ProofI `json:"proof_init" yaml:"proof_init"`
+	ProofInit             commitmentexported.Proof `json:"proof_init" yaml:"proof_init"`
 	ProofHeight           uint64            `json:"proof_height" yaml:"proof_height"`
 }
 
@@ -52,14 +52,14 @@ type ChannelOpenTryReq struct {
 type ChannelOpenAckReq struct {
 	BaseReq             rest.BaseReq      `json:"base_req" yaml:"base_req"`
 	CounterpartyVersion string            `json:"counterparty_version" yaml:"counterparty_version"`
-	ProofTry            commitment.ProofI `json:"proof_try" yaml:"proof_try"`
+	ProofTry            commitmentexported.Proof `json:"proof_try" yaml:"proof_try"`
 	ProofHeight         uint64            `json:"proof_height" yaml:"proof_height"`
 }
 
 // ChannelOpenConfirmReq defines the properties of a channel open confirm request's body.
 type ChannelOpenConfirmReq struct {
 	BaseReq     rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	ProofAck    commitment.ProofI `json:"proof_ack" yaml:"proof_ack"`
+	ProofAck    commitmentexported.Proof `json:"proof_ack" yaml:"proof_ack"`
 	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 }
 
@@ -71,7 +71,7 @@ type ChannelCloseInitReq struct {
 // ChannelCloseConfirmReq defines the properties of a channel close confirm request's body.
 type ChannelCloseConfirmReq struct {
 	BaseReq     rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	ProofInit   commitment.ProofI `json:"proof_init" yaml:"proof_init"`
+	ProofInit   commitmentexported.Proof `json:"proof_init" yaml:"proof_init"`
 	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 }
 
@@ -79,6 +79,6 @@ type ChannelCloseConfirmReq struct {
 type RecvPacketReq struct {
 	BaseReq rest.BaseReq      `json:"base_req" yaml:"base_req"`
 	Packet  types.Packet      `json:"packet" yaml:"packet"`
-	Proofs  commitment.ProofI `json:"proofs" yaml:"proofs"`
+	Proofs  commitmentexported.Proof `json:"proofs" yaml:"proofs"`
 	Height  uint64            `json:"height" yaml:"height"`
 }

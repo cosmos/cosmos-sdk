@@ -11,7 +11,7 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // SendPacket  is called by a module in order to send an IBC packet on a channel
@@ -111,7 +111,7 @@ func (k Keeper) SendPacket(
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
@@ -232,7 +232,7 @@ func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	acknowledgement exported.PacketAcknowledgementI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -307,7 +307,7 @@ func (k Keeper) AcknowledgePacket(
 func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight,
 	nextSequenceRecv uint64,
 	acknowledgement []byte,

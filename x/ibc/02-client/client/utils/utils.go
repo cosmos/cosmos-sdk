@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -149,7 +149,7 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 
 	state := ibctmtypes.ConsensusState{
 		Timestamp:    commit.Time,
-		Root:         commitment.NewRoot(commit.AppHash),
+		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
 

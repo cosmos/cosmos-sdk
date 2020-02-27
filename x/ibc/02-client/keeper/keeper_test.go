@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:       testClientHeight,
 		Timestamp:    suite.now,
-		Root:         commitment.NewRoot([]byte("hash")),
+		Root:         commitmenttypes.NewMerkleRoot([]byte("hash")),
 		ValidatorSet: suite.valSet,
 	}
 
@@ -162,7 +162,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	nextState := ibctmtypes.ConsensusState{
 		Height:       testClientHeight + 5,
 		Timestamp:    suite.now,
-		Root:         commitment.NewRoot([]byte("next")),
+		Root:         commitmenttypes.NewMerkleRoot([]byte("next")),
 		ValidatorSet: suite.valSet,
 	}
 

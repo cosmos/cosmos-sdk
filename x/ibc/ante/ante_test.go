@@ -23,7 +23,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/ante"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -68,7 +68,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectionexported.OPEN)
 }
 
-func queryProof(chain *TestChain, key string) (proof commitment.Proof, height int64) {
+func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
 		Data:  []byte(key),
@@ -76,7 +76,7 @@ func queryProof(chain *TestChain, key string) (proof commitment.Proof, height in
 	})
 
 	height = res.Height
-	proof = commitment.Proof{
+	proof = commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
 
@@ -298,7 +298,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       uint64(client.Header.Height) - 1,
 		Timestamp:    client.Header.Time,
-		Root:         commitment.NewRoot(commitID.Hash),
+		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 

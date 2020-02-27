@@ -8,7 +8,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	lite "github.com/tendermint/tendermint/lite2"
 )
 
@@ -93,7 +93,7 @@ func update(clientState types.ClientState, header types.Header) (types.ClientSta
 	consensusState := types.ConsensusState{
 		Height:       uint64(header.Height),
 		Timestamp:    header.Time,
-		Root:         commitment.NewRoot(header.AppHash),
+		Root:         commitmenttypes.NewMerkleRoot(header.AppHash),
 		ValidatorSet: header.ValidatorSet,
 	}
 

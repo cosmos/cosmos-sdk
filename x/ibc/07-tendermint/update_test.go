@@ -6,7 +6,7 @@ import (
 
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -148,7 +148,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		expectedConsensus := ibctmtypes.ConsensusState{
 			Height:       uint64(newHeader.Height),
 			Timestamp:    newHeader.Time,
-			Root:         commitment.NewRoot(newHeader.AppHash),
+			Root:         commitmenttypes.NewMerkleRoot(newHeader.AppHash),
 			ValidatorSet: newHeader.ValidatorSet,
 		}
 

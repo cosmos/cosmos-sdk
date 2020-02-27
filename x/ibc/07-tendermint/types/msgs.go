@@ -8,7 +8,7 @@ import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -100,7 +100,7 @@ func (msg MsgCreateClient) GetClientType() string {
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
-	root := commitment.NewRoot(msg.Header.AppHash)
+	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
 	return ConsensusState{
 		Timestamp:    msg.Header.Time,
 		Root:         root,

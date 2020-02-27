@@ -5,7 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -81,11 +81,11 @@ var _ exported.CounterpartyI = Counterparty{}
 type Counterparty struct {
 	ClientID     string             `json:"client_id" yaml:"client_id"`
 	ConnectionID string             `json:"connection_id" yaml:"connection_id"`
-	Prefix       commitment.PrefixI `json:"prefix" yaml:"prefix"`
+	Prefix       commitmentexported.Prefix `json:"prefix" yaml:"prefix"`
 }
 
 // NewCounterparty creates a new Counterparty instance.
-func NewCounterparty(clientID, connectionID string, prefix commitment.PrefixI) Counterparty {
+func NewCounterparty(clientID, connectionID string, prefix commitmentexported.Prefix) Counterparty {
 	return Counterparty{
 		ClientID:     clientID,
 		ConnectionID: connectionID,
@@ -104,7 +104,7 @@ func (c Counterparty) GetConnectionID() string {
 }
 
 // GetPrefix implements the CounterpartyI interface
-func (c Counterparty) GetPrefix() commitment.PrefixI {
+func (c Counterparty) GetPrefix() commitmentexported.Prefix {
 	return c.Prefix
 }
 

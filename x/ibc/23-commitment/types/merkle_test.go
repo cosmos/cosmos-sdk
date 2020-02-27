@@ -22,11 +22,11 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	})
 	require.NotNil(suite.T(), res.Proof)
 
-	proof := types.Proof{
+	proof := types.MerkleProof{
 		Proof: res.Proof,
 	}
 	suite.Require().NoError(proof.ValidateBasic())
-	suite.Require().Error(types.Proof{}.ValidateBasic())
+	suite.Require().Error(types.MerkleProof{}.ValidateBasic())
 
 	cases := []struct {
 		name       string
@@ -50,8 +50,8 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(tc.name, func() {
-			root := types.NewRoot(tc.root)
-			path := types.NewPath(tc.pathArr)
+			root := types.NewMerkleRoot(tc.root)
+			path := types.NewMerklePath(tc.pathArr)
 
 			err := proof.VerifyMembership(root, path, tc.value)
 
@@ -77,7 +77,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 	})
 	require.NotNil(suite.T(), res.Proof)
 
-	proof := types.Proof{
+	proof := types.MerkleProof{
 		Proof: res.Proof,
 	}
 	suite.Require().NoError(proof.ValidateBasic())
@@ -103,8 +103,8 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			root := types.NewRoot(tc.root)
-			path := types.NewPath(tc.pathArr)
+			root := types.NewMerkleRoot(tc.root)
+			path := types.NewMerklePath(tc.pathArr)
 
 			err := proof.VerifyNonMembership(root, path)
 
@@ -119,7 +119,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 }
 
 func TestApplyPrefix(t *testing.T) {
-	prefix := types.NewPrefix([]byte("storePrefixKey"))
+	prefix := types.NewMerklePrefix([]byte("storePrefixKey"))
 
 	pathStr := "path1/path2/path3/key"
 
@@ -133,5 +133,5 @@ func TestApplyPrefix(t *testing.T) {
 	invalidPathStr := "invalid-path/doesitfail?/hopefully"
 	invalidPath, err := types.ApplyPrefix(prefix, invalidPathStr)
 	require.NotNil(t, err, "invalid prefix does not returns error")
-	require.Equal(t, types.Path{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
+	require.Equal(t, types.MerklePath{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
 }

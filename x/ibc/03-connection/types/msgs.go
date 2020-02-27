@@ -5,7 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -24,7 +25,7 @@ type MsgConnectionOpenInit struct {
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitment.PrefixI,
+	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
@@ -79,8 +80,8 @@ type MsgConnectionOpenTry struct {
 	ClientID             string            `json:"client_id"`
 	Counterparty         Counterparty      `json:"counterparty"`
 	CounterpartyVersions []string          `json:"counterparty_versions"`
-	ProofInit            commitment.ProofI `json:"proof_init"`      // proof of the initialization the connection on Chain A: `none -> INIT`
-	ProofConsensus       commitment.ProofI `json:"proof_consensus"` // proof of client consensus state
+	ProofInit            commitmentexported.Proof `json:"proof_init"`      // proof of the initialization the connection on Chain A: `none -> INIT`
+	ProofConsensus       commitmentexported.Proof `json:"proof_consensus"` // proof of client consensus state
 	ProofHeight          uint64            `json:"proof_height"`
 	ConsensusHeight      uint64            `json:"consensus_height"`
 	Signer               sdk.AccAddress    `json:"signer"`
@@ -89,8 +90,8 @@ type MsgConnectionOpenTry struct {
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitment.PrefixI,
-	counterpartyVersions []string, proofInit, proofConsensus commitment.ProofI,
+	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
+	counterpartyVersions []string, proofInit, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
 ) MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
@@ -134,7 +135,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		}
 	}
 	if msg.ProofInit == nil || msg.ProofConsensus == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
@@ -170,8 +171,8 @@ var _ sdk.Msg = MsgConnectionOpenAck{}
 // the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
 	ConnectionID    string            `json:"connection_id"`
-	ProofTry        commitment.ProofI `json:"proof_try"`       // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
-	ProofConsensus  commitment.ProofI `json:"proof_consensus"` // proof of client consensus state
+	ProofTry        commitmentexported.Proof `json:"proof_try"`       // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
+	ProofConsensus  commitmentexported.Proof `json:"proof_consensus"` // proof of client consensus state
 	ProofHeight     uint64            `json:"proof_height"`
 	ConsensusHeight uint64            `json:"consensus_height"`
 	Version         string            `json:"version"`
@@ -180,7 +181,7 @@ type MsgConnectionOpenAck struct {
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry, proofConsensus commitment.ProofI,
+	connectionID string, proofTry, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenAck {
@@ -214,7 +215,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 	}
 	if msg.ProofTry == nil || msg.ProofConsensus == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofTry.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof try cannot be nil")
@@ -250,14 +251,14 @@ var _ sdk.Msg = MsgConnectionOpenConfirm{}
 // the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
 	ConnectionID string            `json:"connection_id"`
-	ProofAck     commitment.ProofI `json:"proof_ack"` // proof for the change of the connection state on Chain A: `INIT -> OPEN`
+	ProofAck     commitmentexported.Proof `json:"proof_ack"` // proof for the change of the connection state on Chain A: `INIT -> OPEN`
 	ProofHeight  uint64            `json:"proof_height"`
 	Signer       sdk.AccAddress    `json:"signer"`
 }
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck commitment.ProofI, proofHeight uint64,
+	connectionID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenConfirm {
 	return MsgConnectionOpenConfirm{
@@ -284,7 +285,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if msg.ProofAck == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofAck.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")

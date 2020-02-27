@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
@@ -78,7 +78,7 @@ func (k Keeper) ChanOpenTry(
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
-	proofInit commitment.ProofI,
+	proofInit commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
@@ -154,7 +154,7 @@ func (k Keeper) ChanOpenAck(
 	portID,
 	channelID,
 	counterpartyVersion string,
-	proofTry commitment.ProofI,
+	proofTry commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -221,7 +221,7 @@ func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	proofAck commitment.ProofI,
+	proofAck commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -341,7 +341,7 @@ func (k Keeper) ChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	proofInit commitment.ProofI,
+	proofInit commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
 	// TODO: blocked by #5542

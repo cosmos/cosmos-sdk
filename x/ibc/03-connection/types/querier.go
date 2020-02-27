@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -19,8 +19,8 @@ const (
 // also includes a proof and the height from which the proof was retrieved.
 type ConnectionResponse struct {
 	Connection  ConnectionEnd    `json:"connection" yaml:"connection"`
-	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
 	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
@@ -30,8 +30,8 @@ func NewConnectionResponse(
 ) ConnectionResponse {
 	return ConnectionResponse{
 		Connection:  connection,
-		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
+		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -56,8 +56,8 @@ func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
 // proof was retrieved.
 type ClientConnectionsResponse struct {
 	ConnectionPaths []string         `json:"connection_paths" yaml:"connection_paths"`
-	Proof           commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath       commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	Proof           commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath       commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
 	ProofHeight     uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
@@ -67,8 +67,8 @@ func NewClientConnectionsResponse(
 ) ClientConnectionsResponse {
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           commitment.Proof{Proof: proof},
-		ProofPath:       commitment.NewPath(strings.Split(ibctypes.ClientConnectionsPath(clientID), "/")),
+		Proof:           commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(ibctypes.ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}
 }

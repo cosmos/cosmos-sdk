@@ -16,7 +16,7 @@ various messages and index transactions."
 Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type and
 take the form of: `{eventType}.{eventAttribute}={value}`.
 
-+++ https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/types.pb.go#L2661-L2667
++++ https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/types.pb.go#L2187-L2193
 
 Events contain:
 

@@ -2,6 +2,7 @@ package codec
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cosmos_sdk_x_v1 "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -9,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -149,6 +151,26 @@ func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
 	}
 
 	return evidence.GetEvidence(), nil
+}
+
+func (c *Codec) MarshalProposal(p types.Proposal) ([]byte, error) {
+	stdProposal := &cosmos_sdk_x_v1.StdProposal{ProposalBase: p.ProposalBase}
+	if err := stdProposal.Content.SetContent(p.Content); err != nil {
+		return nil, err
+	}
+	return c.Marshaler.MarshalBinaryBare(stdProposal)
+}
+
+func (c *Codec) UnmarshalProposal(bz []byte) (types.Proposal, error) {
+	stdProposal := &cosmos_sdk_x_v1.StdProposal{}
+	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, stdProposal); err != nil {
+		return nil, err
+	}
+
+	return types.Proposal{
+		//Content:      stdProposal.Content.GetContent(),
+		ProposalBase: stdProposal.ProposalBase,
+	}, nil
 }
 
 // ----------------------------------------------------------------------------

@@ -1,17 +1,28 @@
 syntax = "proto3";
 package cosmos_sdk.x.v1;
 
+import "third_party/proto/cosmos-proto/cosmos.proto";
+import "third_party/proto/gogoproto/gogo.proto";
 import "x/gov/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
 import "x/distribution/types/types.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/codec/std";
+
 message StdProposal {
-    oneof sum {
-        cosmos_sdk.x.gov.v1.TextProposal text = 1;
-        cosmos_sdk.x.params.v1.ParameterChangeProposal parameter_change = 2;
-        cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal software_upgrade = 3;
-        cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal cancel_software_upgrade = 4;
-        cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend = 5;
+    cosmos_sdk.x.gov.v1.ProposalBase base = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+    Content content = 2 [(gogoproto.nullable) = false];
+
+    message Content {
+        option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/gov/types.Content";
+        oneof sum {
+            cosmos_sdk.x.gov.v1.TextProposal text = 1;
+            cosmos_sdk.x.params.v1.ParameterChangeProposal parameter_change = 2;
+            cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal software_upgrade = 3;
+            cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal cancel_software_upgrade = 4;
+            cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend = 5;
+        }
     }
 }
+

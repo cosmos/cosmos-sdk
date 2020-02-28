@@ -265,7 +265,7 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	}
 }
 
-// CreateTestPubKeys generates crypto.PubKeys in ascending order.
+// CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
 func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
 	var publicKeys []crypto.PubKey
 	var buffer bytes.Buffer

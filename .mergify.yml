@@ -1,0 +1,10 @@
+pull_request_rules:
+  - name: automatic merge for master when CI passes, has 1 review and has the label automerge
+    conditions:
+      - "#approved-reviews-by>=1"
+      - "status-success=ci/circleci - Pull Request"
+      - base=master
+      - label=automerge
+    actions:
+      merge:
+        method: squash

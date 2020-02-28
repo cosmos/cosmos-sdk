@@ -34,8 +34,16 @@ const (
 	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
 )
 
-var errPruningWithGranularOptions = fmt.Errorf("%s flag is not compatible with granular options as %s or %s", flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery)
-var errPruningGranularOptions = fmt.Errorf("%s and %s must be set together", flagPruningSnapshotEvery, flagPruningKeepEvery)
+var (
+	errPruningWithGranularOptions = fmt.Errorf(
+		"'--%s' flag is not compatible with granular options  '--%s' or '--%s'",
+		flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery,
+	)
+	errPruningGranularOptions = fmt.Errorf(
+		"'--%s' and '--%s' must be set together",
+		flagPruningSnapshotEvery, flagPruningKeepEvery,
+	)
+)
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
@@ -104,7 +112,7 @@ which accepts a path for the resulting pprof file.
 // checkPruningParams checks that the provided pruning params are correct
 func checkPruningParams() error {
 	if !viper.IsSet(flagPruning) && !viper.IsSet(flagPruningKeepEvery) && !viper.IsSet(flagPruningSnapshotEvery) {
-		return nil // Use default
+		return nil
 	}
 
 	if viper.IsSet(flagPruning) {

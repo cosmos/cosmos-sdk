@@ -26,6 +26,7 @@ build: go.sum
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
 .PHONY: mocks
 
 $(MOCKS_DIR):

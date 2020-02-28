@@ -27,7 +27,7 @@ import (
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
@@ -52,7 +52,7 @@ func Setup(isCheckTx bool) *SimApp {
 // accounts and possible balances.
 func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ...bank.Balance) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()

@@ -548,7 +548,7 @@ func (k Keeper) Delegate(
 }
 
 // unbond a particular delegation and perform associated store operations
-func (k Keeper) unbond(
+func (k Keeper) Unbond(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 ) (amount sdk.Int, err error) {
 
@@ -654,7 +654,7 @@ func (k Keeper) Undelegate(
 		return time.Time{}, types.ErrMaxUnbondingDelegationEntries
 	}
 
-	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
+	returnAmount, err := k.Unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -751,7 +751,7 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrMaxRedelegationEntries
 	}
 
-	returnAmount, err := k.unbond(ctx, delAddr, valSrcAddr, sharesAmount)
+	returnAmount, err := k.Unbond(ctx, delAddr, valSrcAddr, sharesAmount)
 	if err != nil {
 		return time.Time{}, err
 	}

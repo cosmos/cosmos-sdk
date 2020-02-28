@@ -67,6 +67,7 @@ func TestPruningOptions_IsValid(t *testing.T) {
 		{"SnapshotEvery%KeepEvery!=0", fields{15, 20}, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			po := types.PruningOptions{
 				KeepEvery:     tt.fields.KeepEvery,

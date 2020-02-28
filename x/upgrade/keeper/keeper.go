@@ -2,19 +2,30 @@ package keeper
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// UpgradeInfoFileName file to store upgrade information
+const UpgradeInfoFileName string = "upgrade-info.json"
+
 type Keeper struct {
+	homePath           string
 	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
 	cdc                codec.Marshaler
@@ -22,8 +33,9 @@ type Keeper struct {
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.Marshaler) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.Marshaler, homePath string) Keeper {
 	return Keeper{
+		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
@@ -130,4 +142,60 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 // IsSkipHeight checks if the given height is part of skipUpgradeHeights
 func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
+}
+
+// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
+func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
+	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
+	if err != nil {
+		return err
+	}
+
+	upgradeInfo := store.UpgradeInfo{
+		Name:   name,
+		Height: height,
+	}
+	info, err := json.Marshal(upgradeInfo)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
+}
+
+// GetUpgradeInfoPath returns the upgrade info file path
+func (k Keeper) GetUpgradeInfoPath() (string, error) {
+	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
+	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+}
+
+// getHomeDir returns the height at which the given upgrade was executed
+func (k Keeper) getHomeDir() string {
+	return k.homePath
+}
+
+// ReadUpgradeInfoFromDisk returns the name and height of the upgrade
+// which is written to disk by the old binary when panic'ing
+// if there's an error in reading the info,
+// it assumes that the upgrade info is not available
+func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeInfo store.UpgradeInfo) {
+	upgradeInfoPath, err := k.GetUpgradeInfoPath()
+	// if error in reading the path, assume there are no upgrades
+	if err != nil {
+		return upgradeInfo
+	}
+
+	data, err := ioutil.ReadFile(upgradeInfoPath)
+	// if error in reading the file, assume there are no upgrades
+	if err != nil {
+		return upgradeInfo
+	}
+
+	json.Unmarshal(data, &upgradeInfo)
+	return
 }

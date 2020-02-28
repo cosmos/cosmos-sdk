@@ -122,7 +122,7 @@ type SimApp struct {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
+	homePath string, invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
 ) *SimApp {
 
 	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
@@ -189,7 +189,7 @@ func NewSimApp(
 	app.CrisisKeeper = crisis.NewKeeper(
 		app.subspaces[crisis.ModuleName], invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName,
 	)
-	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], appCodec)
+	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], appCodec, homePath)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidence.NewKeeper(

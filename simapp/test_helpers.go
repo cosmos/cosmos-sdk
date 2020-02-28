@@ -265,6 +265,7 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	}
 }
 
+// CreateTestPubKeys generates crypto.PubKeys in ascending order.
 func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
 	var publicKeys []crypto.PubKey
 	var buffer bytes.Buffer
@@ -281,12 +282,12 @@ func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
 	return publicKeys
 }
 
+// NewPubKeyFromHex returns a PubKey from a hex string.
 func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	pkBytes, err := hex.DecodeString(pk)
 	if err != nil {
 		panic(err)
 	}
-	//res, err = crypto.PubKeyFromBytes(pkBytes)
 	var pkEd ed25519.PubKeyEd25519
 	copy(pkEd[:], pkBytes)
 	return pkEd

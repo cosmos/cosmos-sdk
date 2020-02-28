@@ -22,7 +22,7 @@ It is being used to build [`Gaia`](https://github.com/cosmos/gaia), the first im
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.13+](https://golang.org/dl/)
+**Note**: Requires [Go 1.14+](https://golang.org/dl/)
 
 ## Quick Start
 

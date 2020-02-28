@@ -56,6 +56,33 @@ During each `EndBlock` execution, the `x/upgrade` module checks if there exists 
 `Handler` is executed. If the `Plan` is expected to execute but no `Handler` is registered
 or if the binary was upgraded too early, the node will gracefully panic and exit.
 
+## StoreLoader
+
+
+The `x/upgrade` module also facilitates store migrations as part of the upgrade. The
+`StoreLoader` sets the migrations that need to occur before the new binary can 
+successfully run the chain. This `StoreLoader` is also application specific and 
+not defined on a per-module basis. Registering this `StoreLoader` is done via
+`app#SetStoreLoader` in the application.
+
+```go
+func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader
+```
+
+If there's a planned upgrade and the upgrade height is reached, the old binary writes `UpgradeInfo` to the disk before panic'ing.
+
+```go
+type UpgradeInfo struct {
+  Name    string
+  Height  int64
+}
+```
+
+This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
+expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple
+times everytime on restart. Also if there are multiple upgrades planned on same height, the `Name`
+will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
+
 ## Proposal
 
 Typically, a `Plan` is proposed and submitted through governance via a `SoftwareUpgradeProposal`.

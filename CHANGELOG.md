@@ -148,6 +148,8 @@ Buffers for state serialization instead of Amino.
 * (rest) [\#5648](https://github.com/cosmos/cosmos-sdk/pull/5648) Enhance /txs usability:
   * Add `tx.minheight` key to filter transaction with an inclusive minimum block height
   * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
+* (server) [\#5709](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
+and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
 
 ## [v0.38.1] - 2020-02-11
 

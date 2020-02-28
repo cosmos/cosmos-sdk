@@ -2,7 +2,6 @@ package version
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -21,29 +20,31 @@ func init() {
 var Cmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the app version",
-	RunE: func(_ *cobra.Command, _ []string) error {
-		verInfo := NewInfo()
+	RunE:  runVersionCmd,
+}
 
-		if !viper.GetBool(flagLong) {
-			fmt.Println(verInfo.Version)
-			return nil
-		}
+func runVersionCmd(cmd *cobra.Command, args []string) error {
+	verInfo := NewInfo()
 
-		var bz []byte
-		var err error
+	if !viper.GetBool(flagLong) {
+		cmd.Println(verInfo.Version)
+		return nil
+	}
 
-		switch viper.GetString(cli.OutputFlag) {
-		case "json":
-			bz, err = json.Marshal(verInfo)
-		default:
-			bz, err = yaml.Marshal(&verInfo)
-		}
+	var bz []byte
+	var err error
 
-		if err != nil {
-			return err
-		}
+	switch viper.GetString(cli.OutputFlag) {
+	case "json":
+		bz, err = json.Marshal(verInfo)
+	default:
+		bz, err = yaml.Marshal(&verInfo)
+	}
 
-		_, err = fmt.Println(string(bz))
+	if err != nil {
 		return err
-	},
+	}
+
+	cmd.Println(string(bz))
+	return nil
 }

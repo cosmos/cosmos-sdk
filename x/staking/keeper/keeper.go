@@ -37,6 +37,10 @@ func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps paramtypes.Subspace,
 ) Keeper {
 
+	if !ps.HasKeyTable() {
+		ps = ps.WithKeyTable(ParamKeyTable())
+	}
+
 	// ensure bonded and not bonded module accounts are set
 	if addr := sk.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
@@ -51,7 +55,7 @@ func NewKeeper(
 		cdc:                cdc,
 		bankKeeper:         bk,
 		supplyKeeper:       sk,
-		paramstore:         ps.WithKeyTable(ParamKeyTable()),
+		paramstore:         ps,
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),

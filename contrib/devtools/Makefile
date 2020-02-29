@@ -96,26 +96,13 @@ protoc-gen-gocosmos:
 	@echo "Installing protoc-gen-gocosmos..."
 	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
-buf: protoc-gen-buf-check-breaking protoc-gen-buf-check-lint
+buf:
 	@echo "Installing buf..."
 	@curl -sSL \
     "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" \
     -o "${BIN}/buf" && \
 	chmod +x "${BIN}/buf"
 
-protoc-gen-buf-check-breaking:
-	@echo "Installing protoc-gen-buf-check-breaking..."
-	@curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-breaking-${UNAME_S}-${UNAME_M}" \
-    -o "${BIN}/protoc-gen-buf-check-breaking" && \
-	chmod +x "${BIN}/protoc-gen-buf-check-breaking"
-
-protoc-gen-buf-check-lint:
-	@echo "Installing protoc-gen-buf-check-lint..."
-	@curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-lint-${UNAME_S}-${UNAME_M}" \
-    -o "${BIN}/protoc-gen-buf-check-lint" && \
-	chmod +x "${BIN}/protoc-gen-buf-check-lint"
 
 tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)

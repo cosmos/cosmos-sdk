@@ -248,10 +248,6 @@ TM_MERKLE_TYPES     = third_party/proto/crypto/merkle
 TM_ABCI_TYPES       = third_party/proto/abci/types
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos-proto
-SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types
-AUTH_PROTO_TYPES    = third_party/proto/cosmos-sdk/x/auth/types
-VESTING_PROTO_TYPES = third_party/proto/cosmos-sdk/x/auth/vesting/types
-SUPPLY_PROTO_TYPES  = third_party/proto/cosmos-sdk/x/supply/types
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)

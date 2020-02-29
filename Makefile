@@ -243,9 +243,9 @@ TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 
-TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
-TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
-TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
+TM_KV_TYPES         = third_party/proto/libs/kv
+TM_MERKLE_TYPES     = third_party/proto/crypto/merkle
+TM_ABCI_TYPES       = third_party/proto/abci/types
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos-proto
 SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types

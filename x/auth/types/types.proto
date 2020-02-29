@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.x.auth.v1;
 
-import "third_party/proto/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 import "types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";

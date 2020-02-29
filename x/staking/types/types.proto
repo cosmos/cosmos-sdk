@@ -1,8 +1,8 @@
 syntax = "proto3";
 package cosmos_sdk.x.staking.v1;
 
-import "third_party/proto/gogoproto/gogo.proto";
-import "third_party/proto/tendermint/abci/types/types.proto";
+import "gogoproto/gogo.proto";
+import "tendermint/abci/types/types.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "types/types.proto";

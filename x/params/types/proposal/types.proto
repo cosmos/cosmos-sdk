@@ -4,7 +4,7 @@ package cosmos_sdk.x.params.v1;
 option go_package            = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
 option (gogoproto.equal_all) = true;
 
-import "third_party/proto/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // ParameterChangeProposal defines a proposal which contains multiple parameter
 // changes.

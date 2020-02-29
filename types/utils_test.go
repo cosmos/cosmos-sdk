@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
@@ -65,4 +66,13 @@ func TestTimeFormatAndParse(t *testing.T) {
 		require.True(t, timeFromRFC.Equal(timeFromSDKFormat))
 		require.Equal(t, timeFromRFC.Format(SortableTimeFormat), tc.SDKSortableTimeStr)
 	}
+}
+
+func TestCopyBytes(t *testing.T) {
+	t.Parallel()
+	require.Nil(t, CopyBytes(nil))
+	require.Equal(t, 0, len(CopyBytes([]byte{})))
+	bs := []byte("test")
+	bsCopy := CopyBytes(bs)
+	require.True(t, bytes.Equal(bs, bsCopy))
 }

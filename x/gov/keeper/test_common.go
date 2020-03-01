@@ -56,10 +56,6 @@ var (
 	pubkeys = []crypto.PubKey{
 		delPk1, delPk2, delPk3, valOpPk1, valOpPk2, valOpPk3,
 	}
-
-	emptyDelAddr sdk.AccAddress
-	emptyValAddr sdk.ValAddress
-	emptyPubkey  crypto.PubKey
 )
 
 // TODO: remove dependency with staking

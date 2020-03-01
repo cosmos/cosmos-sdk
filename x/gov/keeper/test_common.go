@@ -72,7 +72,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
+	copy(pkEd[:], pkBytes)
 	return pkEd
 }
 

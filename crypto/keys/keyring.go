@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -218,7 +217,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		}
 
 	case ledgerInfo:
-		return kb.base.SignWithLedger(info, msg)
+		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
 		return kb.base.DecodeSignature(info, msg)
@@ -419,29 +418,7 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 // The oldpass must be the current passphrase used for encryption, getNewpass is
 // a function to get the passphrase to permanently replace the current passphrase.
 func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	info, err := kb.Get(name)
-	if err != nil {
-		return err
-	}
-
-	switch linfo := info.(type) {
-	case localInfo:
-		key, _, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
-		if err != nil {
-			return err
-		}
-
-		newpass, err := getNewpass()
-		if err != nil {
-			return err
-		}
-
-		kb.writeLocalKey(name, key, newpass, linfo.GetAlgo())
-		return nil
-
-	default:
-		return fmt.Errorf("locally stored key required; received: %v", reflect.TypeOf(info).String())
-	}
+	return errors.New("unsupported operation")
 }
 
 // SupportedAlgos returns a list of supported signing algorithms.

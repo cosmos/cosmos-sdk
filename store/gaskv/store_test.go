@@ -22,6 +22,11 @@ func TestGasKVStoreBasic(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(10000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
+
+	require.Equal(t, types.StoreTypeDB, st.GetStoreType())
+	require.Panics(t, func() { st.CacheWrap() })
+	require.Panics(t, func() { st.CacheWrapWithTrace(nil, nil) })
+
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
@@ -34,11 +39,20 @@ func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(10000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
+	require.False(t, st.Has(keyFmt(1)))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
+	require.True(t, st.Has(keyFmt(1)))
 	st.Set(keyFmt(2), valFmt(2))
+
 	iterator := st.Iterator(nil, nil)
+	start, end := iterator.Domain()
+	require.Nil(t, start)
+	require.Nil(t, end)
+	require.NoError(t, iterator.Error())
+
+	t.Cleanup(iterator.Close)
 	ka := iterator.Key()
 	require.Equal(t, ka, keyFmt(1))
 	va := iterator.Value()
@@ -51,7 +65,18 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, meter.GasConsumed(), types.Gas(6987))
+	require.NoError(t, iterator.Error())
+
+	reverseIterator := st.ReverseIterator(nil, nil)
+	t.Cleanup(reverseIterator.Close)
+	require.Equal(t, reverseIterator.Key(), keyFmt(2))
+	reverseIterator.Next()
+	require.Equal(t, reverseIterator.Key(), keyFmt(1))
+	reverseIterator.Next()
+	require.False(t, reverseIterator.Valid())
+	require.Panics(t, reverseIterator.Next)
+
+	require.Equal(t, types.Gas(9194), meter.GasConsumed())
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {

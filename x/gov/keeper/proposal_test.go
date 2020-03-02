@@ -36,7 +36,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
-	keeper.activateVotingPeriod(ctx, proposal)
+	keeper.ActivateVotingPeriod(ctx, proposal)
 
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 

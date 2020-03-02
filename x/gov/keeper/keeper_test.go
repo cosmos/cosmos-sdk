@@ -3,12 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	proto "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -31,7 +29,6 @@ func TestIncrementProposalNumber(t *testing.T) {
 func TestProposalQueues(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := simappcodec.NewAppCodec(app.Codec())
 
 	// create test proposals
 	tp := TestProposal
@@ -53,9 +50,8 @@ func TestProposalQueues(t *testing.T) {
 	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
-	var propIDValue proto.UInt64Value
-	appCodec.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &propIDValue)
+	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())
+	require.Equal(t, proposalID, proposal.ProposalID)
 
-	require.Equal(t, propIDValue.Value, proposal.ProposalID)
 	activeIterator.Close()
 }

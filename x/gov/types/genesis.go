@@ -38,7 +38,8 @@ func DefaultGenesisState() GenesisState {
 }
 
 func (data GenesisState) Equal(other GenesisState) bool {
-	return data.Deposits.Equal(other.Deposits) &&
+	return data.StartingProposalID == other.StartingProposalID &&
+		data.Deposits.Equal(other.Deposits) &&
 		data.Votes.Equal(other.Votes) &&
 		data.Proposals.Equal(other.Proposals) &&
 		data.DepositParams.Equal(other.DepositParams) &&

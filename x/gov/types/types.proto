@@ -91,6 +91,7 @@ message Deposit {
 // all static fields (i.e fields excluding the dynamic Content). A full proposal
 // extends the ProposalBase with Content.
 message ProposalBase {
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.face)             = true;
 

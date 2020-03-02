@@ -10,7 +10,7 @@ import (
 
 var (
 	_ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
-	_ gov.MsgSubmitProposal         = MsgSubmitProposal{}
+	_ gov.MsgSubmitProposalI        = MsgSubmitProposal{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.

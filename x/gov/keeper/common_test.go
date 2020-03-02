@@ -24,9 +24,9 @@ func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
 }
 
 func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	pks := simapp.CreateTestPubKeys(3)
+	pks := simapp.CreateTestPubKeys(5)
 
 	appCodec := codec.NewAppCodec(app.Codec())
 	app.StakingKeeper = staking.NewKeeper(

@@ -10,40 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-func TestTallyDelgatorOverride(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 7})
-
-	delTokens := sdk.TokensFromConsensusPower(30)
-	val1, found := sk.GetValidator(ctx, valOpAddr1)
-	require.True(t, found)
-
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
-	require.NoError(t, err)
-
-	_ = staking.EndBlocker(ctx, sk)
-
-	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
-	require.NoError(t, err)
-	proposalID := proposal.ProposalID
-	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
-
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo))
-
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
-
-	require.False(t, passes)
-	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
-}
-
 func TestTallyDelgatorInherit(t *testing.T) {
 	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 7})

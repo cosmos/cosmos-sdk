@@ -23,7 +23,7 @@ func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
 		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }
 
-func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) {
+func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(3)
@@ -56,4 +56,6 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) {
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[2], sdk.TokensFromConsensusPower(powers[2]), sdk.Unbonded, val3, true)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+
+	return addrs, valAddrs
 }

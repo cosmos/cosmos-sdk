@@ -3,8 +3,9 @@ package types
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewCommissionRates returns an initialized validator commission rates.

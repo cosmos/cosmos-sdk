@@ -46,6 +46,7 @@ balances or a single balance by denom when the `denom` query parameter is presen
 
 ### API Breaking Changes
 
+* [\#5719](https://github.com/cosmos/cosmos-sdk/pull/5719) Bump Go requirement to 1.14+
 * (x/params) [\#5619](https://github.com/cosmos/cosmos-sdk/pull/5619) The `x/params` keeper now accepts a `codec.Marshaller` instead of
 a reference to an amino codec. Amino is still used for JSON serialization.
 * (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The `keepRecent` field has been removed from the `PruningOptions` type.
@@ -66,6 +67,8 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 
 ### Bug Fixes
 
+* (baseapp) [\#5718](https://github.com/cosmos/cosmos-sdk/pull/5718) Remove call to `ctx.BlockGasMeter` during failed message validation which
+resulted in a panic when the tx execution mode was `CheckTx`.
 * (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set.
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 * (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`

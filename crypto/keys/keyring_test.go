@@ -16,7 +16,7 @@ import (
 
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
@@ -100,7 +100,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 
 func TestLazySignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 	algo := Secp256k1
@@ -176,7 +176,7 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 
 func TestLazyExportImportKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
@@ -205,7 +205,7 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 
 func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 	algo := Secp256k1
@@ -246,7 +246,7 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 
 func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
@@ -262,7 +262,7 @@ func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 
 func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
@@ -296,7 +296,7 @@ func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 
 func TestLazySeedPhraseKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 

@@ -68,8 +68,8 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
 	// set a temporary home dir
-	homeDir, cleanUp := tests.NewTestCaseDir(t)
-	defer cleanUp()
+	homeDir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
 	// TODO cleanup viper
 	viper.Set(flags.FlagHome, homeDir)
 

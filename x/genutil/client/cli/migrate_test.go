@@ -38,6 +38,7 @@ func TestGetMigrationCallback(t *testing.T) {
 
 func TestMigrateGenesis(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
 	viper.Set(cli.HomeFlag, home)
 	viper.Set(flags.FlagName, "moniker")
 	logger := log.NewNopLogger()
@@ -48,8 +49,6 @@ func TestMigrateGenesis(t *testing.T) {
 
 	genesisPath := path.Join(home, "genesis.json")
 	target := "v0.36"
-
-	defer cleanup()
 
 	// Reject if we dont' have the right parameters or genesis does not exists
 	require.Error(t, MigrateGenesisCmd(ctx, cdc).RunE(nil, []string{target, genesisPath}))

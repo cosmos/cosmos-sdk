@@ -64,18 +64,17 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	addrs, _ := createValidators(ctx, app, []int64{5, 5, 5})
-	valAccAddr1, valAccAddr2, valAccAddr3 := addrs[0], addrs[1], addrs[2]
-
 	tp := TestProposal
+
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -84,4 +83,28 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	require.True(t, passes)
 	require.False(t, burnDeposits)
 	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
+}
+
+func TestTallyOnlyValidators51No(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 0})
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionNo))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
+
+	require.False(t, passes)
+	require.False(t, burnDeposits)
 }

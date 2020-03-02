@@ -16,7 +16,6 @@ var (
 
 	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
-	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())
 
 	distrAcc = supply.NewEmptyModuleAccount(types.ModuleName)
 )

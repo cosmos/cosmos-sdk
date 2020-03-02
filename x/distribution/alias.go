@@ -55,9 +55,6 @@ var (
 	GetValidatorSlashEventKey                  = types.GetValidatorSlashEventKey
 	HandleCommunityPoolSpendProposal           = keeper.HandleCommunityPoolSpendProposal
 	NewQuerier                                 = keeper.NewQuerier
-	MakeTestCodec                              = keeper.MakeTestCodec
-	CreateTestInputDefault                     = keeper.CreateTestInputDefault
-	CreateTestInputAdvanced                    = keeper.CreateTestInputAdvanced
 	ParamKeyTable                              = types.ParamKeyTable
 	DefaultParams                              = types.DefaultParams
 	RegisterCodec                              = types.RegisterCodec

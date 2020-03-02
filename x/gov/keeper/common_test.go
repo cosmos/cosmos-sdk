@@ -1,10 +1,8 @@
 package keeper_test
 
 import (
-	"bytes"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -14,18 +12,12 @@ var (
 	TestProposal = types.NewTextProposal("Test", "description")
 )
 
-// ProposalEqual checks if two proposals are equal (note: slow, for tests only)
-func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
-	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
-		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
-}
-
 func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
 
-	appCodec := codec.NewAppCodec(app.Codec())
+	appCodec := simappcodec.NewAppCodec(app.Codec())
 	app.StakingKeeper = staking.NewKeeper(
 		appCodec,
 		app.GetKey(staking.StoreKey),

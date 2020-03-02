@@ -21,6 +21,21 @@ func (d Deposit) String() string {
 // Deposits is a collection of Deposit objects
 type Deposits []Deposit
 
+// Equal returns true if two slices (order-dependant) of deposits are equal.
+func (d Deposits) Equal(other Deposits) bool {
+	if len(d) != len(other) {
+		return false
+	}
+
+	for i, deposit := range d {
+		if !deposit.Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (d Deposits) String() string {
 	if len(d) == 0 {
 		return "[]"
@@ -32,12 +47,7 @@ func (d Deposits) String() string {
 	return out
 }
 
-// Equals returns whether two deposits are equal.
-func (d Deposit) Equals(comp Deposit) bool {
-	return d.Depositor.Equals(comp.Depositor) && d.ProposalID == comp.ProposalID && d.Amount.IsEqual(comp.Amount)
-}
-
 // Empty returns whether a deposit is empty.
 func (d Deposit) Empty() bool {
-	return d.Equals(Deposit{})
+	return d.Equal(Deposit{})
 }

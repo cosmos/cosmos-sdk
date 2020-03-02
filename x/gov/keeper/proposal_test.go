@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -27,7 +26,7 @@ func TestGetSetProposal(t *testing.T) {
 
 	gotProposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	require.True(t, ProposalEqual(proposal, gotProposal))
+	require.Equal(t, proposal.String(), gotProposal.String())
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
@@ -90,21 +89,19 @@ func (invalidProposalValidation) ValidateBasic() error {
 	return errors.New("invalid proposal")
 }
 
-func registerTestCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(validProposal{}, "test/validproposal", nil)
-	cdc.RegisterConcrete(invalidProposalTitle1{}, "test/invalidproposalt1", nil)
-	cdc.RegisterConcrete(invalidProposalTitle2{}, "test/invalidproposalt2", nil)
-	cdc.RegisterConcrete(invalidProposalDesc1{}, "test/invalidproposald1", nil)
-	cdc.RegisterConcrete(invalidProposalDesc2{}, "test/invalidproposald2", nil)
-	cdc.RegisterConcrete(invalidProposalRoute{}, "test/invalidproposalr", nil)
-	cdc.RegisterConcrete(invalidProposalValidation{}, "test/invalidproposalv", nil)
-}
+// func registerTestCodec(cdc *codec.Codec) {
+// 	cdc.RegisterConcrete(validProposal{}, "test/validproposal", nil)
+// 	cdc.RegisterConcrete(invalidProposalTitle1{}, "test/invalidproposalt1", nil)
+// 	cdc.RegisterConcrete(invalidProposalTitle2{}, "test/invalidproposalt2", nil)
+// 	cdc.RegisterConcrete(invalidProposalDesc1{}, "test/invalidproposald1", nil)
+// 	cdc.RegisterConcrete(invalidProposalDesc2{}, "test/invalidproposald2", nil)
+// 	cdc.RegisterConcrete(invalidProposalRoute{}, "test/invalidproposalr", nil)
+// 	cdc.RegisterConcrete(invalidProposalValidation{}, "test/invalidproposalv", nil)
+// }
 
 func TestSubmitProposal(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	registerTestCodec(app.Codec())
 
 	testCases := []struct {
 		content     types.Content

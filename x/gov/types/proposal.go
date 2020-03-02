@@ -46,6 +46,21 @@ func (p Proposal) String() string {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
+// Equal returns true if two slices (order-dependant) of proposals are equal.
+func (p Proposals) Equal(other Proposals) bool {
+	if len(p) != len(other) {
+		return false
+	}
+
+	for i, proposal := range p {
+		if !proposal.Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // String implements stringer interface
 func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"

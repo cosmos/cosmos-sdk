@@ -22,6 +22,21 @@ func (v Vote) String() string {
 // Votes is a collection of Vote objects
 type Votes []Vote
 
+// Equal returns true if two slices (order-dependant) of votes are equal.
+func (v Votes) Equal(other Votes) bool {
+	if len(v) != len(other) {
+		return false
+	}
+
+	for i, vote := range v {
+		if !vote.Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (v Votes) String() string {
 	if len(v) == 0 {
 		return "[]"
@@ -33,16 +48,9 @@ func (v Votes) String() string {
 	return out
 }
 
-// Equals returns whether two votes are equal.
-func (v Vote) Equals(comp Vote) bool {
-	return v.Voter.Equals(comp.Voter) &&
-		v.ProposalID == comp.ProposalID &&
-		v.Option == comp.Option
-}
-
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
-	return v.Equals(Vote{})
+	return v.Equal(Vote{})
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error

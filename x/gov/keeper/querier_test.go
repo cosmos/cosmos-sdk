@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermit/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -146,6 +147,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.Marshaler, querier
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	appCodec := simappcodec.NewAppCodec(app.Codec())
 
 	querier := keeper.NewQuerier(app.GovKeeper)
 
@@ -156,7 +158,7 @@ func TestQueries(t *testing.T) {
 
 	tp := TestProposal
 
-	depositParams, _, _ := getQueriedParams(t, ctx, app.Codec(), querier)
+	depositParams, _, _ := getQueriedParams(t, ctx, appCodec, querier)
 
 	// TestAddrs[0] proposes (and deposits) proposals #1 and #2
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -204,35 +206,35 @@ func TestQueries(t *testing.T) {
 	deposit5.Amount = deposit5.Amount.Add(deposit3.Amount...)
 
 	// check deposits on proposal1 match individual deposits
-	deposits := getQueriedDeposits(t, ctx, app.Codec(), querier, proposal1.ProposalID)
+	deposits := getQueriedDeposits(t, ctx, appCodec, querier, proposal1.ProposalID)
 	require.Len(t, deposits, 1)
 	require.Equal(t, deposit1, deposits[0])
 
-	deposit := getQueriedDeposit(t, ctx, app.Codec(), querier, proposal1.ProposalID, TestAddrs[0])
+	deposit := getQueriedDeposit(t, ctx, appCodec, querier, proposal1.ProposalID, TestAddrs[0])
 	require.Equal(t, deposit1, deposit)
 
 	// check deposits on proposal2 match individual deposits
-	deposits = getQueriedDeposits(t, ctx, app.Codec(), querier, proposal2.ProposalID)
+	deposits = getQueriedDeposits(t, ctx, appCodec, querier, proposal2.ProposalID)
 	require.Len(t, deposits, 2)
 	// NOTE order of deposits is determined by the addresses
 	require.Equal(t, deposit2, deposits[0])
 	require.Equal(t, deposit4, deposits[1])
 
 	// check deposits on proposal3 match individual deposits
-	deposits = getQueriedDeposits(t, ctx, app.Codec(), querier, proposal3.ProposalID)
+	deposits = getQueriedDeposits(t, ctx, appCodec, querier, proposal3.ProposalID)
 	require.Len(t, deposits, 1)
 	require.Equal(t, deposit5, deposits[0])
 
-	deposit = getQueriedDeposit(t, ctx, app.Codec(), querier, proposal3.ProposalID, TestAddrs[1])
+	deposit = getQueriedDeposit(t, ctx, appCodec, querier, proposal3.ProposalID, TestAddrs[1])
 	require.Equal(t, deposit5, deposit)
 
 	// Only proposal #1 should be in types.Deposit Period
-	proposals := getQueriedProposals(t, ctx, app.Codec(), querier, nil, nil, types.StatusDepositPeriod, 1, 0)
+	proposals := getQueriedProposals(t, ctx, appCodec, querier, nil, nil, types.StatusDepositPeriod, 1, 0)
 	require.Len(t, proposals, 1)
 	require.Equal(t, proposal1, proposals[0])
 
 	// Only proposals #2 and #3 should be in Voting Period
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, nil, nil, types.StatusVotingPeriod, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, nil, nil, types.StatusVotingPeriod, 1, 0)
 	require.Len(t, proposals, 2)
 	require.Equal(t, proposal2, proposals[0])
 	require.Equal(t, proposal3, proposals[1])
@@ -248,56 +250,60 @@ func TestQueries(t *testing.T) {
 	app.GovKeeper.SetVote(ctx, vote3)
 
 	// Test query voted by TestAddrs[0]
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, nil, TestAddrs[0], types.StatusNil, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, nil, TestAddrs[0], types.StatusNil, 1, 0)
 	require.Equal(t, proposal2, proposals[0])
 	require.Equal(t, proposal3, proposals[1])
 
 	// Test query votes on types.Proposal 2
-	votes := getQueriedVotes(t, ctx, app.Codec(), querier, proposal2.ProposalID, 1, 0)
+	votes := getQueriedVotes(t, ctx, appCodec, querier, proposal2.ProposalID, 1, 0)
 	require.Len(t, votes, 1)
 	require.Equal(t, vote1, votes[0])
 
-	vote := getQueriedVote(t, ctx, app.Codec(), querier, proposal2.ProposalID, TestAddrs[0])
+	vote := getQueriedVote(t, ctx, appCodec, querier, proposal2.ProposalID, TestAddrs[0])
 	require.Equal(t, vote1, vote)
 
 	// Test query votes on types.Proposal 3
-	votes = getQueriedVotes(t, ctx, app.Codec(), querier, proposal3.ProposalID, 1, 0)
+	votes = getQueriedVotes(t, ctx, appCodec, querier, proposal3.ProposalID, 1, 0)
 	require.Len(t, votes, 2)
 	require.Equal(t, vote2, votes[0])
 	require.Equal(t, vote3, votes[1])
 
 	// Test query all proposals
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, nil, nil, types.StatusNil, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, nil, nil, types.StatusNil, 1, 0)
 	require.Equal(t, proposal1, proposals[0])
 	require.Equal(t, proposal2, proposals[1])
 	require.Equal(t, proposal3, proposals[2])
 
 	// Test query voted by TestAddrs[1]
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, nil, TestAddrs[1], types.StatusNil, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, nil, TestAddrs[1], types.StatusNil, 1, 0)
 	require.Equal(t, proposal3.ProposalID, proposals[0].ProposalID)
 
 	// Test query deposited by TestAddrs[0]
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, TestAddrs[0], nil, types.StatusNil, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, TestAddrs[0], nil, types.StatusNil, 1, 0)
 	require.Equal(t, proposal1.ProposalID, proposals[0].ProposalID)
 
 	// Test query deposited by addr2
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, TestAddrs[1], nil, types.StatusNil, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, TestAddrs[1], nil, types.StatusNil, 1, 0)
 	require.Equal(t, proposal2.ProposalID, proposals[0].ProposalID)
 	require.Equal(t, proposal3.ProposalID, proposals[1].ProposalID)
 
 	// Test query voted AND deposited by addr1
-	proposals = getQueriedProposals(t, ctx, app.Codec(), querier, TestAddrs[0], TestAddrs[0], types.StatusNil, 1, 0)
+	proposals = getQueriedProposals(t, ctx, appCodec, querier, TestAddrs[0], TestAddrs[0], types.StatusNil, 1, 0)
 	require.Equal(t, proposal2.ProposalID, proposals[0].ProposalID)
 }
 
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	appCodec := simappcodec.NewAppCodec(app.Codec())
 
 	proposal := types.Proposal{
-		ProposalID: 100,
-		Status:     types.StatusVotingPeriod,
+		ProposalBase: types.ProposalBase{
+			ProposalID: 100,
+			Status:     types.StatusVotingPeriod,
+		},
 	}
+
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	votes := make([]types.Vote, 20)
@@ -317,7 +323,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	querier := keeper.NewQuerier(app.GovKeeper)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order
-	all := getQueriedVotes(t, ctx, app.Codec(), querier, proposal.ProposalID, 1, 0)
+	all := getQueriedVotes(t, ctx, appCodec, querier, proposal.ProposalID, 1, 0)
 	require.Equal(t, len(all), len(votes))
 
 	type testCase struct {
@@ -351,7 +357,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
-			votes := getQueriedVotes(t, ctx, app.Codec(), querier, proposal.ProposalID, tc.page, tc.limit)
+			votes := getQueriedVotes(t, ctx, appCodec, querier, proposal.ProposalID, tc.page, tc.limit)
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])

@@ -106,12 +106,13 @@ func (cs ClientState) IsFrozen() bool {
 func (cs ClientState) VerifyClientConsensusState(
 	cdc *codec.Codec,
 	height uint64,
+	counterpartyClientIdentifier string,
 	consensusHeight uint64,
 	prefix commitment.PrefixI,
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), consensusHeight))
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(counterpartyClientIdentifier, consensusHeight))
 	if err != nil {
 		return err
 	}
@@ -125,6 +126,8 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
+	fmt.Printf("root: %v at height %d\n", consensusState.GetRoot(), height)
+	fmt.Printf("path: %s\n", path)
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
@@ -156,6 +159,8 @@ func (cs ClientState) VerifyConnectionState(
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("verify against consensus state %v\n", consensusState)
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())

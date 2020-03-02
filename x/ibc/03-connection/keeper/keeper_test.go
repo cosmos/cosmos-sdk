@@ -69,6 +69,8 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, uint64) 
 		Prove:  true,
 	})
 
+	fmt.Printf("Proof: %v\n", res.Proof)
+
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
@@ -135,7 +137,7 @@ func NewTestChain(clientID string) *TestChain {
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
 
 	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, valSet, signers)
 
@@ -159,6 +161,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
+	fmt.Printf("commit id at height %s: %d\n", commitID, client.Header.Height)
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
@@ -223,8 +226,17 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	// always commit when updateClient and begin a new block
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-
 	client.Header = nextHeader(client)
+	fmt.Printf("set commit id to : %s at height %d\n", commitID, client.Header.Height)
+	fmt.Printf("last block height: %d\n", client.App.LastBlockHeight())
+
+	/*
+		err := chain.App.IBCKeeper.ClientKeeper.UpdateClient(ctxTarget, client.ClientID, client.Header)
+		if err != nil {
+			panic(err)
+		}
+	*/
+
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
@@ -301,5 +313,5 @@ func (chain *TestChain) createChannel(
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
-		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Vals, chain.Signers)
+		time.Now(), chain.Vals, chain.Vals, chain.Signers)
 }

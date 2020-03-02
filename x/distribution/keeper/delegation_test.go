@@ -296,3 +296,85 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// commission should be equal to initial (50% twice)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}, app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
+
+func TestWithdrawDelegationRewardsBasic(t *testing.T) {
+	balancePower := int64(1000)
+	balanceTokens := sdk.TokensFromConsensusPower(balancePower)
+	app := simapp.Setup(false)
+
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+
+	sh := staking.NewHandler(app.StakingKeeper)
+
+	// set module account coins
+	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
+	app.SupplyKeeper.SetModuleAccount(ctx, distrAcc)
+
+	// create validator with 50% commission
+	power := int64(100)
+	valTokens := sdk.TokensFromConsensusPower(power)
+	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(
+		valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+		staking.Description{}, commission, sdk.OneInt(),
+	)
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// assert correct initial balance
+	expTokens := balanceTokens.Sub(valTokens)
+	require.Equal(t,
+		sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, expTokens)},
+		app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0])),
+	)
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// fetch validator and delegation
+	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
+
+	// allocate some rewards
+	initial := sdk.TokensFromConsensusPower(10)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// historical count should be 2 (initial + latest for delegation)
+	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+
+	// withdraw rewards
+	_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	require.Nil(t, err)
+
+	// historical count should still be 2 (added one record, cleared one)
+	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+
+	// assert correct balance
+	exp := balanceTokens.Sub(valTokens).Add(initial.QuoRaw(2))
+	require.Equal(t,
+		sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, exp)},
+		app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0])),
+	)
+
+	// withdraw commission
+	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	require.Nil(t, err)
+
+	// assert correct balance
+	exp = balanceTokens.Sub(valTokens).Add(initial)
+	require.Equal(t,
+		sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, exp)},
+		app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0])),
+	)
+}

@@ -160,3 +160,30 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	require.True(t, burnDeposits)
 	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
+
+func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
+	valAccAddr1, valAccAddr2, valAccAddr3 := valAccAddrs[0], valAccAddrs[1], valAccAddrs[2]
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionAbstain))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+
+	require.True(t, passes)
+	require.False(t, burnDeposits)
+	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
+}

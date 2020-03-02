@@ -44,17 +44,17 @@ func Test_runShowCmd(t *testing.T) {
 	// Prepare a key base
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
-	defer cleanUp()
+	t.Cleanup(cleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
 	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
-	defer func() {
+	t.Cleanup(func() {
 		kb.Delete("runShowCmd_Key1", "", false)
 		kb.Delete("runShowCmd_Key2", "", false)
-	}()
+	})
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}

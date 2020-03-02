@@ -14,7 +14,7 @@ import (
 func TestExportGenesisFileWithTime(t *testing.T) {
 	t.Parallel()
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 
 	fname := filepath.Join(dir, "genesis.json")
 	require.NoError(t, ExportGenesisFileWithTime(fname, "test", nil, json.RawMessage(""), time.Now()))

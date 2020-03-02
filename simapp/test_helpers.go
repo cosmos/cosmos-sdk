@@ -149,7 +149,7 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 	return testAddrs
 }
 
-//ConvertAddrsToValAddrs converts the provided addresses to
+// ConvertAddrsToValAddrs converts the provided addresses to ValAddress.
 func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
 	valAddrs := make([]sdk.ValAddress, len(addrs))
 
@@ -265,15 +265,16 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	}
 }
 
+// CreateTestPubKeys returns a total of numPubKeys public keys in ascending order.
 func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
 	var publicKeys []crypto.PubKey
 	var buffer bytes.Buffer
 
-	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	// start at 10 to avoid changing 1 to 01, 2 to 02, etc
 	for i := 100; i < (numPubKeys + 100); i++ {
 		numString := strconv.Itoa(i)
-		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
-		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") // base pubkey string
+		buffer.WriteString(numString)                                                       // adding on final two digits to make pubkeys unique
 		publicKeys = append(publicKeys, NewPubKeyFromHex(buffer.String()))
 		buffer.Reset()
 	}
@@ -281,12 +282,12 @@ func CreateTestPubKeys(numPubKeys int) []crypto.PubKey {
 	return publicKeys
 }
 
+// NewPubKeyFromHex returns a PubKey from a hex string.
 func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	pkBytes, err := hex.DecodeString(pk)
 	if err != nil {
 		panic(err)
 	}
-	//res, err = crypto.PubKeyFromBytes(pkBytes)
 	var pkEd ed25519.PubKeyEd25519
 	copy(pkEd[:], pkBytes)
 	return pkEd

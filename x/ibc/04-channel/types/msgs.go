@@ -6,7 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -70,20 +71,20 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelOpenTry{}
 
 type MsgChannelOpenTry struct {
-	PortID              string            `json:"port_id"`
-	ChannelID           string            `json:"channel_id"`
-	Channel             Channel           `json:"channel"`
-	CounterpartyVersion string            `json:"counterparty_version"`
-	ProofInit           commitment.ProofI `json:"proof_init"`
-	ProofHeight         uint64            `json:"proof_height"`
-	Signer              sdk.AccAddress    `json:"signer"`
+	PortID              string                   `json:"port_id"`
+	ChannelID           string                   `json:"channel_id"`
+	Channel             Channel                  `json:"channel"`
+	CounterpartyVersion string                   `json:"counterparty_version"`
+	ProofInit           commitmentexported.Proof `json:"proof_init"`
+	ProofHeight         uint64                   `json:"proof_height"`
+	Signer              sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder exported.Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
-	proofInit commitment.ProofI, proofHeight uint64, signer sdk.AccAddress,
+	proofInit commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
 ) MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(exported.INIT, channelOrder, counterparty, connectionHops, version)
@@ -120,7 +121,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if msg.ProofInit == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
@@ -145,17 +146,17 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelOpenAck{}
 
 type MsgChannelOpenAck struct {
-	PortID              string            `json:"port_id"`
-	ChannelID           string            `json:"channel_id"`
-	CounterpartyVersion string            `json:"counterparty_version"`
-	ProofTry            commitment.ProofI `json:"proof_try"`
-	ProofHeight         uint64            `json:"proof_height"`
-	Signer              sdk.AccAddress    `json:"signer"`
+	PortID              string                   `json:"port_id"`
+	ChannelID           string                   `json:"channel_id"`
+	CounterpartyVersion string                   `json:"counterparty_version"`
+	ProofTry            commitmentexported.Proof `json:"proof_try"`
+	ProofHeight         uint64                   `json:"proof_height"`
+	Signer              sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
-	portID, channelID string, cpv string, proofTry commitment.ProofI, proofHeight uint64,
+	portID, channelID string, cpv string, proofTry commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) MsgChannelOpenAck {
 	return MsgChannelOpenAck{
@@ -190,7 +191,7 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if msg.ProofTry == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofTry.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof try cannot be nil")
@@ -215,16 +216,16 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelOpenConfirm{}
 
 type MsgChannelOpenConfirm struct {
-	PortID      string            `json:"port_id"`
-	ChannelID   string            `json:"channel_id"`
-	ProofAck    commitment.ProofI `json:"proof_ack"`
-	ProofHeight uint64            `json:"proof_height"`
-	Signer      sdk.AccAddress    `json:"signer"`
+	PortID      string                   `json:"port_id"`
+	ChannelID   string                   `json:"channel_id"`
+	ProofAck    commitmentexported.Proof `json:"proof_ack"`
+	ProofHeight uint64                   `json:"proof_height"`
+	Signer      sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
-	portID, channelID string, proofAck commitment.ProofI, proofHeight uint64,
+	portID, channelID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) MsgChannelOpenConfirm {
 	return MsgChannelOpenConfirm{
@@ -255,7 +256,7 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofAck == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofAck.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
@@ -329,16 +330,16 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelCloseConfirm{}
 
 type MsgChannelCloseConfirm struct {
-	PortID      string            `json:"port_id"`
-	ChannelID   string            `json:"channel_id"`
-	ProofInit   commitment.ProofI `json:"proof_init"`
-	ProofHeight uint64            `json:"proof_height"`
-	Signer      sdk.AccAddress    `json:"signer"`
+	PortID      string                   `json:"port_id"`
+	ChannelID   string                   `json:"channel_id"`
+	ProofInit   commitmentexported.Proof `json:"proof_init"`
+	ProofHeight uint64                   `json:"proof_height"`
+	Signer      sdk.AccAddress           `json:"signer"`
 }
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
-	portID, channelID string, proofInit commitment.ProofI, proofHeight uint64,
+	portID, channelID string, proofInit commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) MsgChannelCloseConfirm {
 	return MsgChannelCloseConfirm{
@@ -369,7 +370,7 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofInit == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
@@ -394,15 +395,15 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 // MsgPacket receives incoming IBC packet
 type MsgPacket struct {
 	Packet      `json:"packet" yaml:"packet"`
-	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
-	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
-	Signer      sdk.AccAddress    `json:"signer" yaml:"signer"`
+	Proof       commitmentexported.Proof `json:"proof" yaml:"proof"`
+	ProofHeight uint64                   `json:"proof_height" yaml:"proof_height"`
+	Signer      sdk.AccAddress           `json:"signer" yaml:"signer"`
 }
 
 var _ sdk.Msg = MsgPacket{}
 
 // NewMsgPacket constructs new MsgPacket
-func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
+func NewMsgPacket(packet Packet, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
 	return MsgPacket{
 		Packet:      packet,
 		Proof:       proof,
@@ -419,7 +420,7 @@ func (msg MsgPacket) Route() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
 	if msg.Proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.Proof.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
@@ -449,14 +450,14 @@ var _ sdk.Msg = MsgTimeout{}
 // MsgTimeout receives timed-out packet
 type MsgTimeout struct {
 	Packet           `json:"packet" yaml:"packet"`
-	NextSequenceRecv uint64            `json:"next_sequence_recv" yaml:"next_sequence_recv"`
-	Proof            commitment.ProofI `json:"proof" yaml:"proof"`
-	ProofHeight      uint64            `json:"proof_height" yaml:"proof_height"`
-	Signer           sdk.AccAddress    `json:"signer" yaml:"signer"`
+	NextSequenceRecv uint64                   `json:"next_sequence_recv" yaml:"next_sequence_recv"`
+	Proof            commitmentexported.Proof `json:"proof" yaml:"proof"`
+	ProofHeight      uint64                   `json:"proof_height" yaml:"proof_height"`
+	Signer           sdk.AccAddress           `json:"signer" yaml:"signer"`
 }
 
 // NewMsgTimeout constructs new MsgTimeout
-func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgTimeout {
+func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress) MsgTimeout {
 	return MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
@@ -474,7 +475,7 @@ func (msg MsgTimeout) Route() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
 	if msg.Proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.Proof.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
@@ -505,13 +506,13 @@ var _ sdk.Msg = MsgAcknowledgement{}
 type MsgAcknowledgement struct {
 	Packet          `json:"packet" yaml:"packet"`
 	Acknowledgement exported.PacketAcknowledgementI `json:"acknowledgement" yaml:"acknowledgement"`
-	Proof           commitment.ProofI               `json:"proof" yaml:"proof"`
+	Proof           commitmentexported.Proof        `json:"proof" yaml:"proof"`
 	ProofHeight     uint64                          `json:"proof_height" yaml:"proof_height"`
 	Signer          sdk.AccAddress                  `json:"signer" yaml:"signer"`
 }
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
-func NewMsgAcknowledgement(packet Packet, ack exported.PacketAcknowledgementI, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
+func NewMsgAcknowledgement(packet Packet, ack exported.PacketAcknowledgementI, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
 	return MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
@@ -529,7 +530,7 @@ func (msg MsgAcknowledgement) Route() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
 	if msg.Proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.Proof.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")

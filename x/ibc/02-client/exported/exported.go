@@ -10,7 +10,7 @@ import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientState defines the required common functions for light clients.
@@ -25,15 +25,15 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		cdc *codec.Codec,
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
 		cdc *codec.Codec,
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
 		consensusState ConsensusState,
@@ -41,8 +41,8 @@ type ClientState interface {
 	VerifyChannelState(
 		cdc *codec.Codec,
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
@@ -50,8 +50,8 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -60,8 +60,8 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -70,8 +70,8 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -79,8 +79,8 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
@@ -97,7 +97,7 @@ type ConsensusState interface {
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() commitment.RootI
+	GetRoot() commitmentexported.Root
 
 	ValidateBasic() error
 }

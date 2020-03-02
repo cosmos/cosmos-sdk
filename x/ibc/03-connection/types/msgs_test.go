@@ -13,13 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 type MsgTestSuite struct {
 	suite.Suite
 
-	proof commitment.Proof
+	proof commitmenttypes.MerkleProof
 }
 
 func (suite *MsgTestSuite) SetupTest() {
@@ -40,7 +40,7 @@ func (suite *MsgTestSuite) SetupTest() {
 		Prove: true,
 	})
 
-	suite.proof = commitment.Proof{Proof: res.Proof}
+	suite.proof = commitmenttypes.MerkleProof{Proof: res.Proof}
 }
 
 func TestMsgTestSuite(t *testing.T) {
@@ -48,7 +48,7 @@ func TestMsgTestSuite(t *testing.T) {
 }
 
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
-	prefix := commitment.NewPrefix([]byte("storePrefixKey"))
+	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenInit{
@@ -86,7 +86,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 }
 
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
-	prefix := commitment.NewPrefix([]byte("storePrefixKey"))
+	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenTry{
@@ -97,9 +97,9 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{}, suite.proof, suite.proof, 10, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, nil, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{Proof: nil}, suite.proof, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitmenttypes.MerkleProof{Proof: nil}, suite.proof, 10, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, nil, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, commitment.Proof{Proof: nil}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, commitmenttypes.MerkleProof{Proof: nil}, 10, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 0, 10, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 0, signer),
 		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, nil),
@@ -143,9 +143,9 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	testMsgs := []MsgConnectionOpenAck{
 		NewMsgConnectionOpenAck("test/conn1", suite.proof, suite.proof, 10, 10, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", nil, suite.proof, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{Proof: nil}, suite.proof, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", commitmenttypes.MerkleProof{Proof: nil}, suite.proof, 10, 10, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", suite.proof, nil, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, commitment.Proof{Proof: nil}, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", suite.proof, commitmenttypes.MerkleProof{Proof: nil}, 10, 10, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 0, 10, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 0, "1.0.0", signer),
 		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "", signer),
@@ -185,7 +185,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	testMsgs := []MsgConnectionOpenConfirm{
 		NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, signer),
 		NewMsgConnectionOpenConfirm("ibcconntest", nil, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", commitment.Proof{Proof: nil}, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", commitmenttypes.MerkleProof{Proof: nil}, 10, signer),
 		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, signer),
 		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, nil),
 		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, signer),

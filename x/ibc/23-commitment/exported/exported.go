@@ -1,4 +1,4 @@
-package commitment
+package exported
 
 // ICS 023 Types Implementation
 //
@@ -7,40 +7,40 @@ package commitment
 
 // spec:Path and spec:Value are defined as bytestring
 
-// RootI implements spec:CommitmentRoot.
+// Root implements spec:CommitmentRoot.
 // A root is constructed from a set of key-value pairs,
 // and the inclusion or non-inclusion of an arbitrary key-value pair
 // can be proven with the proof.
-type RootI interface {
+type Root interface {
 	GetCommitmentType() Type
 	GetHash() []byte
 	IsEmpty() bool
 }
 
-// PrefixI implements spec:CommitmentPrefix.
+// Prefix implements spec:CommitmentPrefix.
 // Prefix represents the common "prefix" that a set of keys shares.
-type PrefixI interface {
+type Prefix interface {
 	GetCommitmentType() Type
 	Bytes() []byte
 	IsEmpty() bool
 }
 
-// PathI implements spec:CommitmentPath.
+// Path implements spec:CommitmentPath.
 // A path is the additional information provided to the verification function.
-type PathI interface {
+type Path interface {
 	GetCommitmentType() Type
 	String() string
 	IsEmpty() bool
 }
 
-// ProofI implements spec:CommitmentProof.
+// Proof implements spec:CommitmentProof.
 // Proof can prove whether the key-value pair is a part of the Root or not.
 // Each proof has designated key-value pair it is able to prove.
 // Proofs includes key but value is provided dynamically at the verification time.
-type ProofI interface {
+type Proof interface {
 	GetCommitmentType() Type
-	VerifyMembership(RootI, PathI, []byte) error
-	VerifyNonMembership(RootI, PathI) error
+	VerifyMembership(Root, Path, []byte) error
+	VerifyNonMembership(Root, Path) error
 	IsEmpty() bool
 
 	ValidateBasic() error

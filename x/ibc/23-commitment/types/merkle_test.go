@@ -1,4 +1,4 @@
-package commitment_test
+package types_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -22,11 +22,11 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	})
 	require.NotNil(suite.T(), res.Proof)
 
-	proof := commitment.Proof{
+	proof := types.MerkleProof{
 		Proof: res.Proof,
 	}
 	suite.Require().NoError(proof.ValidateBasic())
-	suite.Require().Error(commitment.Proof{}.ValidateBasic())
+	suite.Require().Error(types.MerkleProof{}.ValidateBasic())
 
 	cases := []struct {
 		name       string
@@ -50,8 +50,8 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(tc.name, func() {
-			root := commitment.NewRoot(tc.root)
-			path := commitment.NewPath(tc.pathArr)
+			root := types.NewMerkleRoot(tc.root)
+			path := types.NewMerklePath(tc.pathArr)
 
 			err := proof.VerifyMembership(root, path, tc.value)
 
@@ -77,7 +77,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 	})
 	require.NotNil(suite.T(), res.Proof)
 
-	proof := commitment.Proof{
+	proof := types.MerkleProof{
 		Proof: res.Proof,
 	}
 	suite.Require().NoError(proof.ValidateBasic())
@@ -103,8 +103,8 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			root := commitment.NewRoot(tc.root)
-			path := commitment.NewPath(tc.pathArr)
+			root := types.NewMerkleRoot(tc.root)
+			path := types.NewMerklePath(tc.pathArr)
 
 			err := proof.VerifyNonMembership(root, path)
 
@@ -119,11 +119,11 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 }
 
 func TestApplyPrefix(t *testing.T) {
-	prefix := commitment.NewPrefix([]byte("storePrefixKey"))
+	prefix := types.NewMerklePrefix([]byte("storePrefixKey"))
 
 	pathStr := "path1/path2/path3/key"
 
-	prefixedPath, err := commitment.ApplyPrefix(prefix, pathStr)
+	prefixedPath, err := types.ApplyPrefix(prefix, pathStr)
 	require.Nil(t, err, "valid prefix returns error")
 
 	require.Equal(t, "/storePrefixKey/path1/path2/path3/key", prefixedPath.Pretty(), "Prefixed path incorrect")
@@ -131,7 +131,7 @@ func TestApplyPrefix(t *testing.T) {
 
 	// invalid prefix contains non-alphanumeric character
 	invalidPathStr := "invalid-path/doesitfail?/hopefully"
-	invalidPath, err := commitment.ApplyPrefix(prefix, invalidPathStr)
+	invalidPath, err := types.ApplyPrefix(prefix, invalidPathStr)
 	require.NotNil(t, err, "invalid prefix does not returns error")
-	require.Equal(t, commitment.Path{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
+	require.Equal(t, types.MerklePath{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
 }

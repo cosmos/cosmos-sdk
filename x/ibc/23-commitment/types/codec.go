@@ -1,21 +1,22 @@
-package commitment
+package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // RegisterCodec registers the necessary x/ibc/23-commitment interfaces and concrete types
 // on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*RootI)(nil), nil)
-	cdc.RegisterInterface((*PrefixI)(nil), nil)
-	cdc.RegisterInterface((*PathI)(nil), nil)
-	cdc.RegisterInterface((*ProofI)(nil), nil)
+	cdc.RegisterInterface((*exported.Root)(nil), nil)
+	cdc.RegisterInterface((*exported.Prefix)(nil), nil)
+	cdc.RegisterInterface((*exported.Path)(nil), nil)
+	cdc.RegisterInterface((*exported.Proof)(nil), nil)
 
-	cdc.RegisterConcrete(Root{}, "ibc/commitment/merkle/Root", nil)
-	cdc.RegisterConcrete(Prefix{}, "ibc/commitment/merkle/Prefix", nil)
-	cdc.RegisterConcrete(Path{}, "ibc/commitment/merkle/Path", nil)
-	cdc.RegisterConcrete(Proof{}, "ibc/commitment/merkle/Proof", nil)
+	cdc.RegisterConcrete(MerkleRoot{}, "ibc/commitment/MerkleRoot", nil)
+	cdc.RegisterConcrete(MerklePrefix{}, "ibc/commitment/MerklePrefix", nil)
+	cdc.RegisterConcrete(MerklePath{}, "ibc/commitment/MerklePath", nil)
+	cdc.RegisterConcrete(MerkleProof{}, "ibc/commitment/MerkleProof", nil)
 }
 
 var (

@@ -6,7 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -32,7 +33,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	cases := []struct {
 		msg        string
 		connection types.ConnectionEnd
-		proof      commitment.ProofI
+		proof      commitmentexported.Proof
 		malleate   func()
 		expPass    bool
 	}{
@@ -76,7 +77,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	// connectionKey := ibctypes.KeyConnection(testConnectionIDA)
 	cases := []struct {
 		msg      string
-		proof    commitment.ProofI
+		proof    commitmentexported.Proof
 		malleate func()
 		expPass  bool
 	}{
@@ -113,7 +114,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			proofHeight := uint64(suite.chainA.Header.Height)
 			// proof, proofHeight := suite.queryProof(connectionKey)
 
-			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitment.NewPrefix([]byte("ibc")))
+			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitmenttypes.NewMerklePrefix([]byte("ibc")))
 			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
@@ -133,7 +134,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	// channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 	cases := []struct {
 		msg         string
-		proof       commitment.ProofI
+		proof       commitmentexported.Proof
 		proofHeight uint64
 		malleate    func()
 		expPass     bool
@@ -190,7 +191,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 
 	cases := []struct {
 		msg         string
-		proof       commitment.ProofI
+		proof       commitmentexported.Proof
 		proofHeight uint64
 		malleate    func()
 		expPass     bool
@@ -245,7 +246,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 
 	cases := []struct {
 		msg         string
-		proof       commitment.ProofI
+		proof       commitmentexported.Proof
 		proofHeight uint64
 		malleate    func()
 		expPass     bool
@@ -292,7 +293,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 	cases := []struct {
 		msg         string
-		proof       commitment.ProofI
+		proof       commitmentexported.Proof
 		proofHeight uint64
 		malleate    func()
 		expPass     bool
@@ -339,7 +340,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 
 	cases := []struct {
 		msg         string
-		proof       commitment.ProofI
+		proof       commitmentexported.Proof
 		proofHeight uint64
 		malleate    func()
 		expPass     bool

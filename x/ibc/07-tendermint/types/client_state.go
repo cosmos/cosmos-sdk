@@ -12,7 +12,8 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -106,11 +107,11 @@ func (cs ClientState) IsFrozen() bool {
 func (cs ClientState) VerifyClientConsensusState(
 	cdc *codec.Codec,
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), height))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), height))
 	if err != nil {
 		return err
 	}
@@ -136,13 +137,13 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	cdc *codec.Codec,
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
@@ -168,14 +169,14 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	cdc *codec.Codec,
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -200,15 +201,15 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -228,15 +229,15 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -257,14 +258,14 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -284,14 +285,14 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	height uint64,
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
+	prefix commitmentexported.Prefix,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -314,7 +315,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 func validateVerificationArgs(
 	cs ClientState,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
 	if cs.GetLatestHeight() < height {
@@ -329,7 +330,7 @@ func validateVerificationArgs(
 	}
 
 	if proof == nil {
-		return sdkerrors.Wrap(commitment.ErrInvalidProof, "proof cannot be empty")
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
 	if consensusState == nil {

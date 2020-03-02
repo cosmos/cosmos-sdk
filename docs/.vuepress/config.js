@@ -32,6 +32,11 @@ module.exports = {
     docsDir: "docs",
     editLinks: true,
     label: "sdk",
+    algolia: {
+      id: "BH4D9OD16A",
+      key: "ac317234e6a42074175369b2f42e9754",
+      index: "cosmos-sdk"
+    },
     sidebar: [
       {
         title: "Using the SDK",

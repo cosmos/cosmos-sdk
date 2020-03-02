@@ -12,7 +12,7 @@ import (
 func Test_openDB(t *testing.T) {
 	t.Parallel()
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	_, err := openDB(dir)
 	require.NoError(t, err)
 }
@@ -20,7 +20,7 @@ func Test_openDB(t *testing.T) {
 func Test_openTraceWriter(t *testing.T) {
 	t.Parallel()
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	fname := filepath.Join(dir, "logfile")
 	w, err := openTraceWriter(fname)
 	require.NoError(t, err)

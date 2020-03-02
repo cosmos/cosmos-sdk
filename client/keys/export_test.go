@@ -19,16 +19,16 @@ func Test_runExportCmd(t *testing.T) {
 
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
-	defer cleanUp()
+	t.Cleanup(cleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
 	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	if !runningUnattended {
-		defer func() {
+		t.Cleanup(func() {
 			kb.Delete("keyname1", "", false)
-		}()
+		})
 	}
 
 	if runningUnattended {

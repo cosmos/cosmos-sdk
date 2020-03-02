@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestIncrementProposalNumber(t *testing.T) {

@@ -7,6 +7,10 @@ import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
 import "x/supply/types/types.proto";
 import "x/evidence/types/types.proto";
+import "x/gov/types/types.proto";
+import "x/params/types/proposal/types.proto";
+import "x/upgrade/types/types.proto";
+import "x/distribution/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/simapp/codec";
 
@@ -55,4 +59,25 @@ message MsgSubmitEvidence {
 
   Evidence                                       evidence = 1;
   cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+}
+
+// Proposal defines the application-level concrete proposal type used in governance
+// proposals.
+message Proposal {
+  cosmos_sdk.x.gov.v1.ProposalBase base    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  Content                          content = 2 [(gogoproto.nullable) = false];
+}
+
+// Content defines the application-level allowed Content to be included in a
+// governance proposal.
+message Content {
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/gov/types.Content";
+
+  oneof sum {
+    cosmos_sdk.x.gov.v1.TextProposal                        text                    = 1;
+    cosmos_sdk.x.params.v1.ParameterChangeProposal          parameter_change        = 2;
+    cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal         software_upgrade        = 3;
+    cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal   cancel_software_upgrade = 4;
+    cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend    = 5;
+  }
 }

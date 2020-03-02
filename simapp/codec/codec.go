@@ -2,7 +2,6 @@ package codec
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cosmos_sdk_x_v1 "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -10,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -19,6 +18,7 @@ var (
 	_ auth.Codec     = (*Codec)(nil)
 	_ supply.Codec   = (*Codec)(nil)
 	_ evidence.Codec = (*Codec)(nil)
+	_ gov.Codec      = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -153,25 +153,31 @@ func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
 	return evidence.GetEvidence(), nil
 }
 
-func (c *Codec) MarshalProposal(p types.Proposal) ([]byte, error) {
-	stdProposal := &cosmos_sdk_x_v1.StdProposal{ProposalBase: p.ProposalBase}
-	if err := stdProposal.Content.SetContent(p.Content); err != nil {
+// MarshalProposal marshals a Proposal. It accepts a Proposal defined by the x/gov
+// module and uses the application-level Proposal type which has the concrete
+// Content implementation to serialize.
+func (c *Codec) MarshalProposal(p gov.Proposal) ([]byte, error) {
+	proposal := &Proposal{ProposalBase: p.ProposalBase}
+	if err := proposal.Content.SetContent(p.Content); err != nil {
 		return nil, err
 	}
-	return c.Marshaler.MarshalBinaryBare(stdProposal)
+
+	return c.Marshaler.MarshalBinaryLengthPrefixed(proposal)
 }
 
-func (c *Codec) UnmarshalProposal(bz []byte, p *types.Proposal) error {
-	stdProposal := &cosmos_sdk_x_v1.StdProposal{}
-	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, stdProposal); err != nil {
-		return err
+// UnmarshalProposal decodes a Proposal defined by the x/gov module and uses the
+// application-level Proposal type which has the concrete Content implementation
+// to deserialize.
+func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
+	proposal := &Proposal{}
+	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, proposal); err != nil {
+		return gov.Proposal{}, err
 	}
 
-	*p = types.Proposal{
-		Content:      stdProposal.Content.GetContent(),
-		ProposalBase: stdProposal.ProposalBase,
-	}
-	return nil
+	return gov.Proposal{
+		Content:      proposal.Content.GetContent(),
+		ProposalBase: proposal.ProposalBase,
+	}, nil
 }
 
 // ----------------------------------------------------------------------------

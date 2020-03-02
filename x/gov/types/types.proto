@@ -3,7 +3,6 @@ package cosmos_sdk.x.gov.v1;
 
 import "types/types.proto";
 import "third_party/proto/gogoproto/gogo.proto";
-// import "third_party/proto/cosmos-proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
@@ -133,16 +132,3 @@ message Vote {
   bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   VoteOption option      = 3;
 }
-
-// message BasicProposal {
-//   ProposalBase base    = 1 [(gogoproto.embed) = true];
-//   BasicContent content = 2;
-// }
-
-// message BasicContent {
-//   option (cosmos_proto.interface_type) = "Content";
-//   option (gogoproto.stringer)          = true;
-//   oneof sum {
-//     TextProposal text = 1;
-//   }
-// }

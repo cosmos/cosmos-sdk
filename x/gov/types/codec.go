@@ -8,8 +8,8 @@ import (
 type Codec interface {
 	codec.Marshaler
 
-	MarshalProposal(p Proposal) ([]byte, error)
-	UnmarshalProposal(bz []byte, ptr *Proposal) error
+	MarshalProposal(Proposal) ([]byte, error)
+	UnmarshalProposal([]byte) (Proposal, error)
 }
 
 // RegisterCodec registers all the necessary types and interfaces for the

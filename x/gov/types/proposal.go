@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -37,20 +39,8 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 
 // String implements stringer interface
 func (p Proposal) String() string {
-	return fmt.Sprintf(`Proposal %d:
-  Title:              %s
-  Type:               %s
-  Status:             %s
-  Submit Time:        %s
-  Deposit End Time:   %s
-  Total Deposit:      %s
-  Voting Start Time:  %s
-  Voting End Time:    %s
-  Description:        %s`,
-		p.ProposalID, p.GetTitle(), p.ProposalType(),
-		p.Status, p.SubmitTime, p.DepositEndTime,
-		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime, p.GetDescription(),
-	)
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // Proposals is an array of proposal

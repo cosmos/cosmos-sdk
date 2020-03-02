@@ -10,31 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{6, 6, 7})
-
-	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
-	require.NoError(t, err)
-	proposalID := proposal.ProposalID
-	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
-
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNoWithVeto))
-
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
-
-	require.False(t, passes)
-	require.True(t, burnDeposits)
-	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
-
-}
-
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{6, 6, 7})

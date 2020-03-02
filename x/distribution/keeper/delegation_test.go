@@ -538,3 +538,154 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	// commission should be equal to initial (twice 50% commission, unaffected by slashing)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
+
+func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	sh := staking.NewHandler(app.StakingKeeper)
+
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+
+	initial := int64(20)
+
+	// set module account coins
+	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
+	err := app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))))
+	require.NoError(t, err)
+	app.SupplyKeeper.SetModuleAccount(ctx, distrAcc)
+
+	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
+
+	// create validator with 50% commission
+	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// fetch validator and delegation
+	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
+	del1 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+
+	// allocate some rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// historical count should be 2 (validator init, delegation init)
+	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+
+	// second delegation
+	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+	res, err = sh(ctx, msg2)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// historical count should be 3 (second delegation init)
+	require.Equal(t, uint64(3), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+
+	// fetch updated validator
+	val = app.StakingKeeper.Validator(ctx, valAddrs[0])
+	del2 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
+
+	// end block
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// allocate some more rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// first delegator withdraws
+	app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+
+	// second delegator withdraws
+	app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
+
+	// historical count should be 3 (validator init + two delegations)
+	require.Equal(t, uint64(3), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+
+	// validator withdraws commission
+	app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+
+	// end period
+	endingPeriod := app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards := app.DistrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be zero
+	require.True(t, rewards.IsZero())
+
+	// calculate delegation rewards for del2
+	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be zero
+	require.True(t, rewards.IsZero())
+
+	// commission should be zero
+	require.True(t, app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// allocate some more rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// first delegator withdraws again
+	app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+
+	// end period
+	endingPeriod = app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be zero
+	require.True(t, rewards.IsZero())
+
+	// calculate delegation rewards for del2
+	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be 1/4 initial
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 4)}}, rewards)
+
+	// commission should be half initial
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// allocate some more rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// withdraw commission
+	app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+
+	// end period
+	endingPeriod = app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be 1/4 initial
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 4)}}, rewards)
+
+	// calculate delegation rewards for del2
+	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be 1/2 initial
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards)
+
+	// commission should be zero
+	require.True(t, app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
+}

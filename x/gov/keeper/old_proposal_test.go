@@ -13,30 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func TestActivateVotingPeriod(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
-
-	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
-	require.NoError(t, err)
-
-	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
-
-	keeper.ActivateVotingPeriod(ctx, proposal)
-
-	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
-
-	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
-	require.True(t, ok)
-
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
-	require.True(t, activeIterator.Valid())
-
-	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-	require.Equal(t, proposalID, proposal.ProposalID)
-	activeIterator.Close()
-}
-
 type validProposal struct{}
 
 func (validProposal) GetTitle() string       { return "title" }

@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 )
 
 func TestImportExportQueues(t *testing.T) {
@@ -28,7 +27,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx = app.BaseApp.NewContext(false, abci.Header{})
 
 	// Create two proposals, put the second into the voting period
-	proposal := keep.TestProposal
+	proposal := TestProposal
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalID
@@ -116,7 +115,7 @@ func TestEqualProposals(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// Submit two proposals
-	proposal := keep.TestProposal
+	proposal := TestProposal
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 
@@ -125,7 +124,7 @@ func TestEqualProposals(t *testing.T) {
 
 	// They are similar but their IDs should be different
 	require.NotEqual(t, proposal1, proposal2)
-	require.False(t, keep.ProposalEqual(proposal1, proposal2))
+	require.False(t, ProposalEqual(proposal1, proposal2))
 
 	// Now create two genesis blocks
 	state1 := gov.GenesisState{Proposals: []gov.Proposal{proposal1}}
@@ -137,7 +136,7 @@ func TestEqualProposals(t *testing.T) {
 	proposal1.ProposalID = 55
 	proposal2.ProposalID = 55
 	require.Equal(t, proposal1, proposal1)
-	require.True(t, keep.ProposalEqual(proposal1, proposal2))
+	require.True(t, ProposalEqual(proposal1, proposal2))
 
 	// Reassign proposals into state
 	state1.Proposals[0] = proposal1

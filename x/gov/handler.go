@@ -17,7 +17,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		case MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
 
-		case MsgSubmitProposal:
+		case MsgSubmitProposalI:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
 
 		case MsgVote:
@@ -29,7 +29,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) (*sdk.Result, error) {
+func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposalI) (*sdk.Result, error) {
 	proposal, err := keeper.SubmitProposal(ctx, msg.GetContent())
 	if err != nil {
 		return nil, err

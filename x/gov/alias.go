@@ -83,6 +83,7 @@ var (
 	SplitKeyDeposit               = types.SplitKeyDeposit
 	SplitKeyVote                  = types.SplitKeyVote
 	NewMsgSubmitProposalBase      = types.NewMsgSubmitProposalBase
+	NewMsgSubmitProposal          = types.NewMsgSubmitProposal
 	NewMsgDeposit                 = types.NewMsgDeposit
 	NewMsgVote                    = types.NewMsgVote
 	ParamKeyTable                 = types.ParamKeyTable
@@ -131,6 +132,7 @@ type (
 	Deposit               = types.Deposit
 	Deposits              = types.Deposits
 	GenesisState          = types.GenesisState
+	MsgSubmitProposalI    = types.MsgSubmitProposalI
 	MsgSubmitProposal     = types.MsgSubmitProposal
 	MsgSubmitProposalBase = types.MsgSubmitProposalBase
 	MsgDeposit            = types.MsgDeposit

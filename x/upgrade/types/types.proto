@@ -10,6 +10,8 @@ option (gogoproto.goproto_getters_all)  = false;
 
 // Plan specifies information about a planned upgrade and when it should occur
 message Plan {
+  option (gogoproto.equal) = true;
+
   // Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any
   // special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used
   // to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been

@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 balances or a single balance by denom when the `denom` query parameter is present.
 * (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
 * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
+* (store/types) [\#5730](https://github.com/cosmos/cosmos-sdk/pull/5730) store.types.Cp() is removed in favour of types.CopyBytes().
 
 ### API Breaking Changes
 

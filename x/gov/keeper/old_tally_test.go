@@ -10,29 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 7})
-
-	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
-	require.NoError(t, err)
-	proposalID := proposal.ProposalID
-	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
-
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
-
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
-
-	require.False(t, passes)
-	require.False(t, burnDeposits)
-	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
-}
-
 func TestTallyDelgatorOverride(t *testing.T) {
 	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 6, 7})

@@ -432,3 +432,43 @@ func TestTallyJailedValidator(t *testing.T) {
 	require.False(t, burnDeposits)
 	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
 }
+
+func TestTallyValidatorMultipleDelegations(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs, valAddrs := createValidators(ctx, app, []int64{10, 10, 10})
+
+	delTokens := sdk.TokensFromConsensusPower(10)
+	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
+	require.True(t, found)
+
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], delTokens, sdk.Unbonded, val2, true)
+	require.NoError(t, err)
+
+	tp := TestProposal
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID := proposal.ProposalID
+	proposal.Status = types.StatusVotingPeriod
+	app.GovKeeper.SetProposal(ctx, proposal)
+
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
+	require.True(t, ok)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
+
+	require.True(t, passes)
+	require.False(t, burnDeposits)
+
+	expectedYes := sdk.TokensFromConsensusPower(30)
+	expectedAbstain := sdk.TokensFromConsensusPower(0)
+	expectedNo := sdk.TokensFromConsensusPower(10)
+	expectedNoWithVeto := sdk.TokensFromConsensusPower(0)
+	expectedTallyResult := types.NewTallyResult(expectedYes, expectedAbstain, expectedNo, expectedNoWithVeto)
+
+	require.True(t, tallyResults.Equals(expectedTallyResult))
+}

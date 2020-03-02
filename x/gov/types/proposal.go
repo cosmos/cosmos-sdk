@@ -37,6 +37,11 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 	}
 }
 
+// Equal returns true if two Proposal types are equal.
+func (p Proposal) Equal(other Proposal) bool {
+	return p.ProposalBase.Equal(other.ProposalBase) && p.Content.String() == other.Content.String()
+}
+
 // String implements stringer interface
 func (p Proposal) String() string {
 	out, _ := yaml.Marshal(p)
@@ -189,13 +194,13 @@ const (
 	ProposalTypeText string = "Text"
 )
 
+// Implements Content Interface
+var _ Content = TextProposal{}
+
 // NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {
 	return TextProposal{title, description}
 }
-
-// Implements Content Interface
-var _ Content = TextProposal{}
 
 // GetTitle returns the proposal title
 func (tp TextProposal) GetTitle() string { return tp.Title }

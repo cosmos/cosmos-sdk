@@ -26,7 +26,7 @@ func TestGetSetProposal(t *testing.T) {
 
 	gotProposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	require.Equal(t, proposal.String(), gotProposal.String())
+	require.True(t, proposal.Equal(gotProposal))
 }
 
 func TestActivateVotingPeriod(t *testing.T) {

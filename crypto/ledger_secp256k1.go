@@ -12,7 +12,6 @@ import (
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -103,7 +102,9 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 }
 
 // LedgerShowAddress triggers a ledger device to show the corresponding address.
-func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) error {
+func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
+	accountAddressPrefix string) error {
+
 	device, err := getLedgerDevice()
 	if err != nil {
 		return err
@@ -119,8 +120,7 @@ func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey) erro
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
-	config := sdk.GetConfig()
-	pubKey2, _, err := getPubKeyAddrSafe(device, path, config.GetBech32AccountAddrPrefix())
+	pubKey2, _, err := getPubKeyAddrSafe(device, path, accountAddressPrefix)
 	if err != nil {
 		return err
 	}

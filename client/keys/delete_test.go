@@ -29,15 +29,15 @@ func Test_runDeleteCmd(t *testing.T) {
 	if !runningUnattended {
 		kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 		require.NoError(t, err)
-		defer func() {
+		t.Cleanup(func() {
 			kb.Delete("runDeleteCmd_Key1", "", false)
 			kb.Delete("runDeleteCmd_Key2", "", false)
 
-		}()
+		})
 	}
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
-	defer cleanUp()
+	t.Cleanup(cleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now

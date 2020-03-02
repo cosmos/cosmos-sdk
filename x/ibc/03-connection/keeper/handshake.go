@@ -87,6 +87,8 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
+	fmt.Printf("expected consensus state: %v\n", expectedConsensusState)
+
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,

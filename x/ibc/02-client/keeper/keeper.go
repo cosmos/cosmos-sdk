@@ -92,6 +92,8 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := ctx.KVStore(k.storeKey)
+	fmt.Printf("key: %s\n", ibctypes.KeyConsensusState(clientID, height))
+	fmt.Printf("consensus state: %v\n", consensusState)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
 	store.Set(ibctypes.KeyConsensusState(clientID, height), bz)
 }
@@ -135,8 +137,9 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	valSet := stakingtypes.Validators(histInfo.Valset)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       height,
-		Timestamp:    ctx.BlockTime(),
+		Height: height,
+		// TODO: Fix me. Currently commented out due to time normalisation issues.
+		//Timestamp:    histInfo.Header.Time,
 		Root:         commitment.NewRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
 	}

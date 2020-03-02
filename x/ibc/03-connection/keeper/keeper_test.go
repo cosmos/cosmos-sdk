@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, uint64) 
 		Prove:  true,
 	})
 
-	fmt.Printf("Proof: %v\n", res.Proof)
+	fmt.Printf("Key: %s, proof: %v\n", key, res.Proof)
 
 	proof := commitment.Proof{
 		Proof: res.Proof,
@@ -174,6 +174,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
 		Header: abci.Header{
+			Time:    client.Header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -189,7 +190,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, client.Header)
+	clientState, err := ibctmtypes.Initialize(chain.ClientID, trustingPeriod, ubdPeriod, client.Header)
 	if err != nil {
 		return err
 	}
@@ -217,7 +218,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	// if clientState does not already exist, return without updating
 	_, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(
-		ctxTarget, client.ClientID,
+		ctxTarget, chain.ClientID,
 	)
 	if !found {
 		return
@@ -249,6 +250,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
 		Header: abci.Header{
+			Time:    client.Header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -256,17 +258,18 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       uint64(client.Header.Height),
-		Timestamp:    client.Header.Time,
+		Height: uint64(client.Header.Height),
+		// TODO Fix me - currently commented out due to time normalisation issues.
+		//Timestamp:    client.Header.Time,
 		Root:         commitment.NewRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
+		ctxTarget, chain.ClientID, uint64(client.Header.Height), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(chain.ClientID, trustingPeriod, ubdPeriod, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

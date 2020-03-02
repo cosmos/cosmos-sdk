@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -12,8 +14,8 @@ func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) D
 }
 
 func (d Deposit) String() string {
-	return fmt.Sprintf("deposit by %s on Proposal %d is for the amount %s",
-		d.Depositor, d.ProposalID, d.Amount)
+	out, _ := yaml.Marshal(d)
+	return string(out)
 }
 
 // Deposits is a collection of Deposit objects

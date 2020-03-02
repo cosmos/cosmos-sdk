@@ -61,6 +61,16 @@ message MsgSubmitEvidence {
   cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
 }
 
+// MsgSubmitProposal defines the application-level message type for handling
+// governance proposals.
+message MsgSubmitProposal {
+  option (gogoproto.equal)           = true;
+  option (gogoproto.goproto_getters) = false;
+
+  Content                                   content = 1;
+  cosmos_sdk.x.gov.v1.MsgSubmitProposalBase base    = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+}
+
 // Proposal defines the application-level concrete proposal type used in governance
 // proposals.
 message Proposal {
@@ -71,6 +81,7 @@ message Proposal {
 // Content defines the application-level allowed Content to be included in a
 // governance proposal.
 message Content {
+  option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/gov/types.Content";
 
   oneof sum {

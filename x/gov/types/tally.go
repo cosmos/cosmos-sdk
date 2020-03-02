@@ -1,7 +1,7 @@
 package types
 
 import (
-	"fmt"
+	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -63,9 +63,6 @@ func (tr TallyResult) Equals(comp TallyResult) bool {
 
 // String implements stringer interface
 func (tr TallyResult) String() string {
-	return fmt.Sprintf(`Tally Result:
-  Yes:        %s
-  Abstain:    %s
-  No:         %s
-  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
+	out, _ := yaml.Marshal(tr)
+	return string(out)
 }

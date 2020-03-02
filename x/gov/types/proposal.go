@@ -199,10 +199,8 @@ func (tp TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
 
 // String implements Stringer interface
 func (tp TextProposal) String() string {
-	return fmt.Sprintf(`Text Proposal:
-  Title:       %s
-  Description: %s
-`, tp.Title, tp.Description)
+	out, _ := yaml.Marshal(tp)
+	return string(out)
 }
 
 var validProposalTypes = map[string]struct{}{

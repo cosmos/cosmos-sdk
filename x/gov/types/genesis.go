@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,16 +37,14 @@ func DefaultGenesisState() GenesisState {
 	)
 }
 
-// Equal checks whether two gov GenesisState structs are equivalent
-func (data GenesisState) Equal(data2 GenesisState) bool {
-	b1 := ModuleCdc.MustMarshalBinaryBare(data)
-	b2 := ModuleCdc.MustMarshalBinaryBare(data2)
-	return bytes.Equal(b1, b2)
-}
-
 // IsEmpty returns true if a GenesisState is empty
 func (data GenesisState) IsEmpty() bool {
-	return data.Equal(GenesisState{})
+	return data.Deposits == nil &&
+		data.Votes == nil &&
+		data.Proposals == nil &&
+		data.DepositParams.Equal(DepositParams{}) &&
+		data.TallyParams.Equal(TallyParams{}) &&
+		data.VotingParams.Equal(VotingParams{})
 }
 
 // ValidateGenesis checks if parameters are within valid ranges

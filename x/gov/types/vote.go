@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,7 +15,8 @@ func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
 }
 
 func (v Vote) String() string {
-	return fmt.Sprintf("voter %s voted with option %s on proposal %d", v.Voter, v.Option, v.ProposalID)
+	out, _ := yaml.Marshal(v)
+	return string(out)
 }
 
 // Votes is a collection of Vote objects

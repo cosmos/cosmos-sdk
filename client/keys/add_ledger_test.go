@@ -39,7 +39,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
-	defer kbCleanUp()
+	t.Cleanup(kbCleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(flags.FlagUseLedger, true)
 
@@ -54,9 +54,9 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
-	defer func() {
+	t.Cleanup(func() {
 		kb.Delete("keyname1", "", false)
-	}()
+	})
 	mockIn.Reset("test1234\n")
 	if runningUnattended {
 		mockIn.Reset("test1234\ntest1234\n")
@@ -87,7 +87,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
-	defer kbCleanUp()
+	t.Cleanup(kbCleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(flags.FlagUseLedger, true)
 
@@ -101,9 +101,9 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
-	defer func() {
+	t.Cleanup(func() {
 		kb.Delete("keyname1", "", false)
-	}()
+	})
 	mockIn.Reset("test1234\n")
 	if runningUnattended {
 		mockIn.Reset("test1234\ntest1234\n")

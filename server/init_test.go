@@ -25,7 +25,7 @@ func TestGenerateCoinKey(t *testing.T) {
 func TestGenerateSaveCoinKey(t *testing.T) {
 	t.Parallel()
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup() // clean after itself
+	t.Cleanup(cleanup)
 
 	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	t.Parallel()
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup() // clean after itself
+	t.Cleanup(cleanup)
 
 	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)

@@ -1,51 +1,56 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestIncrementProposalNumber(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	tp := TestProposal
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	keeper.SubmitProposal(ctx, tp)
-	proposal6, err := keeper.SubmitProposal(ctx, tp)
+	app.GovKeeper.SubmitProposal(ctx, tp)
+	app.GovKeeper.SubmitProposal(ctx, tp)
+	app.GovKeeper.SubmitProposal(ctx, tp)
+	app.GovKeeper.SubmitProposal(ctx, tp)
+	app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.ProposalID)
 }
 
 func TestProposalQueues(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 
-	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
+	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
 	require.Equal(t, proposalID, proposal.ProposalID)
 	inactiveIterator.Close()
 
-	keeper.activateVotingPeriod(ctx, proposal)
+	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	proposal, ok := keeper.GetProposal(ctx, proposal.ProposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalID)
 	require.True(t, ok)
 
-	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
+	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
-	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+	app.Codec().UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
 	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }

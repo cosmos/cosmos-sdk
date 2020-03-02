@@ -10,27 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-func TestTallyNoQuorum(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{2, 5, 0})
-
-	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
-	require.NoError(t, err)
-	proposalID := proposal.ProposalID
-	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
-
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	require.True(t, ok)
-	passes, burnDeposits, _ := keeper.Tally(ctx, proposal)
-	require.False(t, passes)
-	require.True(t, burnDeposits)
-}
-
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
 	createValidators(ctx, sk, []int64{5, 5, 5})

@@ -86,6 +86,7 @@ message Content {
   option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/gov/types.Content";
 
+  // sum defines a set of all acceptable concrete governance proposal Content types.
   oneof sum {
     cosmos_sdk.x.gov.v1.TextProposal                        text                    = 1;
     cosmos_sdk.x.params.v1.ParameterChangeProposal          parameter_change        = 2;

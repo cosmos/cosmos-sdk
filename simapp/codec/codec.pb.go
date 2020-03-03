@@ -446,6 +446,8 @@ func (m *Proposal) GetContent() Content {
 // Content defines the application-level allowed Content to be included in a
 // governance proposal.
 type Content struct {
+	// sum defines a set of all acceptable concrete governance proposal Content types.
+	//
 	// Types that are valid to be assigned to Sum:
 	//	*Content_Text
 	//	*Content_ParameterChange

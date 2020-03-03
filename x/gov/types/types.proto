@@ -61,11 +61,16 @@ enum VoteOption {
   option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
 
-  EMPTY        = 0 [(gogoproto.enumvalue_customname) = "OptionEmpty"];
-  YES          = 1 [(gogoproto.enumvalue_customname) = "OptionYes"];
-  ABSTAIN      = 2 [(gogoproto.enumvalue_customname) = "OptionAbstain"];
-  NO           = 3 [(gogoproto.enumvalue_customname) = "OptionNo"];
-  NO_WITH_VETO = 4 [(gogoproto.enumvalue_customname) = "OptionNoWithVeto"];
+  // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
+  VOTE_OPTION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "OptionEmpty"];
+  // VOTE_OPTION_YES defines a yes vote option.
+  VOTE_OPTION_YES = 1 [(gogoproto.enumvalue_customname) = "OptionYes"];
+  // VOTE_OPTION_ABSTAIN defines an abstain vote option.
+  VOTE_OPTION_ABSTAIN = 2 [(gogoproto.enumvalue_customname) = "OptionAbstain"];
+  // VOTE_OPTION_NO defines a no vote option.
+  VOTE_OPTION_NO = 3 [(gogoproto.enumvalue_customname) = "OptionNo"];
+  // VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  VOTE_OPTION_NO_WITH_VETO = 4 [(gogoproto.enumvalue_customname) = "OptionNoWithVeto"];
 }
 
 // TextProposal defines a standard text proposal whose changes need to be
@@ -121,12 +126,18 @@ enum ProposalStatus {
   option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
 
-  NIL            = 0 [(gogoproto.enumvalue_customname) = "StatusNil"];
-  DEPOSIT_PERIOD = 1 [(gogoproto.enumvalue_customname) = "StatusDepositPeriod"];
-  VOTING_PERIOD  = 2 [(gogoproto.enumvalue_customname) = "StatusVotingPeriod"];
-  PASSED         = 3 [(gogoproto.enumvalue_customname) = "StatusPassed"];
-  REJECTED       = 4 [(gogoproto.enumvalue_customname) = "StatusRejected"];
-  FAILED         = 5 [(gogoproto.enumvalue_customname) = "StatusFailed"];
+  // PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
+  PROPOSAL_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "StatusNil"];
+  // PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
+  PROPOSAL_STATUS_DEPOSIT_PERIOD = 1 [(gogoproto.enumvalue_customname) = "StatusDepositPeriod"];
+  // PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
+  PROPOSAL_STATUS_VOTING_PERIOD = 2 [(gogoproto.enumvalue_customname) = "StatusVotingPeriod"];
+  // PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
+  PROPOSAL_STATUS_PASSED = 3 [(gogoproto.enumvalue_customname) = "StatusPassed"];
+  // PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
+  PROPOSAL_STATUS_REJECTED = 4 [(gogoproto.enumvalue_customname) = "StatusRejected"];
+  // PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+  PROPOSAL_STATUS_FAILED = 5 [(gogoproto.enumvalue_customname) = "StatusFailed"];
 }
 
 // TallyResult defines a standard tally for a proposal

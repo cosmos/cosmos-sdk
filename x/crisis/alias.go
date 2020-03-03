@@ -3,8 +3,8 @@ package crisis
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 const (

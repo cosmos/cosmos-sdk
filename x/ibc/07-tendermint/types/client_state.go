@@ -126,7 +126,8 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	fmt.Printf("root: %v at height %d\n", consensusState.GetRoot(), height)
+	fmt.Println("ClientID:", counterpartyClientIdentifier)
+	fmt.Printf("root: %v at height %d\n", consensusState.GetRoot(), consensusHeight)
 	fmt.Printf("path: %s\n", path)
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())

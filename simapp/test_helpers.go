@@ -116,6 +116,25 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
+// AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
+func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []crypto.PubKey, accAmt sdk.Int) {
+	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+
+	setTotalSupply(app, ctx, accAmt, len(pubKeys))
+
+	// fill all the addresses with some coins, set the loose pool tokens simultaneously
+	for _, pubKey := range pubKeys {
+		saveAccount(app, ctx, sdk.AccAddress(pubKey.Address()), initCoins)
+	}
+}
+
+// setTotalSupply provides the total supply based on accAmt * totalAccounts.
+func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
+	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
+	prevSupply := app.SupplyKeeper.GetSupply(ctx)
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+}
+
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
 func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
@@ -132,21 +151,24 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(testAddrs)))))
-	prevSupply := app.SupplyKeeper.GetSupply(ctx)
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+	setTotalSupply(app, ctx, accAmt, accNum)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		app.AccountKeeper.SetAccount(ctx, acc)
-
-		_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
-		if err != nil {
-			panic(err)
-		}
+		saveAccount(app, ctx, addr, initCoins)
 	}
+
 	return testAddrs
+}
+
+// saveAccount saves the provided account into the simapp with balance based on initCoins.
+func saveAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, initCoins sdk.Coins) {
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	app.AccountKeeper.SetAccount(ctx, acc)
+	_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ConvertAddrsToValAddrs converts the provided addresses to ValAddress.

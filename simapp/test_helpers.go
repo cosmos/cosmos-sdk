@@ -116,6 +116,25 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
+func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []crypto.PubKey, accAmt sdk.Int) {
+	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(pubKeys)))))
+	prevSupply := app.SupplyKeeper.GetSupply(ctx)
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+
+	// fill all the addresses with some coins, set the loose pool tokens simultaneously
+	for _, pubKey := range pubKeys {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, sdk.AccAddress(pubKey.Address()))
+		app.AccountKeeper.SetAccount(ctx, acc)
+
+		_, err := app.BankKeeper.AddCoins(ctx, sdk.AccAddress(pubKey.Address()), initCoins)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return
+}
+
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
 func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {

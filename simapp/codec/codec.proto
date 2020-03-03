@@ -68,7 +68,7 @@ message MsgSubmitProposal {
   option (gogoproto.goproto_getters) = false;
 
   cosmos_sdk.x.gov.v1.MsgSubmitProposalBase base    = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-  Content                                   content = 2 [(gogoproto.nullable) = false];
+  Content                                   content = 2;
 }
 
 // Proposal defines the application-level concrete proposal type used in governance

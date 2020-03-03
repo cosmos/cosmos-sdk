@@ -98,16 +98,8 @@ type AccAddress []byte
 
 // AccAddressFromHex creates an AccAddress from a hex string.
 func AccAddressFromHex(address string) (addr AccAddress, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("decoding Bech32 address failed: must provide an address")
-	}
-
-	bz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-
-	return AccAddress(bz), nil
+	bz, err := addressBytesFromHexString(address)
+	return AccAddress(bz), err
 }
 
 // VerifyAddressFormat verifies that the provided bytes form a valid address
@@ -265,16 +257,8 @@ type ValAddress []byte
 
 // ValAddressFromHex creates a ValAddress from a hex string.
 func ValAddressFromHex(address string) (addr ValAddress, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("decoding Bech32 address failed: must provide an address")
-	}
-
-	bz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-
-	return ValAddress(bz), nil
+	bz, err := addressBytesFromHexString(address)
+	return ValAddress(bz), err
 }
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
@@ -420,16 +404,8 @@ type ConsAddress []byte
 
 // ConsAddressFromHex creates a ConsAddress from a hex string.
 func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("decoding Bech32 address failed: must provide an address")
-	}
-
-	bz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-
-	return ConsAddress(bz), nil
+	bz, err := addressBytesFromHexString(address)
+	return ConsAddress(bz), err
 }
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
@@ -694,4 +670,12 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	return bz, nil
+}
+
+func addressBytesFromHexString(address string) ([]byte, error) {
+	if len(address) == 0 {
+		return nil, errors.New("decoding Bech32 address failed: must provide an address")
+	}
+
+	return hex.DecodeString(address)
 }

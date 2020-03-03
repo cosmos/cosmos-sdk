@@ -1,7 +1,6 @@
 package slashing_test
 
 import (
-	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -15,41 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
-
-func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
-	// initial setup
-	ctx, bk, sk, _, keeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())
-	slh := slashing.NewHandler(keeper)
-	amtInt := int64(100)
-	addr, val, amt := slashingkeeper.Addrs[0], slashingkeeper.Pks[0], sdk.TokensFromConsensusPower(amtInt)
-	msg := slashingkeeper.NewTestMsgCreateValidator(addr, val, amt)
-	msg.MinSelfDelegation = amt
-
-	res, err := staking.NewHandler(sk)(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	staking.EndBlocker(ctx, sk)
-
-	require.Equal(
-		t, bk.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))},
-	)
-
-	unbondAmt := sdk.NewCoin(sk.GetParams(ctx).BondDenom, sdk.OneInt())
-	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
-	res, err = staking.NewHandler(sk)(ctx, undelegateMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	require.True(t, sk.Validator(ctx, addr).IsJailed())
-
-	// assert non-jailed validator can't be unjailed
-	res, err = slh(ctx, slashing.NewMsgUnjail(addr))
-	require.Error(t, err)
-	require.Nil(t, res)
-	require.True(t, errors.Is(slashing.ErrSelfDelegationTooLowToUnjail, err))
-}
 
 func TestJailedValidatorDelegations(t *testing.T) {
 	ctx, _, stakingKeeper, _, slashingKeeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())

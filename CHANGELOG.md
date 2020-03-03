@@ -81,6 +81,7 @@ options `pruning-keep-recent`, `pruning-keep-every`, and `pruning-interval`. The
 dictate how many recent versions are kept on disk and the offset of what versions are kept after that
 respectively, and the latter defines the height interval in which versions are deleted in a batch.
 **Note, there are some client-facing API breaking changes with regard to IAVL, stores, and pruning settings.**
+* (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.
 
 ## [v0.38.4] - 2020-05-21
 

@@ -24,6 +24,7 @@ type ClientState interface {
 
 	VerifyClientConsensusState(
 		cdc *codec.Codec,
+		root commitment.RootI,
 		height uint64,
 		counterpartyClientIdentifier string,
 		consensusHeight uint64,

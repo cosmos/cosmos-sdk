@@ -105,6 +105,7 @@ func (cs ClientState) IsFrozen() bool {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	cdc *codec.Codec,
+	provingRoot commitment.RootI,
 	height uint64,
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
@@ -129,7 +130,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	fmt.Println("ClientID:", counterpartyClientIdentifier)
 	fmt.Printf("root: %v at height %d\n", consensusState.GetRoot(), consensusHeight)
 	fmt.Printf("path: %s\n", path)
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 

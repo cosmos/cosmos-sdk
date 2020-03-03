@@ -152,6 +152,7 @@ Buffers for state serialization instead of Amino.
   * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
 * (server) [\#5709](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
 and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
+* (crypto/keys) [\#5739](https://github.com/cosmos/cosmos-sdk/pull/5739) Print an error message if the password input failed.
 
 ## [v0.38.1] - 2020-02-11
 

@@ -135,6 +135,13 @@ serialization instead of Amino.
 Buffers for state serialization instead of Amino.
   * The `internal` sub-package has been removed in order to expose the types proto file.
   * The `x/upgrade` module now accepts a `codec.Marshaler` interface.
+* (x/upgrade) [\#5737](https://github.com/cosmos/cosmos-sdk/pull/5737) Migrate the `x/gov` module to use Protocol
+Buffers for state serialization instead of Amino.
+  * `MsgSubmitProposal` will be removed in favor of the application-level proto-defined `MsgSubmitProposal` which
+  implements the `MsgSubmitProposalI` interface. Applications should extend the `NewMsgSubmitProposalBase` type
+  to define their own concrete `MsgSubmitProposal` types.
+  * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+  requiring a concrete codec to know how to serialize `Proposal` types.
 
 ### Improvements
 

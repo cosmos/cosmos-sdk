@@ -1,7 +1,6 @@
 package slashing_test
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -14,79 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
-
-func TestJailedValidatorDelegations(t *testing.T) {
-	ctx, _, stakingKeeper, _, slashingKeeper := slashingkeeper.CreateTestInput(t, slashing.DefaultParams())
-
-	stakingParams := stakingKeeper.GetParams(ctx)
-	stakingKeeper.SetParams(ctx, stakingParams)
-
-	// create a validator
-	bondAmount := sdk.TokensFromConsensusPower(10)
-	valPubKey := slashingkeeper.Pks[0]
-	valAddr, consAddr := slashingkeeper.Addrs[1], sdk.ConsAddress(slashingkeeper.Addrs[0])
-
-	msgCreateVal := slashingkeeper.NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
-	res, err := staking.NewHandler(stakingKeeper)(ctx, msgCreateVal)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	// end block
-	staking.EndBlocker(ctx, stakingKeeper)
-
-	// set dummy signing info
-	newInfo := slashing.NewValidatorSigningInfo(consAddr, 0, 0, time.Unix(0, 0), false, 0)
-	slashingKeeper.SetValidatorSigningInfo(ctx, consAddr, newInfo)
-
-	// delegate tokens to the validator
-	delAddr := sdk.AccAddress(slashingkeeper.Addrs[2])
-	msgDelegate := slashingkeeper.NewTestMsgDelegate(delAddr, valAddr, bondAmount)
-	res, err = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	unbondAmt := sdk.NewCoin(stakingKeeper.GetParams(ctx).BondDenom, bondAmount)
-
-	// unbond validator total self-delegations (which should jail the validator)
-	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondAmt)
-	res, err = staking.NewHandler(stakingKeeper)(ctx, msgUndelegate)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	err = stakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
-	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
-
-	// verify validator still exists and is jailed
-	validator, found := stakingKeeper.GetValidator(ctx, valAddr)
-	require.True(t, found)
-	require.True(t, validator.IsJailed())
-
-	// verify the validator cannot unjail itself
-	res, err = slashing.NewHandler(slashingKeeper)(ctx, slashing.NewMsgUnjail(valAddr))
-	require.Error(t, err)
-	require.Nil(t, res)
-
-	// self-delegate to validator
-	msgSelfDelegate := slashingkeeper.NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
-	res, err = staking.NewHandler(stakingKeeper)(ctx, msgSelfDelegate)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	// verify the validator can now unjail itself
-	res, err = slashing.NewHandler(slashingKeeper)(ctx, slashing.NewMsgUnjail(valAddr))
-	require.NoError(t, err)
-	require.NotNil(t, res)
-}
-
-func TestInvalidMsg(t *testing.T) {
-	k := slashing.Keeper{}
-	h := slashing.NewHandler(k)
-
-	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
-	require.Error(t, err)
-	require.Nil(t, res)
-	require.True(t, strings.Contains(err.Error(), "unrecognized slashing message type"))
-}
 
 // Test a validator through uptime, downtime, revocation,
 // unrevocation, starting height reset, and revocation again

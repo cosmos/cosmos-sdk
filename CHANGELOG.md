@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.38.2] - TBD
 
+### Improvements
+
+* (crypto/keys) [\#5739](https://github.com/cosmos/cosmos-sdk/pull/5739) Print an error message if the password input failed.
+
 ## [v0.38.1] - 2020-02-11
 
 ### Improvements

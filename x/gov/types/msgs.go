@@ -206,11 +206,10 @@ func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSigners implements Msg
-func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Proposer}
-}
-
 // nolint
-func (msg MsgSubmitProposal) Route() string { return RouterKey }
-func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
+func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Proposer} }
+func (msg MsgSubmitProposal) Route() string                { return RouterKey }
+func (msg MsgSubmitProposal) Type() string                 { return TypeMsgSubmitProposal }
+func (msg MsgSubmitProposal) GetContent() Content          { return msg.Content }
+func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
+func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }

@@ -54,6 +54,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
 		)
 	}
+
 	ctx.EventManager().EmitEvent(submitEvent)
 
 	return &sdk.Result{

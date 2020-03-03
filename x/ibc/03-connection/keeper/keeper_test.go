@@ -61,10 +61,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, uint64) {
-	res := suite.chainA.App.Query(abci.RequestQuery{
+func queryProof(chain *TestChain, key []byte) (commitment.Proof, uint64) {
+	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
-		Height: suite.chainA.App.LastBlockHeight(),
+		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
 	})

@@ -121,7 +121,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(consensusState)
 	if err != nil {
 		return err
 	}

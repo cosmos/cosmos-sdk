@@ -124,6 +124,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	suite.Require().ElementsMatch(expConnections, connections)
 }
 
+// TestChain is a testing struct that wraps a simapp with the latest Header, Vals and Signers
+// It also contains a field called ClientID. This is the clientID that *other* chains use
+// to refer to this TestChain. For simplicity's sake it is also the chainID on the TestChain Header
 type TestChain struct {
 	ClientID string
 	App      *simapp.SimApp
@@ -190,7 +193,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(chain.ClientID, trustingPeriod, ubdPeriod, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, client.Header)
 	if err != nil {
 		return err
 	}
@@ -218,7 +221,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	// if clientState does not already exist, return without updating
 	_, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(
-		ctxTarget, chain.ClientID,
+		ctxTarget, client.ClientID,
 	)
 	if !found {
 		return
@@ -266,10 +269,10 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, chain.ClientID, uint64(client.Header.Height), consensusState,
+		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(chain.ClientID, trustingPeriod, ubdPeriod, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(

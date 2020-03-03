@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 func (suite *KeeperTestSuite) TestConnOpenTry() {
 	// counterparty for A on B
 	counterparty := connection.NewCounterparty(
-		testClientIDA, testConnectionIDA, suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		testClientIDB, testConnectionIDA, suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
 	)
 
 	testCases := []struct {
@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		{"success", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.INIT)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
 			suite.chainB.updateClient(suite.chainA)
@@ -120,11 +120,11 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connectionKey := ibctypes.KeyConnection(testConnectionIDA)
 			proofInit, proofHeight := suite.queryProof(connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientIDA, consensusHeight)
+			consensusKey := ibctypes.KeyConsensusState(testClientIDB, consensusHeight)
 			proofConsensus, _ := suite.queryProof(consensusKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.chainB.GetContext(), testConnectionIDB, counterparty, testClientIDB,
+				suite.chainB.GetContext(), testConnectionIDB, counterparty, testClientIDA,
 				connection.GetCompatibleVersions(), proofInit, proofConsensus,
 				uint64(proofHeight+1), consensusHeight,
 			)

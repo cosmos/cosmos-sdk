@@ -74,6 +74,7 @@ resulted in a panic when the tx execution mode was `CheckTx`.
 * (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set.
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 * (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`
+* (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.
 
 ### State Machine Breaking
 

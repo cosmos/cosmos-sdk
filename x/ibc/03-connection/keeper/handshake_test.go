@@ -211,12 +211,12 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			proofTry, proofHeight := queryProof(suite.chainB, connectionKey)
 			fmt.Printf("ProofTry: %s\n", proofTry)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientIDB, uint64(consensusHeight))
+			consensusKey := ibctypes.KeyConsensusState(testClientIDA, uint64(consensusHeight))
 			proofConsensus, _ := queryProof(suite.chainB, consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), testConnectionIDA, tc.version, proofTry, proofConsensus,
-				uint64(proofHeight), consensusHeight,
+				uint64(proofHeight+1), consensusHeight,
 			)
 
 			if tc.expPass {
@@ -228,23 +228,21 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	}
 }
 
-// TestConnOpenAck - Chain B (ID #2) calls ConnOpenConfirm to confirm that
+// TestConnOpenConfirm - Chain B (ID #2) calls ConnOpenConfirm to confirm that
 // Chain A (ID #1) state is now OPEN.
 func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.TRYOPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.TRYOPEN)
 			suite.chainB.updateClient(suite.chainA)
 		}, true},
 		{"connection not found", func() {}, false},
 		{"chain B's connection state is not TRYOPEN", func() {
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.UNINITIALIZED)
-		}, false},
-		{"consensus state not found", func() {
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.TRYOPEN)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.OPEN)
 			suite.chainA.updateClient(suite.chainB)
 		}, false},
 		{"connection state verification failed", func() {

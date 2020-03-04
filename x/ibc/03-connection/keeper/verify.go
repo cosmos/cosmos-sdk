@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -52,6 +54,7 @@ func (k Keeper) VerifyConnectionState(
 	}
 
 	// TODO: move to specific clients; blocked by #5502
+	fmt.Println("clientID here", connection.GetClientID())
 	consensusState, found := k.clientKeeper.GetClientConsensusState(
 		ctx, connection.GetClientID(), height,
 	)

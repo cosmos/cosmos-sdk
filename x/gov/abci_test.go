@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -27,11 +28,12 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := gov.NewMsgSubmitProposal(
+	newProposalMsg, err := simappcodec.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -78,11 +80,12 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := gov.NewMsgSubmitProposal(
+	newProposalMsg, err := simappcodec.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -100,11 +103,12 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg2 := gov.NewMsgSubmitProposal(
+	newProposalMsg2, err := simappcodec.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err = govHandler(ctx, newProposalMsg2)
 	require.NoError(t, err)
@@ -156,11 +160,12 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	newProposalMsg := gov.NewMsgSubmitProposal(
+	newProposalMsg, err := simappcodec.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -211,7 +216,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg := gov.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	newProposalMsg, err := simappcodec.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)

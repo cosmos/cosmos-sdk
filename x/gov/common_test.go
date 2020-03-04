@@ -94,9 +94,3 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 		require.NotNil(t, res)
 	}
 }
-
-// ProposalEqual checks if two proposals are equal (note: slow, for tests only)
-func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
-	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
-		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
-}

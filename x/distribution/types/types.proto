@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.x.distribution.v1;
 
-option go_package            = "types";
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";

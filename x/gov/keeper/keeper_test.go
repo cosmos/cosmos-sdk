@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -50,7 +49,9 @@ func TestProposalQueues(t *testing.T) {
 
 	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
-	app.Codec().UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+
+	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())
 	require.Equal(t, proposalID, proposal.ProposalID)
+
 	activeIterator.Close()
 }

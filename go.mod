@@ -35,4 +35,7 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
+// FIXME Use local iavl with export/import API
+replace github.com/tendermint/iavl => ../iavl
+
 go 1.14

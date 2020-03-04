@@ -3,13 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVotes(t *testing.T) {

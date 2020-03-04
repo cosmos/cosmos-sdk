@@ -3,14 +3,15 @@ package keeper_test
 import (
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	cdc "github.com/cosmos/cosmos-sdk/simapp/codec"
+	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -23,7 +24,7 @@ func createTestInput() (*codec.Codec, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	appCodec := cdc.NewAppCodec(codec.New())
+	appCodec := simappcodec.NewAppCodec(codec.New())
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,

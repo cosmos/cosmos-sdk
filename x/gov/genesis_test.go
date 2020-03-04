@@ -124,7 +124,7 @@ func TestEqualProposals(t *testing.T) {
 
 	// They are similar but their IDs should be different
 	require.NotEqual(t, proposal1, proposal2)
-	require.False(t, ProposalEqual(proposal1, proposal2))
+	require.NotEqual(t, proposal1, proposal2)
 
 	// Now create two genesis blocks
 	state1 := gov.GenesisState{Proposals: []gov.Proposal{proposal1}}
@@ -136,7 +136,7 @@ func TestEqualProposals(t *testing.T) {
 	proposal1.ProposalID = 55
 	proposal2.ProposalID = 55
 	require.Equal(t, proposal1, proposal1)
-	require.True(t, ProposalEqual(proposal1, proposal2))
+	require.Equal(t, proposal1, proposal2)
 
 	// Reassign proposals into state
 	state1.Proposals[0] = proposal1

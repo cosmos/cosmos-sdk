@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -27,7 +26,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc *codec.Codec
+	cdc types.Codec
 
 	// Proposal router
 	router types.Router
@@ -41,7 +40,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramSpace types.ParamSubspace,
+	cdc types.Codec, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, rtr types.Router,
 ) Keeper {
 

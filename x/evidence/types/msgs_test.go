@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -13,8 +13,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) simappcodec.MsgSubmitEvidence {
-	msg, err := simappcodec.NewMsgSubmitEvidence(e, s)
+func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
+	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
 	require.NoError(t, err)
 	return msg
 }

@@ -5,6 +5,9 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestABCInfo(t *testing.T) {
@@ -185,6 +188,8 @@ func TestRedact(t *testing.T) {
 	if err := Redact(serr); err == serr {
 		t.Error("reduct must not pass through a stdlib error")
 	}
+
+	require.Nil(t, Redact(nil))
 }
 
 func TestABCIInfoSerializeErr(t *testing.T) {
@@ -271,3 +276,30 @@ func (customErr) Codespace() string { return "extern" }
 func (customErr) ABCICode() uint32 { return 999 }
 
 func (customErr) Error() string { return "custom" }
+
+func TestResponseCheckDeliverTx(t *testing.T) {
+	t.Parallel()
+	require.Equal(t, abci.ResponseCheckTx{
+		Codespace: "extern",
+		Code:      999,
+		Log:       "custom",
+		GasWanted: int64(1),
+		GasUsed:   int64(2),
+	}, ResponseCheckTx(customErr{}, 1, 2))
+	require.Equal(t, abci.ResponseDeliverTx{
+		Codespace: "extern",
+		Code:      999,
+		Log:       "custom",
+		GasWanted: int64(1),
+		GasUsed:   int64(2),
+	}, ResponseDeliverTx(customErr{}, 1, 2))
+}
+
+func TestQueryResult(t *testing.T) {
+	t.Parallel()
+	require.Equal(t, abci.ResponseQuery{
+		Codespace: "extern",
+		Code:      999,
+		Log:       "custom",
+	}, QueryResult(customErr{}))
+}

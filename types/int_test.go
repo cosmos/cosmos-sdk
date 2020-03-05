@@ -10,6 +10,7 @@ import (
 )
 
 func TestFromInt64(t *testing.T) {
+	t.Parallel()
 	for n := 0; n < 20; n++ {
 		r := rand.Int63()
 		require.Equal(t, r, NewInt(r).Int64())
@@ -17,6 +18,7 @@ func TestFromInt64(t *testing.T) {
 }
 
 func TestFromUint64(t *testing.T) {
+	t.Parallel()
 	for n := 0; n < 20; n++ {
 		r := rand.Uint64()
 		require.True(t, NewIntFromUint64(r).IsUint64())
@@ -25,6 +27,7 @@ func TestFromUint64(t *testing.T) {
 }
 
 func TestIntPanic(t *testing.T) {
+	t.Parallel()
 	// Max Int = 2^255-1 = 5.789e+76
 	// Min Int = -(2^255-1) = -5.789e+76
 	require.NotPanics(t, func() { NewIntWithDecimal(1, 76) })
@@ -85,6 +88,7 @@ func TestIntPanic(t *testing.T) {
 // and (U/)Int is immutable value(see TestImmutability(U/)Int)
 // it is safe to use randomness in the tests
 func TestIdentInt(t *testing.T) {
+	t.Parallel()
 	for d := 0; d < 1000; d++ {
 		n := rand.Int63()
 		i := NewInt(n)
@@ -121,6 +125,7 @@ func maxint(i1, i2 int64) int64 {
 }
 
 func TestArithInt(t *testing.T) {
+	t.Parallel()
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
 		i1 := NewInt(n1)
@@ -152,6 +157,7 @@ func TestArithInt(t *testing.T) {
 }
 
 func TestCompInt(t *testing.T) {
+	t.Parallel()
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
 		i1 := NewInt(n1)
@@ -165,6 +171,7 @@ func TestCompInt(t *testing.T) {
 			{i1.Equal(i2), n1 == n2},
 			{i1.GT(i2), n1 > n2},
 			{i1.LT(i2), n1 < n2},
+			{i1.LTE(i2), n1 <= n2},
 		}
 
 		for tcnum, tc := range cases {
@@ -192,6 +199,7 @@ func randint() Int {
 }
 
 func TestImmutabilityAllInt(t *testing.T) {
+	t.Parallel()
 	ops := []func(*Int){
 		func(i *Int) { _ = i.Add(randint()) },
 		func(i *Int) { _ = i.Sub(randint()) },
@@ -242,6 +250,7 @@ func intarithraw(uifn func(Int, int64) Int, bifn func(*big.Int, *big.Int, *big.I
 }
 
 func TestImmutabilityArithInt(t *testing.T) {
+	t.Parallel()
 	size := 500
 
 	ops := []intop{
@@ -323,6 +332,7 @@ func TestEncodingRandom(t *testing.T) {
 }
 
 func TestEncodingTableInt(t *testing.T) {
+	t.Parallel()
 	var i Int
 
 	cases := []struct {
@@ -397,6 +407,7 @@ func TestEncodingTableInt(t *testing.T) {
 }
 
 func TestEncodingTableUint(t *testing.T) {
+	t.Parallel()
 	var i Uint
 
 	cases := []struct {
@@ -451,6 +462,7 @@ func TestEncodingTableUint(t *testing.T) {
 }
 
 func TestSerializationOverflow(t *testing.T) {
+	t.Parallel()
 	bx, _ := new(big.Int).SetString("91888242871839275229946405745257275988696311157297823662689937894645226298583", 10)
 	x := Int{bx}
 	y := new(Int)
@@ -468,4 +480,38 @@ func TestSerializationOverflow(t *testing.T) {
 
 	err = y.UnmarshalJSON(bz)
 	require.Error(t, err)
+}
+
+func TestIntMod(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name      string
+		x         int64
+		y         int64
+		ret       int64
+		wantPanic bool
+	}{
+		{"3 % 10", 3, 10, 3, false},
+		{"10 % 3", 10, 3, 1, false},
+		{"4 % 2", 4, 2, 0, false},
+		{"2 % 0", 2, 0, 0, true},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { NewInt(tt.x).Mod(NewInt(tt.y)) })
+				require.Panics(t, func() { NewInt(tt.x).ModRaw(tt.y) })
+				return
+			}
+			require.True(t, NewInt(tt.x).Mod(NewInt(tt.y)).Equal(NewInt(tt.ret)))
+			require.True(t, NewInt(tt.x).ModRaw(tt.y).Equal(NewInt(tt.ret)))
+		})
+	}
+}
+
+func TestIntEq(t *testing.T) {
+	require.True(IntEq(t, ZeroInt(), ZeroInt()))
+	require.False(IntEq(t, OneInt(), ZeroInt()))
 }

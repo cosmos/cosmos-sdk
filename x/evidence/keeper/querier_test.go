@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"strings"
 
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
@@ -17,7 +17,7 @@ const (
 func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
-	cdc := simappcodec.NewAppCodec(suite.app.Codec())
+	cdc := codecstd.NewAppCodec(suite.app.Codec())
 
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 
 func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := simappcodec.NewAppCodec(suite.app.Codec())
+	cdc := codecstd.NewAppCodec(suite.app.Codec())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := simappcodec.NewAppCodec(suite.app.Codec())
+	cdc := codecstd.NewAppCodec(suite.app.Codec())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc := simappcodec.NewAppCodec(suite.app.Codec())
+	cdc := codecstd.NewAppCodec(suite.app.Codec())
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)

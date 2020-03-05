@@ -7,15 +7,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestCodec(t *testing.T) {
 	app := simapp.Setup(false)
-	appCodec := simappcodec.NewAppCodec(app.Codec())
+	appCodec := codecstd.NewAppCodec(app.Codec())
 	pk := ed25519.GenPrivKey()
 
 	var e exported.Evidence = &types.Equivocation{

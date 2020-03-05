@@ -29,6 +29,9 @@ import (
 const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
+
+	// Do not change without new snapshot format, all nodes must use same size
+	snapshotChunkSize = uint64(8e6)
 )
 
 var cdc = codec.New()
@@ -493,60 +496,70 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 
 // Snapshot implements Snapshotter.
 func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
-	keys := []*types.KVStoreKey{}
-	for key := range rs.stores {
-		switch key := key.(type) {
-		case *types.KVStoreKey:
-			keys = append(keys, key)
-		case *types.TransientStoreKey:
-			// Since transient stores are not persisted they should not be snapshotted
+
+	// Collect stores to snapshot (only IAVL stores are supported)
+	type namedStore struct {
+		*iavl.Store
+		name string
+	}
+	stores := []namedStore{}
+	for key, store := range rs.stores {
+		switch store := store.(type) {
+		case *iavl.Store:
+			stores = append(stores, namedStore{name: key.Name(), Store: store})
+		case *transient.Store:
+			// Transient stores aren't persisted and shouldn't be snapshotted
 			continue
 		default:
-			return types.Snapshot{}, errors.Errorf("unknown key type %T", key)
+			return types.Snapshot{}, errors.Errorf("unable to snapshot store %q of type %T",
+				key.Name(), store)
 		}
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		return strings.Compare(keys[i].Name(), keys[j].Name()) == -1
+	sort.Slice(stores, func(i, j int) bool {
+		return strings.Compare(stores[i].name, stores[j].name) == -1
 	})
 
-	stores := []*iavl.Store{}
-	for _, key := range keys {
-		switch store := rs.stores[key].(type) {
-		case *iavl.Store:
-			stores = append(stores, store)
-		default:
-			return types.Snapshot{}, errors.Errorf("unable to snapshot store of type %T", store)
-		}
-	}
-
+	// Create a channel of snapshot chunk readers, which we'll return to the caller
 	ch := make(chan io.ReadCloser)
-	snapshot := types.Snapshot{
-		Height: height,
-		Format: 1,
-		Chunks: ch,
-	}
-
-	chunker, err := newChunkWriter(ch, 100)
+	chunker, err := newChunkWriter(ch, snapshotChunkSize)
 	if err != nil {
 		return types.Snapshot{}, err
 	}
 
+	// Spawn goroutine to generate snapshot chunks
 	go func() {
+		// Set up a stream pipeline to serialize snapshot nodes:
+		// ExportNode -> delimited Protobuf -> gzip -> chunkWriter -> chan io.ReadCloser
 		defer chunker.Close()
 		gzWriter := gzip.NewWriter(chunker)
-		defer gzWriter.Close()
+		defer func() {
+			if err := gzWriter.Close(); err != nil {
+				chunker.CloseWithError(err)
+			}
+		}()
 		protoWriter := protoio.NewDelimitedWriter(gzWriter)
-		defer protoWriter.Close()
+		defer func() {
+			if err := protoWriter.Close(); err != nil {
+				chunker.CloseWithError(err)
+			}
+		}()
 
-		for i, key := range keys {
-			exporter, err := stores[i].Export(int64(height))
+		// Export each IAVL store. Stores are serialized as a stream of SnapshotItem Protobuf
+		// messages. The first item contains a SnapshotStore with store metadata (i.e. name),
+		// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
+		// are demarcated by new SnapshotStore items.
+		for _, store := range stores {
+			exporter, err := store.Export(int64(height))
 			if err != nil {
 				chunker.CloseWithError(err)
 				return
 			}
-
 			err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
-				Item: &sdktypes.SnapshotItem_Store{Store: &sdktypes.SnapshotStore{Name: key.Name()}},
+				Item: &sdktypes.SnapshotItem_Store{
+					Store: &sdktypes.SnapshotStore{
+						Name: store.name,
+					},
+				},
 			})
 			if err != nil {
 				chunker.CloseWithError(err)
@@ -562,12 +575,14 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 					return
 				}
 				err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
-					Item: &sdktypes.SnapshotItem_Node{Node: &sdktypes.SnapshotNode{
-						Key:     node.Key,
-						Value:   node.Value,
-						Height:  int32(node.Height),
-						Version: node.Version,
-					}},
+					Item: &sdktypes.SnapshotItem_Node{
+						Node: &sdktypes.SnapshotNode{
+							Key:     node.Key,
+							Value:   node.Value,
+							Height:  int32(node.Height),
+							Version: node.Version,
+						},
+					},
 				})
 				if err != nil {
 					chunker.CloseWithError(err)
@@ -577,7 +592,11 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 		}
 	}()
 
-	return snapshot, nil
+	return types.Snapshot{
+		Height: height,
+		Format: 1,
+		Chunks: ch,
+	}, nil
 }
 
 // Restore implements Snapshotter.
@@ -589,80 +608,75 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 		return errors.New("cannot restore snapshot at height 0")
 	}
 
+	// Set up a restore stream pipeline
+	// chan io.ReadCloser -> chunkReader -> gunzip -> delimited Protobuf -> ExportNode
 	chunkReader := newChunkReader(snapshot.Chunks)
 	defer chunkReader.Close()
 	gzReader, err := gzip.NewReader(chunkReader)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("gzip error: %w", err)
 	}
 	defer gzReader.Close()
 	protoReader := protoio.NewDelimitedReader(gzReader, 1e6)
 	defer protoReader.Close()
 
+	// Import nodes into stores. The first item is expected to be a SnapshotItem containing
+	// a SnapshotStore, telling us which store to import into. The following items will contain
+	// SnapshotNode (i.e. ExportNode) until we reach the next SnapshotStore (or EOF).
 	var importer *tmiavl.Importer
+	count := 0
 	for {
 		item := &sdktypes.SnapshotItem{}
 		err := protoReader.ReadMsg(item)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			return fmt.Errorf("invalid protobuf message: %w", err)
 		}
-		switch i := item.Item.(type) {
+
+		switch item := item.Item.(type) {
 		case *sdktypes.SnapshotItem_Store:
 			if importer != nil {
 				err = importer.Commit()
 				if err != nil {
-					panic(err)
+					return fmt.Errorf("IAVL commit failed: %w", err)
 				}
+				count = 0
 			}
-			store, ok := rs.getStoreByName(i.Store.Name).(*iavl.Store)
-			if !ok {
-				panic("invalid store type")
+			store, ok := rs.getStoreByName(item.Store.Name).(*iavl.Store)
+			if !ok || store == nil {
+				return fmt.Errorf("cannot import into non-IAVL store %q", item.Store.Name)
 			}
 			importer, err = store.Import(int64(snapshot.Height))
 			if err != nil {
-				panic(err)
+				return fmt.Errorf("import failed: %w", err)
 			}
+
 		case *sdktypes.SnapshotItem_Node:
 			if importer == nil {
-				panic("received node without store")
+				return fmt.Errorf("received node data before store metadata")
 			}
 			importer.Add(&tmiavl.ExportNode{
-				Key:     i.Node.Key,
-				Value:   i.Node.Value,
-				Height:  int8(i.Node.Height),
-				Version: i.Node.Version,
+				Key:     item.Node.Key,
+				Value:   item.Node.Value,
+				Height:  int8(item.Node.Height),
+				Version: item.Node.Version,
 			})
+			count++
+
 		default:
-			panic(fmt.Sprintf("unknown type %T", i))
+			return fmt.Errorf("unknown protobuf message %T", item)
 		}
 	}
 
 	if importer != nil {
 		err := importer.Commit()
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("IAVL commit failed: %w", err)
 		}
 	}
 
-	storeInfos := []storeInfo{}
-	for key, store := range rs.stores {
-		if store.GetStoreType() == types.StoreTypeTransient {
-			continue
-		}
-		storeInfos = append(storeInfos, storeInfo{
-			Name: key.Name(),
-			Core: storeCore{
-				CommitID: store.LastCommitID(),
-			},
-		})
-	}
-
-	flushCommitInfo(rs.db, int64(snapshot.Height), commitInfo{
-		Version:    int64(snapshot.Height),
-		StoreInfos: storeInfos,
-	})
+	flushCommitInfo(rs.db, int64(snapshot.Height), rs.buildCommitInfo(int64(snapshot.Height)))
 	return rs.LoadLatestVersion()
 }
 
@@ -710,6 +724,25 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
+	}
+}
+
+func (rs *Store) buildCommitInfo(version int64) commitInfo {
+	storeInfos := []storeInfo{}
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeTransient {
+			continue
+		}
+		storeInfos = append(storeInfos, storeInfo{
+			Name: key.Name(),
+			Core: storeCore{
+				CommitID: store.LastCommitID(),
+			},
+		})
+	}
+	return commitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
 	}
 }
 
@@ -875,16 +908,17 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 	batch.Write()
 }
 
-// chunkWriter reads an input byte stream, splits it into fixed-size chunks, and sends the readers
-// to a channel of io.ReadClosers
+// chunkWriter reads an input byte stream, splits it into fixed-size chunks, and writes it to a
+// sequence of readers via a channel of io.ReadClosers
 type chunkWriter struct {
 	ch        chan<- io.ReadCloser
+	pipe      *io.PipeWriter
 	chunkSize uint64
 	written   uint64
-	pipe      *io.PipeWriter
 	closed    bool
 }
 
+// newChunkWriter creates a new chunkWriter
 func newChunkWriter(ch chan<- io.ReadCloser, chunkSize uint64) (*chunkWriter, error) {
 	if chunkSize == 0 {
 		return nil, errors.New("chunk size cannot be 0")
@@ -997,17 +1031,13 @@ func (r *chunkReader) Read(p []byte) (int, error) {
 		}
 	}
 	n, err := r.reader.Read(p)
-	switch err {
-	case io.EOF:
+	if err == io.EOF {
 		err = r.reader.Close()
 		r.reader = nil
 		if err != nil {
 			return 0, err
 		}
 		return r.Read(p)
-	case nil:
-		return n, nil
-	default:
-		return n, err
 	}
+	return n, err
 }

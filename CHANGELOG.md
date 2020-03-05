@@ -62,6 +62,8 @@ and provided directly the IAVL store.
 * (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 * (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
+* (x/mint) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `AppModule` now requires SupplyKeeper in its constructor to create 
+module account on `InitGenesis`. 
 
 ### Features
 

@@ -1,11 +1,11 @@
 package types_test
 
 import (
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 )
 
 var (
 	app      = simapp.Setup(false)
-	appCodec = simappcodec.NewAppCodec(app.Codec())
+	appCodec = codecstd.NewAppCodec(app.Codec())
 )

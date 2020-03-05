@@ -25,7 +25,7 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val exported.ValidatorI) {
 }
 
 // increment validator period, returning the period just ended
-func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val exported.ValidatorI) uint64 {
+func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val exported.ValidatorI) uint64 {
 	// fetch current rewards
 	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 
@@ -95,7 +95,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 	val := k.stakingKeeper.Validator(ctx, valAddr)
 
 	// increment current period
-	newPeriod := k.incrementValidatorPeriod(ctx, val)
+	newPeriod := k.IncrementValidatorPeriod(ctx, val)
 
 	// increment reference count on period we need to track
 	k.incrementReferenceCount(ctx, valAddr, newPeriod)

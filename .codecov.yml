@@ -47,6 +47,7 @@ ignore:
   - "*.md"
   - "*.rst"
   - "**/*.pb.go"
+  - "types/*.pb.go"
   - "tests/*"
   - "tests/**/*"
   - "x/**/*.pb.go"

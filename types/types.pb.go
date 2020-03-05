@@ -239,38 +239,247 @@ func (m *ValAddresses) GetAddresses() []ValAddress {
 	return nil
 }
 
+// SnapshotItem is an item contained in a snapshot
+type SnapshotItem struct {
+	// Types that are valid to be assigned to Item:
+	//	*SnapshotItem_Store
+	//	*SnapshotItem_Node
+	Item isSnapshotItem_Item `protobuf_oneof:"item"`
+}
+
+func (m *SnapshotItem) Reset()      { *m = SnapshotItem{} }
+func (*SnapshotItem) ProtoMessage() {}
+func (*SnapshotItem) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2c0f90c600ad7e2e, []int{5}
+}
+func (m *SnapshotItem) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotItem) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotItem.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotItem) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotItem.Merge(m, src)
+}
+func (m *SnapshotItem) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotItem) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotItem.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotItem proto.InternalMessageInfo
+
+type isSnapshotItem_Item interface {
+	isSnapshotItem_Item()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type SnapshotItem_Store struct {
+	Store *SnapshotStore `protobuf:"bytes,1,opt,name=store,proto3,oneof" json:"store,omitempty"`
+}
+type SnapshotItem_Node struct {
+	Node *SnapshotNode `protobuf:"bytes,2,opt,name=node,proto3,oneof" json:"node,omitempty"`
+}
+
+func (*SnapshotItem_Store) isSnapshotItem_Item() {}
+func (*SnapshotItem_Node) isSnapshotItem_Item()  {}
+
+func (m *SnapshotItem) GetItem() isSnapshotItem_Item {
+	if m != nil {
+		return m.Item
+	}
+	return nil
+}
+
+func (m *SnapshotItem) GetStore() *SnapshotStore {
+	if x, ok := m.GetItem().(*SnapshotItem_Store); ok {
+		return x.Store
+	}
+	return nil
+}
+
+func (m *SnapshotItem) GetNode() *SnapshotNode {
+	if x, ok := m.GetItem().(*SnapshotItem_Node); ok {
+		return x.Node
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*SnapshotItem) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*SnapshotItem_Store)(nil),
+		(*SnapshotItem_Node)(nil),
+	}
+}
+
+// SnapshotStore contains snapshot info about a store
+type SnapshotStore struct {
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *SnapshotStore) Reset()      { *m = SnapshotStore{} }
+func (*SnapshotStore) ProtoMessage() {}
+func (*SnapshotStore) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2c0f90c600ad7e2e, []int{6}
+}
+func (m *SnapshotStore) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotStore) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotStore.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotStore) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotStore.Merge(m, src)
+}
+func (m *SnapshotStore) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotStore) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotStore.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotStore proto.InternalMessageInfo
+
+func (m *SnapshotStore) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+// SnapshotNode contains snapshot data for an ExportNode
+type SnapshotNode struct {
+	Key     []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value   []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Version int64  `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
+	Height  int32  `protobuf:"varint,4,opt,name=height,proto3" json:"height,omitempty"`
+}
+
+func (m *SnapshotNode) Reset()      { *m = SnapshotNode{} }
+func (*SnapshotNode) ProtoMessage() {}
+func (*SnapshotNode) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2c0f90c600ad7e2e, []int{7}
+}
+func (m *SnapshotNode) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotNode) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotNode.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotNode) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotNode.Merge(m, src)
+}
+func (m *SnapshotNode) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotNode) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotNode.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotNode proto.InternalMessageInfo
+
+func (m *SnapshotNode) GetKey() []byte {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *SnapshotNode) GetValue() []byte {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+func (m *SnapshotNode) GetVersion() int64 {
+	if m != nil {
+		return m.Version
+	}
+	return 0
+}
+
+func (m *SnapshotNode) GetHeight() int32 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Coin)(nil), "cosmos_sdk.v1.Coin")
 	proto.RegisterType((*DecCoin)(nil), "cosmos_sdk.v1.DecCoin")
 	proto.RegisterType((*IntProto)(nil), "cosmos_sdk.v1.IntProto")
 	proto.RegisterType((*DecProto)(nil), "cosmos_sdk.v1.DecProto")
 	proto.RegisterType((*ValAddresses)(nil), "cosmos_sdk.v1.ValAddresses")
+	proto.RegisterType((*SnapshotItem)(nil), "cosmos_sdk.v1.SnapshotItem")
+	proto.RegisterType((*SnapshotStore)(nil), "cosmos_sdk.v1.SnapshotStore")
+	proto.RegisterType((*SnapshotNode)(nil), "cosmos_sdk.v1.SnapshotNode")
 }
 
 func init() { proto.RegisterFile("types/types.proto", fileDescriptor_2c0f90c600ad7e2e) }
 
 var fileDescriptor_2c0f90c600ad7e2e = []byte{
-	// 305 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2c, 0xa9, 0x2c, 0x48,
-	0x2d, 0xd6, 0x07, 0x93, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9, 0x42, 0xbc, 0xc9, 0xf9, 0xc5, 0xb9,
-	0xf9, 0xc5, 0xf1, 0xc5, 0x29, 0xd9, 0x7a, 0x65, 0x86, 0x52, 0x6a, 0x25, 0x19, 0x99, 0x45, 0x29,
-	0xf1, 0x05, 0x89, 0x45, 0x25, 0x95, 0xfa, 0x60, 0x15, 0xfa, 0xe9, 0xf9, 0xe9, 0xf9, 0x08, 0x16,
-	0x44, 0x9b, 0x92, 0x3b, 0x17, 0x8b, 0x73, 0x7e, 0x66, 0x9e, 0x90, 0x08, 0x17, 0x6b, 0x4a, 0x6a,
-	0x5e, 0x7e, 0xae, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x67, 0x10, 0x84, 0x23, 0xa4, 0xcc, 0xc5, 0x96,
-	0x98, 0x9b, 0x5f, 0x9a, 0x57, 0x22, 0xc1, 0x04, 0x12, 0x76, 0xe2, 0x3e, 0x71, 0x4f, 0x9e, 0xe1,
-	0xd6, 0x3d, 0x79, 0x66, 0xcf, 0xbc, 0x92, 0x20, 0xa8, 0x94, 0x15, 0xcb, 0x8b, 0x05, 0xf2, 0x8c,
-	0x4a, 0x5e, 0x5c, 0xec, 0x2e, 0xa9, 0xc9, 0xe4, 0x98, 0xe5, 0x92, 0x9a, 0x8c, 0x66, 0x96, 0x26,
-	0x17, 0x87, 0x67, 0x5e, 0x49, 0x00, 0xd8, 0x5f, 0xb2, 0x5c, 0xcc, 0x99, 0x79, 0x25, 0x10, 0xa3,
-	0x50, 0xed, 0x07, 0x89, 0x83, 0x94, 0xba, 0xa4, 0x26, 0xc3, 0x95, 0xa6, 0xa4, 0x26, 0xa3, 0x2b,
-	0x05, 0x19, 0x0f, 0x12, 0x57, 0x72, 0xe2, 0xe2, 0x09, 0x4b, 0xcc, 0x71, 0x4c, 0x49, 0x29, 0x4a,
-	0x2d, 0x2e, 0x4e, 0x2d, 0x16, 0xd2, 0xe1, 0xe2, 0x4c, 0x84, 0x71, 0x24, 0x18, 0x15, 0x98, 0x35,
-	0x78, 0x9c, 0xf8, 0x7e, 0xdd, 0x93, 0xe7, 0x42, 0x28, 0x0a, 0x42, 0x28, 0xb0, 0x62, 0x69, 0xb8,
-	0xa3, 0xc0, 0xe8, 0xe4, 0x72, 0xe3, 0xa1, 0x1c, 0x43, 0xc3, 0x23, 0x39, 0x86, 0x13, 0x8f, 0xe4,
-	0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f,
-	0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x52, 0x4a, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b,
-	0xce, 0xcf, 0xd5, 0x87, 0x44, 0x09, 0x94, 0xd2, 0x2d, 0x4e, 0xc9, 0x86, 0xc4, 0x58, 0x12, 0x1b,
-	0x38, 0xec, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x40, 0xd2, 0x04, 0xc7, 0x01, 0x00,
-	0x00,
+	// 460 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xcf, 0x8b, 0xd3, 0x40,
+	0x14, 0xc7, 0x33, 0x26, 0xed, 0xba, 0xaf, 0x59, 0xd1, 0x41, 0x24, 0xf8, 0x23, 0x0d, 0x11, 0xa4,
+	0x0b, 0x9a, 0xb2, 0xab, 0xa7, 0xbd, 0x59, 0x0b, 0x5a, 0x0f, 0x22, 0xb3, 0xe0, 0xc1, 0xcb, 0x92,
+	0xcd, 0x0c, 0x4d, 0xe8, 0x66, 0xa6, 0x64, 0xa6, 0x85, 0xde, 0xf6, 0xe2, 0xdd, 0x3f, 0xc1, 0x3f,
+	0x67, 0x8f, 0x7b, 0x5c, 0x44, 0x8a, 0xb6, 0x17, 0xff, 0x06, 0x4f, 0x32, 0x33, 0xa9, 0xa1, 0x0b,
+	0x5e, 0xf6, 0x92, 0xbc, 0xef, 0x9b, 0xcf, 0xfb, 0xbe, 0x37, 0x3f, 0xe0, 0x9e, 0x5a, 0x4c, 0x99,
+	0xec, 0x9b, 0x6f, 0x32, 0xad, 0x84, 0x12, 0x78, 0x2f, 0x13, 0xb2, 0x14, 0xf2, 0x44, 0xd2, 0x49,
+	0x32, 0x3f, 0x78, 0xf8, 0x4c, 0xe5, 0x45, 0x45, 0x4f, 0xa6, 0x69, 0xa5, 0x16, 0x7d, 0x43, 0xf4,
+	0xc7, 0x62, 0x2c, 0x9a, 0xc8, 0x96, 0xc5, 0x6f, 0xc1, 0x7b, 0x23, 0x0a, 0x8e, 0xef, 0x43, 0x8b,
+	0x32, 0x2e, 0xca, 0x00, 0x45, 0xa8, 0xb7, 0x4b, 0xac, 0xc0, 0x4f, 0xa1, 0x9d, 0x96, 0x62, 0xc6,
+	0x55, 0x70, 0x4b, 0xa7, 0x07, 0x9d, 0x8b, 0x65, 0xd7, 0xf9, 0xbe, 0xec, 0xba, 0x23, 0xae, 0x48,
+	0xbd, 0x74, 0xe4, 0xfd, 0xfe, 0xd6, 0x45, 0xf1, 0x7b, 0xd8, 0x19, 0xb2, 0xec, 0x26, 0x5e, 0x43,
+	0x96, 0x5d, 0xf3, 0xda, 0x87, 0xdb, 0x23, 0xae, 0x3e, 0x9a, 0x7d, 0x3d, 0x01, 0xb7, 0xe0, 0xca,
+	0x5a, 0x6d, 0xf7, 0xd7, 0x79, 0x8d, 0x0e, 0x59, 0xf6, 0x0f, 0xa5, 0x2c, 0xbb, 0x8e, 0x6a, 0x7b,
+	0x9d, 0x8f, 0x07, 0xe0, 0x7f, 0x4a, 0xcf, 0x5e, 0x53, 0x5a, 0x31, 0x29, 0x99, 0xc4, 0xcf, 0x61,
+	0x37, 0xdd, 0x88, 0x00, 0x45, 0x6e, 0xcf, 0x1f, 0xdc, 0xf9, 0xb3, 0xec, 0x42, 0x03, 0x91, 0x06,
+	0x38, 0xf2, 0xce, 0x7f, 0x44, 0x28, 0xfe, 0x82, 0xc0, 0x3f, 0xe6, 0xe9, 0x54, 0xe6, 0x42, 0x8d,
+	0x14, 0x2b, 0xf1, 0x2b, 0x68, 0x49, 0x25, 0x2a, 0x66, 0xba, 0x76, 0x0e, 0x1f, 0x27, 0x5b, 0xd7,
+	0x90, 0x6c, 0xd8, 0x63, 0xcd, 0xbc, 0x73, 0x88, 0x85, 0xf1, 0x01, 0x78, 0x5c, 0x50, 0x66, 0x4e,
+	0xa2, 0x73, 0xf8, 0xe8, 0x3f, 0x45, 0x1f, 0x04, 0xd5, 0x35, 0x06, 0xb5, 0xfd, 0x07, 0x6d, 0xf0,
+	0x0a, 0xc5, 0xca, 0x78, 0x1f, 0xf6, 0xb6, 0xac, 0x31, 0x06, 0x8f, 0xa7, 0x25, 0xab, 0x8f, 0xdc,
+	0xc4, 0xf5, 0xc8, 0xbc, 0x99, 0x58, 0x1b, 0xe2, 0xbb, 0xe0, 0x4e, 0xd8, 0xc2, 0x80, 0x3e, 0xd1,
+	0xa1, 0xbe, 0xaf, 0x79, 0x7a, 0x36, 0xb3, 0xe3, 0xf8, 0xc4, 0x0a, 0x1c, 0xc0, 0xce, 0x9c, 0x55,
+	0xb2, 0x10, 0x3c, 0x70, 0x23, 0xd4, 0x73, 0xc9, 0x46, 0xe2, 0x07, 0xd0, 0xce, 0x59, 0x31, 0xce,
+	0x55, 0xe0, 0x45, 0xa8, 0xd7, 0x22, 0xb5, 0xaa, 0x47, 0x1c, 0x5e, 0xfd, 0x0a, 0x9d, 0xf3, 0x55,
+	0xe8, 0x5c, 0xac, 0x42, 0x74, 0xb9, 0x0a, 0xd1, 0xcf, 0x55, 0x88, 0xbe, 0xae, 0x43, 0xe7, 0x72,
+	0x1d, 0x3a, 0x57, 0xeb, 0xd0, 0xf9, 0x1c, 0x8f, 0x0b, 0x95, 0xcf, 0x4e, 0x93, 0x4c, 0x94, 0x7d,
+	0xbb, 0xf3, 0xfa, 0xf7, 0x42, 0xd2, 0x89, 0x7d, 0xd4, 0xa7, 0x6d, 0xf3, 0x3c, 0x5f, 0xfe, 0x0d,
+	0x00, 0x00, 0xff, 0xff, 0xd9, 0x3a, 0x17, 0x0d, 0xea, 0x02, 0x00, 0x00,
 }
 
 func (this *Coin) Equal(that interface{}) bool {
@@ -505,6 +714,157 @@ func (m *ValAddresses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *SnapshotItem) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotItem) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotItem) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Item != nil {
+		{
+			size := m.Item.Size()
+			i -= size
+			if _, err := m.Item.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SnapshotItem_Store) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotItem_Store) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Store != nil {
+		{
+			size, err := m.Store.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *SnapshotItem_Node) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotItem_Node) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Node != nil {
+		{
+			size, err := m.Node.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+func (m *SnapshotStore) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotStore) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotStore) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SnapshotNode) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotNode) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotNode) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Height != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Version != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Version))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -583,6 +943,78 @@ func (m *ValAddresses) Size() (n int) {
 	return n
 }
 
+func (m *SnapshotItem) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Item != nil {
+		n += m.Item.Size()
+	}
+	return n
+}
+
+func (m *SnapshotItem_Store) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Store != nil {
+		l = m.Store.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+func (m *SnapshotItem_Node) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Node != nil {
+		l = m.Node.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+func (m *SnapshotStore) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
+func (m *SnapshotNode) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.Version != 0 {
+		n += 1 + sovTypes(uint64(m.Version))
+	}
+	if m.Height != 0 {
+		n += 1 + sovTypes(uint64(m.Height))
+	}
+	return n
+}
+
 func sovTypes(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -595,6 +1027,59 @@ func (this *ValAddresses) String() string {
 	}
 	s := strings.Join([]string{`&ValAddresses{`,
 		`Addresses:` + fmt.Sprintf("%v", this.Addresses) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotItem) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SnapshotItem{`,
+		`Item:` + fmt.Sprintf("%v", this.Item) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotItem_Store) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SnapshotItem_Store{`,
+		`Store:` + strings.Replace(fmt.Sprintf("%v", this.Store), "SnapshotStore", "SnapshotStore", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotItem_Node) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SnapshotItem_Node{`,
+		`Node:` + strings.Replace(fmt.Sprintf("%v", this.Node), "SnapshotNode", "SnapshotNode", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotStore) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SnapshotStore{`,
+		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotNode) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SnapshotNode{`,
+		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
+		`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
+		`Version:` + fmt.Sprintf("%v", this.Version) + `,`,
+		`Height:` + fmt.Sprintf("%v", this.Height) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1080,6 +1565,373 @@ func (m *ValAddresses) Unmarshal(dAtA []byte) error {
 			m.Addresses = append(m.Addresses, make([]byte, postIndex-iNdEx))
 			copy(m.Addresses[len(m.Addresses)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotItem) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotItem: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotItem: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Store", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &SnapshotStore{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &SnapshotItem_Store{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Node", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &SnapshotNode{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &SnapshotItem_Node{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotStore) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotStore: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotStore: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotNode) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotNode: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotNode: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
+			if m.Key == nil {
+				m.Key = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = append(m.Value[:0], dAtA[iNdEx:postIndex]...)
+			if m.Value == nil {
+				m.Value = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
+			}
+			m.Version = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Version |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])

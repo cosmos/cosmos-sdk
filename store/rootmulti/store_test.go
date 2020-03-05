@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -443,6 +444,29 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Equal(t, v2, qres.Value)
 }
 
+func TestMultistoreSnapshotRestore(t *testing.T) {
+	source := newMultiStoreWithMixedMounts(dbm.NewMemDB(), types.PruneNothing, true)
+	target := newMultiStoreWithMixedMounts(dbm.NewMemDB(), types.PruneNothing, false)
+	version := source.LastCommitID().Version
+	require.EqualValues(t, 3, version)
+
+	snapshot, err := source.Snapshot(uint64(version))
+	require.NoError(t, err)
+	err = target.Restore(snapshot)
+	require.NoError(t, err)
+
+	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
+	for key, sourceStore := range source.stores {
+		targetStore := target.getStoreByName(key.Name()).(types.CommitKVStore)
+		switch sourceStore.GetStoreType() {
+		case types.StoreTypeTransient:
+			assert.False(t, targetStore.Iterator(nil, nil).Valid(), "store %v not empty", key.Name())
+		default:
+			assertStoresEqual(t, sourceStore, targetStore, "store %q not equal", key.Name())
+		}
+	}
+}
+
 //-----------------------------------------------------------------------
 // utils
 
@@ -453,6 +477,41 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+
+	return store
+}
+
+func newMultiStoreWithMixedMounts(db dbm.DB, pruningOpts types.PruningOptions, populate bool) *Store {
+	store := NewStore(db)
+	store.pruningOpts = pruningOpts
+
+	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	store.LoadLatestVersion()
+
+	if populate {
+		store1 := store.getStoreByName("iavl1").(types.CommitKVStore)
+		store2 := store.getStoreByName("iavl2").(types.CommitKVStore)
+		trans1 := store.getStoreByName("trans1").(types.KVStore)
+
+		store1.Set([]byte("a"), []byte{1})
+		store1.Set([]byte("b"), []byte{1})
+		store2.Set([]byte("X"), []byte{255})
+		store2.Set([]byte("A"), []byte{101})
+		trans1.Set([]byte("x1"), []byte{91})
+		store.Commit()
+
+		store1.Set([]byte("b"), []byte{2})
+		store1.Set([]byte("c"), []byte{3})
+		store2.Set([]byte("B"), []byte{102})
+		store.Commit()
+
+		store2.Set([]byte("C"), []byte{103})
+		store2.Delete([]byte("X"))
+		trans1.Set([]byte("x2"), []byte{92})
+		store.Commit()
+	}
 
 	return store
 }
@@ -474,6 +533,24 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions
 	}
 
 	return store, upgrades
+}
+
+func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...interface{}) {
+	expectIter := expect.Iterator(nil, nil)
+	expectMap := map[string][]byte{}
+	for ; expectIter.Valid(); expectIter.Next() {
+		expectMap[string(expectIter.Key())] = expectIter.Value()
+	}
+	require.NoError(t, expectIter.Error())
+
+	actualIter := expect.Iterator(nil, nil)
+	actualMap := map[string][]byte{}
+	for ; actualIter.Valid(); actualIter.Next() {
+		actualMap[string(actualIter.Key())] = actualIter.Value()
+	}
+	require.NoError(t, actualIter.Error())
+
+	assert.Equal(t, expectMap, actualMap, msgAndArgs...)
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {

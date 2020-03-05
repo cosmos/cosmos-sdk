@@ -3,10 +3,12 @@ package rootmulti
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
+	gogoio "github.com/gogo/protobuf/io"
 	"github.com/pkg/errors"
-
+	tmiavl "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -19,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -483,6 +486,177 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 	}
 
 	return storeName, subpath, nil
+}
+
+//---------------------- Snapshotting ------------------
+
+// Snapshot implements Snapshotter.
+func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
+	ch := make(chan io.ReadCloser)
+	snapshot := types.Snapshot{
+		Height: height,
+		Format: 1,
+		Chunks: ch,
+	}
+
+	keys := []*types.KVStoreKey{}
+	for key := range rs.stores {
+		switch key := key.(type) {
+		case *types.KVStoreKey:
+			keys = append(keys, key)
+		case *types.TransientStoreKey:
+			// Since transient stores are not persisted they should not be snapshotted
+			continue
+		default:
+			return snapshot, errors.Errorf("unknown key type %T", key)
+		}
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return strings.Compare(keys[i].Name(), keys[j].Name()) == -1
+	})
+
+	stores := []*iavl.Store{}
+	for _, key := range keys {
+		switch store := rs.stores[key].(type) {
+		case *iavl.Store:
+			stores = append(stores, store)
+		default:
+			return snapshot, errors.Errorf("unable to snapshot store of type %T", store)
+		}
+	}
+
+	go func() {
+		for i, key := range keys {
+			store := stores[i]
+			exporter, err := store.Export(int64(height))
+			if err != nil {
+				panic(err)
+			}
+
+			pr, pw := io.Pipe()
+			ch <- pr
+
+			protoWriter := gogoio.NewDelimitedWriter(pw)
+			defer protoWriter.Close()
+
+			err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
+				Item: &sdktypes.SnapshotItem_Store{Store: &sdktypes.SnapshotStore{Name: key.Name()}},
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			for {
+				node, err := exporter.Next()
+				if err == tmiavl.ExportDone {
+					break
+				} else if err != nil {
+					panic(err)
+				}
+				err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
+					Item: &sdktypes.SnapshotItem_Node{Node: &sdktypes.SnapshotNode{
+						Key:     node.Key,
+						Value:   node.Value,
+						Height:  int32(node.Height),
+						Version: node.Version,
+					}},
+				})
+				if err != nil {
+					panic(err)
+				}
+			}
+
+			protoWriter.Close()
+		}
+		close(ch)
+	}()
+
+	return snapshot, nil
+}
+
+// Restore implements Snapshotter.
+func (rs *Store) Restore(snapshot types.Snapshot) error {
+	if snapshot.Format != 1 {
+		return errors.Errorf("unknown snapshot format %v", snapshot.Format)
+	}
+	if snapshot.Height == 0 {
+		return errors.New("cannot restore snapshot at height 0")
+	}
+
+	chunk := 0
+	var importer *tmiavl.Importer
+CHUNK:
+	for chunkReader := range snapshot.Chunks {
+		chunk++
+		protoReader := gogoio.NewDelimitedReader(chunkReader, 1e6)
+		defer protoReader.Close()
+
+		for {
+			item := &sdktypes.SnapshotItem{}
+			err := protoReader.ReadMsg(item)
+			if err == io.EOF {
+				continue CHUNK
+			} else if err != nil {
+				panic(err)
+			}
+			switch i := item.Item.(type) {
+			case *sdktypes.SnapshotItem_Store:
+				if importer != nil {
+					err = importer.Commit()
+					if err != nil {
+						panic(err)
+					}
+					defer importer.Close()
+				}
+				store, ok := rs.getStoreByName(i.Store.Name).(*iavl.Store)
+				if !ok {
+					panic("invalid store type")
+				}
+				importer, err = store.Import(int64(snapshot.Height))
+				if err != nil {
+					panic(err)
+				}
+			case *sdktypes.SnapshotItem_Node:
+				if importer == nil {
+					panic("received node without store")
+				}
+				importer.Add(&tmiavl.ExportNode{
+					Key:     i.Node.Key,
+					Value:   i.Node.Value,
+					Height:  int8(i.Node.Height),
+					Version: i.Node.Version,
+				})
+			default:
+				panic(fmt.Sprintf("unknown type %T", i))
+			}
+		}
+	}
+
+	if importer != nil {
+		err := importer.Commit()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	storeInfos := []storeInfo{}
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeTransient {
+			continue
+		}
+		storeInfos = append(storeInfos, storeInfo{
+			Name: key.Name(),
+			Core: storeCore{
+				CommitID: store.LastCommitID(),
+			},
+		})
+	}
+
+	flushCommitInfo(rs.db, int64(snapshot.Height), commitInfo{
+		Version:    int64(snapshot.Height),
+		StoreInfos: storeInfos,
+	})
+	return rs.LoadLatestVersion()
 }
 
 //----------------------------------------

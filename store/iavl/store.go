@@ -233,6 +233,28 @@ func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(iTree, start, end, false)
 }
 
+// Exports the IAVL store at the given version, returning an iavl.Exporter for the tree.
+func (st *Store) Export(version int64) (*iavl.Exporter, error) {
+	istore, err := st.GetImmutable(version)
+	if err != nil {
+		return nil, fmt.Errorf("iavl export failed for version %v: %w", version, err)
+	}
+	tree, ok := istore.tree.(*immutableTree)
+	if !ok || tree == nil {
+		return nil, fmt.Errorf("iavl export failed: unable to fetch tree for version %v", version)
+	}
+	return tree.Export(), nil
+}
+
+// Import imports an IAVL tree at the given version, returning an iavl.Importer for importing.
+func (st *Store) Import(version int64) (*iavl.Importer, error) {
+	tree, ok := st.tree.(*iavl.MutableTree)
+	if !ok {
+		return nil, errors.New("iavl import failed: unable to find mutable tree")
+	}
+	return tree.Import(version)
+}
+
 // Handle gatest the latest height, if height is 0
 func getHeight(tree Tree, req abci.RequestQuery) int64 {
 	height := req.Height

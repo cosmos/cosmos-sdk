@@ -45,3 +45,30 @@ message ValAddresses {
 
   repeated bytes addresses = 1 [(gogoproto.casttype) = "ValAddress"];
 }
+
+// SnapshotItem is an item contained in a snapshot
+message SnapshotItem {
+  option (gogoproto.stringer) = true;
+
+  oneof item {
+    SnapshotStore store = 1;
+    SnapshotNode node = 2;
+  }
+}
+
+// SnapshotStore contains snapshot info about a store
+message SnapshotStore {
+  option (gogoproto.stringer) = true;
+
+  string name = 1;
+}
+
+// SnapshotNode contains snapshot data for an ExportNode
+message SnapshotNode {
+  option (gogoproto.stringer) = true;
+
+  bytes key = 1;
+  bytes value = 2;
+  int64 version = 3;
+  int32 height = 4;
+}

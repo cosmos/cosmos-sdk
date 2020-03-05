@@ -9,7 +9,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -51,8 +51,8 @@ func (k Keeper) ConnOpenTry(
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string, // clientID of chainA
 	counterpartyVersions []string, // supported versions of chain A
-	proofInit commitment.ProofI, // proof that chainA stored connectionEnd in state (on ConnOpenInit)
-	proofConsensus commitment.ProofI, // proof that chainA stored chainB's consensus state at consensus height
+	proofInit commitmentexported.Proof, // proof that chainA stored connectionEnd in state (on ConnOpenInit)
+	proofConsensus commitmentexported.Proof, // proof that chainA stored chainB's consensus state at consensus height
 	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
 ) error {
@@ -125,8 +125,8 @@ func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
 	version string, // version that ChainB chose in ConnOpenTry
-	proofTry commitment.ProofI, // proof that connectionEnd was added to ChainB state in ConnOpenTry
-	proofConsensus commitment.ProofI, // proof that chainB has stored ConsensusState of chainA on its client
+	proofTry commitmentexported.Proof, // proof that connectionEnd was added to ChainB state in ConnOpenTry
+	proofConsensus commitmentexported.Proof, // proof that chainB has stored ConsensusState of chainA on its client
 	proofHeight uint64, // height that relayer constructed proofTry
 	consensusHeight uint64, // latest height of chainA that chainB has stored on its chainA client
 ) error {
@@ -197,7 +197,7 @@ func (k Keeper) ConnOpenAck(
 func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
-	proofAck commitment.ProofI, // proof that connection opened on ChainA during ConnOpenAck
+	proofAck commitmentexported.Proof, // proof that connection opened on ChainA during ConnOpenAck
 	proofHeight uint64, // height that relayer constructed proofAck
 ) error {
 	// Retrieve connection

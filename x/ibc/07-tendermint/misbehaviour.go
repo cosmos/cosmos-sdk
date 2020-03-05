@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	lite "github.com/tendermint/tendermint/lite2"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	lite "github.com/tendermint/tendermint/lite2"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting

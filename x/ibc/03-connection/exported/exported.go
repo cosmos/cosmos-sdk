@@ -3,7 +3,7 @@ package exported
 import (
 	"encoding/json"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ConnectionI describes the required methods for a connection.
@@ -19,7 +19,7 @@ type ConnectionI interface {
 type CounterpartyI interface {
 	GetClientID() string
 	GetConnectionID() string
-	GetPrefix() commitment.PrefixI
+	GetPrefix() commitmentexported.Prefix
 	ValidateBasic() error
 }
 

@@ -12,8 +12,7 @@ import (
 )
 
 func Test_updateKeyCommand(t *testing.T) {
-	cmd := UpdateKeyCommand()
-	assert.NotNil(t, cmd)
+	assert.NotNil(t, UpdateKeyCommand())
 	// No flags  or defaults to validate
 }
 
@@ -34,7 +33,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	// Prepare a key base
 	// Now add a temporary keybase
 	kbHome, cleanUp1 := tests.NewTestCaseDir(t)
-	defer cleanUp1()
+	t.Cleanup(cleanUp1)
 	viper.Set(flags.FlagHome, kbHome)
 
 	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))

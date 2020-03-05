@@ -7,7 +7,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
@@ -17,7 +17,7 @@ func (k Keeper) VerifyClientConsensusState(
 	connection exported.ConnectionI,
 	height uint64,
 	consensusHeight uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
 	clientID := connection.GetClientID()
@@ -42,7 +42,7 @@ func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
 ) error {
@@ -73,7 +73,7 @@ func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
@@ -106,7 +106,7 @@ func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -140,7 +140,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -175,7 +175,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	sequence uint64,
@@ -208,7 +208,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,

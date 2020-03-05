@@ -1,4 +1,4 @@
-package commitment
+package types
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -16,99 +17,99 @@ import (
 
 // Merkle proof implementation of the Proof interface
 // Applied on SDK-based IBC implementation
-var _ RootI = Root{}
+var _ exported.Root = MerkleRoot{}
 
-// Root defines a merkle root hash.
-// In the Cosmos SDK, the AppHash of a block header becomes the Root.
-type Root struct {
+// MerkleRoot defines a merkle root hash.
+// In the Cosmos SDK, the AppHash of a block header becomes the root.
+type MerkleRoot struct {
 	Hash []byte `json:"hash" yaml:"hash"`
 }
 
-// NewRoot constructs a new Root
-func NewRoot(hash []byte) Root {
-	return Root{
+// NewMerkleRoot constructs a new MerkleRoot
+func NewMerkleRoot(hash []byte) MerkleRoot {
+	return MerkleRoot{
 		Hash: hash,
 	}
 }
 
 // GetCommitmentType implements RootI interface
-func (Root) GetCommitmentType() Type {
-	return Merkle
+func (MerkleRoot) GetCommitmentType() exported.Type {
+	return exported.Merkle
 }
 
 // GetHash implements RootI interface
-func (r Root) GetHash() []byte {
-	return r.Hash
+func (mr MerkleRoot) GetHash() []byte {
+	return mr.Hash
 }
 
 // IsEmpty returns true if the root is empty
-func (r Root) IsEmpty() bool {
-	return len(r.GetHash()) == 0
+func (mr MerkleRoot) IsEmpty() bool {
+	return len(mr.GetHash()) == 0
 }
 
-var _ PrefixI = Prefix{}
+var _ exported.Prefix = MerklePrefix{}
 
-// Prefix is merkle path prefixed to the key.
+// MerklePrefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
-type Prefix struct {
+type MerklePrefix struct {
 	KeyPrefix []byte `json:"key_prefix" yaml:"key_prefix"` // byte slice prefixed before the key
 }
 
-// NewPrefix constructs new Prefix instance
-func NewPrefix(keyPrefix []byte) Prefix {
-	return Prefix{
+// NewMerklePrefix constructs new MerklePrefix instance
+func NewMerklePrefix(keyPrefix []byte) MerklePrefix {
+	return MerklePrefix{
 		KeyPrefix: keyPrefix,
 	}
 }
 
-// GetCommitmentType implements PrefixI
-func (Prefix) GetCommitmentType() Type {
-	return Merkle
+// GetCommitmentType implements Prefix interface
+func (MerklePrefix) GetCommitmentType() exported.Type {
+	return exported.Merkle
 }
 
 // Bytes returns the key prefix bytes
-func (p Prefix) Bytes() []byte {
-	return p.KeyPrefix
+func (mp MerklePrefix) Bytes() []byte {
+	return mp.KeyPrefix
 }
 
 // IsEmpty returns true if the prefix is empty
-func (p Prefix) IsEmpty() bool {
-	return len(p.Bytes()) == 0
+func (mp MerklePrefix) IsEmpty() bool {
+	return len(mp.Bytes()) == 0
 }
 
-var _ PathI = Path{}
+var _ exported.Path = MerklePath{}
 
-// Path is the path used to verify commitment proofs, which can be an arbitrary
+// MerklePath is the path used to verify commitment proofs, which can be an arbitrary
 // structured object (defined by a commitment type).
-type Path struct {
+type MerklePath struct {
 	KeyPath merkle.KeyPath `json:"key_path" yaml:"key_path"` // byte slice prefixed before the key
 }
 
-// NewPath creates a new CommitmentPath instance
-func NewPath(keyPathStr []string) Path {
+// NewMerklePath creates a new MerklePath instance
+func NewMerklePath(keyPathStr []string) MerklePath {
 	merkleKeyPath := merkle.KeyPath{}
 	for _, keyStr := range keyPathStr {
 		merkleKeyPath = merkleKeyPath.AppendKey([]byte(keyStr), merkle.KeyEncodingURL)
 	}
 
-	return Path{
+	return MerklePath{
 		KeyPath: merkleKeyPath,
 	}
 }
 
 // GetCommitmentType implements PathI
-func (Path) GetCommitmentType() Type {
-	return Merkle
+func (MerklePath) GetCommitmentType() exported.Type {
+	return exported.Merkle
 }
 
 // String implements fmt.Stringer.
-func (p Path) String() string {
-	return p.KeyPath.String()
+func (mp MerklePath) String() string {
+	return mp.KeyPath.String()
 }
 
 // Pretty returns the unescaped path of the URL string.
-func (p Path) Pretty() string {
-	path, err := url.PathUnescape(p.KeyPath.String())
+func (mp MerklePath) Pretty() string {
+	path, err := url.PathUnescape(mp.KeyPath.String())
 	if err != nil {
 		panic(err)
 	}
@@ -116,8 +117,8 @@ func (p Path) Pretty() string {
 }
 
 // IsEmpty returns true if the path is empty
-func (p Path) IsEmpty() bool {
-	return len(p.KeyPath) == 0
+func (mp MerklePath) IsEmpty() bool {
+	return len(mp.KeyPath) == 0
 }
 
 // ApplyPrefix constructs a new commitment path from the arguments. It interprets
@@ -125,35 +126,35 @@ func (p Path) IsEmpty() bool {
 //
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
-func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
+func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 	err := host.DefaultPathValidator(path)
 	if err != nil {
-		return Path{}, err
+		return MerklePath{}, err
 	}
 
 	if prefix == nil || prefix.IsEmpty() {
-		return Path{}, errors.New("prefix can't be empty")
+		return MerklePath{}, errors.New("prefix can't be empty")
 	}
-	return NewPath([]string{string(prefix.Bytes()), path}), nil
+	return NewMerklePath([]string{string(prefix.Bytes()), path}), nil
 }
 
-var _ ProofI = Proof{}
+var _ exported.Proof = MerkleProof{}
 
-// Proof is a wrapper type that contains a merkle proof.
+// MerkleProof is a wrapper type that contains a merkle proof.
 // It demonstrates membership or non-membership for an element or set of elements,
 // verifiable in conjunction with a known commitment root. Proofs should be
 // succinct.
-type Proof struct {
+type MerkleProof struct {
 	Proof *merkle.Proof `json:"proof" yaml:"proof"`
 }
 
 // GetCommitmentType implements ProofI
-func (Proof) GetCommitmentType() Type {
-	return Merkle
+func (MerkleProof) GetCommitmentType() exported.Type {
+	return exported.Merkle
 }
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
-func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) error {
+func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path, value []byte) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
 		return errors.New("empty params or proof")
 	}
@@ -163,7 +164,7 @@ func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) error 
 }
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
-func (proof Proof) VerifyNonMembership(root RootI, path PathI) error {
+func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.Path) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
 		return errors.New("empty params or proof")
 	}
@@ -173,12 +174,12 @@ func (proof Proof) VerifyNonMembership(root RootI, path PathI) error {
 }
 
 // IsEmpty returns true if the root is empty
-func (proof Proof) IsEmpty() bool {
-	return (proof == Proof{}) || proof.Proof == nil
+func (proof MerkleProof) IsEmpty() bool {
+	return (proof == MerkleProof{}) || proof.Proof == nil
 }
 
 // ValidateBasic checks if the proof is empty.
-func (proof Proof) ValidateBasic() error {
+func (proof MerkleProof) ValidateBasic() error {
 	if proof.IsEmpty() {
 		return ErrInvalidProof
 	}

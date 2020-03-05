@@ -23,7 +23,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
-	defer kbCleanUp()
+	t.Cleanup(kbCleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
@@ -33,10 +33,10 @@ func Test_runAddCmdBasic(t *testing.T) {
 		mockIn.Reset("y\n")
 		kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 		require.NoError(t, err)
-		defer func() {
+		t.Cleanup(func() {
 			kb.Delete("keyname1", "", false)
 			kb.Delete("keyname2", "", false)
-		}()
+		})
 	}
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 

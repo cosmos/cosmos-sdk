@@ -8,7 +8,7 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -19,7 +19,7 @@ import (
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {
@@ -135,7 +135,7 @@ func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
 	packet types.Packet,
 	proof,
-	proofClosed commitment.ProofI,
+	proofClosed commitmentexported.Proof,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {

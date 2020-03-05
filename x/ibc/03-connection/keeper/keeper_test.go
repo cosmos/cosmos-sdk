@@ -18,7 +18,7 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // nolint: unused
-func queryProof(chain *TestChain, key []byte) (commitment.Proof, uint64) {
+func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
 		Height: chain.App.LastBlockHeight(),
@@ -69,7 +69,7 @@ func queryProof(chain *TestChain, key []byte) (commitment.Proof, uint64) {
 		Prove:  true,
 	})
 
-	proof := commitment.Proof{
+	proof := commitmenttypes.MerkleProof{
 		Proof: res.Proof,
 	}
 
@@ -257,9 +257,9 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height: uint64(client.Header.Height),
-		// TODO Fix me - currently commented out due to time normalisation issues.
+		// FIXME: currently commented out due to time normalisation issues.
 		//Timestamp:    client.Header.Time,
-		Root:         commitment.NewRoot(commitID.Hash),
+		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 

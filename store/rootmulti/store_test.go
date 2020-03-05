@@ -1,7 +1,9 @@
 package rootmulti
 
 import (
+	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -445,8 +447,8 @@ func TestMultiStoreQuery(t *testing.T) {
 }
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
-	source := newMultiStoreWithMixedMounts(dbm.NewMemDB(), types.PruneNothing, true)
-	target := newMultiStoreWithMixedMounts(dbm.NewMemDB(), types.PruneNothing, false)
+	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
 	version := source.LastCommitID().Version
 	require.EqualValues(t, 3, version)
 
@@ -460,10 +462,43 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 		targetStore := target.getStoreByName(key.Name()).(types.CommitKVStore)
 		switch sourceStore.GetStoreType() {
 		case types.StoreTypeTransient:
-			assert.False(t, targetStore.Iterator(nil, nil).Valid(), "store %v not empty", key.Name())
+			assert.False(t, targetStore.Iterator(nil, nil).Valid(),
+				"transient store %v not empty", key.Name())
 		default:
 			assertStoresEqual(t, sourceStore, targetStore, "store %q not equal", key.Name())
 		}
+	}
+}
+
+func BenchmarkMultistoreSnapshotRestore100K(b *testing.B) {
+	benchmarkMultistoreSnapshotRestore(b, 10, 10000)
+}
+
+func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
+	benchmarkMultistoreSnapshotRestore(b, 10, 100000)
+}
+
+func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
+	b.StopTimer()
+	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	version := source.LastCommitID().Version
+	require.EqualValues(b, 1, version)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		target := NewStore(dbm.NewMemDB())
+		for key := range source.stores {
+			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+		}
+		err := target.LoadLatestVersion()
+		require.NoError(b, err)
+		require.EqualValues(b, 0, target.LastCommitID().Version)
+
+		snapshot, err := source.Snapshot(uint64(version))
+		require.NoError(b, err)
+		err = target.Restore(snapshot)
+		require.NoError(b, err)
+		require.Equal(b, source.LastCommitID(), target.LastCommitID())
 	}
 }
 
@@ -481,39 +516,72 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 	return store
 }
 
-func newMultiStoreWithMixedMounts(db dbm.DB, pruningOpts types.PruningOptions, populate bool) *Store {
+func newMultiStoreWithMixedMounts(db dbm.DB) *Store {
 	store := NewStore(db)
-	store.pruningOpts = pruningOpts
-
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
 	store.LoadLatestVersion()
 
-	if populate {
-		store1 := store.getStoreByName("iavl1").(types.CommitKVStore)
-		store2 := store.getStoreByName("iavl2").(types.CommitKVStore)
-		trans1 := store.getStoreByName("trans1").(types.KVStore)
+	return store
+}
 
-		store1.Set([]byte("a"), []byte{1})
-		store1.Set([]byte("b"), []byte{1})
-		store2.Set([]byte("X"), []byte{255})
-		store2.Set([]byte("A"), []byte{101})
-		trans1.Set([]byte("x1"), []byte{91})
-		store.Commit()
+func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *Store {
+	store := newMultiStoreWithMixedMounts(db)
+	store1 := store.getStoreByName("iavl1").(types.CommitKVStore)
+	store2 := store.getStoreByName("iavl2").(types.CommitKVStore)
+	trans1 := store.getStoreByName("trans1").(types.KVStore)
 
-		store1.Set([]byte("b"), []byte{2})
-		store1.Set([]byte("c"), []byte{3})
-		store2.Set([]byte("B"), []byte{102})
-		store.Commit()
+	store1.Set([]byte("a"), []byte{1})
+	store1.Set([]byte("b"), []byte{1})
+	store2.Set([]byte("X"), []byte{255})
+	store2.Set([]byte("A"), []byte{101})
+	trans1.Set([]byte("x1"), []byte{91})
+	store.Commit()
 
-		store2.Set([]byte("C"), []byte{103})
-		store2.Delete([]byte("X"))
-		trans1.Set([]byte("x2"), []byte{92})
-		store.Commit()
-	}
+	store1.Set([]byte("b"), []byte{2})
+	store1.Set([]byte("c"), []byte{3})
+	store2.Set([]byte("B"), []byte{102})
+	store.Commit()
+
+	store2.Set([]byte("C"), []byte{103})
+	store2.Delete([]byte("X"))
+	trans1.Set([]byte("x2"), []byte{92})
+	store.Commit()
 
 	return store
+}
+
+func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *Store {
+	multiStore := NewStore(db)
+	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
+
+	keys := []*types.KVStoreKey{}
+	for i := uint8(0); i < stores; i++ {
+		key := types.NewKVStoreKey(fmt.Sprintf("store%v", i))
+		multiStore.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+		keys = append(keys, key)
+	}
+	multiStore.LoadLatestVersion()
+
+	for _, key := range keys {
+		store := multiStore.stores[key].(*iavl.Store)
+		for i := uint64(0); i < storeKeys; i++ {
+			k := make([]byte, 8)
+			v := make([]byte, 1024)
+			binary.BigEndian.PutUint64(k, i)
+			_, err := r.Read(v)
+			if err != nil {
+				panic(err)
+			}
+			store.Set(k, v)
+		}
+	}
+
+	multiStore.Commit()
+	multiStore.LoadLatestVersion()
+
+	return multiStore
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions) (*Store, *types.StoreUpgrades) {

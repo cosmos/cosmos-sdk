@@ -3,9 +3,10 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHybridCodec(t *testing.T) {

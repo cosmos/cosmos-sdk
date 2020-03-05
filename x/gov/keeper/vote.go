@@ -69,7 +69,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(vote)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(&vote)
 	store.Set(types.VoteKey(vote.ProposalID, vote.Voter), bz)
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -17,6 +18,7 @@ var (
 	_ auth.Codec     = (*Codec)(nil)
 	_ supply.Codec   = (*Codec)(nil)
 	_ evidence.Codec = (*Codec)(nil)
+	_ gov.Codec      = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -149,6 +151,33 @@ func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
 	}
 
 	return evidence.GetEvidence(), nil
+}
+
+// MarshalProposal marshals a Proposal. It accepts a Proposal defined by the x/gov
+// module and uses the application-level Proposal type which has the concrete
+// Content implementation to serialize.
+func (c *Codec) MarshalProposal(p gov.Proposal) ([]byte, error) {
+	proposal := &Proposal{ProposalBase: p.ProposalBase}
+	if err := proposal.Content.SetContent(p.Content); err != nil {
+		return nil, err
+	}
+
+	return c.Marshaler.MarshalBinaryLengthPrefixed(proposal)
+}
+
+// UnmarshalProposal decodes a Proposal defined by the x/gov module and uses the
+// application-level Proposal type which has the concrete Content implementation
+// to deserialize.
+func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
+	proposal := &Proposal{}
+	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, proposal); err != nil {
+		return gov.Proposal{}, err
+	}
+
+	return gov.Proposal{
+		Content:      proposal.Content.GetContent(),
+		ProposalBase: proposal.ProposalBase,
+	}, nil
 }
 
 // ----------------------------------------------------------------------------

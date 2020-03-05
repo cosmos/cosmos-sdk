@@ -287,3 +287,15 @@ func TestRelativePow(t *testing.T) {
 		require.Equal(t, tc.want, res, "unexpected result for test case %d, input: %v, got: %v", i, tc.args, res)
 	}
 }
+
+func TestUintSize(t *testing.T) {
+	x := Uint{i: nil}
+	require.Equal(t, 1, x.Size())
+	x = NewUint(0)
+	require.Equal(t, 1, x.Size())
+	x = NewUint(10)
+	require.Equal(t, 2, x.Size())
+	x = NewUint(100)
+	require.Equal(t, 3, x.Size())
+
+}

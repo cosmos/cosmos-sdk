@@ -210,7 +210,7 @@ func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) typ
 }
 
 // switches a validator from unbonding state to unbonded state
-func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
 	if !validator.IsUnbonding() {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}

@@ -3,6 +3,8 @@ package rootmulti
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math/rand"
 	"testing"
 
@@ -470,12 +472,45 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	}
 }
 
+func BenchmarkMultistoreSnapshot100K(b *testing.B) {
+	benchmarkMultistoreSnapshot(b, 10, 10000)
+}
+
+func BenchmarkMultistoreSnapshot1M(b *testing.B) {
+	benchmarkMultistoreSnapshot(b, 10, 100000)
+}
+
 func BenchmarkMultistoreSnapshotRestore100K(b *testing.B) {
 	benchmarkMultistoreSnapshotRestore(b, 10, 10000)
 }
 
 func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
 	benchmarkMultistoreSnapshotRestore(b, 10, 100000)
+}
+
+func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
+	b.StopTimer()
+	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	version := source.LastCommitID().Version
+	require.EqualValues(b, 1, version)
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		target := NewStore(dbm.NewMemDB())
+		for key := range source.stores {
+			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+		}
+		err := target.LoadLatestVersion()
+		require.NoError(b, err)
+		require.EqualValues(b, 0, target.LastCommitID().Version)
+
+		snapshot, err := source.Snapshot(uint64(version))
+		require.NoError(b, err)
+		for reader := range snapshot.Chunks {
+			_, err := io.Copy(ioutil.Discard, reader)
+			require.NoError(b, err)
+		}
+	}
 }
 
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {

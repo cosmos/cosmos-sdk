@@ -11,7 +11,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -126,9 +126,8 @@ func NewSimApp(
 ) *SimApp {
 
 	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
-	cdc := simappcodec.MakeCodec(ModuleBasics)
-
-	appCodec := simappcodec.NewAppCodec(cdc)
+	cdc := codecstd.MakeCodec(ModuleBasics)
+	appCodec := codecstd.NewAppCodec(cdc)
 
 	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)

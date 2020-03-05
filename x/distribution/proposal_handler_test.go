@@ -1,7 +1,12 @@
-package distribution
+package distribution_test
 
 import (
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -23,45 +28,49 @@ func testProposal(recipient sdk.AccAddress, amount sdk.Coins) types.CommunityPoo
 }
 
 func TestProposalHandlerPassed(t *testing.T) {
-	ctx, ak, bk, keeper, _, supplyKeeper := CreateTestInputDefault(t, false, 10)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
 	recipient := delAddr1
 
 	// add coins to the module account
-	macc := keeper.GetDistributionAccount(ctx)
-	balances := bk.GetAllBalances(ctx, macc.GetAddress())
-	err := bk.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
+	macc := app.DistrKeeper.GetDistributionAccount(ctx)
+	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+	err := app.BankKeeper.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
 	require.NoError(t, err)
 
-	supplyKeeper.SetModuleAccount(ctx, macc)
+	app.SupplyKeeper.SetModuleAccount(ctx, macc)
 
-	account := ak.NewAccountWithAddress(ctx, recipient)
-	ak.SetAccount(ctx, account)
-	require.True(t, bk.GetAllBalances(ctx, account.GetAddress()).IsZero())
+	account := app.AccountKeeper.NewAccountWithAddress(ctx, recipient)
+	app.AccountKeeper.SetAccount(ctx, account)
+	require.True(t, app.BankKeeper.GetAllBalances(ctx, account.GetAddress()).IsZero())
 
-	feePool := keeper.GetFeePool(ctx)
+	feePool := app.DistrKeeper.GetFeePool(ctx)
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
-	keeper.SetFeePool(ctx, feePool)
+	app.DistrKeeper.SetFeePool(ctx, feePool)
 
 	tp := testProposal(recipient, amount)
-	hdlr := NewCommunityPoolSpendProposalHandler(keeper)
+	hdlr := distribution.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)
 	require.NoError(t, hdlr(ctx, tp))
 
-	balances = bk.GetAllBalances(ctx, recipient)
+	balances = app.BankKeeper.GetAllBalances(ctx, recipient)
 	require.Equal(t, balances, amount)
 }
 
 func TestProposalHandlerFailed(t *testing.T) {
-	ctx, ak, bk, keeper, _, _ := CreateTestInputDefault(t, false, 10)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
 	recipient := delAddr1
 
-	account := ak.NewAccountWithAddress(ctx, recipient)
-	ak.SetAccount(ctx, account)
-	require.True(t, bk.GetAllBalances(ctx, account.GetAddress()).IsZero())
+	account := app.AccountKeeper.NewAccountWithAddress(ctx, recipient)
+	app.AccountKeeper.SetAccount(ctx, account)
+	require.True(t, app.BankKeeper.GetAllBalances(ctx, account.GetAddress()).IsZero())
 
 	tp := testProposal(recipient, amount)
-	hdlr := NewCommunityPoolSpendProposalHandler(keeper)
+	hdlr := distribution.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)
 	require.Error(t, hdlr(ctx, tp))
 
-	balances := bk.GetAllBalances(ctx, recipient)
+	balances := app.BankKeeper.GetAllBalances(ctx, recipient)
 	require.True(t, balances.IsZero())
 }

@@ -53,7 +53,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val exported.
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
+func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
@@ -143,8 +143,8 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 	}
 
 	// end current period and calculate rewards
-	endingPeriod := k.incrementValidatorPeriod(ctx, val)
-	rewardsRaw := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+	rewardsRaw := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 	outstanding := k.GetValidatorOutstandingRewardsCoins(ctx, del.GetValidatorAddr())
 
 	// defensive edge case may happen on the very final digits

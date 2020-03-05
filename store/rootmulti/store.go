@@ -173,7 +173,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		// Load it
 		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
-			return errors.Wrapf(err, "failed to load Store")
+			return errors.Wrap(err, "failed to load store")
 		}
 		newStores[key] = store
 
@@ -192,7 +192,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			// load from the old name
 			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
 			if err != nil {
-				return errors.Wrapf(err, "failed to load old Store '%s'", oldName)
+				return errors.Wrapf(err, "failed to load old store %s", oldName)
 			}
 
 			// move all data

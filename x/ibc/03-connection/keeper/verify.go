@@ -32,6 +32,7 @@ func (k Keeper) VerifyClientConsensusState(
 	if !found {
 		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
 	}
+	fmt.Printf("Target Root: %v\n", targetConsState.GetRoot())
 
 	return clientState.VerifyClientConsensusState(
 		k.cdc, targetConsState.GetRoot(), height, connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,

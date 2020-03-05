@@ -164,7 +164,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	fmt.Printf("commit id at height %s: %d\n", commitID, client.Header.Height)
+	fmt.Printf("commit id at height %s: %d\n", commitID, client.App.LastBlockHeight())
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit

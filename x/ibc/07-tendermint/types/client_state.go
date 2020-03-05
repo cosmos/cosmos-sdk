@@ -192,7 +192,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(channel)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(channel)
 	if err != nil {
 		return err
 	}

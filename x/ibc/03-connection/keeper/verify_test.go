@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -32,15 +33,26 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	cases := []struct {
 		msg        string
 		connection types.ConnectionEnd
-		malleate   func()
+		malleate   func() clientexported.ConsensusState
 		expPass    bool
 	}{
-		{"verification success", connection1, func() {
+		{"verification success", connection1, func() clientexported.ConsensusState {
 			suite.chainA.CreateClient(suite.chainB)
+			fmt.Println("App Height in setup", suite.chainB.App.LastBlockHeight())
+			fmt.Println("CreateClient for chainA on chainB")
+			suite.chainB.CreateClient(suite.chainA)
+
+			suite.chainA.updateClient(suite.chainB)
+
+			consState := suite.chainA.Header.ConsensusState()
+			return consState
 		}, true},
-		{"client state not found", connection1, func() {}, false},
-		{"verification failed", connection1, func() {
+		{"client state not found", connection1, func() clientexported.ConsensusState {
+			return suite.chainB.Header.ConsensusState()
+		}, false},
+		{"verification failed", connection1, func() clientexported.ConsensusState {
 			suite.chainA.CreateClient(suite.chainA)
+			return suite.chainA.Header.ConsensusState()
 		}, false},
 	}
 
@@ -49,18 +61,28 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			if i != 0 {
+				return
+			}
 			suite.SetupTest() // reset
 
-			tc.malleate()
+			consState := tc.malleate()
 			proofHeight := uint64(suite.chainB.Header.Height)
 
 			// TODO: is this the right consensus height
-			consensusHeight := uint64(suite.chainA.App.LastBlockHeight())
+			consensusHeight := uint64(suite.chainA.Header.Height)
 			consensusKey := ibctypes.KeyConsensusState(testClientIDA, consensusHeight)
-			proof, proofHeight := queryProof(suite.chainA, consensusKey)
+
+			// commit to get chainB to get height > 1
+			suite.chainB.App.Commit()
+			fmt.Println("App Height ChainB:", suite.chainB.App.LastBlockHeight())
+			proof, proofHeight := queryProof(suite.chainB, consensusKey)
+			fmt.Println("ProofHeight:", proofHeight)
+
+			fmt.Printf("Header Consensus State: %#v\n", consState)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-				suite.chainA.GetContext(), tc.connection, proofHeight, consensusHeight, proof, suite.chainB.Header.ConsensusState(),
+				suite.chainA.GetContext(), tc.connection, proofHeight, consensusHeight, proof, consState,
 			)
 
 			if tc.expPass {
@@ -74,6 +96,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	connectionKey := ibctypes.KeyConnection(testConnectionIDA)
+	var invalidProofHeight uint64
 	cases := []struct {
 		msg      string
 		malleate func()
@@ -82,11 +105,13 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 		{"verification success", func() {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
+			invalidProofHeight = 0 // don't use this
 		}, true},
 		{"client state not found", func() {}, false},
 		{"verification failed", func() {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
+			invalidProofHeight = 10 // make proofHeight incorrect
 		}, false},
 	}
 
@@ -111,12 +136,16 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainB.updateClient(suite.chainA)
 			proof, proofHeight := queryProof(suite.chainA, connectionKey)
+			// if invalidProofHeight has been set, use that value instead
+			if invalidProofHeight != 0 {
+				proofHeight = invalidProofHeight
+			}
 
 			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitment.NewPrefix([]byte("ibc")))
 			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-				suite.chainB.GetContext(), connection, proofHeight, proof, testConnectionIDA, expectedConnection,
+				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
 			)
 
 			if tc.expPass {
@@ -130,20 +159,32 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 
 func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
+
+	// create connection of chainB to pass into verify function
+	counterparty := types.NewCounterparty(
+		testClientIDB, testConnectionIDB,
+		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+	)
+
+	connection := types.NewConnectionEnd(
+		exported.UNINITIALIZED, testClientIDA, counterparty,
+		types.GetCompatibleVersions(),
+	)
+
 	cases := []struct {
 		msg         string
 		proofHeight uint64
 		malleate    func()
 		expPass     bool
 	}{
-		{"verification success", 2, func() {
+		{"verification success", 0, func() {
 			suite.chainB.CreateClient(suite.chainA)
 		}, true},
-		{"client state not found", 2, func() {}, false},
+		{"client state not found", 0, func() {}, false},
 		{"consensus state not found", 100, func() {
 			suite.chainB.CreateClient(suite.chainA)
 		}, false},
-		{"verification failed", 2, func() {
+		{"verification failed", 7, func() {
 			suite.chainB.CreateClient(suite.chainB)
 		}, false},
 	}
@@ -157,7 +198,6 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 
 			tc.malleate()
 			// Create and store channel on chain A
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
 			channel := suite.chainA.createChannel(
 				testPort1, testChannel1, testPort2, testChannel2,
 				channelexported.OPEN, channelexported.ORDERED, testConnectionIDA,
@@ -168,9 +208,13 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 
 			// Check that Chain B can verify channel is stored on chainA
 			proof, proofHeight := queryProof(suite.chainA, channelKey)
+			// if testcase proofHeight is not 0, replace proofHeight with this value
+			if tc.proofHeight != 0 {
+				proofHeight = tc.proofHeight
+			}
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyChannelState(
-				suite.chainB.GetContext(), connection, proofHeight, proof, testPort1,
+				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
 				testChannel1, channel,
 			)
 

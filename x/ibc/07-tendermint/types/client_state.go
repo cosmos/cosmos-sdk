@@ -160,8 +160,6 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	fmt.Printf("verify against consensus state %v\n", consensusState)
-
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}

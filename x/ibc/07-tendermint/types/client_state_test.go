@@ -25,6 +25,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:        "successful verification",
 		// 	clientState: ibctmtypes.NewClientState(chainID, chainID, height),
@@ -78,7 +79,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.cdc, height, tc.prefix, tc.proof, tc.consensusState,
+			suite.cdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -102,6 +103,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
@@ -184,6 +186,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  ibctmtypes.NewClientState(chainID, height),
@@ -263,6 +266,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  ibctmtypes.NewClientState(chainID, height),
@@ -342,6 +346,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
@@ -420,6 +425,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),
@@ -494,6 +500,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		proof          commitmenttypes.MerkleProof
 		expPass        bool
 	}{
+		// FIXME: uncomment
 		// {
 		// 	name:         "successful verification",
 		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height),

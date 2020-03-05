@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/supply/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/types"
@@ -39,7 +39,7 @@ func TestValidatePermissions(t *testing.T) {
 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
-	appCodec := simappcodec.NewAppCodec(app.Codec())
+	appCodec := codecstd.NewAppCodec(app.Codec())
 	keeper := keep.NewKeeper(appCodec, app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 
 	err := keeper.ValidatePermissions(multiPermAcc)

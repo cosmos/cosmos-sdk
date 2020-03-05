@@ -20,11 +20,11 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
+	// create connection on chainA to chainB
 	counterparty := types.NewCounterparty(
 		testClientIDA, testConnectionIDA,
 		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
 	)
-
 	connection1 := types.NewConnectionEnd(
 		exported.UNINITIALIZED, testClientIDB, counterparty,
 		types.GetCompatibleVersions(),
@@ -38,11 +38,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	}{
 		{"verification success", connection1, func() clientexported.ConsensusState {
 			suite.chainA.CreateClient(suite.chainB)
-			fmt.Println("App Height in setup", suite.chainB.App.LastBlockHeight())
-			fmt.Println("CreateClient for chainA on chainB")
 			suite.chainB.CreateClient(suite.chainA)
-
-			suite.chainA.updateClient(suite.chainB)
 
 			consState := suite.chainA.Header.ConsensusState()
 			return consState
@@ -61,28 +57,23 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	for i, tc := range cases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			if i != 0 {
-				return
-			}
 			suite.SetupTest() // reset
 
 			consState := tc.malleate()
-			proofHeight := uint64(suite.chainB.Header.Height)
+
+			// perform a couple updates of chain B on chain A
+			suite.chainA.updateClient(suite.chainB)
+			suite.chainA.updateClient(suite.chainB)
 
 			// TODO: is this the right consensus height
 			consensusHeight := uint64(suite.chainA.Header.Height)
 			consensusKey := ibctypes.KeyConsensusState(testClientIDA, consensusHeight)
 
-			// commit to get chainB to get height > 1
-			suite.chainB.App.Commit()
-			fmt.Println("App Height ChainB:", suite.chainB.App.LastBlockHeight())
+			// get proof that chainB stored chainA' consensus state
 			proof, proofHeight := queryProof(suite.chainB, consensusKey)
-			fmt.Println("ProofHeight:", proofHeight)
-
-			fmt.Printf("Header Consensus State: %#v\n", consState)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientConsensusState(
-				suite.chainA.GetContext(), tc.connection, proofHeight, consensusHeight, proof, consState,
+				suite.chainA.GetContext(), tc.connection, proofHeight+1, consensusHeight, proof, consState,
 			)
 
 			if tc.expPass {
@@ -141,6 +132,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 				proofHeight = invalidProofHeight
 			}
 
+			// Create B's connection to A
 			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitment.NewPrefix([]byte("ibc")))
 			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A

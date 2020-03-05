@@ -70,7 +70,6 @@ func (k Keeper) ConnOpenTry(
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
-	fmt.Printf("expected: %s\n", expectedConnection)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -86,8 +85,6 @@ func (k Keeper) ConnOpenTry(
 	); err != nil {
 		return err
 	}
-
-	fmt.Printf("expected consensus state: %v\n", expectedConsensusState)
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(

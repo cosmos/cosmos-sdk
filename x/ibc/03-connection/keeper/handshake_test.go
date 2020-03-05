@@ -204,7 +204,6 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := queryProof(suite.chainB, connectionKey)
-			fmt.Printf("ProofTry: %s\n", proofTry)
 
 			consensusKey := ibctypes.KeyConsensusState(testClientIDA, uint64(consensusHeight))
 			proofConsensus, _ := queryProof(suite.chainB, consensusKey)

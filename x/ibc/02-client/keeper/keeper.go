@@ -92,8 +92,6 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := ctx.KVStore(k.storeKey)
-	fmt.Printf("key: %s\n", ibctypes.KeyConsensusState(clientID, height))
-	fmt.Printf("consensus state: %v\n", consensusState)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
 	store.Set(ibctypes.KeyConsensusState(clientID, height), bz)
 }

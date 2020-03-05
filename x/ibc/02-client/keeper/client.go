@@ -31,7 +31,6 @@ func (k Keeper) CreateClient(
 
 	height := consensusState.GetHeight()
 	if consensusState != nil {
-		fmt.Printf("Set consensusState: %#v AT Height %d with %s\n", consensusState, height, clientID)
 		k.SetClientConsensusState(ctx, clientID, height, consensusState)
 	}
 

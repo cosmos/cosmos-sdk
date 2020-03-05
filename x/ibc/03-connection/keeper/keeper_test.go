@@ -69,8 +69,6 @@ func queryProof(chain *TestChain, key []byte) (commitment.Proof, uint64) {
 		Prove:  true,
 	})
 
-	fmt.Printf("Key: %s, proof: %v\n", key, res.Proof)
-
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
@@ -164,7 +162,6 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	fmt.Printf("commit id at height %s: %d\n", commitID, client.App.LastBlockHeight())
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
@@ -231,8 +228,6 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
 	client.Header = nextHeader(client)
-	fmt.Printf("set commit id to : %s at height %d\n", commitID, client.Header.Height)
-	fmt.Printf("last block height: %d\n", client.App.LastBlockHeight())
 
 	/*
 		err := chain.App.IBCKeeper.ClientKeeper.UpdateClient(ctxTarget, client.ClientID, client.Header)

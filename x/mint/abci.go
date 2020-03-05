@@ -5,8 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-// beginBlocker mints new tokens for the previous block.
-func beginBlocker(ctx sdk.Context, k Keeper) {
+// BeginBlocker mints new tokens for the previous block.
+func BeginBlocker(ctx sdk.Context, k Keeper) {
 	// fetch stored minter & params
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)

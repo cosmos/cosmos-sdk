@@ -119,7 +119,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	var genesisState GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	initGenesis(ctx, am.keeper, am.supplyKeeper, genesisState)
+	InitGenesis(ctx, am.keeper, am.supplyKeeper, genesisState)
 
 	return []abci.ValidatorUpdate{}
 }
@@ -127,13 +127,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := exportGenesis(ctx, am.keeper)
+	gs := ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	beginBlocker(ctx, am.keeper)
+	BeginBlocker(ctx, am.keeper)
 }
 
 // EndBlock returns the end blocker for the mint module. It returns no validator

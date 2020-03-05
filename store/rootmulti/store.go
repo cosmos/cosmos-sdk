@@ -1,12 +1,13 @@
 package rootmulti
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"sort"
 	"strings"
 
-	gogoio "github.com/gogo/protobuf/io"
+	protoio "github.com/gogo/protobuf/io"
 	"github.com/pkg/errors"
 	tmiavl "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -492,13 +493,6 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 
 // Snapshot implements Snapshotter.
 func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
-	ch := make(chan io.ReadCloser)
-	snapshot := types.Snapshot{
-		Height: height,
-		Format: 1,
-		Chunks: ch,
-	}
-
 	keys := []*types.KVStoreKey{}
 	for key := range rs.stores {
 		switch key := key.(type) {
@@ -508,7 +502,7 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 			// Since transient stores are not persisted they should not be snapshotted
 			continue
 		default:
-			return snapshot, errors.Errorf("unknown key type %T", key)
+			return types.Snapshot{}, errors.Errorf("unknown key type %T", key)
 		}
 	}
 	sort.Slice(keys, func(i, j int) bool {
@@ -521,29 +515,42 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 		case *iavl.Store:
 			stores = append(stores, store)
 		default:
-			return snapshot, errors.Errorf("unable to snapshot store of type %T", store)
+			return types.Snapshot{}, errors.Errorf("unable to snapshot store of type %T", store)
 		}
 	}
 
+	ch := make(chan io.ReadCloser)
+	snapshot := types.Snapshot{
+		Height: height,
+		Format: 1,
+		Chunks: ch,
+	}
+
+	chunker, err := newChunkWriter(ch, 100)
+	if err != nil {
+		return types.Snapshot{}, err
+	}
+
 	go func() {
+		defer chunker.Close()
+		gzWriter := gzip.NewWriter(chunker)
+		defer gzWriter.Close()
+		protoWriter := protoio.NewDelimitedWriter(gzWriter)
+		defer protoWriter.Close()
+
 		for i, key := range keys {
-			store := stores[i]
-			exporter, err := store.Export(int64(height))
+			exporter, err := stores[i].Export(int64(height))
 			if err != nil {
-				panic(err)
+				chunker.CloseWithError(err)
+				return
 			}
-
-			pr, pw := io.Pipe()
-			ch <- pr
-
-			protoWriter := gogoio.NewDelimitedWriter(pw)
-			defer protoWriter.Close()
 
 			err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
 				Item: &sdktypes.SnapshotItem_Store{Store: &sdktypes.SnapshotStore{Name: key.Name()}},
 			})
 			if err != nil {
-				panic(err)
+				chunker.CloseWithError(err)
+				return
 			}
 
 			for {
@@ -551,7 +558,8 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 				if err == tmiavl.ExportDone {
 					break
 				} else if err != nil {
-					panic(err)
+					chunker.CloseWithError(err)
+					return
 				}
 				err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
 					Item: &sdktypes.SnapshotItem_Node{Node: &sdktypes.SnapshotNode{
@@ -562,13 +570,11 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 					}},
 				})
 				if err != nil {
-					panic(err)
+					chunker.CloseWithError(err)
+					return
 				}
 			}
-
-			protoWriter.Close()
 		}
-		close(ch)
 	}()
 
 	return snapshot, nil
@@ -583,52 +589,53 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 		return errors.New("cannot restore snapshot at height 0")
 	}
 
-	chunk := 0
-	var importer *tmiavl.Importer
-CHUNK:
-	for chunkReader := range snapshot.Chunks {
-		chunk++
-		protoReader := gogoio.NewDelimitedReader(chunkReader, 1e6)
-		defer protoReader.Close()
+	chunkReader := newChunkReader(snapshot.Chunks)
+	defer chunkReader.Close()
+	gzReader, err := gzip.NewReader(chunkReader)
+	if err != nil {
+		panic(err)
+	}
+	defer gzReader.Close()
+	protoReader := protoio.NewDelimitedReader(gzReader, 1e6)
+	defer protoReader.Close()
 
-		for {
-			item := &sdktypes.SnapshotItem{}
-			err := protoReader.ReadMsg(item)
-			if err == io.EOF {
-				continue CHUNK
-			} else if err != nil {
-				panic(err)
-			}
-			switch i := item.Item.(type) {
-			case *sdktypes.SnapshotItem_Store:
-				if importer != nil {
-					err = importer.Commit()
-					if err != nil {
-						panic(err)
-					}
-					defer importer.Close()
-				}
-				store, ok := rs.getStoreByName(i.Store.Name).(*iavl.Store)
-				if !ok {
-					panic("invalid store type")
-				}
-				importer, err = store.Import(int64(snapshot.Height))
+	var importer *tmiavl.Importer
+	for {
+		item := &sdktypes.SnapshotItem{}
+		err := protoReader.ReadMsg(item)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+		switch i := item.Item.(type) {
+		case *sdktypes.SnapshotItem_Store:
+			if importer != nil {
+				err = importer.Commit()
 				if err != nil {
 					panic(err)
 				}
-			case *sdktypes.SnapshotItem_Node:
-				if importer == nil {
-					panic("received node without store")
-				}
-				importer.Add(&tmiavl.ExportNode{
-					Key:     i.Node.Key,
-					Value:   i.Node.Value,
-					Height:  int8(i.Node.Height),
-					Version: i.Node.Version,
-				})
-			default:
-				panic(fmt.Sprintf("unknown type %T", i))
 			}
+			store, ok := rs.getStoreByName(i.Store.Name).(*iavl.Store)
+			if !ok {
+				panic("invalid store type")
+			}
+			importer, err = store.Import(int64(snapshot.Height))
+			if err != nil {
+				panic(err)
+			}
+		case *sdktypes.SnapshotItem_Node:
+			if importer == nil {
+				panic("received node without store")
+			}
+			importer.Add(&tmiavl.ExportNode{
+				Key:     i.Node.Key,
+				Value:   i.Node.Value,
+				Height:  int8(i.Node.Height),
+				Version: i.Node.Version,
+			})
+		default:
+			panic(fmt.Sprintf("unknown type %T", i))
 		}
 	}
 
@@ -866,4 +873,141 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)
 	batch.Write()
+}
+
+// chunkWriter reads an input byte stream, splits it into fixed-size chunks, and sends the readers
+// to a channel of io.ReadClosers
+type chunkWriter struct {
+	ch        chan<- io.ReadCloser
+	chunkSize uint64
+	written   uint64
+	pipe      *io.PipeWriter
+	closed    bool
+}
+
+func newChunkWriter(ch chan<- io.ReadCloser, chunkSize uint64) (*chunkWriter, error) {
+	if chunkSize == 0 {
+		return nil, errors.New("chunk size cannot be 0")
+	}
+	return &chunkWriter{
+		ch:        ch,
+		chunkSize: chunkSize,
+	}, nil
+}
+
+// chunk creates a new chunk
+func (w *chunkWriter) chunk() error {
+	if w.pipe != nil {
+		err := w.pipe.Close()
+		if err != nil {
+			return err
+		}
+	}
+	pr, pw := io.Pipe()
+	w.ch <- pr
+	w.pipe = pw
+	w.written = 0
+	return nil
+}
+
+// Close implements io.Closer
+func (w *chunkWriter) Close() error {
+	if !w.closed {
+		w.closed = true
+		close(w.ch)
+		return w.pipe.Close()
+	}
+	return nil
+}
+
+// CloseWithError closes the writer and sends an error to the reader
+func (w *chunkWriter) CloseWithError(err error) {
+	if !w.closed {
+		w.closed = true
+		close(w.ch)
+		w.pipe.CloseWithError(err)
+	}
+}
+
+// Write implements io.Writer
+func (w *chunkWriter) Write(data []byte) (int, error) {
+	if w.closed {
+		return 0, errors.New("cannot write to closed chunkWriter")
+	}
+	nTotal := 0
+	for len(data) > 0 {
+		if w.pipe == nil || w.written >= w.chunkSize {
+			err := w.chunk()
+			if err != nil {
+				return nTotal, err
+			}
+		}
+		writeSize := w.chunkSize - w.written
+		if writeSize > uint64(len(data)) {
+			writeSize = uint64(len(data))
+		}
+		n, err := w.pipe.Write(data[:writeSize])
+		w.written += uint64(n)
+		nTotal += n
+		if err != nil {
+			return nTotal, err
+		}
+		data = data[writeSize:]
+	}
+	return nTotal, nil
+}
+
+// chunkReader combines chunks from a channel of io.ReadClosers into a byte stream
+type chunkReader struct {
+	ch     <-chan io.ReadCloser
+	reader io.ReadCloser
+}
+
+// newChunkReader creates a new chunkReader
+func newChunkReader(ch <-chan io.ReadCloser) *chunkReader {
+	return &chunkReader{ch: ch}
+}
+
+// next fetches the next chunk from the channel, or returns io.EOF if there are no more chunks
+func (r *chunkReader) next() error {
+	reader, ok := <-r.ch
+	if !ok {
+		return io.EOF
+	}
+	r.reader = reader
+	return nil
+}
+
+// Close implements io.ReadCloser
+func (r *chunkReader) Close() error {
+	if r.reader != nil {
+		err := r.reader.Close()
+		r.reader = nil
+		return err
+	}
+	return nil
+}
+
+// Read implements io.Reader
+func (r *chunkReader) Read(p []byte) (int, error) {
+	if r.reader == nil {
+		err := r.next()
+		if err != nil {
+			return 0, err
+		}
+	}
+	n, err := r.reader.Read(p)
+	switch err {
+	case io.EOF:
+		err = r.reader.Close()
+		r.reader = nil
+		if err != nil {
+			return 0, err
+		}
+		return r.Read(p)
+	case nil:
+		return n, nil
+	default:
+		return n, err
+	}
 }

@@ -19,14 +19,13 @@ func Test_runMigrateCmd(t *testing.T) {
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
-	defer kbCleanUp()
+	t.Cleanup(kbCleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	mockIn.Reset("test1234\ntest1234\n")
-	err := runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	viper.Set(flags.FlagDryRun, true)
 	cmd = MigrateCommand()

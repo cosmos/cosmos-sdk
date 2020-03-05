@@ -1,0 +1,10 @@
+pull_request_rules:
+  - name: automerge to master with label automerge and branch protection passing
+    conditions:
+      - "#approved-reviews-by>1"
+      - base=master
+      - label=automerge
+    actions:
+      merge:
+        method: squash
+        strict: true

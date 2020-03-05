@@ -106,11 +106,6 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	}
 
 	for i, tc := range testCases {
-		// TODO remove me, just for fewer printouts
-		if i > 0 {
-			continue
-		}
-		// end TODO
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset

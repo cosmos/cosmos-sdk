@@ -6,7 +6,7 @@ import (
 )
 
 // BeginBlocker mints new tokens for the previous block.
-func BeginBlocker(ctx sdk.Context, k Keeper) {
+func beginBlocker(ctx sdk.Context, k Keeper) {
 	// fetch stored minter & params
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)

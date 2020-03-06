@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -16,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -37,10 +36,8 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		flags.GetCommands(
-			GetAccountCmd(cdc),
-			QueryParamsCmd(cdc),
-		)...,
+		GetAccountCmd(cdc),
+		QueryParamsCmd(cdc),
 	)
 
 	return cmd
@@ -48,7 +45,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 // QueryParamsCmd returns the command handler for evidence parameter querying.
 func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current auth parameters",
 		Args:  cobra.NoArgs,
@@ -73,6 +70,8 @@ $ <appcli> query auth params
 			return cliCtx.PrintOutput(params)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetAccountCmd returns a query account that will display the state of the

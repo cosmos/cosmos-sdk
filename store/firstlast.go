@@ -5,7 +5,7 @@ import (
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Gets the first item.
@@ -24,7 +24,7 @@ func Last(st KVStore, start, end []byte) (kv tmkv.Pair, ok bool) {
 	iter := st.ReverseIterator(end, start)
 	if !iter.Valid() {
 		if v := st.Get(start); v != nil {
-			return tmkv.Pair{Key: types.Cp(start), Value: types.Cp(v)}, true
+			return tmkv.Pair{Key: sdk.CopyBytes(start), Value: sdk.CopyBytes(v)}, true
 		}
 		return kv, false
 	}

@@ -1,64 +1,70 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestVotes(t *testing.T) {
-	ctx, _, _, keeper, _, _ := createTestInput(t, false, 100) // nolint: dogsled
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
 	var invalidOption types.VoteOption = 0x10
 
-	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes), "proposal not on voting period")
-	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], types.OptionYes), "invalid proposal ID")
+	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes), "proposal not on voting period")
+	require.Error(t, app.GovKeeper.AddVote(ctx, 10, addrs[0], types.OptionYes), "invalid proposal ID")
 
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], invalidOption), "invalid option")
+	require.Error(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], invalidOption), "invalid option")
 
 	// Test first vote
-	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain))
-	vote, found := keeper.GetVote(ctx, proposalID, TestAddrs[0])
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionAbstain))
+	vote, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
-	require.Equal(t, TestAddrs[0], vote.Voter)
+	require.Equal(t, addrs[0], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
 	require.Equal(t, types.OptionAbstain, vote.Option)
 
 	// Test change of vote
-	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes))
-	vote, found = keeper.GetVote(ctx, proposalID, TestAddrs[0])
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	vote, found = app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
-	require.Equal(t, TestAddrs[0], vote.Voter)
+	require.Equal(t, addrs[0], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
 	require.Equal(t, types.OptionYes, vote.Option)
 
 	// Test second vote
-	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNoWithVeto))
-	vote, found = keeper.GetVote(ctx, proposalID, TestAddrs[1])
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNoWithVeto))
+	vote, found = app.GovKeeper.GetVote(ctx, proposalID, addrs[1])
 	require.True(t, found)
-	require.Equal(t, TestAddrs[1], vote.Voter)
+	require.Equal(t, addrs[1], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
 	require.Equal(t, types.OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
 	// NOTE order of deposits is determined by the addresses
-	votes := keeper.GetAllVotes(ctx)
+	votes := app.GovKeeper.GetAllVotes(ctx)
 	require.Len(t, votes, 2)
-	require.Equal(t, votes, keeper.GetVotes(ctx, proposalID))
-	require.Equal(t, TestAddrs[0], votes[0].Voter)
+	require.Equal(t, votes, app.GovKeeper.GetVotes(ctx, proposalID))
+	require.Equal(t, addrs[0], votes[0].Voter)
 	require.Equal(t, proposalID, votes[0].ProposalID)
 	require.Equal(t, types.OptionYes, votes[0].Option)
-	require.Equal(t, TestAddrs[1], votes[1].Voter)
+	require.Equal(t, addrs[1], votes[1].Voter)
 	require.Equal(t, proposalID, votes[1].ProposalID)
 	require.Equal(t, types.OptionNoWithVeto, votes[1].Option)
 }

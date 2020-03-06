@@ -3,6 +3,7 @@
 #   timeout: 5m
 
 linters:
+  disable-all: true
   enable:
     - bodyclose
     - deadcode
@@ -30,8 +31,6 @@ linters:
     - unconvert
     - unused
     - misspell
-  disable:
-    - errcheck
 
 issues:
   exclude-rules:

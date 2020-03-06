@@ -4,13 +4,20 @@ import (
 	"testing"
 	"time"
 
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
+
+func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
+	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
+	require.NoError(t, err)
+	return msg
+}
 
 func TestMsgSubmitEvidence(t *testing.T) {
 	pk := ed25519.GenPrivKey()
@@ -27,7 +34,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 			false,
 		},
 		{
-			simappcodec.NewMsgSubmitEvidence(&types.Equivocation{
+			testMsgSubmitEvidence(t, &types.Equivocation{
 				Height:           0,
 				Power:            100,
 				Time:             time.Now().UTC(),
@@ -37,7 +44,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 			true,
 		},
 		{
-			simappcodec.NewMsgSubmitEvidence(&types.Equivocation{
+			testMsgSubmitEvidence(t, &types.Equivocation{
 				Height:           10,
 				Power:            100,
 				Time:             time.Now().UTC(),

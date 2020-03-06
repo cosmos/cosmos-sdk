@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -28,11 +28,12 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := gov.NewMsgSubmitProposal(
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -79,11 +80,12 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := gov.NewMsgSubmitProposal(
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -101,11 +103,12 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg2 := gov.NewMsgSubmitProposal(
+	newProposalMsg2, err := codecstd.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err = govHandler(ctx, newProposalMsg2)
 	require.NoError(t, err)
@@ -157,11 +160,12 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	newProposalMsg := gov.NewMsgSubmitProposal(
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(
 		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0],
 	)
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -212,7 +216,8 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg := gov.NewMsgSubmitProposal(keep.TestProposal, proposalCoins, addrs[0])
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	require.NoError(t, err)
 
 	res, err := govHandler(ctx, newProposalMsg)
 	require.NoError(t, err)
@@ -277,7 +282,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, keep.TestProposal)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
@@ -329,7 +334,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
 	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, keep.TestProposal)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))

@@ -77,7 +77,7 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 // increment period
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	h.k.incrementValidatorPeriod(ctx, val)
+	h.k.IncrementValidatorPeriod(ctx, val)
 }
 
 // withdraw delegation rewards (which also increments period)

@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
-// EvidenceCodec defines the interface required to serialize evidence
+// Codec defines the interface required to serialize evidence
 type Codec interface {
 	codec.Marshaler
 

@@ -11,12 +11,15 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
-	valTokens = sdk.TokensFromConsensusPower(42)
+	valTokens           = sdk.TokensFromConsensusPower(42)
+	TestProposal        = types.NewTextProposal("Test", "description")
+	TestDescription     = staking.NewDescription("T", "E", "S", "T", "Z")
+	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 // SortAddresses - Sorts Addresses
@@ -83,7 +86,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
 		valCreateMsg := staking.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
-			keep.TestDescription, keep.TestCommissionRates, sdk.OneInt(),
+			TestDescription, TestCommissionRates, sdk.OneInt(),
 		)
 
 		res, err := stakingHandler(ctx, valCreateMsg)

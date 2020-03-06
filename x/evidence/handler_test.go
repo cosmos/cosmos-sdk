@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -22,6 +23,12 @@ type HandlerTestSuite struct {
 
 	handler sdk.Handler
 	app     *simapp.SimApp
+}
+
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
+	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
+	r.NoError(err)
+	return msg
 }
 
 func testEquivocationHandler(k interface{}) types.Handler {
@@ -48,7 +55,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		simappcodec.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
+		codecstd.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
 		app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
@@ -70,7 +77,8 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 		expectErr bool
 	}{
 		{
-			simappcodec.NewMsgSubmitEvidence(
+			testMsgSubmitEvidence(
+				suite.Require(),
 				&types.Equivocation{
 					Height:           11,
 					Time:             time.Now().UTC(),
@@ -82,7 +90,8 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			false,
 		},
 		{
-			simappcodec.NewMsgSubmitEvidence(
+			testMsgSubmitEvidence(
+				suite.Require(),
 				&types.Equivocation{
 					Height:           10,
 					Time:             time.Now().UTC(),
@@ -109,7 +118,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			suite.Require().NoError(err, "unexpected error; tc #%d", i)
 			suite.Require().NotNil(res, "expected non-nil result; tc #%d", i)
 
-			msg := tc.msg.(simappcodec.MsgSubmitEvidence)
+			msg := tc.msg.(codecstd.MsgSubmitEvidence)
 			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), res.Data, "invalid hash; tc #%d", i)
 		}
 	}

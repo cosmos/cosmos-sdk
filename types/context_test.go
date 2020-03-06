@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -110,6 +111,7 @@ func TestContextWithCustom(t *testing.T) {
 	logger := NewMockLogger()
 	voteinfos := []abci.VoteInfo{{}}
 	meter := types.NewGasMeter(10000)
+	blockGasMeter := types.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
@@ -121,7 +123,8 @@ func TestContextWithCustom(t *testing.T) {
 		WithTxBytes(txbytes).
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
-		WithMinGasPrices(minGasPrices)
+		WithMinGasPrices(minGasPrices).
+		WithBlockGasMeter(blockGasMeter)
 	require.Equal(t, height, ctx.BlockHeight())
 	require.Equal(t, chainid, ctx.ChainID())
 	require.Equal(t, ischeck, ctx.IsCheckTx())
@@ -130,6 +133,25 @@ func TestContextWithCustom(t *testing.T) {
 	require.Equal(t, voteinfos, ctx.VoteInfos())
 	require.Equal(t, meter, ctx.GasMeter())
 	require.Equal(t, minGasPrices, ctx.MinGasPrices())
+	require.Equal(t, blockGasMeter, ctx.BlockGasMeter())
+
+	require.False(t, ctx.WithIsCheckTx(false).IsCheckTx())
+
+	// test IsReCheckTx
+	require.False(t, ctx.IsReCheckTx())
+	ctx = ctx.WithIsCheckTx(false)
+	ctx = ctx.WithIsReCheckTx(true)
+	require.True(t, ctx.IsCheckTx())
+	require.True(t, ctx.IsReCheckTx())
+
+	// test consensus param
+	require.Nil(t, ctx.ConsensusParams())
+	cp := &abci.ConsensusParams{}
+	require.Equal(t, cp, ctx.WithConsensusParams(cp).ConsensusParams())
+
+	// test inner context
+	newContext := context.WithValue(ctx.Context(), "key", "value")
+	require.NotEqual(t, ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
 // Testing saving/loading of header fields to/from the context

@@ -41,11 +41,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account
 balances or a single balance by denom when the `denom` query parameter is present.
-* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by
-´/´.
+* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
+* (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
+* (store/types) [\#5730](https://github.com/cosmos/cosmos-sdk/pull/5730) store.types.Cp() is removed in favour of types.CopyBytes().
 
 ### API Breaking Changes
 
+* [\#5719](https://github.com/cosmos/cosmos-sdk/pull/5719) Bump Go requirement to 1.14+
 * (x/params) [\#5619](https://github.com/cosmos/cosmos-sdk/pull/5619) The `x/params` keeper now accepts a `codec.Marshaller` instead of
 a reference to an amino codec. Amino is still used for JSON serialization.
 * (types) [\#5579](https://github.com/cosmos/cosmos-sdk/pull/5579) The `keepRecent` field has been removed from the `PruningOptions` type.
@@ -59,6 +61,7 @@ and provided directly the IAVL store.
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
 * (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
+* (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
 
 ### Features
 
@@ -66,9 +69,13 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 
 ### Bug Fixes
 
+* (baseapp) [\#5718](https://github.com/cosmos/cosmos-sdk/pull/5718) Remove call to `ctx.BlockGasMeter` during failed message validation which
+resulted in a panic when the tx execution mode was `CheckTx`.
 * (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set.
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 * (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`
+* (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.
+* (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
 
 ### State Machine Breaking
 
@@ -130,9 +137,17 @@ serialization instead of Amino.
 Buffers for state serialization instead of Amino.
   * The `internal` sub-package has been removed in order to expose the types proto file.
   * The `x/upgrade` module now accepts a `codec.Marshaler` interface.
+* (x/gov) [\#5737](https://github.com/cosmos/cosmos-sdk/pull/5737) Migrate the `x/gov` module to use Protocol
+Buffers for state serialization instead of Amino.
+  * `MsgSubmitProposal` will be removed in favor of the application-level proto-defined `MsgSubmitProposal` which
+  implements the `MsgSubmitProposalI` interface. Applications should extend the `NewMsgSubmitProposalBase` type
+  to define their own concrete `MsgSubmitProposal` types.
+  * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+  requiring a concrete codec to know how to serialize `Proposal` types.
 
 ### Improvements
 
+* (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
 * (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
 * (client) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
@@ -144,6 +159,9 @@ Buffers for state serialization instead of Amino.
 * (rest) [\#5648](https://github.com/cosmos/cosmos-sdk/pull/5648) Enhance /txs usability:
   * Add `tx.minheight` key to filter transaction with an inclusive minimum block height
   * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
+* (server) [\#5709](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
+and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
+* (crypto/keys) [\#5739](https://github.com/cosmos/cosmos-sdk/pull/5739) Print an error message if the password input failed.
 
 ## [v0.38.1] - 2020-02-11
 

@@ -18,7 +18,7 @@ import (
 
 func TestNew(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 	lazykb, ok := kb.(lazyKeybase)
 	require.True(t, ok)
@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 
 func TestLazyKeyManagement(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 
 	algo := Secp256k1
@@ -111,7 +111,7 @@ func TestLazyKeyManagement(t *testing.T) {
 
 func TestLazySignVerify(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 	algo := Secp256k1
 
@@ -186,7 +186,7 @@ func TestLazySignVerify(t *testing.T) {
 
 func TestLazyExportImport(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -214,7 +214,7 @@ func TestLazyExportImport(t *testing.T) {
 
 func TestLazyExportImportPrivKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -243,7 +243,7 @@ func TestLazyExportImportPrivKey(t *testing.T) {
 
 func TestLazyExportImportPubKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 	algo := Secp256k1
 
@@ -283,7 +283,7 @@ func TestLazyExportImportPubKey(t *testing.T) {
 
 func TestLazyExportPrivateKeyObject(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -300,7 +300,7 @@ func TestLazyExportPrivateKeyObject(t *testing.T) {
 
 func TestLazyAdvancedKeyManagement(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 
 	algo := Secp256k1
@@ -348,7 +348,7 @@ func TestLazyAdvancedKeyManagement(t *testing.T) {
 // TestSeedPhrase verifies restoring from a seed phrase
 func TestLazySeedPhrase(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	kb := New("keybasename", dir)
 
 	algo := Secp256k1
@@ -401,13 +401,13 @@ func (key testPub) Equals(other crypto.PubKey) bool         { return true }
 
 func TestKeygenOverride(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 
 	// Save existing codec and reset after test
 	cryptoCdc := CryptoCdc
-	defer func() {
+	t.Cleanup(func() {
 		CryptoCdc = cryptoCdc
-	}()
+	})
 
 	// Setup testCdc encoding and decoding new key type
 	testCdc = codec.New()

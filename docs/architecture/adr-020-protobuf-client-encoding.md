@@ -94,11 +94,78 @@ message StdSignDoc {
 
 ### CLI, REST, & Querying
 
+Currently, the queriers, REST, CLI and handlers encode and decode types via Amino
+JSON encoding using a concrete Amino codec. Being that some of the types dealt with
+in the client can be interfaces, similar to how we described in [ADR 019](./adr-019-protobuf-state-encoding.md),
+the client logic will now need to take a codec interface that knows not only how
+to handle all the types, but also knows how to generate transactions, signatures,
+and messages.
+
+```go
+type TxGenerator interface {
+  sdk.Tx
+
+  NewTx() sdk.Tx
+  SetMsgs(...sdk.Msg) error
+  GetSignatures() []StdSignature
+  SetSignatures(...StdSignature) error
+}
+```
+
+We then extend `codec.Marshaler` to also require fulfillment of `TxGenerator`.
+
+```go
+type ClientMarshaler interface {
+  TxGenerator
+  codec.Marshaler
+}
+```
+
+Then, each module will at the minimum accept a `ClientMarshaler` instead of a concrete
+Amino codec. If the module needs to work with any interface types, it will use
+the `Codec` interface defined by the module which now also includes `ClientMarshaler`.
+
+## Future Improvements
+
+Requiring application developers to have to redefine their `Message` Protobuf types
+can be extremely tedious and may increase the surface area of bugs by potentially
+missing one or more messages in the `oneof`.
+
+To circumvent this, an optional strategy can be taken that has each module define
+it's own `oneof` and then the application-level `Message` simply imports each module's
+`oneof`. However, this requires additional tooling and the use of reflection.
+
+Example:
+
+```protobuf
+// app/codec/codec.proto
+
+message Message {
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
+
+  oneof sum {
+    bank.Msg = 1;
+    staking.Msg = 2;
+    // ...
+  }
+}
+```
+
 ## Consequences
 
 ### Positive
 
+- Significant performance gains.
+- Supports backward and forward type compatibility.
+- Better support for cross-language clients.
+
 ### Negative
+
+- Learning curve required to understand and implement Protobuf messages.
+- Less flexibility in cross-module type registration. We now need to define types
+at the application-level.
+- Client business logic and tx generation become a bit more complex as developers
+have to define more types and implement more interfaces.
 
 ### Neutral
 

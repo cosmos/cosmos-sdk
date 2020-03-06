@@ -49,7 +49,8 @@ func (k Keeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName strin
 	return maccI, perms
 }
 
-// GetModuleAccount gets the module account from the auth account store
+// GetModuleAccount gets the module account from the auth account store, if the account does not
+// exist in the AccountKeeper, then it is created.
 func (k Keeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
 	acc, _ := k.GetModuleAccountAndPermissions(ctx, moduleName)
 	return acc

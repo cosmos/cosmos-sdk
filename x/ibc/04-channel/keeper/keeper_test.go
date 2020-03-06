@@ -208,10 +208,10 @@ func commitNBlocks(chain *TestChain, n int) {
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProof, int64) {
-	res := suite.chainB.App.Query(abci.RequestQuery{
+func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Height: suite.chainB.App.LastBlockHeight(),
+		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
 	})
@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProo
 		Proof: res.Proof,
 	}
 
-	return proof, res.Height
+	return proof, uint64(res.Height)
 }
 
 type TestChain struct {

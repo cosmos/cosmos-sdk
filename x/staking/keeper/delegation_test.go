@@ -282,7 +282,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	// mature unbonding delegations
 	ctx = ctx.WithBlockTime(completionTime)
-	err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
+	_, err = app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -794,7 +794,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 
 	// mature redelegations
 	ctx = ctx.WithBlockTime(completionTime)
-	err = app.StakingKeeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	_, err = app.StakingKeeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
 	require.NoError(t, err)
 
 	// redelegation should work again

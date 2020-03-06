@@ -671,10 +671,10 @@ func (k Keeper) Undelegate(
 	return completionTime, nil
 }
 
-// CompleteUnbondingWithAmount completes the unbonding of all mature entries in
-// the retrieved unbonding delegation object and returns the total unbonding
-// balance or an error upon failure.
-func (k Keeper) CompleteUnbondingWithAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
+// CompleteUnbonding completes the unbonding of all mature entries in the
+// retrieved unbonding delegation object and returns the total unbonding balance
+// or an error upon failure.
+func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, types.ErrNoUnbondingDelegation
@@ -714,13 +714,6 @@ func (k Keeper) CompleteUnbondingWithAmount(ctx sdk.Context, delAddr sdk.AccAddr
 	}
 
 	return balances, nil
-}
-
-// CompleteUnbonding performs the same logic as CompleteUnbondingWithAmount except
-// it does not return the total unbonding amount.
-func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	_, err := k.CompleteUnbondingWithAmount(ctx, delAddr, valAddr)
-	return err
 }
 
 // begin unbonding / redelegation; create a redelegation record
@@ -780,10 +773,10 @@ func (k Keeper) BeginRedelegation(
 	return completionTime, nil
 }
 
-// CompleteRedelegationWithAmount completes the redelegations of all mature entries in the
+// CompleteRedelegation completes the redelegations of all mature entries in the
 // retrieved redelegation object and returns the total redelegation (initial)
 // balance or an error upon failure.
-func (k Keeper) CompleteRedelegationWithAmount(
+func (k Keeper) CompleteRedelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
 ) (sdk.Coins, error) {
 
@@ -817,16 +810,6 @@ func (k Keeper) CompleteRedelegationWithAmount(
 	}
 
 	return balances, nil
-}
-
-// CompleteRedelegation performs the same logic as CompleteRedelegationWithAmount
-// except it does not return the total redelegation amount.
-func (k Keeper) CompleteRedelegation(
-	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
-) error {
-
-	_, err := k.CompleteRedelegationWithAmount(ctx, delAddr, valSrcAddr, valDstAddr)
-	return err
 }
 
 // ValidateUnbondAmount validates that a given unbond or redelegation amount is

@@ -49,6 +49,7 @@ func TestStoreMount(t *testing.T) {
 	require.NotPanics(t, func() { store.MountStoreWithDB(key2, types.StoreTypeIAVL, db) })
 
 	require.Panics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
+	require.Panics(t, func() { store.MountStoreWithDB(nil, types.StoreTypeIAVL, db) })
 	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db) })
 }
 

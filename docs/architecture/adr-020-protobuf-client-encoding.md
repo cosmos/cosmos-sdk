@@ -74,6 +74,24 @@ used as an auxiliary type.
 
 ### Signing
 
+Signing of a `Transaction` must be canonical across clients and binaries. In order
+to provide canonical representation of a `Transaction` to sign over, clients must
+obey the following rules:
+
+- Encode `StdSignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
+  - Default and zero values must be stripped from the output (`0`, `“”`, `null`, `false`, `[]`, and `{}`).
+- Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
+  - This spec should be trivial to interpret and implement in any language.
+
+```Protobuf
+// app/codec/codec.proto
+
+message StdSignDoc {
+  StdSignDocBase base = 1;
+  repeated Message msgs = 2;
+}
+```
+
 ### CLI, REST, & Querying
 
 ## Consequences

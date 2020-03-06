@@ -4,6 +4,7 @@ package cosmos_sdk.x.mint.v1;
 option go_package = "types";
 
 import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 // Minter represents the minting state.
 message Minter {
@@ -16,6 +17,8 @@ message Minter {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+
+  google.protobuf.Timestamp last_block_timestamp = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 // mint parameters

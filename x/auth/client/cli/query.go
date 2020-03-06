@@ -37,7 +37,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(cdc),
-		QueryParamsCmd(cdc)
+		QueryParamsCmd(cdc),
 	)
 
 	return cmd
@@ -45,7 +45,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 // QueryParamsCmd returns the command handler for evidence parameter querying.
 func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "params",
 		Short: "Query the current auth parameters",
 		Args:  cobra.NoArgs,
@@ -70,6 +70,8 @@ $ <appcli> query auth params
 			return cliCtx.PrintOutput(params)
 		},
 	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetAccountCmd returns a query account that will display the state of the

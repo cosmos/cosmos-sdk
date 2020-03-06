@@ -21,55 +21,53 @@ import (
 var errFoo = errors.New("dummy")
 
 func TestBasicManager(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
+	cdc := codec.New()
+	wantDefaultGenesis := map[string]json.RawMessage{
+		"mockAppModuleBasic1": json.RawMessage(``),
+		"mockAppModuleBasic2": json.RawMessage(`{"key":"value"}`),
+	}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 	mockAppModuleBasic2 := mocks.NewMockAppModuleBasic(mockCtrl)
 
-	mockAppModuleBasic1.EXPECT().Name().Times(1).Return("mockAppModuleBasic1")
-	mockAppModuleBasic2.EXPECT().Name().Times(1).Return("mockAppModuleBasic2")
+	mockAppModuleBasic1.EXPECT().Name().Times(3).Return("mockAppModuleBasic1")
+	mockAppModuleBasic2.EXPECT().Name().Times(2).Return("mockAppModuleBasic2")
+	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
+	mockAppModuleBasic2.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key":"value"}`))
+	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
+	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(context.CLIContext{}), gomock.Eq(&mux.Router{})).Times(1)
+	mockAppModuleBasic2.EXPECT().RegisterRESTRoutes(gomock.Eq(context.CLIContext{}), gomock.Eq(&mux.Router{})).Times(1)
+	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
+	mockAppModuleBasic2.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
+	mockAppModuleBasic1.EXPECT().GetTxCmd(cdc).Times(1).Return(nil)
+	mockAppModuleBasic2.EXPECT().GetTxCmd(cdc).Times(1).Return(&cobra.Command{})
+	mockAppModuleBasic1.EXPECT().GetQueryCmd(cdc).Times(1).Return(nil)
+	mockAppModuleBasic2.EXPECT().GetQueryCmd(cdc).Times(1).Return(&cobra.Command{})
 
 	mm := module.NewBasicManager(mockAppModuleBasic1, mockAppModuleBasic2)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
 
-	cdc := codec.New()
-	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
-	mockAppModuleBasic2.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
 	mm.RegisterCodec(cdc)
 
-	mockAppModuleBasic1.EXPECT().Name().Times(1).Return("mockAppModuleBasic1")
-	mockAppModuleBasic2.EXPECT().Name().Times(1).Return("mockAppModuleBasic2")
-	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
-	mockAppModuleBasic2.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key":"value"}`))
-	defaultGenesis := mm.DefaultGenesis(cdc)
-	require.Equal(t, 2, len(defaultGenesis))
-	require.Equal(t, json.RawMessage(``), defaultGenesis["mockAppModuleBasic1"])
+	require.Equal(t, wantDefaultGenesis, mm.DefaultGenesis(cdc))
 
 	var data map[string]string
-	require.NoError(t, json.Unmarshal(defaultGenesis["mockAppModuleBasic2"], &data))
+	require.NoError(t, json.Unmarshal(wantDefaultGenesis["mockAppModuleBasic2"], &data))
 	require.Equal(t, map[string]string{"key": "value"}, data)
 
-	mockAppModuleBasic1.EXPECT().Name().Times(1).Return("mockAppModuleBasic1")
-	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(defaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
-	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, defaultGenesis)))
+	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, wantDefaultGenesis)))
 
-	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(context.CLIContext{}), gomock.Eq(&mux.Router{})).Times(1)
-	mockAppModuleBasic2.EXPECT().RegisterRESTRoutes(gomock.Eq(context.CLIContext{}), gomock.Eq(&mux.Router{})).Times(1)
 	mm.RegisterRESTRoutes(context.CLIContext{}, &mux.Router{})
 
 	mockCmd := &cobra.Command{Use: "root"}
-	mockAppModuleBasic1.EXPECT().GetTxCmd(cdc).Times(1).Return(nil)
-	mockAppModuleBasic2.EXPECT().GetTxCmd(cdc).Times(1).Return(&cobra.Command{})
 	mm.AddTxCommands(mockCmd, cdc)
 
-	mockAppModuleBasic1.EXPECT().GetQueryCmd(cdc).Times(1).Return(nil)
-	mockAppModuleBasic2.EXPECT().GetQueryCmd(cdc).Times(1).Return(&cobra.Command{})
 	mm.AddQueryCommands(mockCmd, cdc)
 
 	// validate genesis returns nil
-	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, defaultGenesis))
+	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, wantDefaultGenesis))
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {
@@ -203,7 +201,6 @@ func TestManager_InitGenesis(t *testing.T) {
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -226,7 +223,6 @@ func TestManager_ExportGenesis(t *testing.T) {
 }
 
 func TestManager_BeginBlock(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -246,7 +242,6 @@ func TestManager_BeginBlock(t *testing.T) {
 }
 
 func TestManager_EndBlock(t *testing.T) {
-	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 

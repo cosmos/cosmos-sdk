@@ -75,10 +75,7 @@ resulted in a panic when the tx execution mode was `CheckTx`.
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 * (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`
 * (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.
-* (x/mint) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) Create Mint Module account on InitGenesis. `AppModule` now requires SupplyKeeper in its constructor to create 
-module account on `InitGenesis`. 
-* (x/auth) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) Create FeeCollectorName Module account on InitGenesis. `AppModule` now requires SupplyKeeper in its constructor to create 
-module account on `InitGenesis`. 
+* (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
 
 ### State Machine Breaking
 

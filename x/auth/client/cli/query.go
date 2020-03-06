@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -16,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -37,10 +36,8 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		flags.GetCommands(
-			GetAccountCmd(cdc),
-			QueryParamsCmd(cdc),
-		)...,
+		GetAccountCmd(cdc),
+		QueryParamsCmd(cdc)
 	)
 
 	return cmd

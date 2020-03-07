@@ -6,6 +6,7 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func (suite *KeeperTestSuite) TestChanOpenInit() {
@@ -54,14 +55,19 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
+	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
+			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
 				connectionexported.OPEN,
 			)
+			suite.chainB.createConnection(
+				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.INIT, exported.ORDERED, testConnectionIDA)
 		}, true},
 		{"previous channel with invalid state", func() {
 			_ = suite.chainA.createChannel(
@@ -97,13 +103,15 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			tc.malleate()
 
-			proofHeight := suite.chainB.Header.Height
+			suite.chainA.updateClient(suite.chainB)
+			suite.chainB.updateClient(suite.chainA)
+			proof, proofHeight := queryProof(suite.chainB, channelKey)
 
 			if tc.expPass {
 				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
-					validProof{}, uint64(proofHeight),
+					proof, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
@@ -119,15 +127,26 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
+	channelKey := ibctypes.KeyChannel(testPort2, testChannel2)
+
 	testCases := []testCase{
 		{"success", func() {
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
+			suite.chainA.createConnection(
+				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
+				connectionexported.OPEN,
+			)
 			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
 				connectionexported.OPEN,
 			)
-			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.TRYOPEN,
+			_ = suite.chainA.createChannel(
+				testPort1, testChannel1, testPort2, testChannel2, exported.INIT,
+				exported.ORDERED, testConnectionIDB,
+			)
+			suite.chainB.createChannel(
+				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
 				exported.ORDERED, testConnectionIDA,
 			)
 		}, true},
@@ -183,17 +202,20 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 			tc.malleate()
 
-			proofHeight := suite.chainA.Header.Height
+			suite.chainA.updateClient(suite.chainB)
+			suite.chainB.updateClient(suite.chainA)
+			proof, proofHeight := queryProof(suite.chainB, channelKey)
+
 			if tc.expPass {
-				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
-					suite.chainB.GetContext(), testPort1, testChannel1, testChannelVersion,
-					validProof{}, uint64(proofHeight),
+				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
+					suite.chainA.GetContext(), testPort1, testChannel1, testChannelVersion,
+					proof, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
-					suite.chainB.GetContext(), testPort1, testChannel1, testChannelVersion,
-					invalidProof{}, uint64(proofHeight),
+				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
+					suite.chainA.GetContext(), testPort1, testChannel1, testChannelVersion,
+					invalidProof{}, proofHeight+1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -202,17 +224,26 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
+	channelKey := ibctypes.KeyChannel(testPort2, testChannel2)
+
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
+			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
+				connectionexported.TRYOPEN,
+			)
+			suite.chainB.createConnection(
+				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
 				connectionexported.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
 				exported.ORDERED, testConnectionIDB,
 			)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
+				exported.TRYOPEN, exported.ORDERED, testConnectionIDA)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not TRYOPEN", func() {
@@ -266,17 +297,20 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 
 			tc.malleate()
 
-			proofHeight := suite.chainB.Header.Height
+			suite.chainA.updateClient(suite.chainB)
+			suite.chainB.updateClient(suite.chainA)
+			proof, proofHeight := queryProof(suite.chainA, channelKey)
+
 			if tc.expPass {
-				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
-					suite.chainA.GetContext(), testPort2, testChannel2,
-					validProof{}, uint64(proofHeight),
+				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
+					suite.chainB.GetContext(), testPort1, testChannel1,
+					proof, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
-					suite.chainA.GetContext(), testPort2, testChannel2,
-					invalidProof{}, uint64(proofHeight),
+				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
+					suite.chainB.GetContext(), testPort1, testChannel1,
+					invalidProof{}, proofHeight+1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -341,16 +375,27 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 }
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
+	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
+
 	testCases := []testCase{
 		{"success", func() {
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainB.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB,
 				connectionexported.OPEN,
 			)
+			suite.chainA.createConnection(
+				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
+				connectionexported.OPEN,
+			)
 			_ = suite.chainB.createChannel(
 				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
 				exported.ORDERED, testConnectionIDB,
+			)
+			suite.chainA.createChannel(
+				testPort1, testChannel1, testPort2, testChannel2, exported.CLOSED,
+				exported.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
@@ -405,11 +450,14 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 
 			tc.malleate()
 
-			proofHeight := suite.chainA.Header.Height
+			suite.chainA.updateClient(suite.chainB)
+			suite.chainB.updateClient(suite.chainA)
+			proof, proofHeight := queryProof(suite.chainA, channelKey)
+
 			if tc.expPass {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 					suite.chainB.GetContext(), testPort2, testChannel2,
-					validProof{}, uint64(proofHeight),
+					proof, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {

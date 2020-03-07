@@ -135,8 +135,9 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	valSet := stakingtypes.Validators(histInfo.Valset)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       height,
-		Timestamp:    ctx.BlockTime(),
+		Height: height,
+		// FIXME: Currently commented out due to time normalisation issues.
+		//Timestamp:    histInfo.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
 	}

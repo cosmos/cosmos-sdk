@@ -106,12 +106,15 @@ func (cs ClientState) IsFrozen() bool {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	cdc *codec.Codec,
+	provingRoot commitmentexported.Root,
 	height uint64,
+	counterpartyClientIdentifier string,
+	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(cs.GetID(), height))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(counterpartyClientIdentifier, consensusHeight))
 	if err != nil {
 		return err
 	}
@@ -120,12 +123,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(consensusState)
 	if err != nil {
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -185,7 +188,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(channel)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(channel)
 	if err != nil {
 		return err
 	}

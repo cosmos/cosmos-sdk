@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"testing"
@@ -207,10 +208,10 @@ func commitNBlocks(chain *TestChain, n int) {
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProof, int64) {
-	res := suite.chainB.App.Query(abci.RequestQuery{
+func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Height: suite.chainB.App.LastBlockHeight(),
+		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
 	})
@@ -219,7 +220,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProo
 		Proof: res.Proof,
 	}
 
-	return proof, res.Height
+	return proof, uint64(res.Height)
 }
 
 type TestChain struct {
@@ -403,12 +404,16 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 // TODO: fix tests and replace for real proofs
 
 var (
-	_ commitmentexported.Proof = validProof{}
+	_ commitmentexported.Proof = validProof{nil, nil, nil}
 	_ commitmentexported.Proof = invalidProof{}
 )
 
 type (
-	validProof   struct{}
+	validProof struct {
+		root  commitmentexported.Root
+		path  commitmentexported.Path
+		value []byte
+	}
 	invalidProof struct{}
 )
 
@@ -416,9 +421,15 @@ func (validProof) GetCommitmentType() commitmentexported.Type {
 	return commitmentexported.Merkle
 }
 
-func (validProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
-	return nil
+func (proof validProof) VerifyMembership(
+	root commitmentexported.Root, path commitmentexported.Path, value []byte,
+) error {
+	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
+		path.String() == proof.path.String() &&
+		bytes.Equal(value, proof.value) {
+		return nil
+	}
+	return errors.New("invalid proof")
 }
 
 func (validProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {

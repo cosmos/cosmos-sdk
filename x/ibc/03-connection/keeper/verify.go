@@ -16,6 +16,7 @@ func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height uint64,
+	consensusHeight uint64,
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
@@ -25,8 +26,13 @@ func (k Keeper) VerifyClientConsensusState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
+	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
+	if !found {
+		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
+	}
+
 	return clientState.VerifyClientConsensusState(
-		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, consensusState,
+		k.cdc, targetConsState.GetRoot(), height, connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 }
 

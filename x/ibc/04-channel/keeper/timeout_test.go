@@ -6,16 +6,15 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func (suite *KeeperTestSuite) TestTimeoutPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
+	packetKey := ibctypes.KeyPacketAcknowledgement(testPort2, testChannel2, 2)
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64
-		proofHeight uint64 = 3
 	)
 
 	testCases := []testCase{
@@ -23,9 +22,11 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			nextSeqRecv = 1
 			packet = types.NewPacket(newMockTimeoutPacket(1), 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.CreateClient(suite.chainA)
-			proofHeight = uint64(suite.chainA.Header.Height)
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.UNORDERED, testConnectionIDB)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 2, types.CommitPacket(packet.Data))
 		}, true},
 		{"channel not found", func() {}, false},
@@ -46,28 +47,24 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 		}, false},
 		{"timeout", func() {
-			proofHeight = 1
 			packet = types.NewPacket(mockSuccessPacket{}, 10, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet already received ", func() {
 			nextSeqRecv = 2
-			proofHeight = 100
 			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet hasn't been sent", func() {
 			nextSeqRecv = 1
-			proofHeight = 100
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 		}, false},
 		{"next seq receive verification failed", func() {
 			nextSeqRecv = 1
-			proofHeight = uint64(suite.chainA.Header.Height)
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
@@ -75,7 +72,6 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 		}, false},
 		{"packet ack verification failed", func() {
 			nextSeqRecv = 1
-			proofHeight = 100
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.UNORDERED, testConnectionIDA)
@@ -89,12 +85,17 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			tc.malleate()
 
 			ctx := suite.chainB.GetContext()
+
+			suite.chainB.updateClient(suite.chainA)
+			suite.chainA.updateClient(suite.chainB)
+			proof, proofHeight := queryProof(suite.chainA, packetKey)
+
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, ibctypes.ValidProof{}, proofHeight, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight+1, nextSeqRecv)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, ibctypes.InvalidProof{}, proofHeight, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, ibctypes.InvalidProof{}, proofHeight+1, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}
@@ -131,22 +132,23 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 }
 
 func (suite *KeeperTestSuite) TestTimeoutOnClose() {
+	channelKey := ibctypes.KeyChannel(testPort2, testChannel2)
+	packetKey := ibctypes.KeyPacketAcknowledgement(testPort1, testChannel1, 2)
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64
-		proofHeight uint64                   = 1
-		proof       commitmentexported.Proof = ibctypes.InvalidProof{}
-		proofClosed commitmentexported.Proof = ibctypes.InvalidProof{}
 	)
 
 	testCases := []testCase{
 		{"success", func() {
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.CreateClient(suite.chainA)
-			proofHeight = uint64(suite.chainA.Header.Height)
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.CLOSED, exported.UNORDERED, testConnectionIDB) // channel on chainA is closed
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 2, types.CommitPacket(packet.Data))
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainB.GetContext(), testPort1, testChannel1, nextSeqRecv)
 		}, true},
@@ -171,27 +173,22 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 		{"channel verification failed", func() {
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.CreateClient(suite.chainA)
-			proofHeight = uint64(suite.chainA.Header.Height)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.UNORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 2, types.CommitPacket(packet.Data))
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainB.GetContext(), testPort1, testChannel1, nextSeqRecv)
 		}, false},
 		{"next seq receive verification failed", func() {
-			proofClosed = ibctypes.ValidProof{}
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.CreateClient(suite.chainA)
-			proofHeight = uint64(suite.chainA.Header.Height)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 2, types.CommitPacket(packet.Data))
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainB.GetContext(), testPort1, testChannel1, nextSeqRecv)
 		}, false},
 		{"packet ack verification failed", func() {
-			proofClosed = ibctypes.ValidProof{}
 			packet = types.NewPacket(mockSuccessPacket{}, 2, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.CreateClient(suite.chainA)
-			proofHeight = uint64(suite.chainA.Header.Height)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.UNORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 2, types.CommitPacket(packet.Data))
@@ -205,13 +202,18 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
+			suite.chainB.updateClient(suite.chainA)
+			suite.chainA.updateClient(suite.chainB)
+			proofClosed, proofHeight := queryProof(suite.chainA, channelKey)
+			proofAckAbsence, _ := queryProof(suite.chainA, packetKey)
+
 			ctx := suite.chainB.GetContext()
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, packet, ibctypes.ValidProof{}, ibctypes.ValidProof{}, proofHeight, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, packet, proofAckAbsence, proofClosed, proofHeight+1, nextSeqRecv)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, packet, proof, proofClosed, proofHeight, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, packet, invalidProof{}, invalidProof{}, proofHeight+1, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

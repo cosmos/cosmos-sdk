@@ -5,11 +5,14 @@ import (
 	"io"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -23,6 +26,8 @@ const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
+
+var cdc = codec.New()
 
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is for cache-wrapping other MultiStores. It implements
@@ -77,21 +82,21 @@ func (rs *Store) SetLazyLoading(lazyLoading bool) {
 	rs.lazyLoading = lazyLoading
 }
 
-// Implements Store.
+// GetStoreType implements Store.
 func (rs *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti
 }
 
-// Implements CommitMultiStore.
+// MountStoreWithDB implements CommitMultiStore.
 func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db dbm.DB) {
 	if key == nil {
 		panic("MountIAVLStore() key cannot be nil")
 	}
 	if _, ok := rs.storesParams[key]; ok {
-		panic(fmt.Sprintf("Store duplicate store key %v", key))
+		panic(fmt.Sprintf("store duplicate store key %v", key))
 	}
 	if _, ok := rs.keysByName[key.Name()]; ok {
-		panic(fmt.Sprintf("Store duplicate store key name %v", key))
+		panic(fmt.Sprintf("store duplicate store key name %v", key))
 	}
 	rs.storesParams[key] = storeParams{
 		key: key,
@@ -168,14 +173,14 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		// Load it
 		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
-			return fmt.Errorf("failed to load Store: %v", err)
+			return errors.Wrap(err, "failed to load store")
 		}
 		newStores[key] = store
 
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
 			if err := deleteKVStore(store.(types.KVStore)); err != nil {
-				return fmt.Errorf("failed to delete store %s: %v", key.Name(), err)
+				return errors.Wrapf(err, "failed to delete store %s", key.Name())
 			}
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
@@ -187,12 +192,12 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			// load from the old name
 			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
 			if err != nil {
-				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
+				return errors.Wrapf(err, "failed to load old store %s", oldName)
 			}
 
 			// move all data
 			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return fmt.Errorf("failed to move store %s -> %s: %v", oldName, key.Name(), err)
+				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
 			}
 		}
 	}
@@ -279,12 +284,12 @@ func (rs *Store) TracingEnabled() bool {
 //----------------------------------------
 // +CommitStore
 
-// Implements Committer/CommitStore.
+// LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitInfo.CommitID()
 }
 
-// Implements Committer/CommitStore.
+// Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
@@ -304,7 +309,7 @@ func (rs *Store) Commit() types.CommitID {
 	return commitID
 }
 
-// Implements CacheWrapper/Store/CommitStore.
+// CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
 	return rs.CacheMultiStore().(types.CacheWrap)
 }
@@ -656,16 +661,16 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
 	cInfoBytes, err := db.Get([]byte(cInfoKey))
 	if err != nil {
-		return commitInfo{}, fmt.Errorf("failed to get commit info: %v", err)
+		return commitInfo{}, errors.Wrap(err, "failed to get commit info")
 	} else if cInfoBytes == nil {
-		return commitInfo{}, fmt.Errorf("failed to get commit info: no data")
+		return commitInfo{}, errors.New("failed to get commit info: no data")
 	}
 
 	var cInfo commitInfo
 
 	err = cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
 	if err != nil {
-		return commitInfo{}, fmt.Errorf("failed to get Store: %v", err)
+		return commitInfo{}, errors.Wrap(err, "failed to get store")
 	}
 
 	return cInfo, nil

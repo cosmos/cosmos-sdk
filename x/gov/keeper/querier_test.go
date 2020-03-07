@@ -10,8 +10,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappcodec "github.com/cosmos/cosmos-sdk/simapp/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -147,7 +147,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := simappcodec.NewAppCodec(app.Codec())
+	appCodec := codecstd.NewAppCodec(app.Codec())
 
 	querier := keeper.NewQuerier(app.GovKeeper)
 
@@ -295,7 +295,7 @@ func TestQueries(t *testing.T) {
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := simappcodec.NewAppCodec(app.Codec())
+	appCodec := codecstd.NewAppCodec(app.Codec())
 
 	proposal := types.Proposal{
 		ProposalBase: types.ProposalBase{

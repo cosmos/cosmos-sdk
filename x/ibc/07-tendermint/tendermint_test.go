@@ -49,7 +49,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	// Suite header is intended to be header passed in for initial ClientState
 	// Thus it should have same height and time as ClientState
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.clientTime, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.clientTime, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 }
 
 func TestTendermintTestSuite(t *testing.T) {

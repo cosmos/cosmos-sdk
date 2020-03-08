@@ -59,11 +59,11 @@ func checkValidity(
 		return errors.New("trusting period since last client timestamp already passed")
 	}
 
-	// assert header timestamp is not in the future (& transitively that is not past the trusting period)
-	if header.Time.Unix() > currentTimestamp.Unix() {
+	// assert header timestamp is not past the trusting period
+	if header.Time.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader,
-			"header blocktime can't be in the future",
+			"header blocktime is outside trusting period from last client timestamp",
 		)
 	}
 
@@ -85,6 +85,8 @@ func checkValidity(
 	}
 
 	// Verify next header with the last header's validatorset as trusted validatorset
+	// TODO: Figure out a better way to add some leeway in currentTimestamp checking either in Tendermint or here
+	currentTimestamp = currentTimestamp.Add(time.Minute)
 	err := lite.Verify(clientState.GetChainID(), &clientState.LastHeader.SignedHeader, clientState.LastHeader.ValidatorSet,
 		&header.SignedHeader, header.ValidatorSet, clientState.TrustingPeriod, currentTimestamp, lite.DefaultTrustLevel)
 	if err != nil {

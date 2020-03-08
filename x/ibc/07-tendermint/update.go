@@ -99,7 +99,7 @@ func checkValidity(
 func update(clientState types.ClientState, header types.Header) (types.ClientState, types.ConsensusState) {
 	clientState.LastHeader = header
 	consensusState := types.ConsensusState{
-		Height:       uint64(header.Height),
+		Height:       uint64(header.Height - 1),
 		Timestamp:    header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(header.AppHash),
 		ValidatorSet: header.ValidatorSet,

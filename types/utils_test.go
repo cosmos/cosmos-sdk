@@ -87,7 +87,7 @@ func TestUint64ToBigEndian(t *testing.T) {
 
 func TestFormatTimeBytes(t *testing.T) {
 	t.Parallel()
-	tm, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Mar 3, 2020 at 7:54pm (PST)")
+	tm, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Mar 3, 2020 at 7:54pm (UTC)")
 	require.NoError(t, err)
 	require.Equal(t, "2020-03-03T19:54:00.000000000", string(sdk.FormatTimeBytes(tm)))
 }

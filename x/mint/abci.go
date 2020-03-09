@@ -52,7 +52,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 // getNewAverageBlockTime calculates the average time it takes to forge a new block based on the cumulated
 // moving average since the beginning of the chain.
 // On first block we use params.BlocksPerYear to calculate it, so the average in block one is:
-// NanosecondsInAYear / params.BlocksPErYear
+// NanosecondsInAYear / params.BlocksPerYear
 func getNewAverageBlockTime(ctx sdk.Context, params types.Params, minter types.Minter) time.Duration {
 	if minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
 		nanoSecondsABlock := types.YEAR.Nanoseconds() / int64(params.BlocksPerYear)

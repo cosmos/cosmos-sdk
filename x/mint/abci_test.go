@@ -14,27 +14,32 @@ import (
 func TestMintCalcBlocksYear(t *testing.T) {
 	app := simapp.Setup(false)
 
+	firstBlockTime := time.Date(2020, 2, 1, 12, 30, 0, 0, time.UTC)
 	initHeader := types.Header{
 		Height: 1,
-		Time:   time.Date(2020, 2, 1, 12, 30, 0, 0, time.UTC),
+		Time:   firstBlockTime,
 	}
-
-	ctx := app.NewContext(false, initHeader)
 
 	// First Block
 	app.BeginBlock(
-		types.RequestBeginBlock{Header: ctx.BlockHeader()},
+		types.RequestBeginBlock{Header: initHeader},
 	)
-	app.EndBlock(types.RequestEndBlock{Height: initHeader.Height})
-
-	secondBlockHeader := types.Header{Height: 2, Time: time.Date(2020, 2, 1, 12, 30, 0, 0, time.UTC).Add(time.Second * 5)}
-	// Second Block
-	ctx.WithBlockHeader(secondBlockHeader)
-
-	app.BeginBlock(
-		types.RequestBeginBlock{Header: ctx.BlockHeader()},
-	)
-
+	ctx := app.NewContext(false, types.Header{})
+	// assert block time
 	minter := app.MintKeeper.GetMinter(ctx)
+	require.Equal(t, 5*time.Second, minter.AverageBlockTime)
 	require.Equal(t, initHeader.Time, minter.GetLastBlockTimestamp())
+	app.Commit()
+
+	// Second Block after 8 seconds.
+	secondBlockHeader := types.Header{Height: 2, Time: firstBlockTime.Add(time.Second * 8)}
+	app.BeginBlock(
+		types.RequestBeginBlock{Header: secondBlockHeader},
+	)
+
+	// Then Average should be 5 + 8 / 2 (blockTime1 + blockTime2 / height))
+	ctx = app.NewContext(false, types.Header{})
+	minter = app.MintKeeper.GetMinter(ctx)
+	require.Equal(t, secondBlockHeader.Time, minter.GetLastBlockTimestamp())
+	require.Equal(t, (5*time.Second+8*time.Second)/2, minter.AverageBlockTime)
 }

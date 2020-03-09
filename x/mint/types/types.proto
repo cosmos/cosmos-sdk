@@ -5,6 +5,7 @@ option go_package = "types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 // Minter represents the minting state.
 message Minter {
@@ -19,6 +20,11 @@ message Minter {
   ];
 
   google.protobuf.Timestamp last_block_timestamp = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Duration average_block_time = 4 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"average_block_time\""
+  ];
 }
 
 // mint parameters

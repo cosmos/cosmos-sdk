@@ -1,4 +1,11 @@
-# Slashing module specification
+<!--
+order: 20
+title: Slashing Overview
+parent:
+  title: "slashing"
+-->
+
+# `slashing`
 
 ## Abstract
 
@@ -9,6 +16,7 @@ The slashing module enables Cosmos SDK-based blockchains to disincentivize any a
 by a protocol-recognized actor with value at stake by penalizing them ("slashing").
 
 Penalties may include, but are not limited to:
+
 - Burning some amount of their stake
 - Removing their ability to vote on future blocks for a period of time.
 
@@ -35,4 +43,3 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
 7. **[Staking Tombstone](07_tombstone.md)**
     - [Abstract](07_tombstone.md#abstract)
 8. **[Parameters](08_params.md)**
-

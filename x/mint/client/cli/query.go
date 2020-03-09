@@ -7,9 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.
@@ -23,7 +24,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	mintingQueryCmd.AddCommand(
-		client.GetCommands(
+		flags.GetCommands(
 			GetCmdQueryParams(cdc),
 			GetCmdQueryInflation(cdc),
 			GetCmdQueryAnnualProvisions(cdc),

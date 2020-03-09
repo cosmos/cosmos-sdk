@@ -1,3 +1,7 @@
+<!--
+order: 3
+-->
+
 # Messages
 
 ## Proposal Submission
@@ -17,13 +21,14 @@ The `Content` of a `TxGovSubmitProposal` message must have an appropriate router
 set in the governance module.
 
 **State modifications:**
-* Generate new `proposalID`
-* Create new `Proposal`
-* Initialise `Proposals` attributes
-* Decrease balance of sender by `InitialDeposit`
-* If `MinDeposit` is reached:
-  * Push `proposalID` in  `ProposalProcessingQueue`
-* Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
+
+- Generate new `proposalID`
+- Create new `Proposal`
+- Initialise `Proposals` attributes
+- Decrease balance of sender by `InitialDeposit`
+- If `MinDeposit` is reached:
+  - Push `proposalID` in `ProposalProcessingQueue`
+- Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `TxGovSubmitProposal` transaction can be handled according to the following
 pseudocode.
@@ -84,12 +89,13 @@ type TxGovDeposit struct {
 ```
 
 **State modifications:**
-* Decrease balance of sender by `deposit`
-* Add `deposit` of sender in `proposal.Deposits`
-* Increase `proposal.TotalDeposit` by sender's `deposit`
-* If `MinDeposit` is reached:
-  * Push `proposalID` in  `ProposalProcessingQueueEnd`
-* Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
+
+- Decrease balance of sender by `deposit`
+- Add `deposit` of sender in `proposal.Deposits`
+- Increase `proposal.TotalDeposit` by sender's `deposit`
+- If `MinDeposit` is reached:
+  - Push `proposalID` in `ProposalProcessingQueueEnd`
+- Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `TxGovDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.
@@ -154,10 +160,10 @@ vote on the proposal.
 ```
 
 **State modifications:**
-* Record `Vote` of sender
 
-*Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker*
+- Record `Vote` of sender
 
+_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker_
 
 Next is a pseudocode proposal of the way `TxGovVote` transactions are
 handled:

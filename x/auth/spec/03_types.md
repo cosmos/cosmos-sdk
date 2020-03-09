@@ -1,6 +1,10 @@
+<!--
+order: 4
+-->
+
 # Types
 
-Besides accounts (specified in [State](state.md)), the types exposed by the auth module
+Besides accounts (specified in [State](02_state.md)), the types exposed by the auth module
 are `StdFee`, the combination of an amount and gas limit, `StdSignature`, the combination
 of an optional public key and a cryptographic signature as a byte array, `StdTx`,
 a struct which implements the `sdk.Tx` interface using `StdFee` and `StdSignature`, and

@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -21,7 +21,7 @@ const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
 func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
-	genAccIterator types.GenesisAccountsIterator, defaultNodeHome string) *cobra.Command {
+	genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
@@ -29,7 +29,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
-			name := viper.GetString(client.FlagName)
+			name := viper.GetString(flags.FlagName)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
@@ -48,7 +48,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
 			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
 			initCfg := genutil.NewInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
 
-			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genAccIterator)
+			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genBalIterator)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")
 			}

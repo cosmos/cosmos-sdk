@@ -10,15 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
-)
-
-const (
-	flagPage  = "page"
-	flagLimit = "limit"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // GetQueryCmd returns the CLI command with all evidence module query commands
@@ -43,10 +39,41 @@ $ %s query %s --page=2 --limit=50
 		RunE:                       QueryEvidenceCmd(cdc),
 	}
 
-	cmd.Flags().Int(flagPage, 1, "pagination page of evidence to to query for")
-	cmd.Flags().Int(flagLimit, 100, "pagination limit of evidence to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
 
-	return cmd
+	cmd.AddCommand(flags.GetCommands(QueryParamsCmd(cdc))...)
+
+	return flags.GetCommands(cmd)[0]
+}
+
+// QueryParamsCmd returns the command handler for evidence parameter querying.
+func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "params",
+		Short: "Query the current evidence parameters",
+		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(`Query the current evidence parameters:
+
+$ <appcli> query evidence params
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
+			res, _, err := cliCtx.QueryWithData(route, nil)
+			if err != nil {
+				return err
+			}
+
+			var params types.Params
+			if err := cdc.UnmarshalJSON(res, &params); err != nil {
+				return fmt.Errorf("failed to unmarshal params: %w", err)
+			}
+
+			return cliCtx.PrintOutput(params)
+		},
+	}
 }
 
 // QueryEvidenceCmd returns the command handler for evidence querying. Evidence
@@ -94,7 +121,7 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 }
 
 func queryAllEvidence(cdc *codec.Codec, cliCtx context.CLIContext) error {
-	params := types.NewQueryAllEvidenceParams(viper.GetInt(flagPage), viper.GetInt(flagLimit))
+	params := types.NewQueryAllEvidenceParams(viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)

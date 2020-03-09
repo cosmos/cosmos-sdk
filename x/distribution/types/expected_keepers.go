@@ -13,6 +13,15 @@ type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 }
 
+// BankKeeper defines the expected interface needed to retrieve account balances.
+type BankKeeper interface {
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
+	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+}
+
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
@@ -40,7 +49,7 @@ type StakingKeeper interface {
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingexported.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
-	MaxValidators(sdk.Context) uint16
+	MaxValidators(sdk.Context) uint32
 
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingexported.DelegationI) (stop bool))
@@ -70,7 +79,7 @@ type SupplyKeeper interface {
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	SetModuleAccount(sdk.Context, supplyexported.ModuleAccountI)
 
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) sdk.Error
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }

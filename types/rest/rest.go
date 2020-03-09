@@ -20,8 +20,10 @@ import (
 )
 
 const (
-	DefaultPage  = 1
-	DefaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	DefaultPage    = 1
+	DefaultLimit   = 30             // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	TxMinHeightKey = "tx.minheight" // Inclusive minimum height filter
+	TxMaxHeightKey = "tx.maxheight" // Inclusive maximum height filter
 )
 
 // ResponseWithHeight defines a response object type that wraps an original
@@ -335,9 +337,14 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 		}
 
 		var tag string
-		if key == types.TxHeightKey {
+		switch key {
+		case types.TxHeightKey:
 			tag = fmt.Sprintf("%s=%s", key, value)
-		} else {
+		case TxMinHeightKey:
+			tag = fmt.Sprintf("%s>=%s", types.TxHeightKey, value)
+		case TxMaxHeightKey:
+			tag = fmt.Sprintf("%s<=%s", types.TxHeightKey, value)
+		default:
 			tag = fmt.Sprintf("%s='%s'", key, value)
 		}
 		tags = append(tags, tag)
@@ -374,4 +381,15 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 // arguments pairs. It separates page and limit used for pagination.
 func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
 	return ParseHTTPArgsWithLimit(r, DefaultLimit)
+}
+
+// ParseQueryParamBool parses the given param to a boolean. It returns false by
+// default if the string is not parseable to bool.
+func ParseQueryParamBool(r *http.Request, param string) bool {
+	valueStr := r.FormValue(param)
+	value := false
+	if ok, err := strconv.ParseBool(valueStr); err == nil {
+		value = ok
+	}
+	return value
 }

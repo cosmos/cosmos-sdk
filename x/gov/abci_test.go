@@ -1,41 +1,45 @@
-package gov
+package gov_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	govHandler := NewHandler(input.keeper)
+	govHandler := gov.NewHandler(app.GovKeeper)
 
-	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := NewMsgSubmitProposal(
-		ContentFromProposalType("test", "test", ProposalTypeText),
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(
+		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		input.addrs[0],
+		addrs[0],
 	)
+	require.NoError(t, err)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -43,48 +47,51 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	EndBlocker(ctx, input.keeper)
+	gov.EndBlocker(ctx, app.GovKeeper)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	govHandler := NewHandler(input.keeper)
+	govHandler := gov.NewHandler(app.GovKeeper)
 
-	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg := NewMsgSubmitProposal(
-		ContentFromProposalType("test", "test", ProposalTypeText),
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(
+		gov.ContentFromProposalType("test", "test", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		input.addrs[0],
+		addrs[0],
 	)
+	require.NoError(t, err)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -92,28 +99,32 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newProposalMsg2 := NewMsgSubmitProposal(
-		ContentFromProposalType("test2", "test2", ProposalTypeText),
+	newProposalMsg2, err := codecstd.NewMsgSubmitProposal(
+		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		input.addrs[0],
+		addrs[0],
 	)
+	require.NoError(t, err)
 
-	res = govHandler(ctx, newProposalMsg2)
-	require.True(t, res.IsOK())
+	res, err = govHandler(ctx, newProposalMsg2)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	EndBlocker(ctx, input.keeper)
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+
+	gov.EndBlocker(ctx, app.GovKeeper)
+
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -121,42 +132,48 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	EndBlocker(ctx, input.keeper)
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+
+	gov.EndBlocker(ctx, app.GovKeeper)
+
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	govHandler := NewHandler(input.keeper)
+	govHandler := gov.NewHandler(app.GovKeeper)
 
-	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	activeQueue := input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue := app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	newProposalMsg := NewMsgSubmitProposal(
-		ContentFromProposalType("test2", "test2", ProposalTypeText),
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(
+		gov.ContentFromProposalType("test2", "test2", gov.ProposalTypeText),
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
-		input.addrs[0],
+		addrs[0],
 	)
+	require.NoError(t, err)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
-	proposalID := GetProposalIDFromBytes(res.Data)
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	proposalID := gov.GetProposalIDFromBytes(res.Data)
+
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
@@ -164,158 +181,174 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
-	res = govHandler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+	newDepositMsg := gov.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
 
-	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	res, err = govHandler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
-	SortAddresses(input.addrs)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	SortAddresses(addrs)
 
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-	govHandler := NewHandler(input.keeper)
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	inactiveQueue := input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	govHandler := gov.NewHandler(app.GovKeeper)
+
+	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
-	activeQueue := input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue := app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg := NewMsgSubmitProposal(keep.TestProposal, proposalCoins, input.addrs[0])
+	newProposalMsg, err := codecstd.NewMsgSubmitProposal(TestProposal, proposalCoins, addrs[0])
+	require.NoError(t, err)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
-	proposalID := GetProposalIDFromBytes(res.Data)
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	proposalID := gov.GetProposalIDFromBytes(res.Data)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, proposalCoins)
-	res = govHandler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+	newDepositMsg := gov.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+
+	res, err = govHandler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, activeQueue.Valid())
 
-	activeProposalID := GetProposalIDFromBytes(activeQueue.Value())
-	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
+	activeProposalID := gov.GetProposalIDFromBytes(activeQueue.Value())
+	proposal, ok := app.GovKeeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
-	require.Equal(t, StatusVotingPeriod, proposal.Status)
+	require.Equal(t, gov.StatusVotingPeriod, proposal.Status)
 
 	activeQueue.Close()
 
-	EndBlocker(ctx, input.keeper)
+	gov.EndBlocker(ctx, app.GovKeeper)
 
-	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	input := getMockApp(t, 1, GenesisState{}, nil, ProposalHandler)
-	SortAddresses(input.addrs)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	handler := NewHandler(input.keeper)
-	stakingHandler := staking.NewHandler(input.sk)
+	SortAddresses(addrs)
 
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+	handler := gov.NewHandler(app.GovKeeper)
+	stakingHandler := staking.NewHandler(app.StakingKeeper)
 
-	valAddr := sdk.ValAddress(input.addrs[0])
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	valAddr := sdk.ValAddress(addrs[0])
 
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	staking.EndBlocker(ctx, input.sk)
+	staking.EndBlocker(ctx, app.StakingKeeper)
 
-	macc := input.keeper.GetGovernanceAccount(ctx)
+	macc := app.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	initialModuleAccCoins := macc.GetCoins()
+	initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
-	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
-	res := handler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+	newDepositMsg := gov.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
 
-	macc = input.keeper.GetGovernanceAccount(ctx)
+	res, err := handler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	macc = app.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	moduleAccCoins := macc.GetCoins()
+	moduleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit).Add(proposalCoins)
+	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
 
-	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], gov.OptionYes)
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	EndBlocker(ctx, input.keeper)
+	gov.EndBlocker(ctx, app.GovKeeper)
 
-	macc = input.keeper.GetGovernanceAccount(ctx)
+	macc = app.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	require.True(t, macc.GetCoins().IsEqual(initialModuleAccCoins))
+	require.True(t, app.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	// hijack the router to one that will fail in a proposal's handler
-	input := getMockApp(t, 1, GenesisState{}, nil, badProposalHandler)
-	SortAddresses(input.addrs)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	addrs := simapp.AddTestAddrs(app, ctx, 1, valTokens)
 
-	handler := NewHandler(input.keeper)
-	stakingHandler := staking.NewHandler(input.sk)
+	SortAddresses(addrs)
 
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+	handler := gov.NewHandler(app.GovKeeper)
+	stakingHandler := staking.NewHandler(app.StakingKeeper)
 
-	valAddr := sdk.ValAddress(input.addrs[0])
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	valAddr := sdk.ValAddress(addrs[0])
 
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	staking.EndBlocker(ctx, input.sk)
+	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
 	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, TestProposal)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
-	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
-	res := handler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+	newDepositMsg := gov.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
 
-	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
+	res, err := handler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], gov.OptionYes)
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	// Set the contextKeyBadProposal value to false so that the handler will fail
@@ -323,5 +356,5 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithValue(contextKeyBadProposal, false)
 
 	// validate that the proposal fails/has been rejected
-	EndBlocker(ctx, input.keeper)
+	gov.EndBlocker(ctx, app.GovKeeper)
 }

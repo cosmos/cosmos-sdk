@@ -32,7 +32,7 @@ func TestPublicKeyUnsafe(t *testing.T) {
 		fmt.Sprintf("%x", priv.PubKey().Bytes()),
 		"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
-	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
@@ -74,7 +74,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		tmp := priv.(PrivKeyLedgerSecp256k1)
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
@@ -104,11 +104,13 @@ func TestPublicKeySafe(t *testing.T) {
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
 
+	require.Nil(t, LedgerShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
+
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", priv.PubKey().Bytes()),
 		"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
-	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
@@ -172,7 +174,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		tmp := priv.(PrivKeyLedgerSecp256k1)
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedPubKeys[i], pubKeyAddr,

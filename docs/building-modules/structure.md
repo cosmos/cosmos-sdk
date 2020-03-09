@@ -1,8 +1,11 @@
-# Module Specification
+<!--
+order: 12
+synopsis: This document outlines the recommended structure of Cosmos SDK modules.These ideas are
+meant to be applied as suggestions. Application developers are encouraged to improve upon and
+contribute to module structure and development design.
+-->
 
-This document outlines the recommended structure of Cosmos SDK modules. These
-ideas are meant to be applied as suggestions. Application developers are encouraged
-to improve upon and contribute to module structure and development design.
+# Recommended Folder Structure
 
 ## Structure
 
@@ -19,40 +22,45 @@ x/{module}
 │       └── tx.go
 ├── exported
 │   └── exported.go
-├── internal
-│   ├── keeper
-│   │   ├── invariants.go
-│   │   ├── keeper.go
-│   │   ├── ...
-│   │   └── querier.go
-│   └── types
-│       ├── codec.go
-│       ├── errors.go
-│       ├── events.go
-│       ├── expected_keepers.go
-│       ├── genesis.go
-│       ├── keys.go
-│       ├── msgs.go
-│       ├── params.go
-│       ├── ...
-│       └── querier.go
+├── keeper
+│   ├── invariants.go
+│   ├── keeper.go
+│   ├── ...
+│   └── querier.go
+├── types
+│   ├── codec.go
+│   ├── errors.go
+│   ├── events.go
+│   ├── expected_keepers.go
+│   ├── genesis.go
+│   ├── keys.go
+│   ├── msgs.go
+│   ├── params.go
+│   ├── types.pb.go
+│   ├── types.proto
+│   ├── ...
+│   └── querier.go
+├── simulation
+│   ├── decoder.go
+│   ├── genesis.go
+│   ├── operations.go
+│   ├── params.go
+│   └── proposals.go
 ├── abci.go
 ├── alias.go
 ├── genesis.go
 ├── handler.go
-├── module.go
 ├── ...
-└── simulation.go
+└── module.go
 ```
 
 - `abci.go`: The module's `BeginBlocker` and `EndBlocker` implementations (if any).
 - `alias.go`: The module's exported types, constants, and variables. These are mainly
 to improve developer ergonomics by only needing to import a single package. Note,
 there is nothing preventing developers from importing other packages from the module
-(excluding`internal/`) but it is recommended that `alias.go` have everything
-exposed that other modules may need. The majority of the exported values here will
-typically come from `internal/` (see below).
-- `client/`: The module's CLI and REST client functionality implementation and 
+but it is recommended that `alias.go` have everything exposed that other modules
+may need.
+- `client/`: The module's CLI and REST client functionality implementation and
 testing.
 - `exported/`: The module's exported types -- typically type interfaces. If a module
 relies on other module keepers, it is expected to receive them as interface
@@ -66,16 +74,16 @@ DRY and also alleviates import cycle chaos.
 - `genesis.go`: The module's genesis related business logic (e.g. `InitGenesis`).
 Note, genesis types are defined in `internal/types`.
 - `handler.go`: The module's message handlers.
-- `internal/`: The module's internal types and implementations. The purpose of
-this package is mainly two fold. First, it signals that this package is not
-intended to be used or imported anywhere outside the defining module. Secondly,
-it goes hand-in-hand with `alias.go` in that it allows public types and functions
-to be used internally while not being exposed outside to the outside world. This
-allows for greater freedom of development while maintaining API stability.
-  - `internal/types`: The module's type definitions such as messages, `KVStore`
-  keys, parameter types, and `expected_keepers.go` contracts.
-  - `internal/keeper`: The module's keeper implementation along with any auxiliary
-  implementations such as the querier and invariants.
+- `keeper/`: The module's keeper implementation along with any auxiliary
+implementations such as the querier and invariants.
+- `types/`: The module's type definitions such as messages, `KVStore` keys,
+parameter types, Protocol Buffer definitions, and `expected_keepers.go` contracts.
 - `module.go`: The module's implementation of the `AppModule` and `AppModuleBasic`
 interfaces.
-- `simulation.go`: The module's simulation messages and related types (if any).
+- `simulation/`: The module's simulation package defines all the required functions
+used on the blockchain simulator: randomized genesis state, parameters, weighted
+operations, proposal contents and types decoders.
+
+## Next {hide}
+
+Learn about [Errors](./errors.md) {hide}

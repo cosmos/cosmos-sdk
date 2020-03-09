@@ -2,12 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -23,7 +25,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	stakingQueryCmd.AddCommand(client.GetCommands(
+	stakingQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryDelegation(queryRoute, cdc),
 		GetCmdQueryDelegations(queryRoute, cdc),
 		GetCmdQueryUnbondingDelegation(queryRoute, cdc),
@@ -35,6 +37,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryValidatorDelegations(queryRoute, cdc),
 		GetCmdQueryValidatorUnbondingDelegations(queryRoute, cdc),
 		GetCmdQueryValidatorRedelegations(queryRoute, cdc),
+		GetCmdQueryHistoricalInfo(queryRoute, cdc),
 		GetCmdQueryParams(queryRoute, cdc),
 		GetCmdQueryPool(queryRoute, cdc))...)
 
@@ -74,7 +77,12 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 				return fmt.Errorf("no validator found with address %s", addr)
 			}
 
-			return cliCtx.PrintOutput(types.MustUnmarshalValidator(cdc, res))
+			validator, err := types.UnmarshalValidator(types.ModuleCdc, res)
+			if err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(validator)
 		},
 	}
 }
@@ -104,7 +112,12 @@ $ %s query staking validators
 
 			var validators types.Validators
 			for _, kv := range resKVs {
-				validators = append(validators, types.MustUnmarshalValidator(cdc, kv.Value))
+				validator, err := types.UnmarshalValidator(types.ModuleCdc, kv.Value)
+				if err != nil {
+					return err
+				}
+
+				validators = append(validators, validator)
 			}
 
 			return cliCtx.PrintOutput(validators)
@@ -377,7 +390,12 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			return cliCtx.PrintOutput(types.MustUnmarshalUBD(cdc, res))
+			ubd, err := types.UnmarshalUBD(types.ModuleCdc, res)
+			if err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(ubd)
 		},
 	}
 }
@@ -518,6 +536,50 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			var resp types.RedelegationResponses
+			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(resp)
+		},
+	}
+}
+
+// GetCmdQueryHistoricalInfo implements the historical info query command
+func GetCmdQueryHistoricalInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "historical-info [height]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query historical info at given height",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query historical info at given height.
+
+Example:
+$ %s query staking historical-info 5
+`,
+				version.ClientName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			height, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil || height < 0 {
+				return fmt.Errorf("height argument provided must be a non-negative-integer: %v", err)
+			}
+
+			bz, err := cdc.MarshalJSON(types.QueryHistoricalInfoParams{Height: height})
+			if err != nil {
+				return err
+			}
+
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryHistoricalInfo)
+			res, _, err := cliCtx.QueryWithData(route, bz)
+			if err != nil {
+				return err
+			}
+
+			var resp types.HistoricalInfo
 			if err := cdc.UnmarshalJSON(res, &resp); err != nil {
 				return err
 			}

@@ -4,69 +4,69 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewHandler creates an sdk.Handler for all the gov type messages
 func NewHandler(keeper Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
 		case MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
 
-		case MsgSubmitProposal:
+		case MsgSubmitProposalI:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
 
 		case MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized gov message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
 
-func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-	proposal, err := keeper.SubmitProposal(ctx, msg.Content)
+func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposalI) (*sdk.Result, error) {
+	proposal, err := keeper.SubmitProposal(ctx, msg.GetContent())
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
-	err, votingStarted := keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
+	votingStarted, err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.GetProposer(), msg.GetInitialDeposit())
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.GetProposer().String()),
 		),
 	)
 
+	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.GetContent().ProposalType()))
 	if votingStarted {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeSubmitProposal,
-				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
-			),
+		submitEvent = submitEvent.AppendAttributes(
+			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
 		)
 	}
 
-	return sdk.Result{
+	ctx.EventManager().EmitEvent(submitEvent)
+
+	return &sdk.Result{
 		Data:   GetProposalIDBytes(proposal.ProposalID),
 		Events: ctx.EventManager().Events(),
-	}
+	}, nil
 }
 
-func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
-	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
+func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) (*sdk.Result, error) {
+	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -86,13 +86,13 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		)
 	}
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
+func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) (*sdk.Result, error) {
 	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -103,6 +103,5 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		),
 	)
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
-
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }

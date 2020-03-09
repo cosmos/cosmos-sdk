@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/errors"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestStoreType(t *testing.T) {
@@ -21,7 +22,7 @@ func TestStoreType(t *testing.T) {
 
 func TestGetCommitKVStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db)
+	ms := newMultiStoreWithMounts(db, types.PruneSyncable)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -48,12 +49,13 @@ func TestStoreMount(t *testing.T) {
 	require.NotPanics(t, func() { store.MountStoreWithDB(key2, types.StoreTypeIAVL, db) })
 
 	require.Panics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
+	require.Panics(t, func() { store.MountStoreWithDB(nil, types.StoreTypeIAVL, db) })
 	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db) })
 }
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db)
+	ms := newMultiStoreWithMounts(db, types.PruneNothing)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -90,7 +92,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 
 func TestHashStableWithEmptyCommit(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db)
+	ms := newMultiStoreWithMounts(db, types.PruneNothing)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -114,7 +116,7 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := newMultiStoreWithMounts(db)
+	store := newMultiStoreWithMounts(db, types.PruneNothing)
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -139,7 +141,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	}
 
 	// Load the latest multistore again and check version.
-	store = newMultiStoreWithMounts(db)
+	store = newMultiStoreWithMounts(db, types.PruneNothing)
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, nCommits)
@@ -152,7 +154,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 	// Load an older multistore and check version.
 	ver := nCommits - 1
-	store = newMultiStoreWithMounts(db)
+	store = newMultiStoreWithMounts(db, types.PruneNothing)
 	err = store.LoadVersion(ver)
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver)
@@ -165,7 +167,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 	// XXX: confirm old commit is overwritten and we have rolled back
 	// LatestVersion
-	store = newMultiStoreWithMounts(db)
+	store = newMultiStoreWithMounts(db, types.PruneSyncable)
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver+1)
@@ -174,7 +176,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := newMultiStoreWithMounts(db)
+	store := newMultiStoreWithMounts(db, types.PruneNothing)
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -206,7 +208,8 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
 
 	// Load without changes and make sure it is sensible
-	store = newMultiStoreWithMounts(db)
+	store = newMultiStoreWithMounts(db, types.PruneNothing)
+
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, 1)
@@ -218,7 +221,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, v2, s2.Get(k2))
 
 	// now, let's load with upgrades...
-	restore, upgrades := newMultiStoreWithModifiedMounts(db)
+	restore, upgrades := newMultiStoreWithModifiedMounts(db, types.PruneNothing)
 	err = restore.LoadLatestVersionAndUpgrade(upgrades)
 	require.Nil(t, err)
 
@@ -245,7 +248,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	migratedID := restore.Commit()
 	require.Equal(t, migratedID.Version, int64(2))
 
-	reload, _ := newMultiStoreWithModifiedMounts(db)
+	reload, _ := newMultiStoreWithModifiedMounts(db, types.PruneNothing)
 	err = reload.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, migratedID, reload.LastCommitID())
@@ -288,9 +291,91 @@ func TestParsePath(t *testing.T) {
 
 }
 
+func TestMultiStoreRestart(t *testing.T) {
+	db := dbm.NewMemDB()
+	pruning := types.PruningOptions{
+		KeepEvery:     3,
+		SnapshotEvery: 6,
+	}
+	multi := newMultiStoreWithMounts(db, pruning)
+	err := multi.LoadLatestVersion()
+	require.Nil(t, err)
+
+	initCid := multi.LastCommitID()
+
+	k, v := "wind", "blows"
+	k2, v2 := "water", "flows"
+	k3, v3 := "fire", "burns"
+
+	for i := 1; i < 3; i++ {
+		// Set and commit data in one store.
+		store1 := multi.getStoreByName("store1").(types.KVStore)
+		store1.Set([]byte(k), []byte(fmt.Sprintf("%s:%d", v, i)))
+
+		// ... and another.
+		store2 := multi.getStoreByName("store2").(types.KVStore)
+		store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, i)))
+
+		// ... and another.
+		store3 := multi.getStoreByName("store3").(types.KVStore)
+		store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, i)))
+
+		multi.Commit()
+
+		cinfo, err := getCommitInfo(multi.db, int64(i))
+		require.NotNil(t, err)
+		require.Equal(t, commitInfo{}, cinfo)
+	}
+
+	// Set and commit data in one store.
+	store1 := multi.getStoreByName("store1").(types.KVStore)
+	store1.Set([]byte(k), []byte(fmt.Sprintf("%s:%d", v, 3)))
+
+	// ... and another.
+	store2 := multi.getStoreByName("store2").(types.KVStore)
+	store2.Set([]byte(k2), []byte(fmt.Sprintf("%s:%d", v2, 3)))
+
+	multi.Commit()
+
+	flushedCinfo, err := getCommitInfo(multi.db, 3)
+	require.Nil(t, err)
+	require.NotEqual(t, initCid, flushedCinfo, "CID is different after flush to disk")
+
+	// ... and another.
+	store3 := multi.getStoreByName("store3").(types.KVStore)
+	store3.Set([]byte(k3), []byte(fmt.Sprintf("%s:%d", v3, 3)))
+
+	multi.Commit()
+
+	postFlushCinfo, err := getCommitInfo(multi.db, 4)
+	require.NotNil(t, err)
+	require.Equal(t, commitInfo{}, postFlushCinfo, "Commit changed after in-memory commit")
+
+	multi = newMultiStoreWithMounts(db, pruning)
+	err = multi.LoadLatestVersion()
+	require.Nil(t, err)
+
+	reloadedCid := multi.LastCommitID()
+	require.Equal(t, flushedCinfo.CommitID(), reloadedCid, "Reloaded CID is not the same as last flushed CID")
+
+	// Check that store1 and store2 retained date from 3rd commit
+	store1 = multi.getStoreByName("store1").(types.KVStore)
+	val := store1.Get([]byte(k))
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v, 3)), val, "Reloaded value not the same as last flushed value")
+
+	store2 = multi.getStoreByName("store2").(types.KVStore)
+	val2 := store2.Get([]byte(k2))
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v2, 3)), val2, "Reloaded value not the same as last flushed value")
+
+	// Check that store3 still has data from last commit even though update happened on 2nd commit
+	store3 = multi.getStoreByName("store3").(types.KVStore)
+	val3 := store3.Get([]byte(k3))
+	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v3, 2)), val3, "Reloaded value not the same as last flushed value")
+}
+
 func TestMultiStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db)
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -317,73 +402,68 @@ func TestMultiStoreQuery(t *testing.T) {
 	ver := cid.Version
 
 	// Reload multistore from database
-	multi = newMultiStoreWithMounts(db)
+	multi = newMultiStoreWithMounts(db, types.PruneNothing)
 	err = multi.LoadLatestVersion()
 	require.Nil(t, err)
 
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
-	require.EqualValues(t, errors.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, errors.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
-	require.EqualValues(t, errors.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, errors.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
-	require.EqualValues(t, errors.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, errors.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
 	qres = multi.Query(query)
-	require.EqualValues(t, errors.CodeOK, qres.Code)
+	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
-	require.EqualValues(t, errors.CodeOK, qres.Code)
+	require.EqualValues(t, 0, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
 	query.Data = k2
 	qres = multi.Query(query)
-	require.EqualValues(t, errors.CodeOK, qres.Code)
+	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v2, qres.Value)
 }
 
 //-----------------------------------------------------------------------
 // utils
 
-func newMultiStoreWithMounts(db dbm.DB) *Store {
+func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store {
 	store := NewStore(db)
-	store.pruningOpts = types.PruneSyncable
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.pruningOpts = pruningOpts
+
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+
 	return store
 }
 
-// store2 -> restore2
-// store3 dropped data (but mount still there to test)
-func newMultiStoreWithModifiedMounts(db dbm.DB) (*Store, *types.StoreUpgrades) {
+func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions) (*Store, *types.StoreUpgrades) {
 	store := NewStore(db)
-	store.pruningOpts = types.PruneSyncable
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("restore2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.pruningOpts = pruningOpts
+
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("restore2"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
 
 	upgrades := &types.StoreUpgrades{
 		Renamed: []types.StoreRename{{
@@ -392,6 +472,7 @@ func newMultiStoreWithModifiedMounts(db dbm.DB) (*Store, *types.StoreUpgrades) {
 		}},
 		Deleted: []string{"store3"},
 	}
+
 	return store, upgrades
 }
 

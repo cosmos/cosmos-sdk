@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
 // StakingKeeper defines the expected staking keeper (noalias)
@@ -27,6 +28,15 @@ type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(
 		cdc *codec.Codec,
 		appGenesis map[string]json.RawMessage,
-		iterateFn func(authexported.Account) (stop bool),
+		cb func(authexported.Account) (stop bool),
+	)
+}
+
+// GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
+type GenesisBalancesIterator interface {
+	IterateGenesisBalances(
+		cdc *codec.Codec,
+		appGenesis map[string]json.RawMessage,
+		cb func(bankexported.GenesisBalance) (stop bool),
 	)
 }

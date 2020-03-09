@@ -11,10 +11,11 @@ import (
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/common"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +48,7 @@ func newPrintInfo(moniker, chainID, nodeID, genTxsDir string,
 	}
 }
 
-func displayInfo(cdc *codec.Codec, info printInfo) error {
+func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
 	out, err := codec.MarshalJSONIndent(cdc, info)
 	if err != nil {
 		return err
@@ -59,7 +60,7 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
+func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManager,
 	defaultNodeHome string) *cobra.Command { // nolint: golint
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
@@ -70,9 +71,9 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
-			chainID := viper.GetString(client.FlagChainID)
+			chainID := viper.GetString(flags.FlagChainID)
 			if chainID == "" {
-				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
+				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
 
 			nodeID, _, err := genutil.InitializeNodeValidatorFiles(config)
@@ -83,10 +84,10 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			config.Moniker = args[0]
 
 			genFile := config.GenesisFile()
-			if !viper.GetBool(flagOverwrite) && common.FileExists(genFile) {
+			if !viper.GetBool(flagOverwrite) && tmos.FileExists(genFile) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
-			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis())
+			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis(cdc))
 			if err != nil {
 				return errors.Wrap(err, "Failed to marshall default genesis state")
 			}
@@ -119,7 +120,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 
 	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 
 	return cmd
 }

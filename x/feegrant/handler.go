@@ -1,13 +1,12 @@
 package feegrant
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
@@ -18,19 +17,18 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleRevokeFee(ctx, k, msg)
 
 		default:
-			errMsg := fmt.Sprintf("Unrecognized data Msg type: %s", ModuleName)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
 
-func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) sdk.Result {
+func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) (*sdk.Result, error) {
 	grant := FeeAllowanceGrant(msg)
 	k.GrantFeeAllowance(ctx, grant)
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleRevokeFee(ctx sdk.Context, k Keeper, msg MsgRevokeFeeAllowance) sdk.Result {
+func handleRevokeFee(ctx sdk.Context, k Keeper, msg MsgRevokeFeeAllowance) (*sdk.Result, error) {
 	k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }

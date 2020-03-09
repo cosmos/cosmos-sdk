@@ -6,7 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // DefaultStartingProposalID is 1
@@ -16,52 +19,52 @@ const DefaultStartingProposalID uint64 = 1
 // on network changes.
 type Proposal struct {
 	Content `json:"content" yaml:"content"` // Proposal content interface
-
-	ProposalID       uint64         `json:"id" yaml:"id"`                                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
-
-	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
-
-	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	ProposalBase
 }
 
 // NewProposal creates a new Proposal instance
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
 	return Proposal{
-		Content:          content,
-		ProposalID:       id,
-		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.NewCoins(),
-		SubmitTime:       submitTime,
-		DepositEndTime:   depositEndTime,
+		Content: content,
+		ProposalBase: ProposalBase{
+			ProposalID:       id,
+			Status:           StatusDepositPeriod,
+			FinalTallyResult: EmptyTallyResult(),
+			TotalDeposit:     sdk.NewCoins(),
+			SubmitTime:       submitTime,
+			DepositEndTime:   depositEndTime,
+		},
 	}
+}
+
+// Equal returns true if two Proposal types are equal.
+func (p Proposal) Equal(other Proposal) bool {
+	return p.ProposalBase.Equal(other.ProposalBase) && p.Content.String() == other.Content.String()
 }
 
 // String implements stringer interface
 func (p Proposal) String() string {
-	return fmt.Sprintf(`Proposal %d:
-  Title:              %s
-  Type:               %s
-  Status:             %s
-  Submit Time:        %s
-  Deposit End Time:   %s
-  Total Deposit:      %s
-  Voting Start Time:  %s
-  Voting End Time:    %s
-  Description:        %s`,
-		p.ProposalID, p.GetTitle(), p.ProposalType(),
-		p.Status, p.SubmitTime, p.DepositEndTime,
-		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime, p.GetDescription(),
-	)
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // Proposals is an array of proposal
 type Proposals []Proposal
+
+// Equal returns true if two slices (order-dependant) of proposals are equal.
+func (p Proposals) Equal(other Proposals) bool {
+	if len(p) != len(other) {
+		return false
+	}
+
+	for i, proposal := range p {
+		if !proposal.Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}
 
 // String implements stringer interface
 func (p Proposals) String() string {
@@ -77,19 +80,6 @@ func (p Proposals) String() string {
 type (
 	// ProposalQueue defines a queue for proposal ids
 	ProposalQueue []uint64
-
-	// ProposalStatus is a type alias that represents a proposal status as a byte
-	ProposalStatus byte
-)
-
-// Valid Proposal statuses
-const (
-	StatusNil           ProposalStatus = 0x00
-	StatusDepositPeriod ProposalStatus = 0x01
-	StatusVotingPeriod  ProposalStatus = 0x02
-	StatusPassed        ProposalStatus = 0x03
-	StatusRejected      ProposalStatus = 0x04
-	StatusFailed        ProposalStatus = 0x05
 )
 
 // ProposalStatusFromString turns a string into a ProposalStatus
@@ -201,24 +191,16 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 
 // Proposal types
 const (
-	ProposalTypeText            string = "Text"
-	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
+	ProposalTypeText string = "Text"
 )
 
-// TextProposal defines a standard text proposal whose changes need to be
-// manually updated in case of approval
-type TextProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
-}
+// Implements Content Interface
+var _ Content = TextProposal{}
 
 // NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {
 	return TextProposal{title, description}
 }
-
-// Implements Content Interface
-var _ Content = TextProposal{}
 
 // GetTitle returns the proposal title
 func (tp TextProposal) GetTitle() string { return tp.Title }
@@ -233,62 +215,16 @@ func (tp TextProposal) ProposalRoute() string { return RouterKey }
 func (tp TextProposal) ProposalType() string { return ProposalTypeText }
 
 // ValidateBasic validates the content's title and description of the proposal
-func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
+func (tp TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
 
 // String implements Stringer interface
 func (tp TextProposal) String() string {
-	return fmt.Sprintf(`Text Proposal:
-  Title:       %s
-  Description: %s
-`, tp.Title, tp.Description)
-}
-
-// SoftwareUpgradeProposal defines a proposal for upgrading the network nodes
-// without the need of manually halting at a given height
-//
-// TODO: We have to add fields for SUP specific arguments e.g. commit hash,
-// upgrade date, etc.
-type SoftwareUpgradeProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
-}
-
-// NewSoftwareUpgradeProposal creates a software upgrade proposal Content
-func NewSoftwareUpgradeProposal(title, description string) Content {
-	return SoftwareUpgradeProposal{title, description}
-}
-
-// Implements Content Interface
-var _ Content = SoftwareUpgradeProposal{}
-
-// GetTitle returns the proposal title
-func (sup SoftwareUpgradeProposal) GetTitle() string { return sup.Title }
-
-// GetDescription returns the proposal description
-func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-
-// ProposalRoute returns the proposal router key
-func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
-
-// ProposalType is "SoftwareUpgrade"
-func (sup SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
-
-// ValidateBasic validates the content's title and description of the proposal
-func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
-	return ValidateAbstract(DefaultCodespace, sup)
-}
-
-// String implements Stringer interface
-func (sup SoftwareUpgradeProposal) String() string {
-	return fmt.Sprintf(`Software Upgrade Proposal:
-  Title:       %s
-  Description: %s
-`, sup.Title, sup.Description)
+	out, _ := yaml.Marshal(tp)
+	return string(out)
 }
 
 var validProposalTypes = map[string]struct{}{
-	ProposalTypeText:            {},
-	ProposalTypeSoftwareUpgrade: {},
+	ProposalTypeText: {},
 }
 
 // RegisterProposalType registers a proposal type. It will panic if the type is
@@ -307,9 +243,6 @@ func ContentFromProposalType(title, desc, ty string) Content {
 	case ProposalTypeText:
 		return NewTextProposal(title, desc)
 
-	case ProposalTypeSoftwareUpgrade:
-		return NewSoftwareUpgradeProposal(title, desc)
-
 	default:
 		return nil
 	}
@@ -325,17 +258,16 @@ func IsValidProposalType(ty string) bool {
 }
 
 // ProposalHandler implements the Handler interface for governance module-based
-// proposals (ie. TextProposal and SoftwareUpgradeProposal). Since these are
+// proposals (ie. TextProposal ). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
-func ProposalHandler(_ sdk.Context, c Content) sdk.Error {
+func ProposalHandler(_ sdk.Context, c Content) error {
 	switch c.ProposalType() {
-	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
+	case ProposalTypeText:
 		// both proposal types do not change state so this performs a no-op
 		return nil
 
 	default:
-		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
-		return sdk.ErrUnknownRequest(errMsg)
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
 	}
 }

@@ -3,12 +3,11 @@ package simulation
 // DONTCOVER
 
 import (
-	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // Simulation parameter constants
@@ -21,6 +20,21 @@ func GenSendEnabled(r *rand.Rand) bool {
 	return r.Int63n(101) <= 95 // 95% chance of transfers being enabled
 }
 
+// RandomGenesisAccounts returns a slice of account balances. Each account has
+// a balance of simState.InitialStake for sdk.DefaultBondDenom.
+func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
+	genesisBalances := []types.Balance{}
+
+	for _, acc := range simState.Accounts {
+		genesisBalances = append(genesisBalances, types.Balance{
+			Address: acc.Address,
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))),
+		})
+	}
+
+	return genesisBalances
+}
+
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
 	var sendEnabled bool
@@ -29,8 +43,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { sendEnabled = GenSendEnabled(r) },
 	)
 
-	bankGenesis := types.NewGenesisState(sendEnabled)
+	bankGenesis := types.NewGenesisState(sendEnabled, RandomGenesisBalances(simState))
 
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, bankGenesis))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
 }

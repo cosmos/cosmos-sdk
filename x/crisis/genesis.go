@@ -2,8 +2,8 @@ package crisis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // new crisis genesis

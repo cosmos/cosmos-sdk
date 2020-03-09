@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -13,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -93,14 +94,15 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
+		stdTx, err := client.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return err
 		}
 
+		inBuf := bufio.NewReader(cmd.InOrStdin())
 		offline := viper.GetBool(flagOffline)
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI()
+		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if viper.GetBool(flagValidateSigs) {
 			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {
@@ -123,13 +125,13 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 				return err
 			}
 
-			newTx, err = utils.SignStdTxWithSignerAddress(
+			newTx, err = client.SignStdTxWithSignerAddress(
 				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, offline,
 			)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = utils.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, offline)
+			newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, offline)
 		}
 
 		if err != nil {
@@ -222,7 +224,7 @@ func printAndValidateSigs(
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			acc, err := types.NewAccountRetriever(cliCtx).GetAccount(sigAddr)
+			acc, err := types.NewAccountRetriever(client.Codec, cliCtx).GetAccount(sigAddr)
 			if err != nil {
 				fmt.Printf("failed to get account: %s\n", sigAddr)
 				return false

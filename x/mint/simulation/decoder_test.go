@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func makeTestCodec() (cdc *codec.Codec) {
@@ -23,9 +23,9 @@ func TestDecodeStore(t *testing.T) {
 	cdc := makeTestCodec()
 	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))
 
-	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(minter)},
-		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := tmkv.Pairs{
+		tmkv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(minter)},
+		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 	tests := []struct {
 		name        string

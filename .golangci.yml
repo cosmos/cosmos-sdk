@@ -3,6 +3,7 @@
 #   timeout: 5m
 
 linters:
+  disable-all: true
   enable:
     - bodyclose
     - deadcode
@@ -30,8 +31,6 @@ linters:
     - unconvert
     - unused
     - misspell
-  disable:
-    - errcheck
 
 issues:
   exclude-rules:
@@ -45,6 +44,11 @@ issues:
       linters:
         - golint
     - text: "ST1003:"
+      linters:
+        - stylecheck
+    # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
+    # https://github.com/dominikh/go-tools/issues/389
+    - text: "ST1016:"
       linters:
         - stylecheck
 

@@ -5,7 +5,7 @@ import (
 	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -42,6 +42,13 @@ type Queryable interface {
 type StoreUpgrades struct {
 	Renamed []StoreRename `json:"renamed"`
 	Deleted []string      `json:"deleted"`
+}
+
+// UpgradeInfo defines height and name of the upgrade
+// to ensure multistore upgrades happen only at matching height.
+type UpgradeInfo struct {
+	Name   string `json:"name"`
+	Height int64  `json:"height"`
 }
 
 // StoreRename defines a name change of a sub-store.
@@ -277,6 +284,10 @@ type StoreKey interface {
 	String() string
 }
 
+// CapabilityKey represent the Cosmos SDK keys for object-capability
+// generation in the IBC protocol as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#data-structures
+type CapabilityKey StoreKey
+
 // KVStoreKey is used for accessing substores.
 // Only the pointer value should ever be used - it functions as a capabilities key.
 type KVStoreKey struct {
@@ -325,7 +336,7 @@ func (key *TransientStoreKey) String() string {
 //----------------------------------------
 
 // key-value result for iterator queries
-type KVPair cmn.KVPair
+type KVPair tmkv.Pair
 
 //----------------------------------------
 

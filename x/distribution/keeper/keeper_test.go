@@ -1,70 +1,84 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
-	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	keeper.SetWithdrawAddrEnabled(ctx, false)
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
 
-	err := keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
+	params := app.DistrKeeper.GetParams(ctx)
+	params.WithdrawAddrEnabled = false
+	app.DistrKeeper.SetParams(ctx, params)
+
+	err := app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
 	require.NotNil(t, err)
 
-	keeper.SetWithdrawAddrEnabled(ctx, true)
+	params.WithdrawAddrEnabled = true
+	app.DistrKeeper.SetParams(ctx, params)
 
-	err = keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
+	err = app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
 	require.Nil(t, err)
 
-	keeper.blacklistedAddrs[distrAcc.GetAddress().String()] = true
-	require.Error(t, keeper.SetWithdrawAddr(ctx, delAddr1, distrAcc.GetAddress()))
+	require.Error(t, app.DistrKeeper.SetWithdrawAddr(ctx, addr[0], distrAcc.GetAddress()))
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {
-	ctx, ak, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
+	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+
 	// set module account coins
-	distrAcc := keeper.GetDistributionAccount(ctx)
-	distrAcc.SetCoins(sdk.NewCoins(
+	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
+	app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(
 		sdk.NewCoin("mytoken", sdk.NewInt(2)),
 		sdk.NewCoin("stake", sdk.NewInt(2)),
 	))
-	keeper.supplyKeeper.SetModuleAccount(ctx, distrAcc)
+	app.SupplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// check initial balance
-	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
+	balance := app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
 	expTokens := sdk.TokensFromConsensusPower(1000)
 	expCoins := sdk.NewCoins(sdk.NewCoin("stake", expTokens))
 	require.Equal(t, expCoins, balance)
 
 	// set outstanding rewards
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr3, valCommission)
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	// set commission
-	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr3, valCommission)
+	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	keeper.WithdrawValidatorCommission(ctx, valOpAddr3)
+	app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
 
 	// check balance increase
-	balance = ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
+	balance = app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
 	require.Equal(t, sdk.NewCoins(
 		sdk.NewCoin("mytoken", sdk.NewInt(1)),
 		sdk.NewCoin("stake", expTokens.AddRaw(1)),
 	), balance)
 
 	// check remainder
-	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)
+	remainder := app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission
 	require.Equal(t, sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(1).Quo(sdk.NewDec(4))),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(2))),
@@ -74,18 +88,41 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestGetTotalRewards(t *testing.T) {
-	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))),
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(3).Quo(sdk.NewDec(2))),
 	}
 
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, valCommission)
-	keeper.SetValidatorOutstandingRewards(ctx, valOpAddr2, valCommission)
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
+	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[1], types.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	expectedRewards := valCommission.MulDec(sdk.NewDec(2))
-	totalRewards := keeper.GetTotalRewards(ctx)
+	totalRewards := app.DistrKeeper.GetTotalRewards(ctx)
 
 	require.Equal(t, expectedRewards, totalRewards)
+}
+
+func TestFundCommunityPool(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr[0], amount))
+
+	initPool := app.DistrKeeper.GetFeePool(ctx)
+	assert.Empty(t, initPool.CommunityPool)
+
+	err := app.DistrKeeper.FundCommunityPool(ctx, amount, addr[0])
+	assert.Nil(t, err)
+
+	assert.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), app.DistrKeeper.GetFeePool(ctx).CommunityPool)
+	assert.Empty(t, app.BankKeeper.GetAllBalances(ctx, addr[0]))
 }

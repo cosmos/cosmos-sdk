@@ -5,13 +5,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // SubmitProposal create new proposal given a content
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, sdk.Error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, error) {
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
-		return types.Proposal{}, types.ErrNoProposalHandlerExists(keeper.codespace, content)
+		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
 	// Execute the proposal content in a cache-wrapped context to validate the
@@ -20,7 +21,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	cacheCtx, _ := ctx.CacheContext()
 	handler := keeper.router.GetRoute(content.ProposalRoute())
 	if err := handler(cacheCtx, content); err != nil {
-		return types.Proposal{}, types.ErrInvalidProposalContent(keeper.codespace, err.Result().Log)
+		return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
 	}
 
 	proposalID, err := keeper.GetProposalID(ctx)
@@ -48,20 +49,31 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 }
 
 // GetProposal get proposal from store by ProposalID
-func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal types.Proposal, ok bool) {
+func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
+
 	bz := store.Get(types.ProposalKey(proposalID))
 	if bz == nil {
-		return
+		return types.Proposal{}, false
 	}
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposal)
+
+	proposal, err := keeper.cdc.UnmarshalProposal(bz)
+	if err != nil {
+		panic(err)
+	}
+
 	return proposal, true
 }
 
 // SetProposal set a proposal to store
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal)
+
+	bz, err := keeper.cdc.MarshalProposal(proposal)
+	if err != nil {
+		panic(err)
+	}
+
 	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }
 
@@ -80,12 +92,15 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 // IterateProposals iterates over the all the proposals and performs a callback function
 func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 
+	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
-		var proposal types.Proposal
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
+		proposal, err := keeper.cdc.UnmarshalProposal(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
 
 		if cb(proposal) {
 			break
@@ -149,12 +164,13 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 }
 
 // GetProposalID gets the highest proposal ID
-func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err sdk.Error) {
+func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.ProposalIDKey)
 	if bz == nil {
-		return 0, types.ErrInvalidGenesis(keeper.codespace, "initial proposal ID hasn't been set")
+		return 0, sdkerrors.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
 	}
+
 	proposalID = types.GetProposalIDFromBytes(bz)
 	return proposalID, nil
 }
@@ -165,7 +181,7 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
-func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
+func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
 	proposal.VotingStartTime = ctx.BlockHeader().Time
 	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
 	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)

@@ -1,22 +1,58 @@
 package simulation
 
 import (
-	"errors"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// Simulation operation weights constants
+const (
+	OpWeightMsgSend      = "op_weight_msg_send"
+	OpWeightMsgMultiSend = "op_weight_msg_multisend"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights
+func WeightedOperations(
+	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+) simulation.WeightedOperations {
+
+	var weightMsgSend, weightMsgMultiSend int
+	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
+		func(_ *rand.Rand) {
+			weightMsgSend = simappparams.DefaultWeightMsgSend
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
+		func(_ *rand.Rand) {
+			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
+		},
+	)
+
+	return simulation.WeightedOperations{
+		simulation.NewWeightedOperation(
+			weightMsgSend,
+			SimulateMsgSend(ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgMultiSend,
+			SimulateMsgMultiSend(ak, bk),
+		),
+	}
+}
+
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-// nolint: funlen
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -27,7 +63,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, ak)
+		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -38,7 +74,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
-		err = sendMsgSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
+		err = sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -48,16 +84,21 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 }
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
+// nolint: interfacer
 func sendMsgSend(
-	r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
-) (err error) {
+) error {
+
+	var (
+		fees sdk.Coins
+		err  error
+	)
 
 	account := ak.GetAccount(ctx, msg.FromAddress)
-	coins := account.SpendableCoins(ctx.BlockTime())
+	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-	var fees sdk.Coins
-	coins, hasNeg := coins.SafeSub(msg.Amount)
+	coins, hasNeg := spendable.SafeSub(msg.Amount)
 	if !hasNeg {
 		fees, err = simulation.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -68,15 +109,16 @@ func sendMsgSend(
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		helpers.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
 		privkeys...,
 	)
 
-	res := app.Deliver(tx)
-	if !res.IsOK() {
-		return errors.New(res.Log)
+	_, _, err = app.Deliver(tx)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -84,7 +126,6 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-// nolint: funlen
 func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -108,11 +149,11 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
 			// generate random input fields, ignore to address
-			simAccount, _, coins, skip, err := randomSendFields(r, ctx, accs, ak)
+			simAccount, _, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
 
 			// make sure account is fresh and not used in previous input
 			for usedAddrs[simAccount.Address.String()] {
-				simAccount, _, coins, skip, err = randomSendFields(r, ctx, accs, ak)
+				simAccount, _, coins, skip, err = randomSendFields(r, ctx, accs, bk, ak)
 			}
 
 			if err != nil {
@@ -130,7 +171,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(simAccount.Address, coins)
-			totalSentCoins = totalSentCoins.Add(coins)
+			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
 		for o := range outputs {
@@ -167,7 +208,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 			Outputs: outputs,
 		}
 
-		err := sendMsgMultiSend(r, app, ak, msg, ctx, chainID, privs)
+		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -178,10 +219,11 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
+// nolint: interfacer
 func sendMsgMultiSend(
-	r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
-) (err error) {
+) error {
 
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
@@ -192,12 +234,16 @@ func sendMsgMultiSend(
 		sequenceNumbers[i] = acc.GetSequence()
 	}
 
+	var (
+		fees sdk.Coins
+		err  error
+	)
+
 	// feePayer is the first signer, i.e. first input address
 	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
-	coins := feePayer.SpendableCoins(ctx.BlockTime())
+	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 
-	var fees sdk.Coins
-	coins, hasNeg := coins.SafeSub(msg.Inputs[0].Coins)
+	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
 	if !hasNeg {
 		fees, err = simulation.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -208,15 +254,16 @@ func sendMsgMultiSend(
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		helpers.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,
 		privkeys...,
 	)
 
-	res := app.Deliver(tx)
-	if !res.IsOK() {
-		return errors.New(res.Log)
+	_, _, err = app.Deliver(tx)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -224,8 +271,9 @@ func sendMsgMultiSend(
 
 // randomSendFields returns the sender and recipient simulation accounts as well
 // as the transferred amount.
+// nolint: interfacer
 func randomSendFields(
-	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper,
+	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, bk keeper.Keeper, ak types.AccountKeeper,
 ) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
 
 	simAccount, _ := simulation.RandomAcc(r, accs)
@@ -241,9 +289,9 @@ func randomSendFields(
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 
-	coins := acc.SpendableCoins(ctx.BlockHeader().Time)
+	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
-	sendCoins := simulation.RandSubsetCoins(r, coins)
+	sendCoins := simulation.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}

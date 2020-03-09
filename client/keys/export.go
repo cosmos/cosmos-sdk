@@ -4,28 +4,32 @@ import (
 	"bufio"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func exportKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+// ExportKeyCommand exports private keys from the key store.
+func ExportKeyCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",
 		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,
 		Args:  cobra.ExactArgs(1),
 		RunE:  runExportCmd,
 	}
-	return cmd
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	buf := bufio.NewReader(cmd.InOrStdin())
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 	if err != nil {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err

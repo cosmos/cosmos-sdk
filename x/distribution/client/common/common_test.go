@@ -30,7 +30,7 @@ func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := QueryDelegationRewards(ctx, "", tt.args.delAddr, tt.args.valAddr)
+			_, _, err := QueryDelegationRewards(ctx, "", tt.args.delAddr, tt.args.valAddr)
 			require.True(t, err != nil, tt.wantErr)
 		})
 	}

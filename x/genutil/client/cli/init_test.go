@@ -14,7 +14,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
@@ -27,10 +27,10 @@ import (
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestInitCmd(t *testing.T) {
-	defer server.SetupViper(t)()
-	defer setupClientHome(t)()
+	t.Cleanup(server.SetupViper(t))
+	t.Cleanup(server.SetupViper(t))
 	home, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
@@ -50,11 +50,11 @@ func setupClientHome(t *testing.T) func() {
 }
 
 func TestEmptyState(t *testing.T) {
-	defer server.SetupViper(t)()
-	defer setupClientHome(t)()
+	t.Cleanup(server.SetupViper(t))
+	t.Cleanup(setupClientHome(t))
 
 	home, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
@@ -94,9 +94,9 @@ func TestEmptyState(t *testing.T) {
 
 func TestStartStandAlone(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	viper.Set(cli.HomeFlag, home)
-	defer setupClientHome(t)()
+	t.Cleanup(setupClientHome(t))
 
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
@@ -124,9 +124,9 @@ func TestStartStandAlone(t *testing.T) {
 
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
+	t.Cleanup(cleanup)
 	viper.Set(cli.HomeFlag, home)
-	viper.Set(client.FlagName, "moniker")
+	viper.Set(flags.FlagName, "moniker")
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)

@@ -1,4 +1,11 @@
-# Mint Specification
+<!--
+order: 0
+title: Mint Overview
+parent:
+  title: "mint"
+-->
+
+# `mint`
 
 ## Contents
 

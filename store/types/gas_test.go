@@ -7,7 +7,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInfiniteGasMeter(t *testing.T) {
+	t.Parallel()
+	meter := NewInfiniteGasMeter()
+	require.Equal(t, uint64(0), meter.Limit())
+	require.Equal(t, uint64(0), meter.GasConsumed())
+	require.Equal(t, uint64(0), meter.GasConsumedToLimit())
+	meter.ConsumeGas(10, "consume 10")
+	require.Equal(t, uint64(10), meter.GasConsumed())
+	require.Equal(t, uint64(10), meter.GasConsumedToLimit())
+	require.False(t, meter.IsPastLimit())
+	require.False(t, meter.IsOutOfGas())
+	meter.ConsumeGas(Gas(math.MaxUint64/2), "consume half max uint64")
+	require.Panics(t, func() { meter.ConsumeGas(Gas(math.MaxUint64/2)+2, "panic") })
+}
+
 func TestGasMeter(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		limit Gas
 		usage []Gas
@@ -41,11 +57,14 @@ func TestGasMeter(t *testing.T) {
 		require.Panics(t, func() { meter.ConsumeGas(1, "") }, "Exceeded but not panicked. tc #%d", tcnum)
 		require.Equal(t, meter.GasConsumedToLimit(), meter.Limit(), "Gas consumption (to limit) not match limit")
 		require.Equal(t, meter.GasConsumed(), meter.Limit()+1, "Gas consumption not match limit+1")
-
+		meter2 := NewGasMeter(math.MaxUint64)
+		meter2.ConsumeGas(Gas(math.MaxUint64/2), "consume half max uint64")
+		require.Panics(t, func() { meter2.ConsumeGas(Gas(math.MaxUint64/2)+2, "panic") })
 	}
 }
 
 func TestAddUint64Overflow(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		a, b     uint64
 		result   uint64
@@ -68,4 +87,18 @@ func TestAddUint64Overflow(t *testing.T) {
 			"invalid uint64 result; tc: #%d, a: %d, b: %d", i, tc.a, tc.b,
 		)
 	}
+}
+
+func TestTransientGasConfig(t *testing.T) {
+	t.Parallel()
+	config := TransientGasConfig()
+	require.Equal(t, config, GasConfig{
+		HasCost:          1000,
+		DeleteCost:       1000,
+		ReadCostFlat:     1000,
+		ReadCostPerByte:  3,
+		WriteCostFlat:    2000,
+		WriteCostPerByte: 30,
+		IterNextCostFlat: 30,
+	})
 }

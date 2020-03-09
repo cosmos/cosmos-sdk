@@ -2,7 +2,10 @@ package mint
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -22,7 +25,7 @@ import (
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the mint module.
@@ -40,17 +43,17 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the mint module.
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
 	var data GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &data)
-	if err != nil {
-		return err
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
+
 	return ValidateGenesis(data)
 }
 
@@ -69,40 +72,20 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the mint module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder registers a decoder for mint module's types.
-func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
-}
-
-// GenerateGenesisState creates a randomized GenState of the mint module.
-func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(r *rand.Rand) []sim.ParamChange {
-	return simulation.ParamChanges(r)
-}
-
-//____________________________________________________________________________
-
 // AppModule implements an application module for the mint module.
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
-	keeper Keeper
+	keeper       Keeper
+	supplyKeeper types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
-		keeper:              keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
+		supplyKeeper:   supplyKeeper,
 	}
 }
 
@@ -132,18 +115,20 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // InitGenesis performs genesis initialization for the mint module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	cdc.MustUnmarshalJSON(data, &genesisState)
+
+	InitGenesis(ctx, am.keeper, am.supplyKeeper, genesisState)
+
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
-	return ModuleCdc.MustMarshalJSON(gs)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock returns the begin blocker for the mint module.
@@ -155,4 +140,33 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the mint module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams creates randomized mint param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(r)
+}
+
+// RegisterStoreDecoder registers a decoder for mint module's types.
+func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// WeightedOperations doesn't return any mint module operation.
+func (AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+	return nil
 }

@@ -2,6 +2,7 @@
 package keys
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,8 +17,8 @@ import (
 
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	algo := Secp256k1
@@ -78,7 +79,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = kb.CreateOffline(o1, pub1)
+	i, err = kb.CreateOffline(o1, pub1, Ed25519)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
@@ -94,14 +95,52 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 	require.Equal(t, 1, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
-	err = kb.Delete(n2, "", true)
+	require.NoError(t, kb.Delete(n2, "", true))
+
+	require.NotPanics(t, kb.CloseDB)
+}
+
+// TestSignVerify does some detailed checks on how we sign and validate
+// signatures
+func TestLazySignVerifyKeyRingWithLedger(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
+
+	i1, err := kb.CreateLedger("key", Secp256k1, "cosmos", 0, 0)
+	if err != nil {
+		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
+	}
+	require.Equal(t, "key", i1.GetName())
+
+	p1 := "1234"
+	d1 := []byte("my first message")
+	s1, pub1, err := kb.Sign("key", p1, d1)
+	require.NoError(t, err)
+
+	s2, pub2, err := SignWithLedger(i1, d1)
+	require.NoError(t, err)
+
+	require.Equal(t, i1.GetPubKey(), pub1)
+	require.Equal(t, i1.GetPubKey(), pub2)
+	require.True(t, pub1.VerifyBytes(d1, s1))
+	require.True(t, i1.GetPubKey().VerifyBytes(d1, s1))
+	require.True(t, bytes.Equal(s1, s2))
+
+	localInfo, _, err := kb.CreateMnemonic("test", English, p1, Secp256k1)
+	require.NoError(t, err)
+	_, _, err = SignWithLedger(localInfo, d1)
+	require.Error(t, err)
+	require.Equal(t, "not a ledger object", err.Error())
 }
 
 func TestLazySignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 	algo := Secp256k1
 
@@ -176,8 +215,8 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 
 func TestLazyExportImportKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -205,13 +244,14 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 
 func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
+	algo := Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
-	info, _, err := kb.CreateMnemonic("john", English, notPasswd, Secp256k1)
+	info, _, err := kb.CreateMnemonic("john", English, notPasswd, algo)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")
@@ -245,8 +285,8 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 
 func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
@@ -261,8 +301,8 @@ func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 
 func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	algo := Secp256k1
@@ -295,8 +335,8 @@ func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 
 func TestLazySeedPhraseKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb, err := NewTestKeyring("keybasename", dir)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
 	algo := Secp256k1
@@ -317,9 +357,57 @@ func TestLazySeedPhraseKeyRing(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
+	hdPath := params.String()
+	newInfo, err := kb.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
+func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+	_, _, err = kb.CreateMnemonic("john", English, "password", Secp256k1)
+	require.NoError(t, err)
+
+	// no error, password is irrelevant, keystr cointains ASCII armored private key
+	keystr, err := kb.ExportPrivKey("john", "wrongpassword", "password")
+	require.NoError(t, err)
+	require.NotEmpty(t, keystr)
+
+	// try import the key - wrong password
+	err = kb.ImportPrivKey("john2", keystr, "somepassword")
+	require.Equal(t, "failed to decrypt private key: ciphertext decryption failed", err.Error())
+
+	// try import the key with the correct password
+	require.NoError(t, kb.ImportPrivKey("john2", keystr, "password"))
+
+	// overwrite is not allowed
+	err = kb.ImportPrivKey("john2", keystr, "password")
+	require.Equal(t, "cannot overwrite key: john2", err.Error())
+
+	// try export non existing key
+	_, err = kb.ExportPrivKey("john3", "wrongpassword", "password")
+	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
+}
+
+func TestKeyringKeybaseUpdate(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+	require.Equal(t, "unsupported operation", kb.Update("john", "oldpassword",
+		func() (string, error) { return "", nil }).Error())
+}
+
+func TestSupportedAlgos(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := NewKeyring("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+	require.Equal(t, []SigningAlgo([]SigningAlgo{"secp256k1"}), kb.SupportedAlgos())
+	require.Equal(t, []SigningAlgo([]SigningAlgo{"secp256k1"}), kb.SupportedAlgosLedger())
 }

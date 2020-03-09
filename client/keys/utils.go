@@ -1,17 +1,15 @@
 package keys
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"path/filepath"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
@@ -26,71 +24,17 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// GetKeyInfo returns key info for a given name. An error is returned if the
-// keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, err
-	}
-
-	return keybase.Get(name)
-}
-
-// GetPassphrase returns a passphrase for a given name. It will first retrieve
-// the key info for that name if the type is local, it'll fetch input from
-// STDIN. Otherwise, an empty passphrase is returned. An error is returned if
-// the key info cannot be fetched or reading from STDIN fails.
-func GetPassphrase(name string) (string, error) {
-	var passphrase string
-
-	keyInfo, err := GetKeyInfo(name)
-	if err != nil {
-		return passphrase, err
-	}
-
-	// we only need a passphrase for locally stored keys
-	// TODO: (ref: #864) address security concerns
-	if keyInfo.GetType() == keys.TypeLocal {
-		passphrase, err = ReadPassphraseFromStdin(name)
-		if err != nil {
-			return passphrase, err
-		}
-	}
-
-	return passphrase, nil
-}
-
-// ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
-// error upon failure.
-func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := bufio.NewReader(os.Stdin)
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-
-	passphrase, err := input.GetPassword(prompt, buf)
-	if err != nil {
-		return passphrase, fmt.Errorf("error reading passphrase: %v", err)
-	}
-
-	return passphrase, nil
-}
-
-// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
-func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
-	rootDir := viper.GetString(flags.FlagHome)
-	return NewKeyBaseFromDir(rootDir)
-}
-
-// NewKeyBaseFromDir initializes a keybase at a particular dir.
-func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir)
+// NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return getLazyKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
-func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
+func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
 }
 
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
@@ -107,9 +51,9 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		var out []byte
 		var err error
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(ko, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(ko)
+			out, err = KeysCdc.MarshalJSON(ko)
 		}
 		if err != nil {
 			panic(err)
@@ -134,9 +78,9 @@ func printInfos(infos []keys.Info) {
 		var err error
 
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(kos, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(kos)
+			out, err = KeysCdc.MarshalJSON(kos)
 		}
 
 		if err != nil {
@@ -170,4 +114,9 @@ func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 
 	fmt.Println(ko.PubKey)
+}
+
+func isRunningUnattended() bool {
+	backends := keyring.AvailableBackends()
+	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
 }

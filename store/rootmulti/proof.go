@@ -2,11 +2,11 @@ package rootmulti
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"github.com/tendermint/iavl"
 	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // MultiStoreProof defines a collection of store proofs in a multi-store
@@ -21,7 +21,6 @@ func NewMultiStoreProof(storeInfos []storeInfo) *MultiStoreProof {
 // ComputeRootHash returns the root hash for a given multi-store proof.
 func (proof *MultiStoreProof) ComputeRootHash() []byte {
 	ci := commitInfo{
-		Version:    -1, // TODO: Not needed; improve code.
 		StoreInfos: proof.StoreInfos,
 	}
 	return ci.Hash()
@@ -63,7 +62,7 @@ func NewMultiStoreProofOp(key []byte, proof *MultiStoreProof) MultiStoreProofOp 
 // given proof operation.
 func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	if pop.Type != ProofOpMultiStore {
-		return nil, cmn.NewError("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpMultiStore)
+		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpMultiStore)
 	}
 
 	// XXX: a bit strange as we'll discard this, but it works
@@ -71,7 +70,7 @@ func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) 
 
 	err := cdc.UnmarshalBinaryLengthPrefixed(pop.Data, &op)
 	if err != nil {
-		return nil, cmn.ErrorWrap(err, "decoding ProofOp.Data into MultiStoreProofOp")
+		return nil, fmt.Errorf("decoding ProofOp.Data into MultiStoreProofOp: %w", err)
 	}
 
 	return NewMultiStoreProofOp(pop.Key, op.Proof), nil
@@ -103,7 +102,7 @@ func (op MultiStoreProofOp) GetKey() []byte {
 // error otherwise.
 func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 	if len(args) != 1 {
-		return nil, cmn.NewError("Value size is not 1")
+		return nil, errors.New("value size is not 1")
 	}
 
 	value := args[0]
@@ -115,11 +114,11 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 				return [][]byte{root}, nil
 			}
 
-			return nil, cmn.NewError("hash mismatch for substore %v: %X vs %X", si.Name, si.Core.CommitID.Hash, value)
+			return nil, fmt.Errorf("hash mismatch for substore %v: %X vs %X", si.Name, si.Core.CommitID.Hash, value)
 		}
 	}
 
-	return nil, cmn.NewError("key %v not found in multistore proof", op.key)
+	return nil, fmt.Errorf("key %v not found in multistore proof", op.key)
 }
 
 //-----------------------------------------------------------------------------
@@ -129,8 +128,8 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
 	prt.RegisterOpDecoder(merkle.ProofOpSimpleValue, merkle.SimpleValueOpDecoder)
-	prt.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.IAVLValueOpDecoder)
-	prt.RegisterOpDecoder(iavl.ProofOpIAVLAbsence, iavl.IAVLAbsenceOpDecoder)
+	prt.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
+	prt.RegisterOpDecoder(iavl.ProofOpIAVLAbsence, iavl.AbsenceOpDecoder)
 	prt.RegisterOpDecoder(ProofOpMultiStore, MultiStoreProofOpDecoder)
 	return
 }

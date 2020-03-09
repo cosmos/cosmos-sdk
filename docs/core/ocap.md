@@ -1,13 +1,12 @@
----
-order: false
----
+<!--
+order: 8
+-->
 
 # Object-Capability Model
 
 ## Intro
 
-When thinking about security, it is good to start with a specific threat
-model. Our threat model is the following:
+When thinking about security, it is good to start with a specific threat model. Our threat model is the following:
 
 > We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -42,20 +41,6 @@ foundation of an object capability system.
 
 For an introduction to object-capabilities, see [this article](https://en.wikipedia.org/wiki/Object-capability_model).
 
-Strictly speaking, Golang does not implement object capabilities
-completely, because of several issues:
-
-- pervasive ability to import primitive modules (e.g. "unsafe", "os")
-- pervasive ability to [override module vars](https://github.com/golang/go/issues/23161)
-- data-race vulnerability where 2+ goroutines can create illegal interface values
-
-The first is easy to catch by auditing imports and using a proper
-dependency version control system like Dep. The second and third are
-unfortunate but it can be audited with some cost.
-
-Perhaps [Go2 will implement the object capability
-model](https://github.com/golang/go/issues/23157).
-
 ## Ocaps in practice
 
 The idea is to only reveal what is necessary to get the work done.
@@ -81,14 +66,10 @@ var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
 In the Cosmos SDK, you can see the application of this principle in the
-[gaia app](../gaia/app/app.go).
+gaia app.
 
-```go
-// register message routes
-app.Router().
-  AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
-  AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
-  AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
-  AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
-  AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
-```
++++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209
+
+## Next
+
+Learn about [building modules](../building-modules/intro.md) {hide}

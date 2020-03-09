@@ -1,4 +1,3 @@
-
 #
 # This codecov.yml is the default configuration for
 # all repositories on Codecov. You may adjust the settings
@@ -10,18 +9,48 @@ coverage:
   range: 70...100
 
   status:
-    # Learn more at https://codecov.io/docs#yaml_default_commit_status
-    project: 
+    # Learn more at https://docs.codecov.io/docs/commit-status
+    project:
       default:
         threshold: 1% # allow this much decrease on project
+      app:
+        target: 70%
+        flags: app
+      modules:
+        target: 70%
+        flags: modules
+      client:
+        flags: client
     changes: false
 
 comment:
-  layout: "header, diff"
-  behavior: default  # update if exists else create new
+  layout: "reach, diff, files"
+  behavior: default # update if exists else create new
+  require_changes: true
+
+flags:
+  app:
+    paths:
+      - "app/"
+      - "baseapp/"
+  modules:
+    paths:
+      - "x/"
+      - "!x/**/client/" # ignore client package
+  client:
+    paths:
+      - "client/"
+      - "x/**/client/"
 
 ignore:
   - "docs"
   - "*.md"
   - "*.rst"
+  - "**/*.pb.go"
+  - "types/*.pb.go"
+  - "tests/*"
+  - "tests/**/*"
+  - "x/**/*.pb.go"
   - "x/**/test_common.go"
+  - "scripts/"
+  - "contrib"

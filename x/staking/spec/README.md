@@ -1,4 +1,11 @@
-# Staking module specification
+<!--
+order: 0
+title: Staking Overview
+parent:
+  title: "staking"
+-->
+
+# `staking`
 
 ## Abstract
 
@@ -8,8 +15,8 @@ in June 2016.
 
 The module enables Cosmos-SDK based blockchain to support an advanced
 Proof-of-Stake system. In this system, holders of the native staking token of
-the chain can become validators and can delegate tokens to validator
-validators, ultimately determining the effective validator set for the system.
+the chain can become validators and can delegate tokens to validators,
+ultimately determining the effective validator set for the system.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos
 network.
@@ -25,6 +32,7 @@ network.
     - [UnbondingDelegation](01_state.md#unbondingdelegation)
     - [Redelegation](01_state.md#redelegation)
     - [Queues](01_state.md#queues)
+    - [HistoricalInfo](01_state.md#historicalinfo)
 2. **[State Transitions](02_state_transitions.md)**
     - [Validators](02_state_transitions.md#validators)
     - [Delegations](02_state_transitions.md#delegations)
@@ -35,11 +43,13 @@ network.
     - [MsgDelegate](03_messages.md#msgdelegate)
     - [MsgBeginUnbonding](03_messages.md#msgbeginunbonding)
     - [MsgBeginRedelegate](03_messages.md#msgbeginredelegate)
-4. **[End-Block ](04_end_block.md)**
-    - [Validator Set Changes](04_end_block.md#validator-set-changes)
-    - [Queues ](04_end_block.md#queues-)
-5. **[Hooks](05_hooks.md)**
-6. **[Events](06_events.md)**
-    - [EndBlocker](06_events.md#endblocker)
-    - [Handlers](06_events.md#handlers)
-7. **[Parameters](07_params.md)**
+4. **[Begin-Block](04_begin_block.md)**
+    - [Historical Info Tracking](04_begin_block.md#historical-info-tracking)
+4. **[End-Block ](05_end_block.md)**
+    - [Validator Set Changes](05_end_block.md#validator-set-changes)
+    - [Queues ](05_end_block.md#queues-)
+5. **[Hooks](06_hooks.md)**
+6. **[Events](07_events.md)**
+    - [EndBlocker](07_events.md#endblocker)
+    - [Handlers](07_events.md#handlers)
+7. **[Parameters](08_params.md)**

@@ -14,9 +14,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +25,8 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	Keybase       cryptokeys.Keybase
+	Keybase       keys.Keybase
+	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
 	Height        int64
@@ -45,33 +45,38 @@ type CLIContext struct {
 	SkipConfirm   bool
 }
 
-// NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
-// command line using Viper. It takes a key name or address and populates the FromName and
-// FromAddress field accordingly. It will also create Tendermint verifier using
-// the chain ID, home directory and RPC URI provided by the command line. If using
-// a CLIContext in tests or any non CLI-based environment, the verifier will not
-// be created and will be set as nil because FlagTrustNode must be set.
-func NewCLIContextWithFrom(from string) CLIContext {
+// NewCLIContextWithInputAndFrom returns a new initialized CLIContext with parameters from the
+// command line using Viper. It takes a io.Reader and and key name or address and populates
+// the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
+// using  the chain ID, home directory and RPC URI provided by the command line. If using
+// a CLIContext in tests or any non CLI-based environment, the verifier will not be created
+// and will be set as nil because FlagTrustNode must be set.
+func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(from, genOnly)
+	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
 	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
+		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
 	}
 
 	if !genOnly {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
+			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
+			if err != nil {
+				fmt.Printf("failted to get client: %v\n", err)
+				os.Exit(1)
+			}
 		}
 	}
 
 	ctx := CLIContext{
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
+		Input:         input,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		From:          viper.GetString(flags.FlagFrom),
@@ -99,9 +104,31 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	return ctx.WithVerifier(verifier)
 }
 
+// NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
+// command line using Viper. It takes a key name or address and populates the FromName and
+// FromAddress field accordingly. It will also create Tendermint verifier using
+// the chain ID, home directory and RPC URI provided by the command line. If using
+// a CLIContext in tests or any non CLI-based environment, the verifier will not
+// be created and will be set as nil because FlagTrustNode must be set.
+func NewCLIContextWithFrom(from string) CLIContext {
+	return NewCLIContextWithInputAndFrom(os.Stdin, from)
+}
+
 // NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper.
 func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom)) }
+
+// NewCLIContextWithInput returns a new initialized CLIContext with a io.Reader and parameters
+// from the command line using Viper.
+func NewCLIContextWithInput(input io.Reader) CLIContext {
+	return NewCLIContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+}
+
+// WithInput returns a copy of the context with an updated input.
+func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
+	ctx.Input = r
+	return ctx
+}
 
 // WithCodec returns a copy of the context with an updated codec.
 func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
@@ -130,7 +157,11 @@ func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
-	ctx.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
+	client, err := rpcclient.NewHTTP(nodeURI, "/websocket")
+	if err != nil {
+		panic(err)
+	}
+	ctx.Client = client
 	return ctx
 }
 
@@ -229,7 +260,7 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
@@ -243,12 +274,13 @@ func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
+	keybase, err := keys.NewKeyring(sdk.KeyringServiceName(),
+		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err
 	}
 
-	var info cryptokeys.Info
+	var info keys.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {

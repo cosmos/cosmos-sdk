@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Default period for deposits & voting
@@ -29,11 +31,11 @@ var (
 )
 
 // ParamKeyTable - Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		ParamStoreKeyDepositParams, DepositParams{},
-		ParamStoreKeyVotingParams, VotingParams{},
-		ParamStoreKeyTallyParams, TallyParams{},
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable(
+		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
 	)
 }
 
@@ -61,14 +63,29 @@ func DefaultDepositParams() DepositParams {
 
 // String implements stringer insterface
 func (dp DepositParams) String() string {
-	return fmt.Sprintf(`Deposit Params:
-  Min Deposit:        %s
-  Max Deposit Period: %s`, dp.MinDeposit, dp.MaxDepositPeriod)
+	out, _ := yaml.Marshal(dp)
+	return string(out)
 }
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
 	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+}
+
+func validateDepositParams(i interface{}) error {
+	v, ok := i.(DepositParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if !v.MinDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
+	}
+	if v.MaxDepositPeriod <= 0 {
+		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
+	}
+
+	return nil
 }
 
 // TallyParams defines the params around Tallying votes in governance
@@ -92,13 +109,43 @@ func DefaultTallyParams() TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVeto)
 }
 
+// Equal checks equality of TallyParams
+func (tp TallyParams) Equal(other TallyParams) bool {
+	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.Veto.Equal(other.Veto)
+}
+
 // String implements stringer insterface
 func (tp TallyParams) String() string {
-	return fmt.Sprintf(`Tally Params:
-  Quorum:             %s
-  Threshold:          %s
-  Veto:               %s`,
-		tp.Quorum, tp.Threshold, tp.Veto)
+	out, _ := yaml.Marshal(tp)
+	return string(out)
+}
+
+func validateTallyParams(i interface{}) error {
+	v, ok := i.(TallyParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.Quorum.IsNegative() {
+		return fmt.Errorf("quorom cannot be negative: %s", v.Quorum)
+	}
+	if v.Quorum.GT(sdk.OneDec()) {
+		return fmt.Errorf("quorom too large: %s", v)
+	}
+	if !v.Threshold.IsPositive() {
+		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
+	}
+	if v.Threshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("vote threshold too large: %s", v)
+	}
+	if !v.Veto.IsPositive() {
+		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
+	}
+	if v.Veto.GT(sdk.OneDec()) {
+		return fmt.Errorf("veto threshold too large: %s", v)
+	}
+
+	return nil
 }
 
 // VotingParams defines the params around Voting in governance
@@ -118,10 +165,28 @@ func DefaultVotingParams() VotingParams {
 	return NewVotingParams(DefaultPeriod)
 }
 
+// Equal checks equality of TallyParams
+func (vp VotingParams) Equal(other VotingParams) bool {
+	return vp.VotingPeriod == other.VotingPeriod
+}
+
 // String implements stringer interface
 func (vp VotingParams) String() string {
-	return fmt.Sprintf(`Voting Params:
-  Voting Period:      %s`, vp.VotingPeriod)
+	out, _ := yaml.Marshal(vp)
+	return string(out)
+}
+
+func validateVotingParams(i interface{}) error {
+	v, ok := i.(VotingParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.VotingPeriod <= 0 {
+		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
+	}
+
+	return nil
 }
 
 // Params returns all of the governance params

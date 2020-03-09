@@ -1,3 +1,7 @@
+<!--
+order: 1
+-->
+
 # State
 
 ## LastTotalPower
@@ -29,7 +33,7 @@ Validators can have one of three statuses
 - `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
 - `Bonded`": Once the validator receives sufficient bonded tokens they automtically join the
-  active set during [`EndBlock`](./04_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
+  active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
   must wait the duration of the UnbondingTime, a chain-specific param. during which time
@@ -69,7 +73,7 @@ ConsensusPower is validator.Tokens/10^6.  Note that all validators where
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
-is updated during the validator set update process which takes place in [`EndBlock`](./04_end_block.md).
+is updated during the validator set update process which takes place in [`EndBlock`](./05_end_block.md).
 
 Each validator's state is stored in a `Validator` struct:
 
@@ -278,3 +282,21 @@ The stored object as each key is an array of validator operator addresses from
 which the validator object can be accessed.  Typically it is expected that only
 a single validator record will be associated with a given timestamp however it is possible
 that multiple validators exist in the queue at the same location.
+
+## HistoricalInfo
+
+HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
+the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
+
+```go
+type HistoricalInfo struct {
+    Header abci.Header
+    ValSet []types.Validator
+}
+```
+
+At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
+the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that 
+they are in a determisnistic order.
+The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of 
+historical entries.

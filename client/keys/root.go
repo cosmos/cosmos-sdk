@@ -2,6 +2,7 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
@@ -19,17 +20,19 @@ func Commands() *cobra.Command {
     needs to sign with a private key.`,
 	}
 	cmd.AddCommand(
-		mnemonicKeyCommand(),
-		addKeyCommand(),
-		exportKeyCommand(),
-		importKeyCommand(),
-		listKeysCmd(),
-		showKeysCmd(),
+		MnemonicKeyCommand(),
+		AddKeyCommand(),
+		ExportKeyCommand(),
+		ImportKeyCommand(),
+		ListKeysCmd(),
+		ShowKeysCmd(),
 		flags.LineBreak,
-		deleteKeyCommand(),
-		updateKeyCommand(),
-		parseKeyStringCommand(),
-		migrateCommand(),
+		DeleteKeyCommand(),
+		UpdateKeyCommand(),
+		ParseKeyStringCommand(),
+		MigrateCommand(),
 	)
+	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 	return cmd
 }

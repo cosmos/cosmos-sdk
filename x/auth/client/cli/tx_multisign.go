@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,15 +11,14 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/crypto/multisig"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -60,31 +60,33 @@ recommended to set such parameters manually.
 
 func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := utils.ReadStdTxFromFile(cdc, args[0])
+		stdTx, err := client.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return
 		}
 
-		keybase, err := keys.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
+		inBuf := bufio.NewReader(cmd.InOrStdin())
+		kb, err := keys.NewKeyring(sdk.KeyringServiceName(),
+			viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), inBuf)
 		if err != nil {
 			return
 		}
 
-		multisigInfo, err := keybase.Get(args[1])
+		multisigInfo, err := kb.Get(args[1])
 		if err != nil {
 			return
 		}
-		if multisigInfo.GetType() != crkeys.TypeMulti {
-			return fmt.Errorf("%q must be of type %s: %s", args[1], crkeys.TypeMulti, multisigInfo.GetType())
+		if multisigInfo.GetType() != keys.TypeMulti {
+			return fmt.Errorf("%q must be of type %s: %s", args[1], keys.TypeMulti, multisigInfo.GetType())
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI()
+		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if !viper.GetBool(flagOffline) {
-			accnum, seq, err := types.NewAccountRetriever(cliCtx).GetAccountNumberSequence(multisigInfo.GetAddress())
+			accnum, seq, err := types.NewAccountRetriever(client.Codec, cliCtx).GetAccountNumberSequence(multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}

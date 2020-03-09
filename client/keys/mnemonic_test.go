@@ -11,13 +11,12 @@ import (
 )
 
 func Test_RunMnemonicCmdNormal(t *testing.T) {
-	cmdBasic := mnemonicKeyCommand()
-	err := runMnemonicCmd(cmdBasic, []string{})
-	require.NoError(t, err)
+	cmdBasic := MnemonicKeyCommand()
+	require.NoError(t, runMnemonicCmd(cmdBasic, []string{}))
 }
 
 func Test_RunMnemonicCmdUser(t *testing.T) {
-	cmdUser := mnemonicKeyCommand()
+	cmdUser := MnemonicKeyCommand()
 	err := cmdUser.Flags().Set(flagUserEntropy, "1")
 	assert.NoError(t, err)
 
@@ -37,18 +36,15 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	// Now provide "good" entropy :)
 	fakeEntropy := strings.Repeat(":)", 40) + "\ny\n" // entropy + accept count
 	mockIn.Reset(fakeEntropy)
-	err = runMnemonicCmd(cmdUser, []string{})
-	require.NoError(t, err)
+	require.NoError(t, runMnemonicCmd(cmdUser, []string{}))
 
 	// Now provide "good" entropy but no answer
 	fakeEntropy = strings.Repeat(":)", 40) + "\n" // entropy + accept count
 	mockIn.Reset(fakeEntropy)
-	err = runMnemonicCmd(cmdUser, []string{})
-	require.Error(t, err)
+	require.Error(t, runMnemonicCmd(cmdUser, []string{}))
 
 	// Now provide "good" entropy but say no
 	fakeEntropy = strings.Repeat(":)", 40) + "\nn\n" // entropy + accept count
 	mockIn.Reset(fakeEntropy)
-	err = runMnemonicCmd(cmdUser, []string{})
-	require.NoError(t, err)
+	require.NoError(t, runMnemonicCmd(cmdUser, []string{}))
 }

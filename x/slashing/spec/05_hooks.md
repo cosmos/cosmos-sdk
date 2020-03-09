@@ -1,8 +1,12 @@
-## Hooks
+<!--
+order: 5
+-->
+
+# Hooks
 
 In this section we describe the "hooks" - slashing module code that runs when other events happen.
 
-### Validator Bonded
+## Validator Bonded
 
 Upon successful first-time bonding of a new validator, we create a new `ValidatorSigningInfo` structure for the
 now-bonded validator, which `StartHeight` of the current block.

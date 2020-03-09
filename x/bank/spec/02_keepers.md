@@ -1,3 +1,7 @@
+<!--
+order: 2
+-->
+
 # Keepers
 
 The bank module provides three different exported keeper interfaces which can be passed to other modules which need to read or update account balances. Modules should use the least-permissive interface which provides the functionality they require.

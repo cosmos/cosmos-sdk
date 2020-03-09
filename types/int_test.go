@@ -10,13 +10,24 @@ import (
 )
 
 func TestFromInt64(t *testing.T) {
+	t.Parallel()
 	for n := 0; n < 20; n++ {
 		r := rand.Int63()
 		require.Equal(t, r, NewInt(r).Int64())
 	}
 }
 
+func TestFromUint64(t *testing.T) {
+	t.Parallel()
+	for n := 0; n < 20; n++ {
+		r := rand.Uint64()
+		require.True(t, NewIntFromUint64(r).IsUint64())
+		require.Equal(t, r, NewIntFromUint64(r).Uint64())
+	}
+}
+
 func TestIntPanic(t *testing.T) {
+	t.Parallel()
 	// Max Int = 2^255-1 = 5.789e+76
 	// Min Int = -(2^255-1) = -5.789e+76
 	require.NotPanics(t, func() { NewIntWithDecimal(1, 76) })
@@ -77,6 +88,7 @@ func TestIntPanic(t *testing.T) {
 // and (U/)Int is immutable value(see TestImmutability(U/)Int)
 // it is safe to use randomness in the tests
 func TestIdentInt(t *testing.T) {
+	t.Parallel()
 	for d := 0; d < 1000; d++ {
 		n := rand.Int63()
 		i := NewInt(n)
@@ -113,6 +125,7 @@ func maxint(i1, i2 int64) int64 {
 }
 
 func TestArithInt(t *testing.T) {
+	t.Parallel()
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
 		i1 := NewInt(n1)
@@ -144,6 +157,7 @@ func TestArithInt(t *testing.T) {
 }
 
 func TestCompInt(t *testing.T) {
+	t.Parallel()
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
 		i1 := NewInt(n1)
@@ -157,6 +171,7 @@ func TestCompInt(t *testing.T) {
 			{i1.Equal(i2), n1 == n2},
 			{i1.GT(i2), n1 > n2},
 			{i1.LT(i2), n1 < n2},
+			{i1.LTE(i2), n1 <= n2},
 		}
 
 		for tcnum, tc := range cases {
@@ -184,6 +199,7 @@ func randint() Int {
 }
 
 func TestImmutabilityAllInt(t *testing.T) {
+	t.Parallel()
 	ops := []func(*Int){
 		func(i *Int) { _ = i.Add(randint()) },
 		func(i *Int) { _ = i.Sub(randint()) },
@@ -234,6 +250,7 @@ func intarithraw(uifn func(Int, int64) Int, bifn func(*big.Int, *big.Int, *big.I
 }
 
 func TestImmutabilityArithInt(t *testing.T) {
+	t.Parallel()
 	size := 500
 
 	ops := []intop{
@@ -274,21 +291,21 @@ func TestEncodingRandom(t *testing.T) {
 		ni := NewInt(n)
 		var ri Int
 
-		str, err := ni.MarshalAmino()
+		str, err := ni.Marshal()
 		require.Nil(t, err)
-		err = (&ri).UnmarshalAmino(str)
+		err = (&ri).Unmarshal(str)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "binary mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 
 		bz, err := ni.MarshalJSON()
 		require.Nil(t, err)
 		err = (&ri).UnmarshalJSON(bz)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "json mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 	}
 
 	for i := 0; i < 1000; i++ {
@@ -296,104 +313,205 @@ func TestEncodingRandom(t *testing.T) {
 		ni := NewUint(n)
 		var ri Uint
 
-		str, err := ni.MarshalAmino()
+		str, err := ni.Marshal()
 		require.Nil(t, err)
-		err = (&ri).UnmarshalAmino(str)
+		err = (&ri).Unmarshal(str)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "binary mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 
 		bz, err := ni.MarshalJSON()
 		require.Nil(t, err)
 		err = (&ri).UnmarshalJSON(bz)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
-		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
+		require.Equal(t, ni, ri, "json mismatch; tc #%d, expected %s, actual %s", i, ni.String(), ri.String())
+		require.True(t, ni.i != ri.i, "pointer addresses are equal; tc #%d", i)
 	}
 }
 
 func TestEncodingTableInt(t *testing.T) {
+	t.Parallel()
 	var i Int
 
 	cases := []struct {
-		i   Int
-		bz  []byte
-		str string
+		i      Int
+		jsonBz []byte
+		rawBz  []byte
 	}{
-		{NewInt(0), []byte("\"0\""), "0"},
-		{NewInt(100), []byte("\"100\""), "100"},
-		{NewInt(51842), []byte("\"51842\""), "51842"},
-		{NewInt(19513368), []byte("\"19513368\""), "19513368"},
-		{NewInt(999999999999), []byte("\"999999999999\""), "999999999999"},
+		{
+			NewInt(0),
+			[]byte("\"0\""),
+			[]byte{0x30},
+		},
+		{
+			NewInt(100),
+			[]byte("\"100\""),
+			[]byte{0x31, 0x30, 0x30},
+		},
+		{
+			NewInt(-100),
+			[]byte("\"-100\""),
+			[]byte{0x2d, 0x31, 0x30, 0x30},
+		},
+		{
+			NewInt(51842),
+			[]byte("\"51842\""),
+			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
+		},
+		{
+			NewInt(-51842),
+			[]byte("\"-51842\""),
+			[]byte{0x2d, 0x35, 0x31, 0x38, 0x34, 0x32},
+		},
+		{
+			NewInt(19513368),
+			[]byte("\"19513368\""),
+			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
+		},
+		{
+			NewInt(-19513368),
+			[]byte("\"-19513368\""),
+			[]byte{0x2d, 0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
+		},
+		{
+			NewInt(999999999999),
+			[]byte("\"999999999999\""),
+			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
+		},
+		{
+			NewInt(-999999999999),
+			[]byte("\"-999999999999\""),
+			[]byte{0x2d, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
+		},
 	}
 
 	for tcnum, tc := range cases {
 		bz, err := tc.i.MarshalJSON()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.bz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+		require.Equal(t, tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
 		err = (&i).UnmarshalJSON(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 
-		str, err := tc.i.MarshalAmino()
+		bz, err = tc.i.Marshal()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.str, str, "Marshaled value is different from exported. tc #%d", tcnum)
-		err = (&i).UnmarshalAmino(str)
+		require.Equal(t, tc.rawBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
+		err = (&i).Unmarshal(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 	}
 }
 
 func TestEncodingTableUint(t *testing.T) {
+	t.Parallel()
 	var i Uint
 
 	cases := []struct {
-		i   Uint
-		bz  []byte
-		str string
+		i      Uint
+		jsonBz []byte
+		rawBz  []byte
 	}{
-		{NewUint(0), []byte("\"0\""), "0"},
-		{NewUint(100), []byte("\"100\""), "100"},
-		{NewUint(51842), []byte("\"51842\""), "51842"},
-		{NewUint(19513368), []byte("\"19513368\""), "19513368"},
-		{NewUint(999999999999), []byte("\"999999999999\""), "999999999999"},
+		{
+			NewUint(0),
+			[]byte("\"0\""),
+			[]byte{0x30},
+		},
+		{
+			NewUint(100),
+			[]byte("\"100\""),
+			[]byte{0x31, 0x30, 0x30},
+		},
+		{
+			NewUint(51842),
+			[]byte("\"51842\""),
+			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
+		},
+		{
+			NewUint(19513368),
+			[]byte("\"19513368\""),
+			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
+		},
+		{
+			NewUint(999999999999),
+			[]byte("\"999999999999\""),
+			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
+		},
 	}
 
 	for tcnum, tc := range cases {
 		bz, err := tc.i.MarshalJSON()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.bz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+		require.Equal(t, tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
 		err = (&i).UnmarshalJSON(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 
-		str, err := tc.i.MarshalAmino()
+		bz, err = tc.i.Marshal()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		require.Equal(t, tc.str, str, "Marshaled value is different from exported. tc #%d", tcnum)
-		err = (&i).UnmarshalAmino(str)
+		require.Equal(t, tc.rawBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
+		err = (&i).Unmarshal(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 	}
 }
 
 func TestSerializationOverflow(t *testing.T) {
+	t.Parallel()
 	bx, _ := new(big.Int).SetString("91888242871839275229946405745257275988696311157297823662689937894645226298583", 10)
 	x := Int{bx}
 	y := new(Int)
 
-	// require amino deserialization to fail due to overflow
-	xStr, err := x.MarshalAmino()
+	bz, err := x.Marshal()
 	require.NoError(t, err)
 
-	err = y.UnmarshalAmino(xStr)
+	// require deserialization to fail due to overflow
+	err = y.Unmarshal(bz)
 	require.Error(t, err)
 
 	// require JSON deserialization to fail due to overflow
-	bz, err := x.MarshalJSON()
+	bz, err = x.MarshalJSON()
 	require.NoError(t, err)
 
 	err = y.UnmarshalJSON(bz)
 	require.Error(t, err)
+}
+
+func TestIntMod(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name      string
+		x         int64
+		y         int64
+		ret       int64
+		wantPanic bool
+	}{
+		{"3 % 10", 3, 10, 3, false},
+		{"10 % 3", 10, 3, 1, false},
+		{"4 % 2", 4, 2, 0, false},
+		{"2 % 0", 2, 0, 0, true},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { NewInt(tt.x).Mod(NewInt(tt.y)) })
+				require.Panics(t, func() { NewInt(tt.x).ModRaw(tt.y) })
+				return
+			}
+			require.True(t, NewInt(tt.x).Mod(NewInt(tt.y)).Equal(NewInt(tt.ret)))
+			require.True(t, NewInt(tt.x).ModRaw(tt.y).Equal(NewInt(tt.ret)))
+		})
+	}
+}
+
+func TestIntEq(t *testing.T) {
+	require.True(IntEq(t, ZeroInt(), ZeroInt()))
+	require.False(IntEq(t, OneInt(), ZeroInt()))
 }

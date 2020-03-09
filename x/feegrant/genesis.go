@@ -33,9 +33,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) {
 func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()
 	var grants []FeeAllowanceGrant
+
 	err := k.IterateAllFeeAllowances(ctx, func(grant FeeAllowanceGrant) bool {
 		grants = append(grants, grant.PrepareForExport(time, height))
 		return false
 	})
+
 	return grants, err
 }

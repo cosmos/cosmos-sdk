@@ -34,22 +34,24 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
 	return []byte("[]")
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
-func (a AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	_, err := a.getValidatedGenesis(bz)
+func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+	_, err := a.getValidatedGenesis(cdc, bz)
 	return err
 }
 
-func (a AppModuleBasic) getValidatedGenesis(bz json.RawMessage) (GenesisState, error) {
+func (a AppModuleBasic) getValidatedGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) (GenesisState, error) {
 	var data GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &data)
+
+	err := cdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return nil, err
 	}
+
 	return data, data.ValidateBasic()
 }
 
@@ -69,7 +71,6 @@ func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command {
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	// TODO
 	return nil
-	// return cli.GetQueryCmd(cdc)
 }
 
 //____________________________________________________________________________
@@ -118,23 +119,25 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	genesisState, err := am.getValidatedGenesis(data)
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
+	genesisState, err := am.getValidatedGenesis(cdc, bz)
 	if err != nil {
 		panic(err)
 	}
+
 	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs, err := ExportGenesis(ctx, am.keeper)
 	if err != nil {
 		panic(err)
 	}
-	return ModuleCdc.MustMarshalJSON(gs)
+
+	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock returns the begin blocker for the feegrant module.

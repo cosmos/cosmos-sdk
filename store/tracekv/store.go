@@ -3,10 +3,10 @@ package tracekv
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -149,6 +149,11 @@ func (ti *traceIterator) Close() {
 	ti.parent.Close()
 }
 
+// Error delegates the Error call to the parent iterator.
+func (ti *traceIterator) Error() error {
+	return ti.parent.Error()
+}
+
 // GetStoreType implements the KVStore interface. It returns the underlying
 // KVStore type.
 func (tkv *Store) GetStoreType() types.StoreType {
@@ -182,11 +187,11 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 
 	raw, err := json.Marshal(traceOp)
 	if err != nil {
-		panic(fmt.Sprintf("failed to serialize trace operation: %v", err))
+		panic(errors.Wrap(err, "failed to serialize trace operation"))
 	}
 
 	if _, err := w.Write(raw); err != nil {
-		panic(fmt.Sprintf("failed to write trace operation: %v", err))
+		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
 	io.WriteString(w, "\n")

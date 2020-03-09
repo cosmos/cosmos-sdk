@@ -2,6 +2,7 @@ package supply
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -16,8 +17,8 @@ import (
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/simulation"
+	"github.com/cosmos/cosmos-sdk/x/supply/types"
 )
 
 var (
@@ -41,17 +42,17 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the supply
 // module.
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the supply module.
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
 	var data GenesisState
-	err := ModuleCdc.UnmarshalJSON(bz, &data)
-	if err != nil {
-		return err
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
+
 	return ValidateGenesis(data)
 }
 
@@ -70,42 +71,22 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the supply module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder registers a decoder for supply module's types
-func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
-}
-
-// GenerateGenesisState creates a randomized GenState of the supply module.
-func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RandomizedParams doesn't create any randomized supply param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
-	return nil
-}
-
-//____________________________________________________________________________
-
 // AppModule implements an application module for the supply module.
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
 	keeper Keeper
+	bk     types.BankKeeper
 	ak     types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, bk types.BankKeeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
-		keeper:              keeper,
-		ak:                  ak,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
+		bk:             bk,
+		ak:             ak,
 	}
 }
 
@@ -139,18 +120,18 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // InitGenesis performs genesis initialization for the supply module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.ak, genesisState)
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	InitGenesis(ctx, am.keeper, am.bk, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the supply
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
-	return ModuleCdc.MustMarshalJSON(gs)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock returns the begin blocker for the supply module.
@@ -160,4 +141,33 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the supply module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams doesn't create any randomized supply param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// WeightedOperations doesn't return any operation for the supply module.
+func (AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+	return nil
 }

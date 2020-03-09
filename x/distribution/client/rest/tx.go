@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -39,6 +39,12 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute strin
 		withdrawValidatorRewardsHandlerFn(cliCtx),
 	).Methods("POST")
 
+	// Fund the community pool
+	r.HandleFunc(
+		"/distribution/community_pool",
+		fundCommunityPoolHandlerFn(cliCtx),
+	).Methods("POST")
+
 }
 
 type (
@@ -49,6 +55,11 @@ type (
 	setWithdrawalAddrReq struct {
 		BaseReq         rest.BaseReq   `json:"base_req" yaml:"base_req"`
 		WithdrawAddress sdk.AccAddress `json:"withdraw_address" yaml:"withdraw_address"`
+	}
+
+	fundCommunityPoolReq struct {
+		BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
+		Amount  sdk.Coins    `json:"amount" yaml:"amount"`
 	}
 )
 
@@ -77,7 +88,7 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 			return
 		}
 
-		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
 	}
 }
 
@@ -112,7 +123,7 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -142,7 +153,7 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 			return
 		}
 
-		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -173,7 +184,35 @@ func withdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFu
 			return
 		}
 
-		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, msgs)
+	}
+}
+
+func fundCommunityPoolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req fundCommunityPoolReq
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		msg := types.NewMsgFundCommunityPool(req.Amount, fromAddr)
+		if err := msg.ValidateBasic(); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 

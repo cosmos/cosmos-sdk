@@ -3,12 +3,15 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
   docs:
     docker:
       - image: tendermintdev/docker-website-deployment
     environment:
       AWS_REGION: us-east-1
+  protoc:
+    docker:
+      - image: tendermintdev/docker-protoc
 
 commands:
   make:
@@ -73,6 +76,15 @@ jobs:
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
+  proto:
+    executor: protoc
+    steps:
+      - make:
+          target: protoc-gen-gocosmos
+          description: "Generate go plugin for protoc"
+      - make:
+          target: proto-gen proto-lint proto-check-breaking
+          description: "Lint and verify Protocol Buffer definitions"
 
   test-sim-nondeterminism:
     executor: golang
@@ -182,6 +194,9 @@ workflows:
             tags:
               only:
                 - /^v.*/
+      - proto:
+          requires:
+            - setup-dependencies                       
       - test-sim-nondeterminism:
           requires:
             - setup-dependencies
@@ -215,16 +230,13 @@ workflows:
           filters:
             branches:
               only:
-                - /.*/
-            tags:
-              ignore:
-                - /^v.*/
+                - docs-theme-latest
       - build-docs:
           context: docs-deployment-release
           filters:
             branches:
-              ignore:
-                - /.*/
+              only:
+                - master
             tags:
               only:
                 - /v.*/

@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func Test_updateKeyCommand(t *testing.T) {
-	cmd := updateKeyCommand()
-	assert.NotNil(t, cmd)
+	assert.NotNil(t, UpdateKeyCommand())
 	// No flags  or defaults to validate
 }
 
@@ -20,7 +20,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	fakeKeyName1 := "runUpdateCmd_Key1"
 	fakeKeyName2 := "runUpdateCmd_Key2"
 
-	cmd := updateKeyCommand()
+	cmd := UpdateKeyCommand()
 
 	// fails because it requests a password
 	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")
@@ -33,14 +33,14 @@ func Test_runUpdateCmd(t *testing.T) {
 	// Prepare a key base
 	// Now add a temporary keybase
 	kbHome, cleanUp1 := tests.NewTestCaseDir(t)
-	defer cleanUp1()
+	t.Cleanup(cleanUp1)
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
 	assert.NoError(t, err)
 
 	// Try again now that we have keys

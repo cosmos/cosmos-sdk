@@ -11,37 +11,42 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
-all: tools build lint test
-
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
 
-########################################
-### Build
+all: tools build lint test
+
+###############################################################################
+###                                  Build                                  ###
+###############################################################################
 
 build: go.sum
 	@go build -mod=readonly ./...
 .PHONY: build
 
-update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
-.PHONY: update-swagger-docs
-
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
+	mockgen -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
+	mockgen -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
+	mockgen -source=types/router.go -package mocks -destination tests/mocks/types_router.go
+	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
 .PHONY: mocks
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
-########################################
-### Tools & dependencies
+distclean:
+	rm -rf \
+    gitian-build-darwin/ \
+    gitian-build-linux/ \
+    gitian-build-windows/ \
+    .gitian-builder-cache/
+.PHONY: distclean
+
+###############################################################################
+###                          Tools & Dependencies                           ###
+###############################################################################
 
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
@@ -53,16 +58,19 @@ go.sum: go.mod
 	@go mod verify
 	@go mod tidy
 
-distclean:
-	rm -rf \
-    gitian-build-darwin/ \
-    gitian-build-linux/ \
-    gitian-build-windows/ \
-    .gitian-builder-cache/
-.PHONY: distclean
+###############################################################################
+###                              Documentation                              ###
+###############################################################################
 
-########################################
-### Documentation
+update-swagger-docs: statik
+	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	@if [ -n "$(git status --porcelain)" ]; then \
+        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+        exit 1;\
+    else \
+    	echo "\033[92mSwagger docs are in sync\033[0m";\
+    fi
+.PHONY: update-swagger-docs
 
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
@@ -74,7 +82,7 @@ build-docs:
 		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
 		mkdir -p ~/output/$${p} ; \
 		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		echo "<a href='$${p}'>$${p}</a>" >> ~/output/index.html ; \
+		cp ~/output/$${p}/index.html ~/output ; \
 	done < versions ;
 
 sync-docs:
@@ -85,8 +93,9 @@ sync-docs:
 	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
 .PHONY: sync-docs
 
-########################################
-### Testing
+###############################################################################
+###                           Tests & Simulation                            ###
+###############################################################################
 
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
@@ -173,24 +182,29 @@ test-cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 .PHONY: test-cover
 
-lint: golangci-lint
-	$(BINDIR)/golangci-lint run
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
-	go mod verify
-.PHONY: lint
-
-format: tools
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
-.PHONY: format
-
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
 
-########################################
-### Devdoc
+###############################################################################
+###                                Linting                                  ###
+###############################################################################
+
+lint:
+	golangci-lint run
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+	go mod verify
+.PHONY: lint
+
+format:
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" -not -name '*.pb.go' | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" -not -name '*.pb.go' | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" -not -name '*.pb.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+.PHONY: format
+
+###############################################################################
+###                                 Devdoc                                  ###
+###############################################################################
 
 DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
 
@@ -213,3 +227,53 @@ devdoc-update:
 	docker pull tendermint/devdoc
 
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
+
+###############################################################################
+###                                Protobuf                                 ###
+###############################################################################
+
+proto-all: proto-gen proto-lint proto-check-breaking
+
+proto-gen:
+	@./scripts/protocgen.sh
+
+proto-lint:
+	@buf check lint --error-format=json
+
+proto-check-breaking:
+	@buf check breaking --against-input '.git#branch=master'
+
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
+GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+
+TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
+TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
+TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
+GOGO_PROTO_TYPES    = third_party/proto/gogoproto
+COSMOS_PROTO_TYPES  = third_party/proto/cosmos-proto
+SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types
+AUTH_PROTO_TYPES    = third_party/proto/cosmos-sdk/x/auth/types
+VESTING_PROTO_TYPES = third_party/proto/cosmos-sdk/x/auth/vesting/types
+SUPPLY_PROTO_TYPES  = third_party/proto/cosmos-sdk/x/supply/types
+
+proto-update-deps:
+	@mkdir -p $(GOGO_PROTO_TYPES)
+	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
+
+	@mkdir -p $(COSMOS_PROTO_TYPES)
+	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto
+
+	@mkdir -p $(TM_ABCI_TYPES)
+	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+
+	@mkdir -p $(TM_KV_TYPES)
+	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto
+
+	@mkdir -p $(TM_MERKLE_TYPES)
+	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
+
+
+.PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps

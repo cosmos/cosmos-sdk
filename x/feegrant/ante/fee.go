@@ -35,7 +35,7 @@ type DeductGrantedFeeDecorator struct {
 	sk exported.SupplyKeeper
 }
 
-func NewDeductGrantedFeeDecorator(ak exported.AccountKeeper, sk exported.SupplyKeeper, K keeper.Keeper) DeductGrantedFeeDecorator {
+func NewDeductGrantedFeeDecorator(ak exported.AccountKeeper, sk exported.SupplyKeeper, k keeper.Keeper) DeductGrantedFeeDecorator {
 	return DeductGrantedFeeDecorator{
 		ak: ak,
 		k:  k,
@@ -43,6 +43,11 @@ func NewDeductGrantedFeeDecorator(ak exported.AccountKeeper, sk exported.SupplyK
 	}
 }
 
+// AnteHandle performs a decorated ante-handler responsible for deducting transaction
+// fees. Fees will be deducted from the account designated by the FeePayer on a
+// transaction by default. However, if the fee payer differs from the transaction
+// signer, the handler will check if a fee grant has been authorized. If the
+// transaction's signer does not exist, it will be created.
 func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(GrantedFeeTx)
 	if !ok {
@@ -79,11 +84,12 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
 	}
 
-	// deduct fee if non-zero
+	// move on if there is no fee to deduct
 	if fee.IsZero() {
 		return next(ctx, tx, simulate)
 	}
 
+	// deduct fee if non-zero
 	err = auth.DeductFees(d.sk, ctx, feePayerAcc, fee)
 	if err != nil {
 		return ctx, err

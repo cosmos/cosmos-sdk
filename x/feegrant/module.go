@@ -19,6 +19,10 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
+// ----------------------------------------------------------------------------
+// AppModuleBasic
+// ----------------------------------------------------------------------------
+
 // AppModuleBasic defines the basic application module used by the feegrant module.
 type AppModuleBasic struct{}
 
@@ -73,7 +77,9 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return nil
 }
 
-//____________________________________________________________________________
+// ----------------------------------------------------------------------------
+// AppModule
+// ----------------------------------------------------------------------------
 
 // AppModule implements an application module for the feegrant module.
 type AppModule struct {

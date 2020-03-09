@@ -34,7 +34,9 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
 	bz := k.cdc.MustMarshalBinaryBare(grant)
+
 	store.Set(key, bz)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSetFeeGrant,
@@ -48,7 +50,9 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant
 func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
+
 	store.Delete(key)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeRevokeFeeGrant,
@@ -66,6 +70,7 @@ func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 	if !found {
 		return nil
 	}
+
 	return grant.Allowance
 }
 
@@ -80,6 +85,7 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 
 	var grant types.FeeAllowanceGrant
 	k.cdc.MustUnmarshalBinaryBare(bz, &grant)
+
 	return grant, true
 }
 
@@ -95,12 +101,15 @@ func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccA
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 		var grant types.FeeAllowanceGrant
+
 		err := k.cdc.UnmarshalBinaryBare(bz, &grant)
 		if err != nil {
 			return err
 		}
+
 		stop = cb(grant)
 	}
+
 	return nil
 }
 
@@ -145,11 +154,13 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 			),
 		)
 	}
+
 	if remove {
 		k.RevokeFeeAllowance(ctx, granter, grantee)
 		// note this returns nil if err == nil
 		return sdkerrors.Wrap(err, "removed grant")
 	}
+
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid grant")
 	}

@@ -11,14 +11,11 @@ const (
 
 var (
 	// ErrFeeLimitExceeded error if there are not enough allowance to cover the fees
-	ErrFeeLimitExceeded = sdkerrors.Register(DefaultCodespace, 1, "fee limit exceeded")
-
+	ErrFeeLimitExceeded = sdkerrors.Register(DefaultCodespace, 2, "fee limit exceeded")
 	// ErrFeeLimitExpired error if the allowance has expired
-	ErrFeeLimitExpired = sdkerrors.Register(DefaultCodespace, 2, "fee limit expired")
-
+	ErrFeeLimitExpired = sdkerrors.Register(DefaultCodespace, 3, "fee limit expired")
 	// ErrInvalidDuration error if the Duration is invalid or doesn't match the expiration
-	ErrInvalidDuration = sdkerrors.Register(DefaultCodespace, 3, "invalid duration")
-
+	ErrInvalidDuration = sdkerrors.Register(DefaultCodespace, 4, "invalid duration")
 	// ErrNoAllowance error if there is no allowance for that pair
-	ErrNoAllowance = sdkerrors.Register(DefaultCodespace, 4, "no allowance")
+	ErrNoAllowance = sdkerrors.Register(DefaultCodespace, 5, "no allowance")
 )

@@ -14,13 +14,13 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	params := k.GetParams(ctx)
 
 	minter.AverageBlockTime = getNewAverageBlockTime(ctx, params, minter)
-	minter.LastBlockTimestamp = ctx.BlockHeader().Time
 
 	// recalculate inflation rate
 	totalStakingSupply := k.StakingTokenSupply(ctx)
 	bondedRatio := k.BondedRatio(ctx)
 	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
+	minter.LastBlockTimestamp = ctx.BlockHeader().Time
 	k.SetMinter(ctx, minter)
 
 	// mint coins, update supply

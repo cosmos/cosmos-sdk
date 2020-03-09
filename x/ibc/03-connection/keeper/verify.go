@@ -58,7 +58,7 @@ func (k Keeper) VerifyConnectionState(
 	if !found {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connectionEnd.GetClientID(), height,
+			"clientID (%s), height (%d)", connection.GetClientID(), height,
 		)
 	}
 

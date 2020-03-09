@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bufio"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -30,8 +31,8 @@ const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 
-	// Do not change without new snapshot format, all nodes must use same size
-	snapshotChunkSize = uint64(8e6)
+	snapshotBufferSize = int(4e6)
+	snapshotChunkSize  = uint64(8e6) // Do not change without new snapshot format (must be uniform)
 )
 
 var cdc = codec.New()
@@ -529,9 +530,15 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 	// Spawn goroutine to generate snapshot chunks
 	go func() {
 		// Set up a stream pipeline to serialize snapshot nodes:
-		// ExportNode -> delimited Protobuf -> gzip -> chunkWriter -> chan io.ReadCloser
+		// ExportNode -> delimited Protobuf -> gzip -> buffer -> chunkWriter -> chan io.ReadCloser
 		defer chunker.Close()
-		gzWriter := gzip.NewWriter(chunker)
+		bufWriter := bufio.NewWriterSize(chunker, snapshotBufferSize)
+		defer func() {
+			if err := bufWriter.Flush(); err != nil {
+				chunker.CloseWithError(err)
+			}
+		}()
+		gzWriter := gzip.NewWriter(bufWriter)
 		defer func() {
 			if err := gzWriter.Close(); err != nil {
 				chunker.CloseWithError(err)

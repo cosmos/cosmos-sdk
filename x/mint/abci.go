@@ -60,7 +60,7 @@ func getNewAverageBlockTime(ctx sdk.Context, params types.Params, minter types.M
 		return time.Duration(nanoSecondsABlock)
 	} else {
 		currentBlockTime := ctx.BlockHeader().Time.Sub(minter.LastBlockTimestamp)
-		currentAverage := (currentBlockTime.Nanoseconds() + minter.AverageBlockTime.Nanoseconds()*(ctx.BlockHeight()-1)) / ctx.BlockHeight()
+		currentAverage := minter.AverageBlockTime.Nanoseconds() + ((currentBlockTime.Nanoseconds() - minter.AverageBlockTime.Nanoseconds()) / ctx.BlockHeight())
 
 		return time.Duration(currentAverage)
 	}

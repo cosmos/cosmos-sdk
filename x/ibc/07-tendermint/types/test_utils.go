@@ -42,7 +42,7 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
-	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers)
+	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}

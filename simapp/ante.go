@@ -23,9 +23,12 @@ func NewAnteHandler(
 		authante.NewValidateBasicDecorator(),
 		authante.NewValidateMemoDecorator(ak),
 		authante.NewConsumeGasForTxSizeDecorator(ak),
+		// DeductGrantedFeeDecorator will create an empty account if we sign with no
+		// tokens but valid validation. This must be before SetPubKey, ValidateSigCount,
+		// SigVerification, which error if account doesn't exist yet.
+		feegrantante.NewDeductGrantedFeeDecorator(ak, supplyKeeper, feeGrantKeeper),
 		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewValidateSigCountDecorator(ak),
-		feegrantante.NewDeductGrantedFeeDecorator(ak, supplyKeeper, feeGrantKeeper),
 		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		authante.NewSigVerificationDecorator(ak),
 		authante.NewIncrementSequenceDecorator(ak), // innermost AnteDecorator

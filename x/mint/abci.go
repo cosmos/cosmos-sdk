@@ -7,9 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-// YEAR is a complete year of 365,25 days in nanoseconds.
-const YEAR = time.Duration(365.25*24) * time.Hour
-
 // BeginBlocker mints new tokens for the previous block.
 func BeginBlocker(ctx sdk.Context, k Keeper) {
 	// fetch stored minter & params
@@ -55,7 +52,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 func calculateAverageBlockTime(ctx sdk.Context, params types.Params, minter types.Minter) {
 	if minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
 		// Calculate Average by BlocksPerYear param.
-		nanoSecondsABlock := YEAR.Nanoseconds() / int64(params.BlocksPerYear)
+		nanoSecondsABlock := types.YEAR.Nanoseconds() / int64(params.BlocksPerYear)
 		minter.AverageBlockTime = time.Duration(nanoSecondsABlock)
 	} else {
 		currentBlockTime := ctx.BlockHeader().Time.Sub(minter.LastBlockTimestamp)

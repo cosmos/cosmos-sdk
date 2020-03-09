@@ -2,11 +2,13 @@ package types
 
 import (
 	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// YEAR is a complete year of 365,25 days in nanoseconds.
+const YEAR = time.Duration(365.25*24) * time.Hour
 
 // NewMinter returns a new Minter object with the given inflation and annual
 // provisions values.
@@ -54,7 +56,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	inflationRateChangePerYear := sdk.OneDec().
 		Sub(bondedRatio.Quo(params.GoalBonded)).
 		Mul(params.InflationRateChange)
-	blocksPerYear := mint.YEAR / m.AverageBlockTime
+	blocksPerYear := YEAR / m.AverageBlockTime
 	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(blocksPerYear)))
 
 	// adjust the new annual inflation for this next cycle
@@ -78,7 +80,7 @@ func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
 // BlockProvision returns the provisions for a block based on the annual
 // provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	blocksPerYear := mint.YEAR / m.AverageBlockTime
+	blocksPerYear := YEAR / m.AverageBlockTime
 
 	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(blocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())

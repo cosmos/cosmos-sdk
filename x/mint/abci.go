@@ -55,13 +55,13 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 // NanosecondsInAYear / params.BlocksPErYear
 func getNewAverageBlockTime(ctx sdk.Context, params types.Params, minter types.Minter) time.Duration {
 	if minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
-		// Calculate Average by BlocksPerYear param.
 		nanoSecondsABlock := types.YEAR.Nanoseconds() / int64(params.BlocksPerYear)
+
 		return time.Duration(nanoSecondsABlock)
 	} else {
 		currentBlockTime := ctx.BlockHeader().Time.Sub(minter.LastBlockTimestamp)
-		// Calculate Cumulative moving average of block time.
 		currentAverage := (currentBlockTime.Nanoseconds() + minter.AverageBlockTime.Nanoseconds()*(ctx.BlockHeight()-1)) / ctx.BlockHeight()
+
 		return time.Duration(currentAverage)
 	}
 }

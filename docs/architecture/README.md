@@ -45,3 +45,4 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 017: Historical Header Module](./adr-017-historical-header-module.md)
 - [ADR 018: Extendable Voting Periods](./adr-018-extendable-voting-period.md)
 - [ADR 019: Protocol Buffer State Encoding](./adr-019-protobuf-state-encoding.md)
+- [ADR 020: Protocol Buffer Transaction Encoding](./adr-020-protobuf-transaction-encoding.md)

@@ -309,8 +309,6 @@ at the application-level.
 
 ### Neutral
 
-{neutral consequences}
-
 ## References
 
 1. https://github.com/cosmos/cosmos-sdk/issues/4977

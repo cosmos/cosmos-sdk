@@ -1,4 +1,4 @@
-# ADR 020: Protocol Buffer Client Encoding
+# ADR 020: Protocol Buffer Transaction Encoding
 
 ## Changelog
 
@@ -19,7 +19,8 @@ signing, message construction and routing, in addition to CLI & REST handlers an
 business logic (i.e. queriers).
 
 With this in mind, we will tackle the migration path via two main areas, txs and
-querying.
+querying. However, this ADR solely focuses on transactions. Querying should be
+addressed in a future ADR, but it should build off of these proposals.
 
 ## Decision
 
@@ -78,7 +79,7 @@ Signing of a `Transaction` must be canonical across clients and binaries. In ord
 to provide canonical representation of a `Transaction` to sign over, clients must
 obey the following rules:
 
-- Encode `StdSignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
+- Encode `SignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
   - Default and zero values must be stripped from the output (`0`, `“”`, `null`, `false`, `[]`, and `{}`).
 - Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
   - This spec should be trivial to interpret and implement in any language.
@@ -86,15 +87,15 @@ obey the following rules:
 ```Protobuf
 // app/codec/codec.proto
 
-message StdSignDoc {
+message SignDoc {
   StdSignDocBase base = 1;
   repeated Message msgs = 2;
 }
 ```
 
-### CLI, REST, & Querying
+### CLI & REST
 
-Currently, the queriers, REST, CLI and handlers encode and decode types via Amino
+Currently, the REST and CLI handlers encode and decode types and txs via Amino
 JSON encoding using a concrete Amino codec. Being that some of the types dealt with
 in the client can be interfaces, similar to how we described in [ADR 019](./adr-019-protobuf-state-encoding.md),
 the client logic will now need to take a codec interface that knows not only how
@@ -103,12 +104,21 @@ and messages.
 
 ```go
 type TxGenerator interface {
-  sdk.Tx
+  NewTx() ClientTx
+  SignBytes func(chainID string, num, seq uint64, fee StdFee, msgs []sdk.Msg, memo string) ([]byte, error)
+}
 
-  NewTx() sdk.Tx
+type ClientTx interface {
+  sdk.Tx
+  codec.ProtoMarshaler
+
   SetMsgs(...sdk.Msg) error
   GetSignatures() []StdSignature
   SetSignatures(...StdSignature) error
+  GetFee() StdFee
+  SetFee(StdFee)
+  GetMemo() string
+  SetMemo(string)
 }
 ```
 
@@ -123,7 +133,7 @@ type ClientMarshaler interface {
 
 Then, each module will at the minimum accept a `ClientMarshaler` instead of a concrete
 Amino codec. If the module needs to work with any interface types, it will use
-the `Codec` interface defined by the module which now also includes `ClientMarshaler`.
+the `Codec` interface defined by the module which also extends `ClientMarshaler`.
 
 ## Future Improvements
 

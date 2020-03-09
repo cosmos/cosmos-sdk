@@ -238,7 +238,7 @@ func NewTestChain(clientID string) *TestChain {
 	signers := []tmtypes.PrivValidator{privVal}
 	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, valSet, signers)
+	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
 
 	return &TestChain{
 		ClientID: clientID,
@@ -397,7 +397,7 @@ func (chain *TestChain) createChannel(
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
-		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Vals, chain.Signers)
+		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }
 
 // Mocked types

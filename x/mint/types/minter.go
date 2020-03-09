@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/mint"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -52,7 +54,8 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	inflationRateChangePerYear := sdk.OneDec().
 		Sub(bondedRatio.Quo(params.GoalBonded)).
 		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+	blocksPerYear := mint.YEAR / m.AverageBlockTime
+	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(blocksPerYear)))
 
 	// adjust the new annual inflation for this next cycle
 	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
@@ -75,6 +78,8 @@ func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
 // BlockProvision returns the provisions for a block based on the annual
 // provisions rate.
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
+	blocksPerYear := mint.YEAR / m.AverageBlockTime
+
+	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(blocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

@@ -85,8 +85,6 @@ func checkValidity(
 	}
 
 	// Verify next header with the last header's validatorset as trusted validatorset
-	// TODO: Figure out a better way to add some leeway in currentTimestamp checking either in Tendermint or here
-	currentTimestamp = currentTimestamp.Add(time.Minute)
 	err := lite.Verify(clientState.GetChainID(), &clientState.LastHeader.SignedHeader, clientState.LastHeader.ValidatorSet,
 		&header.SignedHeader, header.ValidatorSet, clientState.TrustingPeriod, currentTimestamp, lite.DefaultTrustLevel)
 	if err != nil {

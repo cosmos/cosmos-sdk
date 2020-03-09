@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -58,7 +56,6 @@ func (k Keeper) VerifyConnectionState(
 		ctx, connection.GetClientID(), height,
 	)
 	if !found {
-		fmt.Println("Errored Here")
 		return sdkerrors.Wrapf(
 			clienttypes.ErrConsensusStateNotFound,
 			"clientID (%s), height (%d)", connectionEnd.GetClientID(), height,

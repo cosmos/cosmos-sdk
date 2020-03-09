@@ -28,13 +28,11 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.0
-	github.com/tendermint/tendermint v0.33.1-dev3
+	github.com/tendermint/tendermint v0.33.1
 	github.com/tendermint/tm-db v0.4.1
 	gopkg.in/yaml.v2 v2.2.8
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
-
-replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 
 go 1.14

@@ -94,7 +94,6 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
 	store.Set(ibctypes.KeyConsensusState(clientID, height), bz)
-	fmt.Printf("Saving consensus state at %s with hash %v\n", ibctypes.KeyConsensusState(clientID, height), consensusState.GetRoot())
 }
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular

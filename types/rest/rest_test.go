@@ -294,6 +294,15 @@ func TestParseFloat64OrReturnBadRequest(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
 }
 
+func TestParseQueryParamBool(t *testing.T) {
+	req := httptest.NewRequest("GET", "/target?boolean=true", nil)
+	require.True(t, ParseQueryParamBool(req, "boolean"))
+	require.False(t, ParseQueryParamBool(req, "nokey"))
+	req = httptest.NewRequest("GET", "/target?boolean=false", nil)
+	require.False(t, ParseQueryParamBool(req, "boolean"))
+	require.False(t, ParseQueryParamBool(req, ""))
+}
+
 func TestPostProcessResponseBare(t *testing.T) {
 	t.Parallel()
 

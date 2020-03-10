@@ -7,15 +7,10 @@ import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 import "google/protobuf/timestamp.proto";
 
+// MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
 message MsgRevokeFeeAllowance{
-    bytes Granter = 1 [
-                      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-                      (gogoproto.moretags) = "yaml:\"granter\""
-                      ];
-    bytes Grantee = 2 [
-                      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-                      (gogoproto.moretags) = "yaml:\"grantee\""
-                      ];
+    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 
@@ -31,7 +26,8 @@ message BasicFeeAllowance{
     ExpiresAt Expiration = 2;
 }
 
-
+// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// as well as a limit per time period.
 message PeriodicFeeAllowance{
     option (gogoproto.goproto_getters)  = false;
 
@@ -52,19 +48,17 @@ message PeriodicFeeAllowance{
 // Duration is a repeating unit of either clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
 message Duration{
-    google.protobuf.Timestamp Clock = 1[(gogoproto.moretags) = "yaml:\"time\"",
-                                          (gogoproto.stdduration)  = true,
-                                          (gogoproto.nullable) = false
-                                          ];
+    google.protobuf.Timestamp Clock = 1[(gogoproto.stdduration)  = true,
+                                       (gogoproto.nullable) = false
+                                       ];
     int64 Block = 2;
 }
 
 // ExpiresAt is a point in time where something expires.
 // It may be *either* block time or block height
 message ExpiresAt{
-    google.protobuf.Timestamp Time = 1 [(gogoproto.moretags) = "yaml:\"time\"",
-                                               (gogoproto.stdtime)  = true,
-                                               (gogoproto.nullable) = false
-                                               ];
+    google.protobuf.Timestamp Time = 1 [(gogoproto.stdtime)  = true,
+                                       (gogoproto.nullable) = false
+                                       ];
     int64 Height = 2;
 }

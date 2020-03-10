@@ -3,14 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
-
-type MsgGrantFeeAllowance struct {
-	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
-	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`
-	Allowance exported.FeeAllowance `json:"allowance" yaml:"allowance"`
-}
 
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
 	return MsgRevokeFeeAllowance{Granter: granter, Grantee: grantee}

@@ -97,6 +97,8 @@ message Content {
   }
 }
 
+// FeeAllowance defines the application-level fee allowance to be used in
+// feegrant module
 message FeeAllowance {
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/feegrant/exported.FeeAllowance";
 
@@ -109,14 +111,8 @@ message FeeAllowance {
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantFeeAllowance{
-  bytes Granter = 1 [
-                    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-                    (gogoproto.moretags) = "yaml:\"granter\""
-                    ];
-  bytes Grantee = 2 [
-                    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-                    (gogoproto.moretags) = "yaml:\"grantee\""
-                    ];
+  bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   FeeAllowance Allowance = 3;
 }

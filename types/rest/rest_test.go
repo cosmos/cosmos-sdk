@@ -353,7 +353,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	got, err = ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
 	t.Cleanup(func() { res.Body.Close() })
-	require.Equal(t, "application/json", res.Header["Content-Type"])
+	require.Equal(t, []string([]string{"application/json"}), res.Header["Content-Type"])
 	require.Equal(t, `{"error":"couldn't marshal"}`, string(got))
 }
 

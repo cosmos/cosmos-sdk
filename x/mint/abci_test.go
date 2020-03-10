@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-func TestMintCalcBlocksYear_FirstBlock(t *testing.T) {
+func TestBlocksPerYearCalculation(t *testing.T) {
 	app := simapp.Setup(false)
 
 	firstBlockTime := time.Date(2020, 2, 1, 12, 30, 0, 0, time.UTC)

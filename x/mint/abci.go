@@ -14,7 +14,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	params := k.GetParams(ctx)
 
 	// Given we cannot calculate average blocktime we dont mint on block 1.
-	if ctx.BlockHeight() == 1 {
+	if ctx.BlockHeight() == 1 || minter.LastBlockTimestamp.IsZero() {
 		minter.LastBlockTimestamp = ctx.BlockHeader().Time
 		k.SetMinter(ctx, minter)
 
@@ -59,15 +59,18 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 // getNewAverageBlockTime calculates the average time it takes to forge a new block based on the cumulated
 // moving average since the beginning of the chain.
-// On first block we use params.BlocksPerYear to calculate it, so the average in block one is:
-// NanosecondsInAYear / params.BlocksPerYear
+// The formula we use is a cumulated moving average.
+// averageBlockTime + ((currentBlockTime - averageBlockTime) / blockHeight - 1)
+// We remove 1 to blockheight given we dont have an average on block 1.
 func getNewAverageBlockTime(ctx sdk.Context, params types.Params, minter types.Minter) time.Duration {
-	if minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
-		return time.Duration(0)
-	} else {
+	if !minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
 		currentBlockTime := ctx.BlockTime().Sub(minter.LastBlockTimestamp)
-		currentAverage := minter.AverageBlockTime.Nanoseconds() + ((currentBlockTime.Nanoseconds() - minter.AverageBlockTime.Nanoseconds()) / (ctx.BlockHeight() - 1))
+		currentAverage := minter.AverageBlockTime.Nanoseconds() +
+			((currentBlockTime.Nanoseconds() - minter.AverageBlockTime.Nanoseconds()) /
+				(ctx.BlockHeight() - 1))
 
 		return time.Duration(currentAverage)
 	}
+
+	return time.Duration(0)
 }

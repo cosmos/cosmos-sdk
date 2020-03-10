@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -76,7 +77,12 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: abci.Header{
+			Time:   time.Date(2020, 2, 1, 12, 30, 0, 0, time.UTC),
+			Height: app.LastBlockHeight() + 1,
+		},
+	})
 
 	return app
 }

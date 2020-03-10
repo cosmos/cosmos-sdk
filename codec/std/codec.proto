@@ -11,7 +11,6 @@ import "x/gov/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
 import "x/distribution/types/types.proto";
-import "x/feegrant/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/std";
 
@@ -95,24 +94,4 @@ message Content {
     cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal   cancel_software_upgrade = 4;
     cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend    = 5;
   }
-}
-
-// FeeAllowance defines the application-level fee allowance to be used in
-// feegrant module
-message FeeAllowance {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/feegrant/exported.FeeAllowance";
-
-  oneof sum{
-    cosmos_sdk.x.feegrant.v1.BasicFeeAllowance BasicFeeAllowance= 1;
-    cosmos_sdk.x.feegrant.v1.PeriodicFeeAllowance PeriodicFeeAllowance= 2;
-  }
-}
-
-// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
-// of fees from the account of Granter.
-message MsgGrantFeeAllowance{
-  bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-
-  FeeAllowance Allowance = 3;
 }

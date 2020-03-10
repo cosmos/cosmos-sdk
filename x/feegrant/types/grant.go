@@ -8,13 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
-type FeeAllowanceGrant struct {
-	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
-	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`
-	Allowance exported.FeeAllowance `json:"allowance" yaml:"allowance"`
-}
-
 // ValidateBasic ensures that
 func (a FeeAllowanceGrant) ValidateBasic() error {
 	if a.Granter.Empty() {

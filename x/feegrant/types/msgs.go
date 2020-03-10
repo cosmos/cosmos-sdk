@@ -5,6 +5,21 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance *FeeAllowance) MsgGrantFeeAllowance {
+	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
+}
+
+func (msg MsgGrantFeeAllowance) ValidateBasic() error {
+	if msg.Granter.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	}
+	if msg.Grantee.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	}
+
+	return msg.Allowance.ValidateBasic()
+}
+
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
 	return MsgRevokeFeeAllowance{Granter: granter, Grantee: grantee}
 }

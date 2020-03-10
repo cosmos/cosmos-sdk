@@ -13,4 +13,3 @@ The minting module contains the following parameters:
 | InflationMax        | string (dec)    | "0.200000000000000000" |
 | InflationMin        | string (dec)    | "0.070000000000000000" |
 | GoalBonded          | string (dec)    | "0.670000000000000000" |
-| BlocksPerYear       | string (uint64) | "6311520"              |

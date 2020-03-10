@@ -7,6 +7,13 @@ order: 3
 Minting parameters are recalculated and inflation
 paid at the beginning of each block.
 
+## First block
+
+First time BeginBlock is executed we don't mint any tokens. This is because
+it is not possible to calculate the average time the protocol takes to 
+generate a block. So first time we only save the Timestamp of the block 1 in 
+minter.LastBlockTimestamp.
+
 ## NextInflationRate
 
 The target annual inflation rate is recalculated each block.
@@ -49,6 +56,16 @@ Calculate the provisions generated for each block based on current annual provis
 
 ```
 BlockProvision(params Params) sdk.Coin {
-	provisionAmt = AnnualProvisions/ params.BlocksPerYear
+	provisionAmt = AnnualProvisions/ BlocksPerYear
 	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
 ```
+
+## AverageBlockTime
+
+AverageBlockTime represents the average it takes for the network to
+generate a block. It is calculated on every call to BeginBlock (except on block 1)
+with the cummulated moving average formula:
+
+cumulatedAverage + ((currentBlockTime - cumulatedAverage) / (blockHeight - 1))
+
+We use blockHeight - 1 because we don't have a block time since block 2. 

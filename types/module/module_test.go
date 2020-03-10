@@ -32,8 +32,8 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 	mockAppModuleBasic2 := mocks.NewMockAppModuleBasic(mockCtrl)
 
-	mockAppModuleBasic1.EXPECT().Name().Times(3).Return("mockAppModuleBasic1")
-	mockAppModuleBasic2.EXPECT().Name().Times(2).Return("mockAppModuleBasic2")
+	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
+	mockAppModuleBasic2.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic2")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
 	mockAppModuleBasic2.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key":"value"}`))
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)

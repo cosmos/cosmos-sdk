@@ -20,7 +20,7 @@ var _ exported.FeeAllowance = (*BasicFeeAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (bool, error) {
+func (a BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (bool, error) {
 	if a.Expiration.IsExpired(blockTime, blockHeight) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
@@ -37,7 +37,7 @@ func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeig
 // PrepareForExport will adjust the expiration based on export time. In particular,
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
-func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
+func (a BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
 	return &BasicFeeAllowance{
 		SpendLimit: a.SpendLimit,
 		Expiration: a.Expiration.PrepareForExport(dumpTime, dumpHeight),

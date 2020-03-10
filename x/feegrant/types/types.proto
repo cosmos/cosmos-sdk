@@ -22,6 +22,8 @@ message MsgRevokeFeeAllowance{
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicFeeAllowance{
+    option (gogoproto.goproto_getters)  = false;
+
     repeated cosmos_sdk.v1.Coin SpendLimit = 1 [
                                            (gogoproto.nullable)     = false,
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
@@ -31,6 +33,8 @@ message BasicFeeAllowance{
 
 
 message PeriodicFeeAllowance{
+    option (gogoproto.goproto_getters)  = false;
+
     BasicFeeAllowance Basic = 1;
     Duration Period = 2;
     repeated cosmos_sdk.v1.Coin PeriodSpendLimit = 3 [

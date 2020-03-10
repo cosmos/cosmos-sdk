@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-func TestMintCalcBlocksYear(t *testing.T) {
+func TestMintCalcBlocksYear_FirstBlock(t *testing.T) {
 	app := simapp.Setup(false)
 
 	firstBlockTime := time.Date(2020, 2, 1, 12, 30, 0, 0, time.UTC)
@@ -20,14 +20,20 @@ func TestMintCalcBlocksYear(t *testing.T) {
 		Time:   firstBlockTime,
 	}
 
+	// LastBlockTimestamp is not set.
+	ctx := app.NewContext(false, types.Header{})
+	minter := app.MintKeeper.GetMinter(ctx)
+	require.Equal(t, time.Time{}, minter.GetLastBlockTimestamp())
+
 	// First Block
 	app.BeginBlock(
 		types.RequestBeginBlock{Header: initHeader},
 	)
-	ctx := app.NewContext(false, types.Header{})
-	// assert block time
-	minter := app.MintKeeper.GetMinter(ctx)
-	require.Equal(t, 5*time.Second, minter.AverageBlockTime)
+	ctx = app.NewContext(false, types.Header{})
+
+	// just BlockTimeStamp is saved
+	minter = app.MintKeeper.GetMinter(ctx)
+	require.Equal(t, time.Duration(0), minter.AverageBlockTime)
 	require.Equal(t, initHeader.Time, minter.GetLastBlockTimestamp())
 	app.Commit()
 
@@ -37,9 +43,19 @@ func TestMintCalcBlocksYear(t *testing.T) {
 		types.RequestBeginBlock{Header: secondBlockHeader},
 	)
 
-	// Then Average should be 5 + 8 / 2 (blockTime1 + blockTime2 / height))
+	// Then Average should be 8 / 2 (blockTime2 / height-1))
 	ctx = app.NewContext(false, types.Header{})
 	minter = app.MintKeeper.GetMinter(ctx)
 	require.Equal(t, secondBlockHeader.Time, minter.GetLastBlockTimestamp())
-	require.Equal(t, (5*time.Second+8*time.Second)/2, minter.AverageBlockTime)
+	require.Equal(t, (8*time.Second)/1, minter.AverageBlockTime)
+	app.Commit()
+
+	thirdBlockHeader := types.Header{Height: 3, Time: secondBlockHeader.Time.Add(time.Second * 4)}
+	app.BeginBlock(
+		types.RequestBeginBlock{Header: thirdBlockHeader},
+	)
+	ctx = app.NewContext(false, types.Header{})
+	minter = app.MintKeeper.GetMinter(ctx)
+	require.Equal(t, thirdBlockHeader.Time, minter.GetLastBlockTimestamp())
+	require.Equal(t, (8*time.Second+time.Second*4)/2, minter.AverageBlockTime)
 }

@@ -13,6 +13,14 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)
 
+	// Given we cannot calculate average blocktime we dont mint on block 1.
+	if ctx.BlockHeight() == 1 {
+		minter.LastBlockTimestamp = ctx.BlockHeader().Time
+		k.SetMinter(ctx, minter)
+
+		return
+	}
+
 	minter.AverageBlockTime = getNewAverageBlockTime(ctx, params, minter)
 
 	// recalculate inflation rate
@@ -55,12 +63,10 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 // NanosecondsInAYear / params.BlocksPerYear
 func getNewAverageBlockTime(ctx sdk.Context, params types.Params, minter types.Minter) time.Duration {
 	if minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
-		nanoSecondsABlock := types.YEAR.Nanoseconds() / int64(params.BlocksPerYear)
-
-		return time.Duration(nanoSecondsABlock)
+		return time.Duration(0)
 	} else {
-		currentBlockTime := ctx.BlockHeader().Time.Sub(minter.LastBlockTimestamp)
-		currentAverage := minter.AverageBlockTime.Nanoseconds() + ((currentBlockTime.Nanoseconds() - minter.AverageBlockTime.Nanoseconds()) / ctx.BlockHeight())
+		currentBlockTime := ctx.BlockTime().Sub(minter.LastBlockTimestamp)
+		currentAverage := minter.AverageBlockTime.Nanoseconds() + ((currentBlockTime.Nanoseconds() - minter.AverageBlockTime.Nanoseconds()) / (ctx.BlockHeight() - 1))
 
 		return time.Duration(currentAverage)
 	}

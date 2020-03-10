@@ -38,7 +38,6 @@ func TestBaseReq_Sanitize(t *testing.T) {
 }
 
 func TestBaseReq_ValidateBasic(t *testing.T) {
-	t.Parallel()
 	fromAddr := "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
 	tenstakes, err := types.ParseCoins("10stake")
 	require.NoError(t, err)

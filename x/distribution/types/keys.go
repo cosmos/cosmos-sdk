@@ -41,8 +41,7 @@ const (
 //
 // - 0x08<valAddr_Bytes><height>: ValidatorSlashEvent
 var (
-	FeePoolKey = []byte{0x00} // key for global distribution state
-	// ProposerKey                       = []byte{0x01} // key for the proposer operator address
+	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ValidatorOutstandingRewardsPrefix = []byte{0x02} // key for outstanding rewards
 
 	DelegatorWithdrawAddrPrefix          = []byte{0x03} // key for delegator withdraw address

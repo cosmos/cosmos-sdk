@@ -56,7 +56,6 @@ type GenesisState struct {
 	Params                          Params                                 `json:"params" yaml:"params"`
 	FeePool                         FeePool                                `json:"fee_pool" yaml:"fee_pool"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos" yaml:"delegator_withdraw_infos"`
-	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer" yaml:"previous_proposer"`
 	OutstandingRewards              []ValidatorOutstandingRewardsRecord    `json:"outstanding_rewards" yaml:"outstanding_rewards"`
 	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord `json:"validator_accumulated_commissions" yaml:"validator_accumulated_commissions"`
 	ValidatorHistoricalRewards      []ValidatorHistoricalRewardsRecord     `json:"validator_historical_rewards" yaml:"validator_historical_rewards"`
@@ -66,7 +65,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(
-	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
+	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
 ) GenesisState {
@@ -75,7 +74,6 @@ func NewGenesisState(
 		Params:                          params,
 		FeePool:                         fp,
 		DelegatorWithdrawInfos:          dwis,
-		PreviousProposer:                pp,
 		OutstandingRewards:              r,
 		ValidatorAccumulatedCommissions: acc,
 		ValidatorHistoricalRewards:      historical,
@@ -91,7 +89,6 @@ func DefaultGenesisState() GenesisState {
 		FeePool:                         InitialFeePool(),
 		Params:                          DefaultParams(),
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
-		PreviousProposer:                nil,
 		OutstandingRewards:              []ValidatorOutstandingRewardsRecord{},
 		ValidatorAccumulatedCommissions: []ValidatorAccumulatedCommissionRecord{},
 		ValidatorHistoricalRewards:      []ValidatorHistoricalRewardsRecord{},

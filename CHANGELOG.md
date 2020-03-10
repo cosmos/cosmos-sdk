@@ -69,6 +69,7 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 
 ### Bug Fixes
 
+* (x/genutil) [\#5775](https://github.com/cosmos/cosmos-sdk/pull/5775) Fix `ExportGenesis` in `x/genutil` to export default genesis state (`[]`) instead of `null`.
 * (baseapp) [\#5718](https://github.com/cosmos/cosmos-sdk/pull/5718) Remove call to `ctx.BlockGasMeter` during failed message validation which
 resulted in a panic when the tx execution mode was `CheckTx`.
 * (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set.

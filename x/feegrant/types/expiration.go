@@ -6,13 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// ExpiresAt is a point in time where something expires.
-// It may be *either* block time or block height
-type ExpiresAt struct {
-	Time   time.Time `json:"time" yaml:"time"`
-	Height int64     `json:"height" yaml:"height"`
-}
-
 // ExpiresAtTime creates an expiration at the given time
 func ExpiresAtTime(t time.Time) ExpiresAt {
 	return ExpiresAt{Time: t}
@@ -63,7 +56,7 @@ func (e ExpiresAt) IsExpired(t time.Time, h int64) bool {
 
 // IsCompatible returns true iff the two use the same units.
 // If false, they cannot be added.
-func (e ExpiresAt) IsCompatible(d Duration) bool {
+func (e ExpiresAt) IsCompatible(d *Duration) bool {
 	if !e.Time.IsZero() {
 		return d.Clock > 0
 	}
@@ -72,20 +65,20 @@ func (e ExpiresAt) IsCompatible(d Duration) bool {
 
 // Step will increase the expiration point by one Duration
 // It returns an error if the Duration is incompatible
-func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
+func (e ExpiresAt) Step(d *Duration) (*ExpiresAt, error) {
 	if !e.IsCompatible(d) {
-		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
+		return &ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
 	}
 	if !e.Time.IsZero() {
 		e.Time = e.Time.Add(d.Clock)
 	} else {
 		e.Height += d.Block
 	}
-	return e, nil
+	return &e, nil
 }
 
 // MustStep is like Step, but panics on error
-func (e ExpiresAt) MustStep(d Duration) ExpiresAt {
+func (e ExpiresAt) MustStep(d *Duration) *ExpiresAt {
 	res, err := e.Step(d)
 	if err != nil {
 		panic(err)
@@ -95,18 +88,11 @@ func (e ExpiresAt) MustStep(d Duration) ExpiresAt {
 
 // PrepareForExport will deduct the dumpHeight from the expiration, so when this is
 // reloaded after a hard fork, the actual number of allowed blocks is constant
-func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) ExpiresAt {
+func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) *ExpiresAt {
 	if e.Height != 0 {
 		e.Height -= dumpHeight
 	}
-	return e
-}
-
-// Duration is a repeating unit of either clock time or number of blocks.
-// This is designed to be added to an ExpiresAt struct.
-type Duration struct {
-	Clock time.Duration `json:"clock" yaml:"clock"`
-	Block int64         `json:"block" yaml:"block"`
+	return &e
 }
 
 // ClockDuration creates an Duration by clock time

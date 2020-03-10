@@ -82,3 +82,18 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 func (msg MsgSubmitProposal) GetContent() gov.Content      { return msg.Content.GetContent() }
 func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
 func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }
+
+func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance *FeeAllowance) MsgGrantFeeAllowance {
+	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
+}
+
+func (msg MsgGrantFeeAllowance) ValidateBasic() error {
+	if msg.Granter.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	}
+	if msg.Grantee.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	}
+
+	return msg.Allowance.ValidateBasic()
+}

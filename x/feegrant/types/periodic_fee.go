@@ -8,26 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
-// as well as a limit per time period.
-type PeriodicFeeAllowance struct {
-	// Basic contains the absolute limits over all time.
-	// These limit (total and expiration) are enforced in addition to the
-	// periodic limits defined below (which renew every period)
-	Basic BasicFeeAllowance
-
-	// Period is the duration of one period
-	Period Duration
-	// PeriodSpendLimit is the maximum amount of tokens to be spent in this period
-	PeriodSpendLimit sdk.Coins
-
-	// PeriodCanSpend is how much is available until PeriodReset
-	PeriodCanSpend sdk.Coins
-
-	// PeriodRest is when the PeriodCanSpend is updated
-	PeriodReset ExpiresAt
-}
-
 var _ exported.FeeAllowance = (*PeriodicFeeAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp/height of the current block
@@ -92,7 +72,7 @@ func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight i
 // (For PeriodReset and Basic.Expiration)
 func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
 	return &PeriodicFeeAllowance{
-		Basic: BasicFeeAllowance{
+		Basic: &BasicFeeAllowance{
 			SpendLimit: a.Basic.SpendLimit,
 			Expiration: a.Basic.Expiration.PrepareForExport(dumpTime, dumpHeight),
 		},

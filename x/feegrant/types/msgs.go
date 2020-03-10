@@ -6,50 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
-// of fees from the account of Granter.
-// If there was already an existing grant, this overwrites it.
 type MsgGrantFeeAllowance struct {
 	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
 	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`
 	Allowance exported.FeeAllowance `json:"allowance" yaml:"allowance"`
-}
-
-func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance exported.FeeAllowance) MsgGrantFeeAllowance {
-	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
-}
-
-func (msg MsgGrantFeeAllowance) Route() string {
-	return RouterKey
-}
-
-func (msg MsgGrantFeeAllowance) Type() string {
-	return "grant-fee-allowance"
-}
-
-func (msg MsgGrantFeeAllowance) ValidateBasic() error {
-	if msg.Granter.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
-	}
-	if msg.Grantee.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
-	}
-
-	return msg.Allowance.ValidateBasic()
-}
-
-func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
-}
-
-func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Granter}
-}
-
-// MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
-type MsgRevokeFeeAllowance struct {
-	Granter sdk.AccAddress `json:"granter" yaml:"granter"`
-	Grantee sdk.AccAddress `json:"grantee" yaml:"granter"`
 }
 
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {

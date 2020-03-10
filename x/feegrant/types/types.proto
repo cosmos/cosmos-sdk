@@ -1,0 +1,66 @@
+syntax = "proto3";
+package cosmos_sdk.x.feegrant.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "types/types.proto";
+import "google/protobuf/timestamp.proto";
+
+message MsgRevokeFeeAllowance{
+    bytes Granter = 1 [
+                      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+                      (gogoproto.moretags) = "yaml:\"granter\""
+                      ];
+    bytes Grantee = 2 [
+                      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+                      (gogoproto.moretags) = "yaml:\"grantee\""
+                      ];
+}
+
+
+// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+message BasicFeeAllowance{
+    repeated cosmos_sdk.v1.Coin SpendLimit = 1 [
+                                           (gogoproto.nullable)     = false,
+                                           (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+                                           ];
+    ExpiresAt Expiration = 2;
+}
+
+
+message PeriodicFeeAllowance{
+    BasicFeeAllowance Basic = 1;
+    Duration Period = 2;
+    repeated cosmos_sdk.v1.Coin PeriodSpendLimit = 3 [
+                                           (gogoproto.nullable)     = false,
+                                           (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+                                           ];
+    repeated cosmos_sdk.v1.Coin PeriodCanSpend = 4 [
+                                           (gogoproto.nullable)     = false,
+                                           (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+                                           ];
+
+    ExpiresAt PeriodReset = 5;
+}
+
+// Duration is a repeating unit of either clock time or number of blocks.
+// This is designed to be added to an ExpiresAt struct.
+message Duration{
+    google.protobuf.Timestamp Clock = 1[(gogoproto.moretags) = "yaml:\"time\"",
+                                          (gogoproto.stdduration)  = true,
+                                          (gogoproto.nullable) = false
+                                          ];
+    int64 Block = 2;
+}
+
+// ExpiresAt is a point in time where something expires.
+// It may be *either* block time or block height
+message ExpiresAt{
+    google.protobuf.Timestamp Time = 1 [(gogoproto.moretags) = "yaml:\"time\"",
+                                               (gogoproto.stdtime)  = true,
+                                               (gogoproto.nullable) = false
+                                               ];
+    int64 Height = 2;
+}

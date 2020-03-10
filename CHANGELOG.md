@@ -35,6 +35,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.37.78] - TBD
+
 ## [v0.37.7] - 2020-02-10
 
 ### Improvements
@@ -2619,7 +2621,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.7...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.8...HEAD
+[v0.37.8]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.8
 [v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6
 [v0.37.5]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.5

@@ -3,6 +3,7 @@ package slashing_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -63,11 +64,12 @@ func TestSlashingMsgs(t *testing.T) {
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission, sdk.OneInt(),
 	)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	initTime := time.Date(2020, 10, 1, 10, 00, 00, 00, time.UTC)
+	header := abci.Header{Time: initTime, Height: app.LastBlockHeight() + 1}
 	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 5), Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	validator := checkValidator(t, app, addr1, true)
@@ -79,7 +81,7 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(addr1), true)
 
 	// unjail should fail with unknown validator
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 5), Height: app.LastBlockHeight() + 1}
 	_, res, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)

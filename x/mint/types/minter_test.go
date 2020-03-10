@@ -3,6 +3,7 @@ package types
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -12,7 +13,8 @@ import (
 func TestNextInflation(t *testing.T) {
 	minter := DefaultInitialMinter()
 	params := DefaultParams()
-	blocksPerYr := sdk.NewDec(int64(params.BlocksPerYear))
+	minter.AverageBlockTime = time.Second * 5
+	blocksPerYr := sdk.NewDec(YEAR.Nanoseconds() / minter.AverageBlockTime.Nanoseconds())
 
 	// Governing Mechanism:
 	//    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
@@ -57,6 +59,7 @@ func TestNextInflation(t *testing.T) {
 func TestBlockProvision(t *testing.T) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
+	minter.AverageBlockTime = time.Second * 5
 
 	secondsPerYear := int64(60 * 60 * 8766)
 

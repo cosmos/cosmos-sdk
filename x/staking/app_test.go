@@ -2,6 +2,7 @@ package staking_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -69,11 +70,12 @@ func TestStakingMsgs(t *testing.T) {
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
 	)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	initTime := time.Date(2020, 5, 10, 10, 10, 10, 00, time.UTC)
+	header := abci.Header{Time: initTime, Height: app.LastBlockHeight() + 1}
 	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 5), Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
@@ -81,14 +83,14 @@ func TestStakingMsgs(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 10), Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// edit the validator
 	description = staking.NewDescription("bar_moniker", "", "", "", "")
 	editValidatorMsg := staking.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 15), Height: app.LastBlockHeight() + 1}
 	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
 
 	validator = checkValidator(t, app, sdk.ValAddress(addr1), true)
@@ -98,14 +100,14 @@ func TestStakingMsgs(t *testing.T) {
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 	delegateMsg := staking.NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 20), Height: app.LastBlockHeight() + 1}
 	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{delegateMsg}, []uint64{1}, []uint64{0}, true, true, priv2)
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
 	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
 
 	// begin unbonding
 	beginUnbondingMsg := staking.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
-	header = abci.Header{Height: app.LastBlockHeight() + 1}
+	header = abci.Header{Time: initTime.Add(time.Second * 25), Height: app.LastBlockHeight() + 1}
 	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, []uint64{1}, []uint64{1}, true, true, priv2)
 
 	// delegation should exist anymore

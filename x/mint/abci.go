@@ -63,7 +63,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 // averageBlockTime + ((currentBlockTime - averageBlockTime) / blockHeight - 1)
 // We remove 1 to blockheight given we dont have an average on block 1.
 func getNewAverageBlockTime(ctx sdk.Context, params types.Params, minter types.Minter) time.Duration {
-	if !minter.LastBlockTimestamp.IsZero() { // Comes from Genesis
+	if !minter.LastBlockTimestamp.IsZero() {
 		currentBlockTime := ctx.BlockTime().Sub(minter.LastBlockTimestamp)
 		currentAverage := minter.AverageBlockTime.Nanoseconds() +
 			((currentBlockTime.Nanoseconds() - minter.AverageBlockTime.Nanoseconds()) /

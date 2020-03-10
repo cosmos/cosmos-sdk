@@ -256,9 +256,8 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height: uint64(client.Header.Height),
-		// FIXME: currently commented out due to time normalisation issues.
-		//Timestamp:    client.Header.Time,
+		Height:       uint64(client.Header.Height),
+		Timestamp:    client.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}

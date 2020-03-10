@@ -27,8 +27,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64,
-) Params {
+	mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec) Params {
 
 	return Params{
 		MintDenom:           mintDenom,
@@ -36,7 +35,6 @@ func NewParams(
 		InflationMax:        inflationMax,
 		InflationMin:        inflationMin,
 		GoalBonded:          goalBonded,
-		BlocksPerYear:       blocksPerYear,
 	}
 }
 
@@ -48,7 +46,6 @@ func DefaultParams() Params {
 		InflationMax:        sdk.NewDecWithPrec(20, 2),
 		InflationMin:        sdk.NewDecWithPrec(7, 2),
 		GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
 	}
 }
 
@@ -67,9 +64,6 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateGoalBonded(p.GoalBonded); err != nil {
-		return err
-	}
-	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
 		return err
 	}
 	if p.InflationMax.LT(p.InflationMin) {
@@ -97,7 +91,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),
 		paramtypes.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
 		paramtypes.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
-		paramtypes.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
 	}
 }
 
@@ -176,19 +169,6 @@ func validateGoalBonded(i interface{}) error {
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("goal bonded too large: %s", v)
-	}
-
-	return nil
-}
-
-func validateBlocksPerYear(i interface{}) error {
-	v, ok := i.(uint64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == 0 {
-		return fmt.Errorf("blocks per year must be positive: %d", v)
 	}
 
 	return nil

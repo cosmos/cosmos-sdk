@@ -212,7 +212,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		}
 
 	case ledgerInfo:
-		return kb.base.SignWithLedger(info, msg)
+		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
 		return kb.base.DecodeSignature(info, msg)

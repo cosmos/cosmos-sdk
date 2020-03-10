@@ -47,7 +47,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 		var outstanding sdk.DecCoins
 
 		k.IterateValidatorOutstandingRewards(ctx, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			outstanding = rewards
+			outstanding = rewards.GetRewards()
 			if outstanding.IsAnyNegative() {
 				count++
 				msg += fmt.Sprintf("\t%v has negative outstanding coins: %v\n", addr, outstanding)
@@ -89,7 +89,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 				}
 			}
 
-			remaining = k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+			remaining = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
 			if len(remaining) > 0 && remaining[0].Amount.IsNegative() {
 				return true
 			}
@@ -140,7 +140,7 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 
 		var expectedCoins sdk.DecCoins
 		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
-			expectedCoins = expectedCoins.Add(rewards...)
+			expectedCoins = expectedCoins.Add(rewards.Rewards...)
 			return false
 		})
 

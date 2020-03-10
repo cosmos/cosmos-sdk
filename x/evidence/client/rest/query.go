@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"github.com/gorilla/mux"
 )

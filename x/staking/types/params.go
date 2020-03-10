@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	yaml "gopkg.in/yaml.v2"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Staking params default values
@@ -39,7 +40,7 @@ var (
 	KeyHistoricalEntries = []byte("HistoricalEntries")
 )
 
-var _ params.ParamSet = (*Params)(nil)
+var _ paramtypes.ParamSet = (*Params)(nil)
 
 // NewParams creates a new Params instance
 func NewParams(
@@ -56,13 +57,13 @@ func NewParams(
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
-		params.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
-		params.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
-		params.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
-		params.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
+		paramtypes.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
+		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
+		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
+		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
 	}
 }
 

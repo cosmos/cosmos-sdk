@@ -4,11 +4,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 )
 
 // GetPlanCmd returns the query upgrade plan command
@@ -22,7 +23,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			// ignore height for now
-			res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", upgrade.QuerierKey, upgrade.QueryCurrent))
+			res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
 			if err != nil {
 				return err
 			}
@@ -31,7 +32,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 
-			var plan upgrade.Plan
+			var plan types.Plan
 			err = cdc.UnmarshalJSON(res, &plan)
 			if err != nil {
 				return err
@@ -53,13 +54,13 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			name := args[0]
-			params := upgrade.NewQueryAppliedParams(name)
+			params := types.NewQueryAppliedParams(name)
 			bz, err := cliCtx.Codec.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", upgrade.QuerierKey, upgrade.QueryApplied), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryApplied), bz)
 			if err != nil {
 				return err
 			}

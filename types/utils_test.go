@@ -1,10 +1,13 @@
-package types
+package types_test
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestSortJSON(t *testing.T) {
@@ -32,14 +35,14 @@ func TestSortJSON(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		tc := tc
-		got, err := SortJSON([]byte(tc.unsortedJSON))
+		got, err := sdk.SortJSON([]byte(tc.unsortedJSON))
 		if tc.wantErr {
 			require.NotNil(t, err, "tc #%d", tcIndex)
-			require.Panics(t, func() { MustSortJSON([]byte(tc.unsortedJSON)) })
+			require.Panics(t, func() { sdk.MustSortJSON([]byte(tc.unsortedJSON)) })
 		} else {
 			require.Nil(t, err, "tc #%d, err=%s", tcIndex, err)
-			require.NotPanics(t, func() { MustSortJSON([]byte(tc.unsortedJSON)) })
-			require.Equal(t, got, MustSortJSON([]byte(tc.unsortedJSON)))
+			require.NotPanics(t, func() { sdk.MustSortJSON([]byte(tc.unsortedJSON)) })
+			require.Equal(t, got, sdk.MustSortJSON([]byte(tc.unsortedJSON)))
 		}
 
 		require.Equal(t, string(got), tc.want)
@@ -59,10 +62,42 @@ func TestTimeFormatAndParse(t *testing.T) {
 		tc := tc
 		timeFromRFC, err := time.Parse(time.RFC3339Nano, tc.RFC3339NanoStr)
 		require.Nil(t, err)
-		timeFromSDKFormat, err := time.Parse(SortableTimeFormat, tc.SDKSortableTimeStr)
+		timeFromSDKFormat, err := time.Parse(sdk.SortableTimeFormat, tc.SDKSortableTimeStr)
 		require.Nil(t, err)
 
 		require.True(t, timeFromRFC.Equal(timeFromSDKFormat))
-		require.Equal(t, timeFromRFC.Format(SortableTimeFormat), tc.SDKSortableTimeStr)
+		require.Equal(t, timeFromRFC.Format(sdk.SortableTimeFormat), tc.SDKSortableTimeStr)
 	}
+}
+
+func TestCopyBytes(t *testing.T) {
+	t.Parallel()
+	require.Nil(t, sdk.CopyBytes(nil))
+	require.Equal(t, 0, len(sdk.CopyBytes([]byte{})))
+	bs := []byte("test")
+	bsCopy := sdk.CopyBytes(bs)
+	require.True(t, bytes.Equal(bs, bsCopy))
+}
+
+func TestUint64ToBigEndian(t *testing.T) {
+	t.Parallel()
+	require.Equal(t, []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, sdk.Uint64ToBigEndian(uint64(0)))
+	require.Equal(t, []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa}, sdk.Uint64ToBigEndian(uint64(10)))
+}
+
+func TestFormatTimeBytes(t *testing.T) {
+	t.Parallel()
+	tm, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Mar 3, 2020 at 7:54pm (PST)")
+	require.NoError(t, err)
+	require.Equal(t, "2020-03-03T19:54:00.000000000", string(sdk.FormatTimeBytes(tm)))
+}
+
+func TestParseTimeBytes(t *testing.T) {
+	t.Parallel()
+	tm, err := sdk.ParseTimeBytes([]byte("2020-03-03T19:54:00.000000000"))
+	require.NoError(t, err)
+	require.True(t, tm.Equal(time.Date(2020, 3, 3, 19, 54, 0, 0, time.UTC)))
+
+	_, err = sdk.ParseTimeBytes([]byte{})
+	require.Error(t, err)
 }

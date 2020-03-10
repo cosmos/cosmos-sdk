@@ -36,8 +36,8 @@ func TestDecodeDistributionStore(t *testing.T) {
 	feePool := types.InitialFeePool()
 	feePool.CommunityPool = decCoins
 	info := types.NewDelegatorStartingInfo(2, sdk.OneDec(), 200)
-	outstanding := types.ValidatorOutstandingRewards{decCoins[0]}
-	commission := types.ValidatorAccumulatedCommission{decCoins[0]}
+	outstanding := types.ValidatorOutstandingRewards{Rewards: decCoins}
+	commission := types.ValidatorAccumulatedCommission{Commission: decCoins}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 100)
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 5)
 	slashEvent := types.NewValidatorSlashEvent(10, sdk.OneDec())

@@ -24,11 +24,11 @@ func Test_runListCmd(t *testing.T) {
 
 	// Prepare some keybases
 	kbHome1, cleanUp1 := tests.NewTestCaseDir(t)
-	defer cleanUp1()
+	t.Cleanup(cleanUp1)
 	// Do nothing, leave home1 empty
 
 	kbHome2, cleanUp2 := tests.NewTestCaseDir(t)
-	defer cleanUp2()
+	t.Cleanup(cleanUp2)
 	viper.Set(flags.FlagHome, kbHome2)
 
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
@@ -41,9 +41,9 @@ func Test_runListCmd(t *testing.T) {
 	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", "", keys.Secp256k1)
 	require.NoError(t, err)
 
-	defer func() {
+	t.Cleanup(func() {
 		kb.Delete("something", "", false)
-	}()
+	})
 	testData := []struct {
 		name    string
 		kbDir   string

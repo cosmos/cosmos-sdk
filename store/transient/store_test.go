@@ -1,15 +1,18 @@
-package transient
+package transient_test
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/transient"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
 )
 
 var k, v = []byte("hello"), []byte("world")
 
 func TestTransientStore(t *testing.T) {
-	tstore := NewStore()
+	tstore := transient.NewStore()
 
 	require.Nil(t, tstore.Get(k))
 
@@ -20,4 +23,12 @@ func TestTransientStore(t *testing.T) {
 	tstore.Commit()
 
 	require.Nil(t, tstore.Get(k))
+
+	// no-op
+	tstore.SetPruning(types.PruningOptions{})
+
+	emptyCommitID := tstore.LastCommitID()
+	require.Equal(t, emptyCommitID.Version, int64(0))
+	require.True(t, bytes.Equal(emptyCommitID.Hash, nil))
+	require.Equal(t, types.StoreTypeTransient, tstore.GetStoreType())
 }

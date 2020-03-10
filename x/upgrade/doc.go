@@ -68,6 +68,27 @@ as well as providing the opportunity for the upgraded software to perform any ne
 (with the old binary) and applying the migration (with the new binary) are enforced in the state machine. Actually
 switching the binaries is an ops task and not handled inside the sdk / abci app.
 
+Here is a sample code to set store migrations with an upgrade:
+
+	// this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
+	app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx sdk.Context, plan upgrade.Plan) {
+		// upgrade changes here
+	})
+
+	upgradeInfo := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if upgradeInfo.Name == "my-fancy-upgrade" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := store.StoreUpgrades{
+			Renamed: []store.StoreRename{{
+				OldKey: "foo",
+				NewKey: "bar",
+			}},
+			Deleted: []string{},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
 Halt Behavior
 
 Before halting the ABCI state machine in the BeginBlocker method, the upgrade module will log an error

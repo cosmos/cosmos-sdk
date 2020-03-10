@@ -118,6 +118,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
+
 	dels := make([]types.DelegatorStartingInfoRecord, 0)
 	keeper.IterateDelegatorStartingInfos(ctx,
 		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {

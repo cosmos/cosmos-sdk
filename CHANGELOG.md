@@ -163,7 +163,6 @@ Buffers for state serialization instead of Amino.
 and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
 * (crypto/keys) [\#5739](https://github.com/cosmos/cosmos-sdk/pull/5739) Print an error message if the password input failed.
 * (mint) [\#5411](https://github.com/cosmos/cosmos-sdk/issues/5411) Inflation is now computed based on a cumulative moving average instead of the (removed) `BlocksPerYear` parameter.
-It does not use BlocksPerYear param anymore.
 
 
 ## [v0.38.1] - 2020-02-11

@@ -95,7 +95,6 @@ var (
 
 	// variable aliases
 	FeePoolKey                           = types.FeePoolKey
-	ProposerKey                          = types.ProposerKey
 	ValidatorOutstandingRewardsPrefix    = types.ValidatorOutstandingRewardsPrefix
 	DelegatorWithdrawAddrPrefix          = types.DelegatorWithdrawAddrPrefix
 	DelegatorStartingInfoPrefix          = types.DelegatorStartingInfoPrefix

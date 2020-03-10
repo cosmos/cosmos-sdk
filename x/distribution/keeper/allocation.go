@@ -13,7 +13,7 @@ import (
 // AllocateTokens handles distribution of the collected fees
 func (k Keeper) AllocateTokens(
 	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
-	previousProposer sdk.ConsAddress, previousVotes []abci.VoteInfo,
+	proposer sdk.ConsAddress, previousVotes []abci.VoteInfo,
 ) {
 
 	logger := k.Logger(ctx)
@@ -51,7 +51,7 @@ func (k Keeper) AllocateTokens(
 
 	// pay previous proposer
 	remaining := feesCollected
-	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
+	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 
 	if proposerValidator != nil {
 		ctx.EventManager().EmitEvent(
@@ -74,7 +74,7 @@ func (k Keeper) AllocateTokens(
 				"This should happen only if the proposer unbonded completely within a single block, "+
 				"which generally should not happen except in exceptional circumstances (or fuzz testing). "+
 				"We recommend you investigate immediately.",
-			previousProposer.String()))
+			proposer.String()))
 	}
 
 	// calculate fraction allocated to validators

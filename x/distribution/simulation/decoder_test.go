@@ -44,7 +44,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
-		tmkv.Pair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
 		tmkv.Pair{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
 		tmkv.Pair{Key: types.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
 		tmkv.Pair{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
@@ -60,7 +59,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"FeePool", fmt.Sprintf("%v\n%v", feePool, feePool)},
-		{"Proposer", fmt.Sprintf("%v\n%v", consAddr1, consAddr1)},
 		{"ValidatorOutstandingRewards", fmt.Sprintf("%v\n%v", outstanding, outstanding)},
 		{"DelegatorWithdrawAddr", fmt.Sprintf("%v\n%v", delAddr1, delAddr1)},
 		{"DelegatorStartingInfo", fmt.Sprintf("%v\n%v", info, info)},

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	gogotypes "github.com/gogo/protobuf/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -59,27 +57,6 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(&feePool)
 	store.Set(types.FeePoolKey, b)
-}
-
-// GetPreviousProposerConsAddr returns the proposer consensus address for the
-// current block.
-func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) sdk.ConsAddress {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ProposerKey)
-	if bz == nil {
-		panic("previous proposer not set")
-	}
-
-	addrValue := gogotypes.BytesValue{}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &addrValue)
-	return sdk.ConsAddress(addrValue.GetValue())
-}
-
-// set the proposer public key for this block
-func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.BytesValue{Value: consAddr})
-	store.Set(types.ProposerKey, bz)
 }
 
 // get the starting info associated with a delegator

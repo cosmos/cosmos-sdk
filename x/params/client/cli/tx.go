@@ -53,12 +53,7 @@ Where proposal.json contains:
       "value": 105
     }
   ],
-  "deposit": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ]
+  "deposit": "1000stake"
 }
 `,
 				version.ClientName,

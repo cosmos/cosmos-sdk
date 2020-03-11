@@ -20,8 +20,19 @@ type GenesisState struct {
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(genTxs []json.RawMessage) GenesisState {
+	// Ensure genTxs is never nil, https://github.com/cosmos/cosmos-sdk/issues/5086
+	if len(genTxs) == 0 {
+		genTxs = make([]json.RawMessage, 0)
+	}
 	return GenesisState{
 		GenTxs: genTxs,
+	}
+}
+
+// DefaultGenesisState returns the genutil module's default genesis state.
+func DefaultGenesisState() GenesisState {
+	return GenesisState{
+		GenTxs: []json.RawMessage{},
 	}
 }
 

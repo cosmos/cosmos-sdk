@@ -268,6 +268,16 @@ paths:
           description: Maximum number of items per page
           type: integer
           x-example: 1
+        - in: query
+          name: tx.minheight
+          type: integer
+          description: "transactions on blocks with height greater or equal this value"
+          x-example: 25
+        - in: query
+          name: tx.maxheight
+          type: integer
+          description: "transactions on blocks with height less than or equal this value"
+          x-example: 800000
       responses:
         200:
           description: All txs matching the provided events

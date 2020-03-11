@@ -2,6 +2,7 @@ package crisis
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -45,8 +46,9 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := types.ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
+
 	return types.ValidateGenesis(data)
 }
 

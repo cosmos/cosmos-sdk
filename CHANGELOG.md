@@ -35,6 +35,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.37.78] - TBD
+
+### Bug Fixes
+
+* (rest) [\#5508](https://github.com/cosmos/cosmos-sdk/pull/5508) Fix `x/distribution` endpoints to properly return height in the response.
+* (x/genutil) [\#5499](https://github.com/cosmos/cosmos-sdk/pull/) Ensure `DefaultGenesis` returns valid and non-nil default genesis state.
+* (x/genutil) [\#5775](https://github.com/cosmos/cosmos-sdk/pull/5775) Fix `ExportGenesis` in `x/genutil` to export default genesis state (`[]`) instead of `null`.
+* (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure `gentxs` are always an empty array instead of `nil`.
+
+### Improvements
+
+* (rest) [\#5648](https://github.com/cosmos/cosmos-sdk/pull/5648) Enhance /txs usability:
+  * Add `tx.minheight` key to filter transaction with an inclusive minimum block height
+  * Add `tx.maxheight` key to filter transaction with an inclusive maximum block height
+
 ## [v0.37.7] - 2020-02-10
 
 ### Improvements
@@ -2619,7 +2634,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.7...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.8...HEAD
+[v0.37.8]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.8
 [v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6
 [v0.37.5]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.5

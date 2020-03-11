@@ -1,8 +1,10 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -15,6 +17,18 @@ var (
 	pk1 = ed25519.GenPrivKey().PubKey()
 	pk2 = ed25519.GenPrivKey().PubKey()
 )
+
+func TestNetGenesisState(t *testing.T) {
+	gen := NewGenesisState(nil)
+	assert.NotNil(t, gen.GenTxs) // https://github.com/cosmos/cosmos-sdk/issues/5086
+
+	gen = NewGenesisState(
+		[]json.RawMessage{
+			[]byte(`{"foo":"bar"}`),
+		},
+	)
+	assert.Equal(t, string(gen.GenTxs[0]), `{"foo":"bar"}`)
+}
 
 func TestValidateGenesisMultipleMessages(t *testing.T) {
 

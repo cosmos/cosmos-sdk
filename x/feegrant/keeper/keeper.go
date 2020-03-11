@@ -33,7 +33,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
-	bz := k.cdc.MustMarshalBinaryBare(grant)
+	bz := k.cdc.MustMarshalBinaryBare(&grant)
 
 	store.Set(key, bz)
 
@@ -71,7 +71,7 @@ func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 		return nil
 	}
 
-	return grant.Allowance
+	return grant.GetAllowance().GetFeeAllowance()
 }
 
 // GetFeeGrant returns entire grant between both accounts
@@ -144,7 +144,7 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
-	remove, err := grant.Allowance.Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
+	remove, err := grant.GetAllowance().GetFeeAllowance().Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
 	if err == nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

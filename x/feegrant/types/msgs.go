@@ -9,6 +9,14 @@ func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, all
 	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
 }
 
+func (msg MsgGrantFeeAllowance) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGrantFeeAllowance) Type() string {
+	return "grant-fee-allowance"
+}
+
 func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	if msg.Granter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
@@ -17,7 +25,15 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 
-	return msg.Allowance.ValidateBasic()
+	return msg.GetAllowance().GetFeeAllowance().ValidateBasic()
+}
+
+func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Granter}
 }
 
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {

@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
@@ -36,7 +35,7 @@ func NewMsgTransfer(
 
 // Route implements sdk.Msg
 func (MsgTransfer) Route() string {
-	return ibctypes.RouterKey
+	return RouterKey
 }
 
 // Type implements sdk.Msg

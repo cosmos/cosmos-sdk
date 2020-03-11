@@ -587,7 +587,7 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 						Node: &sdktypes.SnapshotNode{
 							Key:     node.Key,
 							Value:   node.Value,
-							Height:  node.Height,
+							Height:  int32(node.Height),
 							Version: node.Version,
 						},
 					},

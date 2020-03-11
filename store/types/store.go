@@ -56,7 +56,7 @@ func (s *Snapshot) Close() error {
 	var err error
 	for r := range s.Chunks {
 		e := r.Close()
-		if e != nil {
+		if e != nil && err == nil {
 			err = e
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strings"
 
@@ -586,7 +587,7 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 						Node: &sdktypes.SnapshotNode{
 							Key:     node.Key,
 							Value:   node.Value,
-							Height:  int32(node.Height),
+							Height:  node.Height,
 							Version: node.Version,
 						},
 					},
@@ -609,10 +610,13 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 // Restore implements Snapshotter.
 func (rs *Store) Restore(snapshot types.Snapshot) error {
 	if snapshot.Format != 1 {
-		return errors.Errorf("unknown snapshot format %v", snapshot.Format)
+		return errors.Errorf("unsupported snapshot format %v", snapshot.Format)
 	}
 	if snapshot.Height == 0 {
 		return errors.New("cannot restore snapshot at height 0")
+	}
+	if snapshot.Height > math.MaxInt64 {
+		return fmt.Errorf("snapshot height %v cannot exceed %v", snapshot.Height, math.MaxInt64)
 	}
 
 	// Set up a restore stream pipeline
@@ -631,7 +635,6 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 	// a SnapshotStore, telling us which store to import into. The following items will contain
 	// SnapshotNode (i.e. ExportNode) until we reach the next SnapshotStore (or EOF).
 	var importer *tmiavl.Importer
-	count := 0
 	for {
 		item := &sdktypes.SnapshotItem{}
 		err := protoReader.ReadMsg(item)
@@ -648,7 +651,6 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 				if err != nil {
 					return fmt.Errorf("IAVL commit failed: %w", err)
 				}
-				count = 0
 			}
 			store, ok := rs.getStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
@@ -663,13 +665,15 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 			if importer == nil {
 				return fmt.Errorf("received node data before store metadata")
 			}
+			if item.Node.Height > math.MaxInt8 {
+				return fmt.Errorf("node height %v cannot exceed %v", item.Node.Height, math.MaxInt8)
+			}
 			importer.Add(&tmiavl.ExportNode{
 				Key:     item.Node.Key,
 				Value:   item.Node.Value,
 				Height:  int8(item.Node.Height),
 				Version: item.Node.Version,
 			})
-			count++
 
 		default:
 			return fmt.Errorf("unknown protobuf message %T", item)

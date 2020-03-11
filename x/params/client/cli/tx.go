@@ -77,7 +77,12 @@ Where proposal.json contains:
 			from := cliCtx.GetFromAddress()
 			content := paramproposal.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
-			msg := govtypes.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			if err != nil {
+				return err
+			}
+
+			msg := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

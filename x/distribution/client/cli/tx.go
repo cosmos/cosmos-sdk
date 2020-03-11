@@ -248,9 +248,18 @@ Where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, proposal.Amount)
 
-			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			amount, err := sdk.ParseCoins(proposal.Amount)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+
+			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			if err != nil {
+				return err
+			}
+			msg := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

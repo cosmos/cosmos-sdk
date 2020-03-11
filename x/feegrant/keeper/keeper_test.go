@@ -10,6 +10,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
@@ -41,14 +42,14 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	suite.cdc = cdc
-
+	appCodec := codecstd.NewAppCodec(cdc)
 	delCapKey := sdk.NewKVStoreKey("delKey")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(delCapKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
-	suite.dk = keeper.NewKeeper(cdc, delCapKey)
+	suite.dk = keeper.NewKeeper(appCodec, delCapKey)
 	suite.ctx = sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id", Time: time.Now().UTC(), Height: 1234}, false, log.NewNopLogger())
 
 	suite.addr = mustAddr("cosmos157ez5zlaq0scm9aycwphhqhmg3kws4qusmekll")

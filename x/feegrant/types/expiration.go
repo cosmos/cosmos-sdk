@@ -7,13 +7,13 @@ import (
 )
 
 // ExpiresAtTime creates an expiration at the given time
-func ExpiresAtTime(t time.Time) ExpiresAt {
-	return ExpiresAt{Time: t}
+func ExpiresAtTime(t time.Time) *ExpiresAt {
+	return &ExpiresAt{Time: t}
 }
 
 // ExpiresAtHeight creates an expiration at the given height
-func ExpiresAtHeight(h int64) ExpiresAt {
-	return ExpiresAt{Height: h}
+func ExpiresAtHeight(h int64) *ExpiresAt {
+	return &ExpiresAt{Height: h}
 }
 
 // ValidateBasic performs basic sanity checks.
@@ -35,7 +35,7 @@ func (e ExpiresAt) IsZero() bool {
 
 // FastForward produces a new Expiration with the time or height set to the
 // new value, depending on what was set on the original expiration
-func (e ExpiresAt) FastForward(t time.Time, h int64) ExpiresAt {
+func (e ExpiresAt) FastForward(t time.Time, h int64) *ExpiresAt {
 	if !e.Time.IsZero() {
 		return ExpiresAtTime(t)
 	}

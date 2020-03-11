@@ -220,18 +220,8 @@ Where proposal.json contains:
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
   "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
-  "amount": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ],
-  "deposit": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ]
+  "amount": "1000stake",
+  "deposit": "1000stake"
 }
 `,
 				version.ClientName,

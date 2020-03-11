@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // define constants used for testing
@@ -37,7 +36,7 @@ var (
 func TestMsgTransferRoute(t *testing.T) {
 	msg := NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2, true)
 
-	require.Equal(t, ibctypes.RouterKey, msg.Route())
+	require.Equal(t, RouterKey, msg.Route())
 }
 
 // TestMsgTransferType tests Type for MsgTransfer

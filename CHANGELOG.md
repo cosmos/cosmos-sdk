@@ -44,6 +44,7 @@ balances or a single balance by denom when the `denom` query parameter is presen
 * (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
 * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
 * (store/types) [\#5730](https://github.com/cosmos/cosmos-sdk/pull/5730) store.types.Cp() is removed in favour of types.CopyBytes().
+* (client) [\#5640](https://github.com/cosmos/cosmos-sdk/issues/5783) Unify all coins representations on json client requests.
 
 ### API Breaking Changes
 

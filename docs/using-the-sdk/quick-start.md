@@ -81,6 +81,7 @@ Now that you have created a local account, go ahead and grant it `stake` tokens 
 ```bash
 aud add-genesis-account $(acli keys show validator -a) 100000000stake
 ```
+> Notice that the stake is `100000000stake`, this is the minimum needed to start a validator. This value is defined _______.
 
 Now that your account has some tokens, you need to add a validator to your chain. Validators are special full-nodes that participate in the consensus process (implemented in the [underlying consensus engine](../intro/sdk-app-architecture.md#tendermint)) in order to add new blocks to the chain. Any account can declare its intention to become a validator operator, but only those with sufficient delegation get to enter the active set (for example, only the top 125 validator candidates with the most delegation get to be validators in the Cosmos Hub). For this guide, you will add your local node (created via the `init` command above) as a validator of your chain. Validators can be declared before a chain is first started via a special transaction included in the genesis file called a `gentx`:
 

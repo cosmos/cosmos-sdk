@@ -76,7 +76,7 @@ func (tx Transaction) ValidateBasic() error {
 // encoding ensures all field names adhere to their proto definition, default
 // values are omitted, and follows the JSON Canonical Form.
 func (tx Transaction) CanonicalSignBytes(cid string, a, s uint64) ([]byte, error) {
-	return NewSignDoc(a, s, cid, tx.Base.Memo, tx.Base.Fee, tx.Msgs...).SignBytes()
+	return NewSignDoc(a, s, cid, tx.Base.Memo, tx.Base.Fee, tx.Msgs...).CanonicalSignBytes()
 }
 
 func NewSignDoc(a, s uint64, cid, m string, f auth.StdFee, msgs ...Message) *SignDoc {

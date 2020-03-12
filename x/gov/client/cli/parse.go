@@ -24,8 +24,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 
 	for _, flag := range ProposalFlags {
 		if viper.GetString(flag) != "" {
-			return nil, fmt.Errorf(
-				"--%s flag provided alongside --proposal, which is a noop", flag)
+			return nil, fmt.Errorf("--%s flag provided alongside --proposal, which is a noop", flag)
 		}
 	}
 

@@ -106,8 +106,9 @@ message Content {
 message Transaction {
   option (gogoproto.goproto_getters) = false;
 
-  cosmos_sdk.x.auth.v1.StdTxBase base = 1 [(gogoproto.nullable) = false];
-  repeated Message               msgs = 2 [(gogoproto.nullable) = false];
+  cosmos_sdk.x.auth.v1.StdTxBase base = 1
+      [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
+  repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }
 
 // Message defines the set of valid concrete message types that can be used to

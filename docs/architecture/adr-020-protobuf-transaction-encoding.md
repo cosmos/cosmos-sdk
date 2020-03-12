@@ -104,7 +104,6 @@ and messages.
 ```go
 type TxGenerator interface {
   NewTx() ClientTx
-  SignBytes func(chainID string, num, seq uint64, fee StdFee, msgs []sdk.Msg, memo string) ([]byte, error)
 }
 
 type ClientTx interface {
@@ -112,12 +111,14 @@ type ClientTx interface {
   codec.ProtoMarshaler
 
   SetMsgs(...sdk.Msg) error
-  GetSignatures() []StdSignature
-  SetSignatures(...StdSignature) error
-  GetFee() StdFee
-  SetFee(StdFee)
+  GetSignatures() []sdk.Signature
+  SetSignatures(...sdk.Signature)
+  GetFee() sdk.Fee
+  SetFee(sdk.Fee)
   GetMemo() string
   SetMemo(string)
+
+  CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
 }
 ```
 

@@ -59,6 +59,9 @@ var (
 	MakeSignature                     = types.MakeSignature
 	ValidateGenAccounts               = types.ValidateGenAccounts
 	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
+	NewStdSignature                   = types.NewStdSignature
+	NewStdTxBase                      = types.NewStdTxBase
+	NewStdSignDocBase                 = types.NewStdSignDocBase
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -89,4 +92,5 @@ type (
 	GenesisAccountIterator           = types.GenesisAccountIterator
 	Codec                            = types.Codec
 	StdSignDocBase                   = types.StdSignDocBase
+	StdTxBase                        = types.StdTxBase
 )

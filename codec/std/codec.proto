@@ -100,6 +100,16 @@ message Content {
   }
 }
 
+// Transaction defines the application-level transaction that can be signed and
+// processed by the state-machine. It contains a base of common fields and
+// repeated set of Message types.
+message Transaction {
+  option (gogoproto.goproto_getters) = false;
+
+  cosmos_sdk.x.auth.v1.StdTxBase base = 1;
+  repeated Message               msgs = 2;
+}
+
 // Message defines the set of valid concrete message types that can be used to
 // construct a transaction.
 message Message {

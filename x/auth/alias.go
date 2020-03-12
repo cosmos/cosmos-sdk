@@ -22,6 +22,7 @@ const (
 	DefaultSigVerifyCostSecp256k1 = types.DefaultSigVerifyCostSecp256k1
 	QueryAccount                  = types.QueryAccount
 	QueryParams                   = types.QueryParams
+	MaxGasWanted                  = types.MaxGasWanted
 )
 
 var (

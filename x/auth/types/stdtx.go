@@ -14,11 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-var (
-	_ sdk.Tx = (*StdTx)(nil)
+// MaxGasWanted defines the max gas allowed.
+const MaxGasWanted = uint64((1 << 63) - 1)
 
-	maxGasWanted = uint64((1 << 63) - 1)
-)
+var _ sdk.Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -46,10 +45,10 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() error {
 	stdSigs := tx.GetSignatures()
 
-	if tx.Fee.Gas > maxGasWanted {
+	if tx.Fee.Gas > MaxGasWanted {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted,
+			"invalid gas supplied; %d > %d", tx.Fee.Gas, MaxGasWanted,
 		)
 	}
 	if tx.Fee.Amount.IsAnyNegative() {
@@ -92,8 +91,9 @@ func CountSubKeys(pub crypto.PubKey) int {
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be omitted.
 func (tx StdTx) GetSigners() []sdk.AccAddress {
-	seen := map[string]bool{}
 	var signers []sdk.AccAddress
+	seen := map[string]bool{}
+
 	for _, msg := range tx.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
 			if !seen[addr.String()] {
@@ -102,6 +102,7 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 			}
 		}
 	}
+
 	return signers
 }
 
@@ -127,9 +128,11 @@ func (tx StdTx) GetSignatures() [][]byte {
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() []crypto.PubKey {
 	pks := make([]crypto.PubKey, len(tx.Signatures))
+
 	for i, stdSig := range tx.Signatures {
-		pks[i] = stdSig.PubKey
+		pks[i] = stdSig.GetPubKey()
 	}
+
 	return pks
 }
 
@@ -237,12 +240,6 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	return sdk.MustSortJSON(bz)
 }
 
-// StdSignature represents a sig
-type StdSignature struct {
-	crypto.PubKey `json:"pub_key" yaml:"pub_key"` // optional
-	Signature     []byte                          `json:"signature" yaml:"signature"`
-}
-
 // DefaultTxDecoder logic for standard transaction decoding
 func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
@@ -270,6 +267,17 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	}
 }
 
+// GetPubKey returns the public key of a signature as a crypto.PubKey using the
+// Amino codec.
+func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
+	if len(ss.PubKey) == 0 {
+		return nil
+	}
+
+	codec.Cdc.MustUnmarshalBinaryBare(ss.PubKey, &pk)
+	return pk
+}
+
 // MarshalYAML returns the YAML representation of the signature.
 func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	var (
@@ -279,7 +287,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	)
 
 	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.PubKey)
+		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +298,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 		Signature string
 	}{
 		PubKey:    pubkey,
-		Signature: fmt.Sprintf("%s", ss.Signature),
+		Signature: fmt.Sprintf("%X", ss.Signature),
 	})
 	if err != nil {
 		return nil, err

@@ -30,6 +30,15 @@ message StdFee {
   uint64 gas = 2;
 }
 
+// StdSignature defines a signature structure that contains the signature of a
+// transaction and an optional public key.
+message StdSignature {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes pub_key   = 1 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
+  bytes signature = 2;
+}
+
 // Params defines the parameters for the auth module.
 message Params {
   option (gogoproto.equal)            = true;
@@ -42,4 +51,12 @@ message Params {
       [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
   uint64 sig_verify_cost_secp256k1 = 5
       [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
+}
+
+// StdTxBase defines a transaction base which application-level concrete transaction
+// types can extend.
+message StdTxBase {
+  StdFee                fee        = 1;
+  repeated StdSignature signatures = 2;
+  string                memo       = 3;
 }

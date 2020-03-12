@@ -43,9 +43,9 @@ message Message {
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
 
   oneof sum {
-    bank.MsgSend = 1;
-    staking.MsgCreateValidator = 2;
-    staking.MsgDelegate = 3;
+    cosmos_sdk.x.bank.v1.MsgSend              msg_send             = 1;
+    cosmos_sdk.x.bank.v1.MsgMultiSend         msg_multi_send       = 2;
+    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant msg_verify_invariant = 3;
     // ...
   }
 }
@@ -61,10 +61,8 @@ Example:
 // app/codec/codec.proto
 
 message Transaction {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Tx";
-
-  StdTxBase base = 1;
-  repeated Message msgs = 2;
+  cosmos_sdk.x.auth.v1.StdTxBase base = 1;
+  repeated Message               msgs = 2;
 }
 ```
 

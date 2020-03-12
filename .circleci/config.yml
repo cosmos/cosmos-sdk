@@ -230,7 +230,7 @@ workflows:
           filters:
             branches:
               only:
-                - docs-theme-latest
+                - docs-staging
       - build-docs:
           context: docs-deployment-release
           filters:

@@ -77,7 +77,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	} else {
 		val := gogotypes.UInt64Value{}
 
-		err := ak.cdc.UnmarshalBinaryLengthPrefixed(bz, &val)
+		err := ak.cdc.UnmarshalBinaryBare(bz, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -85,7 +85,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 		accNumber = val.GetValue()
 	}
 
-	bz = ak.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.UInt64Value{Value: accNumber + 1})
+	bz = ak.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: accNumber + 1})
 	store.Set(types.GlobalAccountNumberKey, bz)
 
 	return accNumber

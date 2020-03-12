@@ -24,10 +24,7 @@ func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	cdc := codec.New()
-	wantDefaultGenesis := map[string]json.RawMessage{
-		"mockAppModuleBasic1": json.RawMessage(``),
-		"mockAppModuleBasic2": json.RawMessage(`{"key":"value"}`),
-	}
+	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 
@@ -47,8 +44,7 @@ func TestBasicManager(t *testing.T) {
 	require.Equal(t, wantDefaultGenesis, mm.DefaultGenesis(cdc))
 
 	var data map[string]string
-	require.NoError(t, json.Unmarshal(wantDefaultGenesis["mockAppModuleBasic2"], &data))
-	require.Equal(t, map[string]string{"key": "value"}, data)
+	require.Equal(t, map[string]string(nil), data)
 
 	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, wantDefaultGenesis)))
 

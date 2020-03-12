@@ -279,14 +279,14 @@ func (k Keeper) IterateValidatorAccumulatedCommissions(ctx sdk.Context, handler 
 func (k Keeper) GetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetValidatorOutstandingRewardsKey(val))
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &rewards)
+	k.cdc.MustUnmarshalBinaryBare(bz, &rewards)
 	return
 }
 
 // set validator outstanding rewards
 func (k Keeper) SetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(&rewards)
+	b := k.cdc.MustMarshalBinaryBare(&rewards)
 	store.Set(types.GetValidatorOutstandingRewardsKey(val), b)
 }
 
@@ -303,7 +303,7 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		rewards := types.ValidatorOutstandingRewards{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewards)
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &rewards)
 		addr := types.GetValidatorOutstandingRewardsAddress(iter.Key())
 		if handler(addr, rewards) {
 			break
@@ -318,14 +318,14 @@ func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 	if b == nil {
 		return types.ValidatorSlashEvent{}, false
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &event)
+	k.cdc.MustUnmarshalBinaryBare(b, &event)
 	return event, true
 }
 
 // set slash event for height
 func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(&event)
+	b := k.cdc.MustMarshalBinaryBare(&event)
 	store.Set(types.GetValidatorSlashEventKey(val, height, period), b)
 }
 
@@ -340,7 +340,7 @@ func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValA
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var event types.ValidatorSlashEvent
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &event)
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &event)
 		_, height := types.GetValidatorSlashEventAddressHeight(iter.Key())
 		if handler(height, event) {
 			break
@@ -355,7 +355,7 @@ func (k Keeper) IterateValidatorSlashEvents(ctx sdk.Context, handler func(val sd
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var event types.ValidatorSlashEvent
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &event)
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &event)
 		val, height := types.GetValidatorSlashEventAddressHeight(iter.Key())
 		if handler(val, height, event) {
 			break

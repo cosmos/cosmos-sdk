@@ -56,7 +56,17 @@ message Params {
 // StdTxBase defines a transaction base which application-level concrete transaction
 // types can extend.
 message StdTxBase {
-  StdFee                fee        = 1;
-  repeated StdSignature signatures = 2;
+  StdFee                fee        = 1 [(gogoproto.nullable) = false];
+  repeated StdSignature signatures = 2 [(gogoproto.nullable) = false];
   string                memo       = 3;
+}
+
+// StdSignDocBase defines the base structure for which applications can extend
+// to define the concrete structure that signers sign over.
+message StdSignDocBase {
+  string chain_id       = 1 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
+  uint64 account_number = 2 [(gogoproto.moretags) = "yaml:\"account_number\""];
+  uint64 sequence       = 3;
+  string memo           = 4;
+  StdFee fee            = 5 [(gogoproto.nullable) = false];
 }

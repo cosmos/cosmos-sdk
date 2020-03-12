@@ -78,7 +78,8 @@ to provide canonical representation of a `Transaction` to sign over, clients mus
 obey the following rules:
 
 - Encode `SignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
-  - Default and zero values must be stripped from the output (`0`, `“”`, `null`, `false`, `[]`, and `{}`).
+  - Default must be stripped from the output!
+  - JSON keys adhere to their Proto-defined field names.
 - Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
   - This spec should be trivial to interpret and implement in any language.
 

@@ -17,6 +17,96 @@ import (
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
+// NewStdFee returns a new instance of StdFee
+func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
+	return StdFee{
+		Amount: amount,
+		Gas:    gas,
+	}
+}
+
+// Bytes returns the encoded bytes of a StdFee.
+func (fee StdFee) Bytes() []byte {
+	if len(fee.Amount) == 0 {
+		fee.Amount = sdk.NewCoins()
+	}
+
+	bz, err := codec.Cdc.MarshalJSON(fee)
+	if err != nil {
+		panic(err)
+	}
+
+	return bz
+}
+
+// GasPrices returns the gas prices for a StdFee.
+//
+// NOTE: The gas prices returned are not the true gas prices that were
+// originally part of the submitted transaction because the fee is computed
+// as fee = ceil(gasWanted * gasPrices).
+func (fee StdFee) GasPrices() sdk.DecCoins {
+	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
+}
+
+// GetPubKey returns the public key of a signature as a crypto.PubKey using the
+// Amino codec.
+func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
+	if len(ss.PubKey) == 0 {
+		return nil
+	}
+
+	codec.Cdc.MustUnmarshalBinaryBare(ss.PubKey, &pk)
+	return pk
+}
+
+// MarshalYAML returns the YAML representation of the signature.
+func (ss StdSignature) MarshalYAML() (interface{}, error) {
+	var (
+		bz     []byte
+		pubkey string
+		err    error
+	)
+
+	if ss.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bz, err = yaml.Marshal(struct {
+		PubKey    string
+		Signature string
+	}{
+		PubKey:    pubkey,
+		Signature: fmt.Sprintf("%X", ss.Signature),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
+}
+
+// CountSubKeys counts the total number of keys for a multi-sig public key.
+func CountSubKeys(pub crypto.PubKey) int {
+	v, ok := pub.(multisig.PubKeyMultisigThreshold)
+	if !ok {
+		return 1
+	}
+
+	numKeys := 0
+	for _, subkey := range v.PubKeys {
+		numKeys += CountSubKeys(subkey)
+	}
+
+	return numKeys
+}
+
+// ---------------------------------------------------------------------------
+// DEPRECATED
+// ---------------------------------------------------------------------------
+
 var _ sdk.Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
@@ -68,21 +158,6 @@ func (tx StdTx) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// CountSubKeys counts the total number of keys for a multi-sig public key.
-func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKeyMultisigThreshold)
-	if !ok {
-		return 1
-	}
-
-	numKeys := 0
-	for _, subkey := range v.PubKeys {
-		numKeys += CountSubKeys(subkey)
-	}
-
-	return numKeys
 }
 
 // GetSigners returns the addresses that must sign the transaction.
@@ -166,43 +241,6 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 	return sdk.AccAddress{}
 }
 
-// NewStdFee returns a new instance of StdFee
-func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
-	return StdFee{
-		Amount: amount,
-		Gas:    gas,
-	}
-}
-
-// Bytes for signing later
-func (fee StdFee) Bytes() []byte {
-	// normalize. XXX
-	// this is a sign of something ugly
-	// (in the lcd_test, client side its null,
-	// server side its [])
-	if len(fee.Amount) == 0 {
-		fee.Amount = sdk.NewCoins()
-	}
-
-	bz, err := codec.Cdc.MarshalJSON(fee) // TODO
-	if err != nil {
-		panic(err)
-	}
-
-	return bz
-}
-
-// GasPrices returns the gas prices for a StdFee.
-//
-// NOTE: The gas prices returned are not the true gas prices that were
-// originally part of the submitted transaction because the fee is computed
-// as fee = ceil(gasWanted * gasPrices).
-func (fee StdFee) GasPrices() sdk.DecCoins {
-	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
-}
-
-//__________________________________________________________
-
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
 // as well as the ChainID (prevent cross chain replay)
@@ -265,44 +303,4 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryLengthPrefixed(tx)
 	}
-}
-
-// GetPubKey returns the public key of a signature as a crypto.PubKey using the
-// Amino codec.
-func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
-	if len(ss.PubKey) == 0 {
-		return nil
-	}
-
-	codec.Cdc.MustUnmarshalBinaryBare(ss.PubKey, &pk)
-	return pk
-}
-
-// MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
-	var (
-		bz     []byte
-		pubkey string
-		err    error
-	)
-
-	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bz, err = yaml.Marshal(struct {
-		PubKey    string
-		Signature string
-	}{
-		PubKey:    pubkey,
-		Signature: fmt.Sprintf("%X", ss.Signature),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
 }

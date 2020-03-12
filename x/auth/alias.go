@@ -88,4 +88,5 @@ type (
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
 	Codec                            = types.Codec
+	StdSignDocBase                   = types.StdSignDocBase
 )

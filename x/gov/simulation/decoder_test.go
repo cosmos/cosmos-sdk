@@ -42,10 +42,10 @@ func TestDecodeStore(t *testing.T) {
 	vote := types.NewVote(1, delAddr1, types.OptionYes)
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.ProposalKey(1), Value: cdc.MustMarshalBinaryLengthPrefixed(proposal)},
+		tmkv.Pair{Key: types.ProposalKey(1), Value: cdc.MustMarshalBinaryBare(proposal)},
 		tmkv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
-		tmkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(deposit)},
-		tmkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(vote)},
+		tmkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(deposit)},
+		tmkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(vote)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

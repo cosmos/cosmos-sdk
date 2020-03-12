@@ -13,7 +13,6 @@ import (
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -74,40 +73,44 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	basic := types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(334455),
+	basic := types.FeeAllowance_BasicFeeAllowance{
+		BasicFeeAllowance: &types.BasicFeeAllowance{
+			SpendLimit: atom,
+			Expiration: types.ExpiresAtHeight(334455),
+		},
 	}
-	basic2 := types.BasicFeeAllowance{
-		SpendLimit: eth,
-		Expiration: types.ExpiresAtHeight(172436),
+	basic2 := types.FeeAllowance_BasicFeeAllowance{
+		BasicFeeAllowance: &types.BasicFeeAllowance{
+			SpendLimit: eth,
+			Expiration: types.ExpiresAtHeight(172436),
+		},
 	}
 
 	// let's set up some initial state here
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr, Grantee: suite.addr2, Allowance: &basic,
+		Granter: suite.addr, Grantee: suite.addr2, Allowance: &types.FeeAllowance{Sum: &basic},
 	})
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr, Grantee: suite.addr3, Allowance: &basic2,
+		Granter: suite.addr, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &basic2},
 	})
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr2, Grantee: suite.addr3, Allowance: &basic,
+		Granter: suite.addr2, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &basic},
 	})
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr2, Grantee: suite.addr4, Allowance: &basic,
+		Granter: suite.addr2, Grantee: suite.addr4, Allowance: &types.FeeAllowance{Sum: &basic},
 	})
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr4, Grantee: suite.addr, Allowance: &basic2,
+		Granter: suite.addr4, Grantee: suite.addr, Allowance: &types.FeeAllowance{Sum: &basic2},
 	})
 
 	// remove some, overwrite other
 	k.RevokeFeeAllowance(ctx, suite.addr, suite.addr2)
 	k.RevokeFeeAllowance(ctx, suite.addr, suite.addr3)
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr, Grantee: suite.addr3, Allowance: &basic,
+		Granter: suite.addr, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &basic},
 	})
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: suite.addr2, Grantee: suite.addr3, Allowance: &basic2,
+		Granter: suite.addr2, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &basic2},
 	})
 
 	// end state:
@@ -119,7 +122,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	cases := map[string]struct {
 		grantee   sdk.AccAddress
 		granter   sdk.AccAddress
-		allowance exported.FeeAllowance
+		allowance *types.FeeAllowance
 	}{
 		"addr revoked": {
 			granter: suite.addr,
@@ -128,7 +131,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		"addr revoked and added": {
 			granter:   suite.addr,
 			grantee:   suite.addr3,
-			allowance: &basic,
+			allowance: &types.FeeAllowance{Sum: &basic},
 		},
 		"addr never there": {
 			granter: suite.addr,
@@ -137,7 +140,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		"addr modified": {
 			granter:   suite.addr2,
 			grantee:   suite.addr3,
-			allowance: &basic2,
+			allowance: &types.FeeAllowance{Sum: &basic2},
 		},
 	}
 
@@ -163,13 +166,13 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		},
 		"addr has one": {
 			grantee: suite.addr,
-			grants:  []types.FeeAllowanceGrant{{Granter: suite.addr4, Grantee: suite.addr, Allowance: &basic2}},
+			grants:  []types.FeeAllowanceGrant{{Granter: suite.addr4, Grantee: suite.addr, Allowance: &types.FeeAllowance{Sum: &basic2}}},
 		},
 		"addr3 has two": {
 			grantee: suite.addr3,
 			grants: []types.FeeAllowanceGrant{
-				{Granter: suite.addr, Grantee: suite.addr3, Allowance: &basic},
-				{Granter: suite.addr2, Grantee: suite.addr3, Allowance: &basic2},
+				{Granter: suite.addr, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &basic}},
+				{Granter: suite.addr2, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &basic2}},
 			},
 		},
 	}
@@ -195,21 +198,24 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	future := types.BasicFeeAllowance{
+	future := types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(5678),
+	},
 	}
-	expired := types.BasicFeeAllowance{
+	expired := types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 		SpendLimit: eth,
 		Expiration: types.ExpiresAtHeight(55),
+	},
 	}
 
 	// for testing limits of the contract
 	hugeAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 9999))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
-	futureAfterSmall := types.BasicFeeAllowance{
+	futureAfterSmall := types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
 		Expiration: types.ExpiresAtHeight(5678),
+	},
 	}
 
 	// then lots of queries
@@ -218,7 +224,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 		granter sdk.AccAddress
 		fee     sdk.Coins
 		allowed bool
-		final   exported.FeeAllowance
+		final   *types.FeeAllowance
 	}{
 		"use entire pot": {
 			granter: suite.addr,
@@ -239,14 +245,14 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			grantee: suite.addr2,
 			fee:     hugeAtom,
 			allowed: false,
-			final:   &future,
+			final:   &types.FeeAllowance{Sum: &future},
 		},
 		"use a little": {
 			granter: suite.addr,
 			grantee: suite.addr2,
 			fee:     smallAtom,
 			allowed: true,
-			final:   &futureAfterSmall,
+			final:   &types.FeeAllowance{Sum: &futureAfterSmall},
 		},
 	}
 
@@ -257,10 +263,10 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			// addr -> addr2 (future)
 			// addr -> addr3 (expired)
 			k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-				Granter: suite.addr, Grantee: suite.addr2, Allowance: &future,
+				Granter: suite.addr, Grantee: suite.addr2, Allowance: &types.FeeAllowance{Sum: &future},
 			})
 			k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-				Granter: suite.addr, Grantee: suite.addr3, Allowance: &expired,
+				Granter: suite.addr, Grantee: suite.addr3, Allowance: &types.FeeAllowance{Sum: &expired},
 			})
 
 			err := k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)

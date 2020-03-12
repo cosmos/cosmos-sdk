@@ -20,17 +20,21 @@ func (suite *KeeperTestSuite) TestQuery() {
 	grant1 := types.FeeAllowanceGrant{
 		Granter: suite.addr,
 		Grantee: suite.addr3,
-		Allowance: &types.BasicFeeAllowance{
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 			Expiration: types.ExpiresAtHeight(334455),
+		},
+		},
 		},
 	}
 	grant2 := types.FeeAllowanceGrant{
 		Granter: suite.addr2,
 		Grantee: suite.addr3,
-		Allowance: &types.BasicFeeAllowance{
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
 			Expiration: types.ExpiresAtHeight(334455),
+		},
+		},
 		},
 	}
 

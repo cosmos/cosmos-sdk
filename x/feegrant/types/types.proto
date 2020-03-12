@@ -18,6 +18,7 @@ message MsgRevokeFeeAllowance{
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicFeeAllowance{
+    option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
 
     repeated cosmos_sdk.v1.Coin SpendLimit = 1 [
@@ -30,6 +31,7 @@ message BasicFeeAllowance{
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
 // as well as a limit per time period.
 message PeriodicFeeAllowance{
+    option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
 
     BasicFeeAllowance Basic = 1;
@@ -49,6 +51,7 @@ message PeriodicFeeAllowance{
 // Duration is a repeating unit of either clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
 message Duration{
+    option (gogoproto.equal) = true;
     google.protobuf.Timestamp Clock = 1[(gogoproto.stdduration)  = true,
                                        (gogoproto.nullable) = false
                                        ];
@@ -58,6 +61,7 @@ message Duration{
 // ExpiresAt is a point in time where something expires.
 // It may be *either* block time or block height
 message ExpiresAt{
+    option (gogoproto.equal) = true;
     google.protobuf.Timestamp Time = 1 [(gogoproto.stdtime)  = true,
                                        (gogoproto.nullable) = false
                                        ];

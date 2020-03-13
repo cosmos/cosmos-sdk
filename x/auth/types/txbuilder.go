@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -51,13 +50,9 @@ func NewTxBuilder(
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
-func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
-	if err != nil {
-		panic(err)
-	}
+func NewTxBuilderFromCLI() TxBuilder {
 	txbldr := TxBuilder{
-		keybase:            kb,
+		keybase:            nil,
 		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
 		sequence:           viper.GetUint64(flags.FlagSequence),
 		gas:                flags.GasFlagVar.Gas,

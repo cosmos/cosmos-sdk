@@ -121,8 +121,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContextWithKeybaseAndFrom(kb, name).WithCodec(cdc).WithInput(inBuf)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authclient.GetTxEncoder(cdc)).WithKeybase(kb)
 
 			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.
@@ -175,7 +175,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 
-			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
+			cmd.PrintErrf("Genesis transaction written to %q\n", outputDocument)
 			return nil
 
 		},

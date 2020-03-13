@@ -102,7 +102,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 		inBuf := bufio.NewReader(cmd.InOrStdin())
 		offline := viper.GetBool(flagOffline)
 		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		txBldr := types.NewTxBuilderFromCLI().WithKeybase(cliCtx.Keybase)
 
 		if viper.GetBool(flagValidateSigs) {
 			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {

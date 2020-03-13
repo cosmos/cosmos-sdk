@@ -82,8 +82,8 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		cliCtx := context.NewCLIContextWithKeybaseAndFrom(kb, viper.GetString(flags.FlagFrom)).WithCodec(cdc).WithInput(inBuf)
+		txBldr := types.NewTxBuilderFromCLI().WithKeybase(kb)
 
 		if !viper.GetBool(flagOffline) {
 			accnum, seq, err := types.NewAccountRetriever(client.Codec, cliCtx).GetAccountNumberSequence(multisigInfo.GetAddress())

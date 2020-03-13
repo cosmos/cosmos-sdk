@@ -45,21 +45,17 @@ type CLIContext struct {
 	SkipConfirm   bool
 }
 
-// NewCLIContextWithInputAndFrom returns a new initialized CLIContext with parameters from the
-// command line using Viper. It takes a io.Reader and and key name or address and populates
+// NewCLIContextWithKeybaseAndFrom returns a new initialized CLIContext with parameters from the
+// command line using Viper. It takes a keys.Keybase and and key name or address and populates
 // the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
 // using  the chain ID, home directory and RPC URI provided by the command line. If using
 // a CLIContext in tests or any non CLI-based environment, the verifier will not be created
 // and will be set as nil because FlagTrustNode must be set.
-func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
+func NewCLIContextWithKeybaseAndFrom(kb keys.Keybase, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
-	var kb keys.Keybase
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	if !genOnly && from != "" {
-		kb = mustInitKeybase(input)
-	}
 
 	fromAddress, fromName, err := GetFromFields(from, kb)
 	if err != nil {
@@ -82,7 +78,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
 		Keybase:       kb,
-		Input:         input,
+		Input:         nil,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		From:          viper.GetString(flags.FlagFrom),
@@ -108,6 +104,23 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	}
 
 	return ctx.WithVerifier(verifier)
+}
+
+// NewCLIContextWithInputAndFrom returns a new initialized CLIContext with parameters from the
+// command line using Viper. It takes a io.Reader and and key name or address and populates
+// the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
+// using  the chain ID, home directory and RPC URI provided by the command line. If using
+// a CLIContext in tests or any non CLI-based environment, the verifier will not be created
+// and will be set as nil because FlagTrustNode must be set.
+func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
+	var kb keys.Keybase
+
+	genOnly := viper.GetBool(flags.FlagGenerateOnly)
+	if !genOnly && from != "" {
+		kb = mustInitKeybase(input)
+	}
+
+	return NewCLIContextWithKeybaseAndFrom(kb, from).WithInput(input)
 }
 
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the

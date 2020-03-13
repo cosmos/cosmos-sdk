@@ -86,7 +86,7 @@ Example:
     // ...
   }
 
-  bz := cdc.MustMarshalBinaryLengthPrefixed(ts)
+  bz := cdc.MustMarshalBinaryBare(ts)
 ```
 
 However, modules can vary greatly in purpose and design and so we must support the ability for modules
@@ -161,12 +161,12 @@ func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
     return nil, err
   }
 
-  return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
+  return c.Marshaler.MarshalBinaryBare(acc)
 }
 
 func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
   acc := &Account{}
-  if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
+  if err := c.Marshaler.UnmarshalBinaryBare(bz, acc); err != nil {
     return nil, err
   }
 

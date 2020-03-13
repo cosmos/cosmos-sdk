@@ -67,7 +67,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		balance := k.GetBalance(ctx, delegatorAddr, coin.Denom)
 		if balance.IsLT(coin) {
 			return sdkerrors.Wrapf(
-				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s < %s", balance, amt,
+				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
 			)
 		}
 
@@ -265,7 +265,7 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
 		if hasNeg {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s < %s", spendable, coin)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}
 
 		newBalance := balance.Sub(coin)

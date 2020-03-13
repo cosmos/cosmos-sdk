@@ -5,7 +5,6 @@ package server
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime/pprof"
 
 	"github.com/spf13/cobra"
@@ -140,7 +139,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	if err != nil {
 		return err
 	}
-	ss, err := openSnapshotStore(filepath.Join(home, "data"))
+	ss, err := openSnapshotStore(db, home)
 	if err != nil {
 		return err
 	}
@@ -186,7 +185,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	ss, err := openSnapshotStore(filepath.Join(home, "data"))
+	ss, err := openSnapshotStore(db, home)
 	if err != nil {
 		return nil, err
 	}

@@ -27,6 +27,9 @@ const (
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"
+
+	// snapshotFormat is the currently used snapshot format
+	snapshotFormat = 1
 )
 
 var (
@@ -642,5 +645,5 @@ func (app *BaseApp) snapshot(height uint64) error {
 	if err != nil {
 		return err
 	}
-	return app.snapshotStore.Save(height, 1, chunks)
+	return app.snapshotStore.Save(height, snapshotFormat, chunks)
 }

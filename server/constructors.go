@@ -31,12 +31,10 @@ func openDB(rootDir string) (dbm.DB, error) {
 	return db, err
 }
 
-func openSnapshotStore(dataDir string) (*snapshot.Store, error) {
-	db, err := sdk.NewLevelDB("snapshot", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	return snapshot.New(db, filepath.Join(dataDir, "snapshots"))
+func openSnapshotStore(db dbm.DB, rootDir string) (*snapshot.Store, error) {
+	db = dbm.NewPrefixDB(db, []byte("s/_snapshots/"))
+	dir := filepath.Join(rootDir, "data", "snapshots")
+	return snapshot.New(db, dir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

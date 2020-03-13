@@ -635,6 +635,9 @@ func (app *BaseApp) snapshot(height uint64) error {
 	if app.snapshotStore == nil {
 		return errors.New("no snapshot store configured")
 	}
+	if app.snapshotStore.Active() {
+		return errors.New("a snapshot is already in progress")
+	}
 	chunks, err := app.cms.Snapshot(height)
 	if err != nil {
 		return err

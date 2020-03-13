@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020 March 06: Initial Draft
+- 2020 March 12: API Updates
 
 ## Status
 

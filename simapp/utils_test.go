@@ -31,7 +31,7 @@ func TestGetSimulationLog(t *testing.T) {
 		},
 		{
 			auth.StoreKey,
-			[]tmkv.Pair{{Key: auth.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryLengthPrefixed(uint64(10))}},
+			[]tmkv.Pair{{Key: auth.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryBare(uint64(10))}},
 			"10",
 		},
 		{

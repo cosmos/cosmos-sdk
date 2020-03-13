@@ -130,7 +130,7 @@ iterator := sdk.KVStorePrefixIterator(store, prefix) // proxy for store.Iterator
 defer iterator.Close()
 for ; iterator.Valid(); iterator.Next() {
 	var object types.Object
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &object)
+	keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &object)
 
 	if cb(object) {
         break

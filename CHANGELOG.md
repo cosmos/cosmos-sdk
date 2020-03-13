@@ -148,6 +148,7 @@ Buffers for state serialization instead of Amino.
   to define their own concrete `MsgSubmitProposal` types.
   * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
   requiring a concrete codec to know how to serialize `Proposal` types.
+* (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) Now we favor the use of MarshalBinaryBare instead of LengthPrefixed in all cases that is not needed.
 
 ### Improvements
 

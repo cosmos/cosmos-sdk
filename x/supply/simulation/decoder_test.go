@@ -27,7 +27,7 @@ func TestDecodeStore(t *testing.T) {
 	totalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: keeper.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(totalSupply)},
+		tmkv.Pair{Key: keeper.SupplyKey, Value: cdc.MustMarshalBinaryBare(totalSupply)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

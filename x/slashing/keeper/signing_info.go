@@ -18,7 +18,7 @@ func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 		found = false
 		return
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &info)
+	k.cdc.MustUnmarshalBinaryBare(bz, &info)
 	found = true
 	return
 }
@@ -33,7 +33,7 @@ func (k Keeper) HasValidatorSigningInfo(ctx sdk.Context, consAddr sdk.ConsAddres
 // SetValidatorSigningInfo sets the validator signing info to a consensus address key
 func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&info)
+	bz := k.cdc.MustMarshalBinaryBare(&info)
 	store.Set(types.GetValidatorSigningInfoKey(address), bz)
 }
 
@@ -47,7 +47,7 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	for ; iter.Valid(); iter.Next() {
 		address := types.GetValidatorSigningInfoAddress(iter.Key())
 		var info types.ValidatorSigningInfo
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &info)
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &info)
 		if handler(address, info) {
 			break
 		}
@@ -63,7 +63,7 @@ func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 		// lazy: treat empty key as not missed
 		return false
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+	k.cdc.MustUnmarshalBinaryBare(bz, &missed)
 
 	return missed.Value
 }
@@ -83,7 +83,7 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 			continue
 		}
 
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+		k.cdc.MustUnmarshalBinaryBare(bz, &missed)
 		if handler(index, missed.Value) {
 			break
 		}
@@ -132,7 +132,7 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 // missed a block in the current window
 func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&gogotypes.BoolValue{Value: missed})
+	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.BoolValue{Value: missed})
 	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 

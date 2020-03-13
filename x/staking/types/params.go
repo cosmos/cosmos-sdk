@@ -95,7 +95,7 @@ func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
 
 // unmarshal the current staking params value from store key
 func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &params)
+	err = cdc.UnmarshalBinaryBare(value, &params)
 	if err != nil {
 		return
 	}

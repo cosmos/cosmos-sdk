@@ -99,11 +99,11 @@ func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
 
-func (kv multiStore) Snapshot(height uint64) (store.Snapshot, error) {
+func (kv multiStore) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 	panic("not implemented")
 }
 
-func (kv multiStore) Restore(store.Snapshot) error {
+func (kv multiStore) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 	panic("not implemented")
 }
 

@@ -498,7 +498,7 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 //---------------------- Snapshotting ------------------
 
 // Snapshot implements Snapshotter.
-func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
+func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 
 	// Collect stores to snapshot (only IAVL stores are supported)
 	type namedStore struct {
@@ -514,8 +514,7 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 			// Transient stores aren't persisted and shouldn't be snapshotted
 			continue
 		default:
-			return types.Snapshot{}, errors.Errorf("unable to snapshot store %q of type %T",
-				key.Name(), store)
+			return nil, errors.Errorf("unable to snapshot store %q of type %T", key.Name(), store)
 		}
 	}
 	sort.Slice(stores, func(i, j int) bool {
@@ -526,7 +525,7 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 	ch := make(chan io.ReadCloser)
 	chunker, err := newChunkWriter(ch, snapshotChunkSize)
 	if err != nil {
-		return types.Snapshot{}, err
+		return nil, err
 	}
 
 	// Spawn goroutine to generate snapshot chunks
@@ -601,28 +600,21 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 		}
 	}()
 
-	return types.Snapshot{
-		Height: height,
-		Format: 1,
-		Chunks: ch,
-	}, nil
+	return ch, nil
 }
 
 // Restore implements Snapshotter.
-func (rs *Store) Restore(snapshot types.Snapshot) error {
-	if snapshot.Format != 1 {
-		return errors.Errorf("unsupported snapshot format %v", snapshot.Format)
-	}
-	if snapshot.Height == 0 {
+func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
+	if height == 0 {
 		return errors.New("cannot restore snapshot at height 0")
 	}
-	if snapshot.Height > math.MaxInt64 {
-		return fmt.Errorf("snapshot height %v cannot exceed %v", snapshot.Height, math.MaxInt64)
+	if height > math.MaxInt64 {
+		return fmt.Errorf("snapshot height %v cannot exceed %v", height, math.MaxInt64)
 	}
 
 	// Set up a restore stream pipeline
 	// chan io.ReadCloser -> chunkReader -> gunzip -> delimited Protobuf -> ExportNode
-	chunkReader := newChunkReader(snapshot.Chunks)
+	chunkReader := newChunkReader(chunks)
 	defer chunkReader.Close()
 	gzReader, err := gzip.NewReader(chunkReader)
 	if err != nil {
@@ -657,7 +649,7 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 			if !ok || store == nil {
 				return fmt.Errorf("cannot import into non-IAVL store %q", item.Store.Name)
 			}
-			importer, err = store.Import(int64(snapshot.Height))
+			importer, err = store.Import(int64(height))
 			if err != nil {
 				return fmt.Errorf("import failed: %w", err)
 			}
@@ -688,7 +680,7 @@ func (rs *Store) Restore(snapshot types.Snapshot) error {
 		}
 	}
 
-	flushCommitInfo(rs.db, int64(snapshot.Height), rs.buildCommitInfo(int64(snapshot.Height)))
+	flushCommitInfo(rs.db, int64(height), rs.buildCommitInfo(int64(height)))
 	return rs.LoadLatestVersion()
 }
 

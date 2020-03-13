@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
@@ -44,34 +43,42 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	return nil
 }
 
+// Exists checks whether a snapshot exists
+func (s *Store) Exists(height uint64, format uint32) (bool, error) {
+	return false, nil
+}
+
 // Load loads a snapshot from disk
-func (s *Store) Load(height uint64, format uint32) (*store.Snapshot, error) {
+func (s *Store) Load(height uint64, format uint32) (<-chan io.ReadCloser, error) {
 	return nil, nil
 }
 
 // Save saves a snapshot to disk
-func (s *Store) Save(snapshot *store.Snapshot) error {
-	if snapshot.Height == 0 {
+func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
+	defer func() {
+		for c := range chunks {
+			c.Close()
+		}
+	}()
+	if height == 0 {
 		return errors.New("snapshot height cannot be 0")
 	}
-	current, err := s.Load(snapshot.Height, snapshot.Format)
+	exists, err := s.Exists(height, format)
 	if err != nil {
 		return err
 	}
-	if current != nil {
-		_ = current.Close()
-		return fmt.Errorf("snapshot already exists for height %v format %v",
-			snapshot.Height, snapshot.Format)
+	if exists {
+		return fmt.Errorf("snapshot already exists for height %v format %v", height, format)
 	}
 
 	metadata := &types.SnapshotMetadata{
-		Height: snapshot.Height,
-		Format: snapshot.Format,
+		Height: height,
+		Format: format,
 	}
 	i := uint32(1)
-	for chunk := range snapshot.Chunks {
+	for chunk := range chunks {
 		defer chunk.Close()
-		snapshotDir := filepath.Join(s.dir, strconv.FormatUint(snapshot.Height, 10))
+		snapshotDir := filepath.Join(s.dir, strconv.FormatUint(height, 10))
 		err = os.MkdirAll(snapshotDir, 0755)
 		if err != nil {
 			return err
@@ -106,7 +113,7 @@ func (s *Store) Save(snapshot *store.Snapshot) error {
 	if err != nil {
 		return fmt.Errorf("failed to encode snapshot: %w", err)
 	}
-	err = s.db.Set(key(snapshot.Height, snapshot.Format), buf.Bytes())
+	err = s.db.Set(key(height, format), buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("failed to store snapshot: %w", err)
 	}

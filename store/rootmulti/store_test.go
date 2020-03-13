@@ -454,9 +454,9 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	version := source.LastCommitID().Version
 	require.EqualValues(t, 3, version)
 
-	snapshot, err := source.Snapshot(uint64(version))
+	chunks, err := source.Snapshot(uint64(version))
 	require.NoError(t, err)
-	err = target.Restore(snapshot)
+	err = target.Restore(uint64(version), chunks)
 	require.NoError(t, err)
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
@@ -504,10 +504,12 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 		require.NoError(b, err)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		snapshot, err := source.Snapshot(uint64(version))
+		chunks, err := source.Snapshot(uint64(version))
 		require.NoError(b, err)
-		for reader := range snapshot.Chunks {
+		for reader := range chunks {
 			_, err := io.Copy(ioutil.Discard, reader)
+			require.NoError(b, err)
+			err = reader.Close()
 			require.NoError(b, err)
 		}
 	}
@@ -529,9 +531,9 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 		require.NoError(b, err)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		snapshot, err := source.Snapshot(uint64(version))
+		chunks, err := source.Snapshot(uint64(version))
 		require.NoError(b, err)
-		err = target.Restore(snapshot)
+		err = target.Restore(uint64(version), chunks)
 		require.NoError(b, err)
 		require.Equal(b, source.LastCommitID(), target.LastCommitID())
 	}

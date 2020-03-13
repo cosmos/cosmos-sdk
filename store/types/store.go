@@ -35,32 +35,11 @@ type Queryable interface {
 	Query(abci.RequestQuery) abci.ResponseQuery
 }
 
-// Snapshotter is something that can take and restore snapshots
+// Snapshotter is something that can take and restore snapshots. Snapshot data
+// consists of streamed chunks. All chunks must be retrieved and closed.
 type Snapshotter interface {
-	Snapshot(height uint64) (Snapshot, error)
-	Restore(snapshot Snapshot) error
-}
-
-// Snapshot is a complete snapshot of application state at some height
-type Snapshot struct {
-	// Height at which the snapshot was taken.
-	Height uint64
-	// Format is the internal format identifier of the snapshot (currently 1).
-	Format uint32
-	// Chunks contains a channel of input streams for snapshot chunks. The streams must be closed.
-	Chunks <-chan io.ReadCloser
-}
-
-// Close closes the snapshot readers.
-func (s *Snapshot) Close() error {
-	var err error
-	for r := range s.Chunks {
-		e := r.Close()
-		if e != nil && err == nil {
-			err = e
-		}
-	}
-	return err
+	Snapshot(height uint64) (<-chan io.ReadCloser, error)
+	Restore(height uint64, chunks <-chan io.ReadCloser) error
 }
 
 //----------------------------------------

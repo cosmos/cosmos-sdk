@@ -1,4 +1,4 @@
-package client
+package tx
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -6,14 +6,6 @@ import (
 )
 
 type (
-	// ClientMarshaler defines an interface that REST and CLI handler will use to
-	// create application-specific transactions and be able to serialize types
-	// specific to the application including transactions.
-	ClientMarshaler interface {
-		TxGenerator
-		codec.Marshaler
-	}
-
 	// TxGenerator defines an interface a client can utilize to generate an
 	// application-defined concrete transaction type. The type returned must
 	// implement ClientTx.

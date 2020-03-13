@@ -1,16 +1,26 @@
 package std
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
+	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
-	_ sdk.Tx          = (*Transaction)(nil)
-	_ client.ClientTx = (*Transaction)(nil)
+	_ sdk.Tx              = (*Transaction)(nil)
+	_ clientx.ClientTx    = (*Transaction)(nil)
+	_ clientx.TxGenerator = TxGenerator{}
 )
+
+// TxGenerator defines a transaction generator that allows clients to construct
+// transactions.
+type TxGenerator struct{}
+
+// NewTx returns a reference to an empty Transaction type.
+func (TxGenerator) NewTx() clientx.ClientTx {
+	return &Transaction{}
+}
 
 func NewTransaction(fee auth.StdFee, memo string, sdkMsgs []sdk.Msg) (*Transaction, error) {
 	tx := &Transaction{

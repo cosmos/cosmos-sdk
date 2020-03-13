@@ -123,18 +123,11 @@ type ClientTx interface {
 }
 ```
 
-We then extend `codec.Marshaler` to also require fulfillment of `TxGenerator`.
+We then update `CLIContext` to have two new fields: `TxGenerator` and `TxGenerator`.
 
-```go
-type ClientMarshaler interface {
-  TxGenerator
-  codec.Marshaler
-}
-```
-
-Then, each module will at the minimum accept a `ClientMarshaler` instead of a concrete
+Then, each module will at the minimum accept a `Marshaler` instead of a concrete
 Amino codec. If the module needs to work with any interface types, it will use
-the `Codec` interface defined by the module which also extends `ClientMarshaler`.
+the `Codec` interface defined by the module which also extends `Marshaler`.
 
 ## Future Improvements
 

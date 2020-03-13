@@ -46,6 +46,23 @@ message ValAddresses {
   repeated bytes addresses = 1 [(gogoproto.casttype) = "ValAddress"];
 }
 
+// SnapshotMetadata contains snapshot metadata, persisted in the snapshot database
+message SnapshotMetadata {
+  option (gogoproto.stringer) = true;
+
+  uint64 height = 1;
+  uint32 format = 2;
+  repeated SnapshotChunkMetadata chunks = 3;
+}
+
+// SnapshotChunkMetadata contains snapshot chunk metadata, persisted in the snapshot database
+message SnapshotChunkMetadata {
+  option (gogoproto.stringer) = true;
+
+  uint32 chunk = 1;
+  bytes checksum = 2;
+}
+
 // SnapshotItem is an item contained in a snapshot
 message SnapshotItem {
   option (gogoproto.stringer) = true;
@@ -56,14 +73,14 @@ message SnapshotItem {
   }
 }
 
-// SnapshotStore contains snapshot info about a store
+// SnapshotStore is a snapshot item with info about the store containing the following nodes
 message SnapshotStore {
   option (gogoproto.stringer) = true;
 
   string name = 1;
 }
 
-// SnapshotNode contains snapshot data for an ExportNode
+// SnapshotNode is a snapshot item containing an exported IAVL node
 message SnapshotNode {
   option (gogoproto.stringer) = true;
 

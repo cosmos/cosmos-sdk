@@ -7,6 +7,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/snapshot"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,6 +43,16 @@ func SetHaltTime(haltTime uint64) func(*BaseApp) {
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
+}
+
+// SetSnapshotDB sets the snapshot store.
+func SetSnapshotStore(s *snapshot.Store) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotStore(s) }
+}
+
+// SetSnapshotPolicy sets the snapshot policy.
+func SetSnapshotPolicy(interval uint64, retention uint32) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotPolicy(interval, retention) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -146,12 +157,11 @@ func (app *BaseApp) SetRouter(router sdk.Router) {
 
 // SetSnapshotDB sets the snapshot database and data directory. This database must
 // be independent of the app state.
-func (app *BaseApp) SetSnapshotDB(db dbm.DB, dir string) {
+func (app *BaseApp) SetSnapshotStore(s *snapshot.Store) {
 	if app.sealed {
 		panic("SetSnapshotDB() on sealed BaseApp")
 	}
-	app.snapshotDB = db
-	app.snapshotDir = dir
+	app.snapshotStore = s
 }
 
 // SetSnapshotPolicy sets the snapshotting policy. 0 disables snapshotting.

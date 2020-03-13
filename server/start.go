@@ -5,6 +5,7 @@ package server
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime/pprof"
 
 	"github.com/spf13/cobra"
@@ -139,12 +140,17 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	if err != nil {
 		return err
 	}
+	ss, err := openSnapshotStore(filepath.Join(home, "data"))
+	if err != nil {
+		return err
+	}
+
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	app := appCreator(ctx.Logger, db, ss, traceWriter)
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
@@ -180,12 +186,17 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
+	ss, err := openSnapshotStore(filepath.Join(home, "data"))
+	if err != nil {
+		return nil, err
+	}
+
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return nil, err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	app := appCreator(ctx.Logger, db, ss, traceWriter)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {

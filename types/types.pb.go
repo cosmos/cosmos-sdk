@@ -239,6 +239,118 @@ func (m *ValAddresses) GetAddresses() []ValAddress {
 	return nil
 }
 
+// SnapshotMetadata contains snapshot metadata, persisted in the snapshot database
+type SnapshotMetadata struct {
+	Height uint64                   `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	Format uint32                   `protobuf:"varint,2,opt,name=format,proto3" json:"format,omitempty"`
+	Chunks []*SnapshotChunkMetadata `protobuf:"bytes,3,rep,name=chunks,proto3" json:"chunks,omitempty"`
+}
+
+func (m *SnapshotMetadata) Reset()      { *m = SnapshotMetadata{} }
+func (*SnapshotMetadata) ProtoMessage() {}
+func (*SnapshotMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2c0f90c600ad7e2e, []int{5}
+}
+func (m *SnapshotMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotMetadata.Merge(m, src)
+}
+func (m *SnapshotMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotMetadata proto.InternalMessageInfo
+
+func (m *SnapshotMetadata) GetHeight() uint64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+func (m *SnapshotMetadata) GetFormat() uint32 {
+	if m != nil {
+		return m.Format
+	}
+	return 0
+}
+
+func (m *SnapshotMetadata) GetChunks() []*SnapshotChunkMetadata {
+	if m != nil {
+		return m.Chunks
+	}
+	return nil
+}
+
+// SnapshotChunkMetadata contains snapshot chunk metadata, persisted in the snapshot database
+type SnapshotChunkMetadata struct {
+	Chunk    uint32 `protobuf:"varint,1,opt,name=chunk,proto3" json:"chunk,omitempty"`
+	Checksum []byte `protobuf:"bytes,2,opt,name=checksum,proto3" json:"checksum,omitempty"`
+}
+
+func (m *SnapshotChunkMetadata) Reset()      { *m = SnapshotChunkMetadata{} }
+func (*SnapshotChunkMetadata) ProtoMessage() {}
+func (*SnapshotChunkMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2c0f90c600ad7e2e, []int{6}
+}
+func (m *SnapshotChunkMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotChunkMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotChunkMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotChunkMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotChunkMetadata.Merge(m, src)
+}
+func (m *SnapshotChunkMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotChunkMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotChunkMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotChunkMetadata proto.InternalMessageInfo
+
+func (m *SnapshotChunkMetadata) GetChunk() uint32 {
+	if m != nil {
+		return m.Chunk
+	}
+	return 0
+}
+
+func (m *SnapshotChunkMetadata) GetChecksum() []byte {
+	if m != nil {
+		return m.Checksum
+	}
+	return nil
+}
+
 // SnapshotItem is an item contained in a snapshot
 type SnapshotItem struct {
 	// Types that are valid to be assigned to Item:
@@ -250,7 +362,7 @@ type SnapshotItem struct {
 func (m *SnapshotItem) Reset()      { *m = SnapshotItem{} }
 func (*SnapshotItem) ProtoMessage() {}
 func (*SnapshotItem) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2c0f90c600ad7e2e, []int{5}
+	return fileDescriptor_2c0f90c600ad7e2e, []int{7}
 }
 func (m *SnapshotItem) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -324,7 +436,7 @@ func (*SnapshotItem) XXX_OneofWrappers() []interface{} {
 	}
 }
 
-// SnapshotStore contains snapshot info about a store
+// SnapshotStore is a snapshot item with info about the store containing the following nodes
 type SnapshotStore struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -332,7 +444,7 @@ type SnapshotStore struct {
 func (m *SnapshotStore) Reset()      { *m = SnapshotStore{} }
 func (*SnapshotStore) ProtoMessage() {}
 func (*SnapshotStore) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2c0f90c600ad7e2e, []int{6}
+	return fileDescriptor_2c0f90c600ad7e2e, []int{8}
 }
 func (m *SnapshotStore) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -368,7 +480,7 @@ func (m *SnapshotStore) GetName() string {
 	return ""
 }
 
-// SnapshotNode contains snapshot data for an ExportNode
+// SnapshotNode is a snapshot item containing an exported IAVL node
 type SnapshotNode struct {
 	Key     []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value   []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
@@ -379,7 +491,7 @@ type SnapshotNode struct {
 func (m *SnapshotNode) Reset()      { *m = SnapshotNode{} }
 func (*SnapshotNode) ProtoMessage() {}
 func (*SnapshotNode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2c0f90c600ad7e2e, []int{7}
+	return fileDescriptor_2c0f90c600ad7e2e, []int{9}
 }
 func (m *SnapshotNode) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -442,6 +554,8 @@ func init() {
 	proto.RegisterType((*IntProto)(nil), "cosmos_sdk.v1.IntProto")
 	proto.RegisterType((*DecProto)(nil), "cosmos_sdk.v1.DecProto")
 	proto.RegisterType((*ValAddresses)(nil), "cosmos_sdk.v1.ValAddresses")
+	proto.RegisterType((*SnapshotMetadata)(nil), "cosmos_sdk.v1.SnapshotMetadata")
+	proto.RegisterType((*SnapshotChunkMetadata)(nil), "cosmos_sdk.v1.SnapshotChunkMetadata")
 	proto.RegisterType((*SnapshotItem)(nil), "cosmos_sdk.v1.SnapshotItem")
 	proto.RegisterType((*SnapshotStore)(nil), "cosmos_sdk.v1.SnapshotStore")
 	proto.RegisterType((*SnapshotNode)(nil), "cosmos_sdk.v1.SnapshotNode")
@@ -450,36 +564,41 @@ func init() {
 func init() { proto.RegisterFile("types/types.proto", fileDescriptor_2c0f90c600ad7e2e) }
 
 var fileDescriptor_2c0f90c600ad7e2e = []byte{
-	// 460 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xcf, 0x8b, 0xd3, 0x40,
-	0x14, 0xc7, 0x33, 0x26, 0xed, 0xba, 0xaf, 0x59, 0xd1, 0x41, 0x24, 0xf8, 0x23, 0x0d, 0x11, 0xa4,
-	0x0b, 0x9a, 0xb2, 0xab, 0xa7, 0xbd, 0x59, 0x0b, 0x5a, 0x0f, 0x22, 0xb3, 0xe0, 0xc1, 0xcb, 0x92,
-	0xcd, 0x0c, 0x4d, 0xe8, 0x66, 0xa6, 0x64, 0xa6, 0x85, 0xde, 0xf6, 0xe2, 0xdd, 0x3f, 0xc1, 0x3f,
-	0x67, 0x8f, 0x7b, 0x5c, 0x44, 0x8a, 0xb6, 0x17, 0xff, 0x06, 0x4f, 0x32, 0x33, 0xa9, 0xa1, 0x0b,
-	0x5e, 0xf6, 0x92, 0xbc, 0xef, 0x9b, 0xcf, 0xfb, 0xbe, 0x37, 0x3f, 0xe0, 0x9e, 0x5a, 0x4c, 0x99,
-	0xec, 0x9b, 0x6f, 0x32, 0xad, 0x84, 0x12, 0x78, 0x2f, 0x13, 0xb2, 0x14, 0xf2, 0x44, 0xd2, 0x49,
-	0x32, 0x3f, 0x78, 0xf8, 0x4c, 0xe5, 0x45, 0x45, 0x4f, 0xa6, 0x69, 0xa5, 0x16, 0x7d, 0x43, 0xf4,
-	0xc7, 0x62, 0x2c, 0x9a, 0xc8, 0x96, 0xc5, 0x6f, 0xc1, 0x7b, 0x23, 0x0a, 0x8e, 0xef, 0x43, 0x8b,
-	0x32, 0x2e, 0xca, 0x00, 0x45, 0xa8, 0xb7, 0x4b, 0xac, 0xc0, 0x4f, 0xa1, 0x9d, 0x96, 0x62, 0xc6,
-	0x55, 0x70, 0x4b, 0xa7, 0x07, 0x9d, 0x8b, 0x65, 0xd7, 0xf9, 0xbe, 0xec, 0xba, 0x23, 0xae, 0x48,
-	0xbd, 0x74, 0xe4, 0xfd, 0xfe, 0xd6, 0x45, 0xf1, 0x7b, 0xd8, 0x19, 0xb2, 0xec, 0x26, 0x5e, 0x43,
-	0x96, 0x5d, 0xf3, 0xda, 0x87, 0xdb, 0x23, 0xae, 0x3e, 0x9a, 0x7d, 0x3d, 0x01, 0xb7, 0xe0, 0xca,
-	0x5a, 0x6d, 0xf7, 0xd7, 0x79, 0x8d, 0x0e, 0x59, 0xf6, 0x0f, 0xa5, 0x2c, 0xbb, 0x8e, 0x6a, 0x7b,
-	0x9d, 0x8f, 0x07, 0xe0, 0x7f, 0x4a, 0xcf, 0x5e, 0x53, 0x5a, 0x31, 0x29, 0x99, 0xc4, 0xcf, 0x61,
-	0x37, 0xdd, 0x88, 0x00, 0x45, 0x6e, 0xcf, 0x1f, 0xdc, 0xf9, 0xb3, 0xec, 0x42, 0x03, 0x91, 0x06,
-	0x38, 0xf2, 0xce, 0x7f, 0x44, 0x28, 0xfe, 0x82, 0xc0, 0x3f, 0xe6, 0xe9, 0x54, 0xe6, 0x42, 0x8d,
-	0x14, 0x2b, 0xf1, 0x2b, 0x68, 0x49, 0x25, 0x2a, 0x66, 0xba, 0x76, 0x0e, 0x1f, 0x27, 0x5b, 0xd7,
-	0x90, 0x6c, 0xd8, 0x63, 0xcd, 0xbc, 0x73, 0x88, 0x85, 0xf1, 0x01, 0x78, 0x5c, 0x50, 0x66, 0x4e,
-	0xa2, 0x73, 0xf8, 0xe8, 0x3f, 0x45, 0x1f, 0x04, 0xd5, 0x35, 0x06, 0xb5, 0xfd, 0x07, 0x6d, 0xf0,
-	0x0a, 0xc5, 0xca, 0x78, 0x1f, 0xf6, 0xb6, 0xac, 0x31, 0x06, 0x8f, 0xa7, 0x25, 0xab, 0x8f, 0xdc,
-	0xc4, 0xf5, 0xc8, 0xbc, 0x99, 0x58, 0x1b, 0xe2, 0xbb, 0xe0, 0x4e, 0xd8, 0xc2, 0x80, 0x3e, 0xd1,
-	0xa1, 0xbe, 0xaf, 0x79, 0x7a, 0x36, 0xb3, 0xe3, 0xf8, 0xc4, 0x0a, 0x1c, 0xc0, 0xce, 0x9c, 0x55,
-	0xb2, 0x10, 0x3c, 0x70, 0x23, 0xd4, 0x73, 0xc9, 0x46, 0xe2, 0x07, 0xd0, 0xce, 0x59, 0x31, 0xce,
-	0x55, 0xe0, 0x45, 0xa8, 0xd7, 0x22, 0xb5, 0xaa, 0x47, 0x1c, 0x5e, 0xfd, 0x0a, 0x9d, 0xf3, 0x55,
-	0xe8, 0x5c, 0xac, 0x42, 0x74, 0xb9, 0x0a, 0xd1, 0xcf, 0x55, 0x88, 0xbe, 0xae, 0x43, 0xe7, 0x72,
-	0x1d, 0x3a, 0x57, 0xeb, 0xd0, 0xf9, 0x1c, 0x8f, 0x0b, 0x95, 0xcf, 0x4e, 0x93, 0x4c, 0x94, 0x7d,
-	0xbb, 0xf3, 0xfa, 0xf7, 0x42, 0xd2, 0x89, 0x7d, 0xd4, 0xa7, 0x6d, 0xf3, 0x3c, 0x5f, 0xfe, 0x0d,
-	0x00, 0x00, 0xff, 0xff, 0xd9, 0x3a, 0x17, 0x0d, 0xea, 0x02, 0x00, 0x00,
+	// 543 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0xf5, 0x62, 0x37, 0x6d, 0x27, 0x09, 0x2a, 0x2b, 0x40, 0x56, 0x01, 0xc7, 0x32, 0x08, 0xa5,
+	0x12, 0x24, 0x6a, 0xe0, 0x54, 0x71, 0x21, 0x8d, 0x04, 0x41, 0xe2, 0x43, 0xae, 0xc4, 0x81, 0x4b,
+	0xe5, 0xda, 0x4b, 0x6c, 0xa5, 0xde, 0x8d, 0xbc, 0x9b, 0x48, 0xb9, 0xf5, 0x02, 0x67, 0x7e, 0x02,
+	0x3f, 0xa7, 0xc7, 0x1e, 0x2b, 0x84, 0x22, 0x48, 0x2e, 0xfc, 0x06, 0x4e, 0x68, 0x3f, 0xdc, 0x90,
+	0x8a, 0x5e, 0xb8, 0xd8, 0xf3, 0xc6, 0x6f, 0xde, 0xbc, 0xd9, 0xf1, 0xc2, 0x0d, 0x31, 0x1d, 0x11,
+	0xde, 0x56, 0xcf, 0xd6, 0xa8, 0x60, 0x82, 0xe1, 0x7a, 0xcc, 0x78, 0xce, 0xf8, 0x21, 0x4f, 0x86,
+	0xad, 0xc9, 0xee, 0xf6, 0x43, 0x91, 0x66, 0x45, 0x72, 0x38, 0x8a, 0x0a, 0x31, 0x6d, 0x2b, 0x46,
+	0x7b, 0xc0, 0x06, 0x6c, 0x19, 0xe9, 0xb2, 0xe0, 0x05, 0x38, 0xfb, 0x2c, 0xa3, 0xf8, 0x26, 0xac,
+	0x25, 0x84, 0xb2, 0xdc, 0x45, 0x3e, 0x6a, 0x6e, 0x86, 0x1a, 0xe0, 0xfb, 0x50, 0x89, 0x72, 0x36,
+	0xa6, 0xc2, 0xbd, 0x26, 0xd3, 0xdd, 0xea, 0xe9, 0xac, 0x61, 0x7d, 0x9b, 0x35, 0xec, 0x3e, 0x15,
+	0xa1, 0xf9, 0xb4, 0xe7, 0xfc, 0xfa, 0xda, 0x40, 0xc1, 0x2b, 0x58, 0xef, 0x91, 0xf8, 0x7f, 0xb4,
+	0x7a, 0x24, 0xbe, 0xa4, 0xb5, 0x03, 0x1b, 0x7d, 0x2a, 0xde, 0xa9, 0xb9, 0xee, 0x81, 0x9d, 0x51,
+	0xa1, 0xa5, 0x56, 0xfb, 0xcb, 0xbc, 0xa4, 0xf6, 0x48, 0x7c, 0x41, 0x4d, 0x48, 0x7c, 0x99, 0x2a,
+	0xe5, 0x65, 0x3e, 0xe8, 0x42, 0xed, 0x7d, 0x74, 0xfc, 0x3c, 0x49, 0x0a, 0xc2, 0x39, 0xe1, 0xf8,
+	0x11, 0x6c, 0x46, 0x25, 0x70, 0x91, 0x6f, 0x37, 0x6b, 0xdd, 0xeb, 0xbf, 0x67, 0x0d, 0x58, 0x92,
+	0xc2, 0x25, 0x61, 0xcf, 0x39, 0xf9, 0xee, 0xa3, 0xe0, 0x33, 0x82, 0xad, 0x03, 0x1a, 0x8d, 0x78,
+	0xca, 0xc4, 0x6b, 0x22, 0xa2, 0x24, 0x12, 0x11, 0xbe, 0x0d, 0x95, 0x94, 0x64, 0x83, 0x54, 0xbb,
+	0x74, 0x42, 0x83, 0x64, 0xfe, 0x23, 0x2b, 0xf2, 0x48, 0x4f, 0x5c, 0x0f, 0x0d, 0xc2, 0xcf, 0xa0,
+	0x12, 0xa7, 0x63, 0x3a, 0xe4, 0xae, 0xed, 0xdb, 0xcd, 0x6a, 0xe7, 0x41, 0x6b, 0x65, 0x77, 0xad,
+	0xb2, 0xc1, 0xbe, 0x24, 0x95, 0x5d, 0x42, 0x53, 0x63, 0x8c, 0xbc, 0x85, 0x5b, 0xff, 0xa4, 0xc9,
+	0xc3, 0x57, 0x44, 0xe5, 0xa5, 0x1e, 0x6a, 0x80, 0xb7, 0x61, 0x23, 0x4e, 0x49, 0x3c, 0xe4, 0xe3,
+	0x5c, 0x99, 0xa9, 0x85, 0x17, 0xd8, 0x08, 0x7e, 0x42, 0x50, 0x2b, 0x15, 0xfb, 0x82, 0xe4, 0xf8,
+	0x29, 0xac, 0x71, 0xc1, 0x0a, 0xa2, 0x84, 0xaa, 0x9d, 0xbb, 0x57, 0x98, 0x3c, 0x90, 0x9c, 0x97,
+	0x56, 0xa8, 0xc9, 0x78, 0x17, 0x1c, 0xca, 0x12, 0xa2, 0x9a, 0x54, 0x3b, 0x77, 0xae, 0x28, 0x7a,
+	0xc3, 0x12, 0x59, 0xa3, 0xa8, 0xba, 0x7f, 0xb7, 0x02, 0x4e, 0x26, 0x48, 0x1e, 0xec, 0x40, 0x7d,
+	0x45, 0x1a, 0x63, 0x70, 0x68, 0x94, 0x13, 0xf3, 0x33, 0xa9, 0xd8, 0x58, 0xa6, 0x4b, 0xc7, 0x52,
+	0x10, 0x6f, 0x81, 0x3d, 0x24, 0x53, 0x45, 0xac, 0x85, 0x32, 0x94, 0x87, 0x31, 0x89, 0x8e, 0xc7,
+	0xc4, 0xcc, 0xac, 0x01, 0x76, 0x61, 0x7d, 0x42, 0x0a, 0x9e, 0x31, 0xea, 0xda, 0x3e, 0x6a, 0xda,
+	0x61, 0x09, 0xff, 0xda, 0xa4, 0xe3, 0xa3, 0xe6, 0x5a, 0xb9, 0x49, 0x63, 0xb1, 0x77, 0xfe, 0xd3,
+	0xb3, 0x4e, 0xe6, 0x9e, 0x75, 0x3a, 0xf7, 0xd0, 0xd9, 0xdc, 0x43, 0x3f, 0xe6, 0x1e, 0xfa, 0xb2,
+	0xf0, 0xac, 0xb3, 0x85, 0x67, 0x9d, 0x2f, 0x3c, 0xeb, 0x43, 0x30, 0xc8, 0x44, 0x3a, 0x3e, 0x6a,
+	0xc5, 0x2c, 0x6f, 0xeb, 0xc9, 0xcd, 0xeb, 0x31, 0x4f, 0x86, 0xfa, 0xba, 0x1e, 0x55, 0xd4, 0xc5,
+	0x7b, 0xf2, 0x27, 0x00, 0x00, 0xff, 0xff, 0x36, 0x66, 0x07, 0x09, 0xc4, 0x03, 0x00, 0x00,
 }
 
 func (this *Coin) Equal(that interface{}) bool {
@@ -714,6 +833,88 @@ func (m *ValAddresses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *SnapshotMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Chunks) > 0 {
+		for iNdEx := len(m.Chunks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Chunks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTypes(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.Format != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Format))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Height != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SnapshotChunkMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotChunkMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotChunkMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Checksum) > 0 {
+		i -= len(m.Checksum)
+		copy(dAtA[i:], m.Checksum)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Checksum)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Chunk != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Chunk))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *SnapshotItem) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -943,6 +1144,43 @@ func (m *ValAddresses) Size() (n int) {
 	return n
 }
 
+func (m *SnapshotMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Height != 0 {
+		n += 1 + sovTypes(uint64(m.Height))
+	}
+	if m.Format != 0 {
+		n += 1 + sovTypes(uint64(m.Format))
+	}
+	if len(m.Chunks) > 0 {
+		for _, e := range m.Chunks {
+			l = e.Size()
+			n += 1 + l + sovTypes(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SnapshotChunkMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Chunk != 0 {
+		n += 1 + sovTypes(uint64(m.Chunk))
+	}
+	l = len(m.Checksum)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
 func (m *SnapshotItem) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1027,6 +1265,34 @@ func (this *ValAddresses) String() string {
 	}
 	s := strings.Join([]string{`&ValAddresses{`,
 		`Addresses:` + fmt.Sprintf("%v", this.Addresses) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotMetadata) String() string {
+	if this == nil {
+		return "nil"
+	}
+	repeatedStringForChunks := "[]*SnapshotChunkMetadata{"
+	for _, f := range this.Chunks {
+		repeatedStringForChunks += strings.Replace(f.String(), "SnapshotChunkMetadata", "SnapshotChunkMetadata", 1) + ","
+	}
+	repeatedStringForChunks += "}"
+	s := strings.Join([]string{`&SnapshotMetadata{`,
+		`Height:` + fmt.Sprintf("%v", this.Height) + `,`,
+		`Format:` + fmt.Sprintf("%v", this.Format) + `,`,
+		`Chunks:` + repeatedStringForChunks + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *SnapshotChunkMetadata) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&SnapshotChunkMetadata{`,
+		`Chunk:` + fmt.Sprintf("%v", this.Chunk) + `,`,
+		`Checksum:` + fmt.Sprintf("%v", this.Checksum) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1564,6 +1830,237 @@ func (m *ValAddresses) Unmarshal(dAtA []byte) error {
 			}
 			m.Addresses = append(m.Addresses, make([]byte, postIndex-iNdEx))
 			copy(m.Addresses[len(m.Addresses)-1], dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Format", wireType)
+			}
+			m.Format = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Format |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Chunks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Chunks = append(m.Chunks, &SnapshotChunkMetadata{})
+			if err := m.Chunks[len(m.Chunks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotChunkMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotChunkMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotChunkMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Chunk", wireType)
+			}
+			m.Chunk = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Chunk |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Checksum", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Checksum = append(m.Checksum[:0], dAtA[iNdEx:postIndex]...)
+			if m.Checksum == nil {
+				m.Checksum = []byte{}
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

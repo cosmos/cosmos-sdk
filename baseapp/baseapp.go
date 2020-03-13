@@ -14,6 +14,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/snapshot"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -71,8 +72,7 @@ type BaseApp struct { // nolint: maligned
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// snapshot storage, i.e. dumps of app state at certain intervals
-	snapshotDB        dbm.DB // database for snapshot metadata
-	snapshotDir       string // directory for snapshot data storage
+	snapshotStore     *snapshot.Store
 	snapshotInterval  uint64 // interval (in blocks) between snapshots (0 to disable)
 	snapshotRetention uint32 // number of snapshots to keep (0 for all)
 
@@ -628,4 +628,17 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		Log:    strings.TrimSpace(msgLogs.String()),
 		Events: events,
 	}, nil
+}
+
+// snapshot takes a snapshot
+func (app *BaseApp) snapshot(height uint64) error {
+	if app.snapshotStore == nil {
+		return errors.New("no snapshot store configured")
+	}
+	s, err := app.cms.Snapshot(height)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	return app.snapshotStore.Save(&s)
 }

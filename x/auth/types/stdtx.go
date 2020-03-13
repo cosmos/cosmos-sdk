@@ -25,6 +25,16 @@ func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	}
 }
 
+// GetGas returns the fee's (wanted) gas.
+func (fee StdFee) GetGas() uint64 {
+	return fee.Gas
+}
+
+// GetAmount returns the fee's amount.
+func (fee StdFee) GetAmount() sdk.Coins {
+	return fee.Amount
+}
+
 // Bytes returns the encoded bytes of a StdFee.
 func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
@@ -46,6 +56,15 @@ func (fee StdFee) Bytes() []byte {
 // as fee = ceil(gasWanted * gasPrices).
 func (fee StdFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
+}
+
+func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
+	return StdSignature{PubKey: pk.Bytes(), Signature: sig}
+}
+
+// GetSignature returns the raw signature bytes.
+func (ss StdSignature) GetSignature() []byte {
+	return ss.Signature
 }
 
 // GetPubKey returns the public key of a signature as a crypto.PubKey using the
@@ -86,6 +105,24 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	}
 
 	return string(bz), err
+}
+
+func NewStdTxBase(fee StdFee, sigs []StdSignature, memo string) StdTxBase {
+	return StdTxBase{
+		Fee:        fee,
+		Signatures: sigs,
+		Memo:       memo,
+	}
+}
+
+func NewStdSignDocBase(num, seq uint64, cid, memo string, fee StdFee) StdSignDocBase {
+	return StdSignDocBase{
+		ChainID:       cid,
+		AccountNumber: num,
+		Sequence:      seq,
+		Memo:          memo,
+		Fee:           fee,
+	}
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.

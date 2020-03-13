@@ -84,6 +84,26 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	return nil
 }
 
+// List lists snapshots, in reverse order (newest first)
+func (s *Store) List() ([]*types.SnapshotMetadata, error) {
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	if err != nil {
+		return nil, fmt.Errorf("failed to list snapshots: %w", err)
+	}
+	defer iter.Close()
+
+	snapshots := make([]*types.SnapshotMetadata, 0)
+	for ; iter.Valid(); iter.Next() {
+		snapshot := &types.SnapshotMetadata{}
+		err := proto.Unmarshal(iter.Value(), snapshot)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode snapshot metadata: %w", err)
+		}
+		snapshots = append(snapshots, snapshot)
+	}
+	return snapshots, nil
+}
+
 // Load loads a snapshot (both metadata and chunks). The chunks must be consumed and closed.
 func (s *Store) Load(height uint64, format uint32) (*types.SnapshotMetadata, <-chan io.ReadCloser, error) {
 	metadata, err := s.LoadMetadata(height, format)

@@ -337,12 +337,12 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 
 // encoding info
 func marshalInfo(i Info) []byte {
-	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
+	return CryptoCdc.MustMarshalBinaryBare(i)
 }
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
-	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = CryptoCdc.UnmarshalBinaryBare(bz, &info)
 	return
 }
 

@@ -54,9 +54,14 @@ type CLIContext struct {
 func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
+	var kb keys.Keybase
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
+	if !genOnly {
+		kb = mustInitKeybase(input)
+	}
+
+	fromAddress, fromName, err := GetFromFields(from, kb)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
@@ -76,6 +81,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	ctx := CLIContext{
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
+		Keybase:       kb,
 		Input:         input,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
@@ -171,6 +177,12 @@ func (ctx CLIContext) WithHeight(height int64) CLIContext {
 	return ctx
 }
 
+// WithKeybase returns a copy of the context with an updated keybase.
+func (ctx CLIContext) WithKeybase(kb keys.Keybase) CLIContext {
+	ctx.Keybase = kb
+	return ctx
+}
+
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
 func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
@@ -257,15 +269,14 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 	return nil
 }
 
-// GetFromFields returns a from account address and Keybase name given either
-// an address or key name. If genOnly is true, only a valid Bech32 cosmos
-// address is returned.
-func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, string, error) {
+// GetFromFields returns a from account address and keybase name given either  an address or
+// key name. If the supplied Keybase is nil, only a valid Bech32 cosmos address is returned.
+func GetFromFields(from string, kb keys.Keybase) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
 
-	if genOnly {
+	if kb == nil {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
 			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address for generate-only")
@@ -274,24 +285,26 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyring(sdk.KeyringServiceName(),
-		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
-	if err != nil {
-		return nil, "", err
-	}
-
 	var info keys.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		info, err = keybase.GetByAddress(addr)
+		info, err = kb.GetByAddress(addr)
 		if err != nil {
 			return nil, "", err
 		}
 	} else {
-		info, err = keybase.Get(from)
+		info, err = kb.Get(from)
 		if err != nil {
 			return nil, "", err
 		}
 	}
 
 	return info.GetAddress(), info.GetName(), nil
+}
+
+func mustInitKeybase(input io.Reader) keys.Keybase {
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
+	if err != nil {
+		panic(fmt.Errorf("couldn't acquire keybase: %v", err))
+	}
+	return kb
 }

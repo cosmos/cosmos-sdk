@@ -289,7 +289,7 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 
 func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (uint64, error) {
 	var gasUsed uint64
-	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &gasUsed); err != nil {
+	if err := cdc.UnmarshalBinaryBare(rawRes, &gasUsed); err != nil {
 		return 0, err
 	}
 

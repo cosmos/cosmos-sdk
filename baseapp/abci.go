@@ -267,11 +267,19 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 			app.logger.Info("Taking state snapshot", "height", header.Height)
 			err := app.snapshot(uint64(header.Height))
 			if err != nil {
-				app.logger.Error("Failed to take snapshot",
-					"height", header.Height, "err", err.Error())
+				app.logger.Error("Failed to take snapshot", "height", header.Height, "err", err.Error())
 				return
 			}
 			app.logger.Info("Finished taking state snapshot", "height", header.Height)
+			if app.snapshotRetention > 0 {
+				app.logger.Info("Pruning state snapshots")
+				pruned, err := app.snapshotStore.Prune(app.snapshotRetention)
+				if err != nil {
+					app.logger.Error("Failed to prune snapshots", "err", err.Error())
+					return
+				}
+				app.logger.Info(fmt.Sprintf("Pruned %v state snapshots", pruned))
+			}
 		}()
 	}
 

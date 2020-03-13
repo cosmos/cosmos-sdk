@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -64,6 +65,22 @@ func (s *Store) Active() bool {
 
 // Delete deletes a snapshot
 func (s *Store) Delete(height uint64, format uint32) error {
+	s.mtx.Lock()
+	saving := s.saving[height]
+	s.mtx.Unlock()
+	if saving {
+		return fmt.Errorf("snapshot for height %v format %v is currently being saved", height, format)
+	}
+	err := s.db.DeleteSync(encodeKey(height, format))
+	if err != nil {
+		return fmt.Errorf("failed to delete snapshot for height %v format %v: %w",
+			height, format, err)
+	}
+	err = os.RemoveAll(s.pathSnapshot(height, format))
+	if err != nil {
+		return fmt.Errorf("failed to delete snapshot data for height %v format %v: %w",
+			height, format, err)
+	}
 	return nil
 }
 
@@ -107,7 +124,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.SnapshotMetadata, <-c
 
 // LoadMetadata loads snapshot metadata from the database.
 func (s *Store) LoadMetadata(height uint64, format uint32) (*types.SnapshotMetadata, error) {
-	bytes, err := s.db.Get(key(height, format))
+	bytes, err := s.db.Get(encodeKey(height, format))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load snapshot metadata: %w", err)
 	}
@@ -141,6 +158,46 @@ func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCl
 	return file, nil
 }
 
+// Prune removes old snapshots. The given number of heights (regardless of format) are retained.
+func (s *Store) Prune(retainHeights uint32) (uint64, error) {
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	if err != nil {
+		return 0, fmt.Errorf("failed to prune snapshots: %w", err)
+	}
+	defer iter.Close()
+
+	pruned := uint64(0)
+	prunedHeights := make(map[uint64]bool)
+	skip := make(map[uint64]bool)
+	for ; iter.Valid(); iter.Next() {
+		height, format, err := decodeKey(iter.Key())
+		if err != nil {
+			return 0, fmt.Errorf("failed to prune snapshots: %w", err)
+		}
+		if skip[height] || uint32(len(skip)) < retainHeights {
+			skip[height] = true
+			continue
+		}
+		err = s.Delete(height, format)
+		if err != nil {
+			return 0, fmt.Errorf("failed to prune snapshots: %w", err)
+		}
+		pruned++
+		prunedHeights[height] = true
+	}
+	// Since Delete() deletes a specific format, while we want to prune a height, we clean up
+	// the height directory as well
+	for height, ok := range prunedHeights {
+		if ok {
+			err = os.Remove(s.pathHeight(height))
+			if err != nil {
+				return 0, fmt.Errorf("failed to clean up snapshot directory for height %v", height)
+			}
+		}
+	}
+	return pruned, iter.Error()
+}
+
 // Save saves a snapshot to disk
 func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
 	// Make sure we close all of the chunks on error
@@ -166,7 +223,7 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 		s.mtx.Unlock()
 	}()
 
-	exists, err := s.db.Has(key(height, format))
+	exists, err := s.db.Has(encodeKey(height, format))
 	if err != nil {
 		return err
 	}
@@ -225,11 +282,21 @@ func (s *Store) saveMetadata(height uint64, format uint32, metadata *types.Snaps
 	if err != nil {
 		return fmt.Errorf("failed to encode snapshot metadata: %w", err)
 	}
-	err = s.db.Set(key(height, format), value)
+	err = s.db.SetSync(encodeKey(height, format), value)
 	if err != nil {
 		return fmt.Errorf("failed to store snapshot: %w", err)
 	}
 	return nil
+}
+
+// pathHeight generates the path to a height, containing multiple snapshot formats
+func (s *Store) pathHeight(height uint64) string {
+	return filepath.Join(s.dir, strconv.FormatUint(height, 10))
+}
+
+// pathSnapshot generates a snapshot path, as a format under a height
+func (s *Store) pathSnapshot(height uint64, format uint32) string {
+	return filepath.Join(s.pathHeight(height), strconv.FormatUint(uint64(format), 10))
 }
 
 // pathChunk generates a snapshot chunk path
@@ -237,13 +304,21 @@ func (s *Store) pathChunk(height uint64, format uint32, chunk uint32) string {
 	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
 }
 
-// pathSnapshot generates a snapshot path
-func (s *Store) pathSnapshot(height uint64, format uint32) string {
-	return filepath.Join(s.dir, strconv.FormatUint(height, 10), strconv.FormatUint(uint64(format), 10))
+// decodeKey decodes a snapshot key
+func decodeKey(k []byte) (uint64, uint32, error) {
+	if len(k) != 13 {
+		return 0, 0, fmt.Errorf("invalid snapshot key with length %v", len(k))
+	}
+	if k[0] != keyPrefixSnapshot {
+		return 0, 0, fmt.Errorf("invalid snapshot key prefix %x", k[0])
+	}
+	height := binary.BigEndian.Uint64(k[1:9])
+	format := binary.BigEndian.Uint32(k[9:13])
+	return height, format, nil
 }
 
-// key generates a snapshot key
-func key(height uint64, format uint32) []byte {
+// encodeKey encodes a snapshot encodeKey
+func encodeKey(height uint64, format uint32) []byte {
 	k := make([]byte, 0, 13)
 	k = append(k, keyPrefixSnapshot)
 

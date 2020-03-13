@@ -7,7 +7,7 @@ import (
 )
 
 type (
-// Msg defines the interface a transaction message must fulfill.
+	// Msg defines the interface a transaction message must fulfill.
 	Msg interface {
 
 		// Return the message type.
@@ -45,7 +45,7 @@ type (
 		GetSignature() []byte
 	}
 
-// Tx defines the interface a transaction must fulfill.
+	// Tx defines the interface a transaction must fulfill.
 	Tx interface {
 		// Gets the all the transaction's messages.
 		GetMsgs() []Msg
@@ -55,7 +55,6 @@ type (
 		ValidateBasic() error
 	}
 )
-
 
 // TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, error)

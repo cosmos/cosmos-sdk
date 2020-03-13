@@ -1,11 +1,6 @@
 package std
 
 import (
-	"bytes"
-
-	jsonc "github.com/gibson042/canonicaljson-go"
-	"github.com/gogo/protobuf/jsonpb"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -165,21 +160,5 @@ func NewSignDoc(num, seq uint64, cid, memo string, fee auth.StdFee, msgs ...Mess
 // names adhere to their proto definition, default values are omitted, and follows
 // the JSON Canonical Form.
 func (sd *SignDoc) CanonicalSignBytes() ([]byte, error) {
-	jm := &jsonpb.Marshaler{EmitDefaults: false, OrigName: false}
-	buf := new(bytes.Buffer)
-
-	// first, encode via canonical Protocol Buffer JSON
-	if err := jm.Marshal(buf, sd); err != nil {
-		return nil, err
-	}
-
-	genericJSON := make(map[string]interface{})
-
-	// decode canonical proto encoding into a generic map
-	if err := jsonc.Unmarshal(buf.Bytes(), &genericJSON); err != nil {
-		return nil, err
-	}
-
-	// finally, return the canonical JSON encoding via JSON Canonical Form
-	return jsonc.Marshal(genericJSON)
+	return sdk.CanonicalSignBytes(sd)
 }

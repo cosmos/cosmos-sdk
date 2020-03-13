@@ -1,6 +1,4 @@
-// Package rest provides HTTP types and primitives for REST
-// requests validation and responses handling.
-package rest
+package rest_test
 
 import (
 	"errors"
@@ -8,28 +6,33 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sort"
 	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 func TestBaseReq_Sanitize(t *testing.T) {
 	t.Parallel()
-	sanitized := BaseReq{ChainID: "   test",
+	sanitized := rest.BaseReq{ChainID: "   test",
 		Memo:          "memo     ",
 		From:          " cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0 ",
 		Gas:           " ",
 		GasAdjustment: "  0.3",
 	}.Sanitize()
-	require.Equal(t, BaseReq{ChainID: "test",
+	require.Equal(t, rest.BaseReq{ChainID: "test",
 		Memo:          "memo",
 		From:          "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0",
 		Gas:           "",
@@ -44,25 +47,25 @@ func TestBaseReq_ValidateBasic(t *testing.T) {
 	onestake, err := types.ParseDecCoins("1.0stake")
 	require.NoError(t, err)
 
-	req1 := NewBaseReq(
+	req1 := rest.NewBaseReq(
 		fromAddr, "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
 	)
-	req2 := NewBaseReq(
+	req2 := rest.NewBaseReq(
 		"", "", "nonempty", "", "", 0, 0, tenstakes, nil, false,
 	)
-	req3 := NewBaseReq(
+	req3 := rest.NewBaseReq(
 		fromAddr, "", "", "", "", 0, 0, tenstakes, nil, false,
 	)
-	req4 := NewBaseReq(
+	req4 := rest.NewBaseReq(
 		fromAddr, "", "nonempty", "", "", 0, 0, tenstakes, onestake, false,
 	)
-	req5 := NewBaseReq(
+	req5 := rest.NewBaseReq(
 		fromAddr, "", "nonempty", "", "", 0, 0, types.Coins{}, types.DecCoins{}, false,
 	)
 
 	tests := []struct {
 		name string
-		req  BaseReq
+		req  rest.BaseReq
 		w    http.ResponseWriter
 		want bool
 	}{
@@ -102,21 +105,21 @@ func TestParseHTTPArgs(t *testing.T) {
 		limit int
 		err   bool
 	}{
-		{"no params", req0, httptest.NewRecorder(), []string{}, DefaultPage, DefaultLimit, false},
-		{"Limit", req1, httptest.NewRecorder(), []string{}, DefaultPage, 5, false},
-		{"Page", req2, httptest.NewRecorder(), []string{}, 5, DefaultLimit, false},
+		{"no params", req0, httptest.NewRecorder(), []string{}, rest.DefaultPage, rest.DefaultLimit, false},
+		{"Limit", req1, httptest.NewRecorder(), []string{}, rest.DefaultPage, 5, false},
+		{"Page", req2, httptest.NewRecorder(), []string{}, 5, rest.DefaultLimit, false},
 		{"Page and limit", req3, httptest.NewRecorder(), []string{}, 5, 5, false},
 
-		{"error page 0", reqE1, httptest.NewRecorder(), []string{}, DefaultPage, DefaultLimit, true},
-		{"error limit 0", reqE2, httptest.NewRecorder(), []string{}, DefaultPage, DefaultLimit, true},
+		{"error page 0", reqE1, httptest.NewRecorder(), []string{}, rest.DefaultPage, rest.DefaultLimit, true},
+		{"error limit 0", reqE2, httptest.NewRecorder(), []string{}, rest.DefaultPage, rest.DefaultLimit, true},
 
-		{"tags", req4, httptest.NewRecorder(), []string{"foo='faa'"}, DefaultPage, DefaultLimit, false},
-		{"tags", reqTxH, httptest.NewRecorder(), []string{"tx.height<=14", "tx.height>=12"}, DefaultPage, DefaultLimit, false},
+		{"tags", req4, httptest.NewRecorder(), []string{"foo='faa'"}, rest.DefaultPage, rest.DefaultLimit, false},
+		{"tags", reqTxH, httptest.NewRecorder(), []string{"tx.height<=14", "tx.height>=12"}, rest.DefaultPage, rest.DefaultLimit, false},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tags, page, limit, err := ParseHTTPArgs(tt.req)
+			tags, page, limit, err := rest.ParseHTTPArgs(tt.req)
 
 			sort.Strings(tags)
 
@@ -158,7 +161,7 @@ func TestParseQueryHeight(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			cliCtx, ok := ParseQueryHeightOrReturnBadRequest(tt.w, tt.cliCtx, tt.req)
+			cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(tt.w, tt.cliCtx, tt.req)
 			if tt.expectedOk {
 				require.True(t, ok)
 				require.Equal(t, tt.expectedHeight, cliCtx.Height)
@@ -206,8 +209,8 @@ func TestProcessPostResponse(t *testing.T) {
 	require.Nil(t, err)
 	jsonWithIndent, err := ctx.Codec.MarshalJSONIndent(acc, "", "  ")
 	require.Nil(t, err)
-	respNoIndent := NewResponseWithHeight(height, jsonNoIndent)
-	respWithIndent := NewResponseWithHeight(height, jsonWithIndent)
+	respNoIndent := rest.NewResponseWithHeight(height, jsonNoIndent)
+	respWithIndent := rest.NewResponseWithHeight(height, jsonWithIndent)
 	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 	expectedWithIndent, err := ctx.Codec.MarshalJSONIndent(respWithIndent, "", "  ")
@@ -216,7 +219,7 @@ func TestProcessPostResponse(t *testing.T) {
 	// check that negative height writes an error
 	w := httptest.NewRecorder()
 	ctx = ctx.WithHeight(-1)
-	PostProcessResponse(w, ctx, acc)
+	rest.PostProcessResponse(w, ctx, acc)
 	require.Equal(t, http.StatusInternalServerError, w.Code)
 
 	// check that height returns expected response
@@ -231,20 +234,20 @@ func TestReadRESTReq(t *testing.T) {
 	reqBody := ioutil.NopCloser(strings.NewReader(`{"chain_id":"alessio","memo":"text"}`))
 	req := &http.Request{Body: reqBody}
 	w := httptest.NewRecorder()
-	var br BaseReq
+	var br rest.BaseReq
 
 	// test OK
-	ReadRESTReq(w, req, codec.New(), &br)
-	require.Equal(t, BaseReq{ChainID: "alessio", Memo: "text"}, br)
+	rest.ReadRESTReq(w, req, codec.New(), &br)
+	require.Equal(t, rest.BaseReq{ChainID: "alessio", Memo: "text"}, br)
 	res := w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// test non valid JSON
 	reqBody = ioutil.NopCloser(strings.NewReader(`MALFORMED`))
 	req = &http.Request{Body: reqBody}
-	br = BaseReq{}
+	br = rest.BaseReq{}
 	w = httptest.NewRecorder()
-	ReadRESTReq(w, req, codec.New(), &br)
+	rest.ReadRESTReq(w, req, codec.New(), &br)
 	require.Equal(t, br, br)
 	res = w.Result()
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -253,7 +256,7 @@ func TestReadRESTReq(t *testing.T) {
 func TestWriteSimulationResponse(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
-	WriteSimulationResponse(w, codec.New(), 10)
+	rest.WriteSimulationResponse(w, codec.New(), 10)
 	res := w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	bs, err := ioutil.ReadAll(res.Body)
@@ -265,12 +268,12 @@ func TestWriteSimulationResponse(t *testing.T) {
 func TestParseUint64OrReturnBadRequest(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
-	_, ok := ParseUint64OrReturnBadRequest(w, "100")
+	_, ok := rest.ParseUint64OrReturnBadRequest(w, "100")
 	require.True(t, ok)
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
 
 	w = httptest.NewRecorder()
-	_, ok = ParseUint64OrReturnBadRequest(w, "-100")
+	_, ok = rest.ParseUint64OrReturnBadRequest(w, "-100")
 	require.False(t, ok)
 	require.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
 }
@@ -278,17 +281,17 @@ func TestParseUint64OrReturnBadRequest(t *testing.T) {
 func TestParseFloat64OrReturnBadRequest(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
-	_, ok := ParseFloat64OrReturnBadRequest(w, "100", 0)
+	_, ok := rest.ParseFloat64OrReturnBadRequest(w, "100", 0)
 	require.True(t, ok)
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
 
 	w = httptest.NewRecorder()
-	_, ok = ParseFloat64OrReturnBadRequest(w, "bad request", 0)
+	_, ok = rest.ParseFloat64OrReturnBadRequest(w, "bad request", 0)
 	require.False(t, ok)
 	require.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
 
 	w = httptest.NewRecorder()
-	ret, ok := ParseFloat64OrReturnBadRequest(w, "", 9.0)
+	ret, ok := rest.ParseFloat64OrReturnBadRequest(w, "", 9.0)
 	require.Equal(t, float64(9), ret)
 	require.True(t, ok)
 	require.Equal(t, http.StatusOK, w.Result().StatusCode)
@@ -296,11 +299,11 @@ func TestParseFloat64OrReturnBadRequest(t *testing.T) {
 
 func TestParseQueryParamBool(t *testing.T) {
 	req := httptest.NewRequest("GET", "/target?boolean=true", nil)
-	require.True(t, ParseQueryParamBool(req, "boolean"))
-	require.False(t, ParseQueryParamBool(req, "nokey"))
+	require.True(t, rest.ParseQueryParamBool(req, "boolean"))
+	require.False(t, rest.ParseQueryParamBool(req, "nokey"))
 	req = httptest.NewRequest("GET", "/target?boolean=false", nil)
-	require.False(t, ParseQueryParamBool(req, "boolean"))
-	require.False(t, ParseQueryParamBool(req, ""))
+	require.False(t, rest.ParseQueryParamBool(req, "boolean"))
+	require.False(t, rest.ParseQueryParamBool(req, ""))
 }
 
 func TestPostProcessResponseBare(t *testing.T) {
@@ -310,7 +313,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	ctx := context.CLIContext{}
 	w := httptest.NewRecorder()
 	bs := []byte("text string")
-	PostProcessResponseBare(w, ctx, bs)
+	rest.PostProcessResponseBare(w, ctx, bs)
 	res := w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	got, err := ioutil.ReadAll(res.Body)
@@ -325,7 +328,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 		X int    `json:"x"`
 		S string `json:"s"`
 	}{X: 10, S: "test"}
-	PostProcessResponseBare(w, ctx, data)
+	rest.PostProcessResponseBare(w, ctx, data)
 	res = w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	got, err = ioutil.ReadAll(res.Body)
@@ -343,7 +346,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 		X int    `json:"x"`
 		S string `json:"s"`
 	}{X: 10, S: "test"}
-	PostProcessResponseBare(w, ctx, data)
+	rest.PostProcessResponseBare(w, ctx, data)
 	res = w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	got, err = ioutil.ReadAll(res.Body)
@@ -355,7 +358,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	ctx = context.CLIContext{Indent: false}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
-	PostProcessResponseBare(w, ctx, data2)
+	rest.PostProcessResponseBare(w, ctx, data2)
 	res = w.Result()
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	got, err = ioutil.ReadAll(res.Body)
@@ -381,7 +384,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 
 	// test using regular struct
 	w := httptest.NewRecorder()
-	PostProcessResponse(w, ctx, obj)
+	rest.PostProcessResponse(w, ctx, obj)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp := w.Result()
 	t.Cleanup(func() { resp.Body.Close() })
@@ -399,7 +402,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 
 	// test using marshalled struct
 	w = httptest.NewRecorder()
-	PostProcessResponse(w, ctx, marshalled)
+	rest.PostProcessResponse(w, ctx, marshalled)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp = w.Result()
 	t.Cleanup(func() { resp.Body.Close() })
@@ -414,4 +417,9 @@ func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Requ
 	err = req.ParseForm()
 	require.NoError(t, err)
 	return req
+}
+
+func TestMain(m *testing.M) {
+	viper.Set(flags.FlagKeyringBackend, keys.BackendTest)
+	os.Exit(m.Run())
 }

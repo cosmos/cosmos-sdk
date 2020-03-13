@@ -53,12 +53,7 @@ Where proposal.json contains:
       "value": 105
     }
   ],
-  "deposit": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ]
+  "deposit": "1000stake"
 }
 `,
 				version.ClientName,
@@ -77,7 +72,12 @@ Where proposal.json contains:
 			from := cliCtx.GetFromAddress()
 			content := paramproposal.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
-			msg := govtypes.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			if err != nil {
+				return err
+			}
+
+			msg := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

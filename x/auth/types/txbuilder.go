@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -276,10 +275,7 @@ func MakeSignature(keybase keys.Keybase, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 
 	if keybase == nil {
-		keybase, err = keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
-		if err != nil {
-			return
-		}
+		return sig, errors.New("keybase cannot be nil")
 	}
 
 	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())

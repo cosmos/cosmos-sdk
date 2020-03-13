@@ -61,8 +61,8 @@ message MsgSubmitEvidence {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  Evidence                                       evidence = 1;
-  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+  Evidence                                       evidence = 2;
 }
 
 // MsgSubmitProposal defines the application-level message type for handling

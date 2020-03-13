@@ -558,6 +558,7 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 				chunkWriter.CloseWithError(err)
 				return
 			}
+			defer exporter.Close()
 			err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
 				Item: &sdktypes.SnapshotItem_Store{
 					Store: &sdktypes.SnapshotStoreItem{
@@ -593,6 +594,7 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 					return
 				}
 			}
+			exporter.Close()
 		}
 	}()
 
@@ -640,6 +642,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 				if err != nil {
 					return fmt.Errorf("IAVL commit failed: %w", err)
 				}
+				importer.Close()
 			}
 			store, ok := rs.getStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
@@ -649,6 +652,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 			if err != nil {
 				return fmt.Errorf("import failed: %w", err)
 			}
+			defer importer.Close()
 
 		case *sdktypes.SnapshotItem_Node:
 			if importer == nil {
@@ -674,6 +678,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 		if err != nil {
 			return fmt.Errorf("IAVL commit failed: %w", err)
 		}
+		importer.Close()
 	}
 
 	flushCommitInfo(rs.db, int64(height), rs.buildCommitInfo(int64(height)))

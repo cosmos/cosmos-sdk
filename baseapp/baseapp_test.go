@@ -1036,7 +1036,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 
-		txBytes, err := newCdc.MarshalBinaryLengthPrefixed(tx)
+		txBytes, err := newCdc.MarshalBinaryBare(tx)
 		require.NoError(t, err)
 
 		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1359,7 +1359,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	tx := newTxCounter(5, 0)
 	tx.setFailOnAnte(true)
-	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+	txBytes, err := cdc.MarshalBinaryBare(tx)
 	require.NoError(t, err)
 
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -1367,7 +1367,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	// require next tx to fail due to black gas limit
 	tx = newTxCounter(5, 0)
-	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
+	txBytes, err = cdc.MarshalBinaryBare(tx)
 	require.NoError(t, err)
 
 	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})

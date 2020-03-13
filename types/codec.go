@@ -15,8 +15,10 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Tx)(nil), nil)
 }
 
-// CanonicalSignBytes returns a canonical JSON encoding of a message that can be
-// signed over.
+// CanonicalSignBytes returns a canonical JSON encoding of a Proto message that
+// can be signed over. The JSON encoding ensures all field names adhere to their
+// Proto definition, default values are omitted, and follows the JSON Canonical
+// Form.
 func CanonicalSignBytes(m codec.ProtoMarshaler) ([]byte, error) {
 	jm := &jsonpb.Marshaler{EmitDefaults: false, OrigName: false}
 	buf := new(bytes.Buffer)

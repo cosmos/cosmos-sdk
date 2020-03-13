@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
 	"errors"
@@ -66,9 +67,78 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	return nil
 }
 
-// Load loads a snapshot from disk
-func (s *Store) Load(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	return nil, nil
+// Load loads a snapshot (both metadata and chunks). The chunks must be consumed and closed.
+func (s *Store) Load(height uint64, format uint32) (*types.SnapshotMetadata, <-chan io.ReadCloser, error) {
+	metadata, err := s.LoadMetadata(height, format)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ch := make(chan io.ReadCloser)
+	go func() {
+		defer close(ch)
+		for _, chunkMetadata := range metadata.Chunks {
+			pr, pw := io.Pipe()
+			ch <- pr
+			hasher := sha1.New()
+			chunk, err := s.LoadChunk(height, format, chunkMetadata.Chunk)
+			if err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+			defer chunk.Close()
+			_, err = io.Copy(io.MultiWriter(pw, hasher), chunk)
+			if err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+			if !bytes.Equal(chunkMetadata.Checksum, hasher.Sum(nil)) {
+				pw.CloseWithError(fmt.Errorf("checksum failure for chunk %v: expected %q got %q",
+					chunkMetadata.Chunk, chunkMetadata.Checksum, hasher.Sum(nil)))
+				return
+			}
+			chunk.Close()
+			pw.Close()
+		}
+	}()
+
+	return metadata, ch, nil
+}
+
+// LoadMetadata loads snapshot metadata from the database.
+func (s *Store) LoadMetadata(height uint64, format uint32) (*types.SnapshotMetadata, error) {
+	bytes, err := s.db.Get(key(height, format))
+	if err != nil {
+		return nil, fmt.Errorf("failed to load snapshot metadata: %w", err)
+	}
+	if bytes == nil {
+		return nil, fmt.Errorf("snapshot at height %v in format %v not found", height, format)
+	}
+	metadata := &types.SnapshotMetadata{}
+	err = proto.Unmarshal(bytes, metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load snapshot metadata for height %v format %v: %w",
+			height, format, err)
+	}
+	return metadata, nil
+}
+
+// LoadChunk loads a chunk from disk. The caller must call Close() on it when done.
+func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
+	metadata, err := s.LoadMetadata(height, format)
+	if err != nil {
+		return nil, err
+	}
+	if chunk > uint32(len(metadata.Chunks)) {
+		return nil, fmt.Errorf("snapshot for height %v format %v only has %v chunks, requested %v",
+			height, format, len(metadata.Chunks), chunk)
+	}
+	path := s.pathChunk(height, format, chunk)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch chunk %v from file %q: %w", chunk, path, err)
+	}
+	return file, nil
 }
 
 // Save saves a snapshot to disk
@@ -123,12 +193,12 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 // saveChunk saves a chunk to disk
 func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.ReadCloser) (*types.SnapshotChunkMetadata, error) {
 	defer chunk.Close()
-	dir := filepath.Join(s.dir, strconv.FormatUint(height, 10), strconv.FormatUint(uint64(format), 10))
+	dir := s.pathSnapshot(height, format)
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
 	}
-	path := filepath.Join(dir, strconv.FormatUint(uint64(index), 10))
+	path := s.pathChunk(height, format, index)
 	file, err := os.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
@@ -160,6 +230,16 @@ func (s *Store) saveMetadata(height uint64, format uint32, metadata *types.Snaps
 		return fmt.Errorf("failed to store snapshot: %w", err)
 	}
 	return nil
+}
+
+// pathChunk generates a snapshot chunk path
+func (s *Store) pathChunk(height uint64, format uint32, chunk uint32) string {
+	return filepath.Join(s.pathSnapshot(height, format), strconv.FormatUint(uint64(chunk), 10))
+}
+
+// pathSnapshot generates a snapshot path
+func (s *Store) pathSnapshot(height uint64, format uint32) string {
+	return filepath.Join(s.dir, strconv.FormatUint(height, 10), strconv.FormatUint(uint64(format), 10))
 }
 
 // key generates a snapshot key

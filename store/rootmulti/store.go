@@ -18,6 +18,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -509,7 +510,7 @@ func (rs *Store) Snapshot(height uint64) (types.Snapshot, error) {
 		switch store := store.(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
-		case *transient.Store:
+		case *transient.Store, *cache.CommitKVStoreCache:
 			// Transient stores aren't persisted and shouldn't be snapshotted
 			continue
 		default:

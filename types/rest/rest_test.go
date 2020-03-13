@@ -6,20 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"sort"
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -417,9 +413,4 @@ func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Requ
 	err = req.ParseForm()
 	require.NoError(t, err)
 	return req
-}
-
-func TestMain(m *testing.M) {
-	viper.Set(flags.FlagKeyringBackend, keys.BackendTest)
-	os.Exit(m.Run())
 }

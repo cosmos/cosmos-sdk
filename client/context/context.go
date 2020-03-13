@@ -57,7 +57,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var kb keys.Keybase
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	if !genOnly {
+	if !genOnly && from != "" {
 		kb = mustInitKeybase(input)
 	}
 

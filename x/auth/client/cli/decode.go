@@ -44,7 +44,7 @@ func runDecodeTxString(codec *amino.Codec) func(cmd *cobra.Command, args []strin
 		}
 
 		var stdTx authtypes.StdTx
-		err = cliCtx.Codec.UnmarshalBinaryLengthPrefixed(txBytes, &stdTx)
+		err = cliCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
 		if err != nil {
 			return err
 		}

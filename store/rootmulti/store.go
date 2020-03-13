@@ -18,7 +18,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -33,8 +32,10 @@ const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 
-	snapshotBufferSize = int(4e6)
-	snapshotChunkSize  = uint64(8e6) // Do not change without new snapshot format (must be uniform)
+	// Do not change chunk size without new snapshot format (must be uniform to fit together)
+	snapshotChunkSize   = uint64(8e6)
+	snapshotBufferSize  = int(snapshotChunkSize)
+	snapshotMaxItemSize = int(32e6) // FIXME Figure out what the actual limit is
 )
 
 var cdc = codec.New()
@@ -506,49 +507,44 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 		name string
 	}
 	stores := []namedStore{}
-	for key, store := range rs.stores {
-		switch store := store.(type) {
+	for key := range rs.stores {
+		switch store := rs.GetCommitKVStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
-		case *transient.Store, *cache.CommitKVStoreCache:
+		case *transient.Store:
 			// Transient stores aren't persisted and shouldn't be snapshotted
 			continue
 		default:
-			return nil, errors.Errorf("unable to snapshot store %q of type %T", key.Name(), store)
+			return nil, errors.Errorf("don't know how to snapshot store %q of type %T", key.Name(), store)
 		}
 	}
 	sort.Slice(stores, func(i, j int) bool {
 		return strings.Compare(stores[i].name, stores[j].name) == -1
 	})
 
-	// Create a channel of snapshot chunk readers, which we'll return to the caller
+	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
 	ch := make(chan io.ReadCloser)
-	chunker, err := newChunkWriter(ch, snapshotChunkSize)
-	if err != nil {
-		return nil, err
-	}
-
-	// Spawn goroutine to generate snapshot chunks
 	go func() {
 		// Set up a stream pipeline to serialize snapshot nodes:
 		// ExportNode -> delimited Protobuf -> gzip -> buffer -> chunkWriter -> chan io.ReadCloser
-		defer chunker.Close()
-		bufWriter := bufio.NewWriterSize(chunker, snapshotBufferSize)
+		chunkWriter := newChunkWriter(ch, snapshotChunkSize)
+		defer chunkWriter.Close()
+		bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
 		defer func() {
 			if err := bufWriter.Flush(); err != nil {
-				chunker.CloseWithError(err)
+				chunkWriter.CloseWithError(err)
 			}
 		}()
 		gzWriter := gzip.NewWriter(bufWriter)
 		defer func() {
 			if err := gzWriter.Close(); err != nil {
-				chunker.CloseWithError(err)
+				chunkWriter.CloseWithError(err)
 			}
 		}()
 		protoWriter := protoio.NewDelimitedWriter(gzWriter)
 		defer func() {
 			if err := protoWriter.Close(); err != nil {
-				chunker.CloseWithError(err)
+				chunkWriter.CloseWithError(err)
 			}
 		}()
 
@@ -559,18 +555,18 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 		for _, store := range stores {
 			exporter, err := store.Export(int64(height))
 			if err != nil {
-				chunker.CloseWithError(err)
+				chunkWriter.CloseWithError(err)
 				return
 			}
 			err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
 				Item: &sdktypes.SnapshotItem_Store{
-					Store: &sdktypes.SnapshotStore{
+					Store: &sdktypes.SnapshotStoreItem{
 						Name: store.name,
 					},
 				},
 			})
 			if err != nil {
-				chunker.CloseWithError(err)
+				chunkWriter.CloseWithError(err)
 				return
 			}
 
@@ -579,12 +575,12 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 				if err == tmiavl.ExportDone {
 					break
 				} else if err != nil {
-					chunker.CloseWithError(err)
+					chunkWriter.CloseWithError(err)
 					return
 				}
 				err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
 					Item: &sdktypes.SnapshotItem_Node{
-						Node: &sdktypes.SnapshotNode{
+						Node: &sdktypes.SnapshotNodeItem{
 							Key:     node.Key,
 							Value:   node.Value,
 							Height:  int32(node.Height),
@@ -593,7 +589,7 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 					},
 				})
 				if err != nil {
-					chunker.CloseWithError(err)
+					chunkWriter.CloseWithError(err)
 					return
 				}
 			}
@@ -621,12 +617,12 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 		return fmt.Errorf("gzip error: %w", err)
 	}
 	defer gzReader.Close()
-	protoReader := protoio.NewDelimitedReader(gzReader, 1e6)
+	protoReader := protoio.NewDelimitedReader(gzReader, snapshotMaxItemSize)
 	defer protoReader.Close()
 
 	// Import nodes into stores. The first item is expected to be a SnapshotItem containing
-	// a SnapshotStore, telling us which store to import into. The following items will contain
-	// SnapshotNode (i.e. ExportNode) until we reach the next SnapshotStore (or EOF).
+	// a SnapshotStoreItem, telling us which store to import into. The following items will contain
+	// SnapshotNodeItem (i.e. ExportNode) until we reach the next SnapshotStoreItem or EOF.
 	var importer *tmiavl.Importer
 	for {
 		item := &sdktypes.SnapshotItem{}
@@ -656,7 +652,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 
 		case *sdktypes.SnapshotItem_Node:
 			if importer == nil {
-				return fmt.Errorf("received node data before store metadata")
+				return fmt.Errorf("received node item before store item")
 			}
 			if item.Node.Height > math.MaxInt8 {
 				return fmt.Errorf("node height %v cannot exceed %v", item.Node.Height, math.MaxInt8)
@@ -669,7 +665,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 			})
 
 		default:
-			return fmt.Errorf("unknown protobuf message %T", item)
+			return fmt.Errorf("unknown snapshot item %T", item)
 		}
 	}
 

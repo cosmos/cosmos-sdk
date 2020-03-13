@@ -68,20 +68,20 @@ message SnapshotItem {
   option (gogoproto.stringer) = true;
 
   oneof item {
-    SnapshotStore store = 1;
-    SnapshotNode node = 2;
+    SnapshotStoreItem store = 1;
+    SnapshotNodeItem node = 2;
   }
 }
 
-// SnapshotStore is a snapshot item with info about the store containing the following nodes
-message SnapshotStore {
+// SnapshotStoreItem is a snapshot item with info about the store containing the following nodes
+message SnapshotStoreItem {
   option (gogoproto.stringer) = true;
 
   string name = 1;
 }
 
-// SnapshotNode is a snapshot item containing an exported IAVL node
-message SnapshotNode {
+// SnapshotNodeItem is a snapshot item containing an exported IAVL node
+message SnapshotNodeItem {
   option (gogoproto.stringer) = true;
 
   bytes key = 1;

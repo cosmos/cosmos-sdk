@@ -15,15 +15,12 @@ type chunkWriter struct {
 	closed    bool
 }
 
-// newChunkWriter creates a new chunkWriter
-func newChunkWriter(ch chan<- io.ReadCloser, chunkSize uint64) (*chunkWriter, error) {
-	if chunkSize == 0 {
-		return nil, errors.New("chunk size cannot be 0")
-	}
+// newChunkWriter creates a new chunkWriter. If chunkSize is 0, no chunking will be done.
+func newChunkWriter(ch chan<- io.ReadCloser, chunkSize uint64) *chunkWriter {
 	return &chunkWriter{
 		ch:        ch,
 		chunkSize: chunkSize,
-	}, nil
+	}
 }
 
 // chunk creates a new chunk
@@ -73,10 +70,17 @@ func (w *chunkWriter) Write(data []byte) (int, error) {
 				return nTotal, err
 			}
 		}
-		writeSize := w.chunkSize - w.written
+
+		var writeSize uint64
+		if w.chunkSize == 0 {
+			writeSize = uint64(len(data))
+		} else {
+			writeSize = w.chunkSize - w.written
+		}
 		if writeSize > uint64(len(data)) {
 			writeSize = uint64(len(data))
 		}
+
 		n, err := w.pipe.Write(data[:writeSize])
 		w.written += uint64(n)
 		nTotal += n

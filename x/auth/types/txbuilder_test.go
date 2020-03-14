@@ -146,3 +146,16 @@ func TestTxBuilderBuild(t *testing.T) {
 		})
 	}
 }
+
+func TestNewTxBuilderFromCLI(t *testing.T) {
+	require.Equal(t, TxBuilder{
+		keybase:            nil,
+		accountNumber:      0,
+		sequence:           0,
+		gas:                200000,
+		gasAdjustment:      0.0,
+		simulateAndExecute: false,
+		chainID:            "",
+		memo:               "",
+	}, NewTxBuilderFromCLI())
+}

@@ -39,7 +39,7 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, s
 
 // MustMarshalDelegation returns the delegation bytes. Panics if fails
 func MustMarshalDelegation(cdc codec.Marshaler, delegation Delegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&delegation)
+	return cdc.MustMarshalBinaryBare(&delegation)
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
@@ -54,7 +54,7 @@ func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
 
 // return the delegation
 func UnmarshalDelegation(cdc codec.Marshaler, value []byte) (delegation Delegation, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &delegation)
+	err = cdc.UnmarshalBinaryBare(value, &delegation)
 	return delegation, err
 }
 
@@ -127,7 +127,7 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 
 // return the unbonding delegation
 func MustMarshalUBD(cdc codec.Marshaler, ubd UnbondingDelegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&ubd)
+	return cdc.MustMarshalBinaryBare(&ubd)
 }
 
 // unmarshal a unbonding delegation from a store value
@@ -141,7 +141,7 @@ func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
 
 // unmarshal a unbonding delegation from a store value
 func UnmarshalUBD(cdc codec.Marshaler, value []byte) (ubd UnbondingDelegation, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &ubd)
+	err = cdc.UnmarshalBinaryBare(value, &ubd)
 	return ubd, err
 }
 
@@ -219,7 +219,7 @@ func (red *Redelegation) RemoveEntry(i int64) {
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
 func MustMarshalRED(cdc codec.Marshaler, red Redelegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&red)
+	return cdc.MustMarshalBinaryBare(&red)
 }
 
 // MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
@@ -233,7 +233,7 @@ func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
 
 // UnmarshalRED unmarshals a redelegation from a store value
 func UnmarshalRED(cdc codec.Marshaler, value []byte) (red Redelegation, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &red)
+	err = cdc.UnmarshalBinaryBare(value, &red)
 	return red, err
 }
 

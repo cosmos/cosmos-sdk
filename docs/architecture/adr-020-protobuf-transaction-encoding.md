@@ -103,7 +103,7 @@ to handle all the types, but also knows how to generate transactions, signatures
 and messages.
 
 ```go
-type TxGenerator interface {
+type Generator interface {
   NewTx() ClientTx
 }
 
@@ -123,7 +123,7 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have two new fields: `TxGenerator` and `TxGenerator`.
+We then update `CLIContext` to have two new fields: `Generator` and `Generator`.
 
 Then, each module will at the minimum accept a `Marshaler` instead of a concrete
 Amino codec. If the module needs to work with any interface types, it will use

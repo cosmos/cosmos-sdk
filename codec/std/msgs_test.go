@@ -12,10 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
-type BadEvidence struct {
-	*std.Evidence_Equivocation
-}
-
 func TestNewMsgSubmitEvidence(t *testing.T) {
 	s := sdk.AccAddress("foo")
 	e := evidence.Equivocation{

@@ -6,10 +6,10 @@ import (
 )
 
 type (
-	// TxGenerator defines an interface a client can utilize to generate an
+	// Generator defines an interface a client can utilize to generate an
 	// application-defined concrete transaction type. The type returned must
 	// implement ClientTx.
-	TxGenerator interface {
+	Generator interface {
 		NewTx() ClientTx
 	}
 

@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	_ sdk.Tx              = (*Transaction)(nil)
-	_ clientx.ClientTx    = (*Transaction)(nil)
-	_ clientx.TxGenerator = TxGenerator{}
+	_ sdk.Tx            = (*Transaction)(nil)
+	_ clientx.ClientTx  = (*Transaction)(nil)
+	_ clientx.Generator = TxGenerator{}
 )
 
 // TxGenerator defines a transaction generator that allows clients to construct

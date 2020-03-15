@@ -26,7 +26,7 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	TxGenerator   clientx.TxGenerator
+	TxGenerator   clientx.Generator
 	Marshaler     codec.Marshaler
 	Keybase       keys.Keybase
 	Input         io.Reader
@@ -136,7 +136,7 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 }
 
 // WithTxGenerator returns a copy of the CLIContext with an updated TxGenerator.
-func (ctx CLIContext) WithTxGenerator(txg clientx.TxGenerator) CLIContext {
+func (ctx CLIContext) WithTxGenerator(txg clientx.Generator) CLIContext {
 	ctx.TxGenerator = txg
 	return ctx
 }

@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gibson042/canonicaljson-go v1.0.3
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/mock v1.4.1
+	github.com/golang/mock v1.4.2
 	github.com/golang/protobuf v1.4.0-rc.4
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4

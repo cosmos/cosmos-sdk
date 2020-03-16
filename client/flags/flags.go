@@ -115,7 +115,8 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().StringP(FlagBroadcastMode, "b", BroadcastSync, "Transaction broadcasting mode (sync|async|block)")
 		c.Flags().Bool(FlagTrustNode, true, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
-		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible and the node operates offline)")
+		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT")
+		c.Flags().Bool(FlagOffline, false, "perform the action completely offline and disable local Keybase access")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 

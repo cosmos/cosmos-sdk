@@ -55,14 +55,14 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
-	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
+	offline := viper.GetBool(flags.FlagOffline)
+	fromAddress, fromName, err := GetFromFields(input, from, offline)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
 	}
 
-	if !genOnly {
+	if !offline {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
 			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
@@ -87,7 +87,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
-		GenerateOnly:  genOnly,
+		GenerateOnly:  offline,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
@@ -258,14 +258,14 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 }
 
 // GetFromFields returns a from account address and Keybase name given either
-// an address or key name. If genOnly is true, only a valid Bech32 cosmos
+// an address or key name. If offline is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(input io.Reader, from string, offline bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
 
-	if genOnly {
+	if offline {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
 			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address for generate-only")

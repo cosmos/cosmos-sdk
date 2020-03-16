@@ -123,7 +123,7 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have two new fields: `Generator` and `Generator`.
+We then update `CLIContext` to have two new fields: `Generator` and `Marshler`.
 
 Then, each module will at the minimum accept a `Marshaler` instead of a concrete
 Amino codec. If the module needs to work with any interface types, it will use

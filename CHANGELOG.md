@@ -48,6 +48,8 @@ balances or a single balance by denom when the `denom` query parameter is presen
 * [\#5785](https://github.com/cosmos/cosmos-sdk/issues/5785) JSON strings coerced to valid UTF-8 bytes at JSON marshalling time
 are now replaced by human-readable expressions. This change can potentially break compatibility with all those client side tools
 that parse log messages.
+* (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) Now we favor the use of MarshalBinaryBare instead of LengthPrefixed in all cases that are not needed,
+this cause a change on how some types are encoded.
 
 ### API Breaking Changes
 

@@ -29,6 +29,10 @@ type (
 		GetMemo() string
 		SetMemo(string)
 
+		// CanonicalSignBytes returns the canonical JSON bytes to sign over, given a
+		// chain ID, along with an account and sequence number. The JSON encoding
+		// ensures all field names adhere to their proto definition, default values
+		// are omitted, and follows the JSON Canonical Form.
 		CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
 	}
 )

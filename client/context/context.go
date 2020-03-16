@@ -41,6 +41,7 @@ type CLIContext struct {
 	UseLedger     bool
 	Simulate      bool
 	GenerateOnly  bool
+	Offline       bool
 	Indent        bool
 	SkipConfirm   bool
 }
@@ -87,7 +88,8 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
-		GenerateOnly:  offline,
+		GenerateOnly:  viper.GetBool(flags.FlagGenerateOnly),
+		Offline:       offline,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),

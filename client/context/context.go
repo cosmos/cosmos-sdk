@@ -204,6 +204,12 @@ func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
 	return ctx
 }
 
+// WithOffline returns a copy of the context with updated Offline value
+func (ctx CLIContext) WithOffline(offline bool) CLIContext {
+	ctx.Offline = offline
+	return ctx
+}
+
 // WithSimulation returns a copy of the context with updated Simulate value
 func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
 	ctx.Simulate = simulate

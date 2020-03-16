@@ -57,6 +57,7 @@ const (
 	FlagBroadcastMode      = "broadcast-mode"
 	FlagDryRun             = "dry-run"
 	FlagGenerateOnly       = "generate-only"
+	FlagOffline            = "offline"
 	FlagIndentResponse     = "indent"
 	FlagListenAddr         = "laddr"
 	FlagMaxOpenConnections = "max-open"

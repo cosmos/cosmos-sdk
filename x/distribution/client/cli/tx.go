@@ -150,8 +150,8 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 			// The transaction cannot be generated offline since it requires a query
 			// to get all the validators.
-			if cliCtx.GenerateOnly {
-				return fmt.Errorf("command disabled with the provided flag: %s", flags.FlagGenerateOnly)
+			if cliCtx.Offline {
+				return fmt.Errorf("command disabled with the provided flag: %s", flags.FlagOffline)
 			}
 
 			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)

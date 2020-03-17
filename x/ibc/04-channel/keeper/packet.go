@@ -102,6 +102,21 @@ func (k Keeper) SendPacket(
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
 	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.GetData()))
 
+	// Emit Event with Packet data along with other packet information for relayer to pick up
+	// and relay to other chain
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeSendPacket,
+			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData().GetBytes())),
+			sdk.NewAttribute(types.AttributeKeyTimeout, string(packet.GetData().GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, string(packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
+
 	k.Logger(ctx).Info(fmt.Sprintf("packet sent %v", packet)) // TODO: use packet.String()
 	return nil
 }

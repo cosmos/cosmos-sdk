@@ -48,6 +48,8 @@ balances or a single balance by denom when the `denom` query parameter is presen
 * [\#5785](https://github.com/cosmos/cosmos-sdk/issues/5785) JSON strings coerced to valid UTF-8 bytes at JSON marshalling time
 are now replaced by human-readable expressions. This change can potentially break compatibility with all those client side tools
 that parse log messages.
+* (client) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) The `tx encode/decode` commands, due to change on encoding break compatibility with
+older clients.
 
 ### API Breaking Changes
 
@@ -148,7 +150,7 @@ Buffers for state serialization instead of Amino.
   to define their own concrete `MsgSubmitProposal` types.
   * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
   requiring a concrete codec to know how to serialize `Proposal` types.
-* (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) Now we favor the use of MarshalBinaryBare instead of LengthPrefixed in all cases that is not needed.
+* (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) Now we favor the use of `(Un)MarshalBinaryBare` instead of `(Un)MarshalBinaryLengthPrefixed` in all cases that are not needed.
 
 ### Improvements
 

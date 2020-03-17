@@ -38,6 +38,4 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alp
 // FIXME Use local iavl with export/import API
 replace github.com/tendermint/iavl => ../iavl
 
-replace github.com/tendermint/tm-db => ../tm-db
-
 go 1.14

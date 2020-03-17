@@ -13,6 +13,15 @@ const (
 	AttributeKeyChannelID          = "channel_id"
 	AttributeCounterpartyPortID    = "counterparty_port_id"
 	AttributeCounterpartyChannelID = "counterparty_channel_id"
+
+	EventTypeSendPacket    = "send_packet"
+	AttributeKeyData       = "packet_data"
+	AttributeKeyTimeout    = "packet_timeout"
+	AttributeKeySequence   = "packet_sequence"
+	AttributeKeySrcPort    = "packet_src_port"
+	AttributeKeySrcChannel = "packet_src_channel"
+	AttributeKeyDstPort    = "packet_dst_port"
+	AttributeKeyDstChannel = "packet_dst_channel"
 )
 
 // IBC channel events vars

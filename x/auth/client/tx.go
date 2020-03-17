@@ -209,8 +209,7 @@ func SignStdTx(
 // populate account and sequence numbers from a foreign account.
 func SignStdTxWithSignerAddress(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext,
-	addr sdk.AccAddress, name string, stdTx authtypes.StdTx,
-	offline bool,
+	addr sdk.AccAddress, name string, stdTx authtypes.StdTx, offline bool,
 ) (signedStdTx authtypes.StdTx, err error) {
 
 	// check whether the address is a signer

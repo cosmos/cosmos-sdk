@@ -36,16 +36,16 @@ func CanonicalSignBytes(m codec.ProtoMarshaler) ([]byte, error) {
 	}
 
 	// strip default values, i.e. 0, true, "", [], {}, null
-	genericJSONNoDefaults := JsonStripDefaults(genericJSON)
+	genericJSONNoDefaults := JSONStripDefaults(genericJSON)
 
 	// finally, return the canonical JSON encoding via JSON Canonical Form
 	return jsonc.Marshal(genericJSONNoDefaults)
 }
 
-func JsonStripDefaults(val interface{}) interface{} {
+func JSONStripDefaults(val interface{}) interface{} {
 	switch val := val.(type) {
 	case bool:
-		if val == false {
+		if !val {
 			return nil
 		}
 	case string:
@@ -63,13 +63,13 @@ func JsonStripDefaults(val interface{}) interface{} {
 		}
 		res := make([]interface{}, n)
 		for i, x := range val {
-			res[i] = JsonStripDefaults(x)
+			res[i] = JSONStripDefaults(x)
 		}
 		return res
 	case map[string]interface{}:
 		res := make(map[string]interface{})
 		for k, v := range val {
-			v2 := JsonStripDefaults(v)
+			v2 := JSONStripDefaults(v)
 			if v2 != nil {
 				res[k] = v2
 			}

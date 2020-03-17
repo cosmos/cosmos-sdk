@@ -632,18 +632,3 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		Events: events,
 	}, nil
 }
-
-// snapshot takes a snapshot
-func (app *BaseApp) snapshot(height uint64) error {
-	if app.snapshotStore == nil {
-		return errors.New("no snapshot store configured")
-	}
-	if app.snapshotStore.Active() {
-		return errors.New("a snapshot is already in progress")
-	}
-	chunks, err := app.cms.Snapshot(height)
-	if err != nil {
-		return err
-	}
-	return app.snapshotStore.Save(height, snapshotFormat, chunks)
-}

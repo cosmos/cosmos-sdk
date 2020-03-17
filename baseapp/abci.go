@@ -263,24 +263,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 
 	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
-		go func() {
-			app.logger.Info("Taking state snapshot", "height", header.Height)
-			err := app.snapshot(uint64(header.Height))
-			if err != nil {
-				app.logger.Error("Failed to take snapshot", "height", header.Height, "err", err.Error())
-				return
-			}
-			app.logger.Info("Finished taking state snapshot", "height", header.Height)
-			if app.snapshotRetention > 0 {
-				app.logger.Info("Pruning state snapshots")
-				pruned, err := app.snapshotStore.Prune(app.snapshotRetention)
-				if err != nil {
-					app.logger.Error("Failed to prune snapshots", "err", err.Error())
-					return
-				}
-				app.logger.Info(fmt.Sprintf("Pruned %v state snapshots", pruned))
-			}
-		}()
+		go app.snapshot(uint64(header.Height))
 	}
 
 	return abci.ResponseCommit{
@@ -308,6 +291,40 @@ func (app *BaseApp) halt() {
 	// via SIGINT/SIGTERM signals.
 	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
 	os.Exit(0)
+}
+
+// snapshot takes a snapshot of the current state and prunes any old snapshots
+func (app *BaseApp) snapshot(height uint64) {
+	app.logger.Info("Taking state snapshot", "height", height)
+	if app.snapshotStore == nil {
+		app.logger.Error("No snapshot store configured")
+		return
+	}
+	if app.snapshotStore.Active() {
+		app.logger.Error("A state snapshot is already in progress")
+		return
+	}
+	chunks, err := app.cms.Snapshot(height)
+	if err != nil {
+		app.logger.Error("Failed to take state snapshot", "height", height, "err", err.Error())
+		return
+	}
+	err = app.snapshotStore.Save(height, snapshotFormat, chunks)
+	if err != nil {
+		app.logger.Error("Failed to take state snapshot", "height", height, "err", err.Error())
+		return
+	}
+	app.logger.Info("Completed state snapshot", "height", height)
+
+	if app.snapshotRetention > 0 {
+		app.logger.Info("Pruning state snapshots")
+		pruned, err := app.snapshotStore.Prune(app.snapshotRetention)
+		if err != nil {
+			app.logger.Error("Failed to prune state snapshots", "err", err.Error())
+			return
+		}
+		app.logger.Info("Pruned state snapshots", "pruned", pruned)
+	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it

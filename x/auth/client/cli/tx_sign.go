@@ -98,7 +98,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, cliCtx.Offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 
@@ -118,7 +118,7 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 				return err
 			}
 			newTx, err = client.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx,
+				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
@@ -176,10 +176,10 @@ func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, indent, generateSigna
 }
 
 // printAndValidateSigs will validate the signatures of a given transaction over
-// its expected signers. In addition, if cliCtx.Offline has not been supplied, the
+// its expected signers. In addition, if offline has not been supplied, the
 // signature is verified over the transaction sign bytes.
 func printAndValidateSigs(
-	cliCtx context.CLIContext, chainID string, stdTx types.StdTx,
+	cliCtx context.CLIContext, chainID string, stdTx types.StdTx, offline bool,
 ) bool {
 
 	fmt.Println("Signers:")
@@ -215,7 +215,7 @@ func printAndValidateSigs(
 
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
-		if !cliCtx.Offline && success {
+		if !offline && success {
 			acc, err := types.NewAccountRetriever(client.Codec, cliCtx).GetAccount(sigAddr)
 			if err != nil {
 				fmt.Printf("failed to get account: %s\n", sigAddr)

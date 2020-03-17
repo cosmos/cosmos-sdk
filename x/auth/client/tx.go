@@ -205,11 +205,12 @@ func SignStdTx(
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
-// Don't perform online validation or lookups if cliCtx.Offline is true, else
+// Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
 func SignStdTxWithSignerAddress(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext,
 	addr sdk.AccAddress, name string, stdTx authtypes.StdTx,
+	offline bool,
 ) (signedStdTx authtypes.StdTx, err error) {
 
 	// check whether the address is a signer
@@ -217,7 +218,7 @@ func SignStdTxWithSignerAddress(
 		return signedStdTx, fmt.Errorf("%s: %s", authtypes.ErrorInvalidSigner, name)
 	}
 
-	if !cliCtx.Offline {
+	if !offline {
 		txBldr, err = populateAccountFromState(txBldr, cliCtx, addr)
 		if err != nil {
 			return signedStdTx, err

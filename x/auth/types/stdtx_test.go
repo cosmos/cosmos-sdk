@@ -131,7 +131,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 
-	cdcBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+	cdcBytes, err := cdc.MarshalBinaryBare(tx)
 
 	require.NoError(t, err)
 	encoderBytes, err := encoder(tx)

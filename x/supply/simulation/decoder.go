@@ -16,8 +16,8 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], keeper.SupplyKey):
 		var supplyA, supplyB types.Supply
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &supplyA)
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &supplyB)
+		cdc.MustUnmarshalBinaryBare(kvA.Value, &supplyA)
+		cdc.MustUnmarshalBinaryBare(kvB.Value, &supplyB)
 		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
 
 	default:

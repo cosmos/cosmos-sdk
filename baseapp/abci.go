@@ -369,7 +369,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     codec.Cdc.MustMarshalBinaryLengthPrefixed(gInfo.GasUsed),
+				Value:     codec.Cdc.MustMarshalBinaryBare(gInfo.GasUsed),
 			}
 
 		case "version":

@@ -166,6 +166,7 @@ Buffers for state serialization instead of Amino.
 * (server) [\#5709](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
 and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
 * (crypto/keys) [\#5739](https://github.com/cosmos/cosmos-sdk/pull/5739) Print an error message if the password input failed.
+* (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
 
 ## [v0.38.1] - 2020-02-11
 

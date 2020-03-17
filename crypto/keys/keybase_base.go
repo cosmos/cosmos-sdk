@@ -124,7 +124,7 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 		return nil, nil, err
 	}
 
-	if err := CryptoCdc.UnmarshalBinaryBare([]byte(signed), sig); err != nil {
+	if err := CryptoCdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to decode signature")
 	}
 

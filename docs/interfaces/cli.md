@@ -61,7 +61,8 @@ The root command (called `rootCmd`) is what the user first types into the comman
 * **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](../core/node.md). The Status of a node includes `NodeInfo`,`SyncInfo` and `ValidatorInfo`.
 * **Config** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/config.go) from the SDK client tools, which allows the user to edit a `config.toml` file that sets values for [flags](#flags) such as `--chain-id` and which `--node` they wish to connect to.
 The `config` command can be invoked by typing `appcli config` with optional arguments `<key> [value]` and a `--get` flag to query configurations or `--home` flag to create a new configuration.
-* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys) from the SDK client tools, which includes a collection of subcommands for using the key functions in the SDK crypto tools, including adding a new key and saving it to disk, listing all public keys stored in the key manager, and deleting a key. For example, users can type `appcli keys add <name>` to add a new key and save an encrypted copy to disk, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key.
+* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys) from the SDK client tools, which includes a collection of subcommands for using the key functions in the SDK crypto tools, including adding a new key and saving it to disk, listing all public keys stored in the key manager, and deleting a key. For example, users can type `appcli keys add <name>` to add a new key and save an encrypted copy to disk, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys/add.go).
+
 
 * **Key storage** is handled using the [Keys API](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/README.md) which uses  https://github.com/99designs/keyring to interface with different operating systems (OS) and environments. This underlying storage system can be accessed with the flag `--keyring-backend`. The following options are available:
   * `OS`
@@ -80,7 +81,6 @@ The `config` command can be invoked by typing `appcli config` with optional argu
 > (echo '1234567890'; echo '1234567890'; echo '1234567890') | gaiad collect-gentxs --keyring-backend file # multiple prompts
 > ```
 
-For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys/add.go).
 * [**Transaction**](#transaction-commands) commands.
 * [**Query**](#query-commands) commands.
 

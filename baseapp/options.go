@@ -6,8 +6,8 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/snapshot"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,7 +46,7 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 }
 
 // SetSnapshotDB sets the snapshot store.
-func SetSnapshotStore(s *snapshot.Store) func(*BaseApp) {
+func SetSnapshotStore(s *snapshots.Store) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshotStore(s) }
 }
 
@@ -157,7 +157,7 @@ func (app *BaseApp) SetRouter(router sdk.Router) {
 
 // SetSnapshotDB sets the snapshot database and data directory. This database must
 // be independent of the app state.
-func (app *BaseApp) SetSnapshotStore(s *snapshot.Store) {
+func (app *BaseApp) SetSnapshotStore(s *snapshots.Store) {
 	if app.sealed {
 		panic("SetSnapshotDB() on sealed BaseApp")
 	}

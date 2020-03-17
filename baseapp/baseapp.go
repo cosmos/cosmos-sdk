@@ -13,8 +13,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/snapshot"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -75,7 +75,7 @@ type BaseApp struct { // nolint: maligned
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// snapshot storage, i.e. dumps of app state at certain intervals
-	snapshotStore     *snapshot.Store
+	snapshotStore     *snapshots.Store
 	snapshotInterval  uint64 // interval (in blocks) between snapshots (0 to disable)
 	snapshotRetention uint32 // number of snapshots to keep (0 for all)
 

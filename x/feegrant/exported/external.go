@@ -19,3 +19,19 @@ type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.Account
 	SetAccount(ctx sdk.Context, acc auth.Account)
 }
+
+type MsgGrantAuthorization interface {
+	sdk.Msg
+
+	GetFeeGrant() FeeAllowance
+	GetGranter() sdk.AccAddress
+	GetGrantee() sdk.AccAddress
+}
+
+type FeeAllowanceGrant interface {
+	sdk.Msg
+
+	GetFeeGrant() FeeAllowance
+	GetGranter() sdk.AccAddress
+	GetGrantee() sdk.AccAddress
+}

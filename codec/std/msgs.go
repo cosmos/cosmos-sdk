@@ -5,6 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
@@ -82,3 +83,12 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 func (msg MsgSubmitProposal) GetContent() gov.Content      { return msg.Content.GetContent() }
 func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
 func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }
+
+func (msg MsgGrantFeeAllowance) ValidateBasic() error {
+	//TODO
+	return nil
+}
+
+func (msg MsgGrantFeeAllowance) GetEvidence() exported.FeeAllowance {
+	return msg.Allowance.GetFeeAllowance()
+}

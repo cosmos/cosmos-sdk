@@ -6,7 +6,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 import "google/protobuf/timestamp.proto";
-import "third_party/proto/cosmos-proto/cosmos.proto";
 
 // MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
 message MsgRevokeFeeAllowance{
@@ -68,30 +67,15 @@ message ExpiresAt{
     int64 Height = 2;
 }
 
-// FeeAllowance defines the application-level fee allowance to be used in
-// feegrant module
-message FeeAllowance {
-    option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/feegrant/exported.FeeAllowance";
-
-    oneof sum{
-        BasicFeeAllowance BasicFeeAllowance= 1;
-        PeriodicFeeAllowance PeriodicFeeAllowance= 2;
-    }
-}
-
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
-message MsgGrantFeeAllowance{
+message MsgGrantFeeAllowanceBase{
     bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-
-    FeeAllowance Allowance = 3;
 }
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context
-message FeeAllowanceGrant{
+message FeeAllowanceGrantBase{
     bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-
-    FeeAllowance Allowance = 3;
 }

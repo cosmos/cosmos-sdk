@@ -48,6 +48,8 @@ balances or a single balance by denom when the `denom` query parameter is presen
 * [\#5785](https://github.com/cosmos/cosmos-sdk/issues/5785) JSON strings coerced to valid UTF-8 bytes at JSON marshalling time
 are now replaced by human-readable expressions. This change can potentially break compatibility with all those client side tools
 that parse log messages.
+* (client) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) The `tx encode/decode` commands, due to change on encoding break compatibility with
+older clients.
 
 ### API Breaking Changes
 

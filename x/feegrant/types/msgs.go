@@ -5,19 +5,19 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance *FeeAllowance) MsgGrantFeeAllowance {
-	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
+func NewMsgGrantFeeAllowanceBase(granter sdk.AccAddress, grantee sdk.AccAddress) MsgGrantFeeAllowanceBase {
+	return MsgGrantFeeAllowanceBase{Granter: granter, Grantee: grantee}
 }
 
-func (msg MsgGrantFeeAllowance) Route() string {
+func (msg MsgGrantFeeAllowanceBase) Route() string {
 	return RouterKey
 }
 
-func (msg MsgGrantFeeAllowance) Type() string {
+func (msg MsgGrantFeeAllowanceBase) Type() string {
 	return "grant-fee-allowance"
 }
 
-func (msg MsgGrantFeeAllowance) ValidateBasic() error {
+func (msg MsgGrantFeeAllowanceBase) ValidateBasic() error {
 	if msg.Granter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
@@ -25,14 +25,14 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 
-	return msg.GetAllowance().GetFeeAllowance().ValidateBasic()
+	return nil
 }
 
-func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
+func (msg MsgGrantFeeAllowanceBase) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
-func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
+func (msg MsgGrantFeeAllowanceBase) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Granter}
 }
 

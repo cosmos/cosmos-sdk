@@ -73,21 +73,17 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	basic := types.FeeAllowance_BasicFeeAllowance{
-		BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: atom,
-			Expiration: types.ExpiresAtHeight(334455),
-		},
+	basic := &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(334455),
 	}
-	basic2 := types.FeeAllowance_BasicFeeAllowance{
-		BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: eth,
-			Expiration: types.ExpiresAtHeight(172436),
-		},
+	basic2 := &types.BasicFeeAllowance{
+		SpendLimit: eth,
+		Expiration: types.ExpiresAtHeight(172436),
 	}
 
 	// let's set up some initial state here
-	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, std.FeeAllowanceGrant{
 		Granter: suite.addr, Grantee: suite.addr2, Allowance: &types.FeeAllowance{Sum: &basic},
 	})
 	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{

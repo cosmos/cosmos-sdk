@@ -20,7 +20,7 @@ type AccountKeeper interface {
 	SetAccount(ctx sdk.Context, acc auth.Account)
 }
 
-type MsgGrantAuthorization interface {
+type MsgGrantFeeAllowance interface {
 	sdk.Msg
 
 	GetFeeGrant() FeeAllowance
@@ -29,8 +29,6 @@ type MsgGrantAuthorization interface {
 }
 
 type FeeAllowanceGrant interface {
-	sdk.Msg
-
 	GetFeeGrant() FeeAllowance
 	GetGranter() sdk.AccAddress
 	GetGrantee() sdk.AccAddress

@@ -5,13 +5,15 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feeexported "github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 var (
-	_ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
-	_ gov.MsgSubmitProposalI        = MsgSubmitProposal{}
+	_ eviexported.MsgSubmitEvidence    = MsgSubmitEvidence{}
+	_ gov.MsgSubmitProposalI           = MsgSubmitProposal{}
+	_ feeexported.MsgGrantFeeAllowance = MsgGrantFeeAllowance{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
@@ -84,11 +86,48 @@ func (msg MsgSubmitProposal) GetContent() gov.Content      { return msg.Content.
 func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
 func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }
 
+func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowanceI feeexported.FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
+	feeallowance := &FeeAllowance{}
+
+	if err := feeallowance.SetFeeAllowance(feeAllowanceI); err != nil {
+		return MsgGrantFeeAllowance{}, err
+	}
+
+	return MsgGrantFeeAllowance{
+		Allowance:                feeallowance,
+		MsgGrantFeeAllowanceBase: feegrant.NewMsgGrantFeeAllowanceBase(granter, grantee),
+	}, nil
+}
+
 func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	//TODO
 	return nil
 }
 
-func (msg MsgGrantFeeAllowance) GetEvidence() exported.FeeAllowance {
+func (msg MsgGrantFeeAllowance) GetFeeGrant() feeexported.FeeAllowance {
 	return msg.Allowance.GetFeeAllowance()
+}
+
+func (msg MsgGrantFeeAllowance) GetGrantee() sdk.AccAddress {
+	return msg.Grantee
+}
+
+func (msg MsgGrantFeeAllowance) GetGranter() sdk.AccAddress {
+	return msg.Granter
+}
+
+func (grant FeeAllowanceGrant) ValidateBasic() error {
+	return nil
+}
+
+func (grant FeeAllowanceGrant) GetFeeGrant() feeexported.FeeAllowance {
+	return grant.Allowance.GetFeeAllowance()
+}
+
+func (grant FeeAllowanceGrant) GetGrantee() sdk.AccAddress {
+	return grant.Grantee
+}
+
+func (grant FeeAllowanceGrant) GetGranter() sdk.AccAddress {
+	return grant.Granter
 }

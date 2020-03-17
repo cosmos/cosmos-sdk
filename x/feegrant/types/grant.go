@@ -3,11 +3,21 @@ package types
 import (
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
+func (a FeeAllowanceGrantBase) NewFeeAllowanceGrantBase(granter sdk.AccAddress, grantee sdk.AccAddress) FeeAllowanceGrantBase {
+	return FeeAllowanceGrantBase{
+		Granter: granter,
+		Grantee: grantee,
+	}
+}
+
+//TODO these should be implemented in std/msgs.go
 // ValidateBasic ensures that
-func (a FeeAllowanceGrant) ValidateBasic() error {
+func (a FeeAllowanceGrantBase) ValidateBasic() error {
 	if a.Granter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
@@ -23,7 +33,7 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 
 // PrepareForExport will make all needed changes to the allowance to prepare to be
 // re-imported at height 0, and return a copy of this grant.
-func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
+func (a FeeAllowanceGrantBase) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowanceGrant {
 	err := a.GetAllowance().SetFeeAllowance(a.GetAllowance().GetFeeAllowance().PrepareForExport(dumpTime, dumpHeight))
 	if err != nil {
 		//TODO handle this error

@@ -62,30 +62,3 @@ message SnapshotChunkMetadata {
   uint32 chunk = 1;
   bytes checksum = 2;
 }
-
-// SnapshotItem is an item contained in a snapshot
-message SnapshotItem {
-  option (gogoproto.stringer) = true;
-
-  oneof item {
-    SnapshotStoreItem store = 1;
-    SnapshotNodeItem node = 2;
-  }
-}
-
-// SnapshotStoreItem is a snapshot item with info about the store containing the following nodes
-message SnapshotStoreItem {
-  option (gogoproto.stringer) = true;
-
-  string name = 1;
-}
-
-// SnapshotNodeItem is a snapshot item containing an exported IAVL node
-message SnapshotNodeItem {
-  option (gogoproto.stringer) = true;
-
-  bytes key = 1;
-  bytes value = 2;
-  int64 version = 3;
-  int32 height = 4;
-}

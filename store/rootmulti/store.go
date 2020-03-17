@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -559,9 +558,9 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 				return
 			}
 			defer exporter.Close()
-			err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
-				Item: &sdktypes.SnapshotItem_Store{
-					Store: &sdktypes.SnapshotStoreItem{
+			err = protoWriter.WriteMsg(&types.SnapshotItem{
+				Item: &types.SnapshotItem_Store{
+					Store: &types.SnapshotStoreItem{
 						Name: store.name,
 					},
 				},
@@ -579,9 +578,9 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 					chunkWriter.CloseWithError(err)
 					return
 				}
-				err = protoWriter.WriteMsg(&sdktypes.SnapshotItem{
-					Item: &sdktypes.SnapshotItem_Node{
-						Node: &sdktypes.SnapshotNodeItem{
+				err = protoWriter.WriteMsg(&types.SnapshotItem{
+					Item: &types.SnapshotItem_IAVL{
+						IAVL: &types.SnapshotIAVLItem{
 							Key:     node.Key,
 							Value:   node.Value,
 							Height:  int32(node.Height),
@@ -627,7 +626,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 	// SnapshotNodeItem (i.e. ExportNode) until we reach the next SnapshotStoreItem or EOF.
 	var importer *tmiavl.Importer
 	for {
-		item := &sdktypes.SnapshotItem{}
+		item := &types.SnapshotItem{}
 		err := protoReader.ReadMsg(item)
 		if err == io.EOF {
 			break
@@ -636,7 +635,7 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 		}
 
 		switch item := item.Item.(type) {
-		case *sdktypes.SnapshotItem_Store:
+		case *types.SnapshotItem_Store:
 			if importer != nil {
 				err = importer.Commit()
 				if err != nil {
@@ -654,18 +653,18 @@ func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
 			}
 			defer importer.Close()
 
-		case *sdktypes.SnapshotItem_Node:
+		case *types.SnapshotItem_IAVL:
 			if importer == nil {
-				return fmt.Errorf("received node item before store item")
+				return fmt.Errorf("received IAVL node item before store item")
 			}
-			if item.Node.Height > math.MaxInt8 {
-				return fmt.Errorf("node height %v cannot exceed %v", item.Node.Height, math.MaxInt8)
+			if item.IAVL.Height > math.MaxInt8 {
+				return fmt.Errorf("node height %v cannot exceed %v", item.IAVL.Height, math.MaxInt8)
 			}
 			importer.Add(&tmiavl.ExportNode{
-				Key:     item.Node.Key,
-				Value:   item.Node.Value,
-				Height:  int8(item.Node.Height),
-				Version: item.Node.Version,
+				Key:     item.IAVL.Key,
+				Value:   item.IAVL.Value,
+				Height:  int8(item.IAVL.Height),
+				Version: item.IAVL.Version,
 			})
 
 		default:

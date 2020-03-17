@@ -51,7 +51,6 @@ recommended to set such parameters manually.
 	}
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node")
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
 	// Add the flags here and return the command
@@ -85,7 +84,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
-		if !viper.GetBool(flagOffline) {
+		if !cliCtx.Offline {
 			accnum, seq, err := types.NewAccountRetriever(client.Codec, cliCtx).GetAccountNumberSequence(multisigInfo.GetAddress())
 			if err != nil {
 				return err

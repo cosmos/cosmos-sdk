@@ -34,8 +34,10 @@ func Test_runAddCmdBasic(t *testing.T) {
 		kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			kb.Delete("keyname1", "", false)
-			kb.Delete("keyname2", "", false)
+			err := kb.Delete("keyname1", "", false)
+			require.NoError(t, err)
+			err = kb.Delete("keyname2", "", false)
+			require.Error(t, err) // This fails when running the individual test, but pass when running `make test`
 		})
 	}
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))

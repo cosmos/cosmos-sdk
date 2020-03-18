@@ -157,7 +157,8 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 	// Import a public key
 	armor, err := kb.ExportPubKey(n2)
 	require.Nil(t, err)
-	kb.ImportPubKey(n3, armor)
+	err = kb.ImportPubKey(n3, armor)
+	require.NoError(t, err)
 	i3, err := kb.Get(n3)
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
@@ -408,6 +409,6 @@ func TestSupportedAlgos(t *testing.T) {
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
-	require.Equal(t, []SigningAlgo([]SigningAlgo{"secp256k1"}), kb.SupportedAlgos())
-	require.Equal(t, []SigningAlgo([]SigningAlgo{"secp256k1"}), kb.SupportedAlgosLedger())
+	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgos())
+	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgosLedger())
 }

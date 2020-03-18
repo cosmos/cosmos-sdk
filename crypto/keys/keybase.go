@@ -340,7 +340,11 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 		return
 	}
 
-	kb.db.Set(infoKey(name), infoBytes)
+	err = kb.db.Set(infoKey(name), infoBytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -388,8 +392,15 @@ func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 		}
 	}
 
-	kb.db.DeleteSync(addrKey(info.GetAddress()))
-	kb.db.DeleteSync(infoKey(name))
+	err = kb.db.DeleteSync(addrKey(info.GetAddress()))
+	if err != nil {
+		return err
+	}
+
+	err = kb.db.DeleteSync(infoKey(name))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

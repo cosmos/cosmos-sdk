@@ -108,7 +108,7 @@ func (v Validators) Swap(i, j int) {
 
 // return the redelegation
 func MustMarshalValidator(cdc codec.Marshaler, validator Validator) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&validator)
+	return cdc.MustMarshalBinaryBare(&validator)
 }
 
 // unmarshal a redelegation from a store value
@@ -122,7 +122,7 @@ func MustUnmarshalValidator(cdc codec.Marshaler, value []byte) Validator {
 
 // unmarshal a redelegation from a store value
 func UnmarshalValidator(cdc codec.Marshaler, value []byte) (v Validator, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &v)
+	err = cdc.UnmarshalBinaryBare(value, &v)
 	return v, err
 }
 

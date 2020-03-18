@@ -131,7 +131,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 
-	cdcBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+	cdcBytes, err := cdc.MarshalBinaryBare(tx)
 
 	require.NoError(t, err)
 	encoderBytes, err := encoder(tx)
@@ -152,11 +152,11 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 			"|\n  pubkey: \"\"\n  signature: \"\"\n",
 		},
 		{
-			StdSignature{PubKey: pubKey, Signature: []byte("dummySig")},
-			fmt.Sprintf("|\n  pubkey: %s\n  signature: dummySig\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
+			StdSignature{PubKey: pubKey.Bytes(), Signature: []byte("dummySig")},
+			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 		{
-			StdSignature{PubKey: pubKey, Signature: nil},
+			StdSignature{PubKey: pubKey.Bytes(), Signature: nil},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 	}

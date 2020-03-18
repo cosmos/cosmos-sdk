@@ -23,7 +23,7 @@ var (
 
 func TestParseQueryResponse(t *testing.T) {
 	cdc := makeCodec()
-	sdkResBytes := cdc.MustMarshalBinaryLengthPrefixed(uint64(10))
+	sdkResBytes := cdc.MustMarshalBinaryBare(uint64(10))
 	gas, err := parseQueryResponse(cdc, sdkResBytes)
 	assert.Equal(t, gas, uint64(10))
 	assert.Nil(t, err)
@@ -39,7 +39,7 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("")
 			}
-			return cdc.MustMarshalBinaryLengthPrefixed(gasUsed), 0, nil
+			return cdc.MustMarshalBinaryBare(gasUsed), 0, nil
 		}
 	}
 

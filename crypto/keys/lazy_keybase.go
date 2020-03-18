@@ -219,5 +219,3 @@ func (lkb lazyKeybase) SupportedAlgos() []SigningAlgo {
 func (lkb lazyKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return newBaseKeybase(lkb.options...).SupportedAlgosLedger()
 }
-
-func (lkb lazyKeybase) CloseDB() {}

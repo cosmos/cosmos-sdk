@@ -34,7 +34,7 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{Key: types.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(acc)},
-		tmkv.Pair{Key: types.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryLengthPrefixed(globalAccNumber)},
+		tmkv.Pair{Key: types.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryBare(globalAccNumber)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 	tests := []struct {

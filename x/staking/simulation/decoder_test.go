@@ -40,12 +40,12 @@ func TestDecodeStore(t *testing.T) {
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryLengthPrefixed(sdk.OneInt())},
-		tmkv.Pair{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(val)},
+		tmkv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(sdk.OneInt())},
+		tmkv.Pair{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryBare(val)},
 		tmkv.Pair{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(del)},
-		tmkv.Pair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(ubd)},
-		tmkv.Pair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(red)},
+		tmkv.Pair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(del)},
+		tmkv.Pair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(ubd)},
+		tmkv.Pair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(red)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

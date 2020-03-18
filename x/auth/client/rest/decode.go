@@ -46,7 +46,7 @@ func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		var stdTx authtypes.StdTx
-		err = cliCtx.Codec.UnmarshalBinaryLengthPrefixed(txBytes, &stdTx)
+		err = cliCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

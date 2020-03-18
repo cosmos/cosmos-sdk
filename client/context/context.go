@@ -288,7 +288,7 @@ func GetFromFields(input io.Reader, from string, offline bool) (sdk.AccAddress, 
 	if offline {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address for generate-only")
+			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address in offline mode")
 		}
 
 		return addr, "", nil

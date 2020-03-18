@@ -29,7 +29,7 @@ $ <appcli> tx broadcast ./mytxn.json
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			if cliCtx.Offline {
-				return errors.New("cannot broadcast tx with offline flag")
+				return errors.New("cannot broadcast tx during offline mode")
 			}
 
 			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])

@@ -157,6 +157,9 @@ func NewSimApp(
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
+	// TODO:
+	// memKeys := sdk.NewMemoryStoreKeys(...)
+
 	app := &SimApp{
 		BaseApp:        bApp,
 		cdc:            cdc,
@@ -301,6 +304,9 @@ func NewSimApp(
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
+
+	// TODO:
+	// app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)

@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/crypto/bcrypt"
-	"github.com/tendermint/tendermint/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
@@ -431,9 +430,6 @@ func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.base.SupportedAlgosLedger()
 }
 
-// CloseDB releases the lock and closes the storage backend.
-func (kb keyringKeybase) CloseDB() {}
-
 func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
@@ -569,7 +565,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			saltBytes := crypto.CRandBytes(16)
+			saltBytes := tmcrypto.CRandBytes(16)
 			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)

@@ -428,11 +428,6 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	}
 }
 
-// CloseDB releases the lock and closes the storage backend.
-func (kb dbKeybase) CloseDB() {
-	kb.db.Close()
-}
-
 // SupportedAlgos returns a list of supported signing algorithms.
 func (kb dbKeybase) SupportedAlgos() []SigningAlgo {
 	return kb.base.SupportedAlgos()

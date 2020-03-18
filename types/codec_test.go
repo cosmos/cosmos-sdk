@@ -22,8 +22,18 @@ func TestJSONStripDefaults(t *testing.T) {
 		"k":{"x":0,"y":1}
 	}`), &x)
 	assert.NoError(t, err)
-	y := JSONStripDefaults(x)
+	y := jsonStripDefaults(x)
 	bz, err := json.Marshal(y)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"g":1,"h":true,"i":"abc","j":[null,null,null,null,null,1],"k":{"y":1}}`, string(bz))
+	assert.Equal(t, `{"g":1,"h":true,"i":"abc","j":[0,false,"",[],{},1],"k":{"y":1}}`, string(bz))
+}
+
+func TestJSONStripDefaults2(t *testing.T) {
+	var x interface{}
+	err := json.Unmarshal([]byte(`{"base":{"accountNumber":"13","chainId":"test-chain","fee":null}}`), &x)
+	assert.NoError(t, err)
+	y := jsonStripDefaults(x)
+	bz, err := json.Marshal(y)
+	assert.NoError(t, err)
+	assert.Equal(t, `{"base":{"accountNumber":"13","chainId":"test-chain"}}`, string(bz))
 }

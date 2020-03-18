@@ -2,11 +2,11 @@ package types
 
 import (
 	"bytes"
-
+	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/codec"
 	jsonc "github.com/gibson042/canonicaljson-go"
 	"github.com/gogo/protobuf/jsonpb"
-
-	"github.com/cosmos/cosmos-sdk/codec"
+	"reflect"
 )
 
 // Register the sdk message type
@@ -31,31 +31,22 @@ func CanonicalSignBytes(m codec.ProtoMarshaler) ([]byte, error) {
 	var genericJSON interface{}
 
 	// decode canonical proto encoding into a generic map
-	if err := jsonc.Unmarshal(buf.Bytes(), &genericJSON); err != nil {
+	if err := json.Unmarshal(buf.Bytes(), &genericJSON); err != nil {
 		return nil, err
 	}
 
 	// strip default values, i.e. 0, true, "", [], {}, null
-	genericJSONNoDefaults := JSONStripDefaults(genericJSON)
+	genericJSONNoDefaults := jsonStripDefaults(genericJSON)
 
 	// finally, return the canonical JSON encoding via JSON Canonical Form
 	return jsonc.Marshal(genericJSONNoDefaults)
 }
 
-func JSONStripDefaults(val interface{}) interface{} {
+// jsonStripDefaults removes default and nil values from maps within JSON
+// that has been parsed into a generic interface{} using json.Unmarshal.
+// The returned interface{} value can then be marshaled back to JSON.
+func jsonStripDefaults(val interface{}) interface{} {
 	switch val := val.(type) {
-	case bool:
-		if !val {
-			return nil
-		}
-	case string:
-		if val == "" {
-			return nil
-		}
-	case float64:
-		if val == 0 {
-			return nil
-		}
 	case []interface{}:
 		n := len(val)
 		if n == 0 {
@@ -63,21 +54,39 @@ func JSONStripDefaults(val interface{}) interface{} {
 		}
 		res := make([]interface{}, n)
 		for i, x := range val {
-			res[i] = JSONStripDefaults(x)
+			switch x := x.(type) {
+			case map[string]interface{}:
+				res[i] = jsonStripDefaultMapKeys(x)
+			default:
+				res[i] = x
+			}
 		}
 		return res
 	case map[string]interface{}:
-		res := make(map[string]interface{})
-		for k, v := range val {
-			v2 := JSONStripDefaults(v)
-			if v2 != nil {
-				res[k] = v2
-			}
-		}
+		res := jsonStripDefaultMapKeys(val)
 		if len(res) == 0 {
 			return nil
 		}
 		return res
+	default:
+		if isZeroVal(val) {
+			return nil
+		}
 	}
 	return val
+}
+
+func isZeroVal(x interface{}) bool {
+	return x == nil || reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}
+
+func jsonStripDefaultMapKeys(val map[string]interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+	for k, v := range val {
+		v2 := jsonStripDefaults(v)
+		if v2 != nil {
+			res[k] = v2
+		}
+	}
+	return res
 }

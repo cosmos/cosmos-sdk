@@ -15,7 +15,8 @@ import (
 func TestSanitize(t *testing.T) {
 	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	authAcc1 := types.NewBaseAccountWithAddress(addr1)
-	authAcc1.SetAccountNumber(1)
+	err := authAcc1.SetAccountNumber(1)
+	require.NoError(t, err)
 
 	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	authAcc2 := types.NewBaseAccountWithAddress(addr2)

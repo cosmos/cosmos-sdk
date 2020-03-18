@@ -69,7 +69,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	_, err := app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
 	require.NoError(t, err)
 
 	// check balance increase

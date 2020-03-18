@@ -42,7 +42,8 @@ func Test_runListCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		kb.Delete("something", "", false)
+		err = kb.Delete("something", "", false)
+		require.NoError(t, err)
 	})
 	testData := []struct {
 		name    string

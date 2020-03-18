@@ -112,7 +112,8 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := abci.Header{Height: app.LastBlockHeight() + 1}
-	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	_, _, err = simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	require.NoError(t, err)
 
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
 
@@ -178,7 +179,8 @@ func TestSendToModuleAcc(t *testing.T) {
 			origSeq := res1.GetSequence()
 
 			header := abci.Header{Height: app.LastBlockHeight() + 1}
-			simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{test.msg}, []uint64{origAccNum}, []uint64{origSeq}, test.expSimPass, test.expPass, priv1)
+			_, _, err = simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{test.msg}, []uint64{origAccNum}, []uint64{origSeq}, test.expSimPass, test.expPass, priv1)
+			require.NoError(t, err)
 
 			simapp.CheckBalance(t, app, test.msg.FromAddress, test.expFromBalance)
 			simapp.CheckBalance(t, app, test.msg.ToAddress, test.expToBalance)

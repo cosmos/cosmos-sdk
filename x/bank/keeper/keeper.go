@@ -274,7 +274,10 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 		newBalance := balance.Sub(coin)
 		resultCoins = resultCoins.Add(newBalance)
 
-		k.SetBalance(ctx, addr, newBalance)
+		err := k.SetBalance(ctx, addr, newBalance)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return resultCoins, nil

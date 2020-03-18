@@ -237,6 +237,7 @@ func TestReadRESTReq(t *testing.T) {
 	ReadRESTReq(w, req, codec.New(), &br)
 	require.Equal(t, BaseReq{ChainID: "alessio", Memo: "text"}, br)
 	res := w.Result()
+	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// test non valid JSON
@@ -255,6 +256,7 @@ func TestWriteSimulationResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	WriteSimulationResponse(w, codec.New(), 10)
 	res := w.Result()
+	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	bs, err := ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
@@ -361,13 +363,13 @@ func TestPostProcessResponseBare(t *testing.T) {
 	got, err = ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
 	t.Cleanup(func() { res.Body.Close() })
-	require.Equal(t, []string([]string{"application/json"}), res.Header["Content-Type"])
+	require.Equal(t, []string{"application/json"}, res.Header["Content-Type"])
 	require.Equal(t, `{"error":"couldn't marshal"}`, string(got))
 }
 
 type badJSONMarshaller struct{}
 
-func (_ badJSONMarshaller) MarshalJSON() ([]byte, error) {
+func (badJSONMarshaller) MarshalJSON() ([]byte, error) {
 	return nil, errors.New("couldn't marshal")
 }
 

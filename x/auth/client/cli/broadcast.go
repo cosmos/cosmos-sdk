@@ -37,6 +37,10 @@ $ <appcli> tx broadcast ./mytxn.json
 			}
 
 			res, err := cliCtx.BroadcastTx(txBytes)
+			if err != nil {
+				return err
+			}
+
 			err = cliCtx.PrintOutput(res)
 			if err != nil {
 				return err

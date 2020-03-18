@@ -116,7 +116,8 @@ func TestVerifyMultiStoreQueryProofEmptyStore(t *testing.T) {
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
-	store.LoadVersion(0)
+	err := store.LoadVersion(0)
+	require.NoError(t, err)
 	cid := store.Commit() // Commit with empty iavl store.
 
 	// Get Proof
@@ -129,7 +130,7 @@ func TestVerifyMultiStoreQueryProofEmptyStore(t *testing.T) {
 
 	// Verify proof.
 	prt := DefaultProofRuntime()
-	err := prt.VerifyAbsence(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY")
+	err = prt.VerifyAbsence(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY")
 	require.Nil(t, err)
 
 	// Verify (bad) proof.

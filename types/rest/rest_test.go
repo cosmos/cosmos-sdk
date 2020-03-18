@@ -235,9 +235,9 @@ func TestReadRESTReq(t *testing.T) {
 
 	// test OK
 	ReadRESTReq(w, req, codec.New(), &br)
-	require.Equal(t, BaseReq{ChainID: "alessio", Memo: "text"}, br)
 	res := w.Result()
-	defer res.Body.Close()
+	t.Cleanup(func() { res.Body.Close() })
+	require.Equal(t, BaseReq{ChainID: "alessio", Memo: "text"}, br)
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// test non valid JSON
@@ -248,6 +248,7 @@ func TestReadRESTReq(t *testing.T) {
 	ReadRESTReq(w, req, codec.New(), &br)
 	require.Equal(t, br, br)
 	res = w.Result()
+	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
 
@@ -256,7 +257,7 @@ func TestWriteSimulationResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	WriteSimulationResponse(w, codec.New(), 10)
 	res := w.Result()
-	defer res.Body.Close()
+	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	bs, err := ioutil.ReadAll(res.Body)
 	require.NoError(t, err)

@@ -127,7 +127,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			// use stdsignature to mock the size of a full signature
 			simSig := types.StdSignature{
 				Signature: simSecp256k1Sig[:],
-				PubKey:    pubkey,
+				PubKey:    pubkey.Bytes(),
 			}
 
 			sigBz := codec.Cdc.MustMarshalBinaryBare(simSig)

@@ -14,11 +14,137 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-var (
-	_ sdk.Tx = (*StdTx)(nil)
+// MaxGasWanted defines the max gas allowed.
+const MaxGasWanted = uint64((1 << 63) - 1)
 
-	maxGasWanted = uint64((1 << 63) - 1)
-)
+// NewStdFee returns a new instance of StdFee
+func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
+	return StdFee{
+		Amount: amount,
+		Gas:    gas,
+	}
+}
+
+// GetGas returns the fee's (wanted) gas.
+func (fee StdFee) GetGas() uint64 {
+	return fee.Gas
+}
+
+// GetAmount returns the fee's amount.
+func (fee StdFee) GetAmount() sdk.Coins {
+	return fee.Amount
+}
+
+// Bytes returns the encoded bytes of a StdFee.
+func (fee StdFee) Bytes() []byte {
+	if len(fee.Amount) == 0 {
+		fee.Amount = sdk.NewCoins()
+	}
+
+	bz, err := codec.Cdc.MarshalJSON(fee)
+	if err != nil {
+		panic(err)
+	}
+
+	return bz
+}
+
+// GasPrices returns the gas prices for a StdFee.
+//
+// NOTE: The gas prices returned are not the true gas prices that were
+// originally part of the submitted transaction because the fee is computed
+// as fee = ceil(gasWanted * gasPrices).
+func (fee StdFee) GasPrices() sdk.DecCoins {
+	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
+}
+
+func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
+	return StdSignature{PubKey: pk.Bytes(), Signature: sig}
+}
+
+// GetSignature returns the raw signature bytes.
+func (ss StdSignature) GetSignature() []byte {
+	return ss.Signature
+}
+
+// GetPubKey returns the public key of a signature as a crypto.PubKey using the
+// Amino codec.
+func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
+	if len(ss.PubKey) == 0 {
+		return nil
+	}
+
+	codec.Cdc.MustUnmarshalBinaryBare(ss.PubKey, &pk)
+	return pk
+}
+
+// MarshalYAML returns the YAML representation of the signature.
+func (ss StdSignature) MarshalYAML() (interface{}, error) {
+	var (
+		bz     []byte
+		pubkey string
+		err    error
+	)
+
+	if ss.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bz, err = yaml.Marshal(struct {
+		PubKey    string
+		Signature string
+	}{
+		PubKey:    pubkey,
+		Signature: fmt.Sprintf("%X", ss.Signature),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
+}
+
+func NewStdTxBase(fee StdFee, sigs []StdSignature, memo string) StdTxBase {
+	return StdTxBase{
+		Fee:        fee,
+		Signatures: sigs,
+		Memo:       memo,
+	}
+}
+
+func NewStdSignDocBase(num, seq uint64, cid, memo string, fee StdFee) StdSignDocBase {
+	return StdSignDocBase{
+		ChainID:       cid,
+		AccountNumber: num,
+		Sequence:      seq,
+		Memo:          memo,
+		Fee:           fee,
+	}
+}
+
+// CountSubKeys counts the total number of keys for a multi-sig public key.
+func CountSubKeys(pub crypto.PubKey) int {
+	v, ok := pub.(multisig.PubKeyMultisigThreshold)
+	if !ok {
+		return 1
+	}
+
+	numKeys := 0
+	for _, subkey := range v.PubKeys {
+		numKeys += CountSubKeys(subkey)
+	}
+
+	return numKeys
+}
+
+// ---------------------------------------------------------------------------
+// DEPRECATED
+// ---------------------------------------------------------------------------
+
+var _ sdk.Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -46,10 +172,10 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() error {
 	stdSigs := tx.GetSignatures()
 
-	if tx.Fee.Gas > maxGasWanted {
+	if tx.Fee.Gas > MaxGasWanted {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted,
+			"invalid gas supplied; %d > %d", tx.Fee.Gas, MaxGasWanted,
 		)
 	}
 	if tx.Fee.Amount.IsAnyNegative() {
@@ -71,29 +197,15 @@ func (tx StdTx) ValidateBasic() error {
 	return nil
 }
 
-// CountSubKeys counts the total number of keys for a multi-sig public key.
-func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKeyMultisigThreshold)
-	if !ok {
-		return 1
-	}
-
-	numKeys := 0
-	for _, subkey := range v.PubKeys {
-		numKeys += CountSubKeys(subkey)
-	}
-
-	return numKeys
-}
-
 // GetSigners returns the addresses that must sign the transaction.
 // Addresses are returned in a deterministic order.
 // They are accumulated from the GetSigners method for each Msg
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be omitted.
 func (tx StdTx) GetSigners() []sdk.AccAddress {
-	seen := map[string]bool{}
 	var signers []sdk.AccAddress
+	seen := map[string]bool{}
+
 	for _, msg := range tx.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
 			if !seen[addr.String()] {
@@ -102,6 +214,7 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 			}
 		}
 	}
+
 	return signers
 }
 
@@ -127,9 +240,11 @@ func (tx StdTx) GetSignatures() [][]byte {
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() []crypto.PubKey {
 	pks := make([]crypto.PubKey, len(tx.Signatures))
+
 	for i, stdSig := range tx.Signatures {
-		pks[i] = stdSig.PubKey
+		pks[i] = stdSig.GetPubKey()
 	}
+
 	return pks
 }
 
@@ -162,43 +277,6 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 	}
 	return sdk.AccAddress{}
 }
-
-// NewStdFee returns a new instance of StdFee
-func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
-	return StdFee{
-		Amount: amount,
-		Gas:    gas,
-	}
-}
-
-// Bytes for signing later
-func (fee StdFee) Bytes() []byte {
-	// normalize. XXX
-	// this is a sign of something ugly
-	// (in the lcd_test, client side its null,
-	// server side its [])
-	if len(fee.Amount) == 0 {
-		fee.Amount = sdk.NewCoins()
-	}
-
-	bz, err := codec.Cdc.MarshalJSON(fee) // TODO
-	if err != nil {
-		panic(err)
-	}
-
-	return bz
-}
-
-// GasPrices returns the gas prices for a StdFee.
-//
-// NOTE: The gas prices returned are not the true gas prices that were
-// originally part of the submitted transaction because the fee is computed
-// as fee = ceil(gasWanted * gasPrices).
-func (fee StdFee) GasPrices() sdk.DecCoins {
-	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
-}
-
-//__________________________________________________________
 
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
@@ -237,12 +315,6 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	return sdk.MustSortJSON(bz)
 }
 
-// StdSignature represents a sig
-type StdSignature struct {
-	crypto.PubKey `json:"pub_key" yaml:"pub_key"` // optional
-	Signature     []byte                          `json:"signature" yaml:"signature"`
-}
-
 // DefaultTxDecoder logic for standard transaction decoding
 func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
@@ -268,33 +340,4 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
-}
-
-// MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
-	var (
-		bz     []byte
-		pubkey string
-		err    error
-	)
-
-	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bz, err = yaml.Marshal(struct {
-		PubKey    string
-		Signature string
-	}{
-		PubKey:    pubkey,
-		Signature: fmt.Sprintf("%s", ss.Signature),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
 }

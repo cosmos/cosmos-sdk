@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020 March 06: Initial Draft
+- 2020 March 12: API Updates
 
 ## Status
 
@@ -43,9 +44,9 @@ message Message {
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
 
   oneof sum {
-    bank.MsgSend = 1;
-    staking.MsgCreateValidator = 2;
-    staking.MsgDelegate = 3;
+    cosmos_sdk.x.bank.v1.MsgSend              msg_send             = 1;
+    cosmos_sdk.x.bank.v1.MsgMultiSend         msg_multi_send       = 2;
+    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant msg_verify_invariant = 3;
     // ...
   }
 }
@@ -61,10 +62,8 @@ Example:
 // app/codec/codec.proto
 
 message Transaction {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Tx";
-
-  StdTxBase base = 1;
-  repeated Message msgs = 2;
+  cosmos_sdk.x.auth.v1.StdTxBase base = 1;
+  repeated Message               msgs = 2;
 }
 ```
 
@@ -80,7 +79,8 @@ to provide canonical representation of a `Transaction` to sign over, clients mus
 obey the following rules:
 
 - Encode `SignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
-  - Default and zero values must be stripped from the output (`0`, `“”`, `null`, `false`, `[]`, and `{}`).
+  - Default must be stripped from the output!
+  - JSON keys adhere to their Proto-defined field names.
 - Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
   - This spec should be trivial to interpret and implement in any language.
 
@@ -103,9 +103,8 @@ to handle all the types, but also knows how to generate transactions, signatures
 and messages.
 
 ```go
-type TxGenerator interface {
+type Generator interface {
   NewTx() ClientTx
-  SignBytes func(chainID string, num, seq uint64, fee StdFee, msgs []sdk.Msg, memo string) ([]byte, error)
 }
 
 type ClientTx interface {
@@ -113,27 +112,22 @@ type ClientTx interface {
   codec.ProtoMarshaler
 
   SetMsgs(...sdk.Msg) error
-  GetSignatures() []StdSignature
-  SetSignatures(...StdSignature) error
-  GetFee() StdFee
-  SetFee(StdFee)
+  GetSignatures() []sdk.Signature
+  SetSignatures(...sdk.Signature)
+  GetFee() sdk.Fee
+  SetFee(sdk.Fee)
   GetMemo() string
   SetMemo(string)
+
+  CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
 }
 ```
 
-We then extend `codec.Marshaler` to also require fulfillment of `TxGenerator`.
+We then update `CLIContext` to have two new fields: `Generator` and `Marshler`.
 
-```go
-type ClientMarshaler interface {
-  TxGenerator
-  codec.Marshaler
-}
-```
-
-Then, each module will at the minimum accept a `ClientMarshaler` instead of a concrete
+Then, each module will at the minimum accept a `Marshaler` instead of a concrete
 Amino codec. If the module needs to work with any interface types, it will use
-the `Codec` interface defined by the module which also extends `ClientMarshaler`.
+the `Codec` interface defined by the module which also extends `Marshaler`.
 
 ## Future Improvements
 

@@ -13,13 +13,15 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
 const (
-	keyPrefixSnapshot = 0x01
+	// keyPrefixSnapshot is the prefix for snapshot keys
+	keyPrefixSnapshot byte = 0x01
 )
 
 // Store is a snapshot store, containing snapshot metadata and binary chunks.
@@ -38,7 +40,7 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	}
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create snapshot dir %v: %w", dir, err)
+		return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
 	}
 
 	return &Store{
@@ -77,7 +79,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	}
 	err = os.RemoveAll(s.pathSnapshot(height, format))
 	if err != nil {
-		return fmt.Errorf("failed to delete snapshot data for height %v format %v: %w",
+		return fmt.Errorf("failed to delete snapshot chunks for height %v format %v: %w",
 			height, format, err)
 	}
 	return nil
@@ -100,14 +102,22 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 		}
 		snapshots = append(snapshots, snapshot)
 	}
+	err = iter.Error()
+	if err != nil {
+		return nil, err
+	}
 	return snapshots, nil
 }
 
 // Load loads a snapshot (both metadata and binary chunks). The chunks must be consumed and closed.
+// Returns nil if the snapshot does not exist.
 func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.ReadCloser, error) {
 	metadata, err := s.LoadMetadata(height, format)
 	if err != nil {
 		return nil, nil, err
+	}
+	if metadata == nil {
+		return nil, nil, nil
 	}
 
 	ch := make(chan io.ReadCloser)
@@ -148,7 +158,7 @@ func (s *Store) LoadMetadata(height uint64, format uint32) (*types.Snapshot, err
 		return nil, fmt.Errorf("failed to load snapshot metadata: %w", err)
 	}
 	if bytes == nil {
-		return nil, fmt.Errorf("snapshot at height %v in format %v not found", height, format)
+		return nil, nil
 	}
 	metadata := &types.Snapshot{}
 	err = proto.Unmarshal(bytes, metadata)
@@ -156,18 +166,28 @@ func (s *Store) LoadMetadata(height uint64, format uint32) (*types.Snapshot, err
 		return nil, fmt.Errorf("failed to load snapshot metadata for height %v format %v: %w",
 			height, format, err)
 	}
+	if metadata.Chunks == nil {
+		metadata.Chunks = []*types.SnapshotChunk{}
+	}
 	return metadata, nil
 }
 
-// LoadChunk loads a chunk from disk. The caller must call Close() on it when done.
+// LoadChunk loads a chunk from disk, or nil if it does not exist. The caller must call Close() on
+// it when done.
 func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
-	metadata, err := s.LoadMetadata(height, format)
+	snapshot, err := s.LoadMetadata(height, format)
 	if err != nil {
 		return nil, err
 	}
-	if chunk > uint32(len(metadata.Chunks)) {
+	if snapshot == nil {
+		return nil, nil
+	}
+	if chunk == 0 {
+		return nil, errors.New("chunk index 0 is not valid")
+	}
+	if chunk > uint32(len(snapshot.Chunks)) {
 		return nil, fmt.Errorf("snapshot for height %v format %v only has %v chunks, requested %v",
-			height, format, len(metadata.Chunks), chunk)
+			height, format, len(snapshot.Chunks), chunk)
 	}
 	path := s.pathChunk(height, format, chunk)
 	file, err := os.Open(path)
@@ -177,7 +197,7 @@ func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCl
 	return file, nil
 }
 
-// Prune removes old snapshots. The given number of heights (regardless of format) are retained.
+// Prune removes old snapshots. The given number of most recent heights (regardless of format) are retained.
 func (s *Store) Prune(retainHeights uint32) (uint64, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
 	if err != nil {
@@ -210,11 +230,15 @@ func (s *Store) Prune(retainHeights uint32) (uint64, error) {
 		if ok {
 			err = os.Remove(s.pathHeight(height))
 			if err != nil {
-				return 0, fmt.Errorf("failed to clean up snapshot directory for height %v", height)
+				return 0, fmt.Errorf("failed to remove snapshot directory for height %v", height)
 			}
 		}
 	}
-	return pruned, iter.Error()
+	err = iter.Error()
+	if err != nil {
+		return 0, err
+	}
+	return pruned, nil
 }
 
 // Save saves a snapshot to disk.
@@ -313,7 +337,7 @@ func (s *Store) pathHeight(height uint64) string {
 	return filepath.Join(s.dir, strconv.FormatUint(height, 10))
 }
 
-// pathSnapshot generates a snapshot path, as a format under a height.
+// pathSnapshot generates a snapshot path, as a specific format under a height.
 func (s *Store) pathSnapshot(height uint64, format uint32) string {
 	return filepath.Join(s.pathHeight(height), strconv.FormatUint(uint64(format), 10))
 }

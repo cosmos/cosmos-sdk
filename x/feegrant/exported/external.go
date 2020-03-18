@@ -1,6 +1,8 @@
 package exported
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	supply "github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -26,10 +28,14 @@ type MsgGrantFeeAllowance interface {
 	GetFeeGrant() FeeAllowance
 	GetGranter() sdk.AccAddress
 	GetGrantee() sdk.AccAddress
+	PrepareForExport(time.Time, int64) FeeAllowanceGrant
 }
 
 type FeeAllowanceGrant interface {
 	GetFeeGrant() FeeAllowance
 	GetGranter() sdk.AccAddress
 	GetGrantee() sdk.AccAddress
+
+	ValidateBasic() error
+	PrepareForExport(time.Time, int64) FeeAllowanceGrant
 }

@@ -70,12 +70,16 @@ message ExpiresAt{
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantFeeAllowanceBase{
+    option (gogoproto.equal)           = true;
+
     bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context
 message FeeAllowanceGrantBase{
+    option (gogoproto.equal)           = true;
+
     bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

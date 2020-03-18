@@ -38,7 +38,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 	var grants []exported.FeeAllowanceGrant
 
 	err := k.IterateAllFeeAllowances(ctx, func(grant exported.FeeAllowanceGrant) bool {
-		grants = append(grants, grant.GetFeeGrant().PrepareForExport(time, height))
+		grants = append(grants, grant.PrepareForExport(time, height))
 		return false
 	})
 

@@ -1,6 +1,8 @@
 package std
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -116,8 +118,30 @@ func (msg MsgGrantFeeAllowance) GetGranter() sdk.AccAddress {
 	return msg.Granter
 }
 
-func (grant FeeAllowanceGrant) ValidateBasic() error {
-	return nil
+// PrepareForExport will make all needed changes to the allowance to prepare to be
+// re-imported at height 0, and return a copy of this grant.
+func (a MsgGrantFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) feeexported.FeeAllowanceGrant {
+	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
+	if err != nil {
+		//TODO handle this error
+	}
+	return a
+}
+
+// ValidateBasic performs basic validation on
+// FeeAllowanceGrant
+func (a FeeAllowanceGrant) ValidateBasic() error {
+	if a.Granter.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	}
+	if a.Grantee.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	}
+	if a.Grantee.Equals(a.Granter) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
+	}
+
+	return a.ValidateBasic()
 }
 
 func (grant FeeAllowanceGrant) GetFeeGrant() feeexported.FeeAllowance {
@@ -130,4 +154,14 @@ func (grant FeeAllowanceGrant) GetGrantee() sdk.AccAddress {
 
 func (grant FeeAllowanceGrant) GetGranter() sdk.AccAddress {
 	return grant.Granter
+}
+
+// PrepareForExport will make all needed changes to the allowance to prepare to be
+// re-imported at height 0, and return a copy of this grant.
+func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) feeexported.FeeAllowanceGrant {
+	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
+	if err != nil {
+		//TODO handle this error
+	}
+	return a
 }

@@ -27,9 +27,6 @@ const (
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"
-
-	// snapshotFormat is the currently used snapshot format
-	snapshotFormat = 1
 )
 
 var (

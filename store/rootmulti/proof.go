@@ -68,7 +68,7 @@ func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) 
 	// XXX: a bit strange as we'll discard this, but it works
 	var op MultiStoreProofOp
 
-	err := cdc.UnmarshalBinaryLengthPrefixed(pop.Data, &op)
+	err := cdc.UnmarshalBinaryBare(pop.Data, &op)
 	if err != nil {
 		return nil, fmt.Errorf("decoding ProofOp.Data into MultiStoreProofOp: %w", err)
 	}
@@ -79,7 +79,7 @@ func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) 
 // ProofOp return a merkle proof operation from a given multi-store proof
 // operation.
 func (op MultiStoreProofOp) ProofOp() merkle.ProofOp {
-	bz := cdc.MustMarshalBinaryLengthPrefixed(op)
+	bz := cdc.MustMarshalBinaryBare(op)
 	return merkle.ProofOp{
 		Type: ProofOpMultiStore,
 		Key:  op.key,

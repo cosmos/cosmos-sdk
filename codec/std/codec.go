@@ -44,14 +44,14 @@ func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
 		return nil, err
 	}
 
-	return c.Marshaler.MarshalBinaryLengthPrefixed(acc)
+	return c.Marshaler.MarshalBinaryBare(acc)
 }
 
 // UnmarshalAccount returns an Account interface from raw encoded account bytes
 // of a Proto-based Account type. An error is returned upon decoding failure.
 func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
 	acc := &Account{}
-	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, acc); err != nil {
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, acc); err != nil {
 		return nil, err
 	}
 
@@ -83,14 +83,14 @@ func (c *Codec) MarshalSupply(supplyI supplyexported.SupplyI) ([]byte, error) {
 		return nil, err
 	}
 
-	return c.Marshaler.MarshalBinaryLengthPrefixed(supply)
+	return c.Marshaler.MarshalBinaryBare(supply)
 }
 
 // UnmarshalSupply returns a SupplyI interface from raw encoded account bytes
 // of a Proto-based SupplyI type. An error is returned upon decoding failure.
 func (c *Codec) UnmarshalSupply(bz []byte) (supplyexported.SupplyI, error) {
 	supply := &Supply{}
-	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, supply); err != nil {
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, supply); err != nil {
 		return nil, err
 	}
 
@@ -122,7 +122,7 @@ func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) 
 		return nil, err
 	}
 
-	return c.Marshaler.MarshalBinaryLengthPrefixed(evidence)
+	return c.Marshaler.MarshalBinaryBare(evidence)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
@@ -130,7 +130,7 @@ func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) 
 // failure.
 func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
 	evidence := &Evidence{}
-	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, evidence); err != nil {
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, evidence); err != nil {
 		return nil, err
 	}
 
@@ -162,7 +162,7 @@ func (c *Codec) MarshalProposal(p gov.Proposal) ([]byte, error) {
 		return nil, err
 	}
 
-	return c.Marshaler.MarshalBinaryLengthPrefixed(proposal)
+	return c.Marshaler.MarshalBinaryBare(proposal)
 }
 
 // UnmarshalProposal decodes a Proposal defined by the x/gov module and uses the
@@ -170,7 +170,7 @@ func (c *Codec) MarshalProposal(p gov.Proposal) ([]byte, error) {
 // to deserialize.
 func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 	proposal := &Proposal{}
-	if err := c.Marshaler.UnmarshalBinaryLengthPrefixed(bz, proposal); err != nil {
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, proposal); err != nil {
 		return gov.Proposal{}, err
 	}
 

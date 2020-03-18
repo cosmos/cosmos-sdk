@@ -617,7 +617,7 @@ func getLatestVersion(db dbm.DB) int64 {
 		return 0
 	}
 
-	err = cdc.UnmarshalBinaryLengthPrefixed(latestBytes, &latest)
+	err = cdc.UnmarshalBinaryBare(latestBytes, &latest)
 	if err != nil {
 		panic(err)
 	}
@@ -627,7 +627,7 @@ func getLatestVersion(db dbm.DB) int64 {
 
 // Set the latest version.
 func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes, _ := cdc.MarshalBinaryLengthPrefixed(version)
+	latestBytes, _ := cdc.MarshalBinaryBare(version)
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
@@ -668,7 +668,7 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 	var cInfo commitInfo
 
-	err = cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
+	err = cdc.UnmarshalBinaryBare(cInfoBytes, &cInfo)
 	if err != nil {
 		return commitInfo{}, errors.Wrap(err, "failed to get store")
 	}
@@ -678,7 +678,7 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 // Set a commitInfo for given version.
 func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
-	cInfoBytes := cdc.MustMarshalBinaryLengthPrefixed(cInfo)
+	cInfoBytes := cdc.MustMarshalBinaryBare(cInfo)
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
 }

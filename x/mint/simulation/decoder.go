@@ -15,8 +15,8 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key, types.MinterKey):
 		var minterA, minterB types.Minter
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &minterA)
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &minterB)
+		cdc.MustUnmarshalBinaryBare(kvA.Value, &minterA)
+		cdc.MustUnmarshalBinaryBare(kvB.Value, &minterB)
 		return fmt.Sprintf("%v\n%v", minterA, minterB)
 	default:
 		panic(fmt.Sprintf("invalid mint key %X", kvA.Key))

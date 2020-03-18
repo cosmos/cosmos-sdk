@@ -21,7 +21,7 @@ func NewHistoricalInfo(header abci.Header, valSet Validators) HistoricalInfo {
 
 // MustMarshalHistoricalInfo wll marshal historical info and panic on error
 func MustMarshalHistoricalInfo(cdc codec.Marshaler, hi HistoricalInfo) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(&hi)
+	return cdc.MustMarshalBinaryBare(&hi)
 }
 
 // MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
@@ -35,7 +35,7 @@ func MustUnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) HistoricalIn
 
 // UnmarshalHistoricalInfo will unmarshal historical info and return any error
 func UnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) (hi HistoricalInfo, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &hi)
+	err = cdc.UnmarshalBinaryBare(value, &hi)
 	return hi, err
 }
 

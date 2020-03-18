@@ -22,8 +22,8 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 
 	case bytes.Equal(kvA.Key, types.GlobalAccountNumberKey):
 		var globalAccNumberA, globalAccNumberB uint64
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &globalAccNumberA)
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &globalAccNumberB)
+		cdc.MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
+		cdc.MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
 		return fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumberA, globalAccNumberB)
 
 	default:

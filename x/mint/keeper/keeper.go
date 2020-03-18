@@ -57,14 +57,14 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 		panic("stored minter should not have been nil")
 	}
 
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &minter)
+	k.cdc.MustUnmarshalBinaryBare(b, &minter)
 	return
 }
 
 // set the minter
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(&minter)
+	b := k.cdc.MustMarshalBinaryBare(&minter)
 	store.Set(types.MinterKey, b)
 }
 

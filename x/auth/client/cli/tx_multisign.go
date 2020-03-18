@@ -106,15 +106,15 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
-			if ok := stdSig.PubKey.VerifyBytes(sigBytes, stdSig.Signature); !ok {
+			if ok := stdSig.GetPubKey().VerifyBytes(sigBytes, stdSig.Signature); !ok {
 				return fmt.Errorf("couldn't verify signature")
 			}
-			if err := multisigSig.AddSignatureFromPubKey(stdSig.Signature, stdSig.PubKey, multisigPub.PubKeys); err != nil {
+			if err := multisigSig.AddSignatureFromPubKey(stdSig.Signature, stdSig.GetPubKey(), multisigPub.PubKeys); err != nil {
 				return err
 			}
 		}
 
-		newStdSig := types.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub}
+		newStdSig := types.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()}
 		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo())
 
 		sigOnly := viper.GetBool(flagSigOnly)

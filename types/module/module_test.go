@@ -179,8 +179,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`)}
-	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 }
 
@@ -239,13 +239,13 @@ func TestManager_EndBlock(t *testing.T) {
 
 	req := abci.RequestEndBlock{Height: 10}
 
-	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
+	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1)
 	ret := mm.EndBlock(sdk.Context{}, req)
-	require.Equal(t, []abci.ValidatorUpdate{abci.ValidatorUpdate{}}, ret.ValidatorUpdates)
+	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
-	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
-	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{abci.ValidatorUpdate{}})
+	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
 }

@@ -286,8 +286,9 @@ func MakeSignature(keybase keys.Keybase, name, passphrase string,
 	if err != nil {
 		return
 	}
+
 	return StdSignature{
-		PubKey:    pubkey,
+		PubKey:    pubkey.Bytes(),
 		Signature: sigBytes,
 	}, nil
 }

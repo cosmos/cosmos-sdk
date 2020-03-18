@@ -645,7 +645,8 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// first delegator withdraws again
-	app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	require.NoError(t, err)
 
 	// end period
 	endingPeriod = app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
@@ -672,7 +673,8 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// withdraw commission
-	app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	require.NoError(t, err)
 
 	// end period
 	endingPeriod = app.DistrKeeper.IncrementValidatorPeriod(ctx, val)

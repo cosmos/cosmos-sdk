@@ -1,14 +1,17 @@
 package feegrant
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
+)
 
 // GenesisState contains a set of fee allowances, persisted from the store
-type GenesisState []FeeAllowanceGrant
+type GenesisState []exported.FeeAllowanceGrant
 
 // ValidateBasic ensures all grants in the genesis state are valid
 func (g GenesisState) ValidateBasic() error {
 	for _, f := range g {
-		err := f.ValidateBasic()
+		err := f.GetFeeGrant().ValidateBasic()
 		if err != nil {
 			return err
 		}
@@ -32,10 +35,10 @@ func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) {
 // them to perform any changes needed prior to export.
 func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()
-	var grants []FeeAllowanceGrant
+	var grants []exported.FeeAllowanceGrant
 
-	err := k.IterateAllFeeAllowances(ctx, func(grant FeeAllowanceGrant) bool {
-		grants = append(grants, grant.PrepareForExport(time, height))
+	err := k.IterateAllFeeAllowances(ctx, func(grant exported.FeeAllowanceGrant) bool {
+		grants = append(grants, grant.GetFeeGrant().PrepareForExport(time, height))
 		return false
 	})
 

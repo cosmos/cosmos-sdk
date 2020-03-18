@@ -88,6 +88,11 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	require.Equal(t, "unknown", algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
 
+	armored, err = cstore.ExportPrivKey("Bob", "passphrase", "alessio")
+	require.NoError(t, err)
+	_, _, err = mintkey.UnarmorPubKeyBytes(armored)
+	require.Equal(t, `couldn't unarmor bytes: unrecognized armor type "TENDERMINT PRIVATE KEY", expected: "TENDERMINT PUBLIC KEY"`, err.Error())
+
 	// armor pubkey manually
 	header := map[string]string{
 		"version": "0.0.0",
@@ -108,7 +113,19 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	require.Nil(t, bz)
 	require.Empty(t, algo)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "unrecognized version")
+	require.Equal(t, "header's version field is empty", err.Error())
+
+	// unknown version header
+	header = map[string]string{
+		"type":    "unknown",
+		"version": "unknown",
+	}
+	armored = armor.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
+	bz, algo, err = mintkey.UnarmorPubKeyBytes(armored)
+	require.Nil(t, bz)
+	require.Empty(t, algo)
+	require.Error(t, err)
+	require.Equal(t, "unrecognized version: unknown", err.Error())
 }
 
 func TestArmorInfoBytes(t *testing.T) {

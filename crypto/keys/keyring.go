@@ -430,9 +430,6 @@ func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.base.SupportedAlgosLedger()
 }
 
-// CloseDB releases the lock and closes the storage backend.
-func (kb keyringKeybase) CloseDB() {}
-
 func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()

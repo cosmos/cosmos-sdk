@@ -96,8 +96,6 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2, "", true))
-
-	require.NotPanics(t, kb.CloseDB)
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate

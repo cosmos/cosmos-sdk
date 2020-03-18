@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	feegrantexported "github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -184,7 +183,7 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 	}, nil
 }
 
-func (c *Codec) MarshalFeeAllowanceGrant(feeAllowanceI exported.FeeAllowanceGrant) ([]byte, error) {
+func (c *Codec) MarshalFeeAllowanceGrant(feeAllowanceI feegrantexported.FeeAllowanceGrant) ([]byte, error) {
 	feeallowance := &FeeAllowance{}
 
 	if err := feeallowance.SetFeeAllowance(feeAllowanceI.GetFeeGrant()); err != nil {

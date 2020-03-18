@@ -38,7 +38,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 
 	// wrong key type
 	armored = mintkey.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
-	decrypted, algo, err = mintkey.UnarmorDecryptPrivKey(armored, "passphrase")
+	_, _, err = mintkey.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unrecognized armor type")
 
@@ -91,6 +91,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	armored, err = cstore.ExportPrivKey("Bob", "passphrase", "alessio")
 	require.NoError(t, err)
 	_, _, err = mintkey.UnarmorPubKeyBytes(armored)
+	require.Error(t, err)
 	require.Equal(t, `couldn't unarmor bytes: unrecognized armor type "TENDERMINT PRIVATE KEY", expected: "TENDERMINT PUBLIC KEY"`, err.Error())
 
 	// armor pubkey manually

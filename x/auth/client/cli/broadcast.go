@@ -41,12 +41,7 @@ $ <appcli> tx broadcast ./mytxn.json
 				return err
 			}
 
-			err = cliCtx.PrintOutput(res)
-			if err != nil {
-				return err
-			}
-
-			return err
+			return cliCtx.PrintOutput(res)
 		},
 	}
 

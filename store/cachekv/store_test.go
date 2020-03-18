@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	dbm "github.com/tendermint/tm-db"
@@ -329,7 +328,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		k := args[0]
 		st.Set(keyFmt(k), valFmt(k))
 		err := truth.Set(keyFmt(k), valFmt(k))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case opSetRange:
 		start := args[0]
 		end := args[1]
@@ -338,7 +337,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		k := args[0]
 		st.Delete(keyFmt(k))
 		err := truth.Delete(keyFmt(k))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case opDelRange:
 		start := args[0]
 		end := args[1]
@@ -355,7 +354,7 @@ func doRandomOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, maxKey int) {
 		k := randInt(maxKey)
 		st.Set(keyFmt(k), valFmt(k))
 		err := truth.Set(keyFmt(k), valFmt(k))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case opSetRange:
 		start := randInt(maxKey - 2)
 		end := randInt(maxKey-start) + start
@@ -364,7 +363,7 @@ func doRandomOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, maxKey int) {
 		k := randInt(maxKey)
 		st.Delete(keyFmt(k))
 		err := truth.Delete(keyFmt(k))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case opDelRange:
 		start := randInt(maxKey - 2)
 		end := randInt(maxKey-start) + start
@@ -448,7 +447,7 @@ func setRange(t *testing.T, st types.KVStore, mem dbm.DB, start, end int) {
 	for i := start; i < end; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 		err := mem.Set(keyFmt(i), valFmt(i))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
 
@@ -456,7 +455,7 @@ func deleteRange(t *testing.T, st types.KVStore, mem dbm.DB, start, end int) {
 	for i := start; i < end; i++ {
 		st.Delete(keyFmt(i))
 		err := mem.Delete(keyFmt(i))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
 

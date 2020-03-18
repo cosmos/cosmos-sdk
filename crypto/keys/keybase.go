@@ -340,12 +340,7 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 		return
 	}
 
-	err = kb.db.Set(infoKey(name), infoBytes)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return kb.db.Set(infoKey(name), infoBytes)
 }
 
 // ImportPubKey imports ASCII-armored public keys. Store a new Info object holding

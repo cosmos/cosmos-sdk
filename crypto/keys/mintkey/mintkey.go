@@ -84,6 +84,10 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 // UnarmorPubKeyBytes returns the pubkey byte slice, a string of the algo type, and an error
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %v", err)
+	}
+
 	switch header[headerVersion] {
 	case "0.0.0":
 		return bz, defaultAlgo, err
@@ -92,6 +96,8 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 			header[headerType] = defaultAlgo
 		}
 		return bz, header[headerType], err
+	case "":
+		return nil, "", fmt.Errorf("header's version field is empty")
 	default:
 		err = fmt.Errorf("unrecognized version: %v", header[headerVersion])
 		return nil, "", err

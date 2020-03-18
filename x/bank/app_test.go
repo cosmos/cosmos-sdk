@@ -245,7 +245,8 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {
 			simapp.CheckBalance(t, app, eb.addr, eb.coins)
@@ -291,7 +292,8 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {
 			simapp.CheckBalance(t, app, eb.addr, eb.coins)
@@ -344,7 +346,8 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 
 	for _, tc := range testCases {
 		header := abci.Header{Height: app.LastBlockHeight() + 1}
-		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {
 			simapp.CheckBalance(t, app, eb.addr, eb.coins)

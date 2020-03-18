@@ -38,7 +38,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 
 	// wrong key type
 	armored = mintkey.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
-	decrypted, algo, err = mintkey.UnarmorDecryptPrivKey(armored, "passphrase")
+	_, _, err = mintkey.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unrecognized armor type")
 

@@ -149,7 +149,7 @@ func TestMintCoins(t *testing.T) {
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, bk, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
 
-	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) })
+	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }) // nolint:errcheck
 }
 
 func TestBurnCoins(t *testing.T) {

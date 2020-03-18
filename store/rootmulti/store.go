@@ -31,10 +31,10 @@ const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 
-	// Do not change chunk size without new snapshot format (must be uniform to fit together)
+	// Do not change chunk size without new snapshot format (must be uniform across nodes)
 	snapshotChunkSize   = uint64(8e6)
 	snapshotBufferSize  = int(snapshotChunkSize)
-	snapshotMaxItemSize = int(32e6) // FIXME Figure out what the actual limit is
+	snapshotMaxItemSize = int(64e6) // FIXME SDK has no key/value limit, so we set an arbitrary limit
 )
 
 var cdc = codec.New()
@@ -498,7 +498,10 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 //---------------------- Snapshotting ------------------
 
 // Snapshot implements Snapshotter.
-func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
+func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
+	if format != types.SnapshotFormat {
+		return nil, fmt.Errorf("unknown snapshot format %v", format)
+	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
 	type namedStore struct {
@@ -601,12 +604,15 @@ func (rs *Store) Snapshot(height uint64) (<-chan io.ReadCloser, error) {
 }
 
 // Restore implements Snapshotter.
-func (rs *Store) Restore(height uint64, chunks <-chan io.ReadCloser) error {
+func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
 	if height == 0 {
 		return errors.New("cannot restore snapshot at height 0")
 	}
 	if height > math.MaxInt64 {
 		return fmt.Errorf("snapshot height %v cannot exceed %v", height, math.MaxInt64)
+	}
+	if format != types.SnapshotFormat {
+		return fmt.Errorf("unknown snapshot format %v", format)
 	}
 
 	// Set up a restore stream pipeline

@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -295,7 +296,8 @@ func (app *BaseApp) halt() {
 
 // snapshot takes a snapshot of the current state and prunes any old snapshots
 func (app *BaseApp) snapshot(height uint64) {
-	app.logger.Info("Taking state snapshot", "height", height)
+	format := store.SnapshotFormat
+	app.logger.Info("Taking state snapshot", "height", height, "format", format)
 	if app.snapshotStore == nil {
 		app.logger.Error("No snapshot store configured")
 		return
@@ -304,26 +306,28 @@ func (app *BaseApp) snapshot(height uint64) {
 		app.logger.Error("A state snapshot is already in progress")
 		return
 	}
-	chunks, err := app.cms.Snapshot(height)
+	chunks, err := app.cms.Snapshot(height, format)
 	if err != nil {
-		app.logger.Error("Failed to take state snapshot", "height", height, "err", err.Error())
+		app.logger.Error("Failed to take state snapshot", "height", height, "format", format,
+			"err", err.Error())
 		return
 	}
-	err = app.snapshotStore.Save(height, snapshotFormat, chunks)
+	err = app.snapshotStore.Save(height, format, chunks)
 	if err != nil {
-		app.logger.Error("Failed to take state snapshot", "height", height, "err", err.Error())
+		app.logger.Error("Failed to take state snapshot", "height", height, "format", format,
+			"err", err.Error())
 		return
 	}
-	app.logger.Info("Completed state snapshot", "height", height)
+	app.logger.Info("Completed state snapshot", "height", height, "format", format)
 
 	if app.snapshotRetention > 0 {
-		app.logger.Info("Pruning state snapshots")
+		app.logger.Debug("Pruning state snapshots")
 		pruned, err := app.snapshotStore.Prune(app.snapshotRetention)
 		if err != nil {
 			app.logger.Error("Failed to prune state snapshots", "err", err.Error())
 			return
 		}
-		app.logger.Info("Pruned state snapshots", "pruned", pruned)
+		app.logger.Debug("Pruned state snapshots", "pruned", pruned)
 	}
 }
 

@@ -38,9 +38,15 @@ type Queryable interface {
 // Snapshotter is something that can take and restore snapshots. Snapshot data
 // consists of streamed chunks. All chunks must be retrieved and closed.
 type Snapshotter interface {
-	Snapshot(height uint64) (<-chan io.ReadCloser, error)
-	Restore(height uint64, chunks <-chan io.ReadCloser) error
+	Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error)
+	Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error
 }
+
+const (
+	// SnapshotFormat is the currently used format for snapshots. Snapshots using the same format
+	// must be identical across all nodes for a given height.
+	SnapshotFormat uint32 = 1
+)
 
 //----------------------------------------
 // MultiStore

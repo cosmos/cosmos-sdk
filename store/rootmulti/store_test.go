@@ -451,12 +451,12 @@ func TestMultiStoreQuery(t *testing.T) {
 func TestMultistoreSnapshotRestore(t *testing.T) {
 	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
 	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
-	version := source.LastCommitID().Version
+	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
 
-	chunks, err := source.Snapshot(uint64(version))
+	chunks, err := source.Snapshot(version, types.SnapshotFormat)
 	require.NoError(t, err)
-	err = target.Restore(uint64(version), chunks)
+	err = target.Restore(version, types.SnapshotFormat, chunks)
 	require.NoError(t, err)
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
@@ -504,7 +504,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 		require.NoError(b, err)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		chunks, err := source.Snapshot(uint64(version))
+		chunks, err := source.Snapshot(uint64(version), types.SnapshotFormat)
 		require.NoError(b, err)
 		for reader := range chunks {
 			_, err := io.Copy(ioutil.Discard, reader)
@@ -518,7 +518,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
 	b.StopTimer()
 	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
-	version := source.LastCommitID().Version
+	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
@@ -531,9 +531,9 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 		require.NoError(b, err)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		chunks, err := source.Snapshot(uint64(version))
+		chunks, err := source.Snapshot(version, types.SnapshotFormat)
 		require.NoError(b, err)
-		err = target.Restore(uint64(version), chunks)
+		err = target.Restore(version, types.SnapshotFormat, chunks)
 		require.NoError(b, err)
 		require.Equal(b, source.LastCommitID(), target.LastCommitID())
 	}

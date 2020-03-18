@@ -139,17 +139,13 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	if err != nil {
 		return err
 	}
-	ss, err := openSnapshotStore(db, home)
-	if err != nil {
-		return err
-	}
 
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, ss, traceWriter)
+	app := appCreator(ctx.Logger, db, traceWriter)
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
@@ -185,17 +181,12 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	ss, err := openSnapshotStore(db, home)
-	if err != nil {
-		return nil, err
-	}
-
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return nil, err
 	}
 
-	app := appCreator(ctx.Logger, db, ss, traceWriter)
+	app := appCreator(ctx.Logger, db, traceWriter)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {

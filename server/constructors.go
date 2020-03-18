@@ -11,14 +11,13 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/snapshots"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB, *snapshots.Store, io.Writer) abci.Application
+	AppCreator func(log.Logger, dbm.DB, io.Writer) abci.Application
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
@@ -29,12 +28,6 @@ func openDB(rootDir string) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	db, err := sdk.NewLevelDB("application", dataDir)
 	return db, err
-}
-
-func openSnapshotStore(db dbm.DB, rootDir string) (*snapshots.Store, error) {
-	db = dbm.NewPrefixDB(db, []byte("s/_snapshots/"))
-	dir := filepath.Join(rootDir, "data", "snapshots")
-	return snapshots.NewStore(db, dir)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {

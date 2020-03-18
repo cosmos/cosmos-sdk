@@ -155,16 +155,16 @@ func (app *BaseApp) SetRouter(router sdk.Router) {
 	app.router = router
 }
 
-// SetSnapshotDB sets the snapshot database and data directory. This database must
-// be independent of the app state.
-func (app *BaseApp) SetSnapshotStore(s *snapshots.Store) {
+// SetSnapshotStore sets the snapshot store.
+func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 	if app.sealed {
-		panic("SetSnapshotDB() on sealed BaseApp")
+		panic("SetSnapshotStore() on sealed BaseApp")
 	}
-	app.snapshotStore = s
+	app.snapshotStore = snapshotStore
 }
 
-// SetSnapshotPolicy sets the snapshotting policy. 0 disables snapshotting.
+// SetSnapshotPolicy sets the snapshotting policy. 0 interval disables snapshotting, and 0 retention
+// keeps all snapshots.
 func (app *BaseApp) SetSnapshotPolicy(interval uint64, retention uint32) {
 	if app.sealed {
 		panic("SetSnapshotPolicy on sealed BaseApp")

@@ -80,9 +80,6 @@ type Keybase interface {
 
 	// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
 	SupportedAlgosLedger() []SigningAlgo
-
-	// CloseDB closes the database.
-	CloseDB()
 }
 
 // KeyType reflects a human-readable type for key listing.

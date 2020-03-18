@@ -96,8 +96,6 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2, "", true))
-
-	require.NotPanics(t, kb.CloseDB)
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate
@@ -408,6 +406,6 @@ func TestSupportedAlgos(t *testing.T) {
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
-	require.Equal(t, []SigningAlgo([]SigningAlgo{"secp256k1"}), kb.SupportedAlgos())
-	require.Equal(t, []SigningAlgo([]SigningAlgo{"secp256k1"}), kb.SupportedAlgosLedger())
+	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgos())
+	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgosLedger())
 }

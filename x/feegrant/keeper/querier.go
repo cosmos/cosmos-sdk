@@ -3,6 +3,7 @@ package keeper
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -39,8 +40,8 @@ func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byt
 		return nil, sdkerrors.Wrapf(err, "invalid address")
 	}
 
-	var grants []types.FeeAllowanceGrant
-	err = keeper.IterateAllGranteeFeeAllowances(ctx, granteeAddr, func(grant types.FeeAllowanceGrant) bool {
+	var grants []codecstd.FeeAllowanceGrant
+	err = keeper.IterateAllGranteeFeeAllowances(ctx, granteeAddr, func(grant codecstd.FeeAllowanceGrant) bool {
 		grants = append(grants, grant)
 		return false
 	})

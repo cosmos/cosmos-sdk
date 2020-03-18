@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
@@ -94,7 +95,7 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 
 // IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
 // Callback to get all data, returns true to stop, false to keep reading
-func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(exported.FeeAllowanceGrant) bool) error {
+func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(codecstd.FeeAllowanceGrant) bool) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.FeeAllowancePrefixByGrantee(grantee)
 	iter := sdk.KVStorePrefixIterator(store, prefix)

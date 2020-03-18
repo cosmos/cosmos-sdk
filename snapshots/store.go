@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	// keyPrefixSnapshot is the prefix for snapshot keys
+	// keyPrefixSnapshot is the prefix for snapshot database keys
 	keyPrefixSnapshot byte = 0x01
 )
 

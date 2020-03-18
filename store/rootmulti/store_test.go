@@ -448,6 +448,46 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Equal(t, v2, qres.Value)
 }
 
+func TestMultistoreSnapshot(t *testing.T) {
+	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+
+	// Errors on 0 height
+	_, err := store.Snapshot(0, types.SnapshotFormat)
+	require.Error(t, err)
+
+	// Errors on 0 format
+	_, err = store.Snapshot(1, 0)
+	require.Error(t, err)
+
+	// Errors on unknown format
+	_, err = store.Snapshot(1, 9)
+	require.Error(t, err)
+
+	// Errors on unknown height
+	_, err = store.Snapshot(9, types.SnapshotFormat)
+	require.Error(t, err)
+
+	// Actual snapshotting is tested in TestMultistoreSnapshotRestore
+}
+
+func TestMultistoreRestore(t *testing.T) {
+	store := newMultiStoreWithMixedMounts(dbm.NewMemDB())
+
+	// Errors on 0 height
+	err := store.Restore(0, types.SnapshotFormat, nil)
+	require.Error(t, err)
+
+	// Errors on 0 format
+	err = store.Restore(1, 0, nil)
+	require.Error(t, err)
+
+	// Errors on unknown format
+	err = store.Restore(1, 9, nil)
+	require.Error(t, err)
+
+	// Actual restoring is tested in TestMultistoreSnapshotRestore
+}
+
 func TestMultistoreSnapshotRestore(t *testing.T) {
 	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
 	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())

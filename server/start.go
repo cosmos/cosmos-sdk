@@ -139,7 +139,6 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	if err != nil {
 		return err
 	}
-
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err

@@ -502,6 +502,12 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 	if format != types.SnapshotFormat {
 		return nil, fmt.Errorf("unknown snapshot format %v", format)
 	}
+	if height == 0 {
+		return nil, errors.New("cannot snapshot height 0")
+	}
+	if height > uint64(rs.LastCommitID().Version) {
+		return nil, fmt.Errorf("cannot snapshot future height %v", height)
+	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
 	type namedStore struct {
@@ -605,14 +611,14 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 
 // Restore implements Snapshotter.
 func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
+	if format != types.SnapshotFormat {
+		return fmt.Errorf("unknown snapshot format %v", format)
+	}
 	if height == 0 {
 		return errors.New("cannot restore snapshot at height 0")
 	}
 	if height > math.MaxInt64 {
 		return fmt.Errorf("snapshot height %v cannot exceed %v", height, math.MaxInt64)
-	}
-	if format != types.SnapshotFormat {
-		return fmt.Errorf("unknown snapshot format %v", format)
 	}
 
 	// Set up a restore stream pipeline

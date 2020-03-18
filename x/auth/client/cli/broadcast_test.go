@@ -19,5 +19,5 @@ func TestGetBroadcastCommand_CannotBePerformedWhenOfflineFlag(t *testing.T) {
 	viper.Set(flags.FlagOffline, true)
 
 	err := cmd.RunE(nil, []string{})
-	require.EqualError(t, err, "cannot broadcast tx with offline flag")
+	require.EqualError(t, err, "cannot broadcast tx during offline mode")
 }

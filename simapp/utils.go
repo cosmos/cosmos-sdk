@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"io/ioutil"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -50,9 +50,9 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app App, cdc *codec.Codec, config simulation.Config) []simulation2.WeightedOperation {
+func SimulationOperations(app App, cdc *codec.Codec, config simulation.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
-		AppParams: make(simulation2.AppParams),
+		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
 	}
 

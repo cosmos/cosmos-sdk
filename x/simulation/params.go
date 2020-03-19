@@ -2,10 +2,10 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 

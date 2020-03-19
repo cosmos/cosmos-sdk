@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	simapparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -23,11 +23,11 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
-	return func(r *rand.Rand, accs []simulation2.Account, config simulation.Config,
-	) (appState json.RawMessage, simAccs []simulation2.Account, chainID string, genesisTimestamp time.Time) {
+	return func(r *rand.Rand, accs []simtypes.Account, config simulation.Config,
+	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 
 		if FlagGenesisTimeValue == 0 {
-			genesisTimestamp = simulation2.RandTimestamp(r)
+			genesisTimestamp = simtypes.RandTimestamp(r)
 		} else {
 			genesisTimestamp = time.Unix(FlagGenesisTimeValue, 0)
 		}
@@ -51,7 +51,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			simAccs = accounts
 
 		case config.ParamsFile != "":
-			appParams := make(simulation2.AppParams)
+			appParams := make(simtypes.AppParams)
 			bz, err := ioutil.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
@@ -61,7 +61,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
-			appParams := make(simulation2.AppParams)
+			appParams := make(simtypes.AppParams)
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
@@ -73,8 +73,8 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 // and creates the simulation params
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
-	accs []simulation2.Account, genesisTimestamp time.Time, appParams simulation2.AppParams,
-) (json.RawMessage, []simulation2.Account) {
+	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
+) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState()
 
@@ -126,7 +126,7 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string) (tmtypes.GenesisDoc, []simulation2.Account) {
+func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
@@ -143,7 +143,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string
 		cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authGenesis)
 	}
 
-	newAccs := make([]simulation2.Account, len(authGenesis.Accounts))
+	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))
 	for i, acc := range authGenesis.Accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
@@ -156,7 +156,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 
 		// create simulator accounts
-		simAcc := simulation2.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.GetAddress()}
+		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.GetAddress()}
 		newAccs[i] = simAcc
 	}
 

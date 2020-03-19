@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	crkeys "github.com/cosmos/cosmos-sdk/crypto/keybase"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 )

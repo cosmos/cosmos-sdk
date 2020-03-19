@@ -1,4 +1,4 @@
-package keys
+package keybase
 
 import (
 	"bufio"
@@ -18,8 +18,8 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/keyerror"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

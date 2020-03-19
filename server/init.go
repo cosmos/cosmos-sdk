@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"

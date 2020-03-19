@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

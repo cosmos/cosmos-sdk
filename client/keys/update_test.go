@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -38,16 +38,16 @@ func Test_runUpdateCmd(t *testing.T) {
 
 	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keybase.Secp256k1)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keybase.Secp256k1)
 	assert.NoError(t, err)
 
 	// Try again now that we have keys
 	// Incorrect key type
 	mockIn.Reset("pass1234\nNew1234\nNew1234")
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
+	assert.EqualError(t, err, "locally stored key required. Received: keybase.offlineInfo")
 
 	// TODO: Check for other type types?
 }

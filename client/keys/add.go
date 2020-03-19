@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -77,16 +77,16 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().String(flagKeyAlgo, string(keys.Secp256k1), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flagKeyAlgo, string(keybase.Secp256k1), "Key signing algorithm to generate keys for")
 	return cmd
 }
 
-func getKeybase(transient bool, buf io.Reader) (keys.Keybase, error) {
+func getKeybase(transient bool, buf io.Reader) (keybase.Keybase, error) {
 	if transient {
-		return keys.NewInMemory(), nil
+		return keybase.NewInMemory(), nil
 	}
 
-	return keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
+	return keybase.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
@@ -108,7 +108,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.Reader) error {
+func RunAddCmd(cmd *cobra.Command, args []string, kb keybase.Keybase, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
@@ -116,12 +116,12 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
-	algo := keys.SigningAlgo(viper.GetString(flagKeyAlgo))
-	if algo == keys.SigningAlgo("") {
-		algo = keys.Secp256k1
+	algo := keybase.SigningAlgo(viper.GetString(flagKeyAlgo))
+	if algo == keybase.SigningAlgo("") {
+		algo = keybase.Secp256k1
 	}
-	if !keys.IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
-		return keys.ErrUnsupportedSigningAlgo
+	if !keybase.IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
+		return keybase.ErrUnsupportedSigningAlgo
 	}
 
 	if !viper.GetBool(flagDryRun) {
@@ -190,7 +190,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	var hdPath string
 
 	if useBIP44 {
-		hdPath = keys.CreateHDPath(account, index).String()
+		hdPath = keybase.CreateHDPath(account, index).String()
 	} else {
 		hdPath = viper.GetString(flagHDPath)
 	}
@@ -202,12 +202,12 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 			return errors.New("cannot set custom bip32 path with ledger")
 		}
 
-		if !keys.IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
-			return keys.ErrUnsupportedSigningAlgo
+		if !keybase.IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
+			return keybase.ErrUnsupportedSigningAlgo
 		}
 
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.CreateLedger(name, keys.Secp256k1, bech32PrefixAccAddr, account, index)
+		info, err := kb.CreateLedger(name, keybase.Secp256k1, bech32PrefixAccAddr, account, index)
 		if err != nil {
 			return err
 		}
@@ -285,13 +285,13 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	return printCreate(cmd, info, showMnemonic, mnemonic)
 }
 
-func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic string) error {
+func printCreate(cmd *cobra.Command, info keybase.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(info, keys.Bech32KeyOutput)
+		printKeyInfo(info, keybase.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -301,7 +301,7 @@ func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic
 			cmd.PrintErrln(mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := keys.Bech32KeyOutput(info)
+		out, err := keybase.Bech32KeyOutput(info)
 		if err != nil {
 			return err
 		}

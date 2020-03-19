@@ -1,4 +1,4 @@
-package keys
+package keybase
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/keyerror"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

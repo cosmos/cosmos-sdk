@@ -1,5 +1,5 @@
 //nolint: goconst
-package keys
+package keybase
 
 import (
 	"errors"
@@ -14,8 +14,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/mintkey"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

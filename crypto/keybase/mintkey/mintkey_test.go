@@ -15,8 +15,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/mintkey"
 )
 
 func TestArmorUnarmorPrivKey(t *testing.T) {

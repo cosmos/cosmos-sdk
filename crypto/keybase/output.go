@@ -1,4 +1,4 @@
-package keys
+package keybase
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

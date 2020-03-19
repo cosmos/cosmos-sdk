@@ -1,4 +1,4 @@
-package keys
+package keybase
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

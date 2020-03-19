@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 )
 
 func TestCommands(t *testing.T) {
@@ -20,6 +20,6 @@ func TestCommands(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	viper.Set(flags.FlagKeyringBackend, keys.BackendTest)
+	viper.Set(flags.FlagKeyringBackend, keybase.BackendTest)
 	os.Exit(m.Run())
 }

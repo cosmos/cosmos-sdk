@@ -1,4 +1,4 @@
-package keys
+package keybase
 
 // SigningAlgo defines an algorithm to derive key-pairs which can be used for cryptographic signing.
 type SigningAlgo string

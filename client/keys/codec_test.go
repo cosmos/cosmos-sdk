@@ -5,27 +5,26 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 type testCases struct {
-	Keys    []keys.KeyOutput
-	Answers []keys.KeyOutput
+	Keys    []keybase.KeyOutput
+	Answers []keybase.KeyOutput
 	JSON    [][]byte
 }
 
 func getTestCases() testCases {
 	return testCases{
 		// nolint:govet
-		[]keys.KeyOutput{
+		[]keybase.KeyOutput{
 			{"A", "B", "C", "D", "E", 0, nil},
 			{"A", "B", "C", "D", "", 0, nil},
 			{"", "B", "C", "D", "", 0, nil},
 			{"", "", "", "", "", 0, nil},
 		},
-		make([]keys.KeyOutput, 4),
+		make([]keybase.KeyOutput, 4),
 		[][]byte{
 			[]byte(`{"name":"A","type":"B","address":"C","pubkey":"D","mnemonic":"E"}`),
 			[]byte(`{"name":"A","type":"B","address":"C","pubkey":"D"}`),
@@ -37,7 +36,7 @@ func getTestCases() testCases {
 
 func TestMarshalJSON(t *testing.T) {
 	type args struct {
-		o keys.KeyOutput
+		o keybase.KeyOutput
 	}
 
 	data := getTestCases()

@@ -1,10 +1,10 @@
-package keys
+package keybase
 
 import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase/hd"
 )
 
 // CryptoCdc defines the codec required for keys and info

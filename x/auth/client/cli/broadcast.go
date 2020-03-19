@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -26,6 +27,11 @@ $ <appcli> tx broadcast ./mytxn.json
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			if cliCtx.Offline {
+				return errors.New("cannot broadcast tx during offline mode")
+			}
+
 			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return

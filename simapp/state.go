@@ -50,7 +50,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			simAccs = accounts
 
 		case config.ParamsFile != "":
-			appParams := make(simulation.AppParams)
+			appParams := make(module.AppParams)
 			bz, err := ioutil.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
@@ -60,7 +60,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
-			appParams := make(simulation.AppParams)
+			appParams := make(module.AppParams)
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 

@@ -49,9 +49,9 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app App, cdc *codec.Codec, config simulation.Config) []simulation.WeightedOperation {
+func SimulationOperations(app App, cdc *codec.Codec, config simulation.Config) []module.WeightedOperation {
 	simState := module.SimulationState{
-		AppParams: make(simulation.AppParams),
+		AppParams: make(module.AppParams),
 		Cdc:       cdc,
 	}
 

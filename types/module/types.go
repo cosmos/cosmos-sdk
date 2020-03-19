@@ -5,9 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -127,8 +126,19 @@ type FutureOperation struct {
 // AppParams defines a flat JSON of key/values for all possible configurable
 // simulation parameters. It might contain: operation weights, simulation parameters
 // and flattened module state parameters (i.e not stored under it's respective module name).
-type AppParams interface {
-	GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator)
+type AppParams map[string]json.RawMessage
+
+// GetOrGenerate attempts to get a given parameter by key from the AppParams
+// object. If it exists, it'll be decoded and returned. Otherwise, the provided
+// ParamSimulator is used to generate a random value or default value (eg: in the
+// case of operation weights where Rand is not used).
+func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+	if v, ok := sp[key]; ok && v != nil {
+		cdc.MustUnmarshalJSON(v, ptr)
+		return
+	}
+
+	ps(r)
 }
 
 type ParamSimulator func(r *rand.Rand)

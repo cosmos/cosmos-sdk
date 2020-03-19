@@ -73,7 +73,7 @@ The `config` command can be invoked by typing `appcli config` with optional argu
       * [Secret Service](https://github.com/99designs/aws-vault/pull/98)
       * [KDE Wallet](https://github.com/99designs/aws-vault/pull/27)
   * `test`
-    * This option stores the keyring in apps configuration directory unencrypted. As such it does not prompt for a password to be unlocked. This should be considerd an unsafe keyring not used for production.
+    * This option stores the keyring in apps configuration directory unencrypted. As such it does not prompt for a password to be unlocked. This should be considerd an **unsafe keyring** and **should not be used in production environments**.
   * `file`
     * This option more closesly resembles the previous keyring storage used prior to v0.38.1. It stores the keyring encrypted within the apps configuration directory. This keyring will request a password each time it is accessed, which may occur multiple times in a single command resulting in repeated password prompts. If using bash scripts to execute commands using the `file` option you may want to utilize the following format for multiple prompts:
 > ```sh
@@ -152,4 +152,3 @@ Here is an example of an `initConfig()` function from the [nameservice tutorial 
 And an example of how to add `initConfig` as a `PersistentPreRunE` to the root command:
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/cmd/nscli/main.go#L42-L44
-

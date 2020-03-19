@@ -69,10 +69,13 @@ and provided directly the IAVL store.
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 * (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
+* (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) The `store.CommitMultiStore` interface now includes the new `store.Snapshotter` interface as well.
 
 ### Features
 
 * (x/ibc) [\#5588](https://github.com/cosmos/cosmos-sdk/pull/5588) Add [ICS 024 - Host State Machine Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements) subpackage to `x/ibc` module.
+* (baseapp) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) Added support for taking state snapshots at regular height intervals, stored in `snapshots.Store`.
+* (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) Added `rootmulti.Store` methods for taking and restoring snapshots, based on `iavl.Store` export/import.
 
 ### Bug Fixes
 

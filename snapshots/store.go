@@ -2,7 +2,7 @@ package snapshots
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" // nolint: gosec // only used for checksumming
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -126,7 +126,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 		for _, chunkMetadata := range metadata.Chunks {
 			pr, pw := io.Pipe()
 			ch <- pr
-			hasher := sha1.New()
+			hasher := sha1.New() // nolint: gosec
 			chunk, err := s.LoadChunk(height, format, chunkMetadata.Chunk)
 			if err != nil {
 				pw.CloseWithError(err)
@@ -304,7 +304,7 @@ func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.R
 		return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
 	}
 	defer file.Close()
-	hasher := sha1.New()
+	hasher := sha1.New() // nolint: gosec
 	_, err = io.Copy(io.MultiWriter(file, hasher), chunk)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate snapshot chunk file %q: %w", path, err)

@@ -2,7 +2,7 @@ package snapshots_test
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" // nolint: gosec
 	"errors"
 	"io"
 	"io/ioutil"
@@ -62,7 +62,7 @@ func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
 }
 
 func checksum(b []byte) []byte {
-	hash := sha1.Sum(b)
+	hash := sha1.Sum(b) // nolint: gosec
 	return hash[:]
 }
 
@@ -194,8 +194,8 @@ func TestStore_Load(t *testing.T) {
 		Height: 2,
 		Format: 1,
 		Chunks: []*types.SnapshotChunk{
-			&types.SnapshotChunk{Chunk: 1, Checksum: checksum([]byte{2, 1, 1})},
-			&types.SnapshotChunk{Chunk: 2, Checksum: checksum([]byte{2, 1, 2})},
+			{Chunk: 1, Checksum: checksum([]byte{2, 1, 1})},
+			{Chunk: 2, Checksum: checksum([]byte{2, 1, 2})},
 		},
 	}, snapshot)
 
@@ -221,11 +221,11 @@ func TestStore_LoadChunk(t *testing.T) {
 	assert.Nil(t, chunk)
 
 	// Loading a zero chunk index should error
-	chunk, err = store.LoadChunk(2, 1, 0)
+	_, err = store.LoadChunk(2, 1, 0)
 	require.Error(t, err)
 
 	// Loading a missing chunk index should error
-	chunk, err = store.LoadChunk(2, 1, 3)
+	_, err = store.LoadChunk(2, 1, 3)
 	require.Error(t, err)
 
 	// Loading a chunk should returns its contents as a reader
@@ -254,8 +254,8 @@ func TestStore_LoadMetadata(t *testing.T) {
 		Height: 2,
 		Format: 1,
 		Chunks: []*types.SnapshotChunk{
-			&types.SnapshotChunk{Chunk: 1, Checksum: checksum([]byte{2, 1, 1})},
-			&types.SnapshotChunk{Chunk: 2, Checksum: checksum([]byte{2, 1, 2})},
+			{Chunk: 1, Checksum: checksum([]byte{2, 1, 1})},
+			{Chunk: 2, Checksum: checksum([]byte{2, 1, 2})},
 		},
 	}, snapshot)
 }
@@ -270,6 +270,7 @@ func TestStore_Prune(t *testing.T) {
 	assert.EqualValues(t, 0, pruned)
 
 	snapshots, err := store.List()
+	require.NoError(t, err)
 	assert.Len(t, snapshots, 4)
 
 	// Pruning until the last two heights should leave three snapshots (for two heights)
@@ -302,6 +303,7 @@ func TestStore_Prune(t *testing.T) {
 	assert.EqualValues(t, 3, pruned)
 
 	snapshots, err = store.List()
+	require.NoError(t, err)
 	assert.Empty(t, snapshots)
 }
 

@@ -32,6 +32,12 @@ type BaseConfig struct {
 	// Note: Commitment of state will be attempted on the corresponding block.
 	HaltTime uint64 `mapstructure:"halt-time"`
 
+	// SnapshotInterval sets the interval between state snapshots (in blocks). 0 to disable.
+	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
+
+	// SnapshotRetention sets the number of recent snapshots to keep. 0 keeps all snapshots.
+	SnapshotRetention uint32 `mapstructure:"snapshot-retention"`
+
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
@@ -74,9 +80,11 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig{
-			MinGasPrices:    defaultMinGasPrices,
-			InterBlockCache: true,
-			Pruning:         store.PruningStrategySyncable,
+			MinGasPrices:      defaultMinGasPrices,
+			InterBlockCache:   true,
+			Pruning:           store.PruningStrategySyncable,
+			SnapshotInterval:  0,
+			SnapshotRetention: 3,
 		},
 	}
 }

@@ -39,6 +39,12 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 # everything: all saved states will be deleted, storing only the current state
 pruning = "{{ .BaseConfig.Pruning }}"
+
+# State snapshots can be taken at regular height intervals, given by snapshot-interval (0 to
+# disable). Old snapshots can be removed by setting snapshot-retention, giving the number
+# of recent snapshots to keep (0 to keep all).
+snapshot-interval = {{ .BaseConfig.SnapshotInterval }}
+snapshot-retention = {{ .BaseConfig.SnapshotRetention }}
 `
 
 var configTemplate *template.Template

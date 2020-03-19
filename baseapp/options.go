@@ -167,7 +167,7 @@ func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 // keeps all snapshots.
 func (app *BaseApp) SetSnapshotPolicy(interval uint64, retention uint32) {
 	if app.sealed {
-		panic("SetSnapshotPolicy on sealed BaseApp")
+		panic("SetSnapshotPolicy() on sealed BaseApp")
 	}
 	app.snapshotInterval = interval
 	app.snapshotRetention = retention

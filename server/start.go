@@ -32,6 +32,8 @@ const (
 	FlagHaltTime             = "halt-time"
 	FlagInterBlockCache      = "inter-block-cache"
 	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
+	FlagSnapshotInterval     = "snapshot-interval"
+	FlagSnapshotRetention    = "snapshot-retention"
 )
 
 var (
@@ -102,6 +104,8 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
+	cmd.Flags().Uint64(FlagSnapshotInterval, 0, "Interval between state snapshots, in blocks (0 to disable)")
+	cmd.Flags().Uint32(FlagSnapshotRetention, 0, "Interval between state snapshots, in blocks (0 to disable)")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
 	// add support for all Tendermint-specific command line options

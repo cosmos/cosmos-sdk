@@ -70,6 +70,8 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 * (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
 * (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
+* (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
+`Result` from the execution.
 
 ### Features
 

@@ -2,9 +2,8 @@ package simulation
 
 import (
 	"errors"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,7 +23,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams module.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	appParams simulation2.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
 ) simulation.WeightedOperations {
 
@@ -45,44 +44,44 @@ func WeightedOperations(
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 // nolint: interfacer
-func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) module.Operation {
+func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation2.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
-		simAccount, found := module.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := simulation2.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return module.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		if !validator.IsJailed() {
 			// TODO: due to this condition this message is almost, if not always, skipped !
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
 		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 		if !found {
-			return module.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
 		if selfDel == nil {
-			return module.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
@@ -108,23 +107,23 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 			if res != nil && err == nil {
 				if info.Tombstoned {
-					return module.NewOperationMsg(msg, true, ""), nil, errors.New("validator should not have been unjailed if validator tombstoned")
+					return simulation2.NewOperationMsg(msg, true, ""), nil, errors.New("validator should not have been unjailed if validator tombstoned")
 				}
 				if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-					return module.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed while validator still in jail period")
+					return simulation2.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed while validator still in jail period")
 				}
 				if validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
-					return module.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed even though self-delegation too low")
+					return simulation2.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed even though self-delegation too low")
 				}
 			}
 			// msg failed as expected
-			return module.NewOperationMsg(msg, false, ""), nil, nil
+			return simulation2.NewOperationMsg(msg, false, ""), nil, nil
 		}
 
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+			return simulation2.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

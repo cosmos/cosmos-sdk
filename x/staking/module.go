@@ -3,6 +3,7 @@ package staking
 import (
 	"encoding/json"
 	"fmt"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -187,12 +188,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []module.WeightedProposalContent {
+func (AppModule) ProposalContents(simState module.SimulationState) []simulation2.WeightedProposalContent {
 	return nil
 }
 
 // RandomizedParams creates randomized staking param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []module.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simulation2.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
@@ -202,7 +203,7 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the staking module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []module.WeightedOperation {
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simulation2.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
 	)

@@ -2,6 +2,7 @@ package params
 
 import (
 	"encoding/json"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -73,12 +74,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []module.WeightedProposalContent {
+func (am AppModule) ProposalContents(simState module.SimulationState) []simulation2.WeightedProposalContent {
 	return simulation.ProposalContents(simState.ParamChanges)
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []module.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simulation2.ParamChange {
 	return nil
 }
 
@@ -86,6 +87,6 @@ func (AppModule) RandomizedParams(r *rand.Rand) []module.ParamChange {
 func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(_ module.SimulationState) []module.WeightedOperation {
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simulation2.WeightedOperation {
 	return nil
 }

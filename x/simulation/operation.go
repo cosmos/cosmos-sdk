@@ -2,10 +2,9 @@ package simulation
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 	"sort"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // entry kinds for use within OperationEntry
@@ -45,12 +44,12 @@ func EndBlockEntry(height int64) OperationEntry {
 }
 
 // MsgEntry - operation entry for standard msg
-func MsgEntry(height, order int64, opMsg module.OperationMsg) OperationEntry {
+func MsgEntry(height, order int64, opMsg simulation.OperationMsg) OperationEntry {
 	return NewOperationEntry(MsgEntryKind, height, order, opMsg.MustMarshal())
 }
 
 // QueuedMsgEntry creates an operation entry for a given queued message.
-func QueuedMsgEntry(height int64, opMsg module.OperationMsg) OperationEntry {
+func QueuedMsgEntry(height int64, opMsg simulation.OperationMsg) OperationEntry {
 	return NewOperationEntry(QueuedMsgEntryKind, height, -1, opMsg.MustMarshal())
 }
 
@@ -66,7 +65,7 @@ func (oe OperationEntry) MustMarshal() json.RawMessage {
 //_____________________________________________________________________
 
 // OperationQueue defines an object for a queue of operations
-type OperationQueue map[int][]module.Operation
+type OperationQueue map[int][]simulation.Operation
 
 // NewOperationQueue creates a new OperationQueue instance.
 func NewOperationQueue() OperationQueue {
@@ -75,7 +74,7 @@ func NewOperationQueue() OperationQueue {
 
 // queueOperations adds all future operations into the operation queue.
 func queueOperations(queuedOps OperationQueue,
-	queuedTimeOps []module.FutureOperation, futureOps []module.FutureOperation) {
+	queuedTimeOps []simulation.FutureOperation, futureOps []simulation.FutureOperation) {
 
 	if futureOps == nil {
 		return
@@ -87,7 +86,7 @@ func queueOperations(queuedOps OperationQueue,
 			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
 				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)
 			} else {
-				queuedOps[futureOp.BlockHeight] = []module.Operation{futureOp.Op}
+				queuedOps[futureOp.BlockHeight] = []simulation.Operation{futureOp.Op}
 			}
 			continue
 		}
@@ -100,7 +99,7 @@ func queueOperations(queuedOps OperationQueue,
 				return queuedTimeOps[i].BlockTime.After(futureOp.BlockTime)
 			},
 		)
-		queuedTimeOps = append(queuedTimeOps, module.FutureOperation{})
+		queuedTimeOps = append(queuedTimeOps, simulation.FutureOperation{})
 		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
 		queuedTimeOps[index] = futureOp
 	}
@@ -112,19 +111,19 @@ func queueOperations(queuedOps OperationQueue,
 // This is used to bias the selection operation within the simulator.
 type WeightedOperation struct {
 	weight int
-	op     module.Operation
+	op     simulation.Operation
 }
 
 func (w WeightedOperation) Weight() int {
 	return w.weight
 }
 
-func (w WeightedOperation) Op() module.Operation {
+func (w WeightedOperation) Op() simulation.Operation {
 	return w.op
 }
 
 // NewWeightedOperation creates a new WeightedOperation instance
-func NewWeightedOperation(weight int, op module.Operation) WeightedOperation {
+func NewWeightedOperation(weight int, op simulation.Operation) WeightedOperation {
 	return WeightedOperation{
 		weight: weight,
 		op:     op,
@@ -132,7 +131,7 @@ func NewWeightedOperation(weight int, op module.Operation) WeightedOperation {
 }
 
 // WeightedOperations is the group of all weighted operations to simulate.
-type WeightedOperations []module.WeightedOperation
+type WeightedOperations []simulation.WeightedOperation
 
 func (ops WeightedOperations) totalWeight() int {
 	totalOpWeight := 0
@@ -142,9 +141,9 @@ func (ops WeightedOperations) totalWeight() int {
 	return totalOpWeight
 }
 
-func (ops WeightedOperations) getSelectOpFn() module.SelectOpFn {
+func (ops WeightedOperations) getSelectOpFn() simulation.SelectOpFn {
 	totalOpWeight := ops.totalWeight()
-	return func(r *rand.Rand) module.Operation {
+	return func(r *rand.Rand) simulation.Operation {
 		x := r.Intn(totalOpWeight)
 		for i := 0; i < len(ops); i++ {
 			if x <= ops[i].Weight() {

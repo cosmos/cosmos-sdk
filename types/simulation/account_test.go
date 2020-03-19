@@ -1,15 +1,14 @@
-package module_test
+package simulation_test
 
 import (
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestRandomAccounts(t *testing.T) {
@@ -27,14 +26,14 @@ func TestRandomAccounts(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got := module.RandomAccounts(r, tt.n)
+			got := simulation.RandomAccounts(r, tt.n)
 			require.Equal(t, tt.want, len(got))
 			if tt.n == 0 {
 				return
 			}
-			acc, i := module.RandomAcc(r, got)
+			acc, i := simulation.RandomAcc(r, got)
 			require.True(t, acc.Equals(got[i]))
-			accFound, found := module.FindAccount(got, acc.Address)
+			accFound, found := simulation.FindAccount(got, acc.Address)
 			require.True(t, found)
 			require.True(t, accFound.Equals(acc))
 		})
@@ -44,9 +43,9 @@ func TestRandomAccounts(t *testing.T) {
 func TestFindAccountEmptySlice(t *testing.T) {
 	t.Parallel()
 	r := rand.New(rand.NewSource(time.Now().Unix()))
-	accs := module.RandomAccounts(r, 1)
+	accs := simulation.RandomAccounts(r, 1)
 	require.Equal(t, 1, len(accs))
-	acc, found := module.FindAccount(nil, accs[0].Address)
+	acc, found := simulation.FindAccount(nil, accs[0].Address)
 	require.False(t, found)
 	require.Nil(t, acc.Address)
 	require.Nil(t, acc.PrivKey)
@@ -69,7 +68,7 @@ func TestRandomFees(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := module.RandomFees(r, sdk.Context{}, tt.spendableCoins)
+			got, err := simulation.RandomFees(r, sdk.Context{}, tt.spendableCoins)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RandomFees() error = %v, wantErr %v", err, tt.wantErr)
 				return

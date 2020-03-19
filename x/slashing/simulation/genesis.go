@@ -4,6 +4,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 	"time"
 
@@ -25,7 +26,7 @@ const (
 
 // GenSignedBlocksWindow randomized SignedBlocksWindow
 func GenSignedBlocksWindow(r *rand.Rand) int64 {
-	return int64(module.RandIntBetween(r, 10, 1000))
+	return int64(simulation.RandIntBetween(r, 10, 1000))
 }
 
 // GenMinSignedPerWindow randomized MinSignedPerWindow
@@ -35,7 +36,7 @@ func GenMinSignedPerWindow(r *rand.Rand) sdk.Dec {
 
 // GenDowntimeJailDuration randomized DowntimeJailDuration
 func GenDowntimeJailDuration(r *rand.Rand) time.Duration {
-	return time.Duration(module.RandIntBetween(r, 60, 60*60*24)) * time.Second
+	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second
 }
 
 // GenSlashFractionDoubleSign randomized SlashFractionDoubleSign

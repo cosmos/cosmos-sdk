@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"io"
 	"math/rand"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -20,15 +19,15 @@ import (
 )
 
 // AppStateFn returns the app state json bytes and the genesis accounts
-type AppStateFn func(r *rand.Rand, accs []module.Account, config Config) (
-	appState json.RawMessage, accounts []module.Account, chainId string, genesisTimestamp time.Time,
+type AppStateFn func(r *rand.Rand, accs []simulation.Account, config Config) (
+	appState json.RawMessage, accounts []simulation.Account, chainId string, genesisTimestamp time.Time,
 )
 
 // initialize the chain for the simulation
 func initChain(
-	r *rand.Rand, params Params, accounts []module.Account, app *baseapp.BaseApp,
+	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
 	appStateFn AppStateFn, config Config,
-) (mockValidators, time.Time, []module.Account, string) {
+) (mockValidators, time.Time, []simulation.Account, string) {
 
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
@@ -60,7 +59,7 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := module.RandomAccounts(r, params.NumKeys)
+	accs := simulation.RandomAccounts(r, params.NumKeys)
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
@@ -78,7 +77,7 @@ func SimulateFromSeed(
 	)
 
 	// remove module account address if they exist in accs
-	var tmpAccs []module.Account
+	var tmpAccs []simulation.Account
 	for _, acc := range accs {
 		if !blackListedAccs[acc.Address.String()] {
 			tmpAccs = append(tmpAccs, acc)
@@ -115,7 +114,7 @@ func SimulateFromSeed(
 
 	// These are operations which have been queued by previous operations
 	operationQueue := NewOperationQueue()
-	timeOperationQueue := []module.FutureOperation{}
+	timeOperationQueue := []simulation.FutureOperation{}
 
 	logWriter := NewLogWriter(testingMode)
 
@@ -236,13 +235,13 @@ func SimulateFromSeed(
 //______________________________________________________________________________
 
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []module.Account, header abci.Header) (opCount int)
+	accounts []simulation.Account, header abci.Header) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
-	operationQueue OperationQueue, timeOperationQueue []module.FutureOperation,
+	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
 	logWriter LogWriter, config Config) blockSimFn {
 
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
@@ -250,7 +249,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 	selectOp := ops.getSelectOpFn()
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []module.Account, header abci.Header,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header abci.Header,
 	) (opCount int) {
 
 		_, _ = fmt.Fprintf(
@@ -260,7 +259,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 		lastBlockSizeState, blocksize = getBlockSize(r, params, lastBlockSizeState, config.BlockSize)
 
 		type opAndR struct {
-			op   module.Operation
+			op   simulation.Operation
 			rand *rand.Rand
 		}
 
@@ -271,7 +270,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 		for i := 0; i < blocksize; i++ {
 			opAndRz = append(opAndRz, opAndR{
 				op:   selectOp(r),
-				rand: module.DeriveRand(r),
+				rand: simulation.DeriveRand(r),
 			})
 		}
 
@@ -308,9 +307,9 @@ Comment: %s`,
 }
 
 // nolint: errcheck
-func runQueuedOperations(queueOps map[int][]module.Operation,
+func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []module.Account, logWriter LogWriter,
+	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
 	event func(route, op, evResult string), lean bool, chainID string) (numOpsRan int) {
 
 	queuedOp, ok := queueOps[height]
@@ -338,9 +337,9 @@ func runQueuedOperations(queueOps map[int][]module.Operation,
 	return numOpsRan
 }
 
-func runQueuedTimeOperations(queueOps []module.FutureOperation,
+func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
 	height int, currentTime time.Time, tb testing.TB, r *rand.Rand,
-	app *baseapp.BaseApp, ctx sdk.Context, accounts []module.Account,
+	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
 	lean bool, chainID string) (numOpsRan int) {
 

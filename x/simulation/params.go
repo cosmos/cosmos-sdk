@@ -2,10 +2,10 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -41,7 +41,7 @@ type ParamSimulator func(r *rand.Rand)
 
 // ContentSimulatorFn defines a function type alias for generating random proposal
 // content.
-type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []module.Account) govtypes.Content
+type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content
 
 // Params define the parameters necessary for running the simulations
 type Params struct {
@@ -57,9 +57,9 @@ type Params struct {
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
-		NumKeys:                   module.RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
+		NumKeys:                   simulation.RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
 		EvidenceFraction:          r.Float64(),
-		InitialLivenessWeightings: []int{module.RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
+		InitialLivenessWeightings: []int{simulation.RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
 		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}
@@ -75,7 +75,7 @@ type SimValFn func(r *rand.Rand) string
 type ParamChange struct {
 	subspace string
 	key      string
-	simValue module.SimValFn
+	simValue simulation.SimValFn
 }
 
 func (spc ParamChange) Subspace() string {
@@ -86,12 +86,12 @@ func (spc ParamChange) Key() string {
 	return spc.key
 }
 
-func (spc ParamChange) SimValue() module.SimValFn {
+func (spc ParamChange) SimValue() simulation.SimValFn {
 	return spc.simValue
 }
 
 // NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key string, simVal module.SimValFn) module.ParamChange {
+func NewSimParamChange(subspace, key string, simVal simulation.SimValFn) simulation.ParamChange {
 	return ParamChange{
 		subspace: subspace,
 		key:      key,
@@ -110,12 +110,12 @@ func (spc ParamChange) ComposedKey() string {
 // WeightedProposalContent defines a common struct for proposal contents defined by
 // external modules (i.e outside gov)
 type WeightedProposalContent struct {
-	appParamsKey       string                    // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight      int                       // default weight
-	contentSimulatorFn module.ContentSimulatorFn // content simulator function
+	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
+	defaultWeight      int                           // default weight
+	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn module.ContentSimulatorFn) *WeightedProposalContent {
+func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) *WeightedProposalContent {
 	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
 }
 
@@ -127,6 +127,6 @@ func (w WeightedProposalContent) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() module.ContentSimulatorFn {
+func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
 	return w.contentSimulatorFn
 }

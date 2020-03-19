@@ -2,9 +2,8 @@ package simulation
 
 import (
 	"fmt"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +26,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams module.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	appParams simulation2.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 
@@ -95,30 +94,30 @@ func WeightedOperations(
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
 // nolint: interfacer
-func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) module.Operation {
+func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
-		simAccount, _ := module.RandomAcc(r, accs)
+		simAccount, _ := simulation2.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator doesn't exist already
 		_, found := k.GetValidator(ctx, address)
 		if found {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		denom := k.GetParams(ctx).BondDenom
 
 		balance := bk.GetBalance(ctx, simAccount.Address, denom).Amount
 		if !balance.IsPositive() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		amount, err := module.RandPositiveInt(r, balance)
+		amount, err := simulation2.RandPositiveInt(r, balance)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
@@ -129,25 +128,25 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
 		if !hasNeg {
-			fees, err = module.RandomFees(r, ctx, coins)
+			fees, err = simulation2.RandomFees(r, ctx, coins)
 			if err != nil {
-				return module.NoOpMsg(types.ModuleName), nil, err
+				return simulation2.NoOpMsg(types.ModuleName), nil, err
 			}
 		}
 
 		description := types.NewDescription(
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
 		)
 
-		maxCommission := sdk.NewDecWithPrec(int64(module.RandIntBetween(r, 0, 100)), 2)
+		maxCommission := sdk.NewDecWithPrec(int64(simulation2.RandIntBetween(r, 0, 100)), 2)
 		commission := types.NewCommissionRates(
-			module.RandomDecAmount(r, maxCommission),
+			simulation2.RandomDecAmount(r, maxCommission),
 			maxCommission,
-			module.RandomDecAmount(r, maxCommission),
+			simulation2.RandomDecAmount(r, maxCommission),
 		)
 
 		msg := types.NewMsgCreateValidator(address, simAccount.PubKey,
@@ -165,57 +164,57 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
 // nolint: interfacer
-func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) module.Operation {
+func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
 		if len(k.GetAllValidators(ctx)) == 0 {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		val, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		address := val.GetOperator()
 
-		newCommissionRate := module.RandomDecAmount(r, val.Commission.MaxRate)
+		newCommissionRate := simulation2.RandomDecAmount(r, val.Commission.MaxRate)
 
 		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
 			// skip as the commission is invalid
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, found := module.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		simAccount, found := simulation2.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
 		if !found {
-			return module.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", val.GetOperator())
+			return simulation2.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		description := types.NewDescription(
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
-			module.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
+			simulation2.RandStringOfLength(r, 10),
 		)
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
@@ -232,43 +231,43 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
 // nolint: interfacer
-func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) module.Operation {
+func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, _ := module.RandomAcc(r, accs)
+		simAccount, _ := simulation2.RandomAcc(r, accs)
 		val, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		if val.InvalidExRate() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		amount := bk.GetBalance(ctx, simAccount.Address, denom).Amount
 		if !amount.IsPositive() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		amount, err := module.RandPositiveInt(r, amount)
+		amount, err := simulation2.RandPositiveInt(r, amount)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		bondAmt := sdk.NewCoin(denom, amount)
@@ -279,9 +278,9 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		var fees sdk.Coins
 		coins, hasNeg := spendable.SafeSub(sdk.Coins{bondAmt})
 		if !hasNeg {
-			fees, err = module.RandomFees(r, ctx, coins)
+			fees, err = simulation2.RandomFees(r, ctx, coins)
 			if err != nil {
-				return module.NoOpMsg(types.ModuleName), nil, err
+				return simulation2.NoOpMsg(types.ModuleName), nil, err
 			}
 		}
 
@@ -299,24 +298,24 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
 // nolint: interfacer
-func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) module.Operation {
+func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
 		// get random validator
 		validator, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 		valAddr := validator.GetOperator()
 
@@ -327,21 +326,21 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		delAddr := delegation.GetDelegatorAddr()
 
 		if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		unbondAmt, err := module.RandPositiveInt(r, totalBond)
+		unbondAmt, err := simulation2.RandPositiveInt(r, totalBond)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		if unbondAmt.IsZero() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		msg := types.NewMsgUndelegate(
@@ -349,7 +348,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		)
 
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
-		var simAccount module.Account
+		var simAccount simulation2.Account
 		for _, simAcc := range accs {
 			if simAcc.Address.Equals(delAddr) {
 				simAccount = simAcc
@@ -358,15 +357,15 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		}
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
 		if simAccount.PrivKey == nil {
-			return module.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simulation2.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		tx := helpers.GenTx(
@@ -381,24 +380,24 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
 // nolint: interfacer
-func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) module.Operation {
+func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
 		// get random source validator
 		srcVal, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		srcAddr := srcVal.GetOperator()
@@ -409,13 +408,13 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		delAddr := delegation.GetDelegatorAddr()
 
 		if k.HasReceivingRedelegation(ctx, delAddr, srcAddr) {
-			return module.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		// get random destination validator
 		destVal, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 		destAddr := destVal.GetOperator()
 
@@ -423,35 +422,35 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			destVal.InvalidExRate() ||
 			k.HasMaxRedelegationEntries(ctx, delAddr, srcAddr, destAddr) {
 
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		redAmt, err := module.RandPositiveInt(r, totalBond)
+		redAmt, err := simulation2.RandPositiveInt(r, totalBond)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		if redAmt.IsZero() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		// check if the shares truncate to zero
 		shares, err := srcVal.SharesFromTokens(redAmt)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		if srcVal.TokensFromShares(shares).TruncateInt().IsZero() {
-			return module.NoOpMsg(types.ModuleName), nil, nil // skip
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
-		var simAccount module.Account
+		var simAccount simulation2.Account
 		for _, simAcc := range accs {
 			if simAcc.Address.Equals(delAddr) {
 				simAccount = simAcc
@@ -461,15 +460,15 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
 		if simAccount.PrivKey == nil {
-			return module.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simulation2.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		msg := types.NewMsgBeginRedelegate(
@@ -489,9 +488,9 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

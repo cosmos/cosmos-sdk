@@ -2,9 +2,8 @@ package simulation
 
 import (
 	"fmt"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +26,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams module.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	appParams simulation2.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
 ) simulation.WeightedOperations {
 
@@ -80,23 +79,23 @@ func WeightedOperations(
 }
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
-func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) module.Operation {
+func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 		if !k.GetWithdrawAddrEnabled(ctx) {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, _ := module.RandomAcc(r, accs)
-		simToAccount, _ := module.RandomAcc(r, accs)
+		simAccount, _ := simulation2.RandomAcc(r, accs)
+		simToAccount, _ := simulation2.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
@@ -113,37 +112,37 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) module.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
-		simAccount, _ := module.RandomAcc(r, accs)
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
+		simAccount, _ := simulation2.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
 
 		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
 		if validator == nil {
-			return module.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
+			return simulation2.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
@@ -160,40 +159,40 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) module.Operation {
+func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.Commission.IsZero() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, found := module.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := simulation2.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return module.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
+			return simulation2.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := module.RandomFees(r, ctx, spendable)
+		fees, err := simulation2.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
@@ -210,28 +209,28 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) module.Operation {
+func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation2.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
-	) (module.OperationMsg, []module.FutureOperation, error) {
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation2.Account, chainID string,
+	) (simulation2.OperationMsg, []simulation2.FutureOperation, error) {
 
-		funder, _ := module.RandomAcc(r, accs)
+		funder, _ := simulation2.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, funder.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fundAmount := module.RandSubsetCoins(r, spendable)
+		fundAmount := simulation2.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {
-			return module.NoOpMsg(types.ModuleName), nil, nil
+			return simulation2.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		var (
@@ -241,9 +240,9 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		coins, hasNeg := spendable.SafeSub(fundAmount)
 		if !hasNeg {
-			fees, err = module.RandomFees(r, ctx, coins)
+			fees, err = simulation2.RandomFees(r, ctx, coins)
 			if err != nil {
-				return module.NoOpMsg(types.ModuleName), nil, err
+				return simulation2.NoOpMsg(types.ModuleName), nil, err
 			}
 		}
 
@@ -260,9 +259,9 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {
-			return module.NoOpMsg(types.ModuleName), nil, err
+			return simulation2.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return module.NewOperationMsg(msg, true, ""), nil, nil
+		return simulation2.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

@@ -3,6 +3,7 @@ package mint
 import (
 	"encoding/json"
 	"fmt"
+	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -151,12 +152,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []module.WeightedProposalContent {
+func (AppModule) ProposalContents(simState module.SimulationState) []simulation2.WeightedProposalContent {
 	return nil
 }
 
 // RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []module.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simulation2.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
@@ -166,6 +167,6 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations doesn't return any mint module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []module.WeightedOperation {
+func (AppModule) WeightedOperations(_ module.SimulationState) []simulation2.WeightedOperation {
 	return nil
 }

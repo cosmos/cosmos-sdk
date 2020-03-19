@@ -4,6 +4,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 	"time"
 
@@ -22,7 +23,7 @@ const (
 
 // GenUnbondingTime randomized UnbondingTime
 func GenUnbondingTime(r *rand.Rand) (ubdTime time.Duration) {
-	return time.Duration(module.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
+	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
 }
 
 // GenMaxValidators randomized MaxValidators
@@ -62,11 +63,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
 
-		maxCommission := sdk.NewDecWithPrec(int64(module.RandIntBetween(simState.Rand, 1, 100)), 2)
+		maxCommission := sdk.NewDecWithPrec(int64(simulation.RandIntBetween(simState.Rand, 1, 100)), 2)
 		commission := types.NewCommission(
-			module.RandomDecAmount(simState.Rand, maxCommission),
+			simulation.RandomDecAmount(simState.Rand, maxCommission),
 			maxCommission,
-			module.RandomDecAmount(simState.Rand, maxCommission),
+			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
 		validator := types.NewValidator(valAddr, simState.Accounts[i].PubKey, types.Description{})

@@ -1,15 +1,14 @@
-package module_test
+package simulation_test
 
 import (
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func TestRandSubsetCoins(t *testing.T) {
@@ -26,7 +25,7 @@ func TestRandSubsetCoins(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got := module.RandSubsetCoins(tt.r, tt.coins)
+			got := simulation.RandSubsetCoins(tt.r, tt.coins)
 			gotStringRep := got.String()
 			sortedStringRep := got.Sort().String()
 			require.Equal(t, gotStringRep, sortedStringRep)
@@ -50,7 +49,7 @@ func TestRandStringOfLength(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got := module.RandStringOfLength(r, tt.n)
+			got := simulation.RandStringOfLength(r, tt.n)
 			require.Equal(t, tt.want, len(got))
 		})
 	}

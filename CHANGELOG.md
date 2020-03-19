@@ -69,6 +69,7 @@ and provided directly the IAVL store.
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 * (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
+* (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
 * (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) The `store.CommitMultiStore` interface now includes the new `store.Snapshotter` interface as well.
 
 ### Features
@@ -85,6 +86,8 @@ resulted in a panic when the tx execution mode was `CheckTx`.
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 * (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.
 * (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
+* (crypto/keys/mintkey) [\#5823](https://github.com/cosmos/cosmos-sdk/pull/5823) fix errors handling in UnarmorPubKeyBytes (underlying armoring function's
+return error was not being checked).
 
 ### State Machine Breaking
 
@@ -169,6 +172,10 @@ Buffers for state serialization instead of Amino.
 * (server) [\#5709](https://github.com/cosmos/cosmos-sdk/pull/5709) There are two new flags for pruning, `--pruning-keep-every` 
 and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to fine tune the strategy for pruning the state.
 * (crypto/keys) [\#5739](https://github.com/cosmos/cosmos-sdk/pull/5739) Print an error message if the password input failed.
+* (client) [\#5810](https://github.com/cosmos/cosmos-sdk/pull/5810) Added a new `--offline` flag that allows commands to 
+be executed without an internet connection. Previously, `--generate-only` served this purpose in addition to only allowing
+txs to be generated. Now, `--generate-only` solely allows txs to be generated without being broadcasted and disallows
+Keybase use and `--offline` allows the use of Keybase but does not allow any functionality that requires an online connection.
 
 ## [v0.38.1] - 2020-02-11
 

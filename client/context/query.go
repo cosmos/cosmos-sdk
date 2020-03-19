@@ -22,7 +22,7 @@ import (
 // error is returned.
 func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
-		return nil, errors.New("no RPC client defined")
+		return nil, errors.New("no RPC client is defined in offline mode")
 	}
 
 	return ctx.Client, nil

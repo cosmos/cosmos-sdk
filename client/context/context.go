@@ -14,6 +14,7 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,8 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
+	TxGenerator   clientx.Generator
+	Marshaler     codec.Marshaler
 	Keybase       keys.Keybase
 	Input         io.Reader
 	Output        io.Writer
@@ -36,13 +39,16 @@ type CLIContext struct {
 	BroadcastMode string
 	Verifier      tmlite.Verifier
 	FromName      string
-	Codec         *codec.Codec
 	TrustNode     bool
 	UseLedger     bool
 	Simulate      bool
 	GenerateOnly  bool
+	Offline       bool
 	Indent        bool
 	SkipConfirm   bool
+
+	// TODO: Deprecated (remove).
+	Codec *codec.Codec
 }
 
 // NewCLIContextWithInputAndFrom returns a new initialized CLIContext with parameters from the
@@ -62,7 +68,8 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		os.Exit(1)
 	}
 
-	if !genOnly {
+	offline := viper.GetBool(flags.FlagOffline)
+	if !offline {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
 			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
@@ -88,6 +95,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
 		GenerateOnly:  genOnly,
+		Offline:       offline,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
@@ -130,7 +138,20 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 	return ctx
 }
 
+// WithTxGenerator returns a copy of the CLIContext with an updated TxGenerator.
+func (ctx CLIContext) WithTxGenerator(txg clientx.Generator) CLIContext {
+	ctx.TxGenerator = txg
+	return ctx
+}
+
+// WithMarshaler returns a copy of the CLIContext with an updated Marshaler.
+func (ctx CLIContext) WithMarshaler(m codec.Marshaler) CLIContext {
+	ctx.Marshaler = m
+	return ctx
+}
+
 // WithCodec returns a copy of the context with an updated codec.
+// TODO: Deprecated (remove).
 func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
@@ -268,7 +289,7 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address for generate-only")
+			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
 		}
 
 		return addr, "", nil

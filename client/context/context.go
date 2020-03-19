@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,7 +28,7 @@ type CLIContext struct {
 	ChainID       string
 	TxGenerator   clientx.Generator
 	Marshaler     codec.Marshaler
-	Keybase       keys.Keybase
+	Keybase       keybase.Keybase
 	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
@@ -295,20 +295,20 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyring(sdk.KeyringServiceName(),
+	kb, err := keybase.NewKeyring(sdk.KeyringServiceName(),
 		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err
 	}
 
-	var info keys.Info
+	var info keybase.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		info, err = keybase.GetByAddress(addr)
+		info, err = kb.GetByAddress(addr)
 		if err != nil {
 			return nil, "", err
 		}
 	} else {
-		info, err = keybase.Get(from)
+		info, err = kb.Get(from)
 		if err != nil {
 			return nil, "", err
 		}

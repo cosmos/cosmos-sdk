@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/pkg/errors"
@@ -58,8 +58,8 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	keyringServiceName := sdk.KeyringServiceName()
 
 	var (
-		tmpDir  string
-		keybase keys.Keybase
+		tmpDir string
+		kb     keybase.Keybase
 	)
 
 	if viper.GetBool(flags.FlagDryRun) {
@@ -70,9 +70,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		defer os.RemoveAll(tmpDir)
 
-		keybase, err = keys.NewKeyring(keyringServiceName, "test", tmpDir, buf)
+		kb, err = keybase.NewKeyring(keyringServiceName, "test", tmpDir, buf)
 	} else {
-		keybase, err = keys.NewKeyring(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
+		kb, err = keybase.NewKeyring(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
 	}
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(
@@ -91,7 +91,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		keyType := key.GetType()
 
 		// skip key if already migrated
-		if _, err := keybase.Get(keyName); err == nil {
+		if _, err := kb.Get(keyName); err == nil {
 			cmd.PrintErrf("Key '%s (%s)' already exists; skipping ...\n", key.GetName(), keyType)
 			continue
 		}
@@ -107,8 +107,8 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if keyType != keys.TypeLocal {
-			if err := keybase.Import(keyName, legKeyInfo); err != nil {
+		if keyType != keybase.TypeLocal {
+			if err := kb.Import(keyName, legKeyInfo); err != nil {
 				return err
 			}
 
@@ -128,7 +128,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if err := keybase.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
+		if err := kb.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
 			return err
 		}
 	}

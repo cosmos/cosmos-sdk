@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
 	txEncoder          sdk.TxEncoder
-	keybase            keys.Keybase
+	keybase            keybase.Keybase
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
@@ -53,7 +53,7 @@ func NewTxBuilder(
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
+	kb, err := keybase.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func (bldr TxBuilder) Gas() uint64 { return bldr.gas }
 func (bldr TxBuilder) GasAdjustment() float64 { return bldr.gasAdjustment }
 
 // Keybase returns the keybase
-func (bldr TxBuilder) Keybase() keys.Keybase { return bldr.keybase }
+func (bldr TxBuilder) Keybase() keybase.Keybase { return bldr.keybase }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -149,7 +149,7 @@ func (bldr TxBuilder) WithGasPrices(gasPrices string) TxBuilder {
 }
 
 // WithKeybase returns a copy of the context with updated keybase.
-func (bldr TxBuilder) WithKeybase(keybase keys.Keybase) TxBuilder {
+func (bldr TxBuilder) WithKeybase(keybase keybase.Keybase) TxBuilder {
 	bldr.keybase = keybase
 	return bldr
 }
@@ -272,17 +272,17 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 }
 
 // MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
-func MakeSignature(keybase keys.Keybase, name, passphrase string,
+func MakeSignature(kb keybase.Keybase, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 
-	if keybase == nil {
-		keybase, err = keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
+	if kb == nil {
+		kb, err = keybase.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
 		if err != nil {
 			return
 		}
 	}
 
-	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
+	sigBytes, pubkey, err := kb.Sign(name, passphrase, msg.Bytes())
 	if err != nil {
 		return
 	}

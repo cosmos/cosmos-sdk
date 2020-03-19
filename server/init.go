@@ -3,9 +3,8 @@ package server
 import (
 	"fmt"
 
-	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
-
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,7 +14,7 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 	// generate a private key, with recovery phrase
 	info, secret, err := clkeys.NewInMemoryKeyBase().CreateMnemonic(
-		"name", keys.English, "pass", keys.Secp256k1)
+		"name", keybase.English, "pass", keybase.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
@@ -25,10 +24,10 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(keybase keys.Keybase, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
+func GenerateSaveCoinKey(kb keybase.Keybase, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 	// ensure no overwrite
 	if !overwrite {
-		_, err := keybase.Get(keyName)
+		_, err := kb.Get(keyName)
 		if err == nil {
 			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
 				"key already exists, overwrite is disabled")
@@ -36,7 +35,7 @@ func GenerateSaveCoinKey(keybase keys.Keybase, keyName, keyPass string, overwrit
 	}
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
+	info, secret, err := kb.CreateMnemonic(keyName, keybase.English, keyPass, keybase.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

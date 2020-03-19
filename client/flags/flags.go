@@ -7,10 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	keys "github.com/cosmos/cosmos-sdk/crypto/keybase"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 )
 
 // nolint
@@ -23,7 +22,7 @@ const (
 	GasFlagAuto          = "auto"
 
 	// DefaultKeyringBackend
-	DefaultKeyringBackend = keys.BackendOS
+	DefaultKeyringBackend = keybase.BackendOS
 )
 
 const (

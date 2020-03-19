@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	crkeys "github.com/cosmos/cosmos-sdk/crypto/keybase"
+	"github.com/cosmos/cosmos-sdk/crypto/keybase"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
@@ -17,7 +17,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", crkeys.CreateHDPath(0, 0).String(), crkeys.Secp256k1)
+	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", keybase.CreateHDPath(0, 0).String(), keybase.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -27,7 +27,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
-	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
+	kb, err := keybase.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", "012345678", false)
@@ -39,7 +39,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", crkeys.CreateHDPath(0, 0).String(), crkeys.Secp256k1)
+	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", keybase.CreateHDPath(0, 0).String(), keybase.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -49,7 +49,7 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
-	kb, err := crkeys.NewKeyring(t.Name(), "test", dir, nil)
+	kb, err := keybase.NewKeyring(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	keyname := "justakey"

@@ -28,10 +28,16 @@ func CanonicalSignBytes(m codec.ProtoMarshaler) ([]byte, error) {
 		return nil, err
 	}
 
+	return canonicalProtoJSON(buf.Bytes())
+}
+
+// canonicalProtoJSON strips default and null values from map keys
+// and ensures that the resulting JSON is in canonical form
+func canonicalProtoJSON(bz []byte) ([]byte, error) {
 	var genericJSON interface{}
 
 	// decode canonical proto encoding into a generic map
-	if err := json.Unmarshal(buf.Bytes(), &genericJSON); err != nil {
+	if err := json.Unmarshal(bz, &genericJSON); err != nil {
 		return nil, err
 	}
 
@@ -42,8 +48,9 @@ func CanonicalSignBytes(m codec.ProtoMarshaler) ([]byte, error) {
 	return jsonc.Marshal(genericJSONNoDefaults)
 }
 
-// jsonStripDefaults removes default and nil values from maps within JSON
-// that has been parsed into a generic interface{} using json.Unmarshal.
+// jsonStripDefaults removes default (0, true,"", [], {})  and null values
+//from maps within JSON that has been parsed into a generic interface{}
+// using json.Unmarshal. Defaults within arrays are not removed.
 // The returned interface{} value can then be marshaled back to JSON.
 func jsonStripDefaults(val interface{}) interface{} {
 	switch val := val.(type) {

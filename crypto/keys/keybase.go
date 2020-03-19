@@ -2,6 +2,8 @@ package keys
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"reflect"
 	"strings"
 
@@ -68,23 +70,27 @@ var (
 //
 // NOTE: dbKeybase will be deprecated in favor of keyringKeybase.
 type dbKeybase struct {
-	base baseKeybase
-	db   dbm.DB
+	base  baseKeybase
+	db    dbm.DB
+	input io.Reader
 }
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
+func newDBKeybase(db dbm.DB, input io.Reader, opts ...KeybaseOption) Keybase {
 	return dbKeybase{
-		base: newBaseKeybase(opts...),
-		db:   db,
+		base:  newBaseKeybase(opts...),
+		db:    db,
+		input: input,
 	}
 }
 
 // NewInMemory creates a transient keybase on top of in-memory storage
 // instance useful for testing purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...KeybaseOption) Keybase { return newDBKeybase(dbm.NewMemDB(), opts...) }
+func NewInMemory(opts ...KeybaseOption) Keybase {
+	return newDBKeybase(dbm.NewMemDB(), os.Stdin, opts...)
+}
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
 // using the provided password. It returns the generated mnemonic and the key Info.
@@ -215,7 +221,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return kb.base.DecodeSignature(info, msg)
+		return DecodeSignature(info, msg, kb.input)
 	}
 
 	sig, err = priv.Sign(msg)

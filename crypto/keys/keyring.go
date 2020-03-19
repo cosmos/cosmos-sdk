@@ -41,16 +41,18 @@ var _ Keybase = keyringKeybase{}
 // keyringKeybase implements the Keybase interface by using the Keyring library
 // for account key persistence.
 type keyringKeybase struct {
-	base baseKeybase
-	db   keyring.Keyring
+	base  baseKeybase
+	db    keyring.Keyring
+	input io.Reader
 }
 
 var maxPassphraseEntryAttempts = 3
 
-func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
+func newKeyringKeybase(db keyring.Keyring, input io.Reader, opts ...KeybaseOption) Keybase {
 	return keyringKeybase{
-		db:   db,
-		base: newBaseKeybase(opts...),
+		db:    db,
+		base:  newBaseKeybase(opts...),
+		input: input,
 	}
 }
 
@@ -82,7 +84,7 @@ func NewKeyring(
 		return nil, err
 	}
 
-	return newKeyringKeybase(db, opts...), nil
+	return newKeyringKeybase(db, userInput, opts...), nil
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -219,7 +221,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return kb.base.DecodeSignature(info, msg)
+		return DecodeSignature(info, msg, kb.input)
 	}
 
 	sig, err = priv.Sign(msg)

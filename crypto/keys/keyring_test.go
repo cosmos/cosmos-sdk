@@ -138,7 +138,8 @@ func TestLazySignVerifyKeyRingWithLedger(t *testing.T) {
 func TestLazySignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
-	kb, err := NewKeyring("keybasename", "test", dir, nil)
+	buf := bytes.NewBufferString("")
+	kb, err := NewKeyring("keybasename", "test", dir, buf)
 	require.NoError(t, err)
 	algo := Secp256k1
 

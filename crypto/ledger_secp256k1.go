@@ -8,10 +8,10 @@ import (
 	"github.com/pkg/errors"
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 
+	crypto "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	tmsecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 var (
@@ -43,7 +43,7 @@ type (
 		// CachedPubKey should be private, but we want to encode it via
 		// go-amino so we can view the address later, even without having the
 		// ledger attached.
-		CachedPubKey tmcrypto.PubKey
+		CachedPubKey crypto.PubKey
 		Path         hd.BIP44Params
 	}
 )
@@ -53,7 +53,7 @@ type (
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeyLedgerSecp256k1
-func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
+func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (crypto.PrivKey, error) {
 	device, err := getLedgerDevice()
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func NewPrivKeyLedgerSecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, err
 
 // NewPrivKeyLedgerSecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKey, string, error) {
+func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params, hrp string) (crypto.PrivKey, string, error) {
 	device, err := getLedgerDevice()
 	if err != nil {
 		return nil, "", err
@@ -86,7 +86,7 @@ func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKe
 }
 
 // PubKey returns the cached public key.
-func (pkl PrivKeyLedgerSecp256k1) PubKey() tmcrypto.PubKey {
+func (pkl PrivKeyLedgerSecp256k1) PubKey() crypto.PubKey {
 	return pkl.CachedPubKey
 }
 
@@ -102,7 +102,7 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 }
 
 // LedgerShowAddress triggers a ledger device to show the corresponding address.
-func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
+func LedgerShowAddress(path hd.BIP44Params, expectedPubKey crypto.PubKey,
 	accountAddressPrefix string) error {
 
 	device, err := getLedgerDevice()
@@ -155,7 +155,7 @@ func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
-func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
+func (pkl PrivKeyLedgerSecp256k1) Equals(other crypto.PrivKey) bool {
 	if otherKey, ok := other.(PrivKeyLedgerSecp256k1); ok {
 		return pkl.CachedPubKey.Equals(otherKey.CachedPubKey)
 	}
@@ -233,7 +233,7 @@ func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byt
 //
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, error) {
+func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (crypto.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
 		return nil, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
@@ -257,7 +257,7 @@ func getPubKeyUnsafe(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubK
 //
 // Since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling.
-func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) (tmcrypto.PubKey, string, error) {
+func getPubKeyAddrSafe(device LedgerSECP256K1, path hd.BIP44Params, hrp string) (crypto.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
 		return nil, "", fmt.Errorf("address %s rejected", addr)

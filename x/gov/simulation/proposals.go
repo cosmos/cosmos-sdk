@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -13,12 +14,12 @@ import (
 const OpWeightSubmitTextProposal = "op_weight_submit_text_proposal"
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents() []simulation.WeightedProposalContent {
+func ProposalContents() []module.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{
-			AppParamsKey:       OpWeightSubmitTextProposal,
-			DefaultWeight:      simappparams.DefaultWeightTextProposal,
-			ContentSimulatorFn: SimulateTextProposalContent,
+			appParamsKey:       OpWeightSubmitTextProposal,
+			defaultWeight:      simappparams.DefaultWeightTextProposal,
+			contentSimulatorFn: SimulateTextProposalContent,
 		},
 	}
 }

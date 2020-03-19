@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -117,7 +118,19 @@ func (spc ParamChange) ComposedKey() string {
 // WeightedProposalContent defines a common struct for proposal contents defined by
 // external modules (i.e outside gov)
 type WeightedProposalContent struct {
-	AppParamsKey       string             // key used to retrieve the value of the weight from the simulation application params
-	DefaultWeight      int                // default weight
-	ContentSimulatorFn ContentSimulatorFn // content simulator function
+	appParamsKey       string                    // key used to retrieve the value of the weight from the simulation application params
+	defaultWeight      int                       // default weight
+	contentSimulatorFn module.ContentSimulatorFn // content simulator function
+}
+
+func (w WeightedProposalContent) AppParamsKey() string {
+	return w.appParamsKey
+}
+
+func (w WeightedProposalContent) DefaultWeight() int {
+	return w.defaultWeight
+}
+
+func (w WeightedProposalContent) ContentSimulatorFn() module.ContentSimulatorFn {
+	return w.contentSimulatorFn
 }

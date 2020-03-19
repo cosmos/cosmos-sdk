@@ -12,9 +12,9 @@ const OpWeightSubmitParamChangeProposal = "op_weight_submit_param_change_proposa
 func ProposalContents(paramChanges []simulation.ParamChange) []simulation.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{
-			AppParamsKey:       OpWeightSubmitParamChangeProposal,
-			DefaultWeight:      simappparams.DefaultWeightParamChangeProposal,
-			ContentSimulatorFn: SimulateParamChangeProposalContent(paramChanges),
+			appParamsKey:       OpWeightSubmitParamChangeProposal,
+			defaultWeight:      simappparams.DefaultWeightParamChangeProposal,
+			contentSimulatorFn: SimulateParamChangeProposalContent(paramChanges),
 		},
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
@@ -18,16 +17,16 @@ type AppModuleSimulation interface {
 	GenerateGenesisState(input *SimulationState)
 
 	// content functions used to simulate governance proposals
-	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
+	ProposalContents(simState SimulationState) []WeightedProposalContent
 
 	// randomized module parameters for param change proposals
-	RandomizedParams(r *rand.Rand) []simulation.ParamChange
+	RandomizedParams(r *rand.Rand) []ParamChange
 
 	// register a func to decode the each module's defined types from their corresponding store key
 	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
 
 	// simulation operations (i.e msgs) with their respective weight
-	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
+	WeightedOperations(simState SimulationState) []WeightedOperation
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -49,8 +48,8 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 
 // GetProposalContents returns each module's proposal content generator function
 // with their default operation weight and key.
-func (sm *SimulationManager) GetProposalContents(simState SimulationState) []simulation.WeightedProposalContent {
-	wContents := make([]simulation.WeightedProposalContent, 0, len(sm.Modules))
+func (sm *SimulationManager) GetProposalContents(simState SimulationState) []WeightedProposalContent {
+	wContents := make([]WeightedProposalContent, 0, len(sm.Modules))
 	for _, module := range sm.Modules {
 		wContents = append(wContents, module.ProposalContents(simState)...)
 	}
@@ -75,7 +74,7 @@ func (sm *SimulationManager) GenerateGenesisStates(simState *SimulationState) {
 
 // GenerateParamChanges generates randomized contents for creating params change
 // proposal transactions
-func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []simulation.ParamChange) {
+func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []ParamChange) {
 	r := rand.New(rand.NewSource(seed))
 
 	for _, module := range sm.Modules {
@@ -86,8 +85,8 @@ func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []si
 }
 
 // WeightedOperations returns all the modules' weighted operations of an application
-func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simulation.WeightedOperation {
-	wOps := make([]simulation.WeightedOperation, 0, len(sm.Modules))
+func (sm *SimulationManager) WeightedOperations(simState SimulationState) []WeightedOperation {
+	wOps := make([]WeightedOperation, 0, len(sm.Modules))
 	for _, module := range sm.Modules {
 		wOps = append(wOps, module.WeightedOperations(simState)...)
 	}
@@ -98,15 +97,17 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function
 type SimulationState struct {
-	AppParams    simulation.AppParams
-	Cdc          *codec.Codec                         // application codec
-	Rand         *rand.Rand                           // random number
-	GenState     map[string]json.RawMessage           // genesis state
-	Accounts     []simulation.Account                 // simulation accounts
-	InitialStake int64                                // initial coins per account
-	NumBonded    int64                                // number of initially bonded accounts
-	GenTimestamp time.Time                            // genesis timestamp
-	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
-	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
-	Contents     []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
+	AppParams    AppParams
+	Cdc          *codec.Codec               // application codec
+	Rand         *rand.Rand                 // random number
+	GenState     map[string]json.RawMessage // genesis state
+	Accounts     []Account                  // simulation accounts
+	InitialStake int64                      // initial coins per account
+	NumBonded    int64                      // number of initially bonded accounts
+	GenTimestamp time.Time                  // genesis timestamp
+	UnbondTime   time.Duration              // staking unbond time stored to use it as the slashing maximum evidence duration
+	ParamChanges []ParamChange              // simulated parameter changes from modules
+	Contents     []WeightedProposalContent  // proposal content generator functions with their default weight and app sim key
 }
+
+type AppParams map[string]json.RawMessage

@@ -18,9 +18,9 @@ const OpWeightSubmitCommunitySpendProposal = "op_weight_submit_community_spend_p
 func ProposalContents(k keeper.Keeper) []simulation.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{
-			AppParamsKey:       OpWeightSubmitCommunitySpendProposal,
-			DefaultWeight:      simappparams.DefaultWeightCommunitySpendProposal,
-			ContentSimulatorFn: SimulateCommunityPoolSpendProposalContent(k),
+			appParamsKey:       OpWeightSubmitCommunitySpendProposal,
+			defaultWeight:      simappparams.DefaultWeightCommunitySpendProposal,
+			contentSimulatorFn: SimulateCommunityPoolSpendProposalContent(k),
 		},
 	}
 }

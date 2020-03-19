@@ -153,12 +153,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
+func (AppModule) ProposalContents(simState module.SimulationState) []module.WeightedProposalContent {
 	return nil
 }
 
 // RandomizedParams doesn't create any randomized supply param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []module.ParamChange {
 	return nil
 }
 

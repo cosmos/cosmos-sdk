@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -19,8 +21,8 @@ const (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(r *rand.Rand) []simulation.ParamChange {
-	return []simulation.ParamChange{
+func ParamChanges(r *rand.Rand) []module.ParamChange {
+	return []module.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyInflationRateChange,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenInflationRateChange(r))

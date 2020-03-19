@@ -32,6 +32,7 @@ type ParamChange interface {
 	Subspace() string
 	Key() string
 	SimValue() SimValFn
+	ComposedKey() string
 }
 
 type SimValFn func(r *rand.Rand) string
@@ -41,25 +42,86 @@ type WeightedOperation interface {
 	Op() Operation
 }
 
+// Operation runs a state machine transition, and ensures the transition
+// happened as expected.  The operation could be running and testing a fuzzed
+// transaction, or doing the same for a message.
+//
+// For ease of debugging, an operation returns a descriptive message "action",
+// which details what this fuzzed state machine transition actually did.
+//
+// Operations can optionally provide a list of "FutureOperations" to run later
+// These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
-type OperationMsg interface {
-	Route() string
-	Name() string
-	Comment() string
-	OK() bool
-	Msg() json.RawMessage
-
-	LogEvent(eventLogger func(route, op, evResult string))
-	MustMarshal() json.RawMessage
+// OperationMsg - structure for operation output
+type OperationMsg struct {
+	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
+	Comment string          `json:"comment" yaml:"comment"` // additional comment
+	OK      bool            `json:"ok" yaml:"ok"`           // success
+	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
 }
 
-type FutureOperation interface {
-	BlockHeight() int
-	BlockTime() time.Time
-	Op() Operation
+// NewOperationMsgBasic creates a new operation message from raw input.
+func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
+	return OperationMsg{
+		Route:   route,
+		Name:    name,
+		Comment: comment,
+		OK:      ok,
+		Msg:     msg,
+	}
+}
+
+// NewOperationMsg - create a new operation message from sdk.Msg
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
+	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
+}
+
+// NoOpMsg - create a no-operation message
+func NoOpMsg(route string) OperationMsg {
+	return NewOperationMsgBasic(route, "no-operation", "", false, nil)
+}
+
+// log entry text for this operation msg
+func (om OperationMsg) String() string {
+	out, err := json.Marshal(om)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+
+// MustMarshal Marshals the operation msg, panic on error
+func (om OperationMsg) MustMarshal() json.RawMessage {
+	out, err := json.Marshal(om)
+	if err != nil {
+		panic(err)
+	}
+	return out
+}
+
+// LogEvent adds an event for the events stats
+func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
+	pass := "ok"
+	if !om.OK {
+		pass = "failure"
+	}
+	eventLogger(om.Route, om.Name, pass)
+}
+
+//________________________________________________________________________
+
+// FutureOperation is an operation which will be ran at the beginning of the
+// provided BlockHeight. If both a BlockHeight and BlockTime are specified, it
+// will use the BlockHeight. In the (likely) event that multiple operations
+// are queued at the same block height, they will execute in a FIFO pattern.
+type FutureOperation struct {
+	BlockHeight int
+	BlockTime   time.Time
+	Op          Operation
 }
 
 // AppParams defines a flat JSON of key/values for all possible configurable

@@ -1,14 +1,14 @@
 package simulation
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -16,19 +16,19 @@ import (
 const OpWeightSubmitCommunitySpendProposal = "op_weight_submit_community_spend_proposal"
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents(k keeper.Keeper) []simulation.WeightedProposalContent {
-	return []simulation.WeightedProposalContent{
-		{
-			appParamsKey:       OpWeightSubmitCommunitySpendProposal,
-			defaultWeight:      simappparams.DefaultWeightCommunitySpendProposal,
-			contentSimulatorFn: SimulateCommunityPoolSpendProposalContent(k),
-		},
+func ProposalContents(k keeper.Keeper) []module.WeightedProposalContent {
+	return []module.WeightedProposalContent{
+		simulation.NewWeightedProposalContent(
+			OpWeightSubmitCommunitySpendProposal,
+			simappparams.DefaultWeightCommunitySpendProposal,
+			SimulateCommunityPoolSpendProposalContent(k),
+		),
 	}
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simulation.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []module.Account) govtypes.Content {
+func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) module.ContentSimulatorFn {
+	return func(r *rand.Rand, ctx sdk.Context, accs []module.Account) module.Content {
 		simAccount, _ := module.RandomAcc(r, accs)
 
 		balance := k.GetFeePool(ctx).CommunityPool

@@ -4,26 +4,9 @@ import (
 	"encoding/json"
 	"math/rand"
 	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// Operation runs a state machine transition, and ensures the transition
-// happened as expected.  The operation could be running and testing a fuzzed
-// transaction, or doing the same for a message.
-//
-// For ease of debugging, an operation returns a descriptive message "action",
-// which details what this fuzzed state machine transition actually did.
-//
-// Operations can optionally provide a list of "FutureOperations" to run later
-// These will be ran at the beginning of the corresponding block.
-type Operation func(r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []module.Account, chainID string) (
-	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
 // entry kinds for use within OperationEntry
 const (
@@ -82,63 +65,6 @@ func (oe OperationEntry) MustMarshal() json.RawMessage {
 
 //_____________________________________________________________________
 
-// OperationMsg - structure for operation output
-type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
-	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
-	Comment string          `json:"comment" yaml:"comment"` // additional comment
-	OK      bool            `json:"ok" yaml:"ok"`           // success
-	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
-}
-
-// NewOperationMsgBasic creates a new operation message from raw input.
-func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
-	return OperationMsg{
-		Route:   route,
-		Name:    name,
-		Comment: comment,
-		OK:      ok,
-		Msg:     msg,
-	}
-}
-
-// NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
-	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
-}
-
-// NoOpMsg - create a no-operation message
-func NoOpMsg(route string) OperationMsg {
-	return NewOperationMsgBasic(route, "no-operation", "", false, nil)
-}
-
-// log entry text for this operation msg
-func (om OperationMsg) String() string {
-	out, err := json.Marshal(om)
-	if err != nil {
-		panic(err)
-	}
-	return string(out)
-}
-
-// MustMarshal Marshals the operation msg, panic on error
-func (om OperationMsg) MustMarshal() json.RawMessage {
-	out, err := json.Marshal(om)
-	if err != nil {
-		panic(err)
-	}
-	return out
-}
-
-// LogEvent adds an event for the events stats
-func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
-	pass := "ok"
-	if !om.OK {
-		pass = "failure"
-	}
-	eventLogger(om.Route, om.Name, pass)
-}
-
 // OperationQueue defines an object for a queue of operations
 type OperationQueue map[int][]module.Operation
 
@@ -157,11 +83,11 @@ func queueOperations(queuedOps OperationQueue,
 
 	for _, futureOp := range futureOps {
 		futureOp := futureOp
-		if futureOp.BlockHeight() != 0 {
-			if val, ok := queuedOps[futureOp.BlockHeight()]; ok {
-				queuedOps[futureOp.BlockHeight()] = append(val, futureOp.Op())
+		if futureOp.BlockHeight != 0 {
+			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
+				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)
 			} else {
-				queuedOps[futureOp.BlockHeight()] = []module.Operation{futureOp.Op()}
+				queuedOps[futureOp.BlockHeight] = []module.Operation{futureOp.Op}
 			}
 			continue
 		}
@@ -171,37 +97,13 @@ func queueOperations(queuedOps OperationQueue,
 		index := sort.Search(
 			len(queuedTimeOps),
 			func(i int) bool {
-				return queuedTimeOps[i].BlockTime().After(futureOp.BlockTime())
+				return queuedTimeOps[i].BlockTime.After(futureOp.BlockTime)
 			},
 		)
-		queuedTimeOps = append(queuedTimeOps, FutureOperation{})
+		queuedTimeOps = append(queuedTimeOps, module.FutureOperation{})
 		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
 		queuedTimeOps[index] = futureOp
 	}
-}
-
-//________________________________________________________________________
-
-// FutureOperation is an operation which will be ran at the beginning of the
-// provided BlockHeight. If both a BlockHeight and BlockTime are specified, it
-// will use the BlockHeight. In the (likely) event that multiple operations
-// are queued at the same block height, they will execute in a FIFO pattern.
-type FutureOperation struct {
-	blockHeight int
-	blockTime   time.Time
-	op          module.Operation
-}
-
-func (f FutureOperation) BlockHeight() int {
-	return f.blockHeight
-}
-
-func (f FutureOperation) BlockTime() time.Time {
-	return f.blockTime
-}
-
-func (f FutureOperation) Op() module.Operation {
-	return f.op
 }
 
 //________________________________________________________________________
@@ -230,7 +132,7 @@ func NewWeightedOperation(weight int, op module.Operation) WeightedOperation {
 }
 
 // WeightedOperations is the group of all weighted operations to simulate.
-type WeightedOperations []WeightedOperation
+type WeightedOperations []module.WeightedOperation
 
 func (ops WeightedOperations) totalWeight() int {
 	totalOpWeight := 0

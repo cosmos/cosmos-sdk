@@ -282,7 +282,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			opMsg, futureOps, err := op(r2, app, ctx, accounts, config.ChainID)
 			opMsg.LogEvent(event)
 
-			if !config.Lean || opMsg.OK() {
+			if !config.Lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
 
@@ -326,7 +326,7 @@ func runQueuedOperations(queueOps map[int][]module.Operation,
 		// be changed.
 		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, chainID)
 		opMsg.LogEvent(event)
-		if !lean || opMsg.OK() {
+		if !lean || opMsg.OK {
 			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
 		if err != nil {
@@ -345,14 +345,14 @@ func runQueuedTimeOperations(queueOps []module.FutureOperation,
 	lean bool, chainID string) (numOpsRan int) {
 
 	numOpsRan = 0
-	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime()) {
+	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
 
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queueOps[0].Op()(r, app, ctx, accounts, chainID)
+		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
 		opMsg.LogEvent(event)
-		if !lean || opMsg.OK() {
+		if !lean || opMsg.OK {
 			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}
 		if err != nil {

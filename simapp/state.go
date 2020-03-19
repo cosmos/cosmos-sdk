@@ -72,7 +72,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 // and creates the simulation params
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
-	accs []module.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
+	accs []module.Account, genesisTimestamp time.Time, appParams module.AppParams,
 ) (json.RawMessage, []module.Account) {
 	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState()

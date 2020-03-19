@@ -1,8 +1,9 @@
 package simulation
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -24,7 +25,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+	appParams module.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 
 	var weightMsgSend, weightMsgMultiSend int
@@ -54,33 +55,33 @@ func WeightedOperations(
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
+func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) module.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []module.Account, chainID string,
-	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	) (module.OperationMsg, []module.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return module.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
 		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return module.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		if skip {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return module.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
 		err = sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return module.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return simulation.NewOperationMsg(msg, true, ""), nil, nil
+		return module.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -127,14 +128,14 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
+func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) module.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []module.Account, chainID string,
-	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	) (module.OperationMsg, []module.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return module.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		// random number of inputs/outputs between [1, 3]
@@ -158,10 +159,10 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 			}
 
 			if err != nil {
-				return simulation.NoOpMsg(types.ModuleName), nil, err
+				return module.NoOpMsg(types.ModuleName), nil, err
 			}
 			if skip {
-				return simulation.NoOpMsg(types.ModuleName), nil, nil
+				return module.NoOpMsg(types.ModuleName), nil, nil
 			}
 
 			// set input address in used address map
@@ -211,10 +212,10 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return module.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		return simulation.NewOperationMsg(msg, true, ""), nil, nil
+		return module.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 

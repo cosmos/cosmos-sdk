@@ -46,8 +46,8 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 }
 
 // SetSnapshotDB sets the snapshot store.
-func SetSnapshotStore(s *snapshots.Store) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotStore(s) }
+func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
 }
 
 // SetSnapshotPolicy sets the snapshot policy.

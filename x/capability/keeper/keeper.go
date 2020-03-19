@@ -75,6 +75,43 @@ func (k Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	}
 }
 
+// NewCapability attempts to create a new capability with a given name. If the
+// capability already exists in the in-memory store, an error will be returned.
+// Otherwise, a new capability is created with the current global index. The
+// newly created capability has the module and name tuple set as the initial owner.
+// Finally, the global index is incremented along with forward and reverse indexes
+// set in the in-memory store.
+func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capability, error) {
+	store := ctx.KVStore(sk.storeKey)
+	memStore := ctx.KVStore(sk.memKey)
+
+	if memStore.Has(types.RevCapabilityKey(sk.module, name)) {
+		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
+	}
+
+	// create new capability with the current global index
+	index := types.IndexFromKey(store.Get(types.KeyIndex))
+	cap := types.NewCapabilityKey(index)
+
+	// update capability owner set
+	if err := sk.addOwner(ctx, cap, name); err != nil {
+		return nil, err
+	}
+
+	// increment global index
+	store.Set(types.KeyIndex, types.IndexToKey(index+1))
+
+	// Set the forward mapping between the module and capability tuple and the
+	// capability name in the in-memory store.
+	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
+
+	// Set the reverse mapping between the module and capability name and the
+	// capability in the in-memory store.
+	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
+
+	return cap, nil
+}
+
 // AuthenticateCapability attempts to authenticate a given capability and name
 // from a caller. It allows for a caller to check that a capability does in fact
 // correspond to a particular name. The scoped keeper will lookup the capability
@@ -96,13 +133,31 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capabil
 // it will return an error. Otherwise, it will also set a forward and reverse index
 // for the capability and capability name.
 func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, name string) error {
-	store := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
+	// update capability owner set
+	if err := sk.addOwner(ctx, cap, name); err != nil {
+		return err
+	}
+
 	memStore := ctx.KVStore(sk.memKey)
+
+	// Set the forward mapping between the module and capability tuple and the
+	// capability name in the in-memory store.
+	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
+
+	// Set the reverse mapping between the module and capability name and the
+	// capability in the in-memory store.
+	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
+
+	return nil
+}
+
+func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name string) error {
+	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
 	var capOwners *types.CapabilityOwners
 
-	bz := store.Get(indexKey)
+	bz := prefixStore.Get(indexKey)
 	if len(bz) == 0 {
 		capOwners = types.NewCapabilityOwners()
 	} else {
@@ -114,15 +169,6 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 	}
 
 	// update capability owner set
-	store.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
-
-	// Set the forward mapping between the module and capability tuple and the
-	// capability name in the in-memory store.
-	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
-
-	// Set the reverse mapping between the module and capability name and the
-	// capability in the in-memory store.
-	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
-
+	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
 	return nil
 }

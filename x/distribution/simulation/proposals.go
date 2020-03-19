@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -27,8 +28,8 @@ func ProposalContents(k keeper.Keeper) []simulation.WeightedProposalContent {
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
 func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simulation.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
-		simAccount, _ := simulation.RandomAcc(r, accs)
+	return func(r *rand.Rand, ctx sdk.Context, accs []module.Account) govtypes.Content {
+		simAccount, _ := module.RandomAcc(r, accs)
 
 		balance := k.GetFeePool(ctx).CommunityPool
 		if balance.Empty() {
@@ -36,14 +37,14 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simulation.Conte
 		}
 
 		denomIndex := r.Intn(len(balance))
-		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
+		amount, err := module.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
 		if err != nil {
 			return nil
 		}
 
 		return types.NewCommunityPoolSpendProposal(
-			simulation.RandStringOfLength(r, 10),
-			simulation.RandStringOfLength(r, 100),
+			module.RandStringOfLength(r, 10),
+			module.RandStringOfLength(r, 100),
 			simAccount.Address,
 			sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount)),
 		)

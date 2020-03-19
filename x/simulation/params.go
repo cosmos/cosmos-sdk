@@ -61,7 +61,7 @@ func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{},
 
 // ContentSimulatorFn defines a function type alias for generating random proposal
 // content.
-type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) govtypes.Content
+type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []module.Account) govtypes.Content
 
 // Params define the parameters necessary for running the simulations
 type Params struct {
@@ -77,9 +77,9 @@ type Params struct {
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
-		NumKeys:                   RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
+		NumKeys:                   module.RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
 		EvidenceFraction:          r.Float64(),
-		InitialLivenessWeightings: []int{RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
+		InitialLivenessWeightings: []int{module.RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
 		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}
@@ -93,17 +93,29 @@ type SimValFn func(r *rand.Rand) string
 
 // ParamChange defines the object used for simulating parameter change proposals
 type ParamChange struct {
-	Subspace string
-	Key      string
-	SimValue SimValFn
+	subspace string
+	key      string
+	simValue module.SimValFn
+}
+
+func (spc ParamChange) Subspace() string {
+	return spc.subspace
+}
+
+func (spc ParamChange) Key() string {
+	return spc.key
+}
+
+func (spc ParamChange) SimValue() module.SimValFn {
+	return spc.simValue
 }
 
 // NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key string, simVal SimValFn) ParamChange {
+func NewSimParamChange(subspace, key string, simVal module.SimValFn) module.ParamChange {
 	return ParamChange{
-		Subspace: subspace,
-		Key:      key,
-		SimValue: simVal,
+		subspace: subspace,
+		key:      key,
+		simValue: simVal,
 	}
 }
 

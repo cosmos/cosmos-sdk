@@ -109,5 +109,3 @@ type SimulationState struct {
 	ParamChanges []ParamChange              // simulated parameter changes from modules
 	Contents     []WeightedProposalContent  // proposal content generator functions with their default weight and app sim key
 }
-
-type AppParams map[string]json.RawMessage

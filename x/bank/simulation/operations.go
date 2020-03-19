@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -56,7 +57,7 @@ func WeightedOperations(
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string,
+		accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
@@ -100,7 +101,7 @@ func sendMsgSend(
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount)
 	if !hasNeg {
-		fees, err = simulation.RandomFees(r, ctx, coins)
+		fees, err = module.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
 		}
@@ -129,7 +130,7 @@ func sendMsgSend(
 func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string,
+		accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
@@ -175,7 +176,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 		}
 
 		for o := range outputs {
-			outAddr, _ := simulation.RandomAcc(r, accs)
+			outAddr, _ := module.RandomAcc(r, accs)
 
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
@@ -184,7 +185,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 			} else {
 				// take random subset of remaining coins for output
 				// and update remaining coins
-				outCoins = simulation.RandSubsetCoins(r, totalSentCoins)
+				outCoins = module.RandSubsetCoins(r, totalSentCoins)
 				totalSentCoins = totalSentCoins.Sub(outCoins)
 			}
 
@@ -245,7 +246,7 @@ func sendMsgMultiSend(
 
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
 	if !hasNeg {
-		fees, err = simulation.RandomFees(r, ctx, coins)
+		fees, err = module.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
 		}
@@ -273,15 +274,15 @@ func sendMsgMultiSend(
 // as the transferred amount.
 // nolint: interfacer
 func randomSendFields(
-	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, bk keeper.Keeper, ak types.AccountKeeper,
-) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
+	r *rand.Rand, ctx sdk.Context, accs []module.Account, bk keeper.Keeper, ak types.AccountKeeper,
+) (module.Account, module.Account, sdk.Coins, bool, error) {
 
-	simAccount, _ := simulation.RandomAcc(r, accs)
-	toSimAcc, _ := simulation.RandomAcc(r, accs)
+	simAccount, _ := module.RandomAcc(r, accs)
+	toSimAcc, _ := module.RandomAcc(r, accs)
 
 	// disallow sending money to yourself
 	for simAccount.PubKey.Equals(toSimAcc.PubKey) {
-		toSimAcc, _ = simulation.RandomAcc(r, accs)
+		toSimAcc, _ = module.RandomAcc(r, accs)
 	}
 
 	acc := ak.GetAccount(ctx, simAccount.Address)
@@ -291,7 +292,7 @@ func randomSendFields(
 
 	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
-	sendCoins := simulation.RandSubsetCoins(r, spendable)
+	sendCoins := module.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}

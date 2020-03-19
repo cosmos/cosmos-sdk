@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -80,19 +81,19 @@ func WeightedOperations(
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if !k.GetWithdrawAddrEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, _ := simulation.RandomAcc(r, accs)
-		simToAccount, _ := simulation.RandomAcc(r, accs)
+		simAccount, _ := module.RandomAcc(r, accs)
+		simToAccount, _ := module.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := simulation.RandomFees(r, ctx, spendable)
+		fees, err := module.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -121,9 +122,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-		simAccount, _ := simulation.RandomAcc(r, accs)
+		simAccount, _ := module.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -139,7 +140,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := simulation.RandomFees(r, ctx, spendable)
+		fees, err := module.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -168,7 +169,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
 func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
@@ -181,7 +182,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := module.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
@@ -189,7 +190,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := simulation.RandomFees(r, ctx, spendable)
+		fees, err := module.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -219,15 +220,15 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 // a random account sends a random amount of its funds to the community pool.
 func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
-		funder, _ := simulation.RandomAcc(r, accs)
+		funder, _ := module.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, funder.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fundAmount := simulation.RandSubsetCoins(r, spendable)
+		fundAmount := module.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -239,7 +240,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		coins, hasNeg := spendable.SafeSub(fundAmount)
 		if !hasNeg {
-			fees, err = simulation.RandomFees(r, ctx, coins)
+			fees, err = module.RandomFees(r, ctx, coins)
 			if err != nil {
 				return simulation.NoOpMsg(types.ModuleName), nil, err
 			}

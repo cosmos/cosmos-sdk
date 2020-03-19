@@ -25,9 +25,9 @@ func ProposalContents() []module.WeightedProposalContent {
 }
 
 // SimulateTextProposalContent returns a random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) types.Content {
+func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []module.Account) types.Content {
 	return types.NewTextProposal(
-		simulation.RandStringOfLength(r, 140),
-		simulation.RandStringOfLength(r, 5000),
+		module.RandStringOfLength(r, 140),
+		module.RandStringOfLength(r, 5000),
 	)
 }

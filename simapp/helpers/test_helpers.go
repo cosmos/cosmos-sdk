@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 	"time"
 
@@ -8,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -29,7 +29,7 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
+	memo := module.RandStringOfLength(r, module.RandIntBetween(r, 0, 100))
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing

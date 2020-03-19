@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -46,7 +47,7 @@ func WeightedOperations(
 func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string,
+		accs []module.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
@@ -54,7 +55,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
-		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := module.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
@@ -78,7 +79,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		fees, err := simulation.RandomFees(r, ctx, spendable)
+		fees, err := module.RandomFees(r, ctx, spendable)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}

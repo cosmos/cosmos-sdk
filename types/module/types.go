@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,12 +28,6 @@ type Content interface {
 	String() string
 }
 
-type Account interface {
-	PrivKey() crypto.PrivKey
-	PubKey() crypto.PubKey
-	Address() sdk.AccAddress
-}
-
 type ParamChange interface {
 	Subspace() string
 	Key() string
@@ -51,16 +45,30 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
-type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
-	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
-	Comment string          `json:"comment" yaml:"comment"` // additional comment
-	OK      bool            `json:"ok" yaml:"ok"`           // success
-	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
+type OperationMsg interface {
+	Route() string
+	Name() string
+	Comment() string
+	OK() bool
+	Msg() json.RawMessage
+
+	LogEvent(eventLogger func(route, op, evResult string))
+	MustMarshal() json.RawMessage
 }
 
-type FutureOperation struct {
-	BlockHeight int
-	BlockTime   time.Time
-	Op          Operation
+type FutureOperation interface {
+	BlockHeight() int
+	BlockTime() time.Time
+	Op() Operation
 }
+
+// AppParams defines a flat JSON of key/values for all possible configurable
+// simulation parameters. It might contain: operation weights, simulation parameters
+// and flattened module state parameters (i.e not stored under it's respective module name).
+type AppParams interface {
+	GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator)
+}
+
+type ParamSimulator func(r *rand.Rand)
+
+type SelectOpFn func(r *rand.Rand) Operation

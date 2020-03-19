@@ -5,6 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +48,7 @@ func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 				}
 
 				pc := make(map[string]string)
-				numChanges := simulation.RandIntBetween(r, 1, len(changes))
+				numChanges := module.RandIntBetween(r, 1, len(changes))
 				for i := 0; i < numChanges; i++ {
 					c := changes[r.Intn(len(changes))]
 

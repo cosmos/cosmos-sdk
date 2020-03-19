@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -163,6 +162,6 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations doesn't return any auth module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+func (AppModule) WeightedOperations(_ module.SimulationState) []module.WeightedOperation {
 	return nil
 }

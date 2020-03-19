@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // Simulation parameter constants
@@ -26,7 +25,7 @@ const (
 
 // GenMaxMemoChars randomized MaxMemoChars
 func GenMaxMemoChars(r *rand.Rand) uint64 {
-	return uint64(simulation.RandIntBetween(r, 100, 200))
+	return uint64(module.RandIntBetween(r, 100, 200))
 }
 
 // GenTxSigLimit randomized TxSigLimit
@@ -39,17 +38,17 @@ func GenTxSigLimit(r *rand.Rand) uint64 {
 
 // GenTxSizeCostPerByte randomized TxSizeCostPerByte
 func GenTxSizeCostPerByte(r *rand.Rand) uint64 {
-	return uint64(simulation.RandIntBetween(r, 5, 15))
+	return uint64(module.RandIntBetween(r, 5, 15))
 }
 
 // GenSigVerifyCostED25519 randomized SigVerifyCostED25519
 func GenSigVerifyCostED25519(r *rand.Rand) uint64 {
-	return uint64(simulation.RandIntBetween(r, 500, 1000))
+	return uint64(module.RandIntBetween(r, 500, 1000))
 }
 
 // GenSigVerifyCostSECP256K1 randomized SigVerifyCostSECP256K1
 func GenSigVerifyCostSECP256K1(r *rand.Rand) uint64 {
-	return uint64(simulation.RandIntBetween(r, 500, 1000))
+	return uint64(module.RandIntBetween(r, 500, 1000))
 }
 
 // RandomizedGenState generates a random GenesisState for auth
@@ -110,9 +109,9 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs export
 
 			// Allow for some vesting accounts to vest very quickly while others very slowly.
 			if simState.Rand.Intn(100) < 50 {
-				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
+				endTime = int64(module.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
 			} else {
-				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
+				endTime = int64(module.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
 			}
 
 			bva := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime)

@@ -6,13 +6,32 @@ import (
 )
 
 // nolint
+// DONTCOVER
+
+const (
+	ModuleName  = types.ModuleName
+	StoreKey    = types.StoreKey
+	MemStoreKey = types.MemStoreKey
+)
 
 var (
-	NewCapabilityKey = types.NewCapabilityKey
-	NewKeeper        = keeper.NewKeeper
+	NewKeeper                   = keeper.NewKeeper
+	NewCapabilityKey            = types.NewCapabilityKey
+	RevCapabilityKey            = types.RevCapabilityKey
+	FwdCapabilityKey            = types.FwdCapabilityKey
+	KeyIndex                    = types.KeyIndex
+	KeyPrefixIndexCapability    = types.KeyPrefixIndexCapability
+	ErrCapabilityTaken          = types.ErrCapabilityTaken
+	ErrOwnerClaimed             = types.ErrOwnerClaimed
+	RegisterCodec               = types.RegisterCodec
+	RegisterCapabilityTypeCodec = types.RegisterCapabilityTypeCodec
+	ModuleCdc                   = types.ModuleCdc
+	NewOwner                    = types.NewOwner
+	NewCapabilityOwners         = types.NewCapabilityOwners
 )
 
 type (
-	Capability    = types.Capability
-	CapabilityKey = types.CapabilityKey
+	Capability       = types.Capability
+	CapabilityKey    = types.CapabilityKey
+	CapabilityOwners = types.CapabilityOwners
 )

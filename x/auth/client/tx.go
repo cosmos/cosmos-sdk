@@ -327,8 +327,8 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (au
 
 func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx authtypes.StdTx, err error) {
 	if txBldr.SimulateAndExecute() {
-		if cliCtx.GenerateOnly {
-			return stdTx, errors.New("cannot estimate gas with generate-only")
+		if cliCtx.Offline {
+			return stdTx, errors.New("cannot estimate gas in offline mode")
 		}
 
 		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)

@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,13 +23,18 @@ var (
 
 func TestParseQueryResponse(t *testing.T) {
 	cdc := makeCodec()
-	sdkResBytes := cdc.MustMarshalBinaryBare(uint64(10))
-	gas, err := parseQueryResponse(cdc, sdkResBytes)
-	assert.Equal(t, gas, uint64(10))
-	assert.Nil(t, err)
-	gas, err = parseQueryResponse(cdc, []byte("fuzzy"))
-	assert.Equal(t, gas, uint64(0))
-	assert.Error(t, err)
+	simRes := sdk.SimulationResponse{
+		GasInfo: sdk.GasInfo{GasUsed: 10, GasWanted: 20},
+		Result:  nil,
+	}
+
+	bz := cdc.MustMarshalBinaryBare(simRes)
+	res, err := parseQueryResponse(cdc, bz)
+	require.NoError(t, err)
+	require.Equal(t, 10, int(res.GasInfo.GasUsed))
+
+	res, err = parseQueryResponse(cdc, []byte("fuzzy"))
+	require.Error(t, err)
 }
 
 func TestCalculateGas(t *testing.T) {
@@ -37,9 +42,14 @@ func TestCalculateGas(t *testing.T) {
 	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, []byte) ([]byte, int64, error) {
 		return func(string, []byte) ([]byte, int64, error) {
 			if wantErr {
-				return nil, 0, errors.New("")
+				return nil, 0, errors.New("query failed")
 			}
-			return cdc.MustMarshalBinaryBare(gasUsed), 0, nil
+			simRes := sdk.SimulationResponse{
+				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
+				Result:  nil,
+			}
+
+			return cdc.MustMarshalBinaryBare(simRes), 0, nil
 		}
 	}
 
@@ -54,20 +64,24 @@ func TestCalculateGas(t *testing.T) {
 		args         args
 		wantEstimate uint64
 		wantAdjusted uint64
-		wantErr      bool
+		expPass      bool
 	}{
-		{"error", args{0, true, 1.2}, 0, 0, true},
-		{"adjusted gas", args{10, false, 1.2}, 10, 12, false},
+		{"error", args{0, true, 1.2}, 0, 0, false},
+		{"adjusted gas", args{10, false, 1.2}, 10, 12, true},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(tt.args.queryFuncGasUsed, tt.args.queryFuncWantErr)
-			gotEstimate, gotAdjusted, err := CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
-			assert.Equal(t, err != nil, tt.wantErr)
-			assert.Equal(t, gotEstimate, tt.wantEstimate)
-			assert.Equal(t, gotAdjusted, tt.wantAdjusted)
+			simRes, gotAdjusted, err := CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
+			if tt.expPass {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.Equal(t, simRes.GasInfo.GasUsed, tt.wantEstimate)
+				require.Equal(t, gotAdjusted, tt.wantAdjusted)
+			}
 		})
 	}
 }

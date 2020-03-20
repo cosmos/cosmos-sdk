@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -16,7 +18,7 @@ const keySendEnabled = "sendenabled"
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simtypes.NewSimParamChange(types.ModuleName, keySendEnabled,
+		simulation.NewSimParamChange(types.ModuleName, keySendEnabled,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%v", GenSendEnabled(r))
 			},

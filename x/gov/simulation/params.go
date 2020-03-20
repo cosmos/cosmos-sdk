@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -25,17 +27,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simtypes.NewSimParamChange(types.ModuleName, keyVotingParams,
+		simulation.NewSimParamChange(types.ModuleName, keyVotingParams,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf(`{"voting_period": "%d"}`, GenVotingParamsVotingPeriod(r))
 			},
 		),
-		simtypes.NewSimParamChange(types.ModuleName, keyDepositParams,
+		simulation.NewSimParamChange(types.ModuleName, keyDepositParams,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf(`{"max_deposit_period": "%d"}`, GenDepositParamsDepositPeriod(r))
 			},
 		),
-		simtypes.NewSimParamChange(types.ModuleName, keyTallyParams,
+		simulation.NewSimParamChange(types.ModuleName, keyTallyParams,
 			func(r *rand.Rand) string {
 				changes := []struct {
 					key   string

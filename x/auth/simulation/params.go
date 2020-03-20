@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -20,17 +22,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simtypes.NewSimParamChange(types.ModuleName, keyMaxMemoCharacters,
+		simulation.NewSimParamChange(types.ModuleName, keyMaxMemoCharacters,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenMaxMemoChars(r))
 			},
 		),
-		simtypes.NewSimParamChange(types.ModuleName, keyTxSigLimit,
+		simulation.NewSimParamChange(types.ModuleName, keyTxSigLimit,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenTxSigLimit(r))
 			},
 		),
-		simtypes.NewSimParamChange(types.ModuleName, keyTxSizeCostPerByte,
+		simulation.NewSimParamChange(types.ModuleName, keyTxSizeCostPerByte,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenTxSizeCostPerByte(r))
 			},

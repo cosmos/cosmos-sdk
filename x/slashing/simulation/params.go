@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -20,17 +22,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simtypes.NewSimParamChange(types.ModuleName, keySignedBlocksWindow,
+		simulation.NewSimParamChange(types.ModuleName, keySignedBlocksWindow,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenSignedBlocksWindow(r))
 			},
 		),
-		simtypes.NewSimParamChange(types.ModuleName, keyMinSignedPerWindow,
+		simulation.NewSimParamChange(types.ModuleName, keyMinSignedPerWindow,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenMinSignedPerWindow(r))
 			},
 		),
-		simtypes.NewSimParamChange(types.ModuleName, keySlashFractionDowntime,
+		simulation.NewSimParamChange(types.ModuleName, keySlashFractionDowntime,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenSlashFractionDowntime(r))
 			},

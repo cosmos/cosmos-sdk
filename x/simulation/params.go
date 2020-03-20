@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,8 +68,38 @@ func RandomParams(r *rand.Rand) Params {
 //-----------------------------------------------------------------------------
 // Param change proposals
 
-// SimValFn function to generate the randomized parameter change value
-type SimValFn func(r *rand.Rand) string
+// ParamChange defines the object used for simulating parameter change proposals
+type ParamChange struct {
+	subspace string
+	key      string
+	simValue simulation.SimValFn
+}
+
+func (spc ParamChange) Subspace() string {
+	return spc.subspace
+}
+
+func (spc ParamChange) Key() string {
+	return spc.key
+}
+
+func (spc ParamChange) SimValue() simulation.SimValFn {
+	return spc.simValue
+}
+
+// NewSimParamChange creates a new ParamChange instance
+func NewSimParamChange(subspace, key string, simVal simulation.SimValFn) simulation.ParamChange {
+	return ParamChange{
+		subspace: subspace,
+		key:      key,
+		simValue: simVal,
+	}
+}
+
+// ComposedKey creates a new composed key for the param change proposal
+func (spc ParamChange) ComposedKey() string {
+	return fmt.Sprintf("%s/%s", spc.Subspace(), spc.Key())
+}
 
 //-----------------------------------------------------------------------------
 // Proposal Contents

@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -28,40 +27,14 @@ type Content interface {
 	String() string
 }
 
-// ParamChange defines the object used for simulating parameter change proposals
-type ParamChange struct {
-	subspace string
-	key      string
-	simValue SimValFn
-}
-
-func (spc ParamChange) Subspace() string {
-	return spc.subspace
-}
-
-func (spc ParamChange) Key() string {
-	return spc.key
-}
-
-func (spc ParamChange) SimValue() SimValFn {
-	return spc.simValue
-}
-
-// NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key string, simVal SimValFn) ParamChange {
-	return ParamChange{
-		subspace: subspace,
-		key:      key,
-		simValue: simVal,
-	}
-}
-
-// ComposedKey creates a new composed key for the param change proposal
-func (spc ParamChange) ComposedKey() string {
-	return fmt.Sprintf("%s/%s", spc.Subspace(), spc.Key())
-}
-
 type SimValFn func(r *rand.Rand) string
+
+type ParamChange interface {
+	Subspace() string
+	Key() string
+	SimValue() SimValFn
+	ComposedKey() string
+}
 
 type WeightedOperation interface {
 	Weight() int

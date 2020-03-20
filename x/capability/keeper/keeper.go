@@ -195,6 +195,24 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 	return nil
 }
 
+// GetCapability allows a module to fetch a capability which it previously claimed
+// by name. The module is not allowed to retrieve capabilities which it does not
+// own. If another module claims a capability, the previously owning module will
+// no longer be able to claim it.
+func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (types.Capability, bool) {
+	memStore := ctx.KVStore(sk.memKey)
+
+	bz := memStore.Get(types.RevCapabilityKey(sk.module, name))
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	var cap types.Capability
+	sk.cdc.MustUnmarshalBinaryBare(bz, &cap)
+
+	return cap, true
+}
+
 func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name string) error {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())

@@ -56,7 +56,7 @@ func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
-// Available backends are "os", "file", "test".
+// Available backends are "os", "file", "kwallet", "pass", "test".
 func NewKeyring(
 	appName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {

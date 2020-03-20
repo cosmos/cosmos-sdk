@@ -25,13 +25,14 @@ func TestParseQueryResponse(t *testing.T) {
 	cdc := makeCodec()
 	simRes := sdk.SimulationResponse{
 		GasInfo: sdk.GasInfo{GasUsed: 10, GasWanted: 20},
-		Result:  nil,
+		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 	}
 
 	bz := cdc.MustMarshalBinaryBare(simRes)
 	res, err := parseQueryResponse(cdc, bz)
 	require.NoError(t, err)
 	require.Equal(t, 10, int(res.GasInfo.GasUsed))
+	require.NotNil(t, res.Result)
 
 	res, err = parseQueryResponse(cdc, []byte("fuzzy"))
 	require.Error(t, err)

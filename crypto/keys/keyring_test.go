@@ -208,7 +208,8 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 
 	// Now try to sign data with a secret-less key
 	_, _, err = kb.Sign(n3, p3, d3)
-	require.NotNil(t, err)
+	require.Error(t, err)
+	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
 func TestLazyExportImportKeyRing(t *testing.T) {

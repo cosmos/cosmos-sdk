@@ -327,6 +327,12 @@ func NewSimApp(
 		}
 	}
 
+	// Initialize and seal the capability keeper so all persistent capabilities
+	// are loaded in-memory and prevent any further modules from creating scoped
+	// sub-keepers.
+	ctx := app.BaseApp.NewContext(true, abci.Header{})
+	app.CapabilityKeeper.InitializeAndSeal(ctx)
+
 	return app
 }
 

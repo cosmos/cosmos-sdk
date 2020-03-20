@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
@@ -69,10 +70,53 @@ func (k Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	k.scopedModules[moduleName] = struct{}{}
 
 	return ScopedKeeper{
+		cdc:      k.cdc,
 		storeKey: k.storeKey,
 		memKey:   k.memKey,
 		module:   moduleName,
 	}
+}
+
+// InitializeAndSeal loads all capabilities from the persistent KVStore into the
+// in-memory store and seals the keeper to prevent further modules from creating
+// a scoped keeper. InitializeAndSeal must be called once after the application
+// state is loaded.
+func (k Keeper) InitializeAndSeal(ctx sdk.Context) {
+	if k.sealed {
+		panic("cannot initialize and seal an already sealed capability keeper")
+	}
+
+	memStore := ctx.KVStore(k.memKey)
+	memStoreType := memStore.GetStoreType()
+
+	if memStoreType != sdk.StoreTypeMemory {
+		panic(fmt.Sprintf("invalid memory store type; got %d, expected: %d", memStoreType, sdk.StoreTypeMemory))
+	}
+
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
+	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+
+	// initialize the in-memory store for all persisted capabilities
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		index := types.IndexFromKey(iterator.Key())
+		cap := types.NewCapabilityKey(index)
+
+		var capOwners *types.CapabilityOwners
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), capOwners)
+
+		for _, owner := range capOwners.Owners {
+			// Set the forward mapping between the module and capability tuple and the
+			// capability name in the in-memory store.
+			memStore.Set(types.FwdCapabilityKey(owner.Module, cap), []byte(owner.Name))
+
+			// Set the reverse mapping between the module and capability name and the
+			// capability in the in-memory store.
+			memStore.Set(types.RevCapabilityKey(owner.Module, owner.Name), k.cdc.MustMarshalBinaryBare(cap))
+		}
+	}
+
+	k.sealed = true
 }
 
 // NewCapability attempts to create a new capability with a given name. If the

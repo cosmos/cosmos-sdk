@@ -50,6 +50,7 @@ are now replaced by human-readable expressions. This change can potentially brea
 that parse log messages.
 * (client) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) The `tx encode/decode` commands, due to change on encoding break compatibility with
 older clients.
+* (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
 
 ### API Breaking Changes
 
@@ -87,6 +88,8 @@ resulted in a panic when the tx execution mode was `CheckTx`.
 * (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
 * (crypto/keys/mintkey) [\#5823](https://github.com/cosmos/cosmos-sdk/pull/5823) fix errors handling in UnarmorPubKeyBytes (underlying armoring function's
 return error was not being checked).
+* (crypto/keys) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) Keybase/Keyring `Sign()` methods no longer decode amino signatures
+when method receivers are offline/multisig keys.
 
 ### State Machine Breaking
 

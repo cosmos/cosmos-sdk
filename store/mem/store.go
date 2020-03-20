@@ -1,9 +1,13 @@
 package mem
 
 import (
+	"io"
+
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -27,13 +31,23 @@ func NewStoreWithDB(db *dbm.MemDB) *Store {
 }
 
 // GetStoreType returns the Store's type.
-func (ts *Store) GetStoreType() types.StoreType {
+func (s Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMemory
 }
 
+// CacheWrap cache wraps the underlying store.
+func (s Store) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(s)
+}
+
+// CacheWrapWithTrace implements KVStore.
+func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
+}
+
 // Commit performs a no-op as entries are persistent between commitments.
-func (ts *Store) Commit() (id types.CommitID) { return }
+func (s *Store) Commit() (id types.CommitID) { return }
 
 // nolint
-func (ts *Store) SetPruning(pruning types.PruningOptions) {}
-func (ts *Store) LastCommitID() (id types.CommitID)       { return }
+func (s *Store) SetPruning(pruning types.PruningOptions) {}
+func (s Store) LastCommitID() (id types.CommitID)        { return }

@@ -12,6 +12,9 @@ var ModuleCdc = codec.New()
 // capability module.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Capability)(nil), nil)
+	cdc.RegisterConcrete(&CapabilityKey{}, "cosmos-sdk/CapabilityKey", nil)
+	cdc.RegisterConcrete(Owner{}, "cosmos-sdk/Owner", nil)
+	cdc.RegisterConcrete(&CapabilityOwners{}, "cosmos-sdk/CapabilityOwners", nil)
 }
 
 // RegisterCapabilityTypeCodec registers an external concrete Capability type

@@ -47,8 +47,8 @@ type (
 	}
 )
 
-func NewKeeper(cdc *codec.Codec, storeKey, memKey sdk.StoreKey) Keeper {
-	return Keeper{
+func NewKeeper(cdc *codec.Codec, storeKey, memKey sdk.StoreKey) *Keeper {
+	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		memKey:        memKey,
@@ -60,7 +60,7 @@ func NewKeeper(cdc *codec.Codec, storeKey, memKey sdk.StoreKey) Keeper {
 // ScopeToModule attempts to create and return a ScopedKeeper for a given module
 // by name. It will panic if the keeper is already sealed or if the module name
 // already has a ScopedKeeper.
-func (k Keeper) ScopeToModule(moduleName string) ScopedKeeper {
+func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	if k.sealed {
 		panic("cannot scope to module via a sealed capability keeper")
 	}
@@ -83,7 +83,7 @@ func (k Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 // in-memory store and seals the keeper to prevent further modules from creating
 // a scoped keeper. InitializeAndSeal must be called once after the application
 // state is loaded.
-func (k Keeper) InitializeAndSeal(ctx sdk.Context) {
+func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	if k.sealed {
 		panic("cannot initialize and seal an already sealed capability keeper")
 	}
@@ -92,7 +92,7 @@ func (k Keeper) InitializeAndSeal(ctx sdk.Context) {
 	memStoreType := memStore.GetStoreType()
 
 	if memStoreType != sdk.StoreTypeMemory {
-		panic(fmt.Sprintf("invalid memory store type; got %d, expected: %d", memStoreType, sdk.StoreTypeMemory))
+		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
 	}
 
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
@@ -104,8 +104,8 @@ func (k Keeper) InitializeAndSeal(ctx sdk.Context) {
 		index := types.IndexFromKey(iterator.Key())
 		cap := types.NewCapabilityKey(index)
 
-		var capOwners *types.CapabilityOwners
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), capOwners)
+		var capOwners types.CapabilityOwners
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
 
 		for _, owner := range capOwners.Owners {
 			// Set the forward mapping between the module and capability tuple and the

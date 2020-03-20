@@ -269,6 +269,27 @@ const (
 	StoreTypeMemory
 )
 
+func (st StoreType) String() string {
+	switch st {
+	case StoreTypeMulti:
+		return "StoreTypeMulti"
+
+	case StoreTypeDB:
+		return "StoreTypeDB"
+
+	case StoreTypeIAVL:
+		return "StoreTypeIAVL"
+
+	case StoreTypeTransient:
+		return "StoreTypeTransient"
+
+	case StoreTypeMemory:
+		return "StoreTypeMemory"
+	}
+
+	return "unknown store type"
+}
+
 //----------------------------------------
 // Keys for accessing substores
 

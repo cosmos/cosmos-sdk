@@ -48,5 +48,9 @@ func IndexToKey(index uint64) []byte {
 // IndexFromKey returns an index from a call to IndexToKey for a given capability
 // index.
 func IndexFromKey(key []byte) uint64 {
+	if len(key) == 0 {
+		return 0
+	}
+
 	return binary.LittleEndian.Uint64(key)
 }

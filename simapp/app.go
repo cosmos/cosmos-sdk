@@ -54,6 +54,7 @@ var (
 		supply.AppModuleBasic{},
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
+		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -109,8 +110,9 @@ type SimApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys  map[string]*sdk.KVStoreKey
-	tkeys map[string]*sdk.TransientStoreKey
+	keys    map[string]*sdk.KVStoreKey
+	tkeys   map[string]*sdk.TransientStoreKey
+	memKeys map[string]*sdk.MemoryStoreKey
 
 	// subspaces
 	subspaces map[string]params.Subspace
@@ -118,7 +120,7 @@ type SimApp struct {
 	// keepers
 	AccountKeeper    auth.AccountKeeper
 	BankKeeper       bank.Keeper
-	CapabilityKeeper capability.Keeper
+	CapabilityKeeper *capability.Keeper
 	SupplyKeeper     supply.Keeper
 	StakingKeeper    staking.Keeper
 	SlashingKeeper   slashing.Keeper
@@ -166,6 +168,7 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
+		memKeys:        memKeys,
 		subspaces:      make(map[string]params.Subspace),
 	}
 
@@ -256,6 +259,7 @@ func NewSimApp(
 		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
+		capability.NewAppModule(*app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),
 		supply.NewAppModule(app.SupplyKeeper, app.BankKeeper, app.AccountKeeper),
 		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper),
@@ -401,6 +405,13 @@ func (app *SimApp) GetKey(storeKey string) *sdk.KVStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
+}
+
+// GetMemKey returns the MemoryStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (app *SimApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.

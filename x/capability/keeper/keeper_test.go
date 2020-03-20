@@ -66,6 +66,10 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	suite.Require().Panics(func() {
 		suite.keeper.InitializeAndSeal(suite.ctx)
 	})
+
+	suite.Require().Panics(func() {
+		_ = suite.keeper.ScopeToModule(staking.ModuleName)
+	})
 }
 
 func (suite *KeeperTestSuite) TestNewCapability() {
@@ -78,6 +82,10 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	got, ok := sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
+
+	got, ok = sk.GetCapability(suite.ctx, "invalid")
+	suite.Require().False(ok)
+	suite.Require().Nil(got)
 
 	cap, err = sk.NewCapability(suite.ctx, "transfer")
 	suite.Require().Error(err)
@@ -103,6 +111,30 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().True(sk2.AuthenticateCapability(suite.ctx, cap2, "bond"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap2, "invalid"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap1, "bond"))
+
+	badCap := types.NewCapabilityKey(100)
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
+	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
+}
+
+func (suite *KeeperTestSuite) TestClaimCapability() {
+	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+
+	cap, err := sk1.NewCapability(suite.ctx, "transfer")
+	suite.Require().NoError(err)
+	suite.Require().NotNil(cap)
+
+	suite.Require().Error(sk1.ClaimCapability(suite.ctx, cap, "transfer"))
+	suite.Require().NoError(sk2.ClaimCapability(suite.ctx, cap, "transfer"))
+
+	got, ok := sk1.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap, got)
+
+	got, ok = sk2.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap, got)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

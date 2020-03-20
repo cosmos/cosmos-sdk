@@ -104,7 +104,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		index := types.IndexFromKey(iterator.Key())
 		cap := types.NewCapabilityKey(index)
 
-		var capOwners types.CapabilityOwners
+		var capOwners *types.CapabilityOwners
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
 
 		for _, owner := range capOwners.Owners {
@@ -180,6 +180,8 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capabil
 // it will return an error. Otherwise, it will also set a forward and reverse index
 // for the capability and capability name.
 func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, name string) error {
+	// TODO: Do we need to authenticate the capability against the name first?
+
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {
 		return err
@@ -227,7 +229,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	if len(bz) == 0 {
 		capOwners = types.NewCapabilityOwners()
 	} else {
-		sk.cdc.MustUnmarshalBinaryBare(bz, capOwners)
+		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
 	}
 
 	if err := capOwners.Set(types.NewOwner(sk.module, name)); err != nil {

@@ -58,7 +58,7 @@ func NewSimParamChange(subspace, key string, simVal SimValFn) ParamChange {
 
 // ComposedKey creates a new composed key for the param change proposal
 func (spc ParamChange) ComposedKey() string {
-	return fmt.Sprintf("%s/%s", spc.Subspace, spc.Key)
+	return fmt.Sprintf("%s/%s", spc.Subspace(), spc.Key())
 }
 
 type SimValFn func(r *rand.Rand) string

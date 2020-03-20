@@ -129,7 +129,7 @@ func EnrichWithGas(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs [
 }
 
 // CalculateGas simulates the execution of a transaction and returns
-// the simulation response obtained by the query and the adjusted amount.
+// the simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), cdc *codec.Codec,
 	txBytes []byte, adjustment float64,
@@ -271,8 +271,8 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 	return encoder
 }
 
-// nolint
-// SimulateMsgs simulates the transaction and returns the simulation response and the adjusted value.
+// simulateMsgs simulates the transaction and returns the simulation response and
+// the adjusted gas value.
 func simulateMsgs(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
 	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {

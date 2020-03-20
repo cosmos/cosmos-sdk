@@ -88,7 +88,7 @@ module.exports = {
       }
     },
     footer: {
-      questionsText: "Chat with Cosmos developers on [Riot](https://riot.im/app/#/room/#cosmos-sdk:matrix.org) or reach out on the [SDK Developer Forum](https://forum.cosmos.network/) to learn more.",
+      questionsText: "Chat with Cosmos developers on [Discord](https://discord.gg/W8trcGV) or reach out on the [SDK Developer Forum](https://forum.cosmos.network/) to learn more.",
       logo: "/logo-bw.svg",
       textLink: {
         text: "cosmos.network",

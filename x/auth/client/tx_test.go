@@ -46,7 +46,7 @@ func TestCalculateGas(t *testing.T) {
 			}
 			simRes := sdk.SimulationResponse{
 				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
-				Result:  nil,
+				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
 
 			return cdc.MustMarshalBinaryBare(simRes), 0, nil
@@ -77,10 +77,12 @@ func TestCalculateGas(t *testing.T) {
 			simRes, gotAdjusted, err := CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
 			if tt.expPass {
 				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, tt.wantEstimate)
 				require.Equal(t, gotAdjusted, tt.wantAdjusted)
+				require.NotNil(t, simRes.Result)
+			} else {
+				require.Error(t, err)
+				require.Nil(t, simRes.Result)
 			}
 		})
 	}

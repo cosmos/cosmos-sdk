@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,6 +155,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capabi
 	// capability in the in-memory store.
 	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
 
+	logger(ctx).Info("created new capability", "module", sk.module, "name", name)
 	return cap, nil
 }
 
@@ -192,6 +195,7 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 	// capability in the in-memory store.
 	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
 
+	logger(ctx).Info("claimed capability", "module", sk.module, "name", name, "capability", cap.GetIndex())
 	return nil
 }
 
@@ -233,4 +237,8 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	// update capability owner set
 	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
 	return nil
+}
+
+func logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

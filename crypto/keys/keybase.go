@@ -387,17 +387,13 @@ func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 		}
 	}
 
-	err = kb.db.DeleteSync(addrKey(info.GetAddress()))
-	if err != nil {
-		return err
-	}
+	batch := kb.db.NewBatch()
+	defer batch.Close()
 
-	err = kb.db.DeleteSync(infoKey(name))
-	if err != nil {
-		return err
-	}
+	batch.Delete(addrKey(info.GetAddress()))
+	batch.Delete(infoKey(name))
 
-	return nil
+	return batch.WriteSync()
 }
 
 // Update changes the passphrase with which an already stored key is

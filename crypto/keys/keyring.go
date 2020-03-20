@@ -221,7 +221,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return DecodeSignature(info, msg, kb.input)
+		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
 	}
 
 	sig, err = priv.Sign(msg)

@@ -1,11 +1,6 @@
 package keys
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"os"
-
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -278,31 +273,4 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err
 	}
 
 	return sig, priv.PubKey(), nil
-}
-
-// DecodeSignature decodes a an length-prefixed binary signature from standard input
-// and return it as a byte slice.
-func DecodeSignature(info Info, msg []byte, input io.Reader) (sig []byte, pub tmcrypto.PubKey, err error) {
-	_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	buf := bufio.NewReader(input)
-	_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// will block until user inputs the signature
-	signed, err := buf.ReadString('\n')
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := CryptoCdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to decode signature")
-	}
-
-	return sig, info.GetPubKey(), nil
 }

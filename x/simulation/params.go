@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -35,13 +33,6 @@ var (
 		{0, 3, 99},
 	})
 )
-
-// ParamSimulator creates a parameter value from a source of random number
-type ParamSimulator func(r *rand.Rand)
-
-// ContentSimulatorFn defines a function type alias for generating random proposal
-// content.
-type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content
 
 // Params define the parameters necessary for running the simulations
 type Params struct {

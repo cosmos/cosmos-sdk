@@ -31,6 +31,8 @@ var (
 )
 
 type (
+	Keeper           = keeper.Keeper
+	ScopedKeeper     = keeper.ScopedKeeper
 	Capability       = types.Capability
 	CapabilityKey    = types.CapabilityKey
 	CapabilityOwners = types.CapabilityOwners

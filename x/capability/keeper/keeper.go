@@ -180,8 +180,6 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capabil
 // it will return an error. Otherwise, it will also set a forward and reverse index
 // for the capability and capability name.
 func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, name string) error {
-	// TODO: Do we need to authenticate the capability against the name first?
-
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {
 		return err

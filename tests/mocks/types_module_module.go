@@ -6,14 +6,16 @@ package mocks
 
 import (
 	json "encoding/json"
-	context "github.com/cosmos/cosmos-sdk/client/context"
-	codec "github.com/cosmos/cosmos-sdk/codec"
-	types "github.com/cosmos/cosmos-sdk/types"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	mux "github.com/gorilla/mux"
 	cobra "github.com/spf13/cobra"
 	types0 "github.com/tendermint/tendermint/abci/types"
-	reflect "reflect"
+
+	context "github.com/cosmos/cosmos-sdk/client/context"
+	codec "github.com/cosmos/cosmos-sdk/codec"
+	types "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface

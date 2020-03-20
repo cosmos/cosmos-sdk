@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/stretchr/testify/require"
 )
 
 var k, v = []byte("hello"), []byte("world")

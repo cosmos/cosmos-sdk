@@ -4,11 +4,10 @@ package simulation
 
 import (
 	"fmt"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 const (
@@ -20,24 +19,24 @@ const (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(r *rand.Rand) []simulation2.ParamChange {
-	return []simulation2.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyInflationRateChange,
+func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{
+		simtypes.NewSimParamChange(types.ModuleName, keyInflationRateChange,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenInflationRateChange(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyInflationMax,
+		simtypes.NewSimParamChange(types.ModuleName, keyInflationMax,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenInflationMax(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyInflationMin,
+		simtypes.NewSimParamChange(types.ModuleName, keyInflationMin,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenInflationMin(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyGoalBonded,
+		simtypes.NewSimParamChange(types.ModuleName, keyGoalBonded,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenGoalBonded(r))
 			},

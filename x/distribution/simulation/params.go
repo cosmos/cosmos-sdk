@@ -8,7 +8,6 @@ import (
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 const (
@@ -21,17 +20,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyCommunityTax,
+		simtypes.NewSimParamChange(types.ModuleName, keyCommunityTax,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenCommunityTax(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyBaseProposerReward,
+		simtypes.NewSimParamChange(types.ModuleName, keyBaseProposerReward,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBaseProposerReward(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyBonusProposerReward,
+		simtypes.NewSimParamChange(types.ModuleName, keyBonusProposerReward,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBonusProposerReward(r))
 			},

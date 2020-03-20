@@ -29,7 +29,8 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 	// set some values on the account and save it
 	newSequence := uint64(20)
-	acc.SetSequence(newSequence)
+	err := acc.SetSequence(newSequence)
+	require.NoError(t, err)
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	// check the new values
@@ -50,8 +51,10 @@ func TestAccountMapperRemoveAccount(t *testing.T) {
 	accSeq1 := uint64(20)
 	accSeq2 := uint64(40)
 
-	acc1.SetSequence(accSeq1)
-	acc2.SetSequence(accSeq2)
+	err := acc1.SetSequence(accSeq1)
+	require.NoError(t, err)
+	err = acc2.SetSequence(accSeq2)
+	require.NoError(t, err)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	app.AccountKeeper.SetAccount(ctx, acc2)
 

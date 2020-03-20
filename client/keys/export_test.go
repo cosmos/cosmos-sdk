@@ -27,7 +27,7 @@ func Test_runExportCmd(t *testing.T) {
 	require.NoError(t, err)
 	if !runningUnattended {
 		t.Cleanup(func() {
-			kb.Delete("keyname1", "", false)
+			kb.Delete("keyname1", "", false) // nolint:errcheck
 		})
 	}
 

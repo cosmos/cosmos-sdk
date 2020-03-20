@@ -340,8 +340,7 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 		return
 	}
 
-	kb.db.Set(infoKey(name), infoBytes)
-	return nil
+	return kb.db.Set(infoKey(name), infoBytes)
 }
 
 // ImportPubKey imports ASCII-armored public keys. Store a new Info object holding
@@ -388,10 +387,13 @@ func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 		}
 	}
 
-	kb.db.DeleteSync(addrKey(info.GetAddress()))
-	kb.db.DeleteSync(infoKey(name))
+	batch := kb.db.NewBatch()
+	defer batch.Close()
 
-	return nil
+	batch.Delete(addrKey(info.GetAddress()))
+	batch.Delete(infoKey(name))
+
+	return batch.WriteSync()
 }
 
 // Update changes the passphrase with which an already stored key is

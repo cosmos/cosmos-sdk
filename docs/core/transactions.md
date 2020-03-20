@@ -6,7 +6,7 @@ order: 2
 
 `Transactions` are objects created by end-users to trigger state changes in the application. {synopsis}
 
-## Pre-requisite Readings {hide}
+## Pre-requisite Readings
 
 * [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 

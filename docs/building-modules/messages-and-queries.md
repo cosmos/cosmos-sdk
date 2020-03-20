@@ -6,7 +6,7 @@ order: 3
 
 `Message`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `keeper`s and `querier`s, exist to process `message`s and `queries`. {synopsis}
 
-## Pre-requisite Readings {hide}
+## Pre-requisite Readings
 
 - [Introduction to SDK Modules](./intro.md) {prereq}
 

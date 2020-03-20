@@ -6,7 +6,7 @@ order: 2
 
 This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. The query will be referred to as `Query`. {synopsis}
 
-## Pre-requisite Readings {hide}
+## Pre-requisite Readings
 
 * [Introduction to Interfaces](./interfaces-intro.md) {prereq}
 

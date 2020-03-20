@@ -6,7 +6,7 @@ order: 3
 
 This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli). {synopsis}
 
-## Pre-requisite Readings {hide}
+## Pre-requisite Readings
 
 * [Lifecycle of a Query](./query-lifecycle.md) {prereq}
 

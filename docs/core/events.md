@@ -6,7 +6,7 @@ order: 7
 
 `Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. {synopsis}
 
-## Pre-Requisite Readings {hide}
+## Pre-requisite Readings
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 

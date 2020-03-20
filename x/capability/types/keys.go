@@ -1,8 +1,9 @@
 package types
 
 import (
-	"encoding/binary"
 	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -40,17 +41,11 @@ func FwdCapabilityKey(module string, cap Capability) []byte {
 
 // IndexToKey returns bytes to be used as a key for a given capability index.
 func IndexToKey(index uint64) []byte {
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, index)
-	return buf
+	return sdk.Uint64ToBigEndian(index)
 }
 
 // IndexFromKey returns an index from a call to IndexToKey for a given capability
 // index.
 func IndexFromKey(key []byte) uint64 {
-	if len(key) == 0 {
-		return 0
-	}
-
-	return binary.LittleEndian.Uint64(key)
+	return sdk.BigEndianToUint64(key)
 }

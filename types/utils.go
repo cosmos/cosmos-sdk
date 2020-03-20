@@ -49,6 +49,16 @@ func Uint64ToBigEndian(i uint64) []byte {
 	return b
 }
 
+// BigEndianToUint64 returns an uint64 from big endian encoded bytes. If encoding
+// is empty, zero is returned.
+func BigEndianToUint64(bz []byte) uint64 {
+	if len(bz) == 0 {
+		return 0
+	}
+
+	return binary.BigEndian.Uint64(bz)
+}
+
 // Slight modification of the RFC3339Nano but it right pads all zeros and drops the time zone info
 const SortableTimeFormat = "2006-01-02T15:04:05.000000000"
 

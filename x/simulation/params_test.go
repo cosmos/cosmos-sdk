@@ -7,9 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestParamChange(t *testing.T) {

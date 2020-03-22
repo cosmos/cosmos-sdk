@@ -44,7 +44,7 @@ func QueryClientState(
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyClientState(clientID),
+		Data:  ibctypes.KeyClientState(),
 		Prove: prove,
 	}
 
@@ -72,7 +72,7 @@ func QueryConsensusState(
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyConsensusState(clientID, height),
+		Data:  ibctypes.KeyConsensusState(height),
 		Prove: prove,
 	}
 

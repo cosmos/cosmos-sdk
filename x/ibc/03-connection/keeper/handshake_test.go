@@ -205,8 +205,9 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := queryProof(suite.chainB, connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientIDA, uint64(consensusHeight))
+			consensusKey := append([]byte(testClientIDA+"/"), ibctypes.KeyConsensusState(testClientIDA, uint64(consensusHeight))...)
 			proofConsensus, _ := queryProof(suite.chainB, consensusKey)
+			fmt.Println(proofConsensus)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), testConnectionIDA, tc.version, proofTry, proofConsensus,

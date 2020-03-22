@@ -42,7 +42,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetClientState gets a particular client from the store
 func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
 	store := k.clientStore(ctx, clientID)
-	bz := store.Get(ibctypes.KeyClientState(clientID))
+	bz := store.Get(ibctypes.KeyClientState())
 	if bz == nil {
 		return nil, false
 	}
@@ -56,13 +56,13 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
 	store := k.clientStore(ctx, clientState.GetID())
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
-	store.Set(ibctypes.KeyClientState(clientState.GetID()), bz)
+	store.Set(ibctypes.KeyClientState(), bz)
 }
 
 // GetClientType gets the consensus type for a specific client
 func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.ClientType, bool) {
 	store := k.clientStore(ctx, clientID)
-	bz := store.Get(ibctypes.KeyClientType(clientID))
+	bz := store.Get(ibctypes.KeyClientType())
 	if bz == nil {
 		return 0, false
 	}
@@ -73,13 +73,13 @@ func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.Client
 // SetClientType sets the specific client consensus type to the provable store
 func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType exported.ClientType) {
 	store := k.clientStore(ctx, clientID)
-	store.Set(ibctypes.KeyClientType(clientID), []byte{byte(clientType)})
+	store.Set(ibctypes.KeyClientType(), []byte{byte(clientType)})
 }
 
 // GetClientConsensusState gets the stored consensus state from a client at a given height.
 func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
 	store := k.clientStore(ctx, clientID)
-	bz := store.Get(ibctypes.KeyConsensusState(clientID, height))
+	bz := store.Get(ibctypes.KeyConsensusState(height))
 	if bz == nil {
 		return nil, false
 	}
@@ -94,14 +94,14 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.clientStore(ctx, clientID)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
-	store.Set(ibctypes.KeyConsensusState(clientID, height), bz)
+	store.Set(ibctypes.KeyConsensusState(height), bz)
 }
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular
 // client at the given height
 func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {
 	store := k.clientStore(ctx, clientID)
-	return store.Has(ibctypes.KeyConsensusState(clientID, height))
+	return store.Has(ibctypes.KeyConsensusState(height))
 }
 
 // GetLatestClientConsensusState gets the latest ConsensusState stored for a given client

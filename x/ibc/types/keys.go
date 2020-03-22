@@ -46,36 +46,36 @@ func KeyPrefixBytes(prefix int) []byte {
 
 // ClientStatePath takes an Identifier and returns a Path under which to store a
 // particular client state
-func ClientStatePath(clientID string) string {
-	return fmt.Sprintf("clientState/%s", clientID)
+func ClientStatePath() string {
+	return "clientState"
 }
 
 // ClientTypePath takes an Identifier and returns Path under which to store the
 // type of a particular client.
-func ClientTypePath(clientID string) string {
-	return fmt.Sprintf("clientType/%s", clientID)
+func ClientTypePath() string {
+	return "clientType"
 }
 
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
-func ConsensusStatePath(clientID string, height uint64) string {
-	return fmt.Sprintf("consensusState/%s/%d", clientID, height)
+func ConsensusStatePath(height uint64) string {
+	return fmt.Sprintf("consensusState/%d", height)
 }
 
 // KeyClientState returns the store key for a particular client state
-func KeyClientState(clientID string) []byte {
-	return []byte(ClientStatePath(clientID))
+func KeyClientState() []byte {
+	return []byte(ClientStatePath())
 }
 
 // KeyClientType returns the store key for type of a particular client
-func KeyClientType(clientID string) []byte {
-	return []byte(ClientTypePath(clientID))
+func KeyClientType() []byte {
+	return []byte(ClientTypePath())
 }
 
 // KeyConsensusState returns the store key for the consensus state of a particular
 // client
-func KeyConsensusState(clientID string, height uint64) []byte {
-	return []byte(ConsensusStatePath(clientID, height))
+func KeyConsensusState(height uint64) []byte {
+	return []byte(ConsensusStatePath(height))
 }
 
 // ICS03

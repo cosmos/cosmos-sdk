@@ -11,7 +11,7 @@ import (
 func TestParseSubmitProposalFlags(t *testing.T) {
 	okJSON, err := ioutil.TempFile("", "proposal")
 	require.Nil(t, err, "unexpected error")
-	okJSON.WriteString(`
+	_, err = okJSON.WriteString(`
 {
   "title": "Test Proposal",
   "description": "My awesome proposal",
@@ -19,6 +19,7 @@ func TestParseSubmitProposalFlags(t *testing.T) {
   "deposit": "1000test"
 }
 `)
+	require.NoError(t, err)
 
 	badJSON, err := ioutil.TempFile("", "proposal")
 	require.Nil(t, err, "unexpected error")

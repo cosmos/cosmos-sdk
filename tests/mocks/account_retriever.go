@@ -5,9 +5,8 @@
 package mocks
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockNodeQuerier is a mock of NodeQuerier interface

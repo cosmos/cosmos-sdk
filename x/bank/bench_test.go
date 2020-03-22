@@ -48,7 +48,8 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 			panic("something is broken in checking transaction")
 		}
 
-		benchmarkApp.Deliver(txs[i])
+		_, _, err = benchmarkApp.Deliver(txs[i])
+		require.NoError(b, err)
 		benchmarkApp.EndBlock(abci.RequestEndBlock{Height: height})
 		benchmarkApp.Commit()
 		height++
@@ -87,7 +88,8 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 			panic("something is broken in checking transaction")
 		}
 
-		benchmarkApp.Deliver(txs[i])
+		_, _, err = benchmarkApp.Deliver(txs[i])
+		require.NoError(b, err)
 		benchmarkApp.EndBlock(abci.RequestEndBlock{Height: height})
 		benchmarkApp.Commit()
 		height++

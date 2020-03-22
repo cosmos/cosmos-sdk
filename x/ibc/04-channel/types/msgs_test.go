@@ -476,7 +476,7 @@ func TestMsgPacketGetSignBytes(t *testing.T) {
 	SubModuleCdc.RegisterConcrete(validPacketT{}, "test/validPacketT", nil)
 	res := msg.GetSignBytes()
 
-	expected := `{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`
+	expected := `{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`
 	require.Equal(t, expected, string(res))
 }
 

@@ -14,15 +14,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, string, log.Logger, bool, error) {
+func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
 	if !FlagEnabledValue {
-		return simulation.Config{}, nil, "", nil, true, nil
+		return simtypes.Config{}, nil, "", nil, true, nil
 	}
 
 	config := NewConfigFromFlags()
@@ -37,12 +36,12 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 
 	dir, err := ioutil.TempDir("", dirPrefix)
 	if err != nil {
-		return simulation.Config{}, nil, "", nil, false, err
+		return simtypes.Config{}, nil, "", nil, false, err
 	}
 
 	db, err := sdk.NewLevelDB(dbName, dir)
 	if err != nil {
-		return simulation.Config{}, nil, "", nil, false, err
+		return simtypes.Config{}, nil, "", nil, false, err
 	}
 
 	return config, db, dir, logger, false, nil
@@ -50,7 +49,7 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app App, cdc *codec.Codec, config simulation.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app App, cdc *codec.Codec, config simtypes.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -73,7 +72,7 @@ func SimulationOperations(app App, cdc *codec.Codec, config simulation.Config) [
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
 func CheckExportSimulation(
-	app App, config simulation.Config, params simulation.Params,
+	app App, config simtypes.Config, params simtypes.Params,
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")

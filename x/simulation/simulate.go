@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -18,15 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// AppStateFn returns the app state json bytes and the genesis accounts
-type AppStateFn func(r *rand.Rand, accs []simulation.Account, config Config) (
-	appState json.RawMessage, accounts []simulation.Account, chainId string, genesisTimestamp time.Time,
-)
-
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
-	appStateFn AppStateFn, config Config,
+	appStateFn simulation.AppStateFn, config simulation.Config,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
@@ -46,8 +40,8 @@ func initChain(
 // TODO: split this monster function up
 func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
-	appStateFn AppStateFn, ops WeightedOperations,
-	blackListedAccs map[string]bool, config Config,
+	appStateFn simulation.AppStateFn, ops WeightedOperations,
+	blackListedAccs map[string]bool, config simulation.Config,
 ) (stopEarly bool, exportedParams Params, err error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -59,7 +53,7 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := simulation.RandomAccounts(r, params.NumKeys)
+	accs := simulation.RandomAccounts(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
@@ -242,7 +236,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
-	logWriter LogWriter, config Config) blockSimFn {
+	logWriter LogWriter, config simulation.Config) blockSimFn {
 
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0

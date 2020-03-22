@@ -144,3 +144,17 @@ func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{},
 type ParamSimulator func(r *rand.Rand)
 
 type SelectOpFn func(r *rand.Rand) Operation
+
+// AppStateFn returns the app state json bytes and the genesis accounts
+type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
+	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
+)
+
+type Params interface {
+	PastEvidenceFraction() float64
+	NumKeys() int
+	EvidenceFraction() float64
+	InitialLivenessWeightings() []int
+	LivenessTransitionMatrix() TransitionMatrix
+	BlockSizeTransitionMatrix() TransitionMatrix
+}

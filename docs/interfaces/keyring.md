@@ -40,14 +40,17 @@ v0.38.1. It stores the keyring encrypted within the apps configuration directory
 keyring will request a password each time it is accessed, which may occur multiple
 times in a single command resulting in repeated password prompts. If using bash scripts
 to execute commands using the `file` option you may want to utilize the following format
-for multiple prompts (assuming that keyring's password in stored in the `$KEYPASSWD`
-environment variable):
+for multiple prompts:
 
 ```sh
-$ gaiacli config keyring-backend file         # use file backend
-$ echo "${KEYPASSWD}" | gaiacli keys add me   # add the key 'me'
-$ echo -e "${KEYPASSWD}\n${KEYPASSWD}\n${KEYPASSWD}" | gaiad collect-gentxs # multiple prompts
+$ gaiacli config keyring-backend file                                               # use file backend
+$ (echo '1234567890'; echo '1234567890') | gaiacli keys add me                      # add the key 'me'
+$ (echo '1234567890'; echo '1234567890'; echo '1234567890') | gaiad collect-gentxs  # multiple prompts
 ```
+
+::: tip
+The first time you add a key to an empty keyring, you will be prompted to type the password twice.
+:::
 
 ## The 'pass' backend
 

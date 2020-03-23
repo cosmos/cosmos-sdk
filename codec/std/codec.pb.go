@@ -13,6 +13,8 @@ import (
 	types3 "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	github_com_cosmos_cosmos_sdk_x_gov_types "github.com/cosmos/cosmos-sdk/x/gov/types"
 	types4 "github.com/cosmos/cosmos-sdk/x/gov/types"
+	github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	types7 "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	proposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	github_com_cosmos_cosmos_sdk_x_supply_exported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 	types2 "github.com/cosmos/cosmos-sdk/x/supply/types"
@@ -572,6 +574,448 @@ func (*Content) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+type ClientState struct {
+	// sum defines a set of all acceptable concrete ClientState implementations.
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*ClientState_Tendermint
+	Sum isClientState_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *ClientState) Reset()         { *m = ClientState{} }
+func (m *ClientState) String() string { return proto.CompactTextString(m) }
+func (*ClientState) ProtoMessage()    {}
+func (*ClientState) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daf09dc2dfa19bb4, []int{7}
+}
+func (m *ClientState) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClientState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClientState.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClientState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientState.Merge(m, src)
+}
+func (m *ClientState) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClientState) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientState.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClientState proto.InternalMessageInfo
+
+type isClientState_Sum interface {
+	isClientState_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type ClientState_Tendermint struct {
+	Tendermint *types7.ClientState `protobuf:"bytes,1,opt,name=tendermint,proto3,oneof" json:"tendermint,omitempty"`
+}
+
+func (*ClientState_Tendermint) isClientState_Sum() {}
+
+func (m *ClientState) GetSum() isClientState_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *ClientState) GetTendermint() *types7.ClientState {
+	if x, ok := m.GetSum().(*ClientState_Tendermint); ok {
+		return x.Tendermint
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ClientState) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*ClientState_Tendermint)(nil),
+	}
+}
+
+type ConsensusState struct {
+	// sum defines a set of all acceptable concrete ClientState implementations.
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*ConsensusState_Tendermint
+	Sum isConsensusState_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *ConsensusState) Reset()         { *m = ConsensusState{} }
+func (m *ConsensusState) String() string { return proto.CompactTextString(m) }
+func (*ConsensusState) ProtoMessage()    {}
+func (*ConsensusState) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daf09dc2dfa19bb4, []int{8}
+}
+func (m *ConsensusState) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ConsensusState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ConsensusState.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ConsensusState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConsensusState.Merge(m, src)
+}
+func (m *ConsensusState) XXX_Size() int {
+	return m.Size()
+}
+func (m *ConsensusState) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConsensusState.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConsensusState proto.InternalMessageInfo
+
+type isConsensusState_Sum interface {
+	isConsensusState_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type ConsensusState_Tendermint struct {
+	Tendermint *types7.ConsensusState `protobuf:"bytes,1,opt,name=tendermint,proto3,oneof" json:"tendermint,omitempty"`
+}
+
+func (*ConsensusState_Tendermint) isConsensusState_Sum() {}
+
+func (m *ConsensusState) GetSum() isConsensusState_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *ConsensusState) GetTendermint() *types7.ConsensusState {
+	if x, ok := m.GetSum().(*ConsensusState_Tendermint); ok {
+		return x.Tendermint
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ConsensusState) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*ConsensusState_Tendermint)(nil),
+	}
+}
+
+type Misbehaviour struct {
+	// sum defines a set of all acceptable concrete ClientState implementations.
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*Misbehaviour_Tendermint
+	Sum isMisbehaviour_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *Misbehaviour) Reset()         { *m = Misbehaviour{} }
+func (m *Misbehaviour) String() string { return proto.CompactTextString(m) }
+func (*Misbehaviour) ProtoMessage()    {}
+func (*Misbehaviour) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daf09dc2dfa19bb4, []int{9}
+}
+func (m *Misbehaviour) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Misbehaviour) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Misbehaviour.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Misbehaviour) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Misbehaviour.Merge(m, src)
+}
+func (m *Misbehaviour) XXX_Size() int {
+	return m.Size()
+}
+func (m *Misbehaviour) XXX_DiscardUnknown() {
+	xxx_messageInfo_Misbehaviour.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Misbehaviour proto.InternalMessageInfo
+
+type isMisbehaviour_Sum interface {
+	isMisbehaviour_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Misbehaviour_Tendermint struct {
+	Tendermint *types7.Evidence `protobuf:"bytes,1,opt,name=tendermint,proto3,oneof" json:"tendermint,omitempty"`
+}
+
+func (*Misbehaviour_Tendermint) isMisbehaviour_Sum() {}
+
+func (m *Misbehaviour) GetSum() isMisbehaviour_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *Misbehaviour) GetTendermint() *types7.Evidence {
+	if x, ok := m.GetSum().(*Misbehaviour_Tendermint); ok {
+		return x.Tendermint
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Misbehaviour) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*Misbehaviour_Tendermint)(nil),
+	}
+}
+
+type Header struct {
+	// sum defines a set of all acceptable concrete ClientState implementations.
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*Header_Tendermint
+	Sum isHeader_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *Header) Reset()         { *m = Header{} }
+func (m *Header) String() string { return proto.CompactTextString(m) }
+func (*Header) ProtoMessage()    {}
+func (*Header) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daf09dc2dfa19bb4, []int{10}
+}
+func (m *Header) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Header) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Header.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Header) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Header.Merge(m, src)
+}
+func (m *Header) XXX_Size() int {
+	return m.Size()
+}
+func (m *Header) XXX_DiscardUnknown() {
+	xxx_messageInfo_Header.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Header proto.InternalMessageInfo
+
+type isHeader_Sum interface {
+	isHeader_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Header_Tendermint struct {
+	Tendermint *types7.Header `protobuf:"bytes,1,opt,name=tendermint,proto3,oneof" json:"tendermint,omitempty"`
+}
+
+func (*Header_Tendermint) isHeader_Sum() {}
+
+func (m *Header) GetSum() isHeader_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *Header) GetTendermint() *types7.Header {
+	if x, ok := m.GetSum().(*Header_Tendermint); ok {
+		return x.Tendermint
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Header) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*Header_Tendermint)(nil),
+	}
+}
+
+type MsgCreateClient struct {
+	// Types that are valid to be assigned to Sum:
+	//	*MsgCreateClient_Tendermint
+	Sum isMsgCreateClient_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *MsgCreateClient) Reset()         { *m = MsgCreateClient{} }
+func (m *MsgCreateClient) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClient) ProtoMessage()    {}
+func (*MsgCreateClient) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daf09dc2dfa19bb4, []int{11}
+}
+func (m *MsgCreateClient) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateClient.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClient.Merge(m, src)
+}
+func (m *MsgCreateClient) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateClient) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClient.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateClient proto.InternalMessageInfo
+
+type isMsgCreateClient_Sum interface {
+	isMsgCreateClient_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type MsgCreateClient_Tendermint struct {
+	Tendermint *types7.MsgCreateClient `protobuf:"bytes,1,opt,name=tendermint,proto3,oneof" json:"tendermint,omitempty"`
+}
+
+func (*MsgCreateClient_Tendermint) isMsgCreateClient_Sum() {}
+
+func (m *MsgCreateClient) GetSum() isMsgCreateClient_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *MsgCreateClient) GetTendermint() *types7.MsgCreateClient {
+	if x, ok := m.GetSum().(*MsgCreateClient_Tendermint); ok {
+		return x.Tendermint
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*MsgCreateClient) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*MsgCreateClient_Tendermint)(nil),
+	}
+}
+
+type MsgUpdateClient struct {
+	// sum defines a set of all acceptable concrete ClientState implementations.
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*MsgUpdateClient_Tendermint
+	Sum isMsgUpdateClient_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *MsgUpdateClient) Reset()         { *m = MsgUpdateClient{} }
+func (m *MsgUpdateClient) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateClient) ProtoMessage()    {}
+func (*MsgUpdateClient) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daf09dc2dfa19bb4, []int{12}
+}
+func (m *MsgUpdateClient) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateClient.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateClient.Merge(m, src)
+}
+func (m *MsgUpdateClient) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateClient) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateClient.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateClient proto.InternalMessageInfo
+
+type isMsgUpdateClient_Sum interface {
+	isMsgUpdateClient_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type MsgUpdateClient_Tendermint struct {
+	Tendermint *types7.MsgUpdateClient `protobuf:"bytes,1,opt,name=tendermint,proto3,oneof" json:"tendermint,omitempty"`
+}
+
+func (*MsgUpdateClient_Tendermint) isMsgUpdateClient_Sum() {}
+
+func (m *MsgUpdateClient) GetSum() isMsgUpdateClient_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *MsgUpdateClient) GetTendermint() *types7.MsgUpdateClient {
+	if x, ok := m.GetSum().(*MsgUpdateClient_Tendermint); ok {
+		return x.Tendermint
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*MsgUpdateClient) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*MsgUpdateClient_Tendermint)(nil),
+	}
+}
+
 func init() {
 	proto.RegisterType((*Account)(nil), "cosmos_sdk.codec.std.v1.Account")
 	proto.RegisterType((*Supply)(nil), "cosmos_sdk.codec.std.v1.Supply")
@@ -580,67 +1024,87 @@ func init() {
 	proto.RegisterType((*MsgSubmitProposal)(nil), "cosmos_sdk.codec.std.v1.MsgSubmitProposal")
 	proto.RegisterType((*Proposal)(nil), "cosmos_sdk.codec.std.v1.Proposal")
 	proto.RegisterType((*Content)(nil), "cosmos_sdk.codec.std.v1.Content")
+	proto.RegisterType((*ClientState)(nil), "cosmos_sdk.codec.std.v1.ClientState")
+	proto.RegisterType((*ConsensusState)(nil), "cosmos_sdk.codec.std.v1.ConsensusState")
+	proto.RegisterType((*Misbehaviour)(nil), "cosmos_sdk.codec.std.v1.Misbehaviour")
+	proto.RegisterType((*Header)(nil), "cosmos_sdk.codec.std.v1.Header")
+	proto.RegisterType((*MsgCreateClient)(nil), "cosmos_sdk.codec.std.v1.MsgCreateClient")
+	proto.RegisterType((*MsgUpdateClient)(nil), "cosmos_sdk.codec.std.v1.MsgUpdateClient")
 }
 
 func init() { proto.RegisterFile("codec/std/codec.proto", fileDescriptor_daf09dc2dfa19bb4) }
 
 var fileDescriptor_daf09dc2dfa19bb4 = []byte{
-	// 875 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0x41, 0x6f, 0xdc, 0x44,
-	0x14, 0xb6, 0xa9, 0x9b, 0xac, 0xa6, 0x05, 0xca, 0x88, 0x90, 0x28, 0xa0, 0x4d, 0x1a, 0x44, 0x84,
-	0x8a, 0x62, 0xb7, 0x14, 0x68, 0xba, 0x12, 0x6a, 0xbb, 0x4b, 0xd1, 0x22, 0x11, 0x14, 0x6d, 0x80,
-	0x03, 0x02, 0x59, 0xde, 0x99, 0xc1, 0x6b, 0xd5, 0xf6, 0x0c, 0x9e, 0xb1, 0xf1, 0xfe, 0x03, 0xc4,
-	0x09, 0x89, 0x3f, 0x10, 0xc1, 0x91, 0x6b, 0x8f, 0xfc, 0x80, 0xaa, 0xa7, 0x1c, 0x39, 0x55, 0x28,
-	0xb9, 0xf0, 0x33, 0x90, 0x67, 0xc6, 0x5e, 0x5b, 0xf6, 0x6e, 0xd4, 0xcb, 0xca, 0x9e, 0xf7, 0x7d,
-	0xef, 0xfb, 0xc6, 0x33, 0xef, 0xbd, 0x05, 0x1b, 0x88, 0x62, 0x82, 0x1c, 0x2e, 0xb0, 0x23, 0x9f,
-	0x6c, 0x96, 0x50, 0x41, 0xe1, 0x26, 0xa2, 0x3c, 0xa2, 0xdc, 0xe5, 0xf8, 0x89, 0xad, 0xd6, 0xb9,
-	0xc0, 0x76, 0x76, 0x67, 0xfb, 0x03, 0x31, 0x0b, 0x12, 0xec, 0x32, 0x2f, 0x11, 0x73, 0x47, 0x62,
-	0x1d, 0x05, 0x3d, 0xa8, 0xbf, 0xa8, 0x2c, 0xdb, 0xfb, 0x6d, 0xb0, 0x4f, 0x7d, 0xba, 0x78, 0xd2,
-	0xb8, 0xad, 0xdc, 0xf1, 0x52, 0x31, 0x73, 0xc4, 0x9c, 0x11, 0xae, 0x7e, 0x75, 0x64, 0x57, 0x47,
-	0x32, 0xc2, 0x45, 0x10, 0xfb, 0x1d, 0x88, 0xed, 0xdc, 0xe1, 0x29, 0x63, 0xe1, 0xbc, 0x23, 0xf6,
-	0x4e, 0xee, 0x90, 0x2c, 0xc0, 0x24, 0x46, 0xa4, 0x23, 0xba, 0x99, 0x3b, 0x3e, 0xcd, 0x3a, 0x02,
-	0xef, 0xe6, 0x0e, 0xf3, 0x12, 0x2f, 0xd2, 0xab, 0x85, 0x73, 0x46, 0xb9, 0x17, 0x36, 0x40, 0x6f,
-	0xe7, 0x4e, 0xca, 0xfc, 0xc4, 0xc3, 0xa4, 0xdb, 0x36, 0x0e, 0xb8, 0x48, 0x82, 0x69, 0x2a, 0x02,
-	0x1a, 0xb7, 0x11, 0x7b, 0x7f, 0x5b, 0x60, 0xfd, 0x11, 0x42, 0x34, 0x8d, 0x05, 0xfc, 0x1c, 0x5c,
-	0x9f, 0x7a, 0x9c, 0xb8, 0x9e, 0x7a, 0xdf, 0x32, 0x77, 0xcd, 0xf7, 0xaf, 0x7d, 0x78, 0xd3, 0xae,
-	0x9d, 0x41, 0x6e, 0x17, 0x9f, 0xc1, 0xce, 0xee, 0xd8, 0x43, 0x8f, 0x13, 0x4d, 0x1c, 0x1b, 0x93,
-	0x6b, 0xd3, 0xc5, 0x2b, 0xcc, 0xc0, 0x36, 0xa2, 0xb1, 0x08, 0xe2, 0x94, 0xa6, 0xdc, 0xd5, 0x9f,
-	0xac, 0xca, 0xfa, 0x8a, 0xcc, 0xfa, 0x49, 0x57, 0x56, 0x85, 0x2c, 0xb2, 0x8f, 0x2a, 0xfe, 0xb7,
-	0x6a, 0x71, 0x21, 0xb5, 0x85, 0x96, 0xc4, 0x60, 0x04, 0x36, 0x31, 0x09, 0xbd, 0x39, 0xc1, 0x2d,
-	0xd1, 0x2b, 0x52, 0xf4, 0xee, 0x6a, 0xd1, 0xcf, 0x14, 0xb9, 0xa5, 0xb8, 0x81, 0xbb, 0x02, 0x90,
-	0x81, 0x2d, 0x46, 0x92, 0x80, 0xe2, 0x00, 0xb5, 0xf4, 0x2c, 0xa9, 0xf7, 0xd1, 0x6a, 0xbd, 0x63,
-	0xcd, 0x6e, 0x09, 0xbe, 0xc5, 0x3a, 0x23, 0xf0, 0x2b, 0xf0, 0x5a, 0x44, 0x71, 0x1a, 0x2e, 0x8e,
-	0xe8, 0xaa, 0xd4, 0x79, 0xaf, 0xa9, 0xa3, 0xee, 0x61, 0xa1, 0x70, 0x24, 0xd1, 0x8b, 0xc4, 0xaf,
-	0x46, 0xf5, 0x85, 0xc1, 0xfd, 0xe7, 0x4f, 0x0f, 0x3e, 0xbe, 0xe5, 0x07, 0x62, 0x96, 0x4e, 0x6d,
-	0x44, 0x23, 0x5d, 0x35, 0x65, 0x25, 0x71, 0xfc, 0xc4, 0xd1, 0xf7, 0x9e, 0xe4, 0x8c, 0x26, 0x82,
-	0x60, 0x5b, 0x53, 0x87, 0x57, 0xc1, 0x15, 0x9e, 0x46, 0x7b, 0xbf, 0x9a, 0x60, 0xed, 0x44, 0xca,
-	0xc1, 0x43, 0xb0, 0xa6, 0x84, 0xf5, 0xbd, 0xe9, 0x2f, 0x33, 0xa5, 0xf0, 0x63, 0x63, 0xa2, 0xf1,
-	0x83, 0x07, 0xff, 0x9d, 0xee, 0x98, 0xcf, 0x9f, 0x1e, 0xdc, 0xbb, 0xcc, 0x8a, 0x2e, 0xb0, 0xca,
-	0x8c, 0xca, 0xf4, 0x45, 0x69, 0xe6, 0x0f, 0x13, 0xf4, 0x1e, 0xeb, 0x3a, 0x83, 0x5f, 0x82, 0xeb,
-	0xe4, 0xa7, 0x34, 0xc8, 0x28, 0xf2, 0x8a, 0xab, 0xaf, 0x4d, 0xed, 0x37, 0x4d, 0x95, 0x55, 0x59,
-	0xd8, 0x7a, 0x5c, 0x43, 0x8f, 0x8d, 0x49, 0x83, 0x3d, 0x78, 0xa4, 0x2d, 0xde, 0xbf, 0xc4, 0x61,
-	0x55, 0xe6, 0x95, 0xc7, 0xd2, 0x50, 0x69, 0xf2, 0x2f, 0x13, 0xbc, 0x71, 0xc4, 0xfd, 0x93, 0x74,
-	0x1a, 0x05, 0xa2, 0x72, 0xfb, 0x29, 0xe8, 0x95, 0xd4, 0xae, 0xb2, 0xab, 0xb7, 0xbe, 0x2a, 0xe3,
-	0xa4, 0xa2, 0xc0, 0x23, 0x60, 0x15, 0x05, 0xa8, 0x6b, 0xcb, 0x59, 0xbe, 0xc9, 0x96, 0x72, 0x51,
-	0xc6, 0xc3, 0xde, 0xb3, 0x17, 0x3b, 0xc6, 0xd9, 0x8b, 0x1d, 0x73, 0x22, 0xd3, 0x0c, 0x7a, 0xbf,
-	0x9c, 0xee, 0x18, 0xc5, 0x8e, 0xf7, 0xfe, 0xac, 0xbb, 0x3d, 0xd6, 0xfd, 0x07, 0x8e, 0xb5, 0x9c,
-	0x72, 0x7a, 0xab, 0x29, 0xe7, 0xd3, 0xac, 0xa1, 0x54, 0xb2, 0xba, 0x94, 0xe0, 0x00, 0xac, 0x17,
-	0xe5, 0x4c, 0xaa, 0xbe, 0xb0, 0xbb, 0x74, 0xdb, 0x23, 0x85, 0x9b, 0x94, 0x84, 0x9a, 0xcb, 0xdf,
-	0x4d, 0xd0, 0xab, 0xcc, 0x3d, 0x68, 0x98, 0xbb, 0xd9, 0x69, 0x6e, 0xa5, 0xa7, 0x87, 0x2f, 0xed,
-	0x69, 0x68, 0x15, 0x29, 0x16, 0xce, 0x2c, 0xe9, 0xea, 0xd4, 0x02, 0xeb, 0x1a, 0x00, 0xef, 0x01,
-	0x4b, 0x90, 0x5c, 0xac, 0x34, 0xf5, 0x35, 0xc9, 0xab, 0x8f, 0x35, 0x36, 0x26, 0x92, 0x00, 0xbf,
-	0x07, 0x37, 0xe4, 0x0c, 0x20, 0x82, 0x24, 0x2e, 0x9a, 0x79, 0xb1, 0xbf, 0xe4, 0x94, 0xd5, 0xa4,
-	0x90, 0x9b, 0x2b, 0xf1, 0x23, 0x09, 0xaf, 0xa5, 0x7c, 0x9d, 0x35, 0x43, 0xf0, 0x07, 0x70, 0x83,
-	0xd3, 0x1f, 0xc5, 0xcf, 0x5e, 0x42, 0x5c, 0x3d, 0x45, 0x74, 0xab, 0xbc, 0xdd, 0xcc, 0xae, 0x83,
-	0xb2, 0x7c, 0x35, 0xe1, 0x1b, 0xb5, 0x54, 0x4f, 0xcf, 0x9b, 0x21, 0xc8, 0xc0, 0x26, 0xf2, 0x62,
-	0x44, 0x42, 0xb7, 0xa5, 0x62, 0x75, 0x4d, 0x81, 0x9a, 0xca, 0x48, 0xf2, 0x96, 0x6b, 0x6d, 0xa0,
-	0x2e, 0x00, 0x0c, 0xc1, 0x9b, 0x88, 0x46, 0x51, 0x1a, 0x07, 0x62, 0xee, 0x32, 0x4a, 0x43, 0x97,
-	0x33, 0x12, 0x63, 0xdd, 0x27, 0x0f, 0x9b, 0x72, 0xf5, 0xd1, 0xa8, 0x4e, 0x53, 0x33, 0x8f, 0x29,
-	0x0d, 0x4f, 0x0a, 0x5e, 0x4d, 0x10, 0xa2, 0x56, 0x74, 0x70, 0xa8, 0xbb, 0xc2, 0xed, 0x4b, 0xba,
-	0x42, 0x35, 0xde, 0xab, 0x0b, 0xa3, 0x9a, 0xc1, 0xf0, 0xe1, 0xb3, 0xf3, 0xbe, 0x79, 0x76, 0xde,
-	0x37, 0xff, 0x3d, 0xef, 0x9b, 0xbf, 0x5d, 0xf4, 0x8d, 0xb3, 0x8b, 0xbe, 0xf1, 0xcf, 0x45, 0xdf,
-	0xf8, 0x6e, 0x7f, 0x65, 0xca, 0xea, 0xcf, 0xd2, 0x74, 0x4d, 0x8e, 0xf1, 0xbb, 0xff, 0x07, 0x00,
-	0x00, 0xff, 0xff, 0xf7, 0xf2, 0xb6, 0xa2, 0x40, 0x09, 0x00, 0x00,
+	// 1100 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x97, 0xcf, 0x6f, 0xdc, 0x44,
+	0x14, 0xc7, 0x6d, 0xba, 0x4d, 0xa2, 0x49, 0x68, 0xcb, 0x88, 0x90, 0x28, 0xa0, 0x4d, 0x1a, 0xd4,
+	0xa8, 0x6a, 0x65, 0x3b, 0x6d, 0x81, 0xa4, 0x2b, 0x55, 0x6d, 0x76, 0x49, 0xd8, 0x56, 0x04, 0x85,
+	0x0d, 0xe5, 0x80, 0x40, 0x2b, 0xef, 0x78, 0x70, 0xac, 0xae, 0x3d, 0xc6, 0x33, 0x5e, 0xbc, 0xff,
+	0x01, 0xe2, 0x84, 0xc4, 0x95, 0x43, 0x04, 0x37, 0xb8, 0xae, 0xc4, 0x85, 0x3f, 0xa0, 0xda, 0x53,
+	0x8e, 0x9c, 0x2a, 0x94, 0x5c, 0xf8, 0x33, 0x90, 0x67, 0xc6, 0xbf, 0x76, 0xbd, 0xbb, 0x22, 0x70,
+	0x89, 0xd6, 0xf3, 0xde, 0xfb, 0x7e, 0x3f, 0xb6, 0xe7, 0xbd, 0x71, 0xc0, 0x32, 0x22, 0x16, 0x46,
+	0x06, 0x65, 0x96, 0xc1, 0x7f, 0xe9, 0x7e, 0x40, 0x18, 0x81, 0x2b, 0x88, 0x50, 0x97, 0xd0, 0x36,
+	0xb5, 0x5e, 0xe8, 0x62, 0x9d, 0x32, 0x4b, 0xef, 0xdd, 0x5b, 0xbb, 0xcb, 0x4e, 0x9c, 0xc0, 0x6a,
+	0xfb, 0x66, 0xc0, 0xfa, 0x06, 0xcf, 0x35, 0x44, 0xaa, 0x96, 0xbf, 0x10, 0x2a, 0x6b, 0x5b, 0xe3,
+	0xc9, 0x36, 0xb1, 0x49, 0xf6, 0x4b, 0xe6, 0xad, 0x46, 0x86, 0x19, 0xb2, 0x13, 0x83, 0xf5, 0x7d,
+	0x4c, 0xc5, 0x5f, 0x19, 0xd9, 0x90, 0x91, 0x1e, 0xa6, 0xcc, 0xf1, 0xec, 0x92, 0x8c, 0xb5, 0xc8,
+	0xa0, 0xa1, 0xef, 0x77, 0xfb, 0x25, 0xb1, 0x77, 0x22, 0x03, 0xf7, 0x1c, 0x0b, 0x7b, 0x08, 0x97,
+	0x44, 0x57, 0x22, 0xc3, 0x26, 0xbd, 0x92, 0xc0, 0xbb, 0x91, 0xe1, 0x9b, 0x81, 0xe9, 0xca, 0xd5,
+	0x98, 0xdc, 0x27, 0xd4, 0xec, 0x16, 0x92, 0xde, 0x8e, 0x8c, 0xd0, 0xb7, 0x03, 0xd3, 0xc2, 0xe5,
+	0xd8, 0x96, 0x43, 0x59, 0xe0, 0x74, 0x42, 0xe6, 0x10, 0xaf, 0x24, 0xe3, 0x56, 0x64, 0x38, 0x1d,
+	0x64, 0x6c, 0xef, 0x68, 0x0c, 0x7b, 0x16, 0x0e, 0x5c, 0xc7, 0x63, 0xe3, 0x69, 0x9b, 0x7f, 0x54,
+	0xc0, 0xfc, 0x1e, 0x42, 0x24, 0xf4, 0x18, 0x3c, 0x00, 0x4b, 0x1d, 0x93, 0xe2, 0xb6, 0x29, 0xae,
+	0x57, 0xd5, 0x0d, 0xf5, 0xf6, 0xe2, 0xfd, 0x9b, 0x7a, 0xee, 0x55, 0x45, 0x7a, 0xfc, 0xb4, 0xf4,
+	0xde, 0x3d, 0xbd, 0x6e, 0x52, 0x2c, 0x0b, 0x9b, 0x4a, 0x6b, 0xb1, 0x93, 0x5d, 0xc2, 0x1e, 0x58,
+	0x43, 0xc4, 0x63, 0x8e, 0x17, 0x92, 0x90, 0xb6, 0xe5, 0x93, 0x4d, 0x55, 0x5f, 0xe3, 0xaa, 0x1f,
+	0x94, 0xa9, 0x8a, 0xcc, 0x58, 0xbd, 0x91, 0xd6, 0x7f, 0x2e, 0x16, 0x33, 0xab, 0x55, 0x34, 0x21,
+	0x06, 0x5d, 0xb0, 0x62, 0xe1, 0xae, 0xd9, 0xc7, 0xd6, 0x98, 0xe9, 0x15, 0x6e, 0xfa, 0x60, 0xba,
+	0xe9, 0x87, 0xa2, 0x78, 0xcc, 0x71, 0xd9, 0x2a, 0x0b, 0x40, 0x1f, 0xac, 0xfa, 0x38, 0x70, 0x88,
+	0xe5, 0xa0, 0x31, 0xbf, 0x0a, 0xf7, 0x7b, 0x6f, 0xba, 0xdf, 0x91, 0xac, 0x1e, 0x33, 0x7c, 0xcb,
+	0x2f, 0x8d, 0xc0, 0x4f, 0xc0, 0x35, 0x97, 0x58, 0x61, 0x37, 0x7b, 0x45, 0x57, 0xb9, 0xcf, 0xad,
+	0xa2, 0x8f, 0xd8, 0xae, 0xb1, 0xc3, 0x21, 0xcf, 0xce, 0x84, 0x5f, 0x77, 0xf3, 0x0b, 0xb5, 0x87,
+	0xc3, 0x81, 0xf6, 0xfe, 0x1d, 0xdb, 0x61, 0x27, 0x61, 0x47, 0x47, 0xc4, 0x95, 0xcd, 0x95, 0x34,
+	0x1c, 0xb5, 0x5e, 0x18, 0xb2, 0x3d, 0x70, 0xe4, 0x93, 0x80, 0x61, 0x4b, 0x97, 0xa5, 0xf5, 0xab,
+	0xe0, 0x0a, 0x0d, 0xdd, 0xcd, 0xef, 0x55, 0x30, 0x77, 0xcc, 0xed, 0xe0, 0x2e, 0x98, 0x13, 0xc6,
+	0x72, 0xdf, 0x54, 0x27, 0x41, 0x89, 0xfc, 0xa6, 0xd2, 0x92, 0xf9, 0xb5, 0xc7, 0x7f, 0x9f, 0xae,
+	0xab, 0xc3, 0x81, 0xb6, 0x33, 0x0b, 0x45, 0xf6, 0x61, 0x0a, 0x23, 0x94, 0x9e, 0x26, 0x30, 0x3f,
+	0xab, 0x60, 0x61, 0x5f, 0xb6, 0x23, 0xfc, 0x18, 0x2c, 0xe1, 0x6f, 0x42, 0xa7, 0x47, 0x90, 0x19,
+	0x77, 0x88, 0x84, 0xda, 0x2a, 0x42, 0x25, 0xcd, 0x1b, 0x63, 0xed, 0xe7, 0xb2, 0x9b, 0x4a, 0xab,
+	0x50, 0x5d, 0xdb, 0x93, 0x88, 0x0f, 0x67, 0x10, 0xa6, 0xd3, 0x20, 0x65, 0x4c, 0x80, 0x12, 0xc8,
+	0xdf, 0x54, 0xf0, 0xc6, 0x21, 0xb5, 0x8f, 0xc3, 0x8e, 0xeb, 0xb0, 0x94, 0xf6, 0x11, 0x58, 0x48,
+	0x4a, 0xcb, 0xda, 0x2e, 0x3f, 0x21, 0x53, 0xc5, 0x56, 0x5a, 0x02, 0x0f, 0x41, 0x25, 0x6e, 0x40,
+	0xd9, 0x5b, 0xc6, 0xe4, 0x9b, 0x1c, 0x73, 0x8e, 0xdb, 0xb8, 0xbe, 0xf0, 0xf2, 0xd5, 0xba, 0x72,
+	0xf6, 0x6a, 0x5d, 0x6d, 0x71, 0x99, 0xda, 0xc2, 0x77, 0xa7, 0xeb, 0x4a, 0x7c, 0xc7, 0x9b, 0xbf,
+	0xe4, 0x69, 0x8f, 0xe4, 0x98, 0x82, 0x4d, 0x69, 0x27, 0x48, 0xef, 0x14, 0xed, 0x6c, 0xd2, 0x2b,
+	0x38, 0x25, 0x55, 0x65, 0x4e, 0xb0, 0x06, 0xe6, 0xe3, 0x76, 0xc6, 0xe9, 0x5c, 0xd8, 0x98, 0x78,
+	0xdb, 0x0d, 0x91, 0xd7, 0x4a, 0x0a, 0x72, 0x94, 0x3f, 0xaa, 0x60, 0x21, 0x85, 0x7b, 0x5c, 0x80,
+	0xbb, 0x59, 0x0a, 0x37, 0x95, 0xe9, 0xc9, 0xbf, 0x66, 0xaa, 0x57, 0x62, 0x89, 0x8c, 0xac, 0xc2,
+	0xa9, 0x4e, 0x2b, 0x60, 0x5e, 0x26, 0xc0, 0x1d, 0x50, 0x61, 0x38, 0x62, 0x53, 0xa1, 0x3e, 0xc3,
+	0x51, 0xfa, 0xb0, 0x9a, 0x4a, 0x8b, 0x17, 0xc0, 0x2f, 0xc1, 0x0d, 0x7e, 0x54, 0x60, 0x86, 0x83,
+	0x36, 0x3a, 0x31, 0x3d, 0x7b, 0xc2, 0x5b, 0x16, 0x07, 0x0a, 0xbf, 0xb9, 0x24, 0xbf, 0xc1, 0xd3,
+	0x73, 0x92, 0xd7, 0xfd, 0x62, 0x08, 0x7e, 0x05, 0x6e, 0x50, 0xf2, 0x35, 0xfb, 0xd6, 0x0c, 0x70,
+	0x5b, 0x1e, 0x36, 0x72, 0x54, 0x6e, 0x17, 0xd5, 0x65, 0x90, 0xb7, 0xaf, 0x2c, 0x78, 0x2e, 0x96,
+	0xf2, 0xf2, 0xb4, 0x18, 0x82, 0x3e, 0x58, 0x41, 0xa6, 0x87, 0x70, 0xb7, 0x3d, 0xe6, 0x52, 0x29,
+	0x3b, 0x05, 0x72, 0x2e, 0x0d, 0x5e, 0x37, 0xd9, 0x6b, 0x19, 0x95, 0x25, 0xc0, 0x2e, 0x78, 0x13,
+	0x11, 0xd7, 0x0d, 0x3d, 0x87, 0xf5, 0xdb, 0x3e, 0x21, 0xdd, 0x36, 0xf5, 0xb1, 0x67, 0xc9, 0x39,
+	0xb9, 0x5b, 0xb4, 0xcb, 0x9f, 0xa0, 0xe2, 0x6d, 0xca, 0xca, 0x23, 0x42, 0xba, 0xc7, 0x71, 0x5d,
+	0xce, 0x10, 0xa2, 0xb1, 0x68, 0x6d, 0x57, 0x4e, 0x85, 0xed, 0x19, 0x53, 0x21, 0xfd, 0x0a, 0x48,
+	0x37, 0x4c, 0x36, 0x0c, 0x16, 0x1b, 0x5d, 0x07, 0x7b, 0xec, 0x98, 0x99, 0x2c, 0xee, 0x63, 0x90,
+	0x9d, 0xd6, 0x72, 0xb3, 0xdc, 0x2d, 0x42, 0x3b, 0x1d, 0xa4, 0x67, 0x39, 0x1c, 0x3b, 0x13, 0x68,
+	0x2a, 0xad, 0x9c, 0x40, 0xed, 0x60, 0x38, 0xd0, 0xea, 0xb3, 0x86, 0x2a, 0xff, 0x4a, 0xb8, 0xaf,
+	0x21, 0xae, 0x92, 0xcd, 0xad, 0x9c, 0x6a, 0x42, 0x3b, 0x50, 0xc1, 0xb5, 0x06, 0xf1, 0x28, 0xf6,
+	0x68, 0x48, 0x05, 0xf0, 0x51, 0x09, 0xb0, 0x3e, 0x13, 0xb8, 0xa0, 0x31, 0xc2, 0xfc, 0x74, 0x38,
+	0xd0, 0xf6, 0x2f, 0xcb, 0x5c, 0x10, 0x4e, 0xb0, 0x7f, 0x55, 0xc1, 0xd2, 0xa1, 0x43, 0x3b, 0xf8,
+	0xc4, 0xec, 0x39, 0x24, 0x0c, 0xe0, 0xb3, 0x12, 0xe8, 0xdb, 0xb3, 0xa0, 0x93, 0x81, 0x39, 0x82,
+	0xfb, 0xd1, 0x70, 0xa0, 0x35, 0x2e, 0x89, 0x9b, 0x87, 0x4a, 0x60, 0x7f, 0x52, 0xc1, 0x5c, 0x13,
+	0x9b, 0x16, 0x0e, 0x60, 0xb3, 0x04, 0x73, 0x6b, 0x16, 0xa6, 0xa8, 0x1d, 0x81, 0xdc, 0x1b, 0x0e,
+	0xb4, 0x47, 0x97, 0x84, 0x14, 0x82, 0x09, 0xde, 0xef, 0x2a, 0xb8, 0x7e, 0x48, 0xed, 0x46, 0x80,
+	0x4d, 0x86, 0xc5, 0x16, 0x81, 0x9f, 0x96, 0x70, 0x1a, 0xb3, 0x38, 0x47, 0x44, 0x46, 0x80, 0x9f,
+	0x0d, 0x07, 0xda, 0xc1, 0x65, 0x9f, 0x6a, 0x51, 0x79, 0x84, 0xfc, 0xb9, 0x6f, 0xfd, 0x77, 0xf2,
+	0xbc, 0xc8, 0xff, 0x4b, 0x9e, 0x57, 0x96, 0xe4, 0xf5, 0x27, 0x2f, 0xcf, 0xab, 0xea, 0xd9, 0x79,
+	0x55, 0xfd, 0xeb, 0xbc, 0xaa, 0xfe, 0x70, 0x51, 0x55, 0xce, 0x2e, 0xaa, 0xca, 0x9f, 0x17, 0x55,
+	0xe5, 0x8b, 0xad, 0xa9, 0x3e, 0xe9, 0x3f, 0x5e, 0x9d, 0x39, 0xfe, 0xad, 0xff, 0xe0, 0x9f, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0xd7, 0x81, 0x2d, 0x06, 0x8c, 0x0d, 0x00, 0x00,
 }
 
 func (this *Supply) Equal(that interface{}) bool {
@@ -1126,6 +1590,126 @@ func (this *Content) SetContent(value github_com_cosmos_cosmos_sdk_x_gov_types.C
 		return nil
 	}
 	return fmt.Errorf("can't encode value of type %T as message Content", value)
+}
+
+func (this *ClientState) GetClientState() github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.ClientState {
+	if x := this.GetTendermint(); x != nil {
+		return x
+	}
+	return nil
+}
+
+func (this *ClientState) SetClientState(value github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.ClientState) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
+	switch vt := value.(type) {
+	case *types7.ClientState:
+		this.Sum = &ClientState_Tendermint{vt}
+		return nil
+	}
+	return fmt.Errorf("can't encode value of type %T as message ClientState", value)
+}
+
+func (this *ConsensusState) GetConsensusState() github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.ConsensusState {
+	if x := this.GetTendermint(); x != nil {
+		return x
+	}
+	return nil
+}
+
+func (this *ConsensusState) SetConsensusState(value github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.ConsensusState) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
+	switch vt := value.(type) {
+	case *types7.ConsensusState:
+		this.Sum = &ConsensusState_Tendermint{vt}
+		return nil
+	}
+	return fmt.Errorf("can't encode value of type %T as message ConsensusState", value)
+}
+
+func (this *Misbehaviour) GetMisbehaviour() github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.Misbehaviour {
+	if x := this.GetTendermint(); x != nil {
+		return x
+	}
+	return nil
+}
+
+func (this *Misbehaviour) SetMisbehaviour(value github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.Misbehaviour) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
+	switch vt := value.(type) {
+	case *types7.Evidence:
+		this.Sum = &Misbehaviour_Tendermint{vt}
+		return nil
+	}
+	return fmt.Errorf("can't encode value of type %T as message Misbehaviour", value)
+}
+
+func (this *Header) GetHeader() github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.Header {
+	if x := this.GetTendermint(); x != nil {
+		return x
+	}
+	return nil
+}
+
+func (this *Header) SetHeader(value github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.Header) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
+	switch vt := value.(type) {
+	case *types7.Header:
+		this.Sum = &Header_Tendermint{vt}
+		return nil
+	}
+	return fmt.Errorf("can't encode value of type %T as message Header", value)
+}
+
+func (this *MsgCreateClient) GetMsgCreateClient() github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.MsgCreateClient {
+	if x := this.GetTendermint(); x != nil {
+		return x
+	}
+	return nil
+}
+
+func (this *MsgCreateClient) SetMsgCreateClient(value github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.MsgCreateClient) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
+	switch vt := value.(type) {
+	case *types7.MsgCreateClient:
+		this.Sum = &MsgCreateClient_Tendermint{vt}
+		return nil
+	}
+	return fmt.Errorf("can't encode value of type %T as message MsgCreateClient", value)
+}
+
+func (this *MsgUpdateClient) GetMsgUpdateClient() github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.MsgUpdateClient {
+	if x := this.GetTendermint(); x != nil {
+		return x
+	}
+	return nil
+}
+
+func (this *MsgUpdateClient) SetMsgUpdateClient(value github_com_cosmos_cosmos_sdk_x_ibc_02_client_exported.MsgUpdateClient) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
+	switch vt := value.(type) {
+	case *types7.MsgUpdateClient:
+		this.Sum = &MsgUpdateClient_Tendermint{vt}
+		return nil
+	}
+	return fmt.Errorf("can't encode value of type %T as message MsgUpdateClient", value)
 }
 
 func (m *Account) Marshal() (dAtA []byte, err error) {
@@ -1641,6 +2225,324 @@ func (m *Content_CommunityPoolSpend) MarshalToSizedBuffer(dAtA []byte) (int, err
 	}
 	return len(dAtA) - i, nil
 }
+func (m *ClientState) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClientState) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClientState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ClientState_Tendermint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClientState_Tendermint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tendermint != nil {
+		{
+			size, err := m.Tendermint.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCodec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *ConsensusState) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConsensusState) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConsensusState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ConsensusState_Tendermint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConsensusState_Tendermint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tendermint != nil {
+		{
+			size, err := m.Tendermint.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCodec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *Misbehaviour) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Misbehaviour) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Misbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Misbehaviour_Tendermint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Misbehaviour_Tendermint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tendermint != nil {
+		{
+			size, err := m.Tendermint.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCodec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *Header) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Header) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Header) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Header_Tendermint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Header_Tendermint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tendermint != nil {
+		{
+			size, err := m.Tendermint.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCodec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgCreateClient) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateClient) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateClient_Tendermint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClient_Tendermint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tendermint != nil {
+		{
+			size, err := m.Tendermint.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCodec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgUpdateClient) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateClient) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateClient_Tendermint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClient_Tendermint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tendermint != nil {
+		{
+			size, err := m.Tendermint.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCodec(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
 func encodeVarintCodec(dAtA []byte, offset int, v uint64) int {
 	offset -= sovCodec(v)
 	base := offset
@@ -1883,6 +2785,150 @@ func (m *Content_CommunityPoolSpend) Size() (n int) {
 	_ = l
 	if m.CommunityPoolSpend != nil {
 		l = m.CommunityPoolSpend.Size()
+		n += 1 + l + sovCodec(uint64(l))
+	}
+	return n
+}
+func (m *ClientState) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *ClientState_Tendermint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tendermint != nil {
+		l = m.Tendermint.Size()
+		n += 1 + l + sovCodec(uint64(l))
+	}
+	return n
+}
+func (m *ConsensusState) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *ConsensusState_Tendermint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tendermint != nil {
+		l = m.Tendermint.Size()
+		n += 1 + l + sovCodec(uint64(l))
+	}
+	return n
+}
+func (m *Misbehaviour) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *Misbehaviour_Tendermint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tendermint != nil {
+		l = m.Tendermint.Size()
+		n += 1 + l + sovCodec(uint64(l))
+	}
+	return n
+}
+func (m *Header) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *Header_Tendermint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tendermint != nil {
+		l = m.Tendermint.Size()
+		n += 1 + l + sovCodec(uint64(l))
+	}
+	return n
+}
+func (m *MsgCreateClient) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *MsgCreateClient_Tendermint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tendermint != nil {
+		l = m.Tendermint.Size()
+		n += 1 + l + sovCodec(uint64(l))
+	}
+	return n
+}
+func (m *MsgUpdateClient) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *MsgUpdateClient_Tendermint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tendermint != nil {
+		l = m.Tendermint.Size()
 		n += 1 + l + sovCodec(uint64(l))
 	}
 	return n
@@ -2864,6 +3910,534 @@ func (m *Content) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			m.Sum = &Content_CommunityPoolSpend{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCodec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClientState) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCodec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClientState: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClientState: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tendermint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCodec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCodec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &types7.ClientState{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &ClientState_Tendermint{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCodec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ConsensusState) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCodec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConsensusState: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConsensusState: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tendermint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCodec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCodec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &types7.ConsensusState{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &ConsensusState_Tendermint{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCodec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Misbehaviour) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCodec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Misbehaviour: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Misbehaviour: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tendermint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCodec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCodec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &types7.Evidence{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &Misbehaviour_Tendermint{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCodec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Header) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCodec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Header: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Header: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tendermint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCodec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCodec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &types7.Header{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &Header_Tendermint{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCodec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateClient) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCodec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateClient: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateClient: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tendermint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCodec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCodec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &types7.MsgCreateClient{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &MsgCreateClient_Tendermint{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCodec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateClient) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCodec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateClient: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateClient: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tendermint", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCodec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCodec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCodec
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &types7.MsgUpdateClient{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &MsgUpdateClient_Tendermint{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

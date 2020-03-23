@@ -5,15 +5,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
-// nolint
 // DONTCOVER
 
+// nolint
 const (
 	ModuleName  = types.ModuleName
 	StoreKey    = types.StoreKey
 	MemStoreKey = types.MemStoreKey
 )
 
+// nolint
 var (
 	NewKeeper                   = keeper.NewKeeper
 	NewCapabilityKey            = types.NewCapabilityKey
@@ -30,6 +31,7 @@ var (
 	NewCapabilityOwners         = types.NewCapabilityOwners
 )
 
+// nolint
 type (
 	Keeper           = keeper.Keeper
 	ScopedKeeper     = keeper.ScopedKeeper

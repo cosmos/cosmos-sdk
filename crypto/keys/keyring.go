@@ -34,6 +34,7 @@ const (
 const (
 	keyringDirNameFmt     = "keyring-%s"
 	testKeyringDirNameFmt = "keyring-test-%s"
+	passKeyringPrefix     = keyringDirNameFmt
 )
 
 var _ Keybase = keyringKeybase{}
@@ -490,7 +491,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 }
 
 func newPassBackendKeyringConfig(appName, dir string, _ io.Reader) keyring.Config {
-	prefix := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, appName))
+	prefix := fmt.Sprintf(passKeyringPrefix, appName)
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.PassBackend},
 		ServiceName:     appName,

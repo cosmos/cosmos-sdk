@@ -25,6 +25,7 @@ var configDefaults = map[string]string{
 	"output":          "text",
 	"node":            "tcp://localhost:26657",
 	"broadcast-mode":  "sync",
+	"offline":         "false",
 }
 
 // ConfigCmd returns a CLI command to interactively create an application CLI
@@ -76,7 +77,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	// get config value for a given key
 	if getAction {
 		switch key {
-		case "trace", "trust-node", "indent":
+		case "trace", "trust-node", "indent", "offline":
 			fmt.Println(tree.GetDefault(key, false).(bool))
 
 		default:
@@ -102,7 +103,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	case "chain-id", "output", "node", "broadcast-mode", "keyring-backend":
 		tree.Set(key, value)
 
-	case "trace", "trust-node", "indent":
+	case "trace", "trust-node", "indent", "offline":
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err

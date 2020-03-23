@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantexported "github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -21,7 +19,6 @@ var (
 	_ supply.Codec   = (*Codec)(nil)
 	_ evidence.Codec = (*Codec)(nil)
 	_ gov.Codec      = (*Codec)(nil)
-	_ feegrant.Codec = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -181,31 +178,6 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 		Content:      proposal.Content.GetContent(),
 		ProposalBase: proposal.ProposalBase,
 	}, nil
-}
-
-func (c *Codec) MarshalFeeAllowanceGrant(feeAllowanceI feegrantexported.FeeAllowanceGrant) ([]byte, error) {
-	feeallowance := &FeeAllowance{}
-
-	if err := feeallowance.SetFeeAllowance(feeAllowanceI.GetFeeGrant()); err != nil {
-		return nil, err
-	}
-
-	grantFeeAllowance := &FeeAllowanceGrant{
-		Allowance:             feeallowance,
-		FeeAllowanceGrantBase: feegrant.NewFeeAllowanceGrantBase(feeAllowanceI.GetGranter(), feeAllowanceI.GetGrantee()),
-	}
-
-	return c.Marshaler.MarshalBinaryBare(grantFeeAllowance)
-}
-
-func (c *Codec) UnmarshalFeeAllowanceGrant(bz []byte) (feegrantexported.FeeAllowanceGrant, error) {
-	feeallowance := &FeeAllowanceGrant{}
-
-	if err := c.Marshaler.UnmarshalBinaryBare(bz, feeallowance); err != nil {
-		return nil, err
-	}
-
-	return feeallowance, nil
 }
 
 // ----------------------------------------------------------------------------

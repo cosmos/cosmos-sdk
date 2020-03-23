@@ -4,7 +4,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -18,14 +17,14 @@ func (suite *KeeperTestSuite) TestQuery() {
 	types.RegisterCodec(cdc)
 
 	// some helpers
-	grant1 := codecstd.FeeAllowanceGrant{Allowance: &codecstd.FeeAllowance{Sum: &codecstd.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	grant1 := types.FeeAllowanceGrant{Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 		Expiration: types.ExpiresAtHeight(334455),
 	},
 	},
 	}, FeeAllowanceGrantBase: types.NewFeeAllowanceGrantBase(suite.addr4, suite.addr)}
 
-	grant2 := codecstd.FeeAllowanceGrant{Allowance: &codecstd.FeeAllowance{Sum: &codecstd.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+	grant2 := types.FeeAllowanceGrant{Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
 		Expiration: types.ExpiresAtHeight(334455),
 	},
@@ -40,7 +39,7 @@ func (suite *KeeperTestSuite) TestQuery() {
 	cases := map[string]struct {
 		path  []string
 		valid bool
-		res   []codecstd.FeeAllowanceGrant
+		res   []types.FeeAllowanceGrant
 	}{
 		"bad path": {
 			path: []string{"foo", "bar"},
@@ -54,7 +53,7 @@ func (suite *KeeperTestSuite) TestQuery() {
 			// addr3 in bech32
 			path:  []string{"fees", "cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x"},
 			valid: true,
-			res:   []codecstd.FeeAllowanceGrant{grant1, grant2},
+			res:   []types.FeeAllowanceGrant{grant1, grant2},
 		},
 	}
 
@@ -69,7 +68,7 @@ func (suite *KeeperTestSuite) TestQuery() {
 			}
 			suite.NoError(err)
 
-			var grants []codecstd.FeeAllowanceGrant
+			var grants []types.FeeAllowanceGrant
 			serr := cdc.UnmarshalJSON(bz, &grants)
 			suite.NoError(serr)
 

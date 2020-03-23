@@ -3,6 +3,7 @@ package cosmos_sdk.x.feegrant.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
 
+import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 import "google/protobuf/timestamp.proto";
@@ -82,4 +83,34 @@ message FeeAllowanceGrantBase{
 
     bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+
+// FeeAllowance defines the application-level fee allowance to be used in
+// feegrant module
+message FeeAllowance {
+    option (gogoproto.equal)           = true;
+    option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/feegrant/exported.FeeAllowance";
+
+    oneof sum{
+        BasicFeeAllowance BasicFeeAllowance= 1;
+        PeriodicFeeAllowance PeriodicFeeAllowance= 2;
+    }
+}
+
+// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
+// of fees from the account of Granter.
+message MsgGrantFeeAllowance{
+    option (gogoproto.goproto_getters) = false;
+
+    FeeAllowance Allowance = 1;
+    MsgGrantFeeAllowanceBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+}
+
+// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
+message FeeAllowanceGrant{
+    option (gogoproto.goproto_getters) = false;
+
+    FeeAllowance Allowance = 3;
+    FeeAllowanceGrantBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
 }

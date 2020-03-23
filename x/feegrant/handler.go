@@ -3,7 +3,6 @@ package feegrant
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
@@ -18,7 +17,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleRevokeFee(ctx, k, msg)
 
 		default:
-			msgGrantFa, ok := msg.(exported.MsgGrantFeeAllowance)
+			msgGrantFa, ok := msg.(MsgGrantFeeAllowance)
 			if ok {
 				return handleGrantFee(ctx, k, msgGrantFa)
 			}
@@ -27,9 +26,10 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleGrantFee(ctx sdk.Context, k Keeper, msg exported.MsgGrantFeeAllowance) (*sdk.Result, error) {
-	grant := exported.FeeAllowanceGrant(msg)
-	k.GrantFeeAllowance(ctx, grant)
+func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) (*sdk.Result, error) {
+	feegrant := FeeAllowanceGrant{Allowance: msg.Allowance, FeeAllowanceGrantBase: NewFeeAllowanceGrantBase(msg.Granter, msg.Grantee)}
+
+	k.GrantFeeAllowance(ctx, feegrant)
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 

@@ -25,14 +25,14 @@ type AccountKeeper interface {
 type MsgGrantFeeAllowance interface {
 	sdk.Msg
 
-	GetFeeGrant() FeeAllowance
+	GetFeeGrant() *FeeAllowance
 	GetGranter() sdk.AccAddress
 	GetGrantee() sdk.AccAddress
 	PrepareForExport(time.Time, int64) FeeAllowanceGrant
 }
 
 type FeeAllowanceGrant interface {
-	GetFeeGrant() FeeAllowance
+	GetFeeGrant() *FeeAllowance
 	GetGranter() sdk.AccAddress
 	GetGrantee() sdk.AccAddress
 

@@ -5,21 +5,21 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc      types.Codec
+	cdc      codec.Marshaler
 	storeKey sdk.StoreKey
 }
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc types.Codec, storeKey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) Keeper {
 	return Keeper{cdc: cdc, storeKey: storeKey}
 }
 
@@ -29,10 +29,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GrantFeeAllowance creates a new grant
-func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant exported.FeeAllowanceGrant) {
+func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(grant.GetGranter(), grant.GetGrantee())
-	bz, err := k.cdc.MarshalFeeAllowanceGrant(grant)
+	bz, err := grant.Marshal()
 	if err != nil {
 		panic(fmt.Errorf("failed to encode fee allowance: %w", err))
 	}
@@ -66,35 +66,35 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // GetFeeAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) exported.FeeAllowance {
+func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) *types.FeeAllowance {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
 	if !found {
 		return nil
 	}
 
-	return grant.GetFeeGrant()
+	return grant.Allowance
 }
 
 // GetFeeGrant returns entire grant between both accounts
-func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (exported.FeeAllowanceGrant, bool) {
+func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant types.FeeAllowanceGrant, ok bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
-	if len(bz) == 0 {
-		return nil, false
-	}
+	//if len(bz) == 0 {
+	//	return nil, false
+	//}
 
-	grant, err := k.cdc.UnmarshalFeeAllowanceGrant(bz)
-	if err != nil {
-		return nil, false
-	}
+	_ = feegrant.Unmarshal(bz)
+	//if err != nil {
+	//	return nil, false
+	//}
 
-	return grant, true
+	return feegrant, true
 }
 
 // IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
 // Callback to get all data, returns true to stop, false to keep reading
-func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(exported.FeeAllowanceGrant) bool) error {
+func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(feegrant types.FeeAllowanceGrant) bool) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.FeeAllowancePrefixByGrantee(grantee)
 	iter := sdk.KVStorePrefixIterator(store, prefix)
@@ -104,12 +104,13 @@ func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccA
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 
-		grant, err := k.cdc.UnmarshalFeeAllowanceGrant(bz)
+		var feeGrant types.FeeAllowanceGrant
+		err := feeGrant.Unmarshal(bz)
 		if err != nil {
 			return err
 		}
 
-		stop = cb(grant)
+		stop = cb(feeGrant)
 	}
 
 	return nil
@@ -118,7 +119,7 @@ func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccA
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
-func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(exported.FeeAllowanceGrant) bool) error {
+func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowanceGrant) bool) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.FeeAllowanceKeyPrefix)
 	defer iter.Close()
@@ -126,13 +127,13 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(exported.FeeAll
 	stop := false
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
-
-		grant, err := k.cdc.UnmarshalFeeAllowanceGrant(bz)
+		var feeGrant types.FeeAllowanceGrant
+		err := feeGrant.Unmarshal(bz)
 		if err != nil {
 			return err
 		}
 
-		stop = cb(grant)
+		stop = cb(feeGrant)
 	}
 
 	return nil

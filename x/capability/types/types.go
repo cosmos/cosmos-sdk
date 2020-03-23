@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 
 	"gopkg.in/yaml.v2"
 
@@ -72,15 +73,21 @@ func NewCapabilityOwners() *CapabilityOwners {
 	return &CapabilityOwners{Owners: make([]Owner, 0)}
 }
 
-// Set attempts to add a given owner to the CapabilityOwners. If the owner already
-// exists, an error will be returned.
+// Set attempts to add a given owner to the CapabilityOwners. If the owner
+// already exists, an error will be returned. Set runs in O(log n) average time
+// and O(n) in the worst case.
 func (co *CapabilityOwners) Set(owner Owner) error {
-	for _, o := range co.Owners {
-		if o.Key() == owner.Key() {
-			return sdkerrors.Wrapf(ErrOwnerClaimed, owner.String())
-		}
+	// find smallest index s.t. co.Owners[i] >= owner in O(log n) time
+	i := sort.Search(len(co.Owners), func(i int) bool { return co.Owners[i].Key() >= owner.Key() })
+	if i < len(co.Owners) && co.Owners[i].Key() == owner.Key() {
+		// owner already exists at co.Owners[i]
+		return sdkerrors.Wrapf(ErrOwnerClaimed, owner.String())
 	}
 
-	co.Owners = append(co.Owners, owner)
+	// owner does not exist in the set of owners, so we insert at position i
+	co.Owners = append(co.Owners, Owner{}) // expand by 1 in amortized O(1) / O(n) worst case
+	copy(co.Owners[i+1:], co.Owners[i:])
+	co.Owners[i] = owner
+
 	return nil
 }

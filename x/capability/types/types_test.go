@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,11 +25,25 @@ func TestOwner(t *testing.T) {
 
 func TestCapabilityOwners(t *testing.T) {
 	co := types.NewCapabilityOwners()
-	o1 := types.NewOwner("bank", "send")
-	o2 := types.NewOwner("slashing", "slash")
 
-	require.NoError(t, co.Set(o1))
-	require.Error(t, co.Set(o1))
-	require.NoError(t, co.Set(o2))
-	require.Equal(t, []types.Owner{o1, o2}, co.Owners)
+	owners := make([]types.Owner, 1024)
+	for i := range owners {
+		var owner types.Owner
+
+		if i%2 == 0 {
+			owner = types.NewOwner("bank", fmt.Sprintf("send-%d", i))
+		} else {
+			owner = types.NewOwner("slashing", fmt.Sprintf("slash-%d", i))
+		}
+
+		owners[i] = owner
+		require.NoError(t, co.Set(owner))
+	}
+
+	sort.Slice(owners, func(i, j int) bool { return owners[i].Key() < owners[j].Key() })
+	require.Equal(t, owners, co.Owners)
+
+	for _, owner := range owners {
+		require.Error(t, co.Set(owner))
+	}
 }

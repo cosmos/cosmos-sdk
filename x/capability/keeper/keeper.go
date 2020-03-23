@@ -123,10 +123,13 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 
 // NewCapability attempts to create a new capability with a given name. If the
 // capability already exists in the in-memory store, an error will be returned.
-// Otherwise, a new capability is created with the current global index. The
-// newly created capability has the module and name tuple set as the initial owner.
-// Finally, the global index is incremented along with forward and reverse indexes
-// set in the in-memory store.
+// Otherwise, a new capability is created with the current global unique index.
+// The newly created capability has the module and name tuple set as the initial
+// owner. Finally, the global index is incremented along with forward and reverse
+// indexes set in the in-memory store.
+//
+// Note, namespacing is completely local, which is safe since records are prefixed
+// with the module name and no two ScopedKeeper can have the same module name.
 func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capability, error) {
 	store := ctx.KVStore(sk.storeKey)
 	memStore := ctx.KVStore(sk.memKey)

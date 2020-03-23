@@ -25,7 +25,13 @@ var configDefaults = map[string]string{
 	"output":          "text",
 	"node":            "tcp://localhost:26657",
 	"broadcast-mode":  "sync",
-	"offline":         "false",
+}
+
+var configBoolDefaults = map[string]bool{
+	"trace":      false,
+	"trust-node": false,
+	"indent":     false,
+	"offline":    false,
 }
 
 // ConfigCmd returns a CLI command to interactively create an application CLI
@@ -76,20 +82,17 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	// get config value for a given key
 	if getAction {
-		switch key {
-		case "trace", "trust-node", "indent", "offline":
-			fmt.Println(tree.GetDefault(key, false).(bool))
-
-		default:
-			if defaultValue, ok := configDefaults[key]; ok {
-				fmt.Println(tree.GetDefault(key, defaultValue).(string))
-				return nil
-			}
-
-			return errUnknownConfigKey(key)
+		if defaultValue, ok := configBoolDefaults[key]; ok {
+			fmt.Println(tree.GetDefault(key, defaultValue).(bool))
+			return nil
 		}
 
-		return nil
+		if defaultValue, ok := configDefaults[key]; ok {
+			fmt.Println(tree.GetDefault(key, defaultValue).(string))
+			return nil
+		}
+
+		return errUnknownConfigKey(key)
 	}
 
 	if len(args) != 2 {
@@ -99,19 +102,16 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	value := args[1]
 
 	// set config value for a given key
-	switch key {
-	case "chain-id", "output", "node", "broadcast-mode", "keyring-backend":
-		tree.Set(key, value)
-
-	case "trace", "trust-node", "indent", "offline":
+	if _, ok := configBoolDefaults[key]; ok {
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err
 		}
 
 		tree.Set(key, boolVal)
-
-	default:
+	} else if _, ok := configDefaults[key]; ok {
+		tree.Set(key, value)
+	} else {
 		return errUnknownConfigKey(key)
 	}
 

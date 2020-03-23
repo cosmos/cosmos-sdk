@@ -63,7 +63,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// load configuration
-	tree, err := loadConfigFile(cfgFile)
+	tree, err := loadConfigFile(cmd, cfgFile)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Print(s)
+		cmd.Print(s)
 		return nil
 	}
 
@@ -83,12 +83,12 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	// get config value for a given key
 	if getAction {
 		if defaultValue, ok := configBoolDefaults[key]; ok {
-			fmt.Println(tree.GetDefault(key, defaultValue).(bool))
+			cmd.Println(tree.GetDefault(key, defaultValue).(bool))
 			return nil
 		}
 
 		if defaultValue, ok := configDefaults[key]; ok {
-			fmt.Println(tree.GetDefault(key, defaultValue).(string))
+			cmd.Println(tree.GetDefault(key, defaultValue).(string))
 			return nil
 		}
 
@@ -120,7 +120,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "configuration saved to %s\n", cfgFile)
+	cmd.PrintErrf("configuration saved to %s\n", cfgFile)
+
 	return nil
 }
 
@@ -133,9 +134,9 @@ func ensureConfFile(rootDir string) (string, error) {
 	return path.Join(cfgPath, "config.toml"), nil
 }
 
-func loadConfigFile(cfgFile string) (*toml.Tree, error) {
+func loadConfigFile(cmd *cobra.Command, cfgFile string) (*toml.Tree, error) {
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "%s does not exist\n", cfgFile)
+		cmd.PrintErrf("%s does not exist\n", cfgFile)
 		return toml.Load(``)
 	}
 

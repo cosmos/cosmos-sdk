@@ -100,6 +100,9 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap1)
 
+	forgedCap := types.NewCapabilityKey(0) // index should be the same index as the first capability
+	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
+
 	cap2, err := sk2.NewCapability(suite.ctx, "bond")
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap2)

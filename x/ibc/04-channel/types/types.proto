@@ -10,8 +10,14 @@ import "x/ibc/23-commitment/types/types.proto";
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.
 message MsgChannelOpenInit {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)    = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
   Channel channel = 3 [
     (gogoproto.nullable)    = false
   ];
@@ -23,8 +29,14 @@ message MsgChannelOpenInit {
 // MsgChannelOpenInit defines an sdk.Msg to try open  a channel handshake. It is
 // called by a relayer on Chain A.
 message MsgChannelOpenTry {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)    = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
   Channel channel = 3 [
     (gogoproto.nullable)    = false
   ];
@@ -39,8 +51,14 @@ message MsgChannelOpenTry {
 }
 
 message MsgChannelOpenAck {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)    = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
   string counterparty_version = 3 [(gogoproto.moretags)    = "yaml:\"counterparty_version\""];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 4 [
     (gogoproto.nullable)    = false
@@ -52,8 +70,14 @@ message MsgChannelOpenAck {
 }
 
 message MsgChannelOpenConfirm {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)    = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 3 [
     (gogoproto.nullable)    = false
   ];
@@ -64,16 +88,28 @@ message MsgChannelOpenConfirm {
 }
 
 message MsgChannelCloseInit {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)    = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
   bytes signer = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
 message MsgChannelCloseConfirm {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)    = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)    = "yaml:\"channel_id\""
+  ];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 3 [
     (gogoproto.nullable)    = false
   ];
@@ -126,13 +162,34 @@ message MsgAcknowledgement {
   ];
 }
 
+// Order defines if a channel is ORDERED or UNORDERED
+enum Order {
+  // zero-value for channel ordering
+  NONE = 0;
+  // packets can be delivered in any order, which may differ from the order in which they were sent.
+  UNORDERED = 1;
+  // packets are delivered exactly in the order which they were sent
+  ORDERED = 2;
+}
+
+// State defines if a channel is in one of the following states:
+// CLOSED, INIT, TRYOPEN or OPEN
+enum State {
+  // Default State
+  UNINITIALIZED = 0;
+  // A channel end has just started the opening handshake.
+  INIT = 1;
+  // A channel end has acknowledged the handshake step on the counterparty chain.
+  TRYOPEN = 2;         
+  // A channel end has completed the handshake and is ready to send and receive packets.
+  OPEN = 3;
+   // A channel end has been closed and can no longer be used to send or receive packets.
+	CLOSED = 4;
+}
+
 message Channel {
-  bytes state = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State"
-  ];
-  bytes ordering = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.Order"
-  ];
+  State state = 1;
+  Order ordering = 2;
   Counterparty counterparty = 3 [
     (gogoproto.nullable)    = false
   ];
@@ -143,10 +200,20 @@ message Channel {
 }
 
 message Counterparty {
-  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
-	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string port_id = 1 [
+    (gogoproto.customname) = "PortID",
+    (gogoproto.moretags)   = "yaml:\"port_id\""]
+  ;
+  string channel_id = 2 [
+    (gogoproto.customname) = "ChannelID",
+    (gogoproto.moretags)   = "yaml:\"channel_id\""
+  ];
 }
 
+// CommitPacket appends bigendian encoded timeout height and commitment bytes
+// and then returns the hash of the result bytes.
+// TODO: no specification for packet commitment currently,
+// make it spec compatible once we have it.
 message Packet {
   uint64 sequence = 1;
   string source_port = 2 [(gogoproto.moretags)    = "yaml:\"source_port\""];

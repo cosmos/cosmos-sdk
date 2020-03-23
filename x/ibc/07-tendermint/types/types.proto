@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.x.ibc.tendermint.v1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/abci/types/types.proto";
@@ -12,6 +12,7 @@ import "x/ibc/23-commitment/types/types.proto";
 // MsgCreateClient defines a message to create a tendermint client state.
 message MsgCreateClient {
   string client_id = 1 [
+    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)     = "yaml:\"client_id\""
   ];
   Header header = 2;
@@ -34,6 +35,7 @@ message MsgCreateClient {
 // the given header.
 message MsgUpdateClient {
   string client_id = 1 [
+    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)     = "yaml:\"client_id\""
   ];
   Header header = 2;
@@ -55,7 +57,7 @@ message MsgSubmitClientMisbehaviour {
 
 // ClientState defines a Tendermint consensus light client state.
 message ClientState {
-  string id = 1;
+  string id = 1 [(gogoproto.customname) = "ID"];
   // duration of the period since the LastestTimestamp during which the submitted
 	// headers are valid for upgrade
   google.protobuf.Duration trusting_period = 2 [
@@ -103,16 +105,20 @@ message ConsensusState {
 // It is used to verify and penalize light client misbehaviour.
 message Evidence {
   string client_id = 1 [
+    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
   string chain_id = 2 [
+    (gogoproto.customname) = "ChainID",
     (gogoproto.moretags)    = "yaml:\"chain_id\""
   ];
   Header header_1 = 3 [
+    (gogoproto.customname) = "Header1",
     (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"header_1\""
   ];
   Header header_2 = 4 [
+    (gogoproto.customname) = "Header2",
     (gogoproto.nullable) = false,
     (gogoproto.moretags)    = "yaml:\"header_2\""
   ];
@@ -129,10 +135,6 @@ message Header {
   ValidatorSet validator_set = 2 [
     (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"validator_set\""
-  ];
-  ValidatorSet next_validator_set = 3 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "yaml:\"next_validator_set\""
   ];
 }
 

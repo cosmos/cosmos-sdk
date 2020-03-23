@@ -6,7 +6,6 @@ package types
 import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	github_com_cosmos_cosmos_sdk_x_ibc_04_channel_exported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -26,9 +25,48 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// State defines if a connection is in one of the following states:
+// CLOSED, INIT, TRYOPEN or OPEN
+type State int32
+
+const (
+	// Default State
+	State_UNINITIALIZED State = 0
+	// A connection has just started the opening handshake.
+	State_INIT State = 1
+	// A connection has acknowledged the handshake step on the counterparty chain.
+	State_TRYOPEN State = 2
+	// A connection has completed the handshake.
+	State_OPEN State = 3
+)
+
+var State_name = map[int32]string{
+	0: "UNINITIALIZED",
+	1: "INIT",
+	2: "TRYOPEN",
+	3: "OPEN",
+}
+
+var State_value = map[string]int32{
+	"UNINITIALIZED": 0,
+	"INIT":          1,
+	"TRYOPEN":       2,
+	"OPEN":          3,
+}
+
+func (x State) String() string {
+	return proto.EnumName(State_name, int32(x))
+}
+
+func (State) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_30ee50c03d1fbe43, []int{0}
+}
+
+// MsgConnectionOpenInit defines the msg sent by an account on Chain A to
+// initialize a connection with Chain B.
 type MsgConnectionOpenInit struct {
-	ClientId     string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ConnectionId string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	ClientID     string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ConnectionID string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Counterparty Counterparty                                  `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
 	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
@@ -66,16 +104,16 @@ func (m *MsgConnectionOpenInit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenInit proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenInit) GetClientId() string {
+func (m *MsgConnectionOpenInit) GetClientID() string {
 	if m != nil {
-		return m.ClientId
+		return m.ClientID
 	}
 	return ""
 }
 
-func (m *MsgConnectionOpenInit) GetConnectionId() string {
+func (m *MsgConnectionOpenInit) GetConnectionID() string {
 	if m != nil {
-		return m.ConnectionId
+		return m.ConnectionID
 	}
 	return ""
 }
@@ -94,9 +132,11 @@ func (m *MsgConnectionOpenInit) GetSigner() github_com_cosmos_cosmos_sdk_types.A
 	return nil
 }
 
+// MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
+// on Chain B.
 type MsgConnectionOpenTry struct {
-	ClientId             string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ConnectionId         string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	ClientID             string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ConnectionID         string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Counterparty         Counterparty                                  `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
 	CounterpartyVersions []string                                      `protobuf:"bytes,4,rep,name=counterparty_versions,json=counterpartyVersions,proto3" json:"counterparty_versions,omitempty"`
 	ProofInit            types.MerkleProof                             `protobuf:"bytes,5,opt,name=proof_init,json=proofInit,proto3" json:"proof_init"`
@@ -139,16 +179,16 @@ func (m *MsgConnectionOpenTry) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenTry proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenTry) GetClientId() string {
+func (m *MsgConnectionOpenTry) GetClientID() string {
 	if m != nil {
-		return m.ClientId
+		return m.ClientID
 	}
 	return ""
 }
 
-func (m *MsgConnectionOpenTry) GetConnectionId() string {
+func (m *MsgConnectionOpenTry) GetConnectionID() string {
 	if m != nil {
-		return m.ConnectionId
+		return m.ConnectionID
 	}
 	return ""
 }
@@ -202,8 +242,10 @@ func (m *MsgConnectionOpenTry) GetSigner() github_com_cosmos_cosmos_sdk_types.Ac
 	return nil
 }
 
+// MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
+// the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
-	ConnectionId    string                                        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	ConnectionID    string                                        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Version         string                                        `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
 	ProofTry        types.MerkleProof                             `protobuf:"bytes,3,opt,name=proof_try,json=proofTry,proto3" json:"proof_try"`
 	ProofHeight     uint64                                        `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
@@ -245,9 +287,9 @@ func (m *MsgConnectionOpenAck) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenAck proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenAck) GetConnectionId() string {
+func (m *MsgConnectionOpenAck) GetConnectionID() string {
 	if m != nil {
-		return m.ConnectionId
+		return m.ConnectionID
 	}
 	return ""
 }
@@ -294,8 +336,10 @@ func (m *MsgConnectionOpenAck) GetSigner() github_com_cosmos_cosmos_sdk_types.Ac
 	return nil
 }
 
+// MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
+// the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
-	ConnectionId string                                        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	ConnectionID string                                        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	ProofAck     types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack"`
 	ProofHeight  uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
 	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
@@ -334,9 +378,9 @@ func (m *MsgConnectionOpenConfirm) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenConfirm proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenConfirm) GetConnectionId() string {
+func (m *MsgConnectionOpenConfirm) GetConnectionID() string {
 	if m != nil {
-		return m.ConnectionId
+		return m.ConnectionID
 	}
 	return ""
 }
@@ -362,11 +406,15 @@ func (m *MsgConnectionOpenConfirm) GetSigner() github_com_cosmos_cosmos_sdk_type
 	return nil
 }
 
+// ConnectionEnd defines a stateful object on a chain connected to another separate
+// one.
+// NOTE: there must only be 2 defined ConnectionEnds to establish a connection
+// between two chains.
 type ConnectionEnd struct {
-	ClientId     string                                                       `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	Versions     []string                                                     `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
-	State        github_com_cosmos_cosmos_sdk_x_ibc_04_channel_exported.State `protobuf:"bytes,3,opt,name=state,proto3,casttype=github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State" json:"state,omitempty"`
-	Counterparty Counterparty                                                 `protobuf:"bytes,4,opt,name=counterparty,proto3" json:"counterparty"`
+	ClientID     string       `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	Versions     []string     `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
+	State        State        `protobuf:"varint,3,opt,name=state,proto3,enum=cosmos_sdk.x.ibc.connection.v1.State" json:"state,omitempty"`
+	Counterparty Counterparty `protobuf:"bytes,4,opt,name=counterparty,proto3" json:"counterparty"`
 }
 
 func (m *ConnectionEnd) Reset()         { *m = ConnectionEnd{} }
@@ -402,9 +450,9 @@ func (m *ConnectionEnd) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConnectionEnd proto.InternalMessageInfo
 
-func (m *ConnectionEnd) GetClientId() string {
+func (m *ConnectionEnd) GetClientID() string {
 	if m != nil {
-		return m.ClientId
+		return m.ClientID
 	}
 	return ""
 }
@@ -416,11 +464,11 @@ func (m *ConnectionEnd) GetVersions() []string {
 	return nil
 }
 
-func (m *ConnectionEnd) GetState() github_com_cosmos_cosmos_sdk_x_ibc_04_channel_exported.State {
+func (m *ConnectionEnd) GetState() State {
 	if m != nil {
 		return m.State
 	}
-	return nil
+	return State_UNINITIALIZED
 }
 
 func (m *ConnectionEnd) GetCounterparty() Counterparty {
@@ -430,9 +478,10 @@ func (m *ConnectionEnd) GetCounterparty() Counterparty {
 	return Counterparty{}
 }
 
+// Counterparty defines the counterparty chain associated with a connection end.
 type Counterparty struct {
-	ClientId     string             `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	ConnectionId string             `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ClientID     string             `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ConnectionID string             `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 	Prefix       types.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix"`
 }
 
@@ -469,16 +518,16 @@ func (m *Counterparty) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Counterparty proto.InternalMessageInfo
 
-func (m *Counterparty) GetClientId() string {
+func (m *Counterparty) GetClientID() string {
 	if m != nil {
-		return m.ClientId
+		return m.ClientID
 	}
 	return ""
 }
 
-func (m *Counterparty) GetConnectionId() string {
+func (m *Counterparty) GetConnectionID() string {
 	if m != nil {
-		return m.ConnectionId
+		return m.ConnectionID
 	}
 	return ""
 }
@@ -491,6 +540,7 @@ func (m *Counterparty) GetPrefix() types.MerklePrefix {
 }
 
 func init() {
+	proto.RegisterEnum("cosmos_sdk.x.ibc.connection.v1.State", State_name, State_value)
 	proto.RegisterType((*MsgConnectionOpenInit)(nil), "cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenInit")
 	proto.RegisterType((*MsgConnectionOpenTry)(nil), "cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenTry")
 	proto.RegisterType((*MsgConnectionOpenAck)(nil), "cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenAck")
@@ -504,51 +554,54 @@ func init() {
 }
 
 var fileDescriptor_30ee50c03d1fbe43 = []byte{
-	// 696 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x41, 0x6b, 0x13, 0x4f,
-	0x14, 0xcf, 0x36, 0xdb, 0x34, 0x99, 0xa6, 0xff, 0x96, 0x25, 0x85, 0xa5, 0x7f, 0xd8, 0xc4, 0x88,
-	0x12, 0xd1, 0xec, 0xda, 0x56, 0x3c, 0x88, 0x82, 0x4d, 0x10, 0x8c, 0x50, 0x2d, 0x51, 0x7a, 0xe8,
-	0x25, 0x24, 0xb3, 0xd3, 0x64, 0x48, 0x76, 0x66, 0x99, 0x99, 0x96, 0xe4, 0x4b, 0x88, 0x67, 0x3f,
-	0x83, 0x1f, 0xa4, 0x07, 0x0f, 0x3d, 0x7a, 0x0a, 0xd2, 0x7e, 0x83, 0x1e, 0x8b, 0x82, 0xec, 0xec,
-	0x64, 0xb3, 0x76, 0x43, 0x2d, 0x6d, 0x05, 0x2f, 0x49, 0xf6, 0xcd, 0x7b, 0xbf, 0xf7, 0x7b, 0xf3,
-	0xfb, 0xf1, 0xb2, 0xe0, 0xde, 0xd0, 0xc1, 0x1d, 0xe8, 0x3c, 0xde, 0xac, 0x42, 0x4a, 0x08, 0x82,
-	0x02, 0x53, 0xe2, 0x88, 0x91, 0x8f, 0x78, 0xf8, 0x69, 0xfb, 0x8c, 0x0a, 0x6a, 0x58, 0x90, 0x72,
-	0x8f, 0xf2, 0x16, 0x77, 0xfb, 0xf6, 0xd0, 0xc6, 0x1d, 0x68, 0x4f, 0xd3, 0xed, 0xc3, 0xf5, 0xb5,
-	0xfb, 0xa2, 0x87, 0x99, 0xdb, 0xf2, 0xdb, 0x4c, 0x8c, 0x1c, 0x59, 0xe2, 0x74, 0x69, 0x97, 0x4e,
-	0x7f, 0x85, 0x38, 0x6b, 0xaa, 0xdd, 0x46, 0xd0, 0xce, 0xf3, 0xb0, 0xf0, 0x10, 0x11, 0xc9, 0x76,
-	0xe5, 0x1f, 0x1a, 0x58, 0xdd, 0xe6, 0xdd, 0x7a, 0xd4, 0xe3, 0x9d, 0x8f, 0x48, 0x83, 0x60, 0x61,
-	0xfc, 0x0f, 0x72, 0x70, 0x80, 0x11, 0x11, 0x2d, 0xec, 0x9a, 0x5a, 0x49, 0xab, 0xe4, 0x9a, 0xd9,
-	0x30, 0xd0, 0x70, 0x8d, 0xbb, 0x60, 0x69, 0x4a, 0x2b, 0x48, 0x98, 0x93, 0x09, 0xf9, 0x69, 0xb0,
-	0xe1, 0x1a, 0xbb, 0x20, 0x0f, 0xe9, 0x01, 0x11, 0x88, 0x49, 0xb6, 0x66, 0xba, 0xa4, 0x55, 0x16,
-	0x37, 0x1e, 0xd9, 0x97, 0x4f, 0x68, 0xd7, 0x63, 0x35, 0x35, 0xfd, 0x68, 0x5c, 0x4c, 0x35, 0x7f,
-	0xc3, 0x31, 0x1a, 0x20, 0xc3, 0x71, 0x97, 0x20, 0x66, 0xea, 0x25, 0xad, 0x92, 0xaf, 0xad, 0x9f,
-	0x8f, 0x8b, 0xd5, 0x2e, 0x16, 0xbd, 0x83, 0x8e, 0x0d, 0xa9, 0xe7, 0x84, 0xf8, 0xea, 0xab, 0xca,
-	0xdd, 0xbe, 0x9a, 0x78, 0x0b, 0xc2, 0x2d, 0xd7, 0x65, 0x88, 0xf3, 0xa6, 0x02, 0x28, 0x7f, 0xd1,
-	0x41, 0x21, 0x31, 0xfe, 0x07, 0x36, 0xfa, 0x87, 0xa7, 0xdf, 0x04, 0xab, 0xf1, 0xe7, 0xd6, 0x21,
-	0x62, 0x1c, 0x53, 0xc2, 0x4d, 0xbd, 0x94, 0xae, 0xe4, 0x9a, 0x85, 0xf8, 0xe1, 0xae, 0x3a, 0x33,
-	0x76, 0x00, 0xf0, 0x19, 0xa5, 0xfb, 0x2d, 0x4c, 0xb0, 0x30, 0xe7, 0x25, 0x95, 0x87, 0xb3, 0xa8,
-	0x4c, 0xac, 0x12, 0x50, 0xd9, 0x46, 0xac, 0x3f, 0x40, 0x3b, 0x41, 0x9d, 0x62, 0x92, 0x93, 0x20,
-	0xd2, 0x1e, 0x77, 0x40, 0x3e, 0x44, 0xec, 0x21, 0xdc, 0xed, 0x09, 0x33, 0x53, 0xd2, 0x2a, 0x7a,
-	0x73, 0x51, 0xc6, 0x5e, 0xcb, 0x90, 0xb1, 0x07, 0x96, 0xc3, 0x14, 0x48, 0x09, 0x47, 0x84, 0x1f,
-	0x70, 0x73, 0xe1, 0xba, 0x9d, 0xff, 0x93, 0x48, 0xf5, 0x09, 0x90, 0xf1, 0x00, 0xac, 0x44, 0xa8,
-	0x13, 0x0a, 0x59, 0x49, 0x61, 0x39, 0x8a, 0x2b, 0x1a, 0x53, 0xbb, 0xe4, 0x6e, 0x6a, 0x97, 0xcf,
-	0xe9, 0x19, 0x76, 0xd9, 0x82, 0xfd, 0xa4, 0x23, 0xb4, 0x19, 0x8e, 0x30, 0xc1, 0x82, 0x12, 0x4b,
-	0x19, 0x66, 0xf2, 0x68, 0xbc, 0x05, 0xe1, 0xcd, 0xb6, 0x04, 0x9b, 0x18, 0xe5, 0x1a, 0x77, 0x94,
-	0x95, 0x18, 0x81, 0x7b, 0x2f, 0x8a, 0xa3, 0x5f, 0x49, 0x9c, 0xf9, 0xbf, 0x29, 0x4e, 0xe6, 0x4f,
-	0xe2, 0x2c, 0xdc, 0x54, 0x9c, 0x9f, 0x1a, 0x30, 0x13, 0xe2, 0xd4, 0x29, 0xd9, 0xc7, 0xcc, 0xbb,
-	0x9a, 0x40, 0x91, 0x0c, 0x6d, 0xd8, 0x97, 0x12, 0xdd, 0x40, 0x86, 0xc0, 0x15, 0x17, 0x65, 0x48,
-	0x27, 0x65, 0xb8, 0xc5, 0x5d, 0xf6, 0x71, 0x0e, 0x2c, 0x4d, 0x87, 0x7f, 0x45, 0x5c, 0x63, 0x3d,
-	0xb1, 0xc4, 0x6a, 0x85, 0xb3, 0x71, 0x71, 0x65, 0xd4, 0xf6, 0x06, 0xcf, 0xca, 0xd1, 0x51, 0x39,
-	0xb6, 0xda, 0xd6, 0x40, 0x36, 0x5a, 0x28, 0x73, 0x72, 0xa1, 0x44, 0xcf, 0xc6, 0x2e, 0x98, 0xe7,
-	0xa2, 0x2d, 0x90, 0x9c, 0x23, 0x5f, 0x7b, 0x79, 0x3e, 0x2e, 0x3e, 0xbf, 0x94, 0xaa, 0xfa, 0xc7,
-	0x7b, 0x52, 0x85, 0xbd, 0x36, 0x21, 0x68, 0xe0, 0xa0, 0xa1, 0x4f, 0x99, 0x40, 0xae, 0xfd, 0x3e,
-	0xc0, 0x69, 0x86, 0x70, 0x89, 0x4d, 0xa9, 0xdf, 0xce, 0xa6, 0x2c, 0x7f, 0xd5, 0x40, 0x3e, 0x9e,
-	0x74, 0x9d, 0xfb, 0x78, 0x31, 0x73, 0xd5, 0xd7, 0xcc, 0xb3, 0x71, 0xb1, 0xa0, 0xca, 0xe2, 0xc7,
-	0xe5, 0x0b, 0x8e, 0x7a, 0x03, 0x32, 0x3e, 0x43, 0xfb, 0x78, 0x78, 0xd9, 0xfa, 0x9f, 0x65, 0xa7,
-	0xa0, 0x46, 0x0d, 0xa5, 0x10, 0x6a, 0x3b, 0x47, 0x27, 0x96, 0x76, 0x7c, 0x62, 0x69, 0xdf, 0x4f,
-	0x2c, 0xed, 0xd3, 0xa9, 0x95, 0x3a, 0x3e, 0xb5, 0x52, 0xdf, 0x4e, 0xad, 0xd4, 0xde, 0xd3, 0xab,
-	0xa8, 0x90, 0x7c, 0xef, 0xe8, 0x64, 0xe4, 0x3b, 0xc0, 0xe6, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0xc3, 0x6e, 0x7b, 0x9c, 0x9b, 0x08, 0x00, 0x00,
+	// 748 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xcd, 0x4e, 0xdb, 0x4a,
+	0x14, 0x8e, 0x13, 0xe7, 0x6f, 0x08, 0x90, 0x3b, 0x02, 0xc9, 0x62, 0x91, 0xe4, 0x46, 0xe2, 0x2a,
+	0xdc, 0x16, 0xa7, 0x80, 0xda, 0x45, 0x51, 0x17, 0x49, 0x40, 0xaa, 0xab, 0x12, 0x22, 0x97, 0x22,
+	0x95, 0x4d, 0x94, 0xd8, 0x43, 0x32, 0x0a, 0x99, 0x89, 0x3c, 0x03, 0x22, 0x4f, 0xd1, 0x3e, 0x40,
+	0x1f, 0xa1, 0x0f, 0xc2, 0xa2, 0x0b, 0x96, 0x5d, 0x45, 0x55, 0xd8, 0x74, 0xcd, 0xb2, 0x9b, 0x56,
+	0x1e, 0x3b, 0xb1, 0x1b, 0xa7, 0x80, 0x08, 0x5d, 0x74, 0x93, 0x78, 0xce, 0x9c, 0xf9, 0xce, 0x99,
+	0xf3, 0x7d, 0xfa, 0x6c, 0xb0, 0x7a, 0x5e, 0xc4, 0x4d, 0xa3, 0xf8, 0x64, 0x6b, 0xdd, 0xa0, 0x84,
+	0x20, 0x83, 0x63, 0x4a, 0x8a, 0xbc, 0xdf, 0x43, 0xcc, 0xf9, 0x55, 0x7b, 0x16, 0xe5, 0x14, 0x66,
+	0x0c, 0xca, 0xba, 0x94, 0xd5, 0x99, 0xd9, 0x51, 0xcf, 0x55, 0xdc, 0x34, 0x54, 0x2f, 0x5d, 0x3d,
+	0xdb, 0x58, 0xf9, 0x8f, 0xb7, 0xb1, 0x65, 0xd6, 0x7b, 0x0d, 0x8b, 0xf7, 0x8b, 0xe2, 0x48, 0xb1,
+	0x45, 0x5b, 0xd4, 0x7b, 0x72, 0x70, 0x56, 0xdc, 0x72, 0x9b, 0x76, 0xb9, 0x6e, 0x17, 0xf3, 0x2e,
+	0x22, 0x3c, 0x58, 0x2e, 0xff, 0x31, 0x0c, 0x96, 0xf7, 0x58, 0xab, 0x32, 0xae, 0xb1, 0xdf, 0x43,
+	0x44, 0x23, 0x98, 0xc3, 0x35, 0x90, 0x34, 0x4e, 0x30, 0x22, 0xbc, 0x8e, 0x4d, 0x45, 0xca, 0x49,
+	0x85, 0x64, 0x39, 0x35, 0x1c, 0x64, 0x13, 0x15, 0x11, 0xd4, 0x76, 0xf4, 0x84, 0xb3, 0xad, 0x99,
+	0xf0, 0x29, 0x98, 0xf7, 0x9a, 0xb4, 0xd3, 0xc3, 0x22, 0x3d, 0x3d, 0x1c, 0x64, 0x53, 0x1e, 0xb2,
+	0xb6, 0xa3, 0xa7, 0xbc, 0x34, 0xcd, 0x84, 0x87, 0x20, 0x65, 0xd0, 0x53, 0xc2, 0x91, 0x25, 0x6e,
+	0xa3, 0x44, 0x72, 0x52, 0x61, 0x6e, 0xf3, 0xb1, 0x7a, 0xf3, 0x04, 0xd4, 0x8a, 0xef, 0x4c, 0x59,
+	0xbe, 0x18, 0x64, 0x43, 0xfa, 0x2f, 0x38, 0x50, 0x03, 0x31, 0x86, 0x5b, 0x04, 0x59, 0x8a, 0x9c,
+	0x93, 0x0a, 0xa9, 0xf2, 0xc6, 0xf7, 0x41, 0x76, 0xbd, 0x85, 0x79, 0xfb, 0xb4, 0xa9, 0x1a, 0xb4,
+	0x5b, 0x74, 0xf0, 0xdd, 0xbf, 0x75, 0x66, 0x76, 0xdc, 0x89, 0x94, 0x0c, 0xa3, 0x64, 0x9a, 0x16,
+	0x62, 0x4c, 0x77, 0x01, 0xf2, 0x9f, 0x65, 0xb0, 0x14, 0x18, 0xcf, 0x81, 0xd5, 0xff, 0x8b, 0xa7,
+	0xb3, 0x05, 0x96, 0xfd, 0xeb, 0xfa, 0x19, 0xb2, 0x18, 0xa6, 0x84, 0x29, 0x72, 0x2e, 0x52, 0x48,
+	0xea, 0x4b, 0xfe, 0xcd, 0x43, 0x77, 0x0f, 0xd6, 0x00, 0xe8, 0x59, 0x94, 0x1e, 0xd7, 0x31, 0xc1,
+	0x5c, 0x89, 0x8a, 0x56, 0x1e, 0x4d, 0x6b, 0x65, 0x24, 0x35, 0xbb, 0x95, 0x3d, 0x64, 0x75, 0x4e,
+	0x50, 0xcd, 0x3e, 0xe7, 0x76, 0x92, 0x14, 0x20, 0x42, 0x5e, 0xff, 0x82, 0x94, 0x83, 0xd8, 0x46,
+	0xb8, 0xd5, 0xe6, 0x4a, 0x2c, 0x27, 0x15, 0x64, 0x7d, 0x4e, 0xc4, 0x5e, 0x8a, 0x10, 0x3c, 0x02,
+	0x8b, 0x4e, 0x8a, 0x41, 0x09, 0x43, 0x84, 0x9d, 0x32, 0x25, 0x7e, 0xdf, 0xca, 0x0b, 0x02, 0xa9,
+	0x32, 0x02, 0x82, 0x6b, 0x20, 0x3d, 0x46, 0x1d, 0xb5, 0x90, 0x10, 0x2d, 0x2c, 0x8e, 0xe3, 0x6e,
+	0x1b, 0x9e, 0x9c, 0x92, 0xb3, 0xca, 0xe9, 0x53, 0x64, 0x8a, 0x9c, 0x4a, 0x46, 0x27, 0xa8, 0x11,
+	0xe9, 0x4e, 0x1a, 0x51, 0x40, 0xdc, 0xa5, 0xcf, 0x11, 0x95, 0x3e, 0x5a, 0xc2, 0x2a, 0x70, 0x66,
+	0x5d, 0xe7, 0xd6, 0x48, 0x3a, 0xf7, 0x98, 0x5a, 0x42, 0x60, 0xd8, 0x7a, 0x9f, 0xa4, 0x4b, 0xbe,
+	0x13, 0x5d, 0xd1, 0x3f, 0x49, 0x57, 0xec, 0x36, 0xba, 0xe2, 0xb3, 0xd2, 0xf5, 0x3e, 0x0c, 0x94,
+	0x00, 0x5d, 0x15, 0x4a, 0x8e, 0xb1, 0xd5, 0xbd, 0x2f, 0x65, 0x63, 0x62, 0x1a, 0x46, 0x47, 0x90,
+	0x36, 0x03, 0x31, 0xb6, 0x72, 0x26, 0x89, 0x89, 0x04, 0x89, 0x79, 0x40, 0x3f, 0xfc, 0x21, 0x81,
+	0x79, 0xef, 0x72, 0xbb, 0xc4, 0x84, 0x2f, 0x82, 0x46, 0x98, 0xf3, 0x1b, 0xe1, 0xf5, 0x20, 0x9b,
+	0xee, 0x37, 0xba, 0x27, 0xcf, 0xf3, 0xe3, 0xb4, 0xbc, 0xcf, 0x1c, 0x57, 0x40, 0x62, 0x6c, 0x40,
+	0x61, 0x61, 0x40, 0xe3, 0x35, 0xdc, 0x06, 0x51, 0xc6, 0x1b, 0x1c, 0x89, 0x3b, 0x2d, 0x6c, 0xae,
+	0xde, 0x66, 0x7d, 0x6f, 0xec, 0x64, 0xdd, 0x39, 0x13, 0xb0, 0x4f, 0xf9, 0x61, 0xec, 0x33, 0xff,
+	0x4d, 0x02, 0x29, 0x7f, 0xd2, 0xac, 0x03, 0xd8, 0x9b, 0xfe, 0x76, 0x28, 0x4c, 0xca, 0xe8, 0x7a,
+	0x90, 0x5d, 0x72, 0x61, 0xfc, 0xe9, 0xf9, 0x09, 0x79, 0xbd, 0x02, 0xb1, 0x9e, 0x85, 0x8e, 0xf1,
+	0xf9, 0x4d, 0xef, 0x8b, 0x69, 0xda, 0xb2, 0xcf, 0xb8, 0x17, 0x76, 0x11, 0xfe, 0xdf, 0x06, 0x51,
+	0x31, 0x52, 0xf8, 0x0f, 0x98, 0x7f, 0x5b, 0xd5, 0xaa, 0xda, 0x81, 0x56, 0x7a, 0xad, 0x1d, 0xed,
+	0xee, 0xa4, 0x43, 0x30, 0x01, 0x64, 0x3b, 0x90, 0x96, 0xe0, 0x1c, 0x88, 0x1f, 0xe8, 0xef, 0xf6,
+	0x6b, 0xbb, 0xd5, 0x74, 0xd8, 0x0e, 0x8b, 0xa7, 0x48, 0xb9, 0x76, 0x31, 0xcc, 0x48, 0x97, 0xc3,
+	0x8c, 0xf4, 0x75, 0x98, 0x91, 0x3e, 0x5c, 0x65, 0x42, 0x97, 0x57, 0x99, 0xd0, 0x97, 0xab, 0x4c,
+	0xe8, 0xe8, 0xd9, 0x8d, 0xd2, 0xfb, 0xed, 0x57, 0x52, 0x33, 0x26, 0xbe, 0x58, 0xb6, 0x7e, 0x06,
+	0x00, 0x00, 0xff, 0xff, 0xd8, 0x86, 0x82, 0x7c, 0x49, 0x09, 0x00, 0x00,
 }
 
 func (m *MsgConnectionOpenInit) Marshal() (dAtA []byte, err error) {
@@ -588,17 +641,17 @@ func (m *MsgConnectionOpenInit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if len(m.ConnectionId) > 0 {
-		i -= len(m.ConnectionId)
-		copy(dAtA[i:], m.ConnectionId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionId)))
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionID)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClientId) > 0 {
-		i -= len(m.ClientId)
-		copy(dAtA[i:], m.ClientId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientId)))
+	if len(m.ClientID) > 0 {
+		i -= len(m.ClientID)
+		copy(dAtA[i:], m.ClientID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -681,17 +734,17 @@ func (m *MsgConnectionOpenTry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if len(m.ConnectionId) > 0 {
-		i -= len(m.ConnectionId)
-		copy(dAtA[i:], m.ConnectionId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionId)))
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionID)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClientId) > 0 {
-		i -= len(m.ClientId)
-		copy(dAtA[i:], m.ClientId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientId)))
+	if len(m.ClientID) > 0 {
+		i -= len(m.ClientID)
+		copy(dAtA[i:], m.ClientID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -762,10 +815,10 @@ func (m *MsgConnectionOpenAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ConnectionId) > 0 {
-		i -= len(m.ConnectionId)
-		copy(dAtA[i:], m.ConnectionId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionId)))
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -814,10 +867,10 @@ func (m *MsgConnectionOpenConfirm) MarshalToSizedBuffer(dAtA []byte) (int, error
 	}
 	i--
 	dAtA[i] = 0x12
-	if len(m.ConnectionId) > 0 {
-		i -= len(m.ConnectionId)
-		copy(dAtA[i:], m.ConnectionId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionId)))
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -854,12 +907,10 @@ func (m *ConnectionEnd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x22
-	if len(m.State) > 0 {
-		i -= len(m.State)
-		copy(dAtA[i:], m.State)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.State)))
+	if m.State != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.State))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x18
 	}
 	if len(m.Versions) > 0 {
 		for iNdEx := len(m.Versions) - 1; iNdEx >= 0; iNdEx-- {
@@ -870,10 +921,10 @@ func (m *ConnectionEnd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 		}
 	}
-	if len(m.ClientId) > 0 {
-		i -= len(m.ClientId)
-		copy(dAtA[i:], m.ClientId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientId)))
+	if len(m.ClientID) > 0 {
+		i -= len(m.ClientID)
+		copy(dAtA[i:], m.ClientID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -910,17 +961,17 @@ func (m *Counterparty) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if len(m.ConnectionId) > 0 {
-		i -= len(m.ConnectionId)
-		copy(dAtA[i:], m.ConnectionId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionId)))
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ConnectionID)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClientId) > 0 {
-		i -= len(m.ClientId)
-		copy(dAtA[i:], m.ClientId)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientId)))
+	if len(m.ClientID) > 0 {
+		i -= len(m.ClientID)
+		copy(dAtA[i:], m.ClientID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.ClientID)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -944,11 +995,11 @@ func (m *MsgConnectionOpenInit) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientId)
+	l = len(m.ClientID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = len(m.ConnectionId)
+	l = len(m.ConnectionID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -967,11 +1018,11 @@ func (m *MsgConnectionOpenTry) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientId)
+	l = len(m.ClientID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = len(m.ConnectionId)
+	l = len(m.ConnectionID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -1006,7 +1057,7 @@ func (m *MsgConnectionOpenAck) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ConnectionId)
+	l = len(m.ConnectionID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -1037,7 +1088,7 @@ func (m *MsgConnectionOpenConfirm) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ConnectionId)
+	l = len(m.ConnectionID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -1059,7 +1110,7 @@ func (m *ConnectionEnd) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientId)
+	l = len(m.ClientID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -1069,9 +1120,8 @@ func (m *ConnectionEnd) Size() (n int) {
 			n += 1 + l + sovTypes(uint64(l))
 		}
 	}
-	l = len(m.State)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+	if m.State != 0 {
+		n += 1 + sovTypes(uint64(m.State))
 	}
 	l = m.Counterparty.Size()
 	n += 1 + l + sovTypes(uint64(l))
@@ -1084,11 +1134,11 @@ func (m *Counterparty) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientId)
+	l = len(m.ClientID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = len(m.ConnectionId)
+	l = len(m.ConnectionID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -1134,7 +1184,7 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1162,11 +1212,11 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientId = string(dAtA[iNdEx:postIndex])
+			m.ClientID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1194,7 +1244,7 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1318,7 +1368,7 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1346,11 +1396,11 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientId = string(dAtA[iNdEx:postIndex])
+			m.ClientID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1378,7 +1428,7 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1638,7 +1688,7 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1666,7 +1716,7 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1893,7 +1943,7 @@ func (m *MsgConnectionOpenConfirm) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1921,7 +1971,7 @@ func (m *MsgConnectionOpenConfirm) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2064,7 +2114,7 @@ func (m *ConnectionEnd) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2092,7 +2142,7 @@ func (m *ConnectionEnd) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientId = string(dAtA[iNdEx:postIndex])
+			m.ClientID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2127,10 +2177,10 @@ func (m *ConnectionEnd) Unmarshal(dAtA []byte) error {
 			m.Versions = append(m.Versions, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 3:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
 			}
-			var byteLen int
+			m.State = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -2140,26 +2190,11 @@ func (m *ConnectionEnd) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				m.State |= State(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.State = append(m.State[:0], dAtA[iNdEx:postIndex]...)
-			if m.State == nil {
-				m.State = []byte{}
-			}
-			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Counterparty", wireType)
@@ -2248,7 +2283,7 @@ func (m *Counterparty) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2276,11 +2311,11 @@ func (m *Counterparty) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientId = string(dAtA[iNdEx:postIndex])
+			m.ClientID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2308,7 +2343,7 @@ func (m *Counterparty) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {

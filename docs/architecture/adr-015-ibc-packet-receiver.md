@@ -133,8 +133,8 @@ of ordered channel.
 
 ```go
 func (keeper ChannelKeeper) WriteAcknowledgement(ctx Context, packet Packet, ack []byte) {
-  keeper.SetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack)
-  keeper.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+  keeper.SetPacketAcknowledgement(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(), ack)
+  keeper.SetNextSequenceRecv(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence())
 }
 
 func (keeper ChannelKeeper) DeleteCommitment(ctx Context, packet Packet) {

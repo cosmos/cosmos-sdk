@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -26,15 +25,6 @@ var (
 	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
 )
 
-// MsgCreateClient defines a message to create an IBC client
-type MsgCreateClient struct {
-	ClientID        string         `json:"client_id" yaml:"client_id"`
-	Header          Header         `json:"header" yaml:"header"`
-	TrustingPeriod  time.Duration  `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration  `json:"unbonding_period" yaml:"unbonding_period"`
-	Signer          sdk.AccAddress `json:"address" yaml:"address"`
-}
-
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header,
@@ -42,7 +32,7 @@ func NewMsgCreateClient(
 ) MsgCreateClient {
 	return MsgCreateClient{
 		ClientID:        id,
-		Header:          header,
+		Header:          &header,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		Signer:          signer,
@@ -87,11 +77,6 @@ func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-// GetClientID implements clientexported.MsgCreateClient
-func (msg MsgCreateClient) GetClientID() string {
-	return msg.ClientID
-}
-
 // GetClientType implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetClientType() string {
 	return clientexported.ClientTypeTendermint
@@ -105,15 +90,8 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 		Timestamp:    msg.Header.Time,
 		Root:         root,
 		Height:       uint64(msg.Header.Height),
-		ValidatorSet: msg.Header.ValidatorSet,
+		ValidatorSet: msg.Header.GetValidatorSet(),
 	}
-}
-
-// MsgUpdateClient defines a message to update an IBC client
-type MsgUpdateClient struct {
-	ClientID string         `json:"client_id" yaml:"client_id"`
-	Header   Header         `json:"header" yaml:"header"`
-	Signer   sdk.AccAddress `json:"address" yaml:"address"`
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
@@ -153,27 +131,13 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-// GetClientID implements clientexported.MsgUpdateClient
-func (msg MsgUpdateClient) GetClientID() string {
-	return msg.ClientID
-}
-
-// GetHeader implements clientexported.MsgUpdateClient
-func (msg MsgUpdateClient) GetHeader() clientexported.Header {
-	return msg.Header
-}
-
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
-// Evidence for client misbehaviour.
-type MsgSubmitClientMisbehaviour struct {
-	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
-	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
-}
-
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
-	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(evidence Evidence, signer sdk.AccAddress) MsgSubmitClientMisbehaviour {
+	return MsgSubmitClientMisbehaviour{
+		Evidence:  evidence,
+		Submitter: signer,
+	}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -184,17 +148,11 @@ func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClien
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
-	if msg.Evidence == nil {
-		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
-	}
-	if err := msg.Evidence.ValidateBasic(); err != nil {
-		return err
-	}
 	if msg.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
 	}
 
-	return nil
+	return msg.Evidence.ValidateBasic()
 }
 
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
@@ -206,12 +164,4 @@ func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Submitter}
-}
-
-func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return msg.Evidence
-}
-
-func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {
-	return msg.Submitter
 }

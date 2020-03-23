@@ -6,29 +6,40 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
 
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
+// See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message MsgTransfer {
+   // the port on which the packet will be sent
   string source_port = 1 [
     (gogoproto.moretags) = "yaml:\"source_port\""
   ];
+  // the channel by which the packet will be sent
   string source_channel = 2 [
     (gogoproto.moretags) = "yaml:\"source_channel\""
   ];
+  // the current height of the destination chain
   uint64 destination_height = 3 [
     (gogoproto.moretags) = "yaml:\"destination_height\""
   ];
+  // the tokens to be transferred
   repeated cosmos_sdk.v1.Coin amount = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  // the sender address
   bytes sender = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
+   // the recipient address on the destination chain
   bytes receiver = 6 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
+  // indicates if the sending chain is the source chain of the tokens to be transferred
   bool source = 7;
 }
 
+// FungibleTokenPacketData defines a struct for the packet payload
+// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message FungibleTokenPacketData {
   repeated cosmos_sdk.v1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
@@ -44,4 +55,6 @@ message FungibleTokenPacketData {
   bool source = 5;
 }
 
+// AckDataTransfer is a no-op packet
+// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 message AckDataTransfer {}

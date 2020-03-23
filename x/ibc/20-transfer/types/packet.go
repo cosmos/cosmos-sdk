@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -10,16 +8,6 @@ import (
 )
 
 var _ channelexported.PacketDataI = FungibleTokenPacketData{}
-
-// FungibleTokenPacketData defines a struct for the packet payload
-// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
-type FungibleTokenPacketData struct {
-	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
-	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
-	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
-	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
-	Timeout  uint64         `json:"timeout" yaml:"timeout"`
-}
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
@@ -32,20 +20,6 @@ func NewFungibleTokenPacketData(
 		Source:   source,
 		Timeout:  timeout,
 	}
-}
-
-// String returns a string representation of FungibleTokenPacketData
-func (ftpd FungibleTokenPacketData) String() string {
-	return fmt.Sprintf(`FungibleTokenPacketData:
-	Amount:               %s
-	Sender:               %s
-	Receiver:             %s
-	Source:               %v`,
-		ftpd.Amount.String(),
-		ftpd.Sender,
-		ftpd.Receiver,
-		ftpd.Source,
-	)
 }
 
 // ValidateBasic implements channelexported.PacketDataI
@@ -84,10 +58,6 @@ func (ftpd FungibleTokenPacketData) Type() string {
 }
 
 var _ channelexported.PacketAcknowledgementI = AckDataTransfer{}
-
-// AckDataTransfer is a no-op packet
-// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-type AckDataTransfer struct{}
 
 // GetBytes implements channelexported.PacketAcknowledgementI
 func (ack AckDataTransfer) GetBytes() []byte {

@@ -3,8 +3,6 @@ package types
 import (
 	"math"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -21,23 +19,9 @@ var (
 	_ clientexported.Misbehaviour = Evidence{}
 )
 
-// Evidence is a wrapper over tendermint's DuplicateVoteEvidence
-// that implements Evidence interface expected by ICS-02
-type Evidence struct {
-	ClientID string `json:"client_id" yaml:"client_id"`
-	Header1  Header `json:"header1" yaml:"header1"`
-	Header2  Header `json:"header2" yaml:"header2"`
-	ChainID  string `json:"chain_id" yaml:"chain_id"`
-}
-
 // ClientType is Tendermint light client
 func (ev Evidence) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
-}
-
-// GetClientID returns the ID of the client that committed a misbehaviour.
-func (ev Evidence) GetClientID() string {
-	return ev.ClientID
 }
 
 // Route implements Evidence interface
@@ -48,16 +32,6 @@ func (ev Evidence) Route() string {
 // Type implements Evidence interface
 func (ev Evidence) Type() string {
 	return "client_misbehaviour"
-}
-
-// String implements Evidence interface
-func (ev Evidence) String() string {
-	// FIXME: implement custom marshaller
-	bz, err := yaml.Marshal(ev)
-	if err != nil {
-		panic(err)
-	}
-	return string(bz)
 }
 
 // Hash implements Evidence interface
@@ -102,10 +76,7 @@ func (ev Evidence) ValidateBasic() error {
 	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
 		return err
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
-		return err
-	}
-	return nil
+	return ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet)
 }
 
 // ValidCommit checks if the given commit is a valid commit from the passed-in validatorset

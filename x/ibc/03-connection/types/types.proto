@@ -6,10 +6,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types/types.proto";
 
-
+// MsgConnectionOpenInit defines the msg sent by an account on Chain A to
+// initialize a connection with Chain B.
 message MsgConnectionOpenInit {
-  string client_id = 1;
-  string connection_id = 2;
+  string client_id = 1 [(gogoproto.customname) = "ClientID"];
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   Counterparty counterparty = 3 [
     (gogoproto.nullable) = false
   ];
@@ -18,9 +19,11 @@ message MsgConnectionOpenInit {
   ];
 }
 
+// MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
+// on Chain B.
 message MsgConnectionOpenTry {
-  string client_id = 1;
-  string connection_id = 2;
+  string client_id = 1 [(gogoproto.customname) = "ClientID"];
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   Counterparty counterparty = 3 [
     (gogoproto.nullable) = false
   ];
@@ -38,8 +41,10 @@ message MsgConnectionOpenTry {
   ];
 }
 
+// MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
+// the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
-  string connection_id = 1;
+  string connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
   string version = 2;
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 3 [
     (gogoproto.nullable)    = false
@@ -54,8 +59,10 @@ message MsgConnectionOpenAck {
   ];
 }
 
+// MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
+// the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
-  string connection_id = 1;
+  string connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 2 [
     (gogoproto.nullable)    = false
   ];
@@ -65,24 +72,45 @@ message MsgConnectionOpenConfirm {
   ];
 }
 
+// State defines if a connection is in one of the following states:
+// CLOSED, INIT, TRYOPEN or OPEN
+enum State {
+  // Default State
+  UNINITIALIZED = 0;
+  // A connection has just started the opening handshake.
+  INIT = 1;
+  // A connection has acknowledged the handshake step on the counterparty chain.
+  TRYOPEN = 2;         
+  // A connection has completed the handshake.
+  OPEN = 3;
+}
+
+// ICS03 - Connection Data Structures as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
+
+// ConnectionEnd defines a stateful object on a chain connected to another separate
+// one.
+// NOTE: there must only be 2 defined ConnectionEnds to establish a connection
+// between two chains.
 message ConnectionEnd {
   string client_id = 1 [
+    (gogoproto.customname) = "ClientID", 
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
   repeated string versions = 2;
-  bytes state = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.State"
-  ];
+  State state = 3;
   Counterparty counterparty = 4 [
     (gogoproto.nullable) = false
   ];
 }
 
+// Counterparty defines the counterparty chain associated with a connection end.
 message Counterparty {
   string client_id = 1 [
+    (gogoproto.customname) = "ClientID", 
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
   string connection_id = 2 [
+    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags)    = "yaml:\"connection_id\""
   ];
   cosmos_sdk.x.ibc.commitment.v1.MerklePrefix prefix = 3 [

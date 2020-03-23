@@ -12,23 +12,6 @@ import (
 
 var _ exported.ConnectionI = ConnectionEnd{}
 
-// ICS03 - Connection Data Structures as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
-
-// ConnectionEnd defines a stateful object on a chain connected to another separate
-// one.
-// NOTE: there must only be 2 defined ConnectionEnds to establish a connection
-// between two chains.
-type ConnectionEnd struct {
-	State    exported.State `json:"state" yaml:"state"`
-	ClientID string         `json:"client_id" yaml:"client_id"`
-
-	// Counterparty chain associated with this connection.
-	Counterparty Counterparty `json:"counterparty" yaml:"counterparty"`
-	// Version is utilised to determine encodings or protocols for channels or
-	// packets utilising this connection.
-	Versions []string `json:"versions" yaml:"versions"`
-}
-
 // NewConnectionEnd creates a new ConnectionEnd instance.
 func NewConnectionEnd(state exported.State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
@@ -76,13 +59,6 @@ func (c ConnectionEnd) ValidateBasic() error {
 }
 
 var _ exported.CounterpartyI = Counterparty{}
-
-// Counterparty defines the counterparty chain associated with a connection end.
-type Counterparty struct {
-	ClientID     string                    `json:"client_id" yaml:"client_id"`
-	ConnectionID string                    `json:"connection_id" yaml:"connection_id"`
-	Prefix       commitmentexported.Prefix `json:"prefix" yaml:"prefix"`
-}
 
 // NewCounterparty creates a new Counterparty instance.
 func NewCounterparty(clientID, connectionID string, prefix commitmentexported.Prefix) Counterparty {

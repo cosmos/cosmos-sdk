@@ -25,14 +25,23 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
+// See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type MsgTransfer struct {
-	SourcePort        string                                        `protobuf:"bytes,1,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty" yaml:"source_port"`
-	SourceChannel     string                                        `protobuf:"bytes,2,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty" yaml:"source_channel"`
-	DestinationHeight uint64                                        `protobuf:"varint,3,opt,name=destination_height,json=destinationHeight,proto3" json:"destination_height,omitempty" yaml:"destination_height"`
-	Amount            github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	Sender            github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
-	Receiver          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,6,opt,name=receiver,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"receiver,omitempty"`
-	Source            bool                                          `protobuf:"varint,7,opt,name=source,proto3" json:"source,omitempty"`
+	// the port on which the packet will be sent
+	SourcePort string `protobuf:"bytes,1,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty" yaml:"source_port"`
+	// the channel by which the packet will be sent
+	SourceChannel string `protobuf:"bytes,2,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty" yaml:"source_channel"`
+	// the current height of the destination chain
+	DestinationHeight uint64 `protobuf:"varint,3,opt,name=destination_height,json=destinationHeight,proto3" json:"destination_height,omitempty" yaml:"destination_height"`
+	// the tokens to be transferred
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// the sender address
+	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
+	// the recipient address on the destination chain
+	Receiver github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,6,opt,name=receiver,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"receiver,omitempty"`
+	// indicates if the sending chain is the source chain of the tokens to be transferred
+	Source bool `protobuf:"varint,7,opt,name=source,proto3" json:"source,omitempty"`
 }
 
 func (m *MsgTransfer) Reset()         { *m = MsgTransfer{} }
@@ -117,6 +126,8 @@ func (m *MsgTransfer) GetSource() bool {
 	return false
 }
 
+// FungibleTokenPacketData defines a struct for the packet payload
+// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type FungibleTokenPacketData struct {
 	Amount   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 	Sender   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
@@ -193,6 +204,8 @@ func (m *FungibleTokenPacketData) GetSource() bool {
 	return false
 }
 
+// AckDataTransfer is a no-op packet
+// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 type AckDataTransfer struct {
 }
 

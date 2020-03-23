@@ -19,22 +19,6 @@ import (
 
 var _ clientexported.ClientState = ClientState{}
 
-// ClientState from Tendermint tracks the current validator set, latest height,
-// and a possible frozen height.
-type ClientState struct {
-	// Client ID
-	ID string `json:"id" yaml:"id"`
-	// Duration of the period since the LastestTimestamp during which the
-	// submitted headers are valid for upgrade
-	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`
-	// Duration of the staking unbonding period
-	UnbondingPeriod time.Duration `json:"unbonding_period" yaml:"unbonding_period"`
-	// Block height when the client was frozen due to a misbehaviour
-	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
-	// Last Header that was stored by client
-	LastHeader Header
-}
-
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(
 	msg MsgCreateClient,
@@ -70,11 +54,6 @@ func NewClientState(
 		LastHeader:      header,
 		FrozenHeight:    0,
 	}
-}
-
-// GetID returns the tendermint client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.ID
 }
 
 // GetChainID returns the chain-id from the last header

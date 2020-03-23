@@ -6,30 +6,23 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
-// See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
-type MsgTransfer struct {
-	SourcePort    string         `json:"source_port" yaml:"source_port"`       // the port on which the packet will be sent
-	SourceChannel string         `json:"source_channel" yaml:"source_channel"` // the channel by which the packet will be sent
-	DestHeight    uint64         `json:"dest_height" yaml:"dest_height"`       // the current height of the destination chain
-	Amount        sdk.Coins      `json:"amount" yaml:"amount"`                 // the tokens to be transferred
-	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`                 // the sender address
-	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
-	Source        bool           `json:"source" yaml:"source"`                 // indicates if the sending chain is the source chain of the tokens to be transferred
-}
+// msg types
+const (
+	TypeMsgTransfer = "transfer"
+)
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress, source bool,
 ) MsgTransfer {
 	return MsgTransfer{
-		SourcePort:    sourcePort,
-		SourceChannel: sourceChannel,
-		DestHeight:    destHeight,
-		Amount:        amount,
-		Sender:        sender,
-		Receiver:      receiver,
-		Source:        source,
+		SourcePort:        sourcePort,
+		SourceChannel:     sourceChannel,
+		DestinationHeight: destHeight,
+		Amount:            amount,
+		Sender:            sender,
+		Receiver:          receiver,
+		Source:            source,
 	}
 }
 
@@ -40,7 +33,7 @@ func (MsgTransfer) Route() string {
 
 // Type implements sdk.Msg
 func (MsgTransfer) Type() string {
-	return "transfer"
+	return TypeMsgTransfer
 }
 
 // ValidateBasic implements sdk.Msg

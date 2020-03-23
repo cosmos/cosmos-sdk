@@ -4,23 +4,13 @@ import (
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// Channel defines...
-type Channel struct {
-	State          exported.State `json:"state" yaml:"state"`
-	Ordering       exported.Order `json:"ordering" yaml:"ordering"`
-	Counterparty   Counterparty   `json:"counterparty" yaml:"counterparty"`
-	ConnectionHops []string       `json:"connection_hops" yaml:"connection_hops"`
-	Version        string         `json:"version" yaml:"version "`
-}
-
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state exported.State, ordering exported.Order, counterparty Counterparty,
+	state State, ordering Order, counterparty Counterparty,
 	hops []string, version string,
 ) Channel {
 	return Channel{
@@ -30,31 +20,6 @@ func NewChannel(
 		ConnectionHops: hops,
 		Version:        version,
 	}
-}
-
-// GetState implements Channel interface.
-func (ch Channel) GetState() exported.State {
-	return ch.State
-}
-
-// GetOrdering implements Channel interface.
-func (ch Channel) GetOrdering() exported.Order {
-	return ch.Ordering
-}
-
-// GetCounterparty implements Channel interface.
-func (ch Channel) GetCounterparty() exported.CounterpartyI {
-	return ch.Counterparty
-}
-
-// GetConnectionHops implements Channel interface.
-func (ch Channel) GetConnectionHops() []string {
-	return ch.ConnectionHops
-}
-
-// GetVersion implements Channel interface.
-func (ch Channel) GetVersion() string {
-	return ch.Version
 }
 
 // ValidateBasic performs a basic validation of the channel fields
@@ -86,28 +51,12 @@ func (ch Channel) ValidateBasic() error {
 	return ch.Counterparty.ValidateBasic()
 }
 
-// Counterparty defines the counterparty chain's channel and port identifiers
-type Counterparty struct {
-	PortID    string `json:"port_id" yaml:"port_id"`
-	ChannelID string `json:"channel_id" yaml:"channel_id"`
-}
-
 // NewCounterparty returns a new Counterparty instance
 func NewCounterparty(portID, channelID string) Counterparty {
 	return Counterparty{
 		PortID:    portID,
 		ChannelID: channelID,
 	}
-}
-
-// GetPortID implements CounterpartyI interface
-func (c Counterparty) GetPortID() string {
-	return c.PortID
-}
-
-// GetChannelID implements CounterpartyI interface
-func (c Counterparty) GetChannelID() string {
-	return c.ChannelID
 }
 
 // ValidateBasic performs a basic validation check of the identifiers

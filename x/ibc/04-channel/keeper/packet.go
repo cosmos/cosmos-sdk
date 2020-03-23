@@ -49,17 +49,17 @@ func (k Keeper) SendPacket(
 	// 	return sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
 	// }
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestinationPort() != channel.Counterparty.PortID {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestinationChannel() != channel.Counterparty.ChannelID {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -112,8 +112,8 @@ func (k Keeper) SendPacket(
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestinationPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestinationChannel()),
 		),
 	})
 
@@ -129,9 +129,9 @@ func (k Keeper) RecvPacket(
 	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
-	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
+	channel, found := k.GetChannel(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel())
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestChannel())
+		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestinationChannel())
 	}
 
 	if channel.State != exported.OPEN {
@@ -195,9 +195,9 @@ func (k Keeper) PacketExecuted(
 	packet exported.PacketI,
 	acknowledgement exported.PacketAcknowledgementI,
 ) error {
-	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
+	channel, found := k.GetChannel(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel())
 	if !found {
-		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestChannel())
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestinationChannel())
 	}
 
 	// sanity check
@@ -210,13 +210,13 @@ func (k Keeper) PacketExecuted(
 
 	if acknowledgement != nil || channel.Ordering == exported.UNORDERED {
 		k.SetPacketAcknowledgement(
-			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 
 	if channel.Ordering == exported.ORDERED {
-		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel())
 		if !found {
 			return types.ErrSequenceReceiveNotFound
 		}
@@ -230,7 +230,7 @@ func (k Keeper) PacketExecuted(
 
 		nextSequenceRecv++
 
-		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
+		k.SetNextSequenceRecv(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv)
 	}
 
 	// log that a packet has been received & acknowledged
@@ -266,17 +266,17 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestinationPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestinationChannel() != channel.Counterparty.ChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -300,7 +300,7 @@ func (k Keeper) AcknowledgePacket(
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
-		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
+		ctx, connectionEnd, proofHeight, proof, packet.GetDestinationPort(), packet.GetDestinationChannel(),
 		packet.GetSequence(), acknowledgement.GetBytes(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
@@ -351,16 +351,16 @@ func (k Keeper) CleanupPacket(
 	// 	return nil, sdkerrors.Wrapf(port.ErrInvalidPort, "invalid source port: %s", packet.GetSourcePort())
 	// }
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestinationPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestinationChannel() != channel.Counterparty.ChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -387,12 +387,12 @@ func (k Keeper) CleanupPacket(
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
+			packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv,
 		)
 	case exported.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgement(
 			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),
 			acknowledgement,
 		)
 	default:

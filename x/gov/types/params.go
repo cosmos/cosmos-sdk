@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Default period for deposits & voting
@@ -29,11 +31,11 @@ var (
 )
 
 // ParamKeyTable - Key declaration for parameters
-func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		params.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
-		params.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
-		params.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable(
+		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
+		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
 	)
 }
 
@@ -61,9 +63,8 @@ func DefaultDepositParams() DepositParams {
 
 // String implements stringer insterface
 func (dp DepositParams) String() string {
-	return fmt.Sprintf(`Deposit Params:
-  Min Deposit:        %s
-  Max Deposit Period: %s`, dp.MinDeposit, dp.MaxDepositPeriod)
+	out, _ := yaml.Marshal(dp)
+	return string(out)
 }
 
 // Equal checks equality of DepositParams
@@ -108,13 +109,15 @@ func DefaultTallyParams() TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVeto)
 }
 
+// Equal checks equality of TallyParams
+func (tp TallyParams) Equal(other TallyParams) bool {
+	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.Veto.Equal(other.Veto)
+}
+
 // String implements stringer insterface
 func (tp TallyParams) String() string {
-	return fmt.Sprintf(`Tally Params:
-  Quorum:             %s
-  Threshold:          %s
-  Veto:               %s`,
-		tp.Quorum, tp.Threshold, tp.Veto)
+	out, _ := yaml.Marshal(tp)
+	return string(out)
 }
 
 func validateTallyParams(i interface{}) error {
@@ -162,10 +165,15 @@ func DefaultVotingParams() VotingParams {
 	return NewVotingParams(DefaultPeriod)
 }
 
+// Equal checks equality of TallyParams
+func (vp VotingParams) Equal(other VotingParams) bool {
+	return vp.VotingPeriod == other.VotingPeriod
+}
+
 // String implements stringer interface
 func (vp VotingParams) String() string {
-	return fmt.Sprintf(`Voting Params:
-  Voting Period:      %s`, vp.VotingPeriod)
+	out, _ := yaml.Marshal(vp)
+	return string(out)
 }
 
 func validateVotingParams(i interface{}) error {

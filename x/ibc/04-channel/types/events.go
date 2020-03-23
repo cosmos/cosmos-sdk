@@ -8,10 +8,20 @@ import (
 
 // IBC channel events
 const (
-	AttributeKeySenderPort   = "sender_port"
-	AttributeKeyReceiverPort = "receiver_port"
-	AttributeKeyChannelID    = "channel_id"
-	AttributeKeySequence     = "sequence"
+	AttributeKeyConnectionID       = "connection_id"
+	AttributeKeyPortID             = "port_id"
+	AttributeKeyChannelID          = "channel_id"
+	AttributeCounterpartyPortID    = "counterparty_port_id"
+	AttributeCounterpartyChannelID = "counterparty_channel_id"
+
+	EventTypeSendPacket    = "send_packet"
+	AttributeKeyData       = "packet_data"
+	AttributeKeyTimeout    = "packet_timeout"
+	AttributeKeySequence   = "packet_sequence"
+	AttributeKeySrcPort    = "packet_src_port"
+	AttributeKeySrcChannel = "packet_src_channel"
+	AttributeKeyDstPort    = "packet_dst_port"
+	AttributeKeyDstChannel = "packet_dst_channel"
 )
 
 // IBC channel events vars

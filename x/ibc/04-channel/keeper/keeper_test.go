@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,20 +19,22 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // define constants used for testing
 const (
 	testClientType = clientexported.Tendermint
 
-	testClientID1     = "testclientidone"
-	testConnectionID1 = "connectionidone"
+	testClientIDA     = "testclientida"
+	testConnectionIDA = "connectionidatob"
 
-	testClientID2     = "testclientidtwo"
-	testConnectionID2 = "connectionidtwo"
+	testClientIDB     = "testclientidb"
+	testConnectionIDB = "connectionidbtoa"
 
 	testPort1 = "firstport"
 	testPort2 = "secondport"
@@ -42,33 +46,32 @@ const (
 
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
+
+	testHeight = 1
+
+	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	app    *simapp.SimApp
-	valSet *tmtypes.ValidatorSet
+	cdc *codec.Codec
+
+	chainA *TestChain
+	chainB *TestChain
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	isCheckTx := false
-	app := simapp.Setup(isCheckTx)
+	suite.chainA = NewTestChain(testClientIDA)
+	suite.chainB = NewTestChain(testClientIDB)
 
-	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
-	suite.app = app
-
-	privVal := tmtypes.NewMockPV()
-
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.cdc = suite.chainA.App.Codec()
 }
 
 func (suite *KeeperTestSuite) TestSetChannel() {
-	_, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
+	ctx := suite.chainB.GetContext()
+	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
 	suite.False(found)
 
 	channel := types.Channel{
@@ -78,12 +81,12 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 			PortID:    testPort2,
 			ChannelID: testChannel2,
 		},
-		ConnectionHops: []string{testConnectionID1},
+		ConnectionHops: []string{testConnectionIDA},
 		Version:        testChannelVersion,
 	}
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort1, testChannel1, channel)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
 
-	storedChannel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
+	storedChannel, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
 	suite.True(found)
 	suite.Equal(channel, storedChannel)
 }
@@ -98,7 +101,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 		State:          exported.INIT,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty3,
-		ConnectionHops: []string{testConnectionID1},
+		ConnectionHops: []string{testConnectionIDA},
 		Version:        testChannelVersion,
 	}
 
@@ -106,7 +109,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 		State:          exported.INIT,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty1,
-		ConnectionHops: []string{testConnectionID1},
+		ConnectionHops: []string{testConnectionIDA},
 		Version:        testChannelVersion,
 	}
 
@@ -114,76 +117,81 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 		State:          exported.CLOSED,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty2,
-		ConnectionHops: []string{testConnectionID1},
+		ConnectionHops: []string{testConnectionIDA},
 		Version:        testChannelVersion,
 	}
 
 	expChannels := []types.Channel{channel1, channel2, channel3}
 
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort1, testChannel1, expChannels[0])
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort2, testChannel2, expChannels[1])
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort3, testChannel3, expChannels[2])
+	ctx := suite.chainB.GetContext()
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, expChannels[0])
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort2, testChannel2, expChannels[1])
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort3, testChannel3, expChannels[2])
 
-	channels := suite.app.IBCKeeper.ChannelKeeper.GetAllChannels(suite.ctx)
+	channels := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 	suite.Require().Len(channels, len(expChannels))
 	suite.Require().Equal(expChannels, channels)
 }
 
 func (suite *KeeperTestSuite) TestSetChannelCapability() {
-	_, found := suite.app.IBCKeeper.ChannelKeeper.GetChannelCapability(suite.ctx, testPort1, testChannel1)
+	ctx := suite.chainB.GetContext()
+	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannelCapability(ctx, testPort1, testChannel1)
 	suite.False(found)
 
 	channelCap := "test-channel-capability"
-	suite.app.IBCKeeper.ChannelKeeper.SetChannelCapability(suite.ctx, testPort1, testChannel1, channelCap)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannelCapability(ctx, testPort1, testChannel1, channelCap)
 
-	storedChannelCap, found := suite.app.IBCKeeper.ChannelKeeper.GetChannelCapability(suite.ctx, testPort1, testChannel1)
+	storedChannelCap, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannelCapability(ctx, testPort1, testChannel1)
 	suite.True(found)
 	suite.Equal(channelCap, storedChannelCap)
 }
 
 func (suite *KeeperTestSuite) TestSetSequence() {
-	_, found := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceSend(suite.ctx, testPort1, testChannel1)
+	ctx := suite.chainB.GetContext()
+	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
 	suite.False(found)
 
-	_, found = suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(suite.ctx, testPort1, testChannel1)
+	_, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(ctx, testPort1, testChannel1)
 	suite.False(found)
 
 	nextSeqSend, nextSeqRecv := uint64(10), uint64(10)
-	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, nextSeqSend)
-	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.ctx, testPort1, testChannel1, nextSeqRecv)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, testPort1, testChannel1, nextSeqSend)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctx, testPort1, testChannel1, nextSeqRecv)
 
-	storedNextSeqSend, found := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceSend(suite.ctx, testPort1, testChannel1)
+	storedNextSeqSend, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
 	suite.True(found)
 	suite.Equal(nextSeqSend, storedNextSeqSend)
 
-	storedNextSeqRecv, found := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceSend(suite.ctx, testPort1, testChannel1)
+	storedNextSeqRecv, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
 	suite.True(found)
 	suite.Equal(nextSeqRecv, storedNextSeqRecv)
 }
 
 func (suite *KeeperTestSuite) TestPackageCommitment() {
+	ctx := suite.chainB.GetContext()
 	seq := uint64(10)
-	storedCommitment := suite.app.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.ctx, testPort1, testChannel1, seq)
+	storedCommitment := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
 	suite.Equal([]byte(nil), storedCommitment)
 
 	commitment := []byte("commitment")
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, seq, commitment)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, testPort1, testChannel1, seq, commitment)
 
-	storedCommitment = suite.app.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.ctx, testPort1, testChannel1, seq)
+	storedCommitment = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, testPort1, testChannel1, seq)
 	suite.Equal(commitment, storedCommitment)
 }
 
 func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
+	ctx := suite.chainB.GetContext()
 	seq := uint64(10)
 
-	storedAckHash, found := suite.app.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, seq)
+	storedAckHash, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctx, testPort1, testChannel1, seq)
 	suite.False(found)
 	suite.Nil(storedAckHash)
 
 	ackHash := []byte("ackhash")
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, seq, ackHash)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, testPort1, testChannel1, seq, ackHash)
 
-	storedAckHash, found = suite.app.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(suite.ctx, testPort1, testChannel1, seq)
+	storedAckHash, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctx, testPort1, testChannel1, seq)
 	suite.True(found)
 	suite.Equal(ackHash, storedAckHash)
 }
@@ -192,59 +200,189 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) createClient(clientID string) {
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
-
-	consensusState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSetHash: suite.valSet.Hash(),
+func commitNBlocks(chain *TestChain, n int) {
+	for i := 0; i < n; i++ {
+		chain.App.Commit()
+		chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1}})
 	}
-
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, testClientType, consensusState)
-	suite.Require().NoError(err)
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) updateClient() {
-	// always commit and begin a new block on updateClient
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
+func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+	res := chain.App.Query(abci.RequestQuery{
+		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Height: chain.App.LastBlockHeight(),
+		Data:   key,
+		Prove:  true,
+	})
 
-	height := suite.app.LastBlockHeight() + 1
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight()})
-
-	state := tendermint.ConsensusState{
-		Root: commitment.NewRoot(commitID.Hash),
+	proof := commitmenttypes.MerkleProof{
+		Proof: res.Proof,
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClientID1, uint64(height-1), state)
-	csi, _ := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, testClientID1)
-	cs, _ := csi.(tendermint.ClientState)
-	cs.LatestHeight = uint64(height - 1)
-	suite.app.IBCKeeper.ClientKeeper.SetClientState(suite.ctx, cs)
+	return proof, uint64(res.Height)
 }
 
-func (suite *KeeperTestSuite) createConnection(
+type TestChain struct {
+	ClientID string
+	App      *simapp.SimApp
+	Header   ibctmtypes.Header
+	Vals     *tmtypes.ValidatorSet
+	Signers  []tmtypes.PrivValidator
+}
+
+func NewTestChain(clientID string) *TestChain {
+	privVal := tmtypes.NewMockPV()
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	signers := []tmtypes.PrivValidator{privVal}
+	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+
+	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
+
+	return &TestChain{
+		ClientID: clientID,
+		App:      simapp.Setup(false),
+		Header:   header,
+		Vals:     valSet,
+		Signers:  signers,
+	}
+}
+
+// Creates simple context for testing purposes
+func (chain *TestChain) GetContext() sdk.Context {
+	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
+}
+
+// createClient will create a client for clientChain on targetChain
+func (chain *TestChain) CreateClient(client *TestChain) error {
+	client.Header = nextHeader(client)
+	// Commit and create a new block on appTarget to get a fresh CommitID
+	client.App.Commit()
+	commitID := client.App.LastCommitID()
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+
+	// Set HistoricalInfo on client chain after Commit
+	ctxClient := client.GetContext()
+	validator := staking.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	)
+	validator.Status = sdk.Bonded
+	validator.Tokens = sdk.NewInt(1000000) // get one voting power
+	validators := []staking.Validator{validator}
+	histInfo := staking.HistoricalInfo{
+		Header: abci.Header{
+			AppHash: commitID.Hash,
+		},
+		Valset: validators,
+	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+
+	// Create target ctx
+	ctxTarget := chain.GetContext()
+
+	// create client
+	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, client.Header)
+	if err != nil {
+		return err
+	}
+	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
+	if err != nil {
+		return err
+	}
+	return nil
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
+}
+
+func (chain *TestChain) updateClient(client *TestChain) {
+	// Create target ctx
+	ctxTarget := chain.GetContext()
+
+	// if clientState does not already exist, return without updating
+	_, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(
+		ctxTarget, client.ClientID,
+	)
+	if !found {
+		return
+	}
+
+	// always commit when updateClient and begin a new block
+	client.App.Commit()
+	commitID := client.App.LastCommitID()
+
+	client.Header = nextHeader(client)
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+
+	// Set HistoricalInfo on client chain after Commit
+	ctxClient := client.GetContext()
+	validator := staking.NewValidator(
+		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, staking.Description{},
+	)
+	validator.Status = sdk.Bonded
+	validator.Tokens = sdk.NewInt(1000000)
+	validators := []staking.Validator{validator}
+	histInfo := staking.HistoricalInfo{
+		Header: abci.Header{
+			AppHash: commitID.Hash,
+		},
+		Valset: validators,
+	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+
+	consensusState := ibctmtypes.ConsensusState{
+		Height:       uint64(client.Header.Height),
+		Timestamp:    client.Header.Time,
+		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
+		ValidatorSet: client.Vals,
+	}
+
+	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
+		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
+	)
+	chain.App.IBCKeeper.ClientKeeper.SetClientState(
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, client.Header),
+	)
+
+	// _, _, err := simapp.SignCheckDeliver(
+	// 	suite.T(),
+	// 	suite.cdc,
+	// 	suite.app.BaseApp,
+	// 	ctx.BlockHeader(),
+	// 	[]sdk.Msg{clienttypes.NewMsgUpdateClient(clientID, suite.header, accountAddress)},
+	// 	[]uint64{baseAccount.GetAccountNumber()},
+	// 	[]uint64{baseAccount.GetSequence()},
+	// 	true, true, accountPrivKey,
+	// )
+	// suite.Require().NoError(err)
+}
+
+func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state connectionexported.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     connectiontypes.GetCompatibleVersions(),
 	}
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, connID, connection)
+	ctx := chain.GetContext()
+	chain.App.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connID, connection)
 	return connection
 }
 
-func (suite *KeeperTestSuite) createChannel(
+func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
 	state exported.State, order exported.Order, connectionID string,
 ) types.Channel {
@@ -252,49 +390,49 @@ func (suite *KeeperTestSuite) createChannel(
 	channel := types.NewChannel(state, order, counterparty,
 		[]string{connectionID}, "1.0",
 	)
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, channelID, channel)
+	ctx := chain.GetContext()
+	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
 	return channel
 }
 
-// nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitment.Proof, int64) {
-	res := suite.app.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Height: suite.app.LastBlockHeight(),
-		Data:   key,
-		Prove:  true,
-	})
-
-	proof := commitment.Proof{
-		Proof: res.Proof,
-	}
-
-	return proof, res.Height
+func nextHeader(chain *TestChain) ibctmtypes.Header {
+	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
+		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }
 
 // Mocked types
 // TODO: fix tests and replace for real proofs
 
 var (
-	_ commitment.ProofI = validProof{}
-	_ commitment.ProofI = invalidProof{}
+	_ commitmentexported.Proof = validProof{nil, nil, nil}
+	_ commitmentexported.Proof = invalidProof{}
 )
 
 type (
-	validProof   struct{}
+	validProof struct {
+		root  commitmentexported.Root
+		path  commitmentexported.Path
+		value []byte
+	}
 	invalidProof struct{}
 )
 
-func (validProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
+func (validProof) GetCommitmentType() commitmentexported.Type {
+	return commitmentexported.Merkle
 }
 
-func (validProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
-	return nil
+func (proof validProof) VerifyMembership(
+	root commitmentexported.Root, path commitmentexported.Path, value []byte,
+) error {
+	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
+		path.String() == proof.path.String() &&
+		bytes.Equal(value, proof.value) {
+		return nil
+	}
+	return errors.New("invalid proof")
 }
 
-func (validProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+func (validProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
 	return nil
 }
 
@@ -306,16 +444,16 @@ func (validProof) IsEmpty() bool {
 	return false
 }
 
-func (invalidProof) GetCommitmentType() commitment.Type {
-	return commitment.Merkle
+func (invalidProof) GetCommitmentType() commitmentexported.Type {
+	return commitmentexported.Merkle
 }
 
 func (invalidProof) VerifyMembership(
-	root commitment.RootI, path commitment.PathI, value []byte) error {
+	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
 	return errors.New("proof failed")
 }
 
-func (invalidProof) VerifyNonMembership(root commitment.RootI, path commitment.PathI) error {
+func (invalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
 	return errors.New("proof failed")
 }
 

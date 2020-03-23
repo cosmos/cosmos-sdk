@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -16,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -36,9 +35,43 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(GetAccountCmd(cdc))
+	cmd.AddCommand(
+		GetAccountCmd(cdc),
+		QueryParamsCmd(cdc),
+	)
 
 	return cmd
+}
+
+// QueryParamsCmd returns the command handler for evidence parameter querying.
+func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query the current auth parameters",
+		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(`Query the current auth parameters:
+
+$ <appcli> query auth params
+`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
+			res, _, err := cliCtx.QueryWithData(route, nil)
+			if err != nil {
+				return err
+			}
+
+			var params types.Params
+			if err := cdc.UnmarshalJSON(res, &params); err != nil {
+				return fmt.Errorf("failed to unmarshal params: %w", err)
+			}
+
+			return cliCtx.PrintOutput(params)
+		},
+	}
+
+	return flags.GetCommands(cmd)[0]
 }
 
 // GetAccountCmd returns a query account that will display the state of the
@@ -50,7 +83,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			accGetter := types.NewAccountRetriever(cliCtx)
+			accGetter := types.NewAccountRetriever(authclient.Codec, cliCtx)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -66,7 +99,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	return cmd
 }
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
@@ -118,7 +151,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 			limit := viper.GetInt(flags.FlagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit)
+			txs, err := authclient.QueryTxsByEvents(cliCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}

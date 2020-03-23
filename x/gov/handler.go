@@ -17,7 +17,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		case MsgDeposit:
 			return handleMsgDeposit(ctx, keeper, msg)
 
-		case MsgSubmitProposal:
+		case MsgSubmitProposalI:
 			return handleMsgSubmitProposal(ctx, keeper, msg)
 
 		case MsgVote:
@@ -29,13 +29,13 @@ func NewHandler(keeper Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) (*sdk.Result, error) {
-	proposal, err := keeper.SubmitProposal(ctx, msg.Content)
+func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposalI) (*sdk.Result, error) {
+	proposal, err := keeper.SubmitProposal(ctx, msg.GetContent())
 	if err != nil {
 		return nil, err
 	}
 
-	votingStarted, err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
+	votingStarted, err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.GetProposer(), msg.GetInitialDeposit())
 	if err != nil {
 		return nil, err
 	}
@@ -44,16 +44,17 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.GetProposer().String()),
 		),
 	)
 
-	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.Content.ProposalType()))
+	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.GetContent().ProposalType()))
 	if votingStarted {
 		submitEvent = submitEvent.AppendAttributes(
 			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
 		)
 	}
+
 	ctx.EventManager().EmitEvent(submitEvent)
 
 	return &sdk.Result{

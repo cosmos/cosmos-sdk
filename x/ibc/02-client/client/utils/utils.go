@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -91,30 +91,30 @@ func QueryConsensusState(
 
 // QueryTendermintHeader takes a client context and returns the appropriate
 // tendermint header
-func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64, error) {
+func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
-		return tendermint.Header{}, 0, err
+		return ibctmtypes.Header{}, 0, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return tendermint.Header{}, 0, err
+		return ibctmtypes.Header{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return tendermint.Header{}, 0, err
+		return ibctmtypes.Header{}, 0, err
 	}
 
 	validators, err := node.Validators(&height, 0, 10000)
 	if err != nil {
-		return tendermint.Header{}, 0, err
+		return ibctmtypes.Header{}, 0, err
 	}
 
-	header := tendermint.Header{
+	header := ibctmtypes.Header{
 		SignedHeader: commit.SignedHeader,
 		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
@@ -124,32 +124,33 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64,
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusState, int64, error) {
+func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusState, int64, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
-		return tendermint.ConsensusState{}, 0, err
+		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return tendermint.ConsensusState{}, 0, err
+		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return tendermint.ConsensusState{}, 0, err
+		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	validators, err := node.Validators(&height, 0, 10000)
 	if err != nil {
-		return tendermint.ConsensusState{}, 0, err
+		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	state := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commit.AppHash),
-		ValidatorSetHash: tmtypes.NewValidatorSet(validators.Validators).Hash(),
+	state := ibctmtypes.ConsensusState{
+		Timestamp:    commit.Time,
+		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
+		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
 
 	return state, height, nil

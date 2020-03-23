@@ -3,187 +3,204 @@ package keeper_test
 import (
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-func (suite *KeeperTestSuite) createClient() {
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
-
-	consensusState := tendermint.ConsensusState{
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSetHash: suite.valSet.Hash(),
-	}
-
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
-	suite.NoError(err)
-}
-
-func (suite *KeeperTestSuite) updateClient() {
-	// always commit and begin a new block on updateClient
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
-
-	state := tendermint.ConsensusState{
-		Root: commitment.NewRoot(commitID.Hash),
-	}
-
-	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, 1, state)
-}
-
-func (suite *KeeperTestSuite) createConnection(state connectionexported.State) {
-	connection := connection.ConnectionEnd{
-		State:    state,
-		ClientID: testClient,
-		Counterparty: connection.Counterparty{
-			ClientID:     testClient,
-			ConnectionID: testConnection,
-			Prefix:       suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
-		},
-		Versions: connection.GetCompatibleVersions(),
-	}
-
-	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnection, connection)
-}
-
-func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state channelexported.State) {
-	ch := channel.Channel{
-		State:    state,
-		Ordering: testChannelOrder,
-		Counterparty: channel.Counterparty{
-			PortID:    counterpartyPort,
-			ChannelID: counterpartyChan,
-		},
-		ConnectionHops: []string{connID},
-		Version:        testChannelVersion,
-	}
-
-	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
-}
-
-func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
-	res := suite.app.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  key,
-		Prove: true,
-	})
-
-	height = res.Height
-	proof = commitment.Proof{
-		Proof: res.Proof,
-	}
-
-	return
-}
-
 func (suite *KeeperTestSuite) TestSendTransfer() {
-	// test the situation where the source is true
-	isSourceChain := true
+	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+	testCases := []struct {
+		msg           string
+		amount        sdk.Coins
+		malleate      func()
+		isSourceChain bool
+		expPass       bool
+	}{
+		{"successful transfer from source chain", testCoins,
+			func() {
+				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+			}, true, true},
+		{"successful transfer from source chain with denom prefix", testCoins2,
+			func() {
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
+				suite.Require().NoError(err)
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+			}, true, true},
+		{"successful transfer from external chain", testCoins,
+			func() {
+				suite.chainA.App.SupplyKeeper.SetSupply(suite.chainA.GetContext(), supply.NewSupply(prefixCoins))
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, prefixCoins)
+				suite.Require().NoError(err)
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+			}, false, true},
+		{"source channel not found", testCoins,
+			func() {}, true, false},
+		{"next seq send not found", testCoins,
+			func() {
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+			}, true, false},
+		// createOutgoingPacket tests
+		// - source chain
+		{"send coins failed", testCoins,
+			func() {
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+			}, true, false},
+		// - receiving chain
+		{"send from module account failed", testCoins,
+			func() {
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+			}, false, false},
+	}
 
-	err := suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
-	suite.Error(err) // channel does not exist
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channelexported.OPEN)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
-	suite.Error(err) // next send sequence not found
+			tc.malleate()
 
-	nextSeqSend := uint64(1)
-	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, nextSeqSend)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
-	suite.Error(err) // sender has insufficient coins
+			err := suite.chainA.App.TransferKeeper.SendTransfer(
+				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2, tc.isSourceChain,
+			)
 
-	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testCoins)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testCoins, testAddr1, testAddr2, isSourceChain)
-	suite.NoError(err) // successfully executed
-
-	senderCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, testAddr1)
-	suite.Equal(sdk.Coins(nil), senderCoins)
-
-	escrowCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, types.GetEscrowAddress(testPort1, testChannel1))
-	suite.Equal(testCoins, escrowCoins)
-
-	newNextSeqSend, found := suite.app.IBCKeeper.ChannelKeeper.GetNextSequenceSend(suite.ctx, testPort1, testChannel1)
-	suite.True(found)
-	suite.Equal(nextSeqSend+1, newNextSeqSend)
-
-	packetCommitment := suite.app.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.ctx, testPort1, testChannel1, nextSeqSend)
-	suite.NotNil(packetCommitment)
-
-	// test the situation where the source is false
-	isSourceChain = false
-
-	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins2)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, isSourceChain)
-	suite.Error(err) // incorrect denom prefix
-
-	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
-	_ = suite.app.BankKeeper.SetBalances(suite.ctx, testAddr1, testPrefixedCoins1)
-	err = suite.app.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, isSourceChain)
-	suite.NoError(err) // successfully executed
-
-	senderCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, testAddr1)
-	suite.Equal(sdk.Coins(nil), senderCoins)
-
-	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
-	suite.Equal(sdk.Coins(nil), totalSupply.GetTotal()) // supply should be deflated
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
-	// test the situation where the source is true
-	source := true
-	packetTimeout := uint64(100)
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2, true, 100)
 
-	packetData := types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
-	err := suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
-	suite.Error(err) // incorrect denom prefix
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"success receive from source chain",
+			func() {}, true},
+		// onRecvPacket
+		// - source chain
+		{"no dest prefix on coin denom",
+			func() {
+				data.Amount = testCoins
+			}, false},
+		{"mint failed",
+			func() {
+				data.Source = true
+				data.Amount = prefixCoins2
+				data.Amount[0].Amount = sdk.ZeroInt()
+			}, false},
+		// - receiving chain
+		{"incorrect dest prefix on coin denom",
+			func() {
+				data.Source = false
+				data.Amount = prefixCoins2
+			}, false},
+		{"success receive from external chain",
+			func() {
+				data.Source = false
+				data.Amount = prefixCoins
+				escrow := types.GetEscrowAddress(testPort2, testChannel2)
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, testCoins)
+				suite.Require().NoError(err)
+			}, true},
+	}
 
-	packetData.Amount = testPrefixedCoins2
-	err = suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
-	suite.NoError(err) // successfully executed
+	packet := channeltypes.NewPacket(data, 1, testPort1, testChannel1, testPort2, testChannel2)
 
-	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
-	suite.Equal(testPrefixedCoins2, totalSupply.GetTotal()) // supply should be inflated
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			tc.malleate()
 
-	receiverCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, packetData.Receiver)
-	suite.Equal(testPrefixedCoins2, receiverCoins)
+			err := suite.chainA.App.TransferKeeper.ReceiveTransfer(suite.chainA.GetContext(), packet, data)
 
-	// test the situation where the source is false
-	packetData.Source = false
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
 
-	packetData.Amount = testPrefixedCoins2
-	err = suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
-	suite.Error(err) // incorrect denom prefix
+func (suite *KeeperTestSuite) TestTimeoutTransfer() {
+	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2, true, 100)
 
-	packetData.Amount = testPrefixedCoins1
-	err = suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
-	suite.Error(err) // insufficient coins in the corresponding escrow account
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"successful timeout from source chain",
+			func() {
+				escrow := types.GetEscrowAddress(testPort2, testChannel2)
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
+				suite.Require().NoError(err)
+			}, true},
+		{"successful timeout from external chain",
+			func() {
+				data.Source = false
+			}, true},
+		{"no source prefix on coin denom",
+			func() {
+				data.Source = true
+				data.Amount = prefixCoins2
+			}, false},
+		{"unescrow failed",
+			func() {
+				data.Source = true
+			}, false},
+		{"mint failed",
+			func() {
+				data.Source = false
+				data.Amount[0].Denom = prefixCoins[0].Denom
+				data.Amount[0].Amount = sdk.ZeroInt()
+			}, false},
+	}
 
-	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
-	_ = suite.app.BankKeeper.SetBalances(suite.ctx, escrowAddress, testCoins)
-	_ = suite.app.BankKeeper.SetBalances(suite.ctx, packetData.Receiver, sdk.Coins{})
-	err = suite.app.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
-	suite.NoError(err) // successfully executed
+	packet := channeltypes.NewPacket(data, 1, testPort1, testChannel1, testPort2, testChannel2)
 
-	escrowCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, escrowAddress)
-	suite.Equal(sdk.Coins(nil), escrowCoins)
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			tc.malleate()
 
-	receiverCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, packetData.Receiver)
-	suite.Equal(testCoins, receiverCoins)
+			err := suite.chainA.App.TransferKeeper.TimeoutTransfer(suite.chainA.GetContext(), packet, data)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
 }

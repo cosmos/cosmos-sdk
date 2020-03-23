@@ -8,7 +8,7 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -19,7 +19,7 @@ import (
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {
@@ -134,8 +134,8 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
 	packet types.Packet,
-	proofNonMembership,
-	proofClosed commitment.ProofI,
+	proof,
+	proofClosed commitmentexported.Proof,
 	proofHeight,
 	nextSequenceRecv uint64,
 ) (exported.PacketI, error) {
@@ -207,12 +207,12 @@ func (k Keeper) TimeoutOnClose(
 	case exported.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
-			ctx, connectionEnd, proofHeight, proofClosed,
+			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case exported.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
-			ctx, connectionEnd, proofHeight, proofClosed,
+			ctx, connectionEnd, proofHeight, proof,
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
 		)
 	default:

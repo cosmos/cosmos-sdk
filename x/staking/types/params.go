@@ -1,15 +1,16 @@
 package types
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Staking params default values
@@ -20,14 +21,14 @@ const (
 	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
 	// Default maximum number of bonded validators
-	DefaultMaxValidators uint16 = 100
+	DefaultMaxValidators uint32 = 100
 
 	// Default maximum entries in a UBD/RED pair
-	DefaultMaxEntries uint16 = 7
+	DefaultMaxEntries uint32 = 7
 
 	// DefaultHistorical entries is 0 since it must only be non-zero for
 	// IBC connected chains
-	DefaultHistoricalEntries uint16 = 0
+	DefaultHistoricalEntries uint32 = 0
 )
 
 // nolint - Keys for parameter access
@@ -39,20 +40,12 @@ var (
 	KeyHistoricalEntries = []byte("HistoricalEntries")
 )
 
-var _ params.ParamSet = (*Params)(nil)
-
-// Params defines the high level settings for staking
-type Params struct {
-	UnbondingTime     time.Duration `json:"unbonding_time" yaml:"unbonding_time"`         // time duration of unbonding
-	MaxValidators     uint16        `json:"max_validators" yaml:"max_validators"`         // maximum number of validators (max uint16 = 65535)
-	MaxEntries        uint16        `json:"max_entries" yaml:"max_entries"`               // max entries for either unbonding delegation or redelegation (per pair/trio)
-	HistoricalEntries uint16        `json:"historical_entries" yaml:"historical_entries"` // number of historical entries to persist
-	BondDenom         string        `json:"bond_denom" yaml:"bond_denom"`                 // bondable coin denomination
-}
+var _ paramtypes.ParamSet = (*Params)(nil)
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint16,
-	bondDenom string) Params {
+func NewParams(
+	unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string,
+) Params {
 
 	return Params{
 		UnbondingTime:     unbondingTime,
@@ -64,38 +57,31 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historica
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
-	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
-		params.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
-		params.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
-		params.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
-		params.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
+		paramtypes.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
+		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
+		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
+		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
 	}
-}
-
-// Equal returns a boolean determining if two Param types are identical.
-// TODO: This is slower than comparing struct fields directly
-func (p Params) Equal(p2 Params) bool {
-	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p)
-	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p2)
-	return bytes.Equal(bz1, bz2)
 }
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
-	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, DefaultHistoricalEntries, sdk.DefaultBondDenom)
+	return NewParams(
+		DefaultUnbondingTime,
+		DefaultMaxValidators,
+		DefaultMaxEntries,
+		DefaultHistoricalEntries,
+		sdk.DefaultBondDenom,
+	)
 }
 
 // String returns a human readable string representation of the parameters.
 func (p Params) String() string {
-	return fmt.Sprintf(`Params:
-  Unbonding Time:     %s
-  Max Validators:     %d
-  Max Entries:        %d
-  Historical Entries: %d
-  Bonded Coin Denom:  %s`, p.UnbondingTime,
-		p.MaxValidators, p.MaxEntries, p.HistoricalEntries, p.BondDenom)
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // unmarshal the current staking params value from store key or panic
@@ -148,7 +134,7 @@ func validateUnbondingTime(i interface{}) error {
 }
 
 func validateMaxValidators(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -161,7 +147,7 @@ func validateMaxValidators(i interface{}) error {
 }
 
 func validateMaxEntries(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -174,7 +160,7 @@ func validateMaxEntries(i interface{}) error {
 }
 
 func validateHistoricalEntries(i interface{}) error {
-	_, ok := i.(uint16)
+	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

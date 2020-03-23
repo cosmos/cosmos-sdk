@@ -14,7 +14,7 @@ import (
 const (
 	DefaultPacketTimeout = keeper.DefaultPacketTimeout
 	AttributeKeyReceiver = types.AttributeKeyReceiver
-	SubModuleName        = types.SubModuleName
+	ModuleName           = types.ModuleName
 	StoreKey             = types.StoreKey
 	RouterKey            = types.RouterKey
 	QuerierRoute         = types.QuerierRoute
@@ -35,13 +35,13 @@ var (
 )
 
 type (
-	Keeper             = keeper.Keeper
-	BankKeeper         = types.BankKeeper
-	ChannelKeeper      = types.ChannelKeeper
-	ClientKeeper       = types.ClientKeeper
-	ConnectionKeeper   = types.ConnectionKeeper
-	SupplyKeeper       = types.SupplyKeeper
-	MsgTransfer        = types.MsgTransfer
-	MsgRecvPacket      = types.MsgRecvPacket
-	PacketDataTransfer = types.PacketDataTransfer
+	Keeper                  = keeper.Keeper
+	BankKeeper              = types.BankKeeper
+	ChannelKeeper           = types.ChannelKeeper
+	ClientKeeper            = types.ClientKeeper
+	ConnectionKeeper        = types.ConnectionKeeper
+	SupplyKeeper            = types.SupplyKeeper
+	FungibleTokenPacketData = types.FungibleTokenPacketData
+	MsgTransfer             = types.MsgTransfer
+	AckDataTransfer         = types.AckDataTransfer
 )

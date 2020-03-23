@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientState defines the required common functions for light clients.
@@ -22,16 +24,19 @@ type ClientState interface {
 
 	VerifyClientConsensusState(
 		cdc *codec.Codec,
+		root commitmentexported.Root,
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		counterpartyClientIdentifier string,
+		consensusHeight uint64,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
 		cdc *codec.Codec,
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
 		consensusState ConsensusState,
@@ -39,8 +44,8 @@ type ClientState interface {
 	VerifyChannelState(
 		cdc *codec.Codec,
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
@@ -48,8 +53,8 @@ type ClientState interface {
 	) error
 	VerifyPacketCommitment(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -58,8 +63,8 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgement(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -68,8 +73,8 @@ type ClientState interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		sequence uint64,
@@ -77,8 +82,8 @@ type ClientState interface {
 	) error
 	VerifyNextSequenceRecv(
 		height uint64,
-		prefix commitment.PrefixI,
-		proof commitment.ProofI,
+		prefix commitmentexported.Prefix,
+		proof commitmentexported.Proof,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
@@ -90,9 +95,12 @@ type ClientState interface {
 type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
 
+	// GetHeight returns the height of the consensus state
+	GetHeight() uint64
+
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() commitment.RootI
+	GetRoot() commitmentexported.Root
 
 	ValidateBasic() error
 }
@@ -108,6 +116,23 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+}
+
+// MsgCreateClient defines the msg interface that the
+// CreateClient Handler expects
+type MsgCreateClient interface {
+	sdk.Msg
+	GetClientID() string
+	GetClientType() string
+	GetConsensusState() ConsensusState
+}
+
+// MsgUpdateClient defines the msg interface that the
+// UpdateClient Handler expects
+type MsgUpdateClient interface {
+	sdk.Msg
+	GetClientID() string
+	GetHeader() Header
 }
 
 // ClientType defines the type of the consensus algorithm

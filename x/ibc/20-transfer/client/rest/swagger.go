@@ -1,7 +1,7 @@
 package rest
 
 import (
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -12,16 +12,9 @@ type (
 	}
 
 	PostTransfer struct {
-		Msgs       []types.MsgTransfer `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee         `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
-		Memo       string              `json:"memo" yaml:"memo"`
-	}
-
-	PostRecvPacket struct {
-		Msgs       []types.MsgRecvPacket `json:"msg" yaml:"msg"`
-		Fee        auth.StdFee           `json:"fee" yaml:"fee"`
-		Signatures []auth.StdSignature   `json:"signatures" yaml:"signatures"`
-		Memo       string                `json:"memo" yaml:"memo"`
+		Msgs       []types.MsgTransfer      `json:"msg" yaml:"msg"`
+		Fee        authtypes.StdFee         `json:"fee" yaml:"fee"`
+		Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
+		Memo       string                   `json:"memo" yaml:"memo"`
 	}
 )

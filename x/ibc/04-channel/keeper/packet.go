@@ -11,7 +11,7 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // SendPacket  is called by a module in order to send an IBC packet on a channel
@@ -102,6 +102,21 @@ func (k Keeper) SendPacket(
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
 	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.GetData()))
 
+	// Emit Event with Packet data along with other packet information for relayer to pick up
+	// and relay to other chain
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeSendPacket,
+			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData().GetBytes())),
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetData().GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
+
 	k.Logger(ctx).Info(fmt.Sprintf("packet sent %v", packet)) // TODO: use packet.String()
 	return nil
 }
@@ -111,7 +126,7 @@ func (k Keeper) SendPacket(
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
@@ -178,7 +193,7 @@ func (k Keeper) RecvPacket(
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketDataI,
+	acknowledgement exported.PacketAcknowledgementI,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -231,8 +246,8 @@ func (k Keeper) PacketExecuted(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketDataI,
-	proof commitment.ProofI,
+	acknowledgement exported.PacketAcknowledgementI,
+	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -250,18 +265,18 @@ func (k Keeper) AcknowledgePacket(
 	// NOTE: RecvPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	// packet must have been sent to the channel's counterparty
+	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -294,12 +309,6 @@ func (k Keeper) AcknowledgePacket(
 	return packet, nil
 }
 
-// AcknowledgementExecuted deletes the commitment send from this chain after it receives the acknowlegement
-// CONTRACT: each acknowledgement handler function should call WriteAcknowledgement at the end of the execution
-func (k Keeper) AcknowledgementExecuted(ctx sdk.Context, packet exported.PacketI) {
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-}
-
 // CleanupPacket is called by a module to remove a received packet commitment
 // from storage. The receiving end must have already processed the packet
 // (whether regularly or past timeout).
@@ -313,7 +322,7 @@ func (k Keeper) AcknowledgementExecuted(ctx sdk.Context, packet exported.PacketI
 func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof commitment.ProofI,
+	proof commitmentexported.Proof,
 	proofHeight,
 	nextSequenceRecv uint64,
 	acknowledgement []byte,

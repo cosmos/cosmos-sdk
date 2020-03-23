@@ -18,12 +18,13 @@ type NodeQuerier interface {
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
+	codec   Codec
 	querier NodeQuerier
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(querier NodeQuerier) AccountRetriever {
-	return AccountRetriever{querier: querier}
+func NewAccountRetriever(codec Codec, querier NodeQuerier) AccountRetriever {
+	return AccountRetriever{codec: codec, querier: querier}
 }
 
 // GetAccount queries for an account given an address and a block height. An
@@ -37,18 +38,18 @@ func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, er
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
 func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.Account, int64, error) {
-	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
+	bs, err := ar.codec.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err
 	}
 
-	res, height, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
+	bz, height, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
 	if err != nil {
 		return nil, height, err
 	}
 
 	var account exported.Account
-	if err := ModuleCdc.UnmarshalJSON(res, &account); err != nil {
+	if err := ar.codec.UnmarshalJSON(bz, &account); err != nil {
 		return nil, height, err
 	}
 

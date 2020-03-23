@@ -6,10 +6,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // create a decimal from a decimal string (ex. "1234.5678")

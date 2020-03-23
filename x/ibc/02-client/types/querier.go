@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -35,10 +35,10 @@ func NewQueryAllClientsParams(page, limit int) QueryAllClientsParams {
 // StateResponse defines the client response for a client state query.
 // It includes the commitment proof and the height of the proof.
 type StateResponse struct {
-	ClientState exported.ClientState `json:"client_state" yaml:"client_state"`
-	Proof       commitment.Proof     `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitment.Path      `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64               `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ClientState exported.ClientState        `json:"client_state" yaml:"client_state"`
+	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewClientStateResponse creates a new StateResponse instance.
@@ -47,8 +47,8 @@ func NewClientStateResponse(
 ) StateResponse {
 	return StateResponse{
 		ClientState: clientState,
-		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ibctypes.ClientStatePath(clientID), "/")),
+		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ClientStatePath(clientID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -56,10 +56,10 @@ func NewClientStateResponse(
 // ConsensusStateResponse defines the client response for a Consensus state query.
 // It includes the commitment proof and the height of the proof.
 type ConsensusStateResponse struct {
-	ConsensusState exported.ConsensusState `json:"consensus_state" yaml:"consensus_state"`
-	Proof          commitment.Proof        `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath      commitment.Path         `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight    uint64                  `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ConsensusState exported.ConsensusState     `json:"consensus_state" yaml:"consensus_state"`
+	Proof          commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath      commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight    uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.
@@ -68,8 +68,8 @@ func NewConsensusStateResponse(
 ) ConsensusStateResponse {
 	return ConsensusStateResponse{
 		ConsensusState: cs,
-		Proof:          commitment.Proof{Proof: proof},
-		ProofPath:      commitment.NewPath(strings.Split(ibctypes.ConsensusStatePath(clientID, uint64(height)), "/")),
+		Proof:          commitmenttypes.MerkleProof{Proof: proof},
+		ProofPath:      commitmenttypes.NewMerklePath(strings.Split(ibctypes.ConsensusStatePath(clientID, uint64(height)), "/")),
 		ProofHeight:    uint64(height),
 	}
 }

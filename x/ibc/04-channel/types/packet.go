@@ -22,7 +22,7 @@ func CommitPacket(data exported.PacketDataI) []byte {
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes
-func CommitAcknowledgement(data exported.PacketDataI) []byte {
+func CommitAcknowledgement(data exported.PacketAcknowledgementI) []byte {
 	return tmhash.Sum(data.GetBytes())
 }
 

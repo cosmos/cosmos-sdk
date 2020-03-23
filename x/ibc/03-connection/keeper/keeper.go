@@ -10,7 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -38,8 +39,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment
 // Prefix
-func (k Keeper) GetCommitmentPrefix() commitment.PrefixI {
-	return commitment.NewPrefix([]byte(k.storeKey.Name()))
+func (k Keeper) GetCommitmentPrefix() commitmentexported.Prefix {
+	return commitmenttypes.NewMerklePrefix([]byte(k.storeKey.Name()))
 }
 
 // GetConnection returns a connection with a particular identifier

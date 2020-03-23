@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos_sdk.x.crisis.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+
+// MsgVerifyInvariant - message struct to verify a particular invariance
+message MsgVerifyInvariant {
+  option (gogoproto.equal) = true;
+
+  bytes  sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string invariant_module_name = 2 [(gogoproto.moretags) = "yaml:\"invariant_module_name\""];
+  string invariant_route       = 3 [(gogoproto.moretags) = "yaml:\"invariant_route\""];
+}

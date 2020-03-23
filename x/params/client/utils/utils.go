@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 type (
@@ -49,14 +49,14 @@ func NewParamChangeJSON(subspace, key string, value json.RawMessage) ParamChange
 }
 
 // ToParamChange converts a ParamChangeJSON object to ParamChange.
-func (pcj ParamChangeJSON) ToParamChange() params.ParamChange {
-	return params.NewParamChange(pcj.Subspace, pcj.Key, string(pcj.Value))
+func (pcj ParamChangeJSON) ToParamChange() proposal.ParamChange {
+	return proposal.NewParamChange(pcj.Subspace, pcj.Key, string(pcj.Value))
 }
 
 // ToParamChanges converts a slice of ParamChangeJSON objects to a slice of
 // ParamChange.
-func (pcj ParamChangesJSON) ToParamChanges() []params.ParamChange {
-	res := make([]params.ParamChange, len(pcj))
+func (pcj ParamChangesJSON) ToParamChanges() []proposal.ParamChange {
+	res := make([]proposal.ParamChange, len(pcj))
 	for i, pc := range pcj {
 		res[i] = pc.ToParamChange()
 	}

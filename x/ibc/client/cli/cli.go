@@ -9,6 +9,7 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -23,7 +24,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ibcTxCmd.AddCommand(flags.PostCommands(
-		ibcclient.GetTxCmd(cdc, storeKey),
+		tmclient.GetTxCmd(cdc, storeKey),
 		connection.GetTxCmd(cdc, storeKey),
 		channel.GetTxCmd(cdc, storeKey),
 	)...)

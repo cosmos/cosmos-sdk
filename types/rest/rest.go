@@ -20,8 +20,10 @@ import (
 )
 
 const (
-	DefaultPage  = 1
-	DefaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	DefaultPage    = 1
+	DefaultLimit   = 30             // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+	TxMinHeightKey = "tx.minheight" // Inclusive minimum height filter
+	TxMaxHeightKey = "tx.maxheight" // Inclusive maximum height filter
 )
 
 // ResponseWithHeight defines a response object type that wraps an original
@@ -167,20 +169,6 @@ func WriteSimulationResponse(w http.ResponseWriter, cdc *codec.Codec, gas uint64
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(resp)
-}
-
-// ParseInt64OrReturnBadRequest converts s to a int64 value.
-func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok bool) {
-	var err error
-
-	n, err = strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		err := fmt.Errorf("'%s' is not a valid int64", s)
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return n, false
-	}
-
-	return n, true
 }
 
 // ParseUint64OrReturnBadRequest converts s to a uint64 value.
@@ -335,9 +323,14 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 		}
 
 		var tag string
-		if key == types.TxHeightKey {
+		switch key {
+		case types.TxHeightKey:
 			tag = fmt.Sprintf("%s=%s", key, value)
-		} else {
+		case TxMinHeightKey:
+			tag = fmt.Sprintf("%s>=%s", types.TxHeightKey, value)
+		case TxMaxHeightKey:
+			tag = fmt.Sprintf("%s<=%s", types.TxHeightKey, value)
+		default:
 			tag = fmt.Sprintf("%s='%s'", key, value)
 		}
 		tags = append(tags, tag)
@@ -379,10 +372,8 @@ func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 // ParseQueryParamBool parses the given param to a boolean. It returns false by
 // default if the string is not parseable to bool.
 func ParseQueryParamBool(r *http.Request, param string) bool {
-	valueStr := r.FormValue(param)
-	value := false
-	if ok, err := strconv.ParseBool(valueStr); err == nil {
-		value = ok
+	if value, err := strconv.ParseBool(r.FormValue(param)); err == nil {
+		return value
 	}
-	return value
+	return false
 }

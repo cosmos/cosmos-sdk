@@ -51,6 +51,11 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &redB)
 		return fmt.Sprintf("%v\n%v", redA, redB)
 
+	case bytes.Equal(kvA.Key[:1], types.HistoricalInfoKey):
+		var histInfo types.HistoricalInfo
+		cdc.Seal().MustUnmarshalBinaryLengthPrefixed(kvA.Value, &histInfo)
+		return fmt.Sprintf("%v", histInfo)
+
 	default:
 		panic(fmt.Sprintf("invalid staking key prefix %X", kvA.Key[:1]))
 	}

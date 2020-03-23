@@ -12,16 +12,12 @@ import (
 )
 
 const (
-	AttributeKeySenderPort   = types.AttributeKeySenderPort
-	AttributeKeyReceiverPort = types.AttributeKeyReceiverPort
-	AttributeKeyChannelID    = types.AttributeKeyChannelID
-	AttributeKeySequence     = types.AttributeKeySequence
-	SubModuleName            = types.SubModuleName
-	StoreKey                 = types.StoreKey
-	RouterKey                = types.RouterKey
-	QuerierRoute             = types.QuerierRoute
-	QueryAllChannels         = types.QueryAllChannels
-	QueryChannel             = types.QueryChannel
+	SubModuleName    = types.SubModuleName
+	StoreKey         = types.StoreKey
+	RouterKey        = types.RouterKey
+	QuerierRoute     = types.QuerierRoute
+	QueryAllChannels = types.QueryAllChannels
+	QueryChannel     = types.QueryChannel
 )
 
 var (
@@ -41,6 +37,7 @@ var (
 	ErrPacketTimeout             = types.ErrPacketTimeout
 	ErrInvalidChannel            = types.ErrInvalidChannel
 	ErrInvalidChannelState       = types.ErrInvalidChannelState
+	ErrAcknowledgementTooLong    = types.ErrAcknowledgementTooLong
 	NewMsgChannelOpenInit        = types.NewMsgChannelOpenInit
 	NewMsgChannelOpenTry         = types.NewMsgChannelOpenTry
 	NewMsgChannelOpenAck         = types.NewMsgChannelOpenAck

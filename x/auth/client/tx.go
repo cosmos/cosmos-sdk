@@ -19,6 +19,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// Codec defines the x/auth account codec to be used for use with the
+// AccountRetriever. The application must be sure to set this to their respective
+// codec that implements the Codec interface and must be the same codec that
+// passed to the x/auth module.
+//
+// TODO:/XXX: Using a package-level global isn't ideal and we should consider
+// refactoring the module manager to allow passing in the correct module codec.
+var Codec authtypes.Codec
+
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate" yaml:"gas_estimate"`
@@ -198,9 +207,10 @@ func SignStdTx(
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func SignStdTxWithSignerAddress(txBldr authtypes.TxBuilder, cliCtx context.CLIContext,
-	addr sdk.AccAddress, name string, stdTx authtypes.StdTx,
-	offline bool) (signedStdTx authtypes.StdTx, err error) {
+func SignStdTxWithSignerAddress(
+	txBldr authtypes.TxBuilder, cliCtx context.CLIContext,
+	addr sdk.AccAddress, name string, stdTx authtypes.StdTx, offline bool,
+) (signedStdTx authtypes.StdTx, err error) {
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
@@ -242,7 +252,7 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	num, seq, err := authtypes.NewAccountRetriever(cliCtx).GetAccountNumberSequence(addr)
+	num, seq, err := authtypes.NewAccountRetriever(Codec, cliCtx).GetAccountNumberSequence(addr)
 	if err != nil {
 		return txBldr, err
 	}
@@ -290,7 +300,7 @@ func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (uint64, error) {
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (authtypes.TxBuilder, error) {
 	from := cliCtx.GetFromAddress()
 
-	accGetter := authtypes.NewAccountRetriever(cliCtx)
+	accGetter := authtypes.NewAccountRetriever(Codec, cliCtx)
 	if err := accGetter.EnsureExists(from); err != nil {
 		return txBldr, err
 	}
@@ -299,7 +309,7 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (au
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := authtypes.NewAccountRetriever(cliCtx).GetAccountNumberSequence(from)
+		num, seq, err := authtypes.NewAccountRetriever(Codec, cliCtx).GetAccountNumberSequence(from)
 		if err != nil {
 			return txBldr, err
 		}

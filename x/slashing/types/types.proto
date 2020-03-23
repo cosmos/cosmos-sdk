@@ -1,0 +1,42 @@
+syntax = "proto3";
+package cosmos_sdk.x.slashing.v1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option (gogoproto.equal_all) = true;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+// MsgUnjail - struct for unjailing jailed validator
+message MsgUnjail {
+  bytes validator_addr = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.moretags) = "yaml:\"address\"",
+    (gogoproto.jsontag)  = "address"
+  ];
+}
+
+// ValidatorSigningInfo defines the signing info for a validator
+message ValidatorSigningInfo {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes address = 1 [
+    (gogoproto.casttype) =
+        "github.com/cosmos/cosmos-sdk/types.ConsAddress"  // validator consensus address
+  ];
+  // height at which validator was first a candidate OR was unjailed
+  int64 start_height = 2 [(gogoproto.moretags) = "yaml:\"start_height\""];
+  // index offset into signed block bit array
+  int64 index_offset = 3 [(gogoproto.moretags) = "yaml:\"index_offset\""];
+  // timestamp validator cannot be unjailed until
+  google.protobuf.Timestamp jailed_until = 4 [
+    (gogoproto.moretags) = "yaml:\"jailed_until\"",
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false
+  ];
+  // whether or not a validator has been tombstoned (killed out of validator set)
+  bool tombstoned = 5;
+  // missed blocks counter (to avoid scanning the array every time)
+  int64 missed_blocks_counter = 6 [(gogoproto.moretags) = "yaml:\"missed_blocks_counter\""];
+}

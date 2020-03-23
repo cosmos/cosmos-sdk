@@ -124,9 +124,9 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 // NewCapability attempts to create a new capability with a given name. If the
 // capability already exists in the in-memory store, an error will be returned.
 // Otherwise, a new capability is created with the current global unique index.
-// The newly created capability has the module and name tuple set as the initial
-// owner. Finally, the global index is incremented along with forward and reverse
-// indexes set in the in-memory store.
+// The newly created capability has the scoped module name and capability name
+// tuple set as the initial owner. Finally, the global index is incremented along
+// with forward and reverse indexes set in the in-memory store.
 //
 // Note, namespacing is completely local, which is safe since records are prefixed
 // with the module name and no two ScopedKeeper can have the same module name.
@@ -177,11 +177,11 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capabil
 	return string(bz) == name
 }
 
-// ClaimCapability attempts to claim a given Capability and name tuple. This tuple
-// is considered an Owner. It will attempt to add the owner to the persistent
-// set of capability owners for the capability index. If the owner already exists,
-// it will return an error. Otherwise, it will also set a forward and reverse index
-// for the capability and capability name.
+// ClaimCapability attempts to claim a given Capability. The provided name and
+// the scoped module's name tuple are treated as the owner. It will attempt
+// to add the owner to the persistent set of capability owners for the capability
+// index. If the owner already exists, it will return an error. Otherwise, it will
+// also set a forward and reverse index for the capability and capability name.
 func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, name string) error {
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {

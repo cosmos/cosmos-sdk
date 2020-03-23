@@ -14,7 +14,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

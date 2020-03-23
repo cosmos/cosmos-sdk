@@ -136,7 +136,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       height,
-		Timestamp:    ctx.BlockTime(),
+		Timestamp:    histInfo.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
 		ValidatorSet: tmtypes.NewValidatorSet(valSet.ToTmValidators()),
 	}

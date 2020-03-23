@@ -71,8 +71,8 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress
 	}
 	// ValidateBasic of provided header with self-attested chain-id
-	if msg.Header.ValidateBasic(msg.Header.ChainID) != nil {
-		return sdkerrors.Wrap(ErrInvalidHeader, "header failed validatebasic with its own chain-id")
+	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
 	return host.DefaultClientIdentifierValidator(msg.ClientID)
 }

@@ -142,8 +142,8 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 		return nil, types.ErrNoDelegationExists
 	}
 
-	endingPeriod := k.incrementValidatorPeriod(ctx, val)
-	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 	if rewards == nil {
 		rewards = sdk.DecCoins{}
 	}
@@ -174,8 +174,8 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 		func(_ int64, del exported.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
-			endingPeriod := k.incrementValidatorPeriod(ctx, val)
-			delReward := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+			delReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
 			total = total.Add(delReward...)

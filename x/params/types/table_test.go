@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 func TestKeyTable(t *testing.T) {

@@ -3,10 +3,10 @@ package tracekv
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -187,11 +187,11 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 
 	raw, err := json.Marshal(traceOp)
 	if err != nil {
-		panic(fmt.Sprintf("failed to serialize trace operation: %v", err))
+		panic(errors.Wrap(err, "failed to serialize trace operation"))
 	}
 
 	if _, err := w.Write(raw); err != nil {
-		panic(fmt.Sprintf("failed to write trace operation: %v", err))
+		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
 	io.WriteString(w, "\n")

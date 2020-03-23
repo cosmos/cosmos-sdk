@@ -61,10 +61,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 // nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProof, int64) {
-	res := suite.chainA.App.Query(abci.RequestQuery{
+func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
+	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", storeKey),
-		Height: suite.chainA.App.LastBlockHeight(),
+		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
 	})
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (commitmenttypes.MerkleProo
 		Proof: res.Proof,
 	}
 
-	return proof, res.Height
+	return proof, uint64(res.Height)
 }
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
@@ -122,6 +122,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	suite.Require().ElementsMatch(expConnections, connections)
 }
 
+// TestChain is a testing struct that wraps a simapp with the latest Header, Vals and Signers
+// It also contains a field called ClientID. This is the clientID that *other* chains use
+// to refer to this TestChain. For simplicity's sake it is also the chainID on the TestChain Header
 type TestChain struct {
 	ClientID string
 	App      *simapp.SimApp
@@ -135,9 +138,9 @@ func NewTestChain(clientID string) *TestChain {
 	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
 
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, valSet, signers)
+	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
 
 	return &TestChain{
 		ClientID: clientID,
@@ -171,11 +174,17 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
 		Header: abci.Header{
+			Time:    client.Header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
 	}
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+
+	// also set staking params
+	stakingParams := staking.DefaultParams()
+	stakingParams.HistoricalEntries = 10
+	client.App.StakingKeeper.SetParams(ctxClient, stakingParams)
 
 	// Create target ctx
 	ctxTarget := chain.GetContext()
@@ -218,8 +227,15 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	// always commit when updateClient and begin a new block
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-
 	client.Header = nextHeader(client)
+
+	/*
+		err := chain.App.IBCKeeper.ClientKeeper.UpdateClient(ctxTarget, client.ClientID, client.Header)
+		if err != nil {
+			panic(err)
+		}
+	*/
+
 	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
@@ -232,6 +248,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
 		Header: abci.Header{
+			Time:    client.Header.Time,
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -296,5 +313,5 @@ func (chain *TestChain) createChannel(
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
-		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Vals, chain.Signers)
+		time.Now(), chain.Vals, chain.Signers)
 }

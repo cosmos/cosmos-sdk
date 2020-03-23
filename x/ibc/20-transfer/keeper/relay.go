@@ -126,7 +126,7 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender, receiver, !isSourceChain, destHeight+DefaultPacketTimeout,
+		amount, sender, receiver, isSourceChain, destHeight+DefaultPacketTimeout,
 	)
 
 	packet := channel.NewPacket(

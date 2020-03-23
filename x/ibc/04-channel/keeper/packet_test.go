@@ -96,18 +96,23 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 }
 
 func (suite *KeeperTestSuite) TestRecvPacket() {
-	counterparty := types.NewCounterparty(testPort2, testChannel2)
+	counterparty := types.NewCounterparty(testPort1, testChannel1)
+	packetKey := ibctypes.KeyPacketCommitment(testPort2, testChannel2, 1)
+
 	var packet exported.PacketI
 
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainB.CreateClient(suite.chainA)
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionIDA)
-			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 1)
-			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
-			suite.chainB.updateClient(suite.chainA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionIDB)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort2, testChannel2, 1)
+			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort2, testChannel2, counterparty.GetPortID(), counterparty.GetChannelID())
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitPacket(packet.(types.Packet).Data))
+
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
@@ -149,11 +154,15 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
-			proofHeight := uint64(suite.chainA.Header.Height)
 			ctx := suite.chainB.GetContext()
+
+			suite.chainB.updateClient(suite.chainA)
+			suite.chainA.updateClient(suite.chainB)
+			proof, proofHeight := queryProof(suite.chainA, packetKey)
+
 			var err error
 			if tc.expPass {
-				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, ibctypes.ValidProof{}, proofHeight)
+				_, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight+1)
 				suite.Require().NoError(err)
 			} else {
 				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, ibctypes.InvalidProof{}, proofHeight)
@@ -215,6 +224,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
+	packetKey := ibctypes.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
 
 	ack := transfertypes.AckDataTransfer{}
 
@@ -222,9 +232,13 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 		{"success", func() {
 			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
 			suite.chainB.CreateClient(suite.chainA)
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionIDB)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet.Data))
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, ack.GetBytes())
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
@@ -267,14 +281,17 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
+			suite.chainA.updateClient(suite.chainB)
+			suite.chainB.updateClient(suite.chainA)
+			proof, proofHeight := queryProof(suite.chainA, packetKey)
+
 			ctx := suite.chainB.GetContext()
-			proofHeight := uint64(suite.chainA.Header.Height)
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, ibctypes.ValidProof{}, proofHeight)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, ibctypes.InvalidProof{}, proofHeight)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}
@@ -284,6 +301,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 
 func (suite *KeeperTestSuite) TestCleanupPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
+	packetKey := ibctypes.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64
@@ -295,10 +313,14 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 		{"success", func() {
 			nextSeqRecv = 10
 			packet = types.NewPacket(mockSuccessPacket{}, 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID())
+			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.UNORDERED, testConnectionIDB)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet.Data))
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, ack)
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
@@ -356,13 +378,17 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			tc.malleate()
 
 			ctx := suite.chainB.GetContext()
-			proofHeight := uint64(suite.chainA.Header.Height)
+
+			suite.chainB.updateClient(suite.chainA)
+			suite.chainA.updateClient(suite.chainB)
+			proof, proofHeight := queryProof(suite.chainA, packetKey)
+
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, ibctypes.ValidProof{}, proofHeight, nextSeqRecv, ack)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, proof, proofHeight+1, nextSeqRecv, ack)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, ibctypes.InvalidProof{}, proofHeight, nextSeqRecv, ack)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, ibctypes.InvalidProof{}, proofHeight+1, nextSeqRecv, ack)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

@@ -1,29 +1,33 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 5, 5})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	createValidators(ctx, app, []int64{5, 5, 5})
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.True(t, burnDeposits)
@@ -31,44 +35,50 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyNoQuorum(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{2, 5, 0})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	createValidators(ctx, app, []int64{2, 5, 0})
+
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes)
 	require.Nil(t, err)
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, _ := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
 	require.False(t, passes)
 	require.True(t, burnDeposits)
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 5, 5})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
+	addrs, _ := createValidators(ctx, app, []int64{5, 5, 5})
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -76,44 +86,48 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 0})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 0})
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, _ := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, _ := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 0})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 0})
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionYes))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -121,48 +135,51 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{6, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNoWithVeto))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.OptionNoWithVeto))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.True(t, burnDeposits)
 	require.False(t, tallyResults.Equals(types.EmptyTallyResult()))
-
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{6, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionAbstain))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionAbstain))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.OptionYes))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -170,23 +187,25 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{6, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionAbstain))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionAbstain))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -194,22 +213,25 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 7})
+	valAccAddr1, valAccAddr2 := valAccAddrs[0], valAccAddrs[1]
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -217,33 +239,35 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs, valAddrs := createValidators(ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
-	val1, found := sk.GetValidator(ctx, valOpAddr1)
+	val1, found := app.StakingKeeper.GetValidator(ctx, valAddrs[0])
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[4], delTokens, sdk.Unbonded, val1, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, sk)
+	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[4], types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -251,32 +275,34 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
-	val3, found := sk.GetValidator(ctx, valOpAddr3)
+	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val3, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val3, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, sk)
+	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -284,37 +310,39 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	val1, found := sk.GetValidator(ctx, valOpAddr1)
+	val1, found := app.StakingKeeper.GetValidator(ctx, vals[0])
 	require.True(t, found)
-	val2, found := sk.GetValidator(ctx, valOpAddr2)
+	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val1, true)
 	require.NoError(t, err)
-	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, sk)
+	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -322,36 +350,40 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{25, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	createValidators(ctx, app, []int64{25, 6, 7})
+
+	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	val2, found := sk.GetValidator(ctx, valOpAddr2)
+	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
 	require.True(t, found)
-	val3, found := sk.GetValidator(ctx, valOpAddr3)
+	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
-	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val3, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val3, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, sk)
+	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.False(t, passes)
 	require.False(t, burnDeposits)
@@ -359,38 +391,40 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 }
 
 func TestTallyJailedValidator(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{25, 6, 7})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs, valAddrs := createValidators(ctx, app, []int64{25, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	val2, found := sk.GetValidator(ctx, valOpAddr2)
+	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	require.True(t, found)
-	val3, found := sk.GetValidator(ctx, valOpAddr3)
+	val3, found := app.StakingKeeper.GetValidator(ctx, valAddrs[2])
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
-	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val3, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val3, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, sk)
+	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
-	sk.Jail(ctx, sdk.ConsAddress(val2.GetConsPubKey().Address()))
+	app.StakingKeeper.Jail(ctx, sdk.ConsAddress(val2.GetConsPubKey().Address()))
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionNo))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)
@@ -398,30 +432,32 @@ func TestTallyJailedValidator(t *testing.T) {
 }
 
 func TestTallyValidatorMultipleDelegations(t *testing.T) {
-	ctx, _, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{10, 10, 10})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	addrs, valAddrs := createValidators(ctx, app, []int64{10, 10, 10})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	val2, found := sk.GetValidator(ctx, valOpAddr2)
+	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, valAccAddr1, delTokens, sdk.Unbonded, val2, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
 
 	tp := TestProposal
-	proposal, err := keeper.SubmitProposal(ctx, tp)
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 	proposal.Status = types.StatusVotingPeriod
-	keeper.SetProposal(ctx, proposal)
+	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
-	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
 
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
-	passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
+	passes, burnDeposits, tallyResults := app.GovKeeper.Tally(ctx, proposal)
 
 	require.True(t, passes)
 	require.False(t, burnDeposits)

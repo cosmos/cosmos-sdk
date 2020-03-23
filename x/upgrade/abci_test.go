@@ -1,9 +1,14 @@
 package upgrade_test
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -31,7 +36,7 @@ var s TestSuite
 
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, 0)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0)
 	genesisState := simapp.NewDefaultGenesisState()
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
@@ -392,4 +397,31 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")
+}
+
+func TestDumpUpgradeInfoToFile(t *testing.T) {
+	s := setupTest(10, map[int64]bool{})
+
+	planHeight := s.ctx.BlockHeight() + 1
+	name := "test"
+	t.Log("verify if upgrade height is dumped to file")
+	err := s.keeper.DumpUpgradeInfoToDisk(planHeight, name)
+	require.Nil(t, err)
+
+	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
+	require.Nil(t, err)
+
+	data, err := ioutil.ReadFile(upgradeInfoFilePath)
+	require.NoError(t, err)
+
+	var upgradeInfo storetypes.UpgradeInfo
+	err = json.Unmarshal(data, &upgradeInfo)
+	require.Nil(t, err)
+
+	t.Log("Verify upgrade height from file matches ")
+	require.Equal(t, upgradeInfo.Height, planHeight)
+
+	// clear the test file
+	err = os.Remove(upgradeInfoFilePath)
+	require.Nil(t, err)
 }

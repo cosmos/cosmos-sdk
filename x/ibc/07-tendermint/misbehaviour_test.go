@@ -2,6 +2,7 @@ package tendermint_test
 
 import (
 	"bytes"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -43,8 +44,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
@@ -56,8 +57,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
@@ -69,8 +70,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: suite.valSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
@@ -82,8 +83,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, bothValSet, altSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, altSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
@@ -95,8 +96,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, bothValSet, altSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), altValSet, altSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
@@ -108,8 +109,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
 			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
 			ibctmtypes.Evidence{
-				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, altValSet, altSigners),
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, bothValSet, altSigners),
+				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, altSigners),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), altValSet, altSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},

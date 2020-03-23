@@ -30,8 +30,8 @@ func Test_runDeleteCmd(t *testing.T) {
 		kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			kb.Delete("runDeleteCmd_Key1", "", false)
-			kb.Delete("runDeleteCmd_Key2", "", false)
+			kb.Delete("runDeleteCmd_Key1", "", false) // nolint:errcheck
+			kb.Delete("runDeleteCmd_Key2", "", false) // nolint:errcheck
 
 		})
 	}

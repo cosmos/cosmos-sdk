@@ -13,6 +13,5 @@ The distribution module contains the following parameters:
 | bonusproposerreward | string (dec) | "0.040000000000000000" [1] |
 | withdrawaddrenabled | bool         | true                       |
 
-* [0] The value of `communitytax` must be positive and cannot exceed 1%.
-* [1] The sum of `baseproposerreward` and `bonusproposerreward` cannot exceed 1%.
-Both values must be positive.
+* [0] The value of `communitytax` must be positive and cannot exceed 1.00.
+* [1] `baseproposerreward` and `bonusproposerreward` must be positive and their sum cannot exceed 1.00.

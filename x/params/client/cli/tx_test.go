@@ -14,7 +14,7 @@ func TestParseProposal(t *testing.T) {
 	cdc := codec.New()
 	okJSON, err := ioutil.TempFile("", "proposal")
 	require.Nil(t, err, "unexpected error")
-	okJSON.WriteString(`
+	_, err = okJSON.WriteString(`
 {
   "title": "Staking Param Change",
   "description": "Update max validators",
@@ -28,6 +28,7 @@ func TestParseProposal(t *testing.T) {
   "deposit": "1000stake"
 }
 `)
+	require.NoError(t, err)
 
 	proposal, err := utils.ParseParamChangeProposalJSON(cdc, okJSON.Name())
 	require.NoError(t, err)

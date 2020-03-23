@@ -5,8 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 

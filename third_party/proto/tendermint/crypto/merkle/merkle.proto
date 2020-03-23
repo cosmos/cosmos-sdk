@@ -30,7 +30,7 @@ message Proof {
   repeated ProofOp ops = 1 [(gogoproto.nullable) = false];
 }
 
-
+// Key defines a proof Key
 message Key {
   bytes name = 1;
   bytes enc = 2 [

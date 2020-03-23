@@ -5,13 +5,13 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/20-transfer/types/types.proto";
-import "x/ibc/23-commitment/types.proto";
+import "x/ibc/23-commitment/types/types.proto";
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.
 message MsgChannelOpenInit {
-  string port_id = 1;
-	string channel_id = 2;
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
   Channel channel = 3 [
     (gogoproto.nullable)    = false
   ];
@@ -20,16 +20,16 @@ message MsgChannelOpenInit {
   ];
 }
 
-// // MsgChannelOpenInit defines an sdk.Msg to try open  a channel handshake. It is
+// MsgChannelOpenInit defines an sdk.Msg to try open  a channel handshake. It is
 // called by a relayer on Chain A.
 message MsgChannelOpenTry {
-  string port_id = 1;
-	string channel_id = 2;
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
   Channel channel = 3 [
     (gogoproto.nullable)    = false
   ];
-  string counterparty_version = 4;
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_init = 5 [
+  string counterparty_version = 4 [(gogoproto.moretags)    = "yaml:\"counterparty_version\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 5 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 6;
@@ -39,10 +39,10 @@ message MsgChannelOpenTry {
 }
 
 message MsgChannelOpenAck {
-  string port_id = 1;
-	string channel_id = 2;
-  string counterparty_version = 3;
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_try = 4 [
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  string counterparty_version = 3 [(gogoproto.moretags)    = "yaml:\"counterparty_version\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 4 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 5;
@@ -52,9 +52,9 @@ message MsgChannelOpenAck {
 }
 
 message MsgChannelOpenConfirm {
-  string port_id = 1;
-	string channel_id = 2;
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_ack = 3 [
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;
@@ -64,17 +64,17 @@ message MsgChannelOpenConfirm {
 }
 
 message MsgChannelCloseInit {
-  string port_id = 1;
-	string channel_id = 2;
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
   bytes signer = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
 message MsgChannelCloseConfirm {
-  string port_id = 1;
-	string channel_id = 2;
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof_init = 3 [
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;
@@ -87,7 +87,7 @@ message MsgPacket {
   Packet packet = 1 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof = 2 [
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 2 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 3;
@@ -100,7 +100,7 @@ message MsgTimeout {
   Packet packet = 1 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof = 2 [
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 2 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 3;
@@ -117,7 +117,7 @@ message MsgAcknowledgement {
   PacketAck acknowledgement = 2 [
     (gogoproto.nullable)    = false
   ];
-  cosmos_sdk.x.ibc.commitment.v1.ProofI proof = 3 [
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 3 [
     (gogoproto.nullable)    = false
   ];
   uint64 proof_height = 4;
@@ -143,28 +143,16 @@ message Channel {
 }
 
 message Counterparty {
-	string port_id = 1 [
-    (gogoproto.moretags)    = "yaml:\"port_id\""
-  ];
-	string channel_id = 2 [
-    (gogoproto.moretags)    = "yaml:\"channel_id\""
-  ];
+  string port_id = 1 [(gogoproto.moretags)    = "yaml:\"port_id\""];
+	string channel_id = 2 [(gogoproto.moretags)    = "yaml:\"channel_id\""];
 }
 
 message Packet {
   uint64 sequence = 1;
-  string source_port = 2 [
-    (gogoproto.moretags)    = "yaml:\"source_port\""
-  ];
-  string source_channel = 3 [
-    (gogoproto.moretags)    = "yaml:\"source_channel\""
-  ];
-  string destination_port = 4 [
-    (gogoproto.moretags)    = "yaml:\"destination_port\""
-  ];
-  string destination_channel = 5 [
-    (gogoproto.moretags)    = "yaml:\"destination_channel\""
-  ];
+  string source_port = 2 [(gogoproto.moretags)    = "yaml:\"source_port\""];
+  string source_channel = 3 [(gogoproto.moretags)    = "yaml:\"source_channel\""];
+  string destination_port = 4 [(gogoproto.moretags)    = "yaml:\"destination_port\""];
+  string destination_channel = 5 [(gogoproto.moretags)    = "yaml:\"destination_channel\""];
   PacketData data = 6 [
     (gogoproto.nullable) = false
   ];

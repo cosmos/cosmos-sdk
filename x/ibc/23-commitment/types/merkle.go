@@ -19,12 +19,6 @@ import (
 // Applied on SDK-based IBC implementation
 var _ exported.Root = MerkleRoot{}
 
-// MerkleRoot defines a merkle root hash.
-// In the Cosmos SDK, the AppHash of a block header becomes the root.
-type MerkleRoot struct {
-	Hash []byte `json:"hash" yaml:"hash"`
-}
-
 // NewMerkleRoot constructs a new MerkleRoot
 func NewMerkleRoot(hash []byte) MerkleRoot {
 	return MerkleRoot{
@@ -49,12 +43,6 @@ func (mr MerkleRoot) IsEmpty() bool {
 
 var _ exported.Prefix = MerklePrefix{}
 
-// MerklePrefix is merkle path prefixed to the key.
-// The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
-type MerklePrefix struct {
-	KeyPrefix []byte `json:"key_prefix" yaml:"key_prefix"` // byte slice prefixed before the key
-}
-
 // NewMerklePrefix constructs new MerklePrefix instance
 func NewMerklePrefix(keyPrefix []byte) MerklePrefix {
 	return MerklePrefix{
@@ -78,12 +66,6 @@ func (mp MerklePrefix) IsEmpty() bool {
 }
 
 var _ exported.Path = MerklePath{}
-
-// MerklePath is the path used to verify commitment proofs, which can be an arbitrary
-// structured object (defined by a commitment type).
-type MerklePath struct {
-	KeyPath merkle.KeyPath `json:"key_path" yaml:"key_path"` // byte slice prefixed before the key
-}
 
 // NewMerklePath creates a new MerklePath instance
 func NewMerklePath(keyPathStr []string) MerklePath {
@@ -139,14 +121,6 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 }
 
 var _ exported.Proof = MerkleProof{}
-
-// MerkleProof is a wrapper type that contains a merkle proof.
-// It demonstrates membership or non-membership for an element or set of elements,
-// verifiable in conjunction with a known commitment root. Proofs should be
-// succinct.
-type MerkleProof struct {
-	Proof *merkle.Proof `json:"proof" yaml:"proof"`
-}
 
 // GetCommitmentType implements ProofI
 func (MerkleProof) GetCommitmentType() exported.Type {

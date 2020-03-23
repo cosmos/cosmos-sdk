@@ -7,7 +7,7 @@ import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/abci/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "x/ibc/23-commitment/types.proto";
+import "x/ibc/23-commitment/types/types.proto";
 
 // MsgCreateClient defines a message to create a tendermint client state.
 message MsgCreateClient {
@@ -89,7 +89,7 @@ message ConsensusState {
     (gogoproto.stdtime) = true
   ];
   // commitment root (i.e app hash)
-  cosmos_sdk.x.ibc.commitment.v1.Root root = 2 [
+  cosmos_sdk.x.ibc.commitment.v1.MerkleRoot root = 2 [
     (gogoproto.nullable) = false
   ];
   // height at which the consensus state was stored.

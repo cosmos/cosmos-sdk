@@ -1,0 +1,73 @@
+syntax = "proto3";
+package cosmos_sdk.x.ibc.commitment.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
+
+
+// message RootI {
+//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.RootI";
+  
+//   // sum defines a list of all acceptable concrete Root implementations.
+//   oneof sum {
+//     Root merkle = 1;
+//   }
+// }
+
+// message PrefixI {
+//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.PrefixI";
+
+//   oneof sum {
+//     // sum defines a list of all acceptable concrete Prefix implementations.
+//     Prefix merkle = 1;
+//   }
+// }
+
+// message PathI {
+//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.PathI";
+  
+//   // sum defines a list of all acceptable concrete Path implementations.
+//   oneof sum {
+//     Path merkle = 1;
+//   }
+// }
+
+// message ProofI {
+//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.ProofI";
+
+//    // sum defines a list of all acceptable concrete Proof implementations.
+//   oneof sum {
+//     Proof merkle = 1;
+//   }
+// }
+
+// MerkleRoot defines a merkle root hash.
+// In the Cosmos SDK, the AppHash of a block header becomes the root.
+message MerkleRoot {
+	bytes hash = 1;
+}
+
+// MerklePrefix is merkle path prefixed to the key.
+// The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
+message MerklePrefix {
+	bytes key_prefix = 1;
+}
+
+// MerklePath is the path used to verify commitment proofs, which can be an arbitrary
+// structured object (defined by a commitment type).
+message MerklePath {
+	repeated tendermint.crypto.merkle.Key key_path = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/tendermint/tendermint/crypto/merkle.KeyPath"
+  ];
+}
+
+// MerkleProof is a wrapper type that contains a merkle proof.
+// It demonstrates membership or non-membership for an element or set of elements,
+// verifiable in conjunction with a known commitment root. Proofs should be
+// succinct.
+message MerkleProof {
+  tendermint.crypto.merkle.Proof proof = 1;
+}

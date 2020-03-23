@@ -171,7 +171,7 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
 	return states
 }
 
-// Returns isolated prefix store for each client so they can read/write in seperate
+// Returns isolated prefix store for each client so they can read/write in separate
 // namespace without being able to read/write other client's data
 func (k Keeper) clientStore(ctx sdk.Context, clientID string) sdk.KVStore {
 	// append here is safe, appends within a function won't cause

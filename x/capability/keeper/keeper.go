@@ -166,7 +166,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capabi
 // true upon success and false upon failure.
 //
 // Note, the capability's forward mapping is indexed by a string which should
-// contain it's unique memory reference.
+// contain its unique memory reference.
 func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capability, name string) bool {
 	memStore := ctx.KVStore(sk.memKey)
 
@@ -201,8 +201,7 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 
 // GetCapability allows a module to fetch a capability which it previously claimed
 // by name. The module is not allowed to retrieve capabilities which it does not
-// own. If another module claims a capability, the previously owning module will
-// no longer be able to claim it.
+// own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (types.Capability, bool) {
 	memStore := ctx.KVStore(sk.memKey)
 

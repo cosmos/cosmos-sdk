@@ -16,8 +16,8 @@ var (
 	_ types.Committer = (*Store)(nil)
 )
 
-// Store implements an in-memory only KVStore. Entries are peresistent between
-// commits and thus between blocks.
+// Store implements an in-memory only KVStore. Entries are persisted between
+// commits and thus between blocks. State in Memory store is not committed as part of app state but maintained privately by each node
 type Store struct {
 	dbadapter.Store
 }

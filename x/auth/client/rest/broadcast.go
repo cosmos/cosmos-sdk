@@ -34,7 +34,7 @@ func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(req.Tx)
+		txBytes, err := cliCtx.Codec.MarshalBinaryBare(req.Tx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

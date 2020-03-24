@@ -43,15 +43,15 @@ func TestDecodeDistributionStore(t *testing.T) {
 	slashEvent := types.NewValidatorSlashEvent(10, sdk.OneDec())
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
+		tmkv.Pair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryBare(feePool)},
 		tmkv.Pair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
+		tmkv.Pair{Key: types.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryBare(outstanding)},
 		tmkv.Pair{Key: types.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		tmkv.Pair{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryLengthPrefixed(historicalRewards)},
-		tmkv.Pair{Key: types.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(currentRewards)},
-		tmkv.Pair{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(commission)},
-		tmkv.Pair{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
+		tmkv.Pair{Key: types.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryBare(info)},
+		tmkv.Pair{Key: types.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryBare(historicalRewards)},
+		tmkv.Pair{Key: types.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryBare(currentRewards)},
+		tmkv.Pair{Key: types.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryBare(commission)},
+		tmkv.Pair{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryBare(slashEvent)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

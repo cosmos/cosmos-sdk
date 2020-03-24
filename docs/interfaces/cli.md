@@ -1,11 +1,12 @@
 <!--
 order: 3
-synopsis: "This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli)."
 -->
 
 # Command-Line Interface 
 
-## Pre-requisite Readings {hide}
+This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli). {synopsis}
+
+## Pre-requisite Readings
 
 * [Lifecycle of a Query](./query-lifecycle.md) {prereq}
 
@@ -61,8 +62,7 @@ The root command (called `rootCmd`) is what the user first types into the comman
 * **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](../core/node.md). The Status of a node includes `NodeInfo`,`SyncInfo` and `ValidatorInfo`.
 * **Config** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/config.go) from the SDK client tools, which allows the user to edit a `config.toml` file that sets values for [flags](#flags) such as `--chain-id` and which `--node` they wish to connect to.
 The `config` command can be invoked by typing `appcli config` with optional arguments `<key> [value]` and a `--get` flag to query configurations or `--home` flag to create a new configuration.
-* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys) from the SDK client tools, which includes a collection of subcommands for using the key functions in the SDK crypto tools, including adding a new key and saving it to disk, listing all public keys stored in the key manager, and deleting a key.
-For example, users can type `appcli keys add <name>` to add a new key and save an encrypted copy to disk, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys/add.go).
+* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys) from the SDK client tools, which includes a collection of subcommands for using the key functions in the SDK crypto tools, including adding a new key and saving it to disk, listing all public keys stored in the key manager, and deleting a key. For example, users can type `appcli keys add <name>` to add a new key and save an encrypted copy to disk, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys/add.go). For more details about usage of `--keyring-backend` for storage of key credentials look at the [keyring docs](/keyring.md).
 * [**Transaction**](#transaction-commands) commands.
 * [**Query**](#query-commands) commands.
 
@@ -134,4 +134,3 @@ Here is an example of an `initConfig()` function from the [nameservice tutorial 
 And an example of how to add `initConfig` as a `PersistentPreRunE` to the root command:
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/cmd/nscli/main.go#L42-L44
-

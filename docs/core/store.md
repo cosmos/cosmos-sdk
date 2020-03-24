@@ -1,11 +1,12 @@
 <!--
 order: 5
-synopsis: A store is a data structure that holds the state of the application. 
 -->
 
 # Store
 
-## Pre-requisite Readings {hide}
+A store is a data structure that holds the state of the application. {synopsis}
+
+### Pre-requisite Readings
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -130,7 +131,7 @@ iterator := sdk.KVStorePrefixIterator(store, prefix) // proxy for store.Iterator
 defer iterator.Close()
 for ; iterator.Valid(); iterator.Next() {
 	var object types.Object
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &object)
+	keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &object)
 
 	if cb(object) {
         break

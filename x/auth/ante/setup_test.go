@@ -74,7 +74,7 @@ func TestRecoverPanic(t *testing.T) {
 	require.Equal(t, fee.Gas, newCtx.GasMeter().Limit())
 
 	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})
-	require.Panics(t, func() { antehandler(ctx, tx, false) }, "Recovered from non-Out-of-Gas panic")
+	require.Panics(t, func() { antehandler(ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") // nolint:errcheck
 }
 
 type OutOfGasDecorator struct{}

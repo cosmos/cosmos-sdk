@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -74,12 +74,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []sim.WeightedProposalContent {
+func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return simulation.ProposalContents(simState.ParamChanges)
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []sim.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 
@@ -87,6 +87,6 @@ func (AppModule) RandomizedParams(r *rand.Rand) []sim.ParamChange {
 func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }

@@ -102,7 +102,7 @@ func DeliverGenTxs(
 		var tx authtypes.StdTx
 		cdc.MustUnmarshalJSON(genTx, &tx)
 
-		bz := cdc.MustMarshalBinaryLengthPrefixed(tx)
+		bz := cdc.MustMarshalBinaryBare(tx)
 
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})
 		if !res.IsOK() {

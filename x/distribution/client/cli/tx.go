@@ -150,8 +150,8 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 			// The transaction cannot be generated offline since it requires a query
 			// to get all the validators.
-			if cliCtx.GenerateOnly {
-				return fmt.Errorf("command disabled with the provided flag: %s", flags.FlagGenerateOnly)
+			if cliCtx.Offline {
+				return fmt.Errorf("cannot generate tx in offline mode")
 			}
 
 			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
@@ -220,18 +220,8 @@ Where proposal.json contains:
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
   "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
-  "amount": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ],
-  "deposit": [
-    {
-      "denom": "stake",
-      "amount": "10000"
-    }
-  ]
+  "amount": "1000stake",
+  "deposit": "1000stake"
 }
 `,
 				version.ClientName,
@@ -248,9 +238,18 @@ Where proposal.json contains:
 			}
 
 			from := cliCtx.GetFromAddress()
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, proposal.Amount)
 
-			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			amount, err := sdk.ParseCoins(proposal.Amount)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+
+			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			if err != nil {
+				return err
+			}
+			msg := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

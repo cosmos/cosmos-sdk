@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/store"
 )
 
 // GetPruningOptionsFromFlags parses start command flags and returns the correct PruningOptions.

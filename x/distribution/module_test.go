@@ -5,10 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

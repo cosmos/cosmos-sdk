@@ -71,12 +71,15 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		balance := k.GetBalance(ctx, delegatorAddr, coin.Denom)
 		if balance.IsLT(coin) {
 			return sdkerrors.Wrapf(
-				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s < %s", balance, amt,
+				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
 			)
 		}
 
 		balances = balances.Add(balance)
-		k.SetBalance(ctx, delegatorAddr, balance.Sub(coin))
+		err := k.SetBalance(ctx, delegatorAddr, balance.Sub(coin))
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := k.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, balances, amt); err != nil {
@@ -269,13 +272,16 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
 		if hasNeg {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s < %s", spendable, coin)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}
 
 		newBalance := balance.Sub(coin)
 		resultCoins = resultCoins.Add(newBalance)
 
-		k.SetBalance(ctx, addr, newBalance)
+		err := k.SetBalance(ctx, addr, newBalance)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return resultCoins, nil
@@ -296,7 +302,10 @@ func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 		newBalance := balance.Add(coin)
 		resultCoins = resultCoins.Add(newBalance)
 
-		k.SetBalance(ctx, addr, newBalance)
+		err := k.SetBalance(ctx, addr, newBalance)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return resultCoins, nil

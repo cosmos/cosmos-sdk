@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -24,22 +25,29 @@ filename, the command reads from standard input.
 $ <appcli> tx broadcast ./mytxn.json
 `),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
-			if err != nil {
-				return
+
+			if cliCtx.Offline {
+				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(stdTx)
+			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
-				return
+				return err
+			}
+
+			txBytes, err := cliCtx.Codec.MarshalBinaryBare(stdTx)
+			if err != nil {
+				return err
 			}
 
 			res, err := cliCtx.BroadcastTx(txBytes)
-			cliCtx.PrintOutput(res)
+			if err != nil {
+				return err
+			}
 
-			return err
+			return cliCtx.PrintOutput(res)
 		},
 	}
 

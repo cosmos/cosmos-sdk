@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -9,7 +10,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -336,10 +336,15 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 				Result:  res,
 			}
 
+			bz, err := json.Marshal(simRes)
+			if err != nil {
+				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"))
+			}
+
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     codec.Cdc.MustMarshalBinaryBare(simRes),
+				Value:     bz,
 			}
 
 		case "version":

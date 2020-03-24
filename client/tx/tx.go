@@ -2,6 +2,7 @@ package tx
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -216,14 +217,13 @@ func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), txBytes []byte, adjustment float64,
 ) (sdk.SimulationResponse, uint64, error) {
 
-	rawRes, _, err := queryFunc("/app/simulate", txBytes)
+	bz, _, err := queryFunc("/app/simulate", txBytes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	// TODO: Use JSON or proto instead of codec.cdc
 	var simRes sdk.SimulationResponse
-	if err := codec.Cdc.UnmarshalBinaryBare(rawRes, &simRes); err != nil {
+	if err := json.Unmarshal(bz, &simRes); err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
 

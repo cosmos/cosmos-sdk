@@ -2,7 +2,7 @@ package keyring
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	
+
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

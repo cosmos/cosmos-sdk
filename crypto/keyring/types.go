@@ -33,10 +33,9 @@ const (
 
 	// bits of entropy to draw when creating a mnemonic
 	defaultEntropySize = 256
-	addressSuffix = "address"
-	infoSuffix    = "info"
+	addressSuffix      = "address"
+	infoSuffix         = "info"
 )
-
 
 // KeyType reflects a human-readable type for key listing.
 type KeyType uint

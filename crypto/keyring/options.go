@@ -1,6 +1,5 @@
 package keyring
 
-
 // KeybaseOption overrides options for the db
 type KeybaseOption func(*kbOptions)
 

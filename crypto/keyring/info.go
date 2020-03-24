@@ -247,5 +247,3 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }
-
-

@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 import (
 	"bufio"
@@ -18,9 +18,9 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -145,7 +145,7 @@ func (kb keyringKeybase) List() ([]Info, error) {
 			}
 
 			if len(rawInfo.Data) == 0 {
-				return nil, keyerror.NewErrKeyNotFound(key)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 			}
 
 			info, err := unmarshalInfo(rawInfo.Data)
@@ -170,7 +170,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 	}
 
 	if len(bs.Data) == 0 {
-		return nil, keyerror.NewErrKeyNotFound(name)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
 	return unmarshalInfo(bs.Data)

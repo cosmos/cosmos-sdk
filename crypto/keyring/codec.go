@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"

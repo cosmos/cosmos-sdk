@@ -82,6 +82,12 @@ var (
 	// ErrTxTooLarge defines an ABCI typed error where tx is too large.
 	ErrTxTooLarge = Register(RootCodespace, 21, "tx too large")
 
+	// ErrKeyNotFound defines an error when the key doesn't exist
+	ErrKeyNotFound = Register(RootCodespace, 22, "key not found")
+
+	// ErrWrongPassword defines an error when the key password is invalid.
+	ErrWrongPassword = Register(RootCodespace, 23, "invalid account password")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

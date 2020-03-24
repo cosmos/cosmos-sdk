@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -580,4 +581,8 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			return pass, nil
 		}
 	}
+}
+
+func addrKey(address types.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix))
 }

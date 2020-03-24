@@ -126,7 +126,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 // GetByAddress returns Info based on a provided AccAddress. An error is returned
 // if the address does not exist.
 func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
-	ik, err := kb.db.Get(addrKey(address))
+	ik, err := kb.db.Get(kb.addrKeyByString(address))
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +344,7 @@ func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 	batch := kb.db.NewBatch()
 	defer batch.Close()
 
-	batch.Delete(addrKey(info.GetAddress()))
+	batch.Delete(kb.addrKeyByString(info.GetAddress()))
 	batch.Delete(infoKey(name))
 
 	return batch.WriteSync()
@@ -414,10 +414,11 @@ func (kb dbKeybase) writeInfo(name string, info Info) {
 	kb.db.SetSync(key, serializedInfo)
 
 	// store a pointer to the infokey by address for fast lookup
-	kb.db.SetSync(addrKey(info.GetAddress()), key)
+	kb.db.SetSync(kb.addrKeyByString(info.GetAddress()), key)
 }
 
-func addrKey(address types.AccAddress) []byte {
+// this is to be removed together with dbKeybase and the old Keybase interface
+func (kb dbKeybase) addrKeyByString(address types.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 

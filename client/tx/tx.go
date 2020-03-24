@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"os"
 
-	"githuf.com/cosmos/cosmos-sdk/client/flags"
-	"githuf.com/spf13/viper"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"

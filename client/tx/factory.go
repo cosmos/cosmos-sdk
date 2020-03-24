@@ -4,12 +4,12 @@ import (
 	"io"
 	"strings"
 
-	"githuf.com/cosmos/cosmos-sdk/client/flags"
-	"githuf.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "githuf.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/crypto"
 
-	"githuf.com/spf13/viper"
-	"githuf.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AccountRetriever defines the interfaces required for use by the Factory to

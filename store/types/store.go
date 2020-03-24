@@ -273,7 +273,29 @@ const (
 	StoreTypeDB
 	StoreTypeIAVL
 	StoreTypeTransient
+	StoreTypeMemory
 )
+
+func (st StoreType) String() string {
+	switch st {
+	case StoreTypeMulti:
+		return "StoreTypeMulti"
+
+	case StoreTypeDB:
+		return "StoreTypeDB"
+
+	case StoreTypeIAVL:
+		return "StoreTypeIAVL"
+
+	case StoreTypeTransient:
+		return "StoreTypeTransient"
+
+	case StoreTypeMemory:
+		return "StoreTypeMemory"
+	}
+
+	return "unknown store type"
+}
 
 //----------------------------------------
 // Keys for accessing substores
@@ -331,6 +353,25 @@ func (key *TransientStoreKey) Name() string {
 // Implements StoreKey
 func (key *TransientStoreKey) String() string {
 	return fmt.Sprintf("TransientStoreKey{%p, %s}", key, key.name)
+}
+
+// MemoryStoreKey defines a typed key to be used with an in-memory KVStore.
+type MemoryStoreKey struct {
+	name string
+}
+
+func NewMemoryStoreKey(name string) *MemoryStoreKey {
+	return &MemoryStoreKey{name: name}
+}
+
+// Name returns the name of the MemoryStoreKey.
+func (key *MemoryStoreKey) Name() string {
+	return key.name
+}
+
+// String returns a stringified representation of the MemoryStoreKey.
+func (key *MemoryStoreKey) String() string {
+	return fmt.Sprintf("MemoryStoreKey{%p, %s}", key, key.name)
 }
 
 //----------------------------------------

@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connectionKey := ibctypes.KeyConnection(testConnectionIDA)
 			proofInit, proofHeight := queryProof(suite.chainA, connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(consensusHeight)
+			consensusKey := prefixedClientKey(testClientIDB, ibctypes.KeyConsensusState(uint64(consensusHeight)))
 			proofConsensus, _ := queryProof(suite.chainA, consensusKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
@@ -205,9 +205,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := queryProof(suite.chainB, connectionKey)
 
-			consensusKey := append([]byte(testClientIDA+"/"), ibctypes.KeyConsensusState(uint64(consensusHeight))...)
+			consensusKey := prefixedClientKey(testClientIDA, ibctypes.KeyConsensusState(uint64(consensusHeight)))
 			proofConsensus, _ := queryProof(suite.chainB, consensusKey)
-			fmt.Println(proofConsensus)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), testConnectionIDA, tc.version, proofTry, proofConsensus,

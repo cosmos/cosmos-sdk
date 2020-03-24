@@ -114,12 +114,11 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	fmt.Println("Prefix", prefix)
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(consensusHeight))
+	clientPrefixedPath := counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Path", path)
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
 		return err
@@ -131,7 +130,6 @@ func (cs ClientState) VerifyClientConsensusState(
 	}
 
 	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
-		fmt.Println("In here")
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 

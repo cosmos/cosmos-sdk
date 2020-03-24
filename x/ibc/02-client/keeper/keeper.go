@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -148,12 +149,15 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
 func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bool) {
-	// TODO: determine how to fix this function with new key format
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ibctypes.KeyClientPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, ibctypes.KeyClientStorePrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
+		keySplit := strings.Split(string(iterator.Key()), "/")
+		if keySplit[len(keySplit)-1] != "clientState" {
+			continue
+		}
 		var clientState exported.ClientState
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &clientState)
 
@@ -177,6 +181,6 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
 func (k Keeper) clientStore(ctx sdk.Context, clientID string) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	clientPrefix := append([]byte(clientID), '/')
+	clientPrefix := append([]byte("clients/"+clientID), '/')
 	return prefix.NewStore(ctx.KVStore(k.storeKey), clientPrefix)
 }

@@ -18,6 +18,7 @@ const (
 
 // KVStore key prefixes for IBC
 var (
+	KeyClientStorePrefix       = []byte("clients")
 	KeyClientPrefix            = []byte("clientState")
 	KeyClientTypePrefix        = []byte("clientType")
 	KeyConsensusStatePrefix    = []byte("consensusState")

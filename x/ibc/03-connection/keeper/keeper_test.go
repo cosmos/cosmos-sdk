@@ -317,5 +317,5 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 }
 
 func prefixedClientKey(clientID string, key []byte) []byte {
-	return append([]byte(clientID+"/"), key...)
+	return append([]byte("clients/"+clientID+"/"), key...)
 }

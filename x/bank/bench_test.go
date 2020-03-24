@@ -77,7 +77,8 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
-		benchmarkApp.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: benchmarkApp.LastBlockHeight() + 1}
+		benchmarkApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 		x := benchmarkApp.Check(txs[i])
 		if !x.IsOK() {
 			panic("something is broken in checking transaction")
@@ -107,7 +108,8 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
-		benchmarkApp.BeginBlock(abci.RequestBeginBlock{})
+		header := abci.Header{Height: benchmarkApp.LastBlockHeight() + 1}
+		benchmarkApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 		x := benchmarkApp.Check(txs[i])
 		if !x.IsOK() {
 			panic("something is broken in checking transaction")

@@ -8,7 +8,7 @@ import (
 	"io"
 	"sort"
 
-	bip39 "github.com/bartekn/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"

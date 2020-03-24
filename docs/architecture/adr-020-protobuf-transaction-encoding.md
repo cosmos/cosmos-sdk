@@ -123,11 +123,12 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have two new fields: `Generator` and `Marshler`.
+We then update `CLIContext` to have a new field: `Marshler`.
 
-Then, each module will at the minimum accept a `Marshaler` instead of a concrete
-Amino codec. If the module needs to work with any interface types, it will use
-the `Codec` interface defined by the module which also extends `Marshaler`.
+Then, each module client handler will at the minimum accept a `Marshaler` instead
+of a concrete Amino codec and a `Generator`. If the module needs to work with any
+interface types, it will use the `Codec` interface defined by the module which also
+extends `Marshaler`.
 
 ## Future Improvements
 

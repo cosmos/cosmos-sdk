@@ -3,6 +3,7 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -936,12 +937,13 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var simRes sdk.SimulationResponse
-		err = codec.Cdc.UnmarshalBinaryBare(queryResult.Value, &simRes)
-		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(queryResult.Value, &simRes))
+
 		require.Equal(t, gInfo, simRes.GasInfo)
 		require.Equal(t, result.Log, simRes.Result.Log)
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
+
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}

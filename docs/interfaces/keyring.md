@@ -11,7 +11,7 @@ that provides a set of commands to manage cryptographic keys in a secure fashion
 new keyring supports multiple storage backends, some of which may not be available on
 all operating systems.
 
-## The 'os' backend
+## The `os` backend
 
 The `os` backend relies on operating system-specific defaults to handle key storage
 securely. Typically, operating systems credentials sub-systems handle passwords prompt,
@@ -34,7 +34,7 @@ client.
 designed to meet users' most common needs and provide them with a comfortable
 experience without compromising on security.
 
-## The 'file' backend
+## The `file` backend
 
 The `file` backend more closely resembles the keybase implementation used prior to
 v0.38.1. It stores the keyring encrypted within the apps configuration directory. This
@@ -53,7 +53,7 @@ $ (echo '1234567890'; echo '1234567890'; echo '1234567890') | gaiad collect-gent
 The first time you add a key to an empty keyring, you will be prompted to type the password twice.
 :::
 
-## The 'pass' backend
+## The `pass` backend
 
 The `pass` backend uses the [pass](https://www.passwordstore.org/) utility to manage on-disk
 encryption of keys' sensitive data and metadata. Keys are stored inside `gpg` encrypted files
@@ -77,13 +77,13 @@ $ pass init <GPG_KEY_ID>
 Replace `<GPG_KEY_ID>` with your GPG key ID. You can use your personal GPG key or an alternative
 one you may want to use specifically to encrypt the password store.
 
-## The 'test' backend
+## The `test` backend
 
 The `test` backend is a password-less variation of the `file` backend. Keys are stored
 unencrypted on disk. This backend is meant for testing purposes only and **should never be used
 in production environments**.
 
-## The 'kwallet' backend
+## The `kwallet` backend
 
 The `kwallet` backend uses `KDE Wallet Manager`, which comes installed by default on the
 GNU/Linux distributions that ships KDE as default desktop environment. Please refer to

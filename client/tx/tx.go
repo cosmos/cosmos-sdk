@@ -191,7 +191,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 	tx.SetFee(auth.NewStdFee(txf.gas, fees))
 	tx.SetMsgs(msgs...)
 	tx.SetMemo(txf.memo)
-	tx.SetSignatures(nil)
+	tx.SetSignatures()
 
 	return tx, nil
 }

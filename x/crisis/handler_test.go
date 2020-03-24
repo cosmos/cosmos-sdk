@@ -80,7 +80,7 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 
 			case "panic":
 				require.Panics(t, func() {
-					h(ctx, tc.msg)
+					h(ctx, tc.msg) // nolint:errcheck
 				})
 			}
 		})

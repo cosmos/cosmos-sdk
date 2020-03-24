@@ -35,7 +35,7 @@ func newMockValidators(r *rand.Rand, abciVals []abci.ValidatorUpdate,
 	for _, validator := range abciVals {
 		str := fmt.Sprintf("%v", validator.PubKey)
 		liveliness := GetMemberOfInitialState(r,
-			params.InitialLivenessWeightings)
+			params.InitialLivenessWeightings())
 
 		validators[str] = mockValidator{
 			val:           validator,
@@ -100,7 +100,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 			// Set this new validator
 			current[str] = mockValidator{
 				update,
-				GetMemberOfInitialState(r, params.InitialLivenessWeightings),
+				GetMemberOfInitialState(r, params.InitialLivenessWeightings()),
 			}
 			event("end_block", "validator_updates", "added")
 		}
@@ -125,7 +125,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	voteInfos := make([]abci.VoteInfo, len(validators))
 	for i, key := range validators.getKeys() {
 		mVal := validators[key]
-		mVal.livenessState = params.LivenessTransitionMatrix.NextState(r, mVal.livenessState)
+		mVal.livenessState = params.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
 		signed := true
 
 		if mVal.livenessState == 1 {
@@ -169,13 +169,13 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	// TODO: Determine capacity before allocation
 	evidence := make([]abci.Evidence, 0)
-	for r.Float64() < params.EvidenceFraction {
+	for r.Float64() < params.EvidenceFraction() {
 
 		height := header.Height
 		time := header.Time
 		vals := voteInfos
 
-		if r.Float64() < params.PastEvidenceFraction && header.Height > 1 {
+		if r.Float64() < params.PastEvidenceFraction() && header.Height > 1 {
 			height = int64(r.Intn(int(header.Height)-1)) + 1 // Tendermint starts at height 1
 			// array indices offset by one
 			time = pastTimes[height-1]

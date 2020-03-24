@@ -72,7 +72,10 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 
 		balances = balances.Add(balance)
-		k.SetBalance(ctx, delegatorAddr, balance.Sub(coin))
+		err := k.SetBalance(ctx, delegatorAddr, balance.Sub(coin))
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := k.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, balances, amt); err != nil {
@@ -271,7 +274,10 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 		newBalance := balance.Sub(coin)
 		resultCoins = resultCoins.Add(newBalance)
 
-		k.SetBalance(ctx, addr, newBalance)
+		err := k.SetBalance(ctx, addr, newBalance)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return resultCoins, nil
@@ -292,7 +298,10 @@ func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 		newBalance := balance.Add(coin)
 		resultCoins = resultCoins.Add(newBalance)
 
-		k.SetBalance(ctx, addr, newBalance)
+		err := k.SetBalance(ctx, addr, newBalance)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return resultCoins, nil

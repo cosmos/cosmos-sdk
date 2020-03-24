@@ -93,8 +93,10 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	require.NoError(t, err)
 	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
 	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -141,8 +143,10 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// create a random pool
-	app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
+	require.NoError(t, err)
 	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
 	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -397,8 +401,10 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
-	app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
+	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
+	require.NoError(t, err)
 	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 	app.SupplyKeeper.SetModuleAccount(ctx, bondedPool)
 

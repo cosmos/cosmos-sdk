@@ -50,6 +50,7 @@ are now replaced by human-readable expressions. This change can potentially brea
 that parse log messages.
 * (client) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) The `tx encode/decode` commands, due to change on encoding break compatibility with
 older clients.
+* (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
 
 ### API Breaking Changes
 
@@ -70,6 +71,8 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 * (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
 * (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
+* (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
+`Result` from the execution.
 
 ### Features
 
@@ -85,6 +88,8 @@ resulted in a panic when the tx execution mode was `CheckTx`.
 * (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
 * (crypto/keys/mintkey) [\#5823](https://github.com/cosmos/cosmos-sdk/pull/5823) fix errors handling in UnarmorPubKeyBytes (underlying armoring function's
 return error was not being checked).
+* (crypto/keys) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) Keybase/Keyring `Sign()` methods no longer decode amino signatures
+when method receivers are offline/multisig keys.
 
 ### State Machine Breaking
 
@@ -173,6 +178,7 @@ and `--pruning-snapshot-every` as an alternative to `--pruning`. They allow to f
 be executed without an internet connection. Previously, `--generate-only` served this purpose in addition to only allowing
 txs to be generated. Now, `--generate-only` solely allows txs to be generated without being broadcasted and disallows
 Keybase use and `--offline` allows the use of Keybase but does not allow any functionality that requires an online connection.
+* (types/module) [\#5724](https://github.com/cosmos/cosmos-sdk/issues/5724) The `types/module` package does no longer depend on `x/simulation`.
 
 ## [v0.38.1] - 2020-02-11
 

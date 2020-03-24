@@ -61,26 +61,7 @@ The root command (called `rootCmd`) is what the user first types into the comman
 * **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](../core/node.md). The Status of a node includes `NodeInfo`,`SyncInfo` and `ValidatorInfo`.
 * **Config** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/config.go) from the SDK client tools, which allows the user to edit a `config.toml` file that sets values for [flags](#flags) such as `--chain-id` and which `--node` they wish to connect to.
 The `config` command can be invoked by typing `appcli config` with optional arguments `<key> [value]` and a `--get` flag to query configurations or `--home` flag to create a new configuration.
-* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys) from the SDK client tools, which includes a collection of subcommands for using the key functions in the SDK crypto tools, including adding a new key and saving it to disk, listing all public keys stored in the key manager, and deleting a key. For example, users can type `appcli keys add <name>` to add a new key and save an encrypted copy to disk, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys/add.go).
-
-
-* **Key storage** is handled using the [Keys API](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/README.md) which uses  https://github.com/99designs/keyring to interface with different operating systems (OS) and environments. This underlying storage system can be accessed with the flag `--keyring-backend`. The following options are available:
-  * `OS`
-    * This is the default keyring backend and uses one of the following options based on the operating system. It should be noted that `OS` often uses sessions to keep the keyring unlocked whereas the `file` option requires the keyring be unlocked each time it is accessed.
-      * macOS/OSX Keychain
-      * Windows credential store
-      * [Pass](https://www.passwordstore.org/)
-      * [Secret Service](https://github.com/99designs/aws-vault/pull/98)
-      * [KDE Wallet](https://github.com/99designs/aws-vault/pull/27)
-  * `test`
-    * This option stores the keyring in apps configuration directory unencrypted. As such it does not prompt for a password to be unlocked. This should be considerd an **unsafe keyring** and **should not be used in production environments**.
-  * `file`
-    * This option more closely resembles the previous keyring storage used prior to v0.38.1. It stores the keyring encrypted within the apps configuration directory. This keyring will request a password each time it is accessed, which may occur multiple times in a single command resulting in repeated password prompts. If using bash scripts to execute commands using the `file` option you may want to utilize the following format for multiple prompts:
-> ```sh
-> echo '1234567890' | gaiacli keys add me --keyring-backend file # single prompt
-> (echo '1234567890'; echo '1234567890'; echo '1234567890') | gaiad collect-gentxs --keyring-backend file # multiple prompts
-> ```
-
+* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys) from the SDK client tools, which includes a collection of subcommands for using the key functions in the SDK crypto tools, including adding a new key and saving it to disk, listing all public keys stored in the key manager, and deleting a key. For example, users can type `appcli keys add <name>` to add a new key and save an encrypted copy to disk, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/keys/add.go). For more details about usage of `--keyring-backend` for storage of key credentials look at the [keyring docs](/keyring.md).
 * [**Transaction**](#transaction-commands) commands.
 * [**Query**](#query-commands) commands.
 

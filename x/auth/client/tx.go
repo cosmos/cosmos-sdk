@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -236,7 +237,10 @@ func ReadStdTxFromURI(cdc *codec.Codec, uri string) (authtypes.StdTx, error) {
 		return ReadStdTxFromFile(cdc, uri)
 	}
 
-	resp, err := http.Get(uri)
+	httpclient := http.Client{
+		Timeout: time.Second * 10, // should be reasonable
+	}
+	resp, err := httpclient.Get(uri)
 	if err != nil {
 		return authtypes.StdTx{}, err
 	}

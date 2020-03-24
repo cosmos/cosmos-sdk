@@ -150,6 +150,7 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 	state := ibctmtypes.ConsensusState{
 		Timestamp:    commit.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
+		Height:       uint64(height),
 		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
 

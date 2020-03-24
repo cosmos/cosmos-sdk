@@ -50,6 +50,7 @@ message Evidence {
   // sum defines a set of all acceptable concrete Evidence implementations.
   oneof sum {
     cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
+    cosmos_sdk.x.ibc.tendermint.v1.Evidence  evidence = 2;
   }
 }
 

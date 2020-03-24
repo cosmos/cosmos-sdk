@@ -5,7 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -13,33 +13,13 @@ import (
 var _ exported.ConnectionI = ConnectionEnd{}
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state exported.State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     versions,
 	}
-}
-
-// GetState implements the Connection interface
-func (c ConnectionEnd) GetState() exported.State {
-	return c.State
-}
-
-// GetClientID implements the Connection interface
-func (c ConnectionEnd) GetClientID() string {
-	return c.ClientID
-}
-
-// GetCounterparty implements the Connection interface
-func (c ConnectionEnd) GetCounterparty() exported.CounterpartyI {
-	return c.Counterparty
-}
-
-// GetVersions implements the Connection interface
-func (c ConnectionEnd) GetVersions() []string {
-	return c.Versions
 }
 
 // ValidateBasic implements the Connection interface
@@ -61,27 +41,12 @@ func (c ConnectionEnd) ValidateBasic() error {
 var _ exported.CounterpartyI = Counterparty{}
 
 // NewCounterparty creates a new Counterparty instance.
-func NewCounterparty(clientID, connectionID string, prefix commitmentexported.Prefix) Counterparty {
+func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.MerklePrefix) Counterparty {
 	return Counterparty{
 		ClientID:     clientID,
 		ConnectionID: connectionID,
 		Prefix:       prefix,
 	}
-}
-
-// GetClientID implements the CounterpartyI interface
-func (c Counterparty) GetClientID() string {
-	return c.ClientID
-}
-
-// GetConnectionID implements the CounterpartyI interface
-func (c Counterparty) GetConnectionID() string {
-	return c.ConnectionID
-}
-
-// GetPrefix implements the CounterpartyI interface
-func (c Counterparty) GetPrefix() commitmentexported.Prefix {
-	return c.Prefix
 }
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
@@ -102,7 +67,7 @@ func (c Counterparty) ValidateBasic() error {
 			).Error(),
 		)
 	}
-	if c.Prefix == nil || len(c.Prefix.Bytes()) == 0 {
+	if c.Prefix.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "invalid counterparty prefix")
 	}
 	return nil

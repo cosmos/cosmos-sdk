@@ -179,6 +179,7 @@ be executed without an internet connection. Previously, `--generate-only` served
 txs to be generated. Now, `--generate-only` solely allows txs to be generated without being broadcasted and disallows
 Keybase use and `--offline` allows the use of Keybase but does not allow any functionality that requires an online connection.
 * (types/module) [\#5724](https://github.com/cosmos/cosmos-sdk/issues/5724) The `types/module` package does no longer depend on `x/simulation`.
+* (x/auth) [\#5863](https://github.com/cosmos/cosmos-sdk/pull/5863) `tx sign` supports downloading unsigned Tx files via HTTP(s).
 
 ## [v0.38.1] - 2020-02-11
 

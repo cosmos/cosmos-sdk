@@ -46,9 +46,10 @@ func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64
 	return a
 }
 
-func NewFeeAllowanceGrantBase(granter sdk.AccAddress, grantee sdk.AccAddress) FeeAllowanceGrantBase {
-	return FeeAllowanceGrantBase{
-		Granter: granter,
-		Grantee: grantee,
+func NewFeeAllowanceGrant(granter sdk.AccAddress, grantee sdk.AccAddress, allowance *FeeAllowance) FeeAllowanceGrant {
+	return FeeAllowanceGrant{
+		Granter:   granter,
+		Grantee:   grantee,
+		Allowance: allowance,
 	}
 }

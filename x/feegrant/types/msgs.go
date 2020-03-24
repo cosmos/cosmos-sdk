@@ -16,14 +16,10 @@ func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowanceI exported.F
 	}
 
 	return MsgGrantFeeAllowance{
-		Allowance:                feeallowance,
-		MsgGrantFeeAllowanceBase: NewMsgGrantFeeAllowanceBase(granter, grantee),
+		Granter:   granter,
+		Grantee:   grantee,
+		Allowance: feeallowance,
 	}, nil
-}
-
-func (msg MsgGrantFeeAllowance) ValidateBasic() error {
-	//TODO
-	return nil
 }
 
 func (msg MsgGrantFeeAllowance) GetFeeGrant() exported.FeeAllowance {
@@ -46,22 +42,19 @@ func (a MsgGrantFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight in
 		//TODO handle this error
 	}
 
-	feegrant := FeeAllowanceGrant{Allowance: a.Allowance, FeeAllowanceGrantBase: NewFeeAllowanceGrantBase(a.Granter, a.Grantee)}
+	feegrant := FeeAllowanceGrant{Granter: a.Granter, Grantee: a.Grantee, Allowance: a.Allowance}
 	return feegrant
 }
-func NewMsgGrantFeeAllowanceBase(granter sdk.AccAddress, grantee sdk.AccAddress) MsgGrantFeeAllowanceBase {
-	return MsgGrantFeeAllowanceBase{Granter: granter, Grantee: grantee}
-}
 
-func (msg MsgGrantFeeAllowanceBase) Route() string {
+func (msg MsgGrantFeeAllowance) Route() string {
 	return RouterKey
 }
 
-func (msg MsgGrantFeeAllowanceBase) Type() string {
+func (msg MsgGrantFeeAllowance) Type() string {
 	return "grant-fee-allowance"
 }
 
-func (msg MsgGrantFeeAllowanceBase) ValidateBasic() error {
+func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	if msg.Granter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
@@ -72,11 +65,11 @@ func (msg MsgGrantFeeAllowanceBase) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgGrantFeeAllowanceBase) GetSignBytes() []byte {
+func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
-func (msg MsgGrantFeeAllowanceBase) GetSigners() []sdk.AccAddress {
+func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Granter}
 }
 

@@ -12,7 +12,7 @@ func TestExpiresAt(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
-		example ExpiresAt
+		example *ExpiresAt
 		valid   bool
 		zero    bool
 		before  *ExpiresAt
@@ -25,13 +25,13 @@ func TestExpiresAt(t *testing.T) {
 			after:   &ExpiresAt{Height: 122, Time: now},
 		},
 		"zero": {
-			example: ExpiresAt{},
+			example: &ExpiresAt{},
 			zero:    true,
 			valid:   true,
 			before:  &ExpiresAt{Height: 1},
 		},
 		"double": {
-			example: ExpiresAt{Height: 100, Time: now},
+			example: &ExpiresAt{Height: 100, Time: now},
 			valid:   false,
 		},
 		"match height": {
@@ -73,10 +73,10 @@ func TestDurationValid(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
-		period       Duration
+		period       *Duration
 		valid        bool
-		compatible   ExpiresAt
-		incompatible ExpiresAt
+		compatible   *ExpiresAt
+		incompatible *ExpiresAt
 	}{
 		"basic height": {
 			period:       BlockDuration(100),
@@ -91,11 +91,11 @@ func TestDurationValid(t *testing.T) {
 			incompatible: ExpiresAtHeight(50),
 		},
 		"zero": {
-			period: Duration{},
+			period: &Duration{},
 			valid:  false,
 		},
 		"double": {
-			period: Duration{Block: 100, Clock: time.Hour},
+			period: &Duration{Block: 100, Clock: time.Hour},
 			valid:  false,
 		},
 		"negative clock": {
@@ -128,10 +128,10 @@ func TestDurationStep(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
-		expires ExpiresAt
-		period  Duration
+		expires *ExpiresAt
+		period  *Duration
 		valid   bool
-		result  ExpiresAt
+		result  *ExpiresAt
 	}{
 		"add height": {
 			expires: ExpiresAtHeight(789),

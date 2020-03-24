@@ -68,24 +68,6 @@ message ExpiresAt{
     int64 Height = 2;
 }
 
-// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
-// of fees from the account of Granter.
-message MsgGrantFeeAllowanceBase{
-    option (gogoproto.equal)           = true;
-
-    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
-// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
-message FeeAllowanceGrantBase{
-    option (gogoproto.equal)           = true;
-
-    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
-
 // FeeAllowance defines the application-level fee allowance to be used in
 // feegrant module
 message FeeAllowance {
@@ -103,14 +85,16 @@ message FeeAllowance {
 message MsgGrantFeeAllowance{
     option (gogoproto.goproto_getters) = false;
 
-    FeeAllowance Allowance = 1;
-    MsgGrantFeeAllowanceBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    FeeAllowance Allowance = 3;
 }
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context
 message FeeAllowanceGrant{
     option (gogoproto.goproto_getters) = false;
 
+    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     FeeAllowance Allowance = 3;
-    FeeAllowanceGrantBase base     = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
 }

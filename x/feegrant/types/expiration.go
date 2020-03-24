@@ -96,13 +96,13 @@ func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) *Expir
 }
 
 // ClockDuration creates an Duration by clock time
-func ClockDuration(d time.Duration) Duration {
-	return Duration{Clock: d}
+func ClockDuration(d time.Duration) *Duration {
+	return &Duration{Clock: d}
 }
 
 // BlockDuration creates an Duration by block height
-func BlockDuration(h int64) Duration {
-	return Duration{Block: h}
+func BlockDuration(h int64) *Duration {
+	return &Duration{Block: h}
 }
 
 // ValidateBasic performs basic sanity checks

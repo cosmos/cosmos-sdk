@@ -17,20 +17,23 @@ func (suite *KeeperTestSuite) TestQuery() {
 	types.RegisterCodec(cdc)
 
 	// some helpers
-	grant1 := types.FeeAllowanceGrant{Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
-		Expiration: types.ExpiresAtHeight(334455),
-	},
-	},
-	}, FeeAllowanceGrantBase: types.NewFeeAllowanceGrantBase(suite.addr4, suite.addr)}
-
-	grant2 := types.FeeAllowanceGrant{Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
-		Expiration: types.ExpiresAtHeight(334455),
-	},
-	},
-	}, FeeAllowanceGrantBase: types.NewFeeAllowanceGrantBase(suite.addr2, suite.addr3)}
-
+	grant1 := types.FeeAllowanceGrant{
+		Granter: suite.addr,
+		Grantee: suite.addr3,
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
+			Expiration: types.ExpiresAtHeight(334455),
+		},
+		},
+		},
+	}
+	grant2 := types.FeeAllowanceGrant{
+		Granter: suite.addr2,
+		Grantee: suite.addr3,
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
+			Expiration: types.ExpiresAtHeight(334455)}}},
+	}
 	// let's set up some initial state here
 	k.GrantFeeAllowance(ctx, grant1)
 	k.GrantFeeAllowance(ctx, grant2)

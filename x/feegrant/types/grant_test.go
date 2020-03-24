@@ -27,9 +27,11 @@ func TestGrant(t *testing.T) {
 			grant: FeeAllowanceGrant{
 				Grantee: addr,
 				Granter: addr2,
-				Allowance: &BasicFeeAllowance{
+				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
+				},
+				},
 				},
 			},
 			valid: true,
@@ -37,18 +39,22 @@ func TestGrant(t *testing.T) {
 		"no grantee": {
 			grant: FeeAllowanceGrant{
 				Granter: addr2,
-				Allowance: &BasicFeeAllowance{
+				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
+				},
+				},
 				},
 			},
 		},
 		"no granter": {
 			grant: FeeAllowanceGrant{
 				Grantee: addr2,
-				Allowance: &BasicFeeAllowance{
+				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
+				},
+				},
 				},
 			},
 		},
@@ -56,9 +62,11 @@ func TestGrant(t *testing.T) {
 			grant: FeeAllowanceGrant{
 				Grantee: addr2,
 				Granter: addr2,
-				Allowance: &BasicFeeAllowance{
+				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
+				},
+				},
 				},
 			},
 		},
@@ -66,8 +74,11 @@ func TestGrant(t *testing.T) {
 			grant: FeeAllowanceGrant{
 				Grantee: addr,
 				Granter: addr2,
-				Allowance: &BasicFeeAllowance{
+				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
+					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
+				},
+				},
 				},
 			},
 		},

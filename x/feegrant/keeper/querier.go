@@ -3,6 +3,7 @@ package keeper
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -52,7 +53,8 @@ func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byt
 		return []byte("[]"), nil
 	}
 
-	bz, err := keeper.cdc.MarshalJSON(grants)
+	bz, err := codec.MarshalJSONIndent(keeper.cdc, grants)
+	//bz, err := keeper.cdc.MarshalJSON(grants)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

@@ -80,14 +80,14 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
-	//if len(bz) == 0 {
-	//	return nil, false
-	//}
+	if len(bz) == 0 {
+		return types.FeeAllowanceGrant{}, false
+	}
 
-	_ = feegrant.Unmarshal(bz)
-	//if err != nil {
-	//	return nil, false
-	//}
+	err := feegrant.Unmarshal(bz)
+	if err != nil {
+		return types.FeeAllowanceGrant{}, false
+	}
 
 	return feegrant, true
 }

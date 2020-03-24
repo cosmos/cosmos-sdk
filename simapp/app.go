@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -54,6 +55,7 @@ var (
 		supply.AppModuleBasic{},
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
+		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -98,27 +100,29 @@ type SimApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys  map[string]*sdk.KVStoreKey
-	tkeys map[string]*sdk.TransientStoreKey
+	keys    map[string]*sdk.KVStoreKey
+	tkeys   map[string]*sdk.TransientStoreKey
+	memKeys map[string]*sdk.MemoryStoreKey
 
 	// subspaces
 	subspaces map[string]params.Subspace
 
 	// keepers
-	AccountKeeper  auth.AccountKeeper
-	BankKeeper     bank.Keeper
-	SupplyKeeper   supply.Keeper
-	StakingKeeper  staking.Keeper
-	SlashingKeeper slashing.Keeper
-	MintKeeper     mint.Keeper
-	DistrKeeper    distr.Keeper
-	GovKeeper      gov.Keeper
-	CrisisKeeper   crisis.Keeper
-	UpgradeKeeper  upgrade.Keeper
-	ParamsKeeper   params.Keeper
-	IBCKeeper      ibc.Keeper
-	EvidenceKeeper evidence.Keeper
-	TransferKeeper transfer.Keeper
+	AccountKeeper    auth.AccountKeeper
+	BankKeeper       bank.Keeper
+	CapabilityKeeper *capability.Keeper
+	SupplyKeeper     supply.Keeper
+	StakingKeeper    staking.Keeper
+	SlashingKeeper   slashing.Keeper
+	MintKeeper       mint.Keeper
+	DistrKeeper      distr.Keeper
+	GovKeeper        gov.Keeper
+	CrisisKeeper     crisis.Keeper
+	UpgradeKeeper    upgrade.Keeper
+	ParamsKeeper     params.Keeper
+	IBCKeeper        ibc.Keeper
+	EvidenceKeeper   evidence.Keeper
+	TransferKeeper   transfer.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -145,9 +149,10 @@ func NewSimApp(
 		bam.MainStoreKey, auth.StoreKey, bank.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
 		gov.StoreKey, params.StoreKey, ibc.StoreKey, upgrade.StoreKey,
-		evidence.StoreKey, transfer.StoreKey,
+		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
 
 	app := &SimApp{
 		BaseApp:        bApp,
@@ -155,6 +160,7 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
+		memKeys:        memKeys,
 		subspaces:      make(map[string]params.Subspace),
 	}
 
@@ -176,6 +182,9 @@ func NewSimApp(
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
 		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
+	)
+	app.CapabilityKeeper = capability.NewKeeper(
+		app.cdc, keys[capability.StoreKey], memKeys[capability.MemStoreKey],
 	)
 	app.SupplyKeeper = supply.NewKeeper(
 		appCodec, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
@@ -242,6 +251,7 @@ func NewSimApp(
 		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.AccountKeeper, app.SupplyKeeper),
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
+		capability.NewAppModule(*app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),
 		supply.NewAppModule(app.SupplyKeeper, app.BankKeeper, app.AccountKeeper),
 		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper),
@@ -293,6 +303,7 @@ func NewSimApp(
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
+	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -311,6 +322,12 @@ func NewSimApp(
 			tmos.Exit(err.Error())
 		}
 	}
+
+	// Initialize and seal the capability keeper so all persistent capabilities
+	// are loaded in-memory and prevent any further modules from creating scoped
+	// sub-keepers.
+	ctx := app.BaseApp.NewContext(true, abci.Header{})
+	app.CapabilityKeeper.InitializeAndSeal(ctx)
 
 	return app
 }
@@ -380,6 +397,13 @@ func (app *SimApp) GetKey(storeKey string) *sdk.KVStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
+}
+
+// GetMemKey returns the MemoryStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (app *SimApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.

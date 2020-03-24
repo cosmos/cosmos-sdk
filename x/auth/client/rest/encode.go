@@ -35,7 +35,7 @@ func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// re-encode it via the Amino wire protocol
-		txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(req)
+		txBytes, err := cliCtx.Codec.MarshalBinaryBare(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

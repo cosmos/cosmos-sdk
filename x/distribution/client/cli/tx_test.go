@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -76,4 +79,32 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	assert.NoError(t, err, "")
 	assert.Equal(t, 3, callCount)
+}
+
+func TestParseProposal(t *testing.T) {
+	cdc := codec.New()
+	okJSON, err := ioutil.TempFile("", "proposal")
+	require.Nil(t, err, "unexpected error")
+	_, err = okJSON.WriteString(`
+{
+  "title": "Community Pool Spend",
+  "description": "Pay me some Atoms!",
+  "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
+  "amount": "1000stake",
+  "deposit": "1000stake"
+}
+`)
+	require.NoError(t, err)
+
+	proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, okJSON.Name())
+	require.NoError(t, err)
+
+	addr, err := sdk.AccAddressFromBech32("cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq")
+	require.NoError(t, err)
+
+	require.Equal(t, "Community Pool Spend", proposal.Title)
+	require.Equal(t, "Pay me some Atoms!", proposal.Description)
+	require.Equal(t, addr, proposal.Recipient)
+	require.Equal(t, "1000stake", proposal.Deposit)
+	require.Equal(t, "1000stake", proposal.Amount)
 }

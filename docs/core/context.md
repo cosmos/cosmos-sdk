@@ -1,11 +1,12 @@
 <!--
 order: 3
-synopsis: The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It holds a cached copy of the entire state as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. 
 -->
 
 # Context
 
-## Pre-requisites Readings {hide}
+The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It holds a cached copy of the entire state as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
+
+## Pre-requisites Readings
 
 - [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}

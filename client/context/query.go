@@ -22,7 +22,7 @@ import (
 // error is returned.
 func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
-		return nil, errors.New("no RPC client defined")
+		return nil, errors.New("no RPC client is defined in offline mode")
 	}
 
 	return ctx.Client, nil
@@ -64,7 +64,7 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 		return res, height, err
 	}
 
-	ctx.Codec.MustUnmarshalBinaryLengthPrefixed(resRaw, &res)
+	ctx.Codec.MustUnmarshalBinaryBare(resRaw, &res)
 	return
 }
 

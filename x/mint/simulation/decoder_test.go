@@ -24,7 +24,7 @@ func TestDecodeStore(t *testing.T) {
 	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(minter)},
+		tmkv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryBare(minter)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 	tests := []struct {

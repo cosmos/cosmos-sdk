@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/crypto/bcrypt"
-	"github.com/tendermint/tendermint/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
@@ -35,6 +34,7 @@ const (
 const (
 	keyringDirNameFmt     = "keyring-%s"
 	testKeyringDirNameFmt = "keyring-test-%s"
+	passKeyringPrefix     = keyringDirNameFmt
 )
 
 var _ Keybase = keyringKeybase{}
@@ -57,7 +57,7 @@ func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
-// Available backends are "os", "file", "test".
+// Available backends are "os", "file", "kwallet", "pass", "test".
 func NewKeyring(
 	appName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {
@@ -220,7 +220,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return kb.base.DecodeSignature(info, msg)
+		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
 	}
 
 	sig, err = priv.Sign(msg)
@@ -431,9 +431,6 @@ func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.base.SupportedAlgosLedger()
 }
 
-// CloseDB releases the lock and closes the storage backend.
-func (kb keyringKeybase) CloseDB() {}
-
 func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
@@ -494,7 +491,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 }
 
 func newPassBackendKeyringConfig(appName, dir string, _ io.Reader) keyring.Config {
-	prefix := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, appName))
+	prefix := fmt.Sprintf(passKeyringPrefix, appName)
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.PassBackend},
 		ServiceName:     appName,
@@ -569,7 +566,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			saltBytes := crypto.CRandBytes(16)
+			saltBytes := tmcrypto.CRandBytes(16)
 			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)

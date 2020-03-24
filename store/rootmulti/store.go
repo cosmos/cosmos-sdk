@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -169,12 +170,13 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 	// load each Store (note this doesn't panic on unmounted keys now)
 	var newStores = make(map[types.StoreKey]types.CommitKVStore)
+
 	for key, storeParams := range rs.storesParams {
-		// Load it
 		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
 			return errors.Wrap(err, "failed to load store")
 		}
+
 		newStores[key] = store
 
 		// If it was deleted, remove all data
@@ -527,6 +529,13 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 
 		return transient.NewStore(), nil
 
+	case types.StoreTypeMemory:
+		if _, ok := key.(*types.MemoryStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s", key.String())
+		}
+
+		return mem.NewStore(), nil
+
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
 	}
@@ -617,7 +626,7 @@ func getLatestVersion(db dbm.DB) int64 {
 		return 0
 	}
 
-	err = cdc.UnmarshalBinaryLengthPrefixed(latestBytes, &latest)
+	err = cdc.UnmarshalBinaryBare(latestBytes, &latest)
 	if err != nil {
 		panic(err)
 	}
@@ -627,7 +636,7 @@ func getLatestVersion(db dbm.DB) int64 {
 
 // Set the latest version.
 func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes, _ := cdc.MarshalBinaryLengthPrefixed(version)
+	latestBytes, _ := cdc.MarshalBinaryBare(version)
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
@@ -668,7 +677,7 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 	var cInfo commitInfo
 
-	err = cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
+	err = cdc.UnmarshalBinaryBare(cInfoBytes, &cInfo)
 	if err != nil {
 		return commitInfo{}, errors.Wrap(err, "failed to get store")
 	}
@@ -678,7 +687,7 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 // Set a commitInfo for given version.
 func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
-	cInfoBytes := cdc.MustMarshalBinaryLengthPrefixed(cInfo)
+	cInfoBytes := cdc.MustMarshalBinaryBare(cInfo)
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
 }
@@ -691,5 +700,8 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)
-	batch.Write()
+	err := batch.Write()
+	if err != nil {
+		panic(fmt.Errorf("error on batch write %w", err))
+	}
 }

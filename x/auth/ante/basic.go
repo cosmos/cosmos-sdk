@@ -3,7 +3,6 @@ package ante
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	err "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -68,7 +67,7 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 
 	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
-		return ctx, err.Wrapf(err.ErrMemoTooLarge,
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
 			"maximum number of characters is %d but received %d characters",
 			params.MaxMemoCharacters, memoLength,
 		)
@@ -127,10 +126,10 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			// use stdsignature to mock the size of a full signature
 			simSig := types.StdSignature{
 				Signature: simSecp256k1Sig[:],
-				PubKey:    pubkey,
+				PubKey:    pubkey.Bytes(),
 			}
 
-			sigBz := codec.Cdc.MustMarshalBinaryLengthPrefixed(simSig)
+			sigBz := codec.Cdc.MustMarshalBinaryBare(simSig)
 			cost := sdk.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum

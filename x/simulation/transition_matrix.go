@@ -3,6 +3,8 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // TransitionMatrix is _almost_ a left stochastic matrix.  It is technically
@@ -19,7 +21,7 @@ type TransitionMatrix struct {
 
 // CreateTransitionMatrix creates a transition matrix from the provided weights.
 // TODO: Provide example usage
-func CreateTransitionMatrix(weights [][]int) (TransitionMatrix, error) {
+func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error) {
 	n := len(weights)
 	for i := 0; i < n; i++ {
 		if len(weights[i]) != n {

@@ -935,10 +935,13 @@ func TestSimulateTx(t *testing.T) {
 		queryResult := app.Query(query)
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
-		var res uint64
-		err = codec.Cdc.UnmarshalBinaryBare(queryResult.Value, &res)
+		var simRes sdk.SimulationResponse
+		err = codec.Cdc.UnmarshalBinaryBare(queryResult.Value, &simRes)
 		require.NoError(t, err)
-		require.Equal(t, gasConsumed, res)
+		require.Equal(t, gInfo, simRes.GasInfo)
+		require.Equal(t, result.Log, simRes.Result.Log)
+		require.Equal(t, result.Events, simRes.Result.Events)
+		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}

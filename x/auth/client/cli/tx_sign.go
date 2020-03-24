@@ -22,7 +22,6 @@ const (
 	flagMultisig     = "multisig"
 	flagAppend       = "append"
 	flagValidateSigs = "validate-signatures"
-	flagOffline      = "offline"
 	flagSigOnly      = "signature-only"
 	flagOutfile      = "output-document"
 )
@@ -71,12 +70,7 @@ be generated via the 'multisign' command.
 		"Print the addresses that must sign the transaction, those who have already signed it, and make sure that signatures are in the correct order",
 	)
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().Bool(
-		flagOffline, false,
-		"Offline mode; Do not query a full node. --account and --sequence options would be required if offline is set",
-	)
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
-
 	cmd = flags.PostCommands(cmd)[0]
 	cmd.MarkFlagRequired(flags.FlagFrom)
 
@@ -86,7 +80,7 @@ be generated via the 'multisign' command.
 func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
-	if viper.GetBool(flagOffline) {
+	if viper.GetBool(flags.FlagOffline) {
 		cmd.MarkFlagRequired(flags.FlagAccountNumber)
 		cmd.MarkFlagRequired(flags.FlagSequence)
 	}
@@ -100,12 +94,11 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 		}
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		offline := viper.GetBool(flagOffline)
 		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, cliCtx.Offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 
@@ -124,14 +117,13 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 			if err != nil {
 				return err
 			}
-
 			newTx, err = client.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, offline,
+				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, offline)
+			newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, cliCtx.Offline)
 		}
 
 		if err != nil {

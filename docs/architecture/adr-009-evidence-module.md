@@ -17,7 +17,7 @@ evidence can be submitted, evaluated and verified resulting in some agreed upon
 penalty for any misbehavior committed by a validator, such as equivocation (double-voting),
 signing when unbonded, signing an incorrect state transition (in the future), etc.
 Furthermore, such a mechanism is paramount for any
-[IBC](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md) or
+[IBC](https://github.com/cosmos/ics/blob/master/ibc/2_IBC_ARCHITECTURE.md) or
 cross-chain validation protocol implementation in order to support the ability
 for any misbehavior to be relayed back from a collateralized chain to a primary
 chain so that the equivocating validator(s) can be slashed.
@@ -28,14 +28,14 @@ We will implement an evidence module in the Cosmos SDK supporting the following
 functionality:
 
 - Provide developers with the abstractions and interfaces necessary to define
-custom evidence messages, message handlers, and methods to slash and penalize
-accordingly for misbehavior.
+  custom evidence messages, message handlers, and methods to slash and penalize
+  accordingly for misbehavior.
 - Support the ability to route evidence messages to handlers in any module to
-determine the validity of submitted misbehavior.
+  determine the validity of submitted misbehavior.
 - Support the ability, through governance, to modify slashing penalties of any
-evidence type.
+  evidence type.
 - Querier implementation to support querying params, evidence types, params, and
-all submitted valid misbehavior.
+  all submitted valid misbehavior.
 
 ### Types
 
@@ -161,15 +161,15 @@ type GenesisState struct {
 ### Positive
 
 - Allows the state machine to process misbehavior submitted on-chain and penalize
-validators based on agreed upon slashing parameters.
+  validators based on agreed upon slashing parameters.
 - Allows evidence types to be defined and handled by any module. This further allows
-slashing and jailing to be defined by more complex mechanisms.
+  slashing and jailing to be defined by more complex mechanisms.
 - Does not solely rely on Tendermint to submit evidence.
 
 ### Negative
 
 - No easy way to introduce new evidence types through governance on a live chain
-due to the inability to introduce the new evidence type's corresponding handler
+  due to the inability to introduce the new evidence type's corresponding handler
 
 ### Neutral
 

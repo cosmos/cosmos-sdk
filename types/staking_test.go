@@ -12,7 +12,7 @@ func TestBondStatus(t *testing.T) {
 	require.False(t, sdk.Unbonded.Equal(sdk.Bonded))
 	require.False(t, sdk.Unbonded.Equal(sdk.Unbonding))
 	require.False(t, sdk.Bonded.Equal(sdk.Unbonding))
-	require.Panicsf(t, func() { _ = sdk.BondStatus(0).String() }, "invalid bond status")
+	require.Panicsf(t, func() { sdk.BondStatus(0).String() }, "invalid bond status") // nolint:govet
 	require.Equal(t, sdk.BondStatusUnbonded, sdk.Unbonded.String())
 	require.Equal(t, sdk.BondStatusBonded, sdk.Bonded.String())
 	require.Equal(t, sdk.BondStatusUnbonding, sdk.Unbonding.String())

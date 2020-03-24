@@ -49,10 +49,11 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(
+	err := app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(
 		sdk.NewCoin("mytoken", sdk.NewInt(2)),
 		sdk.NewCoin("stake", sdk.NewInt(2)),
 	))
+	require.NoError(t, err)
 	app.SupplyKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// check initial balance
@@ -68,7 +69,8 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// withdraw commission
-	app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
+	require.NoError(t, err)
 
 	// check balance increase
 	balance = app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))

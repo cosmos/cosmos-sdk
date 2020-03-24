@@ -49,15 +49,18 @@ func TestSimulateGasCost(t *testing.T) {
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, acc1.GetAddress(), types.NewTestCoins())
+	err := app.BankKeeper.SetBalances(ctx, acc1.GetAddress(), types.NewTestCoins())
+	require.NoError(t, err)
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	app.BankKeeper.SetBalances(ctx, acc2.GetAddress(), types.NewTestCoins())
+	err = app.BankKeeper.SetBalances(ctx, acc2.GetAddress(), types.NewTestCoins())
+	require.NoError(t, err)
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
 	require.NoError(t, acc3.SetAccountNumber(2))
 	app.AccountKeeper.SetAccount(ctx, acc3)
-	app.BankKeeper.SetBalances(ctx, acc3.GetAddress(), types.NewTestCoins())
+	err = app.BankKeeper.SetBalances(ctx, acc3.GetAddress(), types.NewTestCoins())
+	require.NoError(t, err)
 
 	// set up msgs and fee
 	var tx sdk.Tx
@@ -129,7 +132,8 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// save the first account, but second is still unrecognized
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, fee.Amount)
+	err := app.BankKeeper.SetBalances(ctx, addr1, fee.Amount)
+	require.NoError(t, err)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrUnknownAddress)
 }
 
@@ -148,11 +152,13 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
+	err := app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
+	require.NoError(t, err)
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
+	err = app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
+	require.NoError(t, err)
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -204,11 +210,13 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// set the accounts, we don't need the acc numbers as it is in the genesis block
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
+	err := app.BankKeeper.SetBalances(ctx, addr1, types.NewTestCoins())
+	require.NoError(t, err)
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	require.NoError(t, acc2.SetAccountNumber(1))
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
+	err = app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
+	require.NoError(t, err)
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -671,7 +679,8 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// set the accounts
 	for i, addr := range addrs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		acc.SetAccountNumber(uint64(i))
+		err := acc.SetAccountNumber(uint64(i))
+		require.NoError(t, err)
 		app.AccountKeeper.SetAccount(ctx, acc)
 		app.BankKeeper.SetBalances(ctx, addr, types.NewTestCoins())
 	}

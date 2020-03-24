@@ -19,7 +19,7 @@ func TestChainAnteDecorators(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	mockAnteDecorator1 := mocks.NewMockAnteDecorator(mockCtrl)
 	mockAnteDecorator1.EXPECT().AnteHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Any()).Times(1)
-	sdk.ChainAnteDecorators(mockAnteDecorator1)(ctx, tx, true)
+	sdk.ChainAnteDecorators(mockAnteDecorator1)(ctx, tx, true) //nolint:errcheck
 
 	mockAnteDecorator2 := mocks.NewMockAnteDecorator(mockCtrl)
 	mockAnteDecorator1.EXPECT().AnteHandle(gomock.Eq(ctx), gomock.Eq(tx), true, mockAnteDecorator2).Times(1)

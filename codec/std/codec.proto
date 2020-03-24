@@ -109,7 +109,7 @@ message ClientState {
 
 message ConsensusState {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.ConsensusState";
-   // sum defines a set of all acceptable concrete ClientState implementations.
+   // sum defines a set of all acceptable concrete ConsensusState implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.ConsensusState tendermint = 1;
   }
@@ -117,7 +117,7 @@ message ConsensusState {
 
 message Misbehaviour {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.Misbehaviour";
-   // sum defines a set of all acceptable concrete ClientState implementations.
+   // sum defines a set of all acceptable concrete Misbehaviour implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.Evidence tendermint = 1;
   }
@@ -125,7 +125,7 @@ message Misbehaviour {
 
 message Header {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.Header";
-   // sum defines a set of all acceptable concrete ClientState implementations.
+   // sum defines a set of all acceptable concrete Header implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.Header tendermint = 1;
   }
@@ -134,14 +134,14 @@ message Header {
 message MsgCreateClient {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.MsgCreateClient";
   oneof sum {
-     // sum defines a set of all acceptable concrete ClientState implementations.
+     // sum defines a set of all acceptable concrete MsgCreateClient implementations.
     cosmos_sdk.x.ibc.tendermint.v1.MsgCreateClient tendermint = 1;
   }
 }
 
 message MsgUpdateClient {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.MsgUpdateClient";
-   // sum defines a set of all acceptable concrete ClientState implementations.
+   // sum defines a set of all acceptable concrete MsgUpdateClient implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.MsgUpdateClient tendermint = 1;
   }
@@ -149,14 +149,14 @@ message MsgUpdateClient {
 
 message PacketData {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketDataI";
-  oneof value {
+  oneof sum {
     cosmos_sdk.x.ibc.transfer.v1.FungibleTokenPacketData fungible_token = 1;
   }
 }
 
 message PacketAck {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketAcknowledgementI";
-  oneof value {
+  oneof sum {
     cosmos_sdk.x.ibc.transfer.v1.AckDataTransfer ack_data_transfer = 1;
   }
 }

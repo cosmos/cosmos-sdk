@@ -10,7 +10,7 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var _ exported.ConnectionI = ConnectionEnd{}
+var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
 func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
@@ -38,7 +38,7 @@ func (c ConnectionEnd) ValidateBasic() error {
 	return c.Counterparty.ValidateBasic()
 }
 
-var _ exported.CounterpartyI = Counterparty{}
+var _ exported.CounterpartyI = (*Counterparty)(nil)
 
 // NewCounterparty creates a new Counterparty instance.
 func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.MerklePrefix) Counterparty {

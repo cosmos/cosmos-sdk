@@ -2,7 +2,7 @@ package exported
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // ConnectionI describes the required methods for a connection.
@@ -18,6 +18,6 @@ type ConnectionI interface {
 type CounterpartyI interface {
 	GetClientID() string
 	GetConnectionID() string
-	GetPrefix() commitmentexported.Prefix
+	GetPrefix() commitmenttypes.MerklePrefix
 	ValidateBasic() error
 }

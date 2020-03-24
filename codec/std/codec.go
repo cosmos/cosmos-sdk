@@ -19,6 +19,7 @@ var (
 	_ supply.Codec   = (*Codec)(nil)
 	_ evidence.Codec = (*Codec)(nil)
 	_ gov.Codec      = (*Codec)(nil)
+	// _ clienttypes.Codec = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the

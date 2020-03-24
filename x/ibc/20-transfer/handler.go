@@ -14,14 +14,14 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
-			switch data := msg.Data.(type) {
+			switch data := msg.Packet.GetData().(type) {
 			case FungibleTokenPacketData:
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		case channeltypes.MsgTimeout:
-			switch data := msg.Data.(type) {
+			switch data := msg.Packet.GetData().(type) {
 			case FungibleTokenPacketData:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
@@ -36,7 +36,7 @@ func NewHandler(k Keeper) sdk.Handler {
 // See createOutgoingPacket in spec:https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
 	if err := k.SendTransfer(
-		ctx, msg.SourcePort, msg.SourceChannel, msg.DestHeight, msg.Amount, msg.Sender, msg.Receiver, msg.Source,
+		ctx, msg.SourcePort, msg.SourceChannel, msg.DestinationHeight, msg.Amount, msg.Sender, msg.Receiver, msg.Source,
 	); err != nil {
 		return nil, err
 	}

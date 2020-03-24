@@ -485,7 +485,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if err := msg.Proof.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
-	if len(msg.Acknowledgement.Value) > 100 {
+	if len(msg.Acknowledgement.GetPacketAcknowledgementI().GetBytes()) > 100 {
 		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
 	}
 	if msg.ProofHeight == 0 {

@@ -34,7 +34,9 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		case channel.MsgPacket:
 			_, err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
 		case channel.MsgAcknowledgement:
-			_, err = pvr.channelKeeper.AcknowledgePacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+			_, err = pvr.channelKeeper.AcknowledgePacket(
+				ctx, msg.Packet, msg.Acknowledgement.GetPacketAcknowledgementI(), msg.Proof, msg.ProofHeight,
+			)
 		case channel.MsgTimeout:
 			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
 		}

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -31,28 +31,28 @@ func (k Keeper) SendTransfer(
 ) error {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return sdkerrors.Wrap(channel.ErrChannelNotFound, sourceChannel)
+		return sdkerrors.Wrap(channeltypes.ErrChannelNotFound, sourceChannel)
 	}
 
-	destinationPort := sourceChannelEnd.Counterparty.PortID
-	destinationChannel := sourceChannelEnd.Counterparty.ChannelID
+	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
+	destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
 
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channel.ErrSequenceSendNotFound
+		return channeltypes.ErrSequenceSendNotFound
 	}
 
 	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver, isSourceChain)
 }
 
 // ReceiveTransfer handles transfer receiving logic.
-func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	return k.onRecvPacket(ctx, packet, data)
 }
 
 // TimeoutTransfer handles transfer timeout logic.
-func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	return k.onTimeoutPacket(ctx, packet, data)
 }
 
@@ -129,8 +129,8 @@ func (k Keeper) createOutgoingPacket(
 		amount, sender, receiver, isSourceChain, destHeight+DefaultPacketTimeout,
 	)
 
-	packet := channel.NewPacket(
-		packetData,
+	packet := channeltypes.NewPacket(
+		channeltypes.PacketData(packetData),
 		seq,
 		sourcePort,
 		sourceChannel,
@@ -141,7 +141,7 @@ func (k Keeper) createOutgoingPacket(
 	return k.channelKeeper.SendPacket(ctx, packet)
 }
 
-func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) onRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	if data.Source {
@@ -186,7 +186,7 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 }
 
-func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	// check the denom prefix

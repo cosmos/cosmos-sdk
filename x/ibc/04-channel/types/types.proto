@@ -220,6 +220,8 @@ message Counterparty {
 // TODO: no specification for packet commitment currently,
 // make it spec compatible once we have it.
 message Packet {
+  option (gogoproto.goproto_getters) = false;
+  
   uint64 sequence = 1;
   string source_port = 2 [(gogoproto.moretags)    = "yaml:\"source_port\""];
   string source_channel = 3 [(gogoproto.moretags)    = "yaml:\"source_channel\""];

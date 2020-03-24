@@ -18,7 +18,7 @@ func NewMsgChannelOpenInit(
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(State_INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
@@ -68,7 +68,7 @@ func NewMsgChannelOpenTry(
 	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
 ) MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(State_INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,

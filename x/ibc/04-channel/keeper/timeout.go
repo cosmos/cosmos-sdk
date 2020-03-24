@@ -31,35 +31,35 @@ func (k Keeper) TimeoutPacket(
 		)
 	}
 
-	if channel.State != exported.OPEN {
+	if channel.GetState() != exported.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.State.String(),
+			"channel state is not OPEN (got %s)", channel.GetState().String(),
 		)
 	}
 
 	// NOTE: TimeoutPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	if packet.GetDestinationPort() != channel.Counterparty.PortID {
+	if packet.GetDestinationPort() != channel.GetCounterparty().GetPortID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.GetCounterparty().GetPortID(),
 		)
 	}
 
-	if packet.GetDestinationChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestinationChannel() != channel.GetCounterparty().GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.GetCounterparty().GetChannelID(),
 		)
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
 	if !found {
 		return nil, sdkerrors.Wrap(
 			connection.ErrConnectionNotFound,
-			channel.ConnectionHops[0],
+			channel.GetConnectionHops()[0],
 		)
 	}
 
@@ -81,7 +81,7 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	var err error
-	switch channel.Ordering {
+	switch channel.GetOrdering() {
 	case exported.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
@@ -94,7 +94,7 @@ func (k Keeper) TimeoutPacket(
 			packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),
 		)
 	default:
-		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))
+		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.GetOrdering().String()))
 	}
 
 	if err != nil {
@@ -120,8 +120,8 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	if channel.Ordering == exported.ORDERED {
-		channel.State = exported.CLOSED
+	if channel.GetOrdering() == exported.ORDERED {
+		channel.GetState() = exported.CLOSED
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
@@ -156,23 +156,23 @@ func (k Keeper) TimeoutOnClose(
 	// 	return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
 	// }
 
-	if packet.GetDestinationPort() != channel.Counterparty.PortID {
+	if packet.GetDestinationPort() != channel.GetCounterparty().GetPortID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.GetCounterparty().GetPortID(),
 		)
 	}
 
-	if packet.GetDestinationChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestinationChannel() != channel.GetCounterparty().GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.GetCounterparty().GetChannelID(),
 		)
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
@@ -190,20 +190,20 @@ func (k Keeper) TimeoutOnClose(
 
 	counterparty := types.NewCounterparty(packet.GetSourcePort(), packet.GetSourceChannel())
 	expectedChannel := types.NewChannel(
-		exported.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
+		exported.CLOSED, channel.GetOrdering(), counterparty, counterpartyHops, channel.GetVersion(),
 	)
 
 	// check that the opposing channel end has closed
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.GetCounterparty().GetPortID(), channel.GetCounterparty().GetChannelID(),
 		expectedChannel,
 	); err != nil {
 		return nil, err
 	}
 
 	var err error
-	switch channel.Ordering {
+	switch channel.GetOrdering() {
 	case exported.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
@@ -216,7 +216,7 @@ func (k Keeper) TimeoutOnClose(
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
 		)
 	default:
-		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))
+		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.GetOrdering().String()))
 	}
 
 	if err != nil {

@@ -3,6 +3,7 @@ package cosmos_sdk.x.ibc.channel.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
+import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/20-transfer/types/types.proto";
 import "x/ibc/23-commitment/types/types.proto";
@@ -164,6 +165,8 @@ message MsgAcknowledgement {
 
 // Order defines if a channel is ORDERED or UNORDERED
 enum Order {
+  option (gogoproto.goproto_enum_prefix)   = false;
+
   // zero-value for channel ordering
   NONE = 0;
   // packets can be delivered in any order, which may differ from the order in which they were sent.
@@ -175,6 +178,8 @@ enum Order {
 // State defines if a channel is in one of the following states:
 // CLOSED, INIT, TRYOPEN or OPEN
 enum State {
+  option (gogoproto.goproto_enum_prefix)   = false;
+
   // Default State
   UNINITIALIZED = 0;
   // A channel end has just started the opening handshake.
@@ -226,12 +231,14 @@ message Packet {
 }
 
 message PacketData {
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketDataI";
   oneof value {
     cosmos_sdk.x.ibc.transfer.v1.FungibleTokenPacketData fungible_token = 1;
   }
 }
 
 message PacketAck {
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketAcknowledgementI";
   oneof value {
     cosmos_sdk.x.ibc.transfer.v1.AckDataTransfer ack_data_transfer = 1;
   }

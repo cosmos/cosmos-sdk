@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -42,14 +43,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetChannel returns a channel with a particular identifier binded to a specific port
-func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Channel, bool) {
+func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (exported.ChannelI, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(ibctypes.KeyChannel(portID, channelID))
 	if bz == nil {
-		return types.Channel{}, false
+		return nil, false
 	}
 
-	var channel types.Channel
+	var channel exported.ChannelI
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &channel)
 	return channel, true
 }
@@ -57,7 +58,7 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(channel)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&channel)
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
 }
 

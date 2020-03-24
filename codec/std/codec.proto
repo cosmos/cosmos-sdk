@@ -12,6 +12,7 @@ import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
 import "x/distribution/types/types.proto";
 import "x/ibc/07-tendermint/types/types.proto";
+import "x/ibc/20-transfer/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/std";
 
@@ -142,5 +143,19 @@ message MsgUpdateClient {
    // sum defines a set of all acceptable concrete ClientState implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.MsgUpdateClient tendermint = 1;
+  }
+}
+
+message PacketData {
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketDataI";
+  oneof value {
+    cosmos_sdk.x.ibc.transfer.v1.FungibleTokenPacketData fungible_token = 1;
+  }
+}
+
+message PacketAck {
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketAcknowledgementI";
+  oneof value {
+    cosmos_sdk.x.ibc.transfer.v1.AckDataTransfer ack_data_transfer = 1;
   }
 }

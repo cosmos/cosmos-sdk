@@ -17,7 +17,7 @@ import (
 
 // Merkle proof implementation of the Proof interface
 // Applied on SDK-based IBC implementation
-var _ exported.Root = MerkleRoot{}
+var _ exported.Root = (*MerkleRoot)(nil)
 
 // NewMerkleRoot constructs a new MerkleRoot
 func NewMerkleRoot(hash []byte) MerkleRoot {
@@ -31,17 +31,12 @@ func (MerkleRoot) GetCommitmentType() exported.Type {
 	return exported.Merkle
 }
 
-// GetHash implements RootI interface
-func (mr MerkleRoot) GetHash() []byte {
-	return mr.Hash
-}
-
 // IsEmpty returns true if the root is empty
 func (mr MerkleRoot) IsEmpty() bool {
 	return len(mr.GetHash()) == 0
 }
 
-var _ exported.Prefix = MerklePrefix{}
+var _ exported.Prefix = (*MerklePrefix)(nil)
 
 // NewMerklePrefix constructs new MerklePrefix instance
 func NewMerklePrefix(keyPrefix []byte) MerklePrefix {
@@ -65,7 +60,7 @@ func (mp MerklePrefix) IsEmpty() bool {
 	return len(mp.Bytes()) == 0
 }
 
-var _ exported.Path = MerklePath{}
+var _ exported.Path = (*MerklePath)(nil)
 
 // NewMerklePath creates a new MerklePath instance
 func NewMerklePath(keyPathStr []string) MerklePath {
@@ -120,7 +115,7 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 	return NewMerklePath([]string{string(prefix.Bytes()), path}), nil
 }
 
-var _ exported.Proof = MerkleProof{}
+var _ exported.Proof = (*MerkleProof)(nil)
 
 // GetCommitmentType implements ProofI
 func (MerkleProof) GetCommitmentType() exported.Type {

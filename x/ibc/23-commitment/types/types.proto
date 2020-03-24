@@ -6,43 +6,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
 
-
-// message RootI {
-//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.RootI";
-  
-//   // sum defines a list of all acceptable concrete Root implementations.
-//   oneof sum {
-//     Root merkle = 1;
-//   }
-// }
-
-// message PrefixI {
-//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.PrefixI";
-
-//   oneof sum {
-//     // sum defines a list of all acceptable concrete Prefix implementations.
-//     Prefix merkle = 1;
-//   }
-// }
-
-// message PathI {
-//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.PathI";
-  
-//   // sum defines a list of all acceptable concrete Path implementations.
-//   oneof sum {
-//     Path merkle = 1;
-//   }
-// }
-
-// message ProofI {
-//   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/23-commitment.ProofI";
-
-//    // sum defines a list of all acceptable concrete Proof implementations.
-//   oneof sum {
-//     Proof merkle = 1;
-//   }
-// }
-
 // MerkleRoot defines a merkle root hash.
 // In the Cosmos SDK, the AppHash of a block header becomes the root.
 message MerkleRoot {
@@ -58,6 +21,7 @@ message MerklePrefix {
 // MerklePath is the path used to verify commitment proofs, which can be an arbitrary
 // structured object (defined by a commitment type).
 message MerklePath {
+  option (gogoproto.goproto_stringer) = false;
 	repeated tendermint.crypto.merkle.Key key_path = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/tendermint/tendermint/crypto/merkle.KeyPath"

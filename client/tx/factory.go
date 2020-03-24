@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -26,8 +25,6 @@ type Factory struct {
 	keybase            keys.Keybase
 	txGenerator        Generator
 	accountRetriever   AccountRetriever
-	feeFn              func(gas uint64, amount sdk.Coins) sdk.Fee
-	sigFn              func(pk crypto.PubKey, sig []byte) sdk.Signature
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
@@ -104,18 +101,6 @@ func (f Factory) WithChainID(chainID string) Factory {
 // WithGas returns a copy of the Builder with an updated gas value.
 func (f Factory) WithGas(gas uint64) Factory {
 	f.gas = gas
-	return f
-}
-
-// WithSigFn returns a copy of the Builder with an updated tx signature constructor.
-func (f Factory) WithSigFn(sigFn func(pk crypto.PubKey, sig []byte) sdk.Signature) Factory {
-	f.sigFn = sigFn
-	return f
-}
-
-// WithFeeFn returns a copy of the Builder with an updated fee constructor.
-func (f Factory) WithFeeFn(feeFn func(gas uint64, amount sdk.Coins) sdk.Fee) Factory {
-	f.feeFn = feeFn
 	return f
 }
 

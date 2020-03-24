@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 type (
@@ -187,7 +188,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 	}
 
 	tx := txf.txGenerator.NewTx()
-	tx.SetFee(txf.feeFn(txf.gas, fees))
+	tx.SetFee(auth.NewStdFee(txf.gas, fees))
 	tx.SetMsgs(msgs...)
 	tx.SetMemo(txf.memo)
 	tx.SetSignatures(nil)
@@ -206,7 +207,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	tx.SetSignatures(txf.sigFn(nil, nil))
+	tx.SetSignatures(auth.NewStdSignature(nil, nil))
 
 	return tx.Marshal()
 }
@@ -292,7 +293,7 @@ func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 		return nil, err
 	}
 
-	tx.SetSignatures(txf.sigFn(pubkey, sigBytes))
+	tx.SetSignatures(auth.NewStdSignature(pubkey, sigBytes))
 	return tx.Marshal()
 }
 

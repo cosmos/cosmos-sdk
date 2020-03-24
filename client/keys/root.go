@@ -24,7 +24,7 @@ The keyring supports the following backends:
                 This keyring will request a password each time it is accessed, which may occur
                 multiple times in a single command resulting in repeated password prompts.
     kwallet     Uses KDE Wallet Manager as a credentials management application.
-    pass        Uses the pass command line utility to store and retrieve keyring.
+    pass        Uses the pass command line utility to store and retrieve keys.
     test        Stores keys insecurely to disk. It does not prompt for a password to be unlocked
                 and it should be use only for testing purposes.
 

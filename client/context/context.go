@@ -7,14 +7,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +24,6 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	TxGenerator   clientx.Generator
 	Marshaler     codec.Marshaler
 	Keybase       keys.Keybase
 	Input         io.Reader
@@ -135,12 +132,6 @@ func NewCLIContextWithInput(input io.Reader) CLIContext {
 // WithInput returns a copy of the context with an updated input.
 func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 	ctx.Input = r
-	return ctx
-}
-
-// WithTxGenerator returns a copy of the CLIContext with an updated TxGenerator.
-func (ctx CLIContext) WithTxGenerator(txg clientx.Generator) CLIContext {
-	ctx.TxGenerator = txg
 	return ctx
 }
 

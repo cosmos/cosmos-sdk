@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
 	"github.com/stretchr/testify/require"
 

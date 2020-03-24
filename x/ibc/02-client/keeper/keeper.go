@@ -148,6 +148,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
 func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bool) {
+	// TODO: determine how to fix this function with new key format
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ibctypes.KeyClientPrefix)
 

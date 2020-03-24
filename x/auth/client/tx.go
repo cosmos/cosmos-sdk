@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/pkg/errors"
@@ -227,7 +230,35 @@ func SignStdTxWithSignerAddress(
 	return txBldr.SignStdTx(name, keys.DefaultKeyPass, stdTx, false)
 }
 
-// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
+// Read and decode a StdTx from a URI. It supports local files and HTTP URLs.
+func ReadStdTxFromURI(cdc *codec.Codec, uri string) (authtypes.StdTx, error) {
+	if !isValidURL(uri) {
+		return ReadStdTxFromFile(cdc, uri)
+	}
+
+	resp, err := http.Get(uri)
+	if err != nil {
+		return authtypes.StdTx{}, err
+	}
+	defer resp.Body.Close()
+
+	fp, err := ioutil.TempFile("", "")
+	if err != nil {
+		return authtypes.StdTx{}, err
+	}
+	defer os.Remove(fp.Name())
+
+	if _, err := io.Copy(fp, resp.Body); err != nil {
+		return authtypes.StdTx{}, err
+	}
+	if err := fp.Close(); err != nil {
+		return authtypes.StdTx{}, err
+	}
+
+	return ReadStdTxFromFile(cdc, fp.Name())
+}
+
+// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx, err error) {
 	var bytes []byte
 
@@ -354,4 +385,9 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 	}
 
 	return false
+}
+
+func isValidURL(rawstring string) bool {
+	u, err := url.Parse(rawstring)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }

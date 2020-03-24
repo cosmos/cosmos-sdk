@@ -29,7 +29,7 @@ const (
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign [file]",
+		Use:   "sign [file_or_URL]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
@@ -88,7 +88,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		stdTx, err := client.ReadStdTxFromFile(cdc, args[0])
+		stdTx, err := client.ReadStdTxFromURI(cdc, args[0])
 		if err != nil {
 			return err
 		}

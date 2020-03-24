@@ -12,7 +12,8 @@ func Test_validateAuxFuncs(t *testing.T) {
 	type args struct {
 		i interface{}
 	}
-	tests := []struct {
+
+	testCases := []struct {
 		name    string
 		args    args
 		wantErr bool
@@ -23,12 +24,14 @@ func Test_validateAuxFuncs(t *testing.T) {
 		{"one dec", args{sdk.NewDec(1)}, false},
 		{"two dec", args{sdk.NewDec(2)}, true},
 	}
-	for _, tt := range tests {
-		tt = tt
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.wantErr, validateCommunityTax(tt.args.i) != nil)
-			require.Equal(t, tt.wantErr, validateBaseProposerReward(tt.args.i) != nil)
-			require.Equal(t, tt.wantErr, validateBonusProposerReward(tt.args.i) != nil)
+
+	for _, tc := range testCases {
+		//	tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.wantErr, validateCommunityTax(tc.args.i) != nil)
+			require.Equal(t, tc.wantErr, validateBaseProposerReward(tc.args.i) != nil)
+			require.Equal(t, tc.wantErr, validateBonusProposerReward(tc.args.i) != nil)
 		})
 	}
 }

@@ -1,11 +1,10 @@
 <!--
 order: 12
-synopsis: This document outlines the recommended structure of Cosmos SDK modules.These ideas are
-meant to be applied as suggestions. Application developers are encouraged to improve upon and
-contribute to module structure and development design.
 -->
 
 # Recommended Folder Structure
+
+This document outlines the recommended structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design. {synopsis}
 
 ## Structure
 

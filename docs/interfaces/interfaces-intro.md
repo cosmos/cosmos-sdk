@@ -1,11 +1,12 @@
 <!--
 order: 1
-synopsis: Typically, SDK applications include interfaces to let end-users interact with the application. This document introduces the different types of interfaces for SDK applications. 
 -->
 
 # Interfaces
 
-## Pre-requisite Readings {hide}
+Typically, SDK applications include interfaces to let end-users interact with the application. This document introduces the different types of interfaces for SDK applications. {synopsis}
+
+## Pre-requisite Readings
 
 * [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 * [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}

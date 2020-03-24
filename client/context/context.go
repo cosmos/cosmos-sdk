@@ -254,6 +254,7 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
+		// TODO: Use ctx.Marshaler.
 		if ctx.Indent {
 			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
 		} else {

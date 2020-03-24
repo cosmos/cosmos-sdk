@@ -1,9 +1,10 @@
 <!--
 order: 3
-synopsis: "This document describes how to configure and use the keyring and its various backends for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli)."
 -->
 
 # The keyring
+
+This document describes how to configure and use the keyring and its various backends for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli). {synopsis}
 
 Starting with the v0.38.0 release, Cosmos SDK comes with a new keyring implementation
 that provides a set of commands to manage cryptographic keys in a secure fashion. The

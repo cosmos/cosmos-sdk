@@ -26,12 +26,12 @@ func Test_validateAuxFuncs(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		//	tc = tc
+		stc := tc
 
-		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.wantErr, validateCommunityTax(tc.args.i) != nil)
-			require.Equal(t, tc.wantErr, validateBaseProposerReward(tc.args.i) != nil)
-			require.Equal(t, tc.wantErr, validateBonusProposerReward(tc.args.i) != nil)
+		t.Run(stc.name, func(t *testing.T) {
+			require.Equal(t, stc.wantErr, validateCommunityTax(stc.args.i) != nil)
+			require.Equal(t, stc.wantErr, validateBaseProposerReward(stc.args.i) != nil)
+			require.Equal(t, stc.wantErr, validateBonusProposerReward(stc.args.i) != nil)
 		})
 	}
 }

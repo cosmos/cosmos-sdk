@@ -9,22 +9,22 @@ import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
 // MerkleRoot defines a merkle root hash.
 // In the Cosmos SDK, the AppHash of a block header becomes the root.
 message MerkleRoot {
-	bytes hash = 1;
+  bytes hash = 1;
 }
 
 // MerklePrefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
 message MerklePrefix {
-	bytes key_prefix = 1;
+  bytes key_prefix = 1;
 }
 
 // MerklePath is the path used to verify commitment proofs, which can be an arbitrary
 // structured object (defined by a commitment type).
 message MerklePath {
   option (gogoproto.goproto_stringer) = false;
-	repeated tendermint.crypto.merkle.Key key_path = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/tendermint/tendermint/crypto/merkle.KeyPath"
+
+  KeyPath key_path = 1 [
+    (gogoproto.nullable) = false
   ];
 }
 
@@ -33,5 +33,33 @@ message MerklePath {
 // verifiable in conjunction with a known commitment root. Proofs should be
 // succinct.
 message MerkleProof {
+  option (gogoproto.equal) = true;
+
   tendermint.crypto.merkle.Proof proof = 1;
+}
+
+// KeyPath defines a slice of keys
+message KeyPath {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  repeated Key keys = 1;
+}
+
+// Key defines a proof Key
+message Key {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes       name = 1 [(gogoproto.customname) = "name"];
+  KeyEncoding enc  = 2 [(gogoproto.customname) = "enc"];
+}
+
+enum KeyEncoding {
+  option (gogoproto.goproto_enum_stringer) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
+
+  // URL encoding
+  URL = 0;
+  // Hex encoding
+  HEX = 1;
 }

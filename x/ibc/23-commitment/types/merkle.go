@@ -4,11 +4,11 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
-
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
+	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -64,9 +64,9 @@ var _ exported.Path = (*MerklePath)(nil)
 
 // NewMerklePath creates a new MerklePath instance
 func NewMerklePath(keyPathStr []string) MerklePath {
-	merkleKeyPath := merkle.KeyPath{}
+	merkleKeyPath := KeyPath{}
 	for _, keyStr := range keyPathStr {
-		merkleKeyPath = merkleKeyPath.AppendKey([]byte(keyStr), merkle.KeyEncodingURL)
+		merkleKeyPath = merkleKeyPath.AppendKey([]byte(keyStr), URL)
 	}
 
 	return MerklePath{
@@ -95,7 +95,7 @@ func (mp MerklePath) Pretty() string {
 
 // IsEmpty returns true if the path is empty
 func (mp MerklePath) IsEmpty() bool {
-	return len(mp.KeyPath) == 0
+	return len(mp.KeyPath.Keys) == 0
 }
 
 // ApplyPrefix constructs a new commitment path from the arguments. It interprets
@@ -144,7 +144,7 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 
 // IsEmpty returns true if the root is empty
 func (proof MerkleProof) IsEmpty() bool {
-	return (proof == MerkleProof{}) || proof.Proof == nil
+	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
 }
 
 // ValidateBasic checks if the proof is empty.

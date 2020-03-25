@@ -9,7 +9,8 @@ import (
 // CalculateRoot returns the application Hash at the curretn block height as a commitment
 // root for proof verification.
 func CalculateRoot(ctx sdk.Context) exported.Root {
-	return types.NewMerkleRoot(ctx.BlockHeader().AppHash)
+	root := types.NewMerkleRoot(ctx.BlockHeader().AppHash)
+	return &root
 }
 
 // BatchVerifyMembership verifies a proof that many paths have been set to

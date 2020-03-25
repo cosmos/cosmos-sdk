@@ -2,7 +2,6 @@ package tx
 
 import (
 	"io"
-	"strings"
 
 	"github.com/spf13/viper"
 
@@ -140,7 +139,7 @@ func (f Factory) WithSequence(sequence uint64) Factory {
 
 // WithMemo returns a copy of the Factory with an updated memo.
 func (f Factory) WithMemo(memo string) Factory {
-	f.memo = strings.TrimSpace(memo)
+	f.memo = memo
 	return f
 }
 

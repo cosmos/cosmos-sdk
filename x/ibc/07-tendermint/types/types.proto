@@ -13,9 +13,9 @@ import "x/ibc/23-commitment/types/types.proto";
 message MsgCreateClient {
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
-    (gogoproto.moretags)     = "yaml:\"client_id\""
+    (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
-  Header header = 2;
+  Header                   header          = 2;
   google.protobuf.Duration trusting_period = 3 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
@@ -36,21 +36,21 @@ message MsgCreateClient {
 message MsgUpdateClient {
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
-    (gogoproto.moretags)     = "yaml:\"client_id\""
+    (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
   Header header = 2;
-	bytes signer = 3 [
+  bytes  signer = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
 // MsgSubmitClientMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
-message MsgSubmitClientMisbehaviour {	
+message MsgSubmitClientMisbehaviour {
   Evidence evidence = 1 [
-    (gogoproto.nullable)    = false
+    (gogoproto.nullable) = false
   ];
-	bytes submitter = 2 [
+  bytes submitter = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
@@ -59,7 +59,7 @@ message MsgSubmitClientMisbehaviour {
 message ClientState {
   string id = 1 [(gogoproto.customname) = "ID"];
   // duration of the period since the LastestTimestamp during which the submitted
-	// headers are valid for upgrade
+  // headers are valid for upgrade
   google.protobuf.Duration trusting_period = 2 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
@@ -73,12 +73,12 @@ message ClientState {
   ];
   // Block height when the client was frozen due to a misbehaviour
   uint64 frozen_height = 4 [
-    (gogoproto.moretags)     = "yaml:\"frozen_height\""
+    (gogoproto.moretags) = "yaml:\"frozen_height\""
   ];
   // Last Header that was stored by the client
   Header last_header = 5 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.moretags)     = "yaml:\"last_header\""
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"last_header\""
   ];
 }
 
@@ -88,16 +88,16 @@ message ConsensusState {
   // was stored.
   google.protobuf.Timestamp timestamp = 1 [
     (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
+    (gogoproto.stdtime)  = true
   ];
   // commitment root (i.e app hash)
   cosmos_sdk.x.ibc.commitment.v1.MerkleRoot root = 2 [
     (gogoproto.nullable) = false
   ];
   // height at which the consensus state was stored.
-  uint64 height = 3;
-	ValidatorSet validator_set = 4 [
-    (gogoproto.moretags)   = "yaml:\"validator_set\""
+  uint64       height        = 3;
+  ValidatorSet validator_set = 4 [
+    (gogoproto.moretags) = "yaml:\"validator_set\""
   ];
 }
 
@@ -106,21 +106,21 @@ message ConsensusState {
 message Evidence {
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
-    (gogoproto.moretags)    = "yaml:\"client_id\""
+    (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
   string chain_id = 2 [
     (gogoproto.customname) = "ChainID",
-    (gogoproto.moretags)    = "yaml:\"chain_id\""
+    (gogoproto.moretags)   = "yaml:\"chain_id\""
   ];
   Header header_1 = 3 [
     (gogoproto.customname) = "Header1",
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags)    = "yaml:\"header_1\""
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"header_1\""
   ];
   Header header_2 = 4 [
     (gogoproto.customname) = "Header2",
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags)    = "yaml:\"header_2\""
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"header_2\""
   ];
 }
 
@@ -128,26 +128,26 @@ message Evidence {
 // corresponds to the header.
 message Header {
   SignedHeader signed_header = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "yaml:\"signed_header\""
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"signed_header\""
   ];
-      
+
   ValidatorSet validator_set = 2 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "yaml:\"validator_set\""
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"validator_set\""
   ];
 }
 
 // TODO: move to tendermint
 message ValidatorSet {
   repeated .tendermint.abci.types.Validator validators = 1 [
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   .tendermint.abci.types.Validator proposer = 2 [
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   int64 total_voting_power = 3 [
-    (gogoproto.moretags)    = "yaml:\"total_voting_power\""
+    (gogoproto.moretags) = "yaml:\"total_voting_power\""
   ];
 }
 

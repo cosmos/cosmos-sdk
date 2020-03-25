@@ -9,7 +9,7 @@ import "types/types.proto";
 // MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
 // See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message MsgTransfer {
-   // the port on which the packet will be sent
+  // the port on which the packet will be sent
   string source_port = 1 [
     (gogoproto.moretags) = "yaml:\"source_port\""
   ];
@@ -30,7 +30,7 @@ message MsgTransfer {
   bytes sender = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
-   // the recipient address on the destination chain
+  // the recipient address on the destination chain
   bytes receiver = 6 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -52,7 +52,7 @@ message FungibleTokenPacketData {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   uint64 timeout = 4;
-  bool source = 5;
+  bool   source  = 5;
 }
 
 // AckDataTransfer is a no-op packet

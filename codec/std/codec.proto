@@ -15,6 +15,8 @@ import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
+import "x/ibc/03-connection/types/types.proto";
+import "x/ibc/04-channel/types/types.proto";
 import "x/ibc/07-tendermint/types/types.proto";
 import "x/ibc/20-transfer/types/types.proto";
 
@@ -53,8 +55,8 @@ message Evidence {
 
   // sum defines a set of all acceptable concrete Evidence implementations.
   oneof sum {
-    cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
-    cosmos_sdk.x.ibc.tendermint.v1.Evidence  evidence = 2;
+    cosmos_sdk.x.evidence.v1.Equivocation   equivocation = 1;
+    cosmos_sdk.x.ibc.tendermint.v1.Evidence evidence     = 2;
   }
 }
 
@@ -78,8 +80,8 @@ message MsgSubmitProposal {
   Content                                   content = 2;
 }
 
-// Proposal defines the application-level concrete proposal type used in governance
-// proposals.
+// Proposal defines the application-level concrete proposal type used in
+// governance proposals.
 message Proposal {
   option (gogoproto.equal) = true;
 
@@ -93,7 +95,8 @@ message Content {
   option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/gov/types.Content";
 
-  // sum defines a set of all acceptable concrete governance proposal Content types.
+  // sum defines a set of all acceptable concrete governance proposal Content
+  // types.
   oneof sum {
     cosmos_sdk.x.gov.v1.TextProposal                        text                    = 1;
     cosmos_sdk.x.params.v1.ParameterChangeProposal          parameter_change        = 2;
@@ -105,7 +108,7 @@ message Content {
 
 message ClientState {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.ClientState";
-   // sum defines a set of all acceptable concrete ClientState implementations.
+  // sum defines a set of all acceptable concrete ClientState implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.ClientState tendermint = 1;
   }
@@ -113,7 +116,8 @@ message ClientState {
 
 message ConsensusState {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.ConsensusState";
-   // sum defines a set of all acceptable concrete ConsensusState implementations.
+  // sum defines a set of all acceptable concrete ConsensusState
+  // implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.ConsensusState tendermint = 1;
   }
@@ -121,7 +125,7 @@ message ConsensusState {
 
 message Misbehaviour {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.Misbehaviour";
-   // sum defines a set of all acceptable concrete Misbehaviour implementations.
+  // sum defines a set of all acceptable concrete Misbehaviour implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.Evidence tendermint = 1;
   }
@@ -129,7 +133,7 @@ message Misbehaviour {
 
 message Header {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.Header";
-   // sum defines a set of all acceptable concrete Header implementations.
+  // sum defines a set of all acceptable concrete Header implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.Header tendermint = 1;
   }
@@ -138,14 +142,16 @@ message Header {
 message MsgCreateClient {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.MsgCreateClient";
   oneof sum {
-     // sum defines a set of all acceptable concrete MsgCreateClient implementations.
+    // sum defines a set of all acceptable concrete MsgCreateClient
+    // implementations.
     cosmos_sdk.x.ibc.tendermint.v1.MsgCreateClient tendermint = 1;
   }
 }
 
 message MsgUpdateClient {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported.MsgUpdateClient";
-   // sum defines a set of all acceptable concrete MsgUpdateClient implementations.
+  // sum defines a set of all acceptable concrete MsgUpdateClient
+  // implementations.
   oneof sum {
     cosmos_sdk.x.ibc.tendermint.v1.MsgUpdateClient tendermint = 1;
   }
@@ -171,8 +177,11 @@ message PacketAck {
 message Transaction {
   option (gogoproto.goproto_getters) = false;
 
-  cosmos_sdk.x.auth.v1.StdTxBase base = 1
-      [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
+  cosmos_sdk.x.auth.v1.StdTxBase base = 1 [
+    (gogoproto.jsontag)  = "",
+    (gogoproto.embed)    = true,
+    (gogoproto.nullable) = false
+  ];
   repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }
 
@@ -183,30 +192,49 @@ message Message {
 
   // sum defines the set of all allowed valid messages defined in modules.
   oneof sum {
-    cosmos_sdk.x.bank.v1.MsgSend                                msg_send                          = 1;
-    cosmos_sdk.x.bank.v1.MsgMultiSend                           msg_multi_send                    = 2;
-    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant                   msg_verify_invariant              = 3;
-    cosmos_sdk.x.distribution.v1.MsgSetWithdrawAddress          msg_set_withdraw_address          = 4;
-    cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward     = 5;
-    cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission = 6;
-    cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool           = 7;
-    MsgSubmitEvidence                                           msg_submit_evidence               = 8;
-    MsgSubmitProposal                                           msg_submit_proposal               = 9;
-    cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                          = 10;
-    cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                       = 11;
-    cosmos_sdk.x.slashing.v1.MsgUnjail                          msg_unjail                        = 12;
-    cosmos_sdk.x.staking.v1.MsgCreateValidator                  msg_create_validator              = 13;
-    cosmos_sdk.x.staking.v1.MsgEditValidator                    msg_edit_validator                = 14;
-    cosmos_sdk.x.staking.v1.MsgDelegate                         msg_delegate                      = 15;
-    cosmos_sdk.x.staking.v1.MsgBeginRedelegate                  msg_begin_redelegate              = 16;
-    cosmos_sdk.x.staking.v1.MsgUndelegate                       msg_undelegate                    = 17;
+    cosmos_sdk.x.bank.v1.MsgSend                                msg_send                                  = 1;
+    cosmos_sdk.x.bank.v1.MsgMultiSend                           msg_multi_send                            = 2;
+    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant                   msg_verify_invariant                      = 3;
+    cosmos_sdk.x.distribution.v1.MsgSetWithdrawAddress          msg_set_withdraw_address                  = 4;
+    cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward             = 5;
+    cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission         = 6;
+    cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool                   = 7;
+    MsgSubmitEvidence                                           msg_submit_evidence                       = 8;
+    MsgSubmitProposal                                           msg_submit_proposal                       = 9;
+    cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                                  = 10;
+    cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                               = 11;
+    cosmos_sdk.x.slashing.v1.MsgUnjail                          msg_unjail                                = 12;
+    cosmos_sdk.x.staking.v1.MsgCreateValidator                  msg_create_validator                      = 13;
+    cosmos_sdk.x.staking.v1.MsgEditValidator                    msg_edit_validator                        = 14;
+    cosmos_sdk.x.staking.v1.MsgDelegate                         msg_delegate                              = 15;
+    cosmos_sdk.x.staking.v1.MsgBeginRedelegate                  msg_begin_redelegate                      = 16;
+    cosmos_sdk.x.staking.v1.MsgUndelegate                       msg_undelegate                            = 17;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenInit        msg_connection_open_init                  = 18;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenTry         msg_connection_open_try                   = 19;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenAck         msg_connection_open_ack                   = 20;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenConfirm     msg_connection_open_confirm               = 21;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenInit              msg_channel_open_init                     = 22;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenTry               msg_channel_open_try                      = 23;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenAck               msg_channel_open_ack                      = 24;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenConfirm           msg_channel_open_confirm                  = 25;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelCloseInit             msg_channel_close_init                    = 26;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelCloseConfirm          msg_channel_close_confirm                 = 27;
+    cosmos_sdk.x.ibc.channel.v1.MsgPacket                       msg_packet                                = 28;
+    cosmos_sdk.x.ibc.channel.v1.MsgAcknowledgement              msg_acknowledgement                       = 29;
+    cosmos_sdk.x.ibc.tendermint.v1.MsgCreateClient              msg_create_client_tendermint              = 30;  // TODO: should I use the interface defined above instead?
+    cosmos_sdk.x.ibc.tendermint.v1.MsgUpdateClient              msg_update_client_tendermint              = 31;  // TODO: ditto
+    cosmos_sdk.x.ibc.tendermint.v1.MsgSubmitClientMisbehaviour  msg_submit_client_misbehaviour_tendermint = 32;  // FIXME: use submit evidence msg?
+    cosmos_sdk.x.ibc.transfer.v1.MsgTransfer                    msg_transfer                              = 33;
   }
 }
 
 // SignDoc defines a standard application-level signing document to compose
 // signatures for a Transaction.
 message SignDoc {
-  cosmos_sdk.x.auth.v1.StdSignDocBase base = 1
-      [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
+  cosmos_sdk.x.auth.v1.StdSignDocBase base = 1 [
+    (gogoproto.jsontag)  = "",
+    (gogoproto.embed)    = true,
+    (gogoproto.nullable) = false
+  ];
   repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }

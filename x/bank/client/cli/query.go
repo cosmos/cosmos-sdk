@@ -88,7 +88,7 @@ func NewBalancesCmd(m codec.Marshaler) *cobra.Command {
 				result = balance
 			}
 
-			return cliCtx.Print(result)
+			return cliCtx.Println(result)
 		},
 	}
 

@@ -181,7 +181,7 @@ functionality that requires an online connection.
 * (baseapp) [\#5718](https://github.com/cosmos/cosmos-sdk/pull/5718) Remove call to `ctx.BlockGasMeter` during failed message validation which resulted in a panic when the tx execution mode was `CheckTx`.
 * (x/genutil) [\#5775](https://github.com/cosmos/cosmos-sdk/pull/5775) Fix `ExportGenesis` in `x/genutil` to export default genesis state (`[]`) instead of `null`.
 * (client) [\#5618](https://github.com/cosmos/cosmos-sdk/pull/5618) Fix crash on the client when the verifier is not set.
-* (crypto/keys/mintkey) [\#5823](https://github.com/cosmos/cosmos-sdk/pull/5823) fix errors handling in UnarmorPubKeyBytes (underlying armoring function's return error was not being checked).
+* (crypto/keys/mintkey) [\#5823](https://github.com/cosmos/cosmos-sdk/pull/5823) fix errors handling in `UnarmorPubKeyBytes` (underlying armoring function's return error was not being checked).
 * (x/distribution) [\#5620](https://github.com/cosmos/cosmos-sdk/pull/5620) Fix nil pointer deref in distribution tax/rewward validation helpers.
 
 ### Improvements

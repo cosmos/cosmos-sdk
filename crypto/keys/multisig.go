@@ -71,19 +71,25 @@ var _ crypto.PubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k int32, pubkeys []*crypto.PubKey) crypto.PubKey {
+func NewPubKeyMultisigThreshold(k int32, pubkeys []crypto.PubKey) crypto.PubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
 	if len(pubkeys) < int(k) {
 		panic("threshold k of n multisignature: len(pubkeys) < k")
 	}
-	for _, pubkey := range pubkeys {
+
+	pks := make([]*PubKey, len(pubkeys))
+	for i, pubkey := range pubkeys {
 		if pubkey == nil {
-			panic("nil pubkey")
+			panic(fmt.Errorf("pubkey at index %d cannot be nil", i))
+		}
+		if err := pks[i].SetPubKey(pubkey); err != nil {
+			panic(fmt.Errorf("couldn't set pubkey at index %d: %w", i, err))
 		}
 	}
-	return PubKeyMultisigThreshold{K: uint32(k), PubKeys: pubkeys}
+
+	return PubKeyMultisigThreshold{K: uint32(k), PubKeys: pks}
 }
 
 // VerifyBytes expects sig to be an amino encoded version of a MultiSignature.

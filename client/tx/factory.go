@@ -80,31 +80,31 @@ func (f Factory) AccountRetriever() AccountRetriever { return f.accountRetriever
 // using the gas from the simulation results
 func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 
-// WithTxGenerator returns a copy of the Builder with an updated Generator.
+// WithTxGenerator returns a copy of the Factory with an updated Generator.
 func (f Factory) WithTxGenerator(g Generator) Factory {
 	f.txGenerator = g
 	return f
 }
 
-// WithAccountRetriever returns a copy of the Builder with an updated AccountRetriever.
+// WithAccountRetriever returns a copy of the Factory with an updated AccountRetriever.
 func (f Factory) WithAccountRetriever(ar AccountRetriever) Factory {
 	f.accountRetriever = ar
 	return f
 }
 
-// WithChainID returns a copy of the Builder with an updated chainID.
+// WithChainID returns a copy of the Factory with an updated chainID.
 func (f Factory) WithChainID(chainID string) Factory {
 	f.chainID = chainID
 	return f
 }
 
-// WithGas returns a copy of the Builder with an updated gas value.
+// WithGas returns a copy of the Factory with an updated gas value.
 func (f Factory) WithGas(gas uint64) Factory {
 	f.gas = gas
 	return f
 }
 
-// WithFees returns a copy of the Builder with an updated fee.
+// WithFees returns a copy of the Factory with an updated fee.
 func (f Factory) WithFees(fees string) Factory {
 	parsedFees, err := sdk.ParseCoins(fees)
 	if err != nil {
@@ -115,7 +115,7 @@ func (f Factory) WithFees(fees string) Factory {
 	return f
 }
 
-// WithGasPrices returns a copy of the Builder with updated gas prices.
+// WithGasPrices returns a copy of the Factory with updated gas prices.
 func (f Factory) WithGasPrices(gasPrices string) Factory {
 	parsedGasPrices, err := sdk.ParseDecCoins(gasPrices)
 	if err != nil {
@@ -126,26 +126,39 @@ func (f Factory) WithGasPrices(gasPrices string) Factory {
 	return f
 }
 
-// WithKeybase returns a copy of the Builder with updated Keybase.
+// WithKeybase returns a copy of the Factory with updated Keybase.
 func (f Factory) WithKeybase(keybase keys.Keybase) Factory {
 	f.keybase = keybase
 	return f
 }
 
-// WithSequence returns a copy of the Builder with an updated sequence number.
+// WithSequence returns a copy of the Factory with an updated sequence number.
 func (f Factory) WithSequence(sequence uint64) Factory {
 	f.sequence = sequence
 	return f
 }
 
-// WithMemo returns a copy of the Builder with an updated memo.
+// WithMemo returns a copy of the Factory with an updated memo.
 func (f Factory) WithMemo(memo string) Factory {
 	f.memo = strings.TrimSpace(memo)
 	return f
 }
 
-// WithAccountNumber returns a copy of the Builder with an updated account number.
+// WithAccountNumber returns a copy of the Factory with an updated account number.
 func (f Factory) WithAccountNumber(accnum uint64) Factory {
 	f.accountNumber = accnum
+	return f
+}
+
+// WithGasAdjustment returns a copy of the Factory with an updated gas adjustment.
+func (f Factory) WithGasAdjustment(gasAdj float64) Factory {
+	f.gasAdjustment = gasAdj
+	return f
+}
+
+// WithSimulateAndExecute returns a copy of the Factory with an updated gas
+// simulation value.
+func (f Factory) WithSimulateAndExecute(sim bool) Factory {
+	f.simulateAndExecute = sim
 	return f
 }

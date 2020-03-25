@@ -53,10 +53,11 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
+		txf := tx.Factory{}.WithChainID("test-chain").WithTxGenerator(std.TxGenerator{})
 
 		t.Run(stc.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
-			simRes, gotAdjusted, err := tx.CalculateGas(queryFunc, []byte(""), stc.args.adjustment)
+			simRes, gotAdjusted, err := tx.CalculateGas(queryFunc, txf.WithGasAdjustment(stc.args.adjustment))
 			if stc.expPass {
 				require.NoError(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, stc.wantEstimate)

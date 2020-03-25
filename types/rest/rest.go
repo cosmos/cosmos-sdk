@@ -119,16 +119,16 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	return true
 }
 
-// ReadRESTReq reads and unmarshals a Request's body to the the BaseReq stuct.
+// ReadRESTReq reads and unmarshals a Request's body to the the BaseReq struct.
 // Writes an error response to ResponseWriter and returns true if errors occurred.
-func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
+func ReadRESTReq(w http.ResponseWriter, r *http.Request, m codec.JSONMarshaler, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return false
 	}
 
-	err = cdc.UnmarshalJSON(body, req)
+	err = m.UnmarshalJSON(body, req)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to decode JSON payload: %s", err))
 		return false
@@ -158,9 +158,10 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 
 // WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
-func WriteSimulationResponse(w http.ResponseWriter, cdc *codec.Codec, gas uint64) {
+func WriteSimulationResponse(w http.ResponseWriter, m codec.JSONMarshaler, gas uint64) {
 	gasEst := GasEstimateResponse{GasEstimate: gas}
-	resp, err := cdc.MarshalJSON(gasEst)
+
+	resp, err := m.MarshalJSON(gasEst)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

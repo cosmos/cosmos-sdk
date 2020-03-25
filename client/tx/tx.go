@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/spf13/viper"
@@ -16,7 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -71,12 +74,7 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		txBytes, err := BuildSimTx(txf, msgs...)
-		if err != nil {
-			return err
-		}
-
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txBytes, txf.GasAdjustment())
+		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -103,12 +101,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if txf.SimulateAndExecute() || ctx.Simulate {
-		txBytes, err := BuildSimTx(txf, msgs...)
-		if err != nil {
-			return err
-		}
-
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txBytes, txf.GasAdjustment())
+		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -154,6 +147,70 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	return ctx.Print(res)
+}
+
+// WriteGeneratedTxResponse writes a generated unsigned transaction to the
+// provided http.ResponseWriter. It will simulate gas costs if requested by the
+// BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
+func WriteGeneratedTxResponse(
+	ctx context.CLIContext, w http.ResponseWriter, txg Generator, br rest.BaseReq, msgs ...sdk.Msg,
+) {
+
+	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
+	if !ok {
+		return
+	}
+
+	simAndExec, gas, err := flags.ParseGas(br.Gas)
+	if err != nil {
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	txf := Factory{fees: br.Fees, gasPrices: br.GasPrices}.
+		WithAccountNumber(br.AccountNumber).
+		WithSequence(br.Sequence).
+		WithGas(gas).
+		WithGasAdjustment(gasAdj).
+		WithMemo(br.Memo).
+		WithChainID(br.ChainID).
+		WithSimulateAndExecute(br.Simulate)
+
+	if br.Simulate || simAndExec {
+		if gasAdj < 0 {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, types.ErrorInvalidGasAdjustment.Error())
+			return
+		}
+
+		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		txf = txf.WithGas(adjusted)
+
+		if br.Simulate {
+			rest.WriteSimulationResponse(w, ctx.Marshaler, txf.Gas())
+			return
+		}
+	}
+
+	tx, err := BuildUnsignedTx(txf, msgs...)
+	if err != nil {
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	output, err := ctx.Marshaler.MarshalJSON(tx)
+	if err != nil {
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(output)
 }
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The
@@ -209,8 +266,13 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
-	queryFunc func(string, []byte) ([]byte, int64, error), txBytes []byte, adjustment float64,
+	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
 ) (sdk.SimulationResponse, uint64, error) {
+
+	txBytes, err := BuildSimTx(txf, msgs...)
+	if err != nil {
+		return sdk.SimulationResponse{}, 0, err
+	}
 
 	bz, _, err := queryFunc("/app/simulate", txBytes)
 	if err != nil {
@@ -222,7 +284,7 @@ func CalculateGas(
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	return simRes, uint64(adjustment * float64(simRes.GasUsed)), nil
+	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasUsed)), nil
 }
 
 // PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and

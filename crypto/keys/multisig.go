@@ -14,7 +14,7 @@ func NewMultisig(n int) *Multisignature {
 	// expect that most multisigs will require multiple signers.
 	return &Multisignature{
 		BitArray: bitarray.NewCompactBitArray(n),
-		Bytes: :make([][]byte, 0, 2),
+		Bytes:    make([][]byte, 0, 2),
 	}
 }
 
@@ -71,7 +71,7 @@ var _ crypto.PubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) crypto.PubKey {
+func NewPubKeyMultisigThreshold(k int, pubkeys []*crypto.PubKey) crypto.PubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -131,7 +131,7 @@ func (pk PubKeyMultisigThreshold) Bytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	 return bz
+	return bz
 }
 
 // Address returns tmhash(PubKeyMultisigThreshold.Bytes())

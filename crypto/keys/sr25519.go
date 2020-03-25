@@ -12,6 +12,11 @@ import (
 	schnorrkel "github.com/ChainSafe/go-schnorrkel"
 )
 
+const (
+	PubKeySr25519Name  = "tendermint/PubKeySr25519"
+	PrivKeySr25519Name = "tendermint/PrivKeySr25519"
+)
+
 var (
 	_ crypto.PubKey  = PubKeySr25519{}
 	_ crypto.PrivKey = PrivKeySr25519{}
@@ -22,11 +27,14 @@ const (
 	PubKeySr25519Size = 32
 	// PrivKeySr25519Size is the number of bytes in an Sr25519 private key.
 	PrivKeySr25519Size = 32
+	// SignatureSr25519Size is the size of an Sr25519 signature. Namely the size of a compressed
+	// Sr25519 point, and a field element. Both of which are 32 bytes.
+	SignatureSr25519Size = 64
 )
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey PubKeySr25519) Address() crypto.Address {
-	return crypto.Address(tmhash.SumTruncated(pubKey[:]))
+	return crypto.Address(tmhash.SumTruncated(pubKey.Bytes()[:]))
 }
 
 // Bytes marshals the PubKey using amino encoding.
@@ -36,15 +44,15 @@ func (pubKey PubKeySr25519) Bytes() []byte {
 			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeySr25519Size),
 		)
 	}
-	return pubKey.bytes
+	return pubKey.bytes[:PubKeySr25519Size]
 }
 
 func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
 	// make sure we use the same algorithm to sign
-	if len(sig) != SignatureSize {
+	if len(sig) != SignatureSr25519Size {
 		return false
 	}
-	var sig64 [SignatureSize]byte
+	var sig64 [SignatureSr25519Size]byte
 	copy(sig64[:], sig)
 
 	publicKey := &(schnorrkel.PublicKey{})
@@ -65,14 +73,14 @@ func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
 }
 
 func (pubKey PubKeySr25519) String() string {
-	return fmt.Sprintf("PubKeySr25519{%X}", pubKey[:])
+	return fmt.Sprintf("%s{%X}", PubKeySr25519Name, pubKey.Bytes()[:])
 }
 
 // Equals - checks that two public keys are the same time
 // Runs in constant time based on length of the keys.
 func (pubKey PubKeySr25519) Equals(other crypto.PubKey) bool {
 	if otherEd, ok := other.(PubKeySr25519); ok {
-		return bytes.Equal(pubKey[:], otherEd[:])
+		return bytes.Equal(pubKey.bytes[:], otherEd.bytes[:])
 	}
 	return false
 }
@@ -89,7 +97,8 @@ func (privKey PrivKeySr25519) Bytes() []byte {
 
 // Sign produces a signature on the provided message.
 func (privKey PrivKeySr25519) Sign(msg []byte) ([]byte, error) {
-	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey)
+
+	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey.Bytes())
 	if err != nil {
 		return []byte{}, err
 	}
@@ -119,14 +128,15 @@ func (privKey PrivKeySr25519) PubKey() crypto.PubKey {
 		panic(fmt.Errorf("could not generate public key: %w", err))
 	}
 
-	return PubKeySr25519{bytes: pubkey.Encode()}
+	pubKeySr := pubkey.Encode()
+	return PubKeySr25519{bytes: pubKeySr[:]}
 }
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
 func (privKey PrivKeySr25519) Equals(other crypto.PrivKey) bool {
 	if otherEd, ok := other.(PrivKeySr25519); ok {
-		return subtle.ConstantTimeCompare(privKey[:], otherEd[:]) == 1
+		return subtle.ConstantTimeCompare(privKey.bytes[:], otherEd.bytes[:]) == 1
 	}
 	return false
 }
@@ -140,7 +150,7 @@ func GenPrivKey() PrivKeySr25519 {
 
 // genPrivKey generates a new sr25519 private key using the provided reader.
 func genPrivKey(rand io.Reader) PrivKeySr25519 {
-	var seed []byte
+	var seed [64]byte
 
 	out := make([]byte, 64)
 	_, err := io.ReadFull(rand, out)
@@ -150,7 +160,8 @@ func genPrivKey(rand io.Reader) PrivKeySr25519 {
 
 	copy(seed[:], out)
 
-	return PrivKeySr25519{bytes: schnorrkel.NewMiniSecretKey(seed).ExpandEd25519().Encode()}
+	privKeySr := schnorrkel.NewMiniSecretKey(seed).ExpandEd25519().Encode()
+	return PrivKeySr25519{bytes: privKeySr[:]}
 }
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
@@ -162,5 +173,6 @@ func GenPrivKeyFromSecret(secret []byte) PrivKeySr25519 {
 	var bz [PrivKeySr25519Size]byte
 	copy(bz[:], seed)
 	privKey, _ := schnorrkel.NewMiniSecretKeyFromRaw(bz)
-	return PrivKeySr25519{bytes: privKey.ExpandEd25519().Encode()}
+	privKeySr := privKey.ExpandEd25519().Encode()
+	return PrivKeySr25519{bytes: privKeySr[:]}
 }

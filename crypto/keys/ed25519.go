@@ -13,25 +13,26 @@ import (
 )
 
 const (
-	PrivKeyEd25519Name = "tendermint/PrivKeyEd25519"
 	PubKeyEd25519Name  = "tendermint/PubKeyEd25519"
+	PrivKeyEd25519Name = "tendermint/PrivKeyEd25519"
 )
 
 var (
-	_ crypto.PubKey = PubKeyEd25519{}
+	_ crypto.PubKey  = PubKeyEd25519{}
 	_ crypto.PrivKey = PrivKeyEd25519{}
 )
 
 const (
-	// PubKeyEd25519Size is the number of bytes in an Ed25519 signature.
+	// PubKeyEd25519Size is the number of bytes in an Ed25519 public key.
 	PubKeyEd25519Size = 32
+	// PrivKeyEd25519Size is the number of bytes in an Ed25519 private key.
+	PrivKeyEd25519Size = 64
 	// SignatureEd25519Size of an Edwards25519 signature. Namely the size of a compressed
 	// Edwards25519 point, and a field element. Both of which are 32 bytes.
 	SignatureEd25519Size = 64
 )
 
 //-------------------------------------
-
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey PubKeyEd25519) Address() crypto.Address {
@@ -42,10 +43,10 @@ func (pubKey PubKeyEd25519) Address() crypto.Address {
 func (pubKey PubKeyEd25519) Bytes() []byte {
 	if len(pubKey.bytes) != PubKeyEd25519Size {
 		panic(
-			fmt.Errorf("invalid bytes length: got (%s), expected (%d)",  len(pubKey.bytes), PubKeyEd25519Size),
+			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeyEd25519Size),
 		)
 	}
-	return pubkey.bytes[]
+	return pubKey.bytes[:]
 }
 
 func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig []byte) bool {
@@ -53,17 +54,17 @@ func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig []byte) bool {
 	if len(sig) != SignatureEd25519Size {
 		return false
 	}
-	return ed25519.Verify(pubKey[:], msg, sig)
+	return ed25519.Verify(pubKey.Bytes()[:], msg, sig)
 }
 
 func (pubKey PubKeyEd25519) String() string {
-	return fmt.Sprintf("%s{%X}", PubKeyEd25519Name, pubKey[:])
+	return fmt.Sprintf("%s{%X}", PubKeyEd25519Name, pubKey.Bytes()[:])
 }
 
 // nolint: golint
 func (pubKey PubKeyEd25519) Equals(other crypto.PubKey) bool {
 	if otherEd, ok := other.(PubKeyEd25519); ok {
-		return bytes.Equal(pubKey[:], otherEd[:])
+		return bytes.Equal(pubKey.bytes, otherEd.bytes)
 	}
 
 	return false
@@ -73,7 +74,7 @@ func (pubKey PubKeyEd25519) Equals(other crypto.PubKey) bool {
 
 // Bytes marshals the privkey using amino encoding.
 func (privKey PrivKeyEd25519) Bytes() []byte {
-	return privkey.bytes
+	return privKey.bytes
 }
 
 // Sign produces a signature on the provided message.
@@ -105,8 +106,8 @@ func (privKey PrivKeyEd25519) PubKey() crypto.PubKey {
 		panic("expected PrivKeyEd25519 to include concatenated pubkey bytes")
 	}
 
-	var pubkeyBytes [PubKeyEd25519Size]byte
-	copy(pubkeyBytes[:], privKey.Bytes()[32:])
+	var pubkeyBytes []byte
+	copy(pubkeyBytes[:32], privKey.Bytes()[32:])
 	return PubKeyEd25519{bytes: pubkeyBytes}
 }
 
@@ -114,7 +115,7 @@ func (privKey PrivKeyEd25519) PubKey() crypto.PubKey {
 // Runs in constant time based on length of the keys.
 func (privKey PrivKeyEd25519) Equals(other crypto.PrivKey) bool {
 	if otherEd, ok := other.(PrivKeyEd25519); ok {
-		return subtle.ConstantTimeCompare(privKey[:], otherEd[:]) == 1
+		return subtle.ConstantTimeCompare(privKey.bytes[:], otherEd.bytes[:]) == 1
 	}
 
 	return false
@@ -136,7 +137,7 @@ func genPrivKey(rand io.Reader) PrivKeyEd25519 {
 	}
 
 	privKey := ed25519.NewKeyFromSeed(seed)
-	var privKeyEd PrivKeyEd25519
+	var privKeyEd []byte
 	copy(privKeyEd[:], privKey)
 	return PrivKeyEd25519{bytes: privKeyEd}
 }
@@ -149,7 +150,7 @@ func GenPrivKeyFromSecret(secret []byte) PrivKeyEd25519 {
 	seed := crypto.Sha256(secret) // Not Ripemd160 because we want 32 bytes.
 
 	privKey := ed25519.NewKeyFromSeed(seed)
-	var privKeyEd PrivKeyEd25519
+	var privKeyEd []byte
 	copy(privKeyEd[:], privKey)
 	return PrivKeyEd25519{bytes: privKeyEd}
 }

@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types/types.proto";
+import "x/ibc/types/types.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
@@ -72,21 +73,6 @@ message MsgConnectionOpenConfirm {
   ];
 }
 
-// State defines if a connection is in one of the following states:
-// CLOSED, INIT, TRYOPEN or OPEN
-enum State {
-  option (gogoproto.goproto_enum_prefix)   = false;
-  
-  // Default State
-  UNINITIALIZED = 0;
-  // A connection has just started the opening handshake.
-  INIT = 1;
-  // A connection has acknowledged the handshake step on the counterparty chain.
-  TRYOPEN = 2;         
-  // A connection has completed the handshake.
-  OPEN = 3;
-}
-
 // ICS03 - Connection Data Structures as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
 
 // ConnectionEnd defines a stateful object on a chain connected to another separate
@@ -99,7 +85,7 @@ message ConnectionEnd {
     (gogoproto.moretags)    = "yaml:\"client_id\""
   ];
   repeated string versions = 2;
-  State state = 3;
+  cosmos_sdk.x.ibc.v1.State state = 3;
   Counterparty counterparty = 4 [
     (gogoproto.nullable) = false
   ];

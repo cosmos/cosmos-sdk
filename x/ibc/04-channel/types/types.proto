@@ -7,6 +7,7 @@ import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/20-transfer/types/types.proto";
 import "x/ibc/23-commitment/types/types.proto";
+import "x/ibc/types/types.proto";
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.
@@ -163,38 +164,9 @@ message MsgAcknowledgement {
   ];
 }
 
-// Order defines if a channel is ORDERED or UNORDERED
-enum Order {
-  option (gogoproto.goproto_enum_prefix)   = false;
-
-  // zero-value for channel ordering
-  NONE = 0;
-  // packets can be delivered in any order, which may differ from the order in which they were sent.
-  UNORDERED = 1;
-  // packets are delivered exactly in the order which they were sent
-  ORDERED = 2;
-}
-
-// State defines if a channel is in one of the following states:
-// CLOSED, INIT, TRYOPEN or OPEN
-enum State {
-  option (gogoproto.goproto_enum_prefix)   = false;
-
-  // Default State
-  UNINITIALIZED = 0;
-  // A channel end has just started the opening handshake.
-  INIT = 1;
-  // A channel end has acknowledged the handshake step on the counterparty chain.
-  TRYOPEN = 2;         
-  // A channel end has completed the handshake and is ready to send and receive packets.
-  OPEN = 3;
-   // A channel end has been closed and can no longer be used to send or receive packets.
-	CLOSED = 4;
-}
-
 message Channel {
-  State state = 1;
-  Order ordering = 2;
+  cosmos_sdk.x.ibc.v1.State state = 1;
+  cosmos_sdk.x.ibc.v1.Order ordering = 2;
   Counterparty counterparty = 3 [
     (gogoproto.nullable)    = false
   ];

@@ -1,13 +1,13 @@
 package exported
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // ConnectionI describes the required methods for a connection.
 type ConnectionI interface {
-	GetState() types.State
+	GetState() ibctypes.State
 	GetClientID() string
 	GetCounterparty() CounterpartyI
 	GetVersions() []string

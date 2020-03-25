@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/subtle"
 	"fmt"
-	"io"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -139,40 +138,4 @@ func (privKey PrivKeySr25519) Equals(other crypto.PrivKey) bool {
 		return subtle.ConstantTimeCompare(privKey.bytes[:], otherEd.bytes[:]) == 1
 	}
 	return false
-}
-
-// GenPrivKey generates a new sr25519 private key.
-// It uses OS randomness in conjunction with the current global random seed
-// in tendermint/libs/common to generate the private key.
-func GenPrivKey() PrivKeySr25519 {
-	return genPrivKey(crypto.CReader())
-}
-
-// genPrivKey generates a new sr25519 private key using the provided reader.
-func genPrivKey(rand io.Reader) PrivKeySr25519 {
-	var seed [64]byte
-
-	out := make([]byte, 64)
-	_, err := io.ReadFull(rand, out)
-	if err != nil {
-		panic(err)
-	}
-
-	copy(seed[:], out)
-
-	privKeySr := schnorrkel.NewMiniSecretKey(seed).ExpandEd25519().Encode()
-	return PrivKeySr25519{bytes: privKeySr[:]}
-}
-
-// GenPrivKeyFromSecret hashes the secret with SHA2, and uses
-// that 32 byte output to create the private key.
-// NOTE: secret should be the output of a KDF like bcrypt,
-// if it's derived from user input.
-func GenPrivKeyFromSecret(secret []byte) PrivKeySr25519 {
-	seed := crypto.Sha256(secret) // Not Ripemd160 because we want 32 bytes.
-	var bz [PrivKeySr25519Size]byte
-	copy(bz[:], seed)
-	privKey, _ := schnorrkel.NewMiniSecretKeyFromRaw(bz)
-	privKeySr := privKey.ExpandEd25519().Encode()
-	return PrivKeySr25519{bytes: privKeySr[:]}
 }

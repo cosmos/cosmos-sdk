@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/subtle"
 	"fmt"
-	"io"
 
 	"golang.org/x/crypto/ed25519"
 
@@ -119,38 +118,4 @@ func (privKey PrivKeyEd25519) Equals(other crypto.PrivKey) bool {
 	}
 
 	return false
-}
-
-// GenPrivKey generates a new ed25519 private key.
-// It uses OS randomness in conjunction with the current global random seed
-// in tendermint/libs/common to generate the private key.
-func GenPrivKey() PrivKeyEd25519 {
-	return genPrivKey(crypto.CReader())
-}
-
-// genPrivKey generates a new ed25519 private key using the provided reader.
-func genPrivKey(rand io.Reader) PrivKeyEd25519 {
-	seed := make([]byte, 32)
-	_, err := io.ReadFull(rand, seed)
-	if err != nil {
-		panic(err)
-	}
-
-	privKey := ed25519.NewKeyFromSeed(seed)
-	var privKeyEd []byte
-	copy(privKeyEd[:], privKey)
-	return PrivKeyEd25519{bytes: privKeyEd}
-}
-
-// GenPrivKeyFromSecret hashes the secret with SHA2, and uses
-// that 32 byte output to create the private key.
-// NOTE: secret should be the output of a KDF like bcrypt,
-// if it's derived from user input.
-func GenPrivKeyFromSecret(secret []byte) PrivKeyEd25519 {
-	seed := crypto.Sha256(secret) // Not Ripemd160 because we want 32 bytes.
-
-	privKey := ed25519.NewKeyFromSeed(seed)
-	var privKeyEd []byte
-	copy(privKeyEd[:], privKey)
-	return PrivKeyEd25519{bytes: privKeyEd}
 }

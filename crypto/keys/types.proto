@@ -7,6 +7,8 @@ import "third_party/proto/gogoproto/gogo.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys";
 option (gogoproto.goproto_getters_all)  = false;
 option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.goproto_enum_prefix_all) = false;
+
 
 // PubKey defines the application-level PubKey type.
 message PubKey {
@@ -31,6 +33,18 @@ message PrivKey {
     PrivKeySecp256k1 secp256k1 = 2;
     PrivKeySr25519 sr25519 = 3;
   }
+}
+
+// Curve defines the key curve types that are available for key generation.
+enum Curve {
+  // Unspecified curve. Returns error on key generation.
+  UNSPECIFIED = 0;
+  // Ed25519 curve
+  ED25519 = 1;
+  // Secp256k1 curve
+  SECP256K1 = 2;
+  // Sr25519 curve
+  SR25519 = 3;
 }
 
 // PubKeyEd25519 implements crypto.PubKey for the Ed25519 signature scheme.

@@ -85,7 +85,7 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return ctx.Print(tx)
+	return ctx.Println(tx)
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
@@ -143,7 +143,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return ctx.Print(res)
+	return ctx.Println(res)
 }
 
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the

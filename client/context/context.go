@@ -240,10 +240,10 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 	return ctx
 }
 
-// Print outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.Marshaler. An error is returned upon failure.
-func (ctx CLIContext) Print(toPrint interface{}) error {
+func (ctx CLIContext) Println(toPrint interface{}) error {
 	var (
 		out []byte
 		err error

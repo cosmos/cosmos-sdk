@@ -27,9 +27,7 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(
-		NewSendTxCmd(m, txg, ar),
-	)
+	txCmd.AddCommand(		NewSendTxCmd(m, txg, ar),	)
 
 	return txCmd
 }

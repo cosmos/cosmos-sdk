@@ -20,7 +20,7 @@ var (
 func MarshalIndentFromJSON(bz []byte) ([]byte, error) {
 	var generic interface{}
 
-	if err := json.Unmarshal(bz, &generic); err == nil {
+	if err := json.Unmarshal(bz, &generic); err != nil {
 		return nil, err
 	}
 

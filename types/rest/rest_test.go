@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestBaseReq_Sanitize(t *testing.T) {
@@ -204,13 +205,12 @@ func TestProcessPostResponse(t *testing.T) {
 	// setup expected results
 	jsonNoIndent, err := ctx.Codec.MarshalJSON(acc)
 	require.Nil(t, err)
-	jsonWithIndent, err := ctx.Codec.MarshalJSONIndent(acc, "", "  ")
-	require.Nil(t, err)
+
 	respNoIndent := NewResponseWithHeight(height, jsonNoIndent)
-	respWithIndent := NewResponseWithHeight(height, jsonWithIndent)
 	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
-	expectedWithIndent, err := ctx.Codec.MarshalJSONIndent(respWithIndent, "", "  ")
+
+	expectedWithIndent, err := sdk.MarshalIndentFromJSON(expectedNoIndent)
 	require.Nil(t, err)
 
 	// check that negative height writes an error
@@ -222,6 +222,7 @@ func TestProcessPostResponse(t *testing.T) {
 	// check that height returns expected response
 	ctx = ctx.WithHeight(height)
 	runPostProcessResponse(t, ctx, acc, expectedNoIndent, false)
+
 	// check height with indent
 	runPostProcessResponse(t, ctx, acc, expectedWithIndent, true)
 }
@@ -313,11 +314,15 @@ func TestPostProcessResponseBare(t *testing.T) {
 	ctx := context.CLIContext{}
 	w := httptest.NewRecorder()
 	bs := []byte("text string")
+
 	PostProcessResponseBare(w, ctx, bs)
+
 	res := w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
+
 	got, err := ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
+
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, "text string", string(got))
 
@@ -328,15 +333,19 @@ func TestPostProcessResponseBare(t *testing.T) {
 		X int    `json:"x"`
 		S string `json:"s"`
 	}{X: 10, S: "test"}
+
 	PostProcessResponseBare(w, ctx, data)
+
 	res = w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
+
 	got, err = ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
+
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, `{
-  "x": "10",
-  "s": "test"
+  "s": "test",
+  "x": "10"
 }`, string(got))
 
 	// write struct, don't indent response
@@ -346,11 +355,15 @@ func TestPostProcessResponseBare(t *testing.T) {
 		X int    `json:"x"`
 		S string `json:"s"`
 	}{X: 10, S: "test"}
+
 	PostProcessResponseBare(w, ctx, data)
+
 	res = w.Result()
 	require.Equal(t, http.StatusOK, res.StatusCode)
+
 	got, err = ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
+
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, `{"x":"10","s":"test"}`, string(got))
 
@@ -358,11 +371,15 @@ func TestPostProcessResponseBare(t *testing.T) {
 	ctx = context.CLIContext{Indent: false}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
+
 	PostProcessResponseBare(w, ctx, data2)
+
 	res = w.Result()
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+
 	got, err = ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
+
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, []string{"application/json"}, res.Header["Content-Type"])
 	require.Equal(t, `{"error":"couldn't marshal"}`, string(got))
@@ -384,31 +401,37 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 
 	// test using regular struct
 	w := httptest.NewRecorder()
+
 	PostProcessResponse(w, ctx, obj)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
+
 	resp := w.Result()
 	t.Cleanup(func() { resp.Body.Close() })
+
 	body, err := ioutil.ReadAll(resp.Body)
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
 
-	var marshalled []byte
+	marshalled, err := ctx.Codec.MarshalJSON(obj)
+	require.NoError(t, err)
+
 	if indent {
-		marshalled, err = ctx.Codec.MarshalJSONIndent(obj, "", "  ")
-	} else {
-		marshalled, err = ctx.Codec.MarshalJSON(obj)
+		marshalled, err = sdk.MarshalIndentFromJSON(marshalled)
+		require.NoError(t, err)
 	}
-	require.Nil(t, err)
 
 	// test using marshalled struct
 	w = httptest.NewRecorder()
 	PostProcessResponse(w, ctx, marshalled)
+
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp = w.Result()
+
 	t.Cleanup(func() { resp.Body.Close() })
 	body, err = ioutil.ReadAll(resp.Body)
+
 	require.Nil(t, err)
-	require.Equal(t, expectedBody, body)
+	require.Equal(t, string(expectedBody), string(body))
 }
 
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {

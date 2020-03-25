@@ -1,6 +1,7 @@
 package context
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -240,9 +241,49 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 	return ctx
 }
 
+// Print outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
+// will be JSON encoded using ctx.Marshaler. An error is returned upon failure.
+func (ctx CLIContext) Print(toPrint interface{}) error {
+	var (
+		out []byte
+		err error
+	)
+
+	switch ctx.OutputFormat {
+	case "text":
+		out, err = yaml.Marshal(&toPrint)
+
+	case "json":
+		out, err = ctx.Marshaler.MarshalJSON(toPrint)
+
+		// To JSON indent, we re-encode the already encoded JSON given there is no
+		// error. The re-encoded JSON uses the standard library as the initial encoded
+		// JSON should have the correct output produced by ctx.Marshaler.
+		if ctx.Indent && err == nil {
+			var generic interface{}
+
+			err = json.Unmarshal(out, &generic)
+			if err == nil {
+				out, err = json.MarshalIndent(generic, "", "  ")
+			}
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(ctx.Output, "%s\n", out)
+	return err
+}
+
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
-// because this function will panic on marshaling errors
+// because this function will panic on marshaling errors.
+//
+// TODO: Remove once client-side Protobuf migration has been completed.
+// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
 func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 	var (
 		out []byte
@@ -254,7 +295,6 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
-		// TODO: Use ctx.Marshaler.
 		if ctx.Indent {
 			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", "  ")
 		} else {

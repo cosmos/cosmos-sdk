@@ -90,13 +90,7 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	out, err := ctx.Marshaler.MarshalJSON(tx)
-	if err != nil {
-		return err
-	}
-
-	_, _ = fmt.Fprintf(ctx.Output, "%s\n", out)
-	return nil
+	return ctx.Print(tx)
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
@@ -159,7 +153,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return ctx.PrintOutput(res)
+	return ctx.Print(res)
 }
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The

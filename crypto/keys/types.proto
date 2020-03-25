@@ -20,6 +20,7 @@ message PubKey {
     PubKeyEd25519 ed25519 = 1;
     PubKeySecp256k1 secp256k1 = 2;
     PubKeySr25519 sr25519 = 3;
+    PubKeyMultisigThreshold multisig = 4;
   }
 }
  
@@ -66,7 +67,7 @@ message Multisignature {
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 message PubKeyMultisigThreshold {
-  uint64 threshold = 1 [
+  uint32 threshold = 1 [
     (gogoproto.customname) = "K",
     (gogoproto.moretags) = "yaml:\"threshold\""
   ];

@@ -18,8 +18,8 @@ const (
 )
 
 var (
-	_ crypto.PubKey  = PubKeySecp256k1{}
-	_ crypto.PrivKey = PrivKeySecp256k1{}
+	_ crypto.PubKey  = PubKeySecp256K1{}
+	_ crypto.PrivKey = PubKeySecp256K1{}
 )
 
 const (
@@ -31,9 +31,9 @@ const (
 )
 
 // Address returns a Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
-func (pubKey PubKeySecp256k1) Address() crypto.Address {
+func (pubKey PubKeySecp256K1) Address() crypto.Address {
 	hasherSHA256 := sha256.New()
-	_, err := hasherSHA256.Write(pubKey[:])
+	_, err := hasherSHA256.Write(pubKey.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -49,19 +49,19 @@ func (pubKey PubKeySecp256k1) Address() crypto.Address {
 }
 
 // Bytes returns the pubkey bytes.
-func (pubKey PubKeySecp256k1) Bytes() []byte {
+func (pubKey PubKeySecp256K1) Bytes() []byte {
 	if len(pubKey.bytes) != PubKeySecp256k1Size {
 		fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeySecp256k1Size)
 	}
 	return pubKey.bytes
 }
 
-func (pubKey PubKeySecp256k1) String() string {
+func (pubKey PubKeySecp256K1) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeySecp256k1Name, pubKey.Bytes())
 }
 
-func (pubKey PubKeySecp256k1) Equals(other crypto.PubKey) bool {
-	if otherSecp, ok := other.(PubKeySecp256k1); ok {
+func (pubKey PubKeySecp256K1) Equals(other crypto.PubKey) bool {
+	if otherSecp, ok := other.(PubKeySecp256K1); ok {
 		return bytes.Equal(pubKey.bytes, otherSecp.bytes)
 	}
 	return false
@@ -70,7 +70,7 @@ func (pubKey PubKeySecp256k1) Equals(other crypto.PubKey) bool {
 //-------------------------------------
 
 // Bytes marshalls the private key using amino encoding.
-func (privKey PrivKeySecp256k1) Bytes() []byte {
+func (privKey PrivKeySecp256K1) Bytes() []byte {
 	if len(privKey.bytes) != PubKeySecp256k1Size {
 		fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(privKey.bytes), PrivKeySecp256k1Size)
 	}
@@ -79,17 +79,17 @@ func (privKey PrivKeySecp256k1) Bytes() []byte {
 
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
-func (privKey PrivKeySecp256k1) PubKey() crypto.PubKey {
+func (privKey PrivKeySecp256K1) PubKey() crypto.PubKey {
 	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Bytes()[:])
 	var pubkeyBytes []byte
 	copy(pubkeyBytes, pubkeyObject.SerializeCompressed())
-	return PubKeySecp256k1{bytes: pubkeyBytes}
+	return PubKeySecp256K1{bytes: pubkeyBytes}
 }
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey PrivKeySecp256k1) Equals(other crypto.PrivKey) bool {
-	if otherSecp, ok := other.(PrivKeySecp256k1); ok {
+func (privKey PrivKeySecp256K1) Equals(other crypto.PrivKey) bool {
+	if otherSecp, ok := other.(PrivKeySecp256K1); ok {
 		return subtle.ConstantTimeCompare(privKey.bytes, otherSecp.bytes) == 1
 	}
 	return false

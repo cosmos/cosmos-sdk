@@ -31,7 +31,7 @@ func (k Keeper) TimeoutPacket(
 		)
 	}
 
-	if channel.GetState() != exported.OPEN {
+	if channel.GetState() != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.GetState().String(),
@@ -82,13 +82,13 @@ func (k Keeper) TimeoutPacket(
 
 	var err error
 	switch channel.GetOrdering() {
-	case exported.ORDERED:
+	case ibctypes.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv,
 		)
-	case exported.UNORDERED:
+	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),
@@ -120,7 +120,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	if channel.GetOrdering() == exported.ORDERED {
+	if channel.GetOrdering() == ibctypes.ORDERED {
 		channel.GetState() = exported.CLOSED
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
@@ -204,13 +204,13 @@ func (k Keeper) TimeoutOnClose(
 
 	var err error
 	switch channel.GetOrdering() {
-	case exported.ORDERED:
+	case ibctypes.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv,
 		)
-	case exported.UNORDERED:
+	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),

@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -48,14 +47,14 @@ func (k Keeper) ChanOpenInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() == connectionexported.UNINITIALIZED {
+	if connectionEnd.GetState() == connectionibctypes.UNINITIALIZED {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection state cannot be UNINITIALIZED",
 		)
 	}
 
-	channel := types.NewChannel(exported.INIT, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(ibctypes.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	// TODO: blocked by #5542
@@ -84,7 +83,7 @@ func (k Keeper) ChanOpenTry(
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
-	if found && !(previousChannel.GetState() == exported.INIT &&
+	if found && !(previousChannel.GetState() == ibctypes.INIT &&
 		previousChannel.GetOrdering() == order &&
 		previousChannel.GetCounterparty().GetPortID() == counterparty.PortID &&
 		previousChannel.GetCounterparty().GetChannelID() == counterparty.ChannelID &&
@@ -104,7 +103,7 @@ func (k Keeper) ChanOpenTry(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -113,7 +112,7 @@ func (k Keeper) ChanOpenTry(
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(exported.TRYOPEN, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(ibctypes.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
@@ -125,7 +124,7 @@ func (k Keeper) ChanOpenTry(
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		exported.INIT, channel.GetOrdering(), expectedCounterparty,
+		ibctypes.INIT, channel.GetOrdering(), expectedCounterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -162,7 +161,7 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if !(channel.GetState() == exported.INIT || channel.GetState() == exported.TRYOPEN) {
+	if !(channel.GetState() == ibctypes.INIT || channel.GetState() == ibctypes.TRYOPEN) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state should be INIT or TRYOPEN (got %s)", channel.GetState().String(),
@@ -180,7 +179,7 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -196,7 +195,7 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		exported.TRYOPEN, channel.GetOrdering(), counterparty,
+		ibctypes.TRYOPEN, channel.GetOrdering(), counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -209,7 +208,7 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
-	channel.GetState() = exported.OPEN
+	channel.GetState() = ibctypes.OPEN
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
@@ -230,7 +229,7 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.GetState() != exported.TRYOPEN {
+	if channel.GetState() != ibctypes.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not TRYOPEN (got %s)", channel.GetState().String(),
@@ -253,7 +252,7 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -268,7 +267,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		exported.OPEN, channel.GetOrdering(), counterparty,
+		ibctypes.OPEN, channel.GetOrdering(), counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -280,7 +279,7 @@ func (k Keeper) ChanOpenConfirm(
 		return err
 	}
 
-	channel.GetState() = exported.OPEN
+	channel.GetState() = ibctypes.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil
@@ -323,7 +322,7 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -370,7 +369,7 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),

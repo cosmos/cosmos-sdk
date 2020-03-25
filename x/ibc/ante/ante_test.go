@@ -64,8 +64,8 @@ func (suite *HandlerTestSuite) SetupTest() {
 	// create client and connection during setups
 	suite.chainA.CreateClient(suite.chainB)
 	suite.chainB.CreateClient(suite.chainA)
-	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectionexported.OPEN)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionibctypes.OPEN)
+	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectionibctypes.OPEN)
 }
 
 func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
@@ -105,8 +105,8 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
 
-	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channelexported.OPEN, channelexported.ORDERED, testConnection)
-	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, channelexported.OPEN, channelexported.ORDERED, testConnection)
+	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channelibctypes.OPEN, channelibctypes.ORDERED, testConnection)
+	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, channelibctypes.OPEN, channelibctypes.ORDERED, testConnection)
 	ctx = suite.chainA.GetContext()
 	packetCommitmentPath := ibctypes.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
@@ -155,7 +155,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(10))
 
-	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channelexported.OPEN, channelexported.UNORDERED, testConnection)
+	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channelibctypes.OPEN, channelibctypes.UNORDERED, testConnection)
 
 	suite.chainA.updateClient(suite.chainB)
 

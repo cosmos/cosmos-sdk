@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func TestConnectionValidateBasic(t *testing.T) {
@@ -16,27 +17,27 @@ func TestConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			ConnectionEnd{"clientidone", []string{"1.0.0"}, INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"clientidone", []string{"1.0.0"}, ibctypes.INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			true,
 		},
 		{
 			"invalid client id",
-			ConnectionEnd{"ClientIDTwo", []string{"1.0.0"}, INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"ClientIDTwo", []string{"1.0.0"}, ibctypes.INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"empty versions",
-			ConnectionEnd{"clientidone", nil, INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"clientidone", nil, ibctypes.INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid version",
-			ConnectionEnd{"clientidone", []string{""}, INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"clientidone", []string{""}, ibctypes.INIT, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid counterparty",
-			ConnectionEnd{"clientidone", []string{"1.0.0"}, INIT, Counterparty{"clientidtwo", "connectionidone", emptyPrefix}},
+			ConnectionEnd{"clientidone", []string{"1.0.0"}, ibctypes.INIT, Counterparty{"clientidtwo", "connectionidone", emptyPrefix}},
 			false,
 		},
 	}

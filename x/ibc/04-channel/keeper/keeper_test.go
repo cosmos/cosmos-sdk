@@ -44,7 +44,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = exported.ORDERED
+	testChannelOrder   = ibctypes.ORDERED
 	testChannelVersion = "1.0"
 
 	testHeight = 1
@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	suite.False(found)
 
 	channel := types.Channel{
-		State:    exported.OPEN,
+		State:    ibctypes.OPEN,
 		Ordering: testChannelOrder,
 		Counterparty: types.Counterparty{
 			PortID:    testPort2,
@@ -98,7 +98,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.Channel{
-		State:          exported.INIT,
+		State:          ibctypes.INIT,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty3,
 		ConnectionHops: []string{testConnectionIDA},
@@ -106,7 +106,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	}
 
 	channel2 := types.Channel{
-		State:          exported.INIT,
+		State:          ibctypes.INIT,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty1,
 		ConnectionHops: []string{testConnectionIDA},

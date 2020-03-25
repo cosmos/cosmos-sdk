@@ -13,7 +13,7 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state ibctypes.State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,

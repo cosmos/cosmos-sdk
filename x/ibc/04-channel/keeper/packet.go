@@ -8,7 +8,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -69,7 +68,7 @@ func (k Keeper) SendPacket(
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == connectionexported.UNINITIALIZED {
+	if connectionEnd.GetState() == connectionibctypes.UNINITIALIZED {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection is closed (i.e NONE)",
@@ -134,7 +133,7 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestinationChannel())
 	}
 
-	if channel.GetState() != exported.OPEN {
+	if channel.GetState() != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.GetState().String(),
@@ -164,7 +163,7 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -201,21 +200,21 @@ func (k Keeper) PacketExecuted(
 	}
 
 	// sanity check
-	if channel.GetState() != exported.OPEN {
+	if channel.GetState() != ibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.GetState().String(),
 		)
 	}
 
-	if acknowledgement != nil || channel.GetOrdering() == exported.UNORDERED {
+	if acknowledgement != nil || channel.GetOrdering() == ibctypes.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 
-	if channel.GetOrdering() == exported.ORDERED {
+	if channel.GetOrdering() == ibctypes.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel())
 		if !found {
 			return types.ErrSequenceReceiveNotFound
@@ -255,7 +254,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.GetState() != exported.OPEN {
+	if channel.GetState() != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.GetState().String(),
@@ -285,7 +284,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionexported.OPEN {
+	if connectionEnd.GetState() != connectionibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -332,7 +331,7 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.GetState() != exported.OPEN {
+	if channel.GetState() != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.GetState().String(),
@@ -383,13 +382,13 @@ func (k Keeper) CleanupPacket(
 
 	var err error
 	switch channel.GetOrdering() {
-	case exported.ORDERED:
+	case ibctypes.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv,
 		)
-	case exported.UNORDERED:
+	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgement(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),

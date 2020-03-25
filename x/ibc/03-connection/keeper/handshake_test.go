@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -20,7 +19,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			suite.chainA.CreateClient(suite.chainB)
 		}, true},
 		{"connection already exists", func() {
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.INIT)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.INIT)
 		}, false},
 		{"couldn't add connection to client", func() {}, false},
 	}
@@ -59,7 +58,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		{"success", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
 			suite.chainB.updateClient(suite.chainA)
@@ -76,14 +75,14 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		{"connection state verification invalid", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			return 0
 		}, false},
 		{"consensus state verification invalid", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
 			return uint64(suite.chainB.Header.Height)
@@ -91,14 +90,14 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		{"invalid previous connection", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
 			return 0
 		}, false},
 		{"couldn't add connection to client", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
-			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
 			return 0
@@ -147,8 +146,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		{"success", version, func() uint64 {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.CreateClient(suite.chainA)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.TRYOPEN)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.TRYOPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
 			return uint64(suite.chainB.Header.Height)
@@ -160,36 +159,36 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			return 2
 		}, false},
 		{"connection state is not INIT", version, func() uint64 {
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			return uint64(suite.chainB.Header.Height)
 		}, false},
 		{"incompatible IBC versions", "2.0", func() uint64 {
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.INIT)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			return uint64(suite.chainB.Header.Height)
 		}, false},
 		{"self consensus state not found", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.TRYOPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.TRYOPEN)
 			suite.chainB.updateClient(suite.chainA)
 			return uint64(suite.chainB.Header.Height)
 		}, false},
 		{"connection state verification failed", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			return uint64(suite.chainB.Header.Height)
 		}, false},
 		{"consensus state verification failed", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.INIT)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
 			return uint64(suite.chainB.Header.Height)
 		}, false},
@@ -229,22 +228,22 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 		{"success", func() {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.TRYOPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.OPEN)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.TRYOPEN)
 			suite.chainB.updateClient(suite.chainA)
 		}, true},
 		{"connection not found", func() {}, false},
 		{"chain B's connection state is not TRYOPEN", func() {
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, exported.UNINITIALIZED)
-			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.OPEN)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, ibctypes.OPEN)
 			suite.chainA.updateClient(suite.chainB)
 		}, false},
 		{"connection state verification failed", func() {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.updateClient(suite.chainA)
-			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.INIT)
-			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, exported.TRYOPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.INIT)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, ibctypes.TRYOPEN)
 			suite.chainA.updateClient(suite.chainA)
 		}, false},
 	}

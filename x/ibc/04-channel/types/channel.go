@@ -10,7 +10,7 @@ import (
 
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state State, ordering Order, counterparty Counterparty,
+	state ibctypes.State, ordering ibctypes.Order, counterparty Counterparty,
 	hops []string, version string,
 ) Channel {
 	return Channel{

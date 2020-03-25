@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -16,20 +15,20 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 		{"success", func() {
 			suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connectionexported.INIT,
+				connectionibctypes.INIT,
 			)
 		}, true},
 		{"channel already exists", func() {
 			suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.INIT,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.INIT,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"connection doesn't exist", func() {}, false},
 		{"connection is UNINITIALIZED", func() {
 			suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connectionexported.UNINITIALIZED,
+				connectionibctypes.UNINITIALIZED,
 			)
 		}, false},
 	}
@@ -40,7 +39,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 			tc.malleate()
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenInit(
-				suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDA},
+				suite.chainA.GetContext(), ibctypes.ORDERED, []string{testConnectionIDA},
 				testPort1, testChannel1, counterparty, testChannelVersion,
 			)
 
@@ -63,36 +62,36 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			suite.chainB.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.INIT, exported.ORDERED, testConnectionIDA)
+				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionibctypes.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.INIT, ibctypes.ORDERED, testConnectionIDA)
 		}, true},
 		{"previous channel with invalid state", func() {
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.UNINITIALIZED,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.UNINITIALIZED,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection doesn't exist", func() {}, false},
 		{"connection is not OPEN", func() {
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.INIT,
+				connectionibctypes.INIT,
 			)
 		}, false},
 		{"consensus state not found", func() {
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 		}, false},
 		{"channel verification failed", func() {
 			suite.chainA.CreateClient(suite.chainB)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 		}, false},
 	}
@@ -109,14 +108,14 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			if tc.expPass {
 				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
-					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},
+					suite.chainA.GetContext(), ibctypes.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
 					proof, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
-					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},
+					suite.chainA.GetContext(), ibctypes.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
 					invalidProof{}, uint64(proofHeight),
 				)
@@ -135,63 +134,63 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.INIT,
-				exported.ORDERED, testConnectionIDB,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.INIT,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not INIT or TRYOPEN", func() {
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.UNINITIALIZED,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.UNINITIALIZED,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"connection is not OPEN", func() {
 			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.TRYOPEN,
+				connectionibctypes.TRYOPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"consensus state not found", func() {
 			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"channel verification failed", func() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 	}
@@ -232,61 +231,61 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.TRYOPEN,
+				connectionibctypes.TRYOPEN,
 			)
 			suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-				exported.TRYOPEN, exported.ORDERED, testConnectionIDA)
+				ibctypes.TRYOPEN, ibctypes.ORDERED, testConnectionIDA)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not TRYOPEN", func() {
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.UNINITIALIZED,
-				exported.ORDERED, testConnectionIDB,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.UNINITIALIZED,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection is not OPEN", func() {
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.TRYOPEN,
+				connectionibctypes.TRYOPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"consensus state not found", func() {
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"channel verification failed", func() {
 			suite.chainA.CreateClient(suite.chainB)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 	}
@@ -324,34 +323,34 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.OPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is CLOSED", func() {
 			_ = suite.chainA.createChannel(
 				testPort1, testChannel1, testPort2, testChannel2, exported.CLOSED,
-				exported.ORDERED, testConnectionIDB,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.OPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"connection is not OPEN", func() {
 			_ = suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.TRYOPEN,
+				connectionibctypes.TRYOPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.UNINITIALIZED,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.UNINITIALIZED,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 	}
@@ -383,63 +382,63 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainB.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 			suite.chainA.createChannel(
 				testPort1, testChannel1, testPort2, testChannel2, exported.CLOSED,
-				exported.ORDERED, testConnectionIDA,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is CLOSED", func() {
 			_ = suite.chainB.createChannel(
 				testPort2, testChannel2, testPort1, testChannel1, exported.CLOSED,
-				exported.ORDERED, testConnectionIDB,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"connection is not OPEN", func() {
 			_ = suite.chainB.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB,
-				connectionexported.TRYOPEN,
+				connectionibctypes.TRYOPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"consensus state not found", func() {
 			_ = suite.chainB.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"channel verification failed", func() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainB.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				connectionibctypes.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 		}, false},
 	}

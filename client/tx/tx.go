@@ -326,17 +326,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 // by the CanonicalSignBytes call.
 func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 	if txf.keybase == nil {
-		keybase, err := keyring.NewKeyring(
-			sdk.KeyringServiceName(),
-			viper.GetString(flags.FlagKeyringBackend),
-			viper.GetString(flags.FlagHome),
-			os.Stdin,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		txf = txf.WithKeybase(keybase)
+		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}
 
 	signBytes, err := tx.CanonicalSignBytes(txf.chainID, txf.accountNumber, txf.sequence)

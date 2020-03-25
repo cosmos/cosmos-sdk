@@ -103,6 +103,11 @@ to handle all the types, but also knows how to generate transactions, signatures
 and messages.
 
 ```go
+type AccountRetriever interface {
+  EnsureExists(addr sdk.AccAddress) error
+  GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error)
+}
+
 type Generator interface {
   NewTx() ClientTx
 }

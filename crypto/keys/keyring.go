@@ -569,6 +569,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			buf := bufio.NewReader(buf)
 			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
 			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
 

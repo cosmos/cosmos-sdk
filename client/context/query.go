@@ -113,6 +113,9 @@ func (ctx CLIContext) query(path string, key tmbytes.HexBytes) (res []byte, heig
 
 // Verify verifies the consensus proof at given height.
 func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
+	if ctx.Verifier == nil {
+		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
+	}
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 	switch {
 	case tmliteErr.IsErrCommitNotFound(err):

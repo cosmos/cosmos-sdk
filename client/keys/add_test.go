@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,7 +31,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	} else {
 		mockIn.Reset("y\n")
-		kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+		kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			kb.Delete("keyname1", "", false) // nolint:errcheck

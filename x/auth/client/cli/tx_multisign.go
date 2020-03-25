@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -65,7 +65,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		}
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
-		kb, err := keys.NewKeyring(sdk.KeyringServiceName(),
+		kb, err := keyring.NewKeyring(sdk.KeyringServiceName(),
 			viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), inBuf)
 		if err != nil {
 			return
@@ -75,8 +75,8 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		if err != nil {
 			return
 		}
-		if multisigInfo.GetType() != keys.TypeMulti {
-			return fmt.Errorf("%q must be of type %s: %s", args[1], keys.TypeMulti, multisigInfo.GetType())
+		if multisigInfo.GetType() != keyring.TypeMulti {
+			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)

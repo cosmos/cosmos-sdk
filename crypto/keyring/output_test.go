@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 import (
 	"testing"

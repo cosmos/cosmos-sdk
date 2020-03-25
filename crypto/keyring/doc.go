@@ -42,4 +42,4 @@
 // 			https://www.passwordstore.org/
 // 	test	This backend stores keys insecurely to disk. It does not prompt for a password to
 // 			be unlocked and it should be use only for testing purposes.
-package keys
+package keyring

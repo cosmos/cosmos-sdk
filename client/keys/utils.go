@@ -7,10 +7,10 @@ import (
 	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 // available output formats.
@@ -22,22 +22,22 @@ const (
 	defaultKeyDBName = "keys"
 )
 
-type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
+type bechKeyOutFn func(keyInfo cryptokeyring.Info) (cryptokeyring.KeyOutput, error)
 
 // NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
-func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+func NewKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
 	return getLazyKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
-func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
+func NewInMemoryKeyBase() cryptokeyring.Keybase { return cryptokeyring.NewInMemory() }
 
-func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
+func getLazyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
+	return cryptokeyring.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
 }
 
-func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
+func printKeyInfo(keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		printTextInfos([]keys.KeyOutput{ko})
+		printTextInfos([]cryptokeyring.KeyOutput{ko})
 
 	case OutputFormatJSON:
 		var out []byte
@@ -63,8 +63,8 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 }
 
-func printInfos(infos []keys.Info) {
-	kos, err := keys.Bech32KeysOutput(infos)
+func printInfos(infos []cryptokeyring.Info) {
+	kos, err := cryptokeyring.Bech32KeysOutput(infos)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func printInfos(infos []keys.Info) {
 	}
 }
 
-func printTextInfos(kos []keys.KeyOutput) {
+func printTextInfos(kos []cryptokeyring.KeyOutput) {
 	out, err := yaml.Marshal(&kos)
 	if err != nil {
 		panic(err)
@@ -98,7 +98,7 @@ func printTextInfos(kos []keys.KeyOutput) {
 	fmt.Println(string(out))
 }
 
-func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
+func printKeyAddress(info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)
@@ -107,7 +107,7 @@ func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
 	fmt.Println(ko.Address)
 }
 
-func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
+func printPubKey(info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)

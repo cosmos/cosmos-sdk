@@ -1,5 +1,4 @@
-//nolint: goconst
-package keys
+package keyring
 
 import (
 	"fmt"

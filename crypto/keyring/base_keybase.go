@@ -1,24 +1,18 @@
-package keys
+package keyring
 
 import (
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
+	bip39 "github.com/cosmos/go-bip39"
 )
 
 type (
-	kbOptions struct {
-		keygenFunc           PrivKeyGenFunc
-		deriveFunc           DeriveKeyFunc
-		supportedAlgos       []SigningAlgo
-		supportedAlgosLedger []SigningAlgo
-	}
-
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
 	baseKeybase struct {
@@ -38,34 +32,6 @@ type (
 		writeInfo(name string, info Info)
 	}
 )
-
-// WithKeygenFunc applies an overridden key generation function to generate the private key.
-func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
-	return func(o *kbOptions) {
-		o.keygenFunc = f
-	}
-}
-
-// WithDeriveFunc applies an overridden key derivation function to generate the private key.
-func WithDeriveFunc(f DeriveKeyFunc) KeybaseOption {
-	return func(o *kbOptions) {
-		o.deriveFunc = f
-	}
-}
-
-// WithSupportedAlgos defines the list of accepted SigningAlgos.
-func WithSupportedAlgos(algos []SigningAlgo) KeybaseOption {
-	return func(o *kbOptions) {
-		o.supportedAlgos = algos
-	}
-}
-
-// WithSupportedAlgosLedger defines the list of accepted SigningAlgos compatible with Ledger.
-func WithSupportedAlgosLedger(algos []SigningAlgo) KeybaseOption {
-	return func(o *kbOptions) {
-		o.supportedAlgosLedger = algos
-	}
-}
 
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
@@ -236,16 +202,6 @@ func (kb baseKeybase) SupportedAlgos() []SigningAlgo {
 // SupportedAlgosLedger returns a list of supported ledger signing algorithms.
 func (kb baseKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.options.supportedAlgosLedger
-}
-
-// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
-func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
-	for _, supportedAlgo := range supported {
-		if algo == supportedAlgo {
-			return true
-		}
-	}
-	return false
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object

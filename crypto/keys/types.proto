@@ -45,15 +45,21 @@ message PrivKeyEd25519 {
 
 // Multisignature is used to represent the signature object used in the multisigs.
 // Sigs is a list of signatures, sorted by corresponding index.message PrivKeyEd25519 {
-  message Multisignature {
-    // CompactBitArray bitarray = 1 [(gogoproto.customname) = "BitArray"];
-    repeated bytes sigs = 2;
+message Multisignature {
+  // CompactBitArray bitarray = 1 [(gogoproto.customname) = "BitArray"];
+  repeated bytes sigs = 2;
 }
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 message PubKeyMultisigThreshold {
-  uint64 k = 1 [(gogoproto.moretags) = "json:\"threshold\""];
-  repeated PubKey pubkeys = 2 [(gogoproto.customname) = "PubKeys"];
+  uint64 threshold = 1 [
+    (gogoproto.customname) = "K",
+    (gogoproto.moretags) = "yaml:\"threshold\""
+  ];
+  repeated PubKey pubkeys = 2 [
+    (gogoproto.customname) = "PubKeys",
+    (gogoproto.moretags) = "yaml:\"threshold\""
+  ];
 }
 
 // PubKeySecp256k1 implements crypto.PubKey for the Secp256k1 signature scheme.

@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/abci/types/types.proto";
+import "third_party/proto/tendermint/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "x/ibc/23-commitment/types/types.proto";
@@ -155,4 +156,19 @@ message ValidatorSet {
 message SignedHeader {
   .tendermint.abci.types.Header header = 1;
   // TODO: Commit
+}
+
+// Commit contains the evidence that a block was committed by a set of validators.
+// NOTE: Commit is empty for height 1, but never nil.
+message Commit {
+  // NOTE: The signatures are in order of address to preserve the bonded
+  // ValidatorSet order.
+  // Any peer with a block can gossip signatures by index with a peer without
+  // recalculating the active ValidatorSet.
+  int64                            height   = 1;
+  int32                            round    = 2;
+  .tendermint.types.proto3.BlockID block_id = 3 [(gogoproto.customname) = "BlockID"];
+  // repeated CommitSig               signatures = 4;
+  bytes hash = 5 [(gogoproto.customname) = "hash"];  // tmbytes.HexBytes
+  // BitArray                         bit_array  = 6 [(gogoproto.customname) = "bitArray"];
 }

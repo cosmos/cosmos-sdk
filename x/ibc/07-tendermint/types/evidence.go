@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ evidenceexported.Evidence   = Evidence{}
-	_ clientexported.Misbehaviour = Evidence{}
+	_ evidenceexported.Evidence   = (*Evidence)(nil)
+	_ clientexported.Misbehaviour = (*Evidence)(nil)
 )
 
 // ClientType is Tendermint light client
@@ -36,7 +36,11 @@ func (ev Evidence) Type() string {
 
 // Hash implements Evidence interface
 func (ev Evidence) Hash() tmbytes.HexBytes {
-	return tmhash.Sum(SubModuleCdc.MustMarshalBinaryBare(ev))
+	bz, err := ev.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return tmhash.Sum(bz)
 }
 
 // GetHeight returns the height at which misbehaviour occurred

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package tendermint.types.proto3;
+option  go_package = "github.com/tendermint/tendermint/types/proto3";
+
+message PartSetHeader {
+  int32 Total = 1;
+  bytes Hash  = 2;
+}
+
+message BlockID {
+  bytes         Hash        = 1;
+  PartSetHeader PartsHeader = 2;
+}
+
+message Header {
+  // basic block info
+  Version   Version = 1;
+  string    ChainID = 2;
+  int64     Height  = 3;
+  Timestamp Time    = 4;
+
+  // prev block info
+  BlockID LastBlockID = 5;
+
+  // hashes of block data
+  bytes LastCommitHash = 6;  // commit from validators from the last block
+  bytes DataHash       = 7;  // transactions
+
+  // hashes from the app output from the prev block
+  bytes ValidatorsHash     = 8;   // validators for the current block
+  bytes NextValidatorsHash = 9;   // validators for the next block
+  bytes ConsensusHash      = 10;  // consensus params for current block
+  bytes AppHash            = 11;  // state after txs from the previous block
+  bytes LastResultsHash    = 12;  // root hash of all results from the txs from the previous block
+
+  // consensus info
+  bytes EvidenceHash    = 13;  // evidence included in the block
+  bytes ProposerAddress = 14;  // original proposer of the block
+}
+
+message Version {
+  uint64 Block = 1;
+  uint64 App   = 2;
+}
+
+// Timestamp wraps how amino encodes time.
+// This is the protobuf well-known type protobuf/timestamp.proto
+// See:
+// https://github.com/google/protobuf/blob/d2980062c859649523d5fd51d6b55ab310e47482/src/google/protobuf/timestamp.proto#L123-L135
+// NOTE/XXX: nanos do not get skipped if they are zero in amino.
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos   = 2;
+}

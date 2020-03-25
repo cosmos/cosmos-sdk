@@ -17,7 +17,7 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(

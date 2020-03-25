@@ -1,18 +1,20 @@
 package keys
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func Test_updateKeyCommand(t *testing.T) {
-	assert.NotNil(t, UpdateKeyCommand())
+	require.NotNil(t, UpdateKeyCommand())
 	// No flags  or defaults to validate
 }
 
@@ -23,12 +25,15 @@ func Test_runUpdateCmd(t *testing.T) {
 	cmd := UpdateKeyCommand()
 
 	// fails because it requests a password
-	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")
+	err := runUpdateCmd(cmd, []string{fakeKeyName1})
+
+	require.EqualError(t, err, "EOF")
 
 	// try again
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("pass1234\n")
-	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "Key runUpdateCmd_Key1 not found")
+	err = runUpdateCmd(cmd, []string{fakeKeyName1})
+	require.True(t, errors.Is(err, sdkerrors.ErrKeyNotFound))
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -37,17 +42,17 @@ func Test_runUpdateCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keyring.Secp256k1)
+	require.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keyring.Secp256k1)
+	require.NoError(t, err)
 
 	// Try again now that we have keys
 	// Incorrect key type
 	mockIn.Reset("pass1234\nNew1234\nNew1234")
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
+	require.EqualError(t, err, "locally stored key required. Received: keyring.offlineInfo")
 
 	// TODO: Check for other type types?
 }

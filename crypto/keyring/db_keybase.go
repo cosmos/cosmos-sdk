@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 import (
 	"fmt"
@@ -10,58 +10,12 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ Keybase = dbKeybase{}
-
-// Language is a language to create the BIP 39 mnemonic in.
-// Currently, only english is supported though.
-// Find a list of all supported languages in the BIP 39 spec (word lists).
-type Language int
-
-//noinspection ALL
-const (
-	// English is the default language to create a mnemonic.
-	// It is the only supported language by this package.
-	English Language = iota + 1
-	// Japanese is currently not supported.
-	Japanese
-	// Korean is currently not supported.
-	Korean
-	// Spanish is currently not supported.
-	Spanish
-	// ChineseSimplified is currently not supported.
-	ChineseSimplified
-	// ChineseTraditional is currently not supported.
-	ChineseTraditional
-	// French is currently not supported.
-	French
-	// Italian is currently not supported.
-	Italian
-	addressSuffix = "address"
-	infoSuffix    = "info"
-)
-
-const (
-	// used for deriving seed from mnemonic
-	DefaultBIP39Passphrase = ""
-
-	// bits of entropy to draw when creating a mnemonic
-	defaultEntropySize = 256
-)
-
-var (
-	// ErrUnsupportedSigningAlgo is raised when the caller tries to use a
-	// different signing scheme than secp256k1.
-	ErrUnsupportedSigningAlgo = errors.New("unsupported signing algo")
-
-	// ErrUnsupportedLanguage is raised when the caller tries to use a
-	// different language than english for creating a mnemonic sentence.
-	ErrUnsupportedLanguage = errors.New("unsupported language: only english is supported")
-)
 
 // dbKeybase combines encryption and storage implementation to provide a
 // full-featured key manager.
@@ -163,7 +117,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	}
 
 	if len(bs) == 0 {
-		return nil, keyerror.NewErrKeyNotFound(name)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
 	return unmarshalInfo(bs)

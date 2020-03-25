@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,7 +23,7 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	if !runningUnattended {
 		t.Cleanup(func() {
@@ -34,7 +34,7 @@ func Test_runExportCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", "", keys.Secp256k1)
+	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", "", keyring.Secp256k1)
 	require.NoError(t, err)
 
 	// Now enter password

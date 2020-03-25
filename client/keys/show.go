@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,9 +55,9 @@ consisting of all the keys provided by name and multisig threshold.`,
 }
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
-	var info keys.Info
+	var info keyring.Info
 
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
+	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-		info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
+		info = keyring.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
 	isShowAddr := viper.GetBool(FlagAddress)
@@ -127,7 +127,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts")
 		}
 		// Override and show in the device
-		if info.GetType() != keys.TypeLedger {
+		if info.GetType() != keyring.TypeLedger {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
 		}
 
@@ -156,11 +156,11 @@ func validateMultisigThreshold(k, nKeys int) error {
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return keys.Bech32KeyOutput, nil
+		return keyring.Bech32KeyOutput, nil
 	case sdk.PrefixValidator:
-		return keys.Bech32ValKeyOutput, nil
+		return keyring.Bech32ValKeyOutput, nil
 	case sdk.PrefixConsensus:
-		return keys.Bech32ConsKeyOutput, nil
+		return keyring.Bech32ConsKeyOutput, nil
 	}
 
 	return nil, fmt.Errorf("invalid Bech32 prefix encoding provided: %s", bechPrefix)

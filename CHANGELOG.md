@@ -65,15 +65,16 @@ heights are kept after pruning. The `IsValid` method should be called whenever u
 `SnapshotVersion` and `FlushVersion` accept a version arugment and determine if the version should be
 flushed to disk or kept as a snapshot. Note, `KeepRecent` is automatically inferred from the options
 and provided directly the IAVL store.
-* (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move x/auth/client/utils/ types and functions to x/auth/client/.
+* (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move `x/auth/client/utils/` types and functions to `x/auth/client/`.
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
 * (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
-* (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's Update() function is now no-op.
+* (crypto/keys) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's `Update()` function is now no-op.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
 * (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
 * (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
 `Result` from the execution.
+* (crypto/keys) [\#5866](https://github.com/cosmos/cosmos-sdk/pull/5866) Move `Keyring` and `Keybase` implementations and their associated types from `crypto/keys/` to `crypto/keybase/`.
 
 ### Features
 

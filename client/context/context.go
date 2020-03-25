@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,7 +25,7 @@ type CLIContext struct {
 	Client        rpcclient.Client
 	ChainID       string
 	Marshaler     codec.Marshaler
-	Keybase       keys.Keybase
+	Keybase       keyring.Keybase
 	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
@@ -321,13 +321,13 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyring(sdk.KeyringServiceName(),
+	keybase, err := keyring.NewKeyring(sdk.KeyringServiceName(),
 		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err
 	}
 
-	var info keys.Info
+	var info keyring.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {

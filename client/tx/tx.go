@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -326,7 +326,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 // by the CanonicalSignBytes call.
 func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 	if txf.keybase == nil {
-		keybase, err := keys.NewKeyring(
+		keybase, err := keyring.NewKeyring(
 			sdk.KeyringServiceName(),
 			viper.GetString(flags.FlagKeyringBackend),
 			viper.GetString(flags.FlagHome),

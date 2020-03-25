@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 			// TODO: is this the right consensus height
 			consensusHeight := uint64(suite.chainA.Header.Height)
-			consensusKey := prefixedClientKey(testClientIDA, ibctypes.KeyConsensusState(uint64(consensusHeight)))
+			consensusKey := prefixedClientKey(testClientIDA, ibctypes.KeyConsensusState(consensusHeight))
 
 			// get proof that chainB stored chainA' consensus state
 			proof, proofHeight := queryProof(suite.chainB, consensusKey)

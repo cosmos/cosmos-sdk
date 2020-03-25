@@ -1,7 +1,6 @@
 package context
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -261,12 +260,7 @@ func (ctx CLIContext) Print(toPrint interface{}) error {
 		// error. The re-encoded JSON uses the standard library as the initial encoded
 		// JSON should have the correct output produced by ctx.Marshaler.
 		if ctx.Indent && err == nil {
-			var generic interface{}
-
-			err = json.Unmarshal(out, &generic)
-			if err == nil {
-				out, err = json.MarshalIndent(generic, "", "  ")
-			}
+			out, err = sdk.MarshalIndentFromJSON(out)
 		}
 	}
 

@@ -56,7 +56,7 @@ func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig []byte) bool {
 	return ed25519.Verify(pubKey.Bytes()[:], msg, sig)
 }
 
-func (pubKey PubKeyEd25519) String() string {
+func (pubKey *PubKeyEd25519) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeyEd25519Name, pubKey.Bytes()[:])
 }
 
@@ -74,6 +74,10 @@ func (pubKey PubKeyEd25519) Equals(other crypto.PubKey) bool {
 // Bytes marshals the privkey using amino encoding.
 func (privKey PrivKeyEd25519) Bytes() []byte {
 	return privKey.bytes
+}
+
+func (privKey *PrivKeyEd25519) String() string {
+	return fmt.Sprintf("%s{%X}", PrivKeyEd25519Name, privKey.Bytes()[:])
 }
 
 // Sign produces a signature on the provided message.

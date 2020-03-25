@@ -21,7 +21,7 @@ const (
 
 var (
 	_ crypto.PubKey  = PubKeySecp256K1{}
-	_ crypto.PrivKey = PubKeySecp256K1{}
+	_ crypto.PrivKey = PrivKeySecp256K1{}
 )
 
 const (
@@ -64,7 +64,7 @@ func (pubKey PubKeySecp256K1) Bytes() []byte {
 	return pubKey.bytes
 }
 
-func (pubKey PubKeySecp256K1) String() string {
+func (pubKey *PubKeySecp256K1) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeySecp256k1Name, pubKey.Bytes())
 }
 
@@ -116,6 +116,10 @@ func (privKey PrivKeySecp256K1) Bytes() []byte {
 		fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(privKey.bytes), PrivKeySecp256k1Size)
 	}
 	return privKey.bytes
+}
+
+func (privKey *PrivKeySecp256K1) String() string {
+	return fmt.Sprintf("%s{%X}", PrivKeySecp256k1Name, privKey.Bytes()[:])
 }
 
 // PubKey performs the point-scalar multiplication from the privKey on the

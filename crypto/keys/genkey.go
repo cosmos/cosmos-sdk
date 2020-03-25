@@ -59,7 +59,7 @@ func genPrivKeyEd25519(rand io.Reader) PrivKeyEd25519 {
 }
 
 // genPrivKeySecp256k1 generates a new secp256k1 private key using the provided reader.
-func genPrivKeySecp256k1(rand io.Reader) PrivKeySecp256k1 {
+func genPrivKeySecp256k1(rand io.Reader) PrivKeySecp256K1 {
 	var privKeyBytes []byte
 	d := new(big.Int)
 	for {
@@ -77,7 +77,7 @@ func genPrivKeySecp256k1(rand io.Reader) PrivKeySecp256k1 {
 		}
 	}
 
-	return PrivKeySecp256k1{bytes: privKeyBytes}
+	return PrivKeySecp256K1{bytes: privKeyBytes}
 }
 
 // genPrivKeySr25519 generates a new sr25519 private key.
@@ -121,7 +121,7 @@ func genPrivKeyEd25519FromSecret(secret []byte) PrivKeyEd25519 {
 //
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
-func genPrivKeySecp256k1FromSecret(secret []byte) PrivKeySecp256k1 {
+func genPrivKeySecp256k1FromSecret(secret []byte) PrivKeySecp256K1 {
 	one := new(big.Int).SetInt64(1)
 	secHash := sha256.Sum256(secret)
 	// to guarantee that we have a valid field element, we use the approach of:
@@ -138,7 +138,7 @@ func genPrivKeySecp256k1FromSecret(secret []byte) PrivKeySecp256k1 {
 	// copy feB over to fixed 32 byte privKey32 and pad (if necessary)
 	copy(privKey32[32-len(feB):32], feB)
 
-	return PrivKeySecp256k1{bytes: privKey32}
+	return PrivKeySecp256K1{bytes: privKey32}
 }
 
 // genPrivKeySr25519FromSecret hashes the secret with SHA2, and uses

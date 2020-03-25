@@ -71,7 +71,7 @@ func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
 	return publicKey.Verify(signature, signingContext)
 }
 
-func (pubKey PubKeySr25519) String() string {
+func (pubKey *PubKeySr25519) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeySr25519Name, pubKey.Bytes()[:])
 }
 
@@ -92,6 +92,10 @@ func (privKey PrivKeySr25519) Bytes() []byte {
 		)
 	}
 	return privKey.bytes
+}
+
+func (privKey *PrivKeySr25519) String() string {
+	return fmt.Sprintf("%s{%X}", PrivKeySr25519Name, privKey.Bytes()[:])
 }
 
 // Sign produces a signature on the provided message.

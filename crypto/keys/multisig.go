@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig/bitarray"
 )
 
 // NewMultisig returns a new Multisignature of size n.
@@ -13,8 +12,8 @@ func NewMultisig(n int) *Multisignature {
 	// Default the signature list to have a capacity of two, since we can
 	// expect that most multisigs will require multiple signers.
 	return &Multisignature{
-		BitArray: bitarray.NewCompactBitArray(n),
-		Bytes:    make([][]byte, 0, 2),
+		BitArray: NewCompactBitArray(n),
+		Sigs:     make([][]byte, 0, 2),
 	}
 }
 
@@ -122,7 +121,7 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
-			if !pk.PubKeys[i].VerifyBytes(msg, sig.Sigs[sigIndex]) {
+			if !pk.PubKeys[i].GetPubKey().VerifyBytes(msg, sig.Sigs[sigIndex]) {
 				return false
 			}
 			sigIndex++
@@ -156,7 +155,7 @@ func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
 		return false
 	}
 	for i := 0; i < len(pk.PubKeys); i++ {
-		if !pk.PubKeys[i].Equals(otherKey.PubKeys[i]) {
+		if !pk.PubKeys[i].GetPubKey().Equals(otherKey.PubKeys[i].GetPubKey()) {
 			return false
 		}
 	}

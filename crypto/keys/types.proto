@@ -12,6 +12,7 @@ option (gogoproto.goproto_enum_prefix_all) = false;
 
 // PubKey defines the application-level PubKey type.
 message PubKey {
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.equal) = false;
   option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PubKey";
 
@@ -26,6 +27,7 @@ message PubKey {
  
 // PrivKey defines the application-level PrivKey type.
 message PrivKey {
+  option (gogoproto.goproto_stringer) = true;
   option (gogoproto.equal) = false;
   option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PrivKey";
   // sum defines a set of all acceptable concrete PrivKey implementations.
@@ -57,23 +59,43 @@ message PubKeyEd25519 {
 message PrivKeyEd25519 {
   bytes bytes = 1 [(gogoproto.customname) = "bytes"];
 }
+// CompactBitArray is an implementation of a space efficient bit array.
+// This is used to ensure that the encoded data takes up a minimal amount of
+// space after amino encoding.
+// This is not thread safe, and is not intended for concurrent usage.
+message CompactBitArray {
+  option (gogoproto.unmarshaler) = false;
+  option (gogoproto.marshaler) = false;
+  option (gogoproto.sizer) = false;
+  bytes extra_bits = 1 [
+    (gogoproto.customname) = "ExtraBitsStored",
+    (gogoproto.moretags) = "yaml:\"extra_bits\""
+  ];
+  bytes bits = 2 [
+    (gogoproto.customname) = "Elems",
+    (gogoproto.moretags) = "yaml:\"bits\""
+  ];
+}
+
 
 // Multisignature is used to represent the signature object used in the multisigs.
 // Sigs is a list of signatures, sorted by corresponding index.message PrivKeyEd25519 {
 message Multisignature {
-  // CompactBitArray bitarray = 1 [(gogoproto.customname) = "BitArray"];
+  option (gogoproto.goproto_stringer) = true;
+  CompactBitArray bitarray = 1 [(gogoproto.customname) = "BitArray"];
   repeated bytes sigs = 2;
 }
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 message PubKeyMultisigThreshold {
+  option (gogoproto.goproto_stringer) = true;
   uint32 threshold = 1 [
     (gogoproto.customname) = "K",
     (gogoproto.moretags) = "yaml:\"threshold\""
   ];
   repeated PubKey pubkeys = 2 [
     (gogoproto.customname) = "PubKeys",
-    (gogoproto.moretags) = "yaml:\"threshold\""
+    (gogoproto.moretags) = "yaml:\"pubkeys\""
   ];
 }
 

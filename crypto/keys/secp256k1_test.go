@@ -1,4 +1,4 @@
-package secp256k1_test
+package keys
 
 import (
 	"encoding/hex"

@@ -1,4 +1,4 @@
-package sr25519_test
+package keys
 
 import (
 	"testing"
@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/sr25519"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 func TestSignAndValidateSr25519(t *testing.T) {

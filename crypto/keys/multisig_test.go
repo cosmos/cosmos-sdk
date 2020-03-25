@@ -1,4 +1,4 @@
-package multisig
+package keys
 
 import (
 	"math/rand"

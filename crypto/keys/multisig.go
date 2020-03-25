@@ -1,4 +1,4 @@
-package multisig
+package keys
 
 import (
 	"fmt"
@@ -8,18 +8,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/multisig/bitarray"
 )
 
-// Multisignature is used to represent the signature object used in the multisigs.
-// Sigs is a list of signatures, sorted by corresponding index.
-type Multisignature struct {
-	BitArray *bitarray.CompactBitArray
-	Sigs     [][]byte
-}
-
 // NewMultisig returns a new Multisignature of size n.
 func NewMultisig(n int) *Multisignature {
 	// Default the signature list to have a capacity of two, since we can
 	// expect that most multisigs will require multiple signers.
-	return &Multisignature{bitarray.NewCompactBitArray(n), make([][]byte, 0, 2)}
+	return &Multisignature{
+		BitArray: bitarray.NewCompactBitArray(n),
+		Bytes: :make([][]byte, 0, 2),
+	}
 }
 
 // GetIndex returns the index of pk in keys. Returns -1 if not found
@@ -71,17 +67,6 @@ func (mSig *Multisignature) AddSignatureFromPubKey(sig []byte, pubkey crypto.Pub
 	return nil
 }
 
-// Marshal the multisignature with amino
-func (mSig *Multisignature) Marshal() []byte {
-	return cdc.MustMarshalBinaryBare(mSig)
-}
-
-// PubKeyMultisigThreshold implements a K of N threshold multisig.
-type PubKeyMultisigThreshold struct {
-	K       uint            `json:"threshold"`
-	PubKeys []crypto.PubKey `json:"pubkeys"`
-}
-
 var _ crypto.PubKey = PubKeyMultisigThreshold{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
@@ -98,7 +83,7 @@ func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) crypto.PubKey {
 			panic("nil pubkey")
 		}
 	}
-	return PubKeyMultisigThreshold{uint(k), pubkeys}
+	return PubKeyMultisigThreshold{K: uint(k), PubKeys: pubkeys}
 }
 
 // VerifyBytes expects sig to be an amino encoded version of a MultiSignature.
@@ -109,10 +94,11 @@ func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) crypto.PubKey {
 // a concern.
 func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) bool {
 	var sig Multisignature
-	err := cdc.UnmarshalBinaryBare(marshalledSig, &sig)
+	err := sig.Unmarshal(marshalledSig)
 	if err != nil {
 		return false
 	}
+
 	size := sig.BitArray.Size()
 	// ensure bit array is the correct size
 	if len(pk.PubKeys) != size {
@@ -141,7 +127,11 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 
 // Bytes returns the amino encoded version of the PubKeyMultisigThreshold
 func (pk PubKeyMultisigThreshold) Bytes() []byte {
-	return cdc.MustMarshalBinaryBare(pk)
+	bz, err := pk.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	 return bz
 }
 
 // Address returns tmhash(PubKeyMultisigThreshold.Bytes())

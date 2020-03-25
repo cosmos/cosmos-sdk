@@ -1,4 +1,4 @@
-package sr25519
+package keys
 
 import (
 	"bytes"
@@ -12,13 +12,17 @@ import (
 	schnorrkel "github.com/ChainSafe/go-schnorrkel"
 )
 
-var _ crypto.PubKey = PubKeySr25519{}
+var (
+	_ crypto.PubKey  = PubKeySr25519{}
+	_ crypto.PrivKey = PrivKeySr25519{}
+)
 
-// PubKeySr25519Size is the number of bytes in an Sr25519 public key.
-const PubKeySr25519Size = 32
-
-// PubKeySr25519 implements crypto.PubKey for the Sr25519 signature scheme.
-type PubKeySr25519 []byte
+const (
+	// PubKeySr25519Size is the number of bytes in an Sr25519 public key.
+	PubKeySr25519Size = 32
+	// PrivKeySr25519Size is the number of bytes in an Sr25519 private key.
+	PrivKeySr25519Size = 32
+)
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey PubKeySr25519) Address() crypto.Address {
@@ -27,11 +31,12 @@ func (pubKey PubKeySr25519) Address() crypto.Address {
 
 // Bytes marshals the PubKey using amino encoding.
 func (pubKey PubKeySr25519) Bytes() []byte {
-	bz, err := cdc.MarshalBinaryBare(pubKey)
-	if err != nil {
-		panic(err)
+	if len(pubKey.bytes) != PubKeyEd25519Size {
+		panic(
+			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeySr25519Size),
+		)
 	}
-	return bz
+	return pubKey.bytes
 }
 
 func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
@@ -72,15 +77,14 @@ func (pubKey PubKeySr25519) Equals(other crypto.PubKey) bool {
 	return false
 }
 
-// PrivKeySr25519Size is the number of bytes in an Sr25519 private key.
-const PrivKeySr25519Size = 32
-
-// PrivKeySr25519 implements crypto.PrivKey.
-type PrivKeySr25519 []byte
-
 // Bytes marshals the privkey using amino encoding.
 func (privKey PrivKeySr25519) Bytes() []byte {
-	return cdc.MustMarshalBinaryBare(privKey)
+	if len(privKey.bytes) != PubKeyEd25519Size {
+		panic(
+			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(privKey.bytes), PrivKeySr25519Size),
+		)
+	}
+	return privKey.bytes
 }
 
 // Sign produces a signature on the provided message.
@@ -106,16 +110,16 @@ func (privKey PrivKeySr25519) Sign(msg []byte) ([]byte, error) {
 func (privKey PrivKeySr25519) PubKey() crypto.PubKey {
 	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey)
 	if err != nil {
-		panic(fmt.Sprintf("Invalid private key: %v", err))
+		panic(fmt.Errorf("invalid private key: %w", err))
 	}
 	secretKey := miniSecretKey.ExpandEd25519()
 
 	pubkey, err := secretKey.Public()
 	if err != nil {
-		panic(fmt.Sprintf("Could not generate public key: %v", err))
+		panic(fmt.Errorf("could not generate public key: %w", err))
 	}
 
-	return PubKeySr25519(pubkey.Encode())
+	return PubKeySr25519{bytes: pubkey.Encode()}
 }
 
 // Equals - you probably don't need to use this.
@@ -146,7 +150,7 @@ func genPrivKey(rand io.Reader) PrivKeySr25519 {
 
 	copy(seed[:], out)
 
-	return schnorrkel.NewMiniSecretKey(seed).ExpandEd25519().Encode()
+	return PrivKeySr25519{bytes: schnorrkel.NewMiniSecretKey(seed).ExpandEd25519().Encode()}
 }
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
@@ -158,5 +162,5 @@ func GenPrivKeyFromSecret(secret []byte) PrivKeySr25519 {
 	var bz [PrivKeySr25519Size]byte
 	copy(bz[:], seed)
 	privKey, _ := schnorrkel.NewMiniSecretKeyFromRaw(bz)
-	return privKey.ExpandEd25519().Encode()
+	return PrivKeySr25519{bytes: privKey.ExpandEd25519().Encode()}
 }

@@ -1,0 +1,82 @@
+syntax = "proto3";
+package cosmos_sdk.crypto.keys.v1;
+
+import "third_party/proto/cosmos-proto/cosmos.proto";
+import "third_party/proto/gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys";
+option (gogoproto.goproto_getters_all)  = false;
+option (gogoproto.goproto_stringer_all) = false;
+
+// PubKey defines the application-level PubKey type.
+message PubKey {
+  option (gogoproto.equal) = false;
+  option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PubKey";
+
+  // sum defines a set of all acceptable concrete PubKey implementations.
+  oneof sum {
+    PubKeyEd25519 ed25519 = 1;
+    PubKeySecp256k1 secp256k1 = 2;
+    PubKeySr25519 sr25519 = 3;
+  }
+}
+ 
+// PrivKey defines the application-level PrivKey type.
+message PrivKey {
+  option (gogoproto.equal) = false;
+  option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PrivKey";
+  // sum defines a set of all acceptable concrete PrivKey implementations.
+  oneof sum {
+    PrivKeyEd25519 ed25519 = 1;
+    PrivKeySecp256k1 secp256k1 = 2;
+    PrivKeySr25519 sr25519 = 3;
+  }
+}
+
+// PubKeyEd25519 implements crypto.PubKey for the Ed25519 signature scheme.
+message PubKeyEd25519 {
+  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+}
+
+// PrivKeyEd25519 implements crypto.PrivKey for the Ed25519 signature scheme.
+message PrivKeyEd25519 {
+  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+}
+
+// Multisignature is used to represent the signature object used in the multisigs.
+// Sigs is a list of signatures, sorted by corresponding index.message PrivKeyEd25519 {
+  message Multisignature {
+    // CompactBitArray bitarray = 1 [(gogoproto.customname) = "BitArray"];
+    repeated bytes sigs = 2;
+}
+
+// PubKeyMultisigThreshold implements a K of N threshold multisig.
+message PubKeyMultisigThreshold {
+  uint64 k = 1 [(gogoproto.moretags) = "json:\"threshold\""];
+  repeated PubKey pubkeys = 2 [(gogoproto.customname) = "PubKeys"];
+}
+
+// PubKeySecp256k1 implements crypto.PubKey for the Secp256k1 signature scheme.
+// 
+// It is the compressed form of the pubkey. The first byte depends is a 0x02 byte
+// if the y-coordinate is the lexicographically largest of the two associated with
+// the x-coordinate. Otherwise the first byte is a 0x03.
+// This prefix is followed with the x-coordinate.
+message PubKeySecp256k1 {
+  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+}
+ 
+// PrivKeySecp256k1 implements crypto.PrivKey for the Secp256k1 signature scheme.
+message PrivKeySecp256k1 {
+  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+}
+
+// PubKeySr25519 implements crypto.PubKey for the Sr25519 signature scheme.
+message PubKeySr25519 {
+  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+}
+ 
+// PrivKeySr25519 implements crypto.PrivKey for the Sr25519 signature scheme.
+message PrivKeySr25519 {
+  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+}

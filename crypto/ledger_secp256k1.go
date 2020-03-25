@@ -9,7 +9,7 @@ import (
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	tmsecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )

@@ -3,7 +3,7 @@ package types
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

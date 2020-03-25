@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"github.com/stretchr/testify/require"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {

@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
 )
 

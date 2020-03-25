@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/codec"

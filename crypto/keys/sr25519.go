@@ -33,7 +33,7 @@ const (
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey PubKeySr25519) Address() crypto.Address {
-	return crypto.Address(tmhash.SumTruncated(pubKey.Bytes()[:]))
+	return crypto.Address(tmhash.SumTruncated(pubKey.Bytes()))
 }
 
 // Bytes marshals the PubKey using amino encoding.
@@ -43,9 +43,17 @@ func (pubKey PubKeySr25519) Bytes() []byte {
 			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeySr25519Size),
 		)
 	}
-	return pubKey.bytes[:PubKeySr25519Size]
+	return pubKey.bytes
 }
 
+// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+func (pubKey PubKeySr25519) ByteArray() [32]byte {
+	var byteArray [PubKeySr25519Size]byte
+	copy(byteArray[:], pubKey.Bytes())
+	return byteArray
+}
+
+// VerifyBytes verifies that message was signed from a given signature
 func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
 	// make sure we use the same algorithm to sign
 	if len(sig) != SignatureSr25519Size {
@@ -55,7 +63,7 @@ func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
 	copy(sig64[:], sig)
 
 	publicKey := &(schnorrkel.PublicKey{})
-	err := publicKey.Decode(pubKey)
+	err := publicKey.Decode(pubKey.ByteArray())
 	if err != nil {
 		return false
 	}
@@ -71,18 +79,20 @@ func (pubKey PubKeySr25519) VerifyBytes(msg []byte, sig []byte) bool {
 	return publicKey.Verify(signature, signingContext)
 }
 
+// String implements fmt.Stringer interface
 func (pubKey *PubKeySr25519) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeySr25519Name, pubKey.Bytes()[:])
 }
 
-// Equals - checks that two public keys are the same time
-// Runs in constant time based on length of the keys.
+// Equals checks if two pubkeys are equal using bytes.Equal
 func (pubKey PubKeySr25519) Equals(other crypto.PubKey) bool {
 	if otherEd, ok := other.(PubKeySr25519); ok {
 		return bytes.Equal(pubKey.bytes[:], otherEd.bytes[:])
 	}
 	return false
 }
+
+//-------------------------------------
 
 // Bytes marshals the privkey using amino encoding.
 func (privKey PrivKeySr25519) Bytes() []byte {
@@ -94,6 +104,14 @@ func (privKey PrivKeySr25519) Bytes() []byte {
 	return privKey.bytes
 }
 
+// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+func (privKey PrivKeySr25519) ByteArray() [32]byte {
+	var byteArray [PrivKeySr25519Size]byte
+	copy(byteArray[:], privKey.Bytes())
+	return byteArray
+}
+
+// String implements fmt.Stringer interface
 func (privKey *PrivKeySr25519) String() string {
 	return fmt.Sprintf("%s{%X}", PrivKeySr25519Name, privKey.Bytes()[:])
 }
@@ -101,7 +119,7 @@ func (privKey *PrivKeySr25519) String() string {
 // Sign produces a signature on the provided message.
 func (privKey PrivKeySr25519) Sign(msg []byte) ([]byte, error) {
 
-	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey.Bytes())
+	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey.ByteArray())
 	if err != nil {
 		return []byte{}, err
 	}
@@ -120,7 +138,7 @@ func (privKey PrivKeySr25519) Sign(msg []byte) ([]byte, error) {
 
 // PubKey gets the corresponding public key from the private key.
 func (privKey PrivKeySr25519) PubKey() crypto.PubKey {
-	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey)
+	miniSecretKey, err := schnorrkel.NewMiniSecretKeyFromRaw(privKey.ByteArray())
 	if err != nil {
 		panic(fmt.Errorf("invalid private key: %w", err))
 	}
@@ -135,8 +153,8 @@ func (privKey PrivKeySr25519) PubKey() crypto.PubKey {
 	return PubKeySr25519{bytes: pubKeySr[:]}
 }
 
-// Equals - you probably don't need to use this.
-// Runs in constant time based on length of the keys.
+// Equals checks if two privkeys are equal in constant time based on length
+//  of the keys.
 func (privKey PrivKeySr25519) Equals(other crypto.PrivKey) bool {
 	if otherEd, ok := other.(PrivKeySr25519); ok {
 		return subtle.ConstantTimeCompare(privKey.bytes[:], otherEd.bytes[:]) == 1

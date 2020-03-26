@@ -64,10 +64,19 @@ func (pubKey PubKeySecp256K1) Bytes() []byte {
 	return pubKey.bytes
 }
 
+// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+func (pubKey PubKeySecp256K1) ByteArray() [33]byte {
+	var byteArray [PubKeySecp256k1Size]byte
+	copy(byteArray[:], pubKey.Bytes())
+	return byteArray
+}
+
+// String implements fmt.Stringer interface
 func (pubKey *PubKeySecp256K1) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeySecp256k1Name, pubKey.Bytes())
 }
 
+// Equals checks if two pubkeys are equal using bytes.Equal
 func (pubKey PubKeySecp256K1) Equals(other crypto.PubKey) bool {
 	otherSecp, ok := other.(PubKeySecp256K1)
 	if !ok {
@@ -118,6 +127,14 @@ func (privKey PrivKeySecp256K1) Bytes() []byte {
 	return privKey.bytes
 }
 
+// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+func (privKey PrivKeySecp256K1) ByteArray() [32]byte {
+	var byteArray [PrivKeySecp256k1Size]byte
+	copy(byteArray[:], privKey.Bytes())
+	return byteArray
+}
+
+// String implements fmt.Stringer interface
 func (privKey *PrivKeySecp256K1) String() string {
 	return fmt.Sprintf("%s{%X}", PrivKeySecp256k1Name, privKey.Bytes()[:])
 }
@@ -131,8 +148,8 @@ func (privKey PrivKeySecp256K1) PubKey() crypto.PubKey {
 	return PubKeySecp256K1{bytes: pubkeyBytes}
 }
 
-// Equals - you probably don't need to use this.
-// Runs in constant time based on length of the keys.
+// Equals checks if two privkeys are equal in constant time based on length
+//  of the keys.
 func (privKey PrivKeySecp256K1) Equals(other crypto.PrivKey) bool {
 	otherSecp, ok := other.(PrivKeySecp256K1)
 	if !ok {

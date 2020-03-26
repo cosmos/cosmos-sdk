@@ -48,6 +48,14 @@ func (pubKey PubKeyEd25519) Bytes() []byte {
 	return pubKey.bytes[:]
 }
 
+// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+func (pubKey PubKeyEd25519) ByteArray() [32]byte {
+	var byteArray [PubKeyEd25519Size]byte
+	copy(byteArray[:], pubKey.Bytes())
+	return byteArray
+}
+
+// VerifyBytes verifies that message was signed from a given signature
 func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig []byte) bool {
 	// make sure we use the same algorithm to sign
 	if len(sig) != SignatureEd25519Size {
@@ -56,11 +64,12 @@ func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig []byte) bool {
 	return ed25519.Verify(pubKey.Bytes()[:], msg, sig)
 }
 
+// String implements fmt.Stringer interface
 func (pubKey *PubKeyEd25519) String() string {
 	return fmt.Sprintf("%s{%X}", PubKeyEd25519Name, pubKey.Bytes()[:])
 }
 
-// nolint: golint
+// Equals checks if two pubkeys are equal using bytes.Equal
 func (pubKey PubKeyEd25519) Equals(other crypto.PubKey) bool {
 	if otherEd, ok := other.(PubKeyEd25519); ok {
 		return bytes.Equal(pubKey.bytes, otherEd.bytes)
@@ -76,6 +85,14 @@ func (privKey PrivKeyEd25519) Bytes() []byte {
 	return privKey.bytes
 }
 
+// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+func (privKey PrivKeyEd25519) ByteArray() [64]byte {
+	var byteArray [PrivKeyEd25519Size]byte
+	copy(byteArray[:], privKey.Bytes())
+	return byteArray
+}
+
+// String implements fmt.Stringer interface
 func (privKey *PrivKeyEd25519) String() string {
 	return fmt.Sprintf("%s{%X}", PrivKeyEd25519Name, privKey.Bytes()[:])
 }
@@ -114,8 +131,8 @@ func (privKey PrivKeyEd25519) PubKey() crypto.PubKey {
 	return PubKeyEd25519{bytes: pubkeyBytes}
 }
 
-// Equals - you probably don't need to use this.
-// Runs in constant time based on length of the keys.
+// Equals checks if two privkeys are equal in constant time based on length
+//  of the keys.
 func (privKey PrivKeyEd25519) Equals(other crypto.PrivKey) bool {
 	if otherEd, ok := other.(PrivKeyEd25519); ok {
 		return subtle.ConstantTimeCompare(privKey.bytes[:], otherEd.bytes[:]) == 1

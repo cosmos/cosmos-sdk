@@ -130,7 +130,7 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 	return true
 }
 
-// Bytes returns the amino encoded version of the PubKeyMultisigThreshold
+// Bytes returns the protobuf encoded version of the PubKeyMultisigThreshold.
 func (pk PubKeyMultisigThreshold) Bytes() []byte {
 	bz, err := pk.Marshal()
 	if err != nil {

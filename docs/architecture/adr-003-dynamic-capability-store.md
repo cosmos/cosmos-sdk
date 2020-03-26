@@ -184,6 +184,33 @@ func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capab
 }
 ```
 
+`ReleaseCapability` allows a module to release a capability which it had previously claimed. If no more owners exist, the capability will be deleted globally.
+
+```golang
+func (sck ScopedCapabilityKeeper) ReleaseCapability(ctx Context, capability Capability) err {
+  persistentStore := ctx.KVStore(sck.persistentKey)
+  memoryStore := ctx.KVStore(sck.memoryKey)
+  name := memoryStore.Get(sck.moduleName + "/fwd/" + capability)
+  if name == nil {
+    return error("capability not owned by module")
+  }
+  // delete forward mapping in memory store
+  memoryStore.Delete(sck.moduleName + "/fwd/" + capability, name)
+  // delete reverse mapping in memory store
+  memoryStore.Delete(sck.moduleName + "/rev/" + name, capability)
+  // update owner set in persistent store
+  owners := persistentStore.Get(capability.Index())
+  owners.remove(sck.moduleName + "/" + name)
+  if owners.size() > 0 {
+    // there are still other owners, keep the capability around
+    persistentStore.Set(capability.Index(), owners)
+  } else {
+    // no more owners, delete the capability
+    persistentStore.Delete(capability.Index())
+  }
+}
+```
+
 ### Memory store
 
 A new store key type, `MemoryStoreKey`, will be added to the `store` package. The `MemoryStoreKey`s work just like `StoreKey`s.

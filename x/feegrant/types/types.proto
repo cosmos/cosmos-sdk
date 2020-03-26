@@ -10,8 +10,8 @@ import "google/protobuf/timestamp.proto";
 
 // MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
 message MsgRevokeFeeAllowance{
-    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 
@@ -21,11 +21,11 @@ message BasicFeeAllowance{
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
 
-    repeated cosmos_sdk.v1.Coin SpendLimit = 1 [
+    repeated cosmos_sdk.v1.Coin spend_limit = 1 [
                                            (gogoproto.nullable)     = false,
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
                                            ];
-    ExpiresAt Expiration = 2 [(gogoproto.nullable)=true];
+    ExpiresAt expiration = 2 [(gogoproto.nullable)=true];
 }
 
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
@@ -34,38 +34,38 @@ message PeriodicFeeAllowance{
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
 
-    BasicFeeAllowance Basic = 1;
-    Duration Period = 2;
-    repeated cosmos_sdk.v1.Coin PeriodSpendLimit = 3 [
+    BasicFeeAllowance basic = 1;
+    Duration period = 2;
+    repeated cosmos_sdk.v1.Coin period_spend_limit = 3 [
                                            (gogoproto.nullable)     = false,
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
                                            ];
-    repeated cosmos_sdk.v1.Coin PeriodCanSpend = 4 [
+    repeated cosmos_sdk.v1.Coin period_can_spend = 4 [
                                            (gogoproto.nullable)     = false,
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
                                            ];
 
-    ExpiresAt PeriodReset = 5 [(gogoproto.nullable)=true];
+    ExpiresAt period_reset = 5 [(gogoproto.nullable)=true];
 }
 
 // Duration is a repeating unit of either clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
 message Duration{
     option (gogoproto.equal) = true;
-    google.protobuf.Timestamp Clock = 1[(gogoproto.stdduration)  = true,
+    google.protobuf.Timestamp clock = 1[(gogoproto.stdduration)  = true,
                                        (gogoproto.nullable) = false
                                        ];
-    int64 Block = 2;
+    int64 block = 2;
 }
 
 // ExpiresAt is a point in time where something expires.
 // It may be *either* block time or block height
 message ExpiresAt{
     option (gogoproto.equal) = true;
-    google.protobuf.Timestamp Time = 1 [(gogoproto.stdtime)  = true,
+    google.protobuf.Timestamp time = 1 [(gogoproto.stdtime)  = true,
                                        (gogoproto.nullable) = false
                                        ];
-    int64 Height = 2;
+    int64 height = 2;
 }
 
 // FeeAllowance defines the application-level fee allowance to be used in
@@ -74,9 +74,10 @@ message FeeAllowance {
     option (gogoproto.equal)           = true;
     option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/feegrant/exported.FeeAllowance";
 
+    // sum defines a set of all acceptable concrete feeallowance implementations.
     oneof sum{
-        BasicFeeAllowance BasicFeeAllowance= 1;
-        PeriodicFeeAllowance PeriodicFeeAllowance= 2;
+        BasicFeeAllowance basic_fee_allowance= 1;
+        PeriodicFeeAllowance periodic_fee_allowance= 2;
     }
 }
 
@@ -85,16 +86,16 @@ message FeeAllowance {
 message MsgGrantFeeAllowance{
     option (gogoproto.goproto_getters) = false;
 
-    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    FeeAllowance Allowance = 3;
+    bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    FeeAllowance allowance = 3;
 }
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context
 message FeeAllowanceGrant{
     option (gogoproto.goproto_getters) = false;
 
-    bytes Granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes Grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    FeeAllowance Allowance = 3;
+    bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    FeeAllowance allowance = 3;
 }

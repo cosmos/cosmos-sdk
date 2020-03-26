@@ -1,7 +1,11 @@
 package baseapp
 
 import (
+	"bytes"
+	"crypto/sha1" // nolint: gosec // only used for checksumming
+	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -10,6 +14,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -368,27 +373,152 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 // ListSnapshots implements the ABCI interface. It delegates to app.snapshotStore if set.
 func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
 	resp := abci.ResponseListSnapshots{
-		Snapshots: make([]*abci.Snapshot, 0),
+		Snapshots: []*abci.Snapshot{},
 	}
+	if app.snapshotStore == nil {
+		return resp
+	}
+
+	snapshots, err := app.snapshotStore.List()
+	if err != nil {
+		app.logger.Error("Failed to list snapshots", "err", err.Error())
+		return resp
+	}
+	for i, snapshot := range snapshots {
+		if i >= 100 {
+			// 100 snapshots should be sufficient
+			break
+		}
+		resp.Snapshots = append(resp.Snapshots, &abci.Snapshot{
+			Height:   snapshot.Height,
+			Format:   snapshot.Format,
+			Chunks:   uint32(len(snapshot.Chunks)),
+			Metadata: nil,
+		})
+	}
+
 	return resp
 }
 
 // GetSnapshotChunk implements the ABCI interface. It delegates to app.snapshotStore if set.
 func (app *BaseApp) GetSnapshotChunk(req abci.RequestGetSnapshotChunk) abci.ResponseGetSnapshotChunk {
 	resp := abci.ResponseGetSnapshotChunk{}
+	if app.snapshotStore == nil {
+		return resp
+	}
+
+	metadata, reader, err := app.snapshotStore.LoadChunk(req.Height, req.Format, req.Chunk)
+	if err != nil {
+		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
+			"chunk", req.Chunk, "err", err.Error())
+		return resp
+	}
+	if metadata == nil || reader == nil {
+		return resp
+	}
+	defer reader.Close()
+
+	chunk := &abci.SnapshotChunk{
+		Height:   req.Height,
+		Format:   req.Format,
+		Chunk:    req.Chunk,
+		Checksum: metadata.Checksum,
+	}
+	chunk.Data, err = ioutil.ReadAll(reader)
+	if err != nil {
+		app.logger.Error("Failed to load snapshot chunk contents", "height", req.Height,
+			"format", req.Format, "chunk", req.Chunk, "err", err.Error())
+		return resp
+	}
+	checksum := sha1.Sum(chunk.Data) // nolint: gosec // just for checksumming
+	if !bytes.Equal(metadata.Checksum, checksum[:]) {
+		app.logger.Error("Checksum failure for snapshot chunk", "height", req.Height,
+			"format", req.Format, "chunk", req.Chunk,
+			"expected", hex.EncodeToString(metadata.Checksum),
+			"actual", hex.EncodeToString(checksum[:]))
+		return resp
+	}
+	resp.Chunk = chunk
+
 	return resp
 }
 
 // OfferSnapshot implements the ABCI interface. It delegates to app.snapshotStore if set.
 func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
-	resp := abci.ResponseOfferSnapshot{}
-	return resp
+	if req.Snapshot == nil {
+		app.logger.Error("Received nil snapshot")
+		return abci.ResponseOfferSnapshot{
+			Accepted: false,
+			Reason:   abci.ResponseOfferSnapshot_internal_error,
+		}
+	}
+	if req.Snapshot.Format != store.SnapshotFormat {
+		return abci.ResponseOfferSnapshot{
+			Accepted: false,
+			Reason:   abci.ResponseOfferSnapshot_invalid_format,
+		}
+	}
+	if app.snapshotRestorer != nil {
+		app.logger.Error("Snapshot restoration already in progress")
+		return abci.ResponseOfferSnapshot{
+			Accepted: false,
+			Reason:   abci.ResponseOfferSnapshot_internal_error,
+		}
+	}
+
+	restorer, err := snapshots.NewRestorer(app.cms, req.Snapshot.Height, req.Snapshot.Format, req.Snapshot.Chunks)
+	if err != nil {
+		app.logger.Error("Snapshot restoration failed", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "error", err.Error())
+		return abci.ResponseOfferSnapshot{
+			Accepted: false,
+			Reason:   abci.ResponseOfferSnapshot_internal_error,
+		}
+	}
+	app.snapshotRestorer = restorer
+
+	return abci.ResponseOfferSnapshot{Accepted: true}
 }
 
 // ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotStore if set.
 func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
-	resp := abci.ResponseApplySnapshotChunk{}
-	return resp
+	respErr := abci.ResponseApplySnapshotChunk{Reason: abci.ResponseApplySnapshotChunk_internal_error}
+	if req.Chunk == nil {
+		app.logger.Error("Received nil snapshot chunk")
+		app.snapshotRestorer.Close()
+		return respErr
+	}
+	err := app.snapshotRestorer.Expects(req.Chunk.Height, req.Chunk.Format, req.Chunk.Chunk)
+	if err != nil {
+		app.logger.Error("Received unexpected snapshot chunk", "height", req.Chunk.Height,
+			"format", req.Chunk.Format, "chunk", req.Chunk.Chunk, "error", err.Error())
+		app.snapshotRestorer.Close()
+		return respErr
+	}
+	checksum := sha1.Sum(req.Chunk.Data) // nolint: gosec // just for checksumming
+	if !bytes.Equal(req.Chunk.Checksum, checksum[:]) {
+		// We don't close the restorer here since the chunk will be refetched and retried
+		app.logger.Error("Snapshot chunk checksum mismatch", "height", req.Chunk.Height,
+			"format", req.Chunk.Format, "chunk", req.Chunk.Chunk,
+			"expected", hex.EncodeToString(req.Chunk.Checksum),
+			"actual", hex.EncodeToString(checksum[:]))
+		return abci.ResponseApplySnapshotChunk{
+			Applied: false,
+			Reason:  abci.ResponseApplySnapshotChunk_verify_failed,
+		}
+	}
+	done, err := app.snapshotRestorer.Add(ioutil.NopCloser(bytes.NewReader(req.Chunk.Data)))
+	if err != nil {
+		app.logger.Error("Failed to restore snapshot", "height", req.Chunk.Height,
+			"format", req.Chunk.Format, "error", err.Error())
+		app.snapshotRestorer.Close()
+		return respErr
+	}
+	if done {
+		app.snapshotRestorer.Close()
+		app.snapshotRestorer = nil
+	}
+	return abci.ResponseApplySnapshotChunk{Applied: true}
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

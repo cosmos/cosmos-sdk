@@ -2,12 +2,15 @@ package baseapp
 
 import (
 	"bytes"
+	"crypto/sha1" // nolint: gosec
 	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
@@ -18,6 +21,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,6 +53,7 @@ func registerTestCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
 	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
 	cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
+	cdc.RegisterConcrete(&msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue", nil)
 	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
 }
 
@@ -68,6 +73,62 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	err := app.LoadLatestVersion(capKey1)
 	require.Nil(t, err)
 	return app
+}
+
+// simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
+func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*BaseApp)) (*BaseApp, func()) {
+	codec := codec.New()
+	registerTestCodec(codec)
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		})
+	}
+
+	snapshotDir := os.TempDir()
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
+	require.NoError(t, err)
+	teardown := func() {
+		os.RemoveAll(snapshotDir)
+	}
+
+	app := setupBaseApp(t, append(options,
+		SetSnapshotStore(snapshotStore),
+		SetSnapshotPolicy(1, 3),
+		routerOpt)...)
+
+	app.InitChain(abci.RequestInitChain{})
+
+	r := rand.New(rand.NewSource(3920758213583))
+	keyCounter := 0
+	for height := int64(1); height <= int64(blocks); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
+		for txNum := 0; txNum < blockTxs; txNum++ {
+			tx := txTest{Msgs: []sdk.Msg{}}
+			for msgNum := 0; msgNum < 100; msgNum++ {
+				key := []byte(fmt.Sprintf("%v", keyCounter))
+				value := make([]byte, 10000)
+				_, err := r.Read(value)
+				require.NoError(t, err)
+				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
+				keyCounter++
+			}
+			txBytes, err := codec.MarshalBinaryBare(tx)
+			require.NoError(t, err)
+			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, resp.IsOK(), "%v", resp.String())
+		}
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+
+		// Wait for snapshot to be taken, since it happens asynchronously. This
+		// heuristic is likely to be flaky on low-IO machines.
+		time.Sleep(time.Duration(int(height)*blockTxs) * 100 * time.Millisecond)
+	}
+
+	return app, teardown
 }
 
 func TestMountStores(t *testing.T) {
@@ -558,6 +619,7 @@ func (tx txTest) ValidateBasic() error { return nil }
 const (
 	routeMsgCounter  = "msgCounter"
 	routeMsgCounter2 = "msgCounter2"
+	routeMsgKeyValue = "msgKeyValue"
 )
 
 // ValidateBasic() fails on negative counters.
@@ -617,6 +679,26 @@ func (msg msgCounter2) ValidateBasic() error {
 		return nil
 	}
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+}
+
+// A msg that sets a key/value pair.
+type msgKeyValue struct {
+	Key   []byte
+	Value []byte
+}
+
+func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
+func (msg msgKeyValue) Type() string                 { return "keyValue" }
+func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
+func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgKeyValue) ValidateBasic() error {
+	if msg.Key == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
+	}
+	if msg.Value == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+	}
+	return nil
 }
 
 // amino decode
@@ -1437,6 +1519,140 @@ func TestQuery(t *testing.T) {
 	app.Commit()
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
+}
+
+func TestListSnapshots(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 5, 4)
+	defer teardown()
+
+	resp := app.ListSnapshots(abci.RequestListSnapshots{})
+	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
+		{Height: 5, Format: 1, Chunks: 3, Metadata: nil},
+		{Height: 4, Format: 1, Chunks: 3, Metadata: nil},
+		{Height: 3, Format: 1, Chunks: 2, Metadata: nil},
+	}}, resp)
+}
+
+func TestGetSnapshotChunk(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
+	defer teardown()
+
+	testcases := map[string]struct {
+		height      uint64
+		format      uint32
+		chunk       uint32
+		expectEmpty bool
+	}{
+		"Existing snapshot": {2, 1, 2, false},
+		"Missing height":    {100, 1, 1, true},
+		"Missing format":    {2, 2, 1, true},
+		"Missing chunk":     {2, 1, 9, true},
+		"Zero height":       {0, 1, 1, true},
+		"Zero format":       {2, 0, 1, true},
+		"Zero chunk":        {2, 1, 0, true},
+	}
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			resp := app.GetSnapshotChunk(abci.RequestGetSnapshotChunk{
+				Height: tc.height,
+				Format: tc.format,
+				Chunk:  tc.chunk,
+			})
+			if tc.expectEmpty {
+				assert.Equal(t, abci.ResponseGetSnapshotChunk{}, resp)
+				return
+			}
+			require.NotNil(t, resp.Chunk)
+			assert.Equal(t, tc.height, resp.Chunk.Height)
+			assert.Equal(t, tc.format, resp.Chunk.Format)
+			assert.Equal(t, tc.chunk, resp.Chunk.Chunk)
+			assert.NotEmpty(t, resp.Chunk.Data)
+			assert.NotEmpty(t, resp.Chunk.Checksum)
+			checksum := sha1.Sum(resp.Chunk.Data) // nolint: gosec
+			assert.Equal(t, resp.Chunk.Checksum, checksum[:])
+		})
+	}
+}
+
+func TestOfferSnapshotChunk_Errors(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
+	defer teardown()
+
+	// Nil snapshot should error
+	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{})
+	require.Equal(t, abci.ResponseOfferSnapshot{
+		Accepted: false,
+		Reason:   abci.ResponseOfferSnapshot_internal_error,
+	}, resp)
+
+	// Invalid snapshot format should error
+	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height: 1,
+		Format: 9,
+		Chunks: 3,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{
+		Accepted: false,
+		Reason:   abci.ResponseOfferSnapshot_invalid_format,
+	}, resp)
+
+	// Offering a snapshot after one has been accepted should error
+	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height: 1,
+		Format: store.SnapshotFormat,
+		Chunks: 3,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{
+		Accepted: true,
+	}, resp)
+
+	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height: 1,
+		Format: store.SnapshotFormat,
+		Chunks: 3,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{
+		Accepted: false,
+		Reason:   abci.ResponseOfferSnapshot_internal_error,
+	}, resp)
+}
+
+func TestApplySnapshotChunk(t *testing.T) {
+	source, teardown := setupBaseAppWithSnapshots(t, 3, 10)
+	defer teardown()
+
+	target, teardown := setupBaseAppWithSnapshots(t, 0, 0)
+	defer teardown()
+
+	// Fetch latest snapshot to restore
+	respList := source.ListSnapshots(abci.RequestListSnapshots{})
+	require.NotEmpty(t, respList.Snapshots)
+	snapshot := respList.Snapshots[0]
+
+	// Make sure the snapshot has at least 3 chunks
+	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
+
+	// Begin a snapshot restoration in the target
+	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
+	require.True(t, respOffer.Accepted)
+
+	// Fetch each chunk from the source and apply it to the target
+	for chunk := uint32(1); chunk <= snapshot.Chunks; chunk++ {
+		respChunk := source.GetSnapshotChunk(abci.RequestGetSnapshotChunk{
+			Height: snapshot.Height,
+			Format: snapshot.Format,
+			Chunk:  chunk,
+		})
+		require.NotNil(t, respChunk.Chunk)
+		respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+			Chunk: respChunk.Chunk,
+		})
+		require.Equal(t, abci.ResponseApplySnapshotChunk{Applied: true}, respApply)
+	}
+
+	// The target should now have the same hash as the source
+	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 }
 
 // Test p2p filter queries

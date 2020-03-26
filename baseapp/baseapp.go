@@ -73,8 +73,9 @@ type BaseApp struct { // nolint: maligned
 
 	// snapshot storage, i.e. dumps of app state at certain intervals
 	snapshotStore     *snapshots.Store
-	snapshotInterval  uint64 // interval (in blocks) between snapshots (0 to disable)
-	snapshotRetention uint32 // number of snapshots to keep (0 for all)
+	snapshotInterval  uint64              // interval (in blocks) between snapshots (0 to disable)
+	snapshotRetention uint32              // number of snapshots to keep (0 for all)
+	snapshotRestorer  *snapshots.Restorer // active snapshot restoration, if any
 
 	// volatile states:
 	//

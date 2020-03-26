@@ -42,18 +42,17 @@ var _ Keybase = keyringKeybase{}
 
 // Keyring exposes operations on a generic keystore
 type Keyring interface {
-
 	// List all keys.
 	List() ([]Info, error)
 
-	// Key and KeyByAddress return keys by uid and address respectively.
-	Key(uid string) (Info, error)
-	KeyByAddress(address types.Address) (Info, error)
-
-	// Delete and DeleteByAddress remove keys.
-	Delete(uid string) error
-	DeleteByAddress(address types.Address) error
-
+	//// Key and KeyByAddress return keys by uid and address respectively.
+	//Key(uid string) (Info, error)
+	//KeyByAddress(address types.Address) (Info, error)
+	//
+	//// Delete and DeleteByAddress remove keys.
+	//Delete(uid string) error
+	//DeleteByAddress(address types.Address) error
+	//
 	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic
 	// key from that, and persists it to storage. Returns the generated mnemonic and the key
 	// Info. It returns an error if it fails to generate a key for the given algo type, or if
@@ -63,20 +62,21 @@ type Keyring interface {
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path  and persists it.
 	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SigningAlgo) (Info, error)
 
-	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
-	SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
-
-	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey crypto.PubKey, algo SigningAlgo) (Info, error)
-
-	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
-	SaveMultisig(uid string, pubkey crypto.PubKey) (Info, error)
-
-	// SupportedAlgos returns a list of signing algorithms supported by the keybase
-	SupportedAlgos() []SigningAlgo
-
-	// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
-	SupportedAlgosLedger() []SigningAlgo
+	//
+	//// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
+	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
+	//
+	//// SavePubKey stores a public key and returns the persisted Info structure.
+	//SavePubKey(uid string, pubkey crypto.PubKey, algo SigningAlgo) (Info, error)
+	//
+	//// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
+	//SaveMultisig(uid string, pubkey crypto.PubKey) (Info, error)
+	//
+	//// SupportedAlgos returns a list of signing algorithms supported by the keybase
+	//SupportedAlgos() []SigningAlgo
+	//
+	//// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
+	//SupportedAlgosLedger() []SigningAlgo
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.

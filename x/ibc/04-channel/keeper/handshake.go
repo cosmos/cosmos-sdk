@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
@@ -65,11 +66,10 @@ func (k Keeper) ChanOpenInit(
 	channel := types.NewChannel(exported.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, channelID)
+	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
-	k.SetChannelCapability(ctx, portID, channelID, capKey)
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
@@ -146,11 +146,10 @@ func (k Keeper) ChanOpenTry(
 
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, channelID)
+	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
-	k.SetChannelCapability(ctx, portID, channelID, capKey)
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
@@ -163,7 +162,7 @@ func (k Keeper) ChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	portCap capability.Capability,
+	chanCap capability.Capability,
 	counterpartyVersion string,
 	proofTry commitmentexported.Proof,
 	proofHeight uint64,
@@ -180,12 +179,8 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	if _, ok := k.GetChannelCapability(ctx, portID, channelID); !ok {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
-	}
-
-	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -234,7 +229,7 @@ func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	portCap capability.Capability,
+	chanCap capability.Capability,
 	proofAck commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
@@ -250,12 +245,8 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	if _, ok := k.GetChannelCapability(ctx, portID, channelID); !ok {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
-	}
-
-	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -307,14 +298,10 @@ func (k Keeper) ChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	portCap capability.Capability,
+	chanCap capability.Capability,
 ) error {
-	if _, ok := k.GetChannelCapability(ctx, portID, channelID); !ok {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
-	}
-
-	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -350,16 +337,12 @@ func (k Keeper) ChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	portCap capability.Capability,
+	chanCap capability.Capability,
 	proofInit commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
-	if _, ok := k.GetChannelCapability(ctx, portID, channelID); !ok {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
-	}
-
-	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)

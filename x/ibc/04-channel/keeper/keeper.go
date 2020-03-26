@@ -64,27 +64,6 @@ func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel ty
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
 }
 
-// GetChannelCapability gets a channel's capability key from the store
-func (k Keeper) GetChannelCapability(ctx sdk.Context, portID, channelID string) (capability.Capability, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(ibctypes.KeyChannelCapabilityPath(portID, channelID))
-	if bz == nil {
-		return nil, false
-	}
-
-	var capKey capability.Capability
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &capKey)
-
-	return capKey, true
-}
-
-// SetChannelCapability sets a channel's capability key to the store
-func (k Keeper) SetChannelCapability(ctx sdk.Context, portID, channelID string, key capability.Capability) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(key)
-	store.Set(ibctypes.KeyChannelCapabilityPath(portID, channelID), bz)
-}
-
 // GetNextSequenceSend gets a channel's next send sequence from the store
 func (k Keeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool) {
 	store := ctx.KVStore(k.storeKey)

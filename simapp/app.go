@@ -180,7 +180,7 @@ func NewSimApp(
 	app.CapabilityKeeper = capability.NewKeeper(
 		app.cdc, keys[capability.StoreKey], memKeys[capability.MemStoreKey],
 	)
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule("ibc")
+	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibc.ModuleName)
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(

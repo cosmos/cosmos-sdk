@@ -24,7 +24,7 @@ func NewKeeper(
 ) Keeper {
 	clientKeeper := client.NewKeeper(cdc, key, stakingKeeper)
 	connectionKeeper := connection.NewKeeper(cdc, key, clientKeeper)
-	portKeeper := port.NewKeeper(scopedKeeper, cdc, key)
+	portKeeper := port.NewKeeper(scopedKeeper)
 	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return Keeper{

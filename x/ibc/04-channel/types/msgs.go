@@ -5,7 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -15,10 +17,11 @@ import (
 var _ sdk.Msg = MsgChannelOpenInit{}
 
 type MsgChannelOpenInit struct {
-	PortID    string         `json:"port_id"`
-	ChannelID string         `json:"channel_id"`
-	Channel   Channel        `json:"channel"`
-	Signer    sdk.AccAddress `json:"signer"`
+	PortID    string                `json:"port_id"`
+	ChannelID string                `json:"channel_id"`
+	PortCap   capability.Capability `json:"port_capability"`
+	Channel   Channel               `json:"channel"`
+	Signer    sdk.AccAddress        `json:"signer"`
 }
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
@@ -54,6 +57,9 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
+	if msg.PortCap == nil {
+		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "port capability is nil")
+	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
 }
@@ -73,6 +79,7 @@ var _ sdk.Msg = MsgChannelOpenTry{}
 type MsgChannelOpenTry struct {
 	PortID              string                   `json:"port_id"`
 	ChannelID           string                   `json:"channel_id"`
+	PortCap             capability.Capability    `json:"port_capability"`
 	Channel             Channel                  `json:"channel"`
 	CounterpartyVersion string                   `json:"counterparty_version"`
 	ProofInit           commitmentexported.Proof `json:"proof_init"`
@@ -120,6 +127,9 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
+	if msg.PortCap == nil {
+		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "port capability is nil")
+	}
 	if msg.ProofInit == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
@@ -148,6 +158,7 @@ var _ sdk.Msg = MsgChannelOpenAck{}
 type MsgChannelOpenAck struct {
 	PortID              string                   `json:"port_id"`
 	ChannelID           string                   `json:"channel_id"`
+	ChannelCap          capability.Capability    `json:"channel_capability"`
 	CounterpartyVersion string                   `json:"counterparty_version"`
 	ProofTry            commitmentexported.Proof `json:"proof_try"`
 	ProofHeight         uint64                   `json:"proof_height"`
@@ -190,6 +201,9 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
+	if msg.ChannelCap == nil {
+		return sdkerrors.Wrap(ErrInvalidChannelCapability, "channel capability is nil")
+	}
 	if msg.ProofTry == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
@@ -218,6 +232,7 @@ var _ sdk.Msg = MsgChannelOpenConfirm{}
 type MsgChannelOpenConfirm struct {
 	PortID      string                   `json:"port_id"`
 	ChannelID   string                   `json:"channel_id"`
+	ChannelCap  capability.Capability    `json:"channel_capability"`
 	ProofAck    commitmentexported.Proof `json:"proof_ack"`
 	ProofHeight uint64                   `json:"proof_height"`
 	Signer      sdk.AccAddress           `json:"signer"`
@@ -255,6 +270,9 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
+	if msg.ChannelCap == nil {
+		return sdkerrors.Wrap(ErrInvalidChannelCapability, "channel capability is nil")
+	}
 	if msg.ProofAck == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
@@ -281,9 +299,10 @@ func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgChannelCloseInit{}
 
 type MsgChannelCloseInit struct {
-	PortID    string         `json:"port_id"`
-	ChannelID string         `json:"channel_id"`
-	Signer    sdk.AccAddress `json:"signer"`
+	PortID     string                `json:"port_id"`
+	ChannelID  string                `json:"channel_id"`
+	ChannelCap capability.Capability `json:"channel_capability"`
+	Signer     sdk.AccAddress        `json:"signer"`
 }
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
@@ -313,6 +332,10 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
+	if msg.ChannelCap == nil {
+		return sdkerrors.Wrap(ErrInvalidChannelCapability, "channel capability is nil")
+	}
+
 	// Signer can be empty
 	return nil
 }
@@ -332,6 +355,7 @@ var _ sdk.Msg = MsgChannelCloseConfirm{}
 type MsgChannelCloseConfirm struct {
 	PortID      string                   `json:"port_id"`
 	ChannelID   string                   `json:"channel_id"`
+	ChannelCap  capability.Capability    `json:"channel_capability"`
 	ProofInit   commitmentexported.Proof `json:"proof_init"`
 	ProofHeight uint64                   `json:"proof_height"`
 	Signer      sdk.AccAddress           `json:"signer"`
@@ -368,6 +392,9 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
+	}
+	if msg.ChannelCap == nil {
+		return sdkerrors.Wrap(ErrInvalidChannelCapability, "channel capability is nil")
 	}
 	if msg.ProofInit == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")

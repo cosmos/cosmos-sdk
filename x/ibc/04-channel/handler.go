@@ -8,9 +8,9 @@ import (
 
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit
 func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenInit) (*sdk.Result, error) {
-	err := k.ChanOpenInit(
+	_, err := k.ChanOpenInit(
 		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
-		msg.Channel.Counterparty, msg.Channel.Version,
+		msg.PortCap, msg.Channel.Counterparty, msg.Channel.Version,
 	)
 	if err != nil {
 		return nil, err
@@ -39,8 +39,8 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCha
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
 func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenTry) (*sdk.Result, error) {
-	err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
-		msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
+	_, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
+		msg.PortCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 // HandleMsgChannelOpenAck defines the sdk.Handler for MsgChannelOpenAck
 func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenAck) (*sdk.Result, error) {
 	err := k.ChanOpenAck(
-		ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
+		ctx, msg.PortID, msg.ChannelID, msg.ChannelCap, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
 	)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 
 // HandleMsgChannelOpenConfirm defines the sdk.Handler for MsgChannelOpenConfirm
 func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenConfirm) (*sdk.Result, error) {
-	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, msg.ProofAck, msg.ProofHeight)
+	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, msg.ChannelCap, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 
 // HandleMsgChannelCloseInit defines the sdk.Handler for MsgChannelCloseInit
 func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelCloseInit) (*sdk.Result, error) {
-	err := k.ChanCloseInit(ctx, msg.PortID, msg.ChannelID)
+	err := k.ChanCloseInit(ctx, msg.PortID, msg.ChannelID, msg.ChannelCap)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCh
 
 // HandleMsgChannelCloseConfirm defines the sdk.Handler for MsgChannelCloseConfirm
 func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelCloseConfirm) (*sdk.Result, error) {
-	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, msg.ProofInit, msg.ProofHeight)
+	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, msg.ChannelCap, msg.ProofInit, msg.ProofHeight)
 	if err != nil {
 		return nil, err
 	}

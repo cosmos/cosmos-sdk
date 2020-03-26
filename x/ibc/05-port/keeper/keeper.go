@@ -3,31 +3,28 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // Keeper defines the IBC connection keeper
 type Keeper struct {
 	scopedKeeper capability.ScopedKeeper
-	cdc          *codec.Codec
-	ports        map[string]bool
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(sck capability.ScopedKeeper, cdc *codec.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(sck capability.ScopedKeeper) Keeper {
 	return Keeper{
 		scopedKeeper: sck,
-		cdc:          cdc,
-		ports:        make(map[string]bool), // map of capability key names to port ids
 	}
 }
 
 // isBounded checks a given port ID is already bounded.
-func (k Keeper) isBounded(portID string) bool {
-	return k.ports[portID]
+func (k Keeper) isBounded(ctx sdk.Context, portID string) bool {
+	_, ok := k.scopedKeeper.GetCapability(ctx, types.PortPath(portID))
+	return ok
 }
 
 // BindPort binds to a port and returns the associated capability.
@@ -39,15 +36,14 @@ func (k *Keeper) BindPort(ctx sdk.Context, portID string) capability.Capability 
 		panic(err.Error())
 	}
 
-	if k.isBounded(portID) {
+	if k.isBounded(ctx, portID) {
 		panic(fmt.Sprintf("port %s is already bound", portID))
 	}
 
-	key, err := k.scopedKeeper.NewCapability(ctx, portID)
+	key, err := k.scopedKeeper.NewCapability(ctx, types.PortPath(portID))
 	if err != nil {
 		panic(err.Error())
 	}
-	k.ports[portID] = true
 
 	return key
 }
@@ -61,5 +57,5 @@ func (k Keeper) Authenticate(ctx sdk.Context, key capability.Capability, portID 
 		panic(err.Error())
 	}
 
-	return k.scopedKeeper.AuthenticateCapability(ctx, key, portID)
+	return k.scopedKeeper.AuthenticateCapability(ctx, key, types.PortPath(portID))
 }

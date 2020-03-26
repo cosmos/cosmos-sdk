@@ -128,7 +128,7 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have a new field: `Marshler`.
+We then update `CLIContext` to have a new field: `Marshaler`.
 
 Then, each module's client handler will at the minimum accept a `Marshaler` instead
 of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so

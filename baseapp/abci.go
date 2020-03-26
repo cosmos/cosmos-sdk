@@ -365,6 +365,32 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
 }
 
+// ListSnapshots implements the ABCI interface. It delegates to app.snapshotStore if set.
+func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
+	resp := abci.ResponseListSnapshots{
+		Snapshots: make([]*abci.Snapshot, 0),
+	}
+	return resp
+}
+
+// GetSnapshotChunk implements the ABCI interface. It delegates to app.snapshotStore if set.
+func (app *BaseApp) GetSnapshotChunk(req abci.RequestGetSnapshotChunk) abci.ResponseGetSnapshotChunk {
+	resp := abci.ResponseGetSnapshotChunk{}
+	return resp
+}
+
+// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotStore if set.
+func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	resp := abci.ResponseOfferSnapshot{}
+	return resp
+}
+
+// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotStore if set.
+func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	resp := abci.ResponseApplySnapshotChunk{}
+	return resp
+}
+
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	if len(path) >= 2 {
 		switch path[1] {

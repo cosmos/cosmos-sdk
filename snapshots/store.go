@@ -127,7 +127,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 			pr, pw := io.Pipe()
 			ch <- pr
 			hasher := sha1.New() // nolint: gosec
-			chunk, err := s.LoadChunk(height, format, chunkMetadata.Chunk)
+			chunk, err := s.loadChunkFile(height, format, chunkMetadata.Chunk)
 			if err != nil {
 				pw.CloseWithError(err)
 				return
@@ -174,21 +174,40 @@ func (s *Store) LoadMetadata(height uint64, format uint32) (*types.Snapshot, err
 
 // LoadChunk loads a chunk from disk, or nil if it does not exist. The caller must call Close() on
 // it when done.
-func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
+func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (*types.SnapshotChunk, io.ReadCloser, error) {
 	snapshot, err := s.LoadMetadata(height, format)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if snapshot == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 	if chunk == 0 {
-		return nil, errors.New("chunk index 0 is not valid")
+		return nil, nil, nil
 	}
-	if chunk > uint32(len(snapshot.Chunks)) {
-		return nil, fmt.Errorf("snapshot for height %v format %v only has %v chunks, requested %v",
-			height, format, len(snapshot.Chunks), chunk)
+	var metadata *types.SnapshotChunk
+	if chunk <= uint32(len(snapshot.Chunks)) && snapshot.Chunks[chunk-1].Chunk == chunk {
+		metadata = snapshot.Chunks[chunk-1]
+	} else {
+		for _, c := range snapshot.Chunks {
+			if c.Chunk == chunk {
+				metadata = c
+				break
+			}
+		}
 	}
+	if metadata == nil {
+		return nil, nil, nil
+	}
+	file, err := s.loadChunkFile(height, format, chunk)
+	if err != nil {
+		return nil, nil, err
+	}
+	return metadata, file, nil
+}
+
+// loadChunkFile loads a chunk file
+func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
 	path := s.pathChunk(height, format, chunk)
 	file, err := os.Open(path)
 	if err != nil {

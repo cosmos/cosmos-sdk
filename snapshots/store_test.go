@@ -216,21 +216,30 @@ func TestStore_LoadChunk(t *testing.T) {
 	defer teardown()
 
 	// Loading a missing snapshot should return nil
-	chunk, err := store.LoadChunk(9, 9, 1)
+	metadata, chunk, err := store.LoadChunk(9, 9, 1)
 	require.NoError(t, err)
+	assert.Nil(t, metadata)
 	assert.Nil(t, chunk)
 
-	// Loading a zero chunk index should error
-	_, err = store.LoadChunk(2, 1, 0)
-	require.Error(t, err)
-
-	// Loading a missing chunk index should error
-	_, err = store.LoadChunk(2, 1, 3)
-	require.Error(t, err)
-
-	// Loading a chunk should returns its contents as a reader
-	chunk, err = store.LoadChunk(2, 1, 2)
+	// Loading a zero chunk index should return nil
+	metadata, chunk, err = store.LoadChunk(2, 1, 0)
 	require.NoError(t, err)
+	require.Nil(t, metadata)
+	require.Nil(t, chunk)
+
+	// Loading a missing chunk index should return nil
+	metadata, chunk, err = store.LoadChunk(2, 1, 3)
+	require.NoError(t, err)
+	require.Nil(t, metadata)
+	require.Nil(t, chunk)
+
+	// Loading a chunk should returns its metadata and a content reader
+	metadata, chunk, err = store.LoadChunk(2, 1, 2)
+	require.NoError(t, err)
+	assert.Equal(t, &types.SnapshotChunk{
+		Chunk:    2,
+		Checksum: checksum([]byte{2, 1, 2}),
+	}, metadata)
 	body, err := ioutil.ReadAll(chunk)
 	require.NoError(t, err)
 	assert.Equal(t, []byte{2, 1, 2}, body)

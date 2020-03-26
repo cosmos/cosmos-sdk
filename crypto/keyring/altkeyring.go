@@ -6,12 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/go-bip39"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -40,7 +40,6 @@ type Keyring interface {
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path  and persists it.
 	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SigningAlgo) (Info, error)
 
-	//
 	//// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
 	//

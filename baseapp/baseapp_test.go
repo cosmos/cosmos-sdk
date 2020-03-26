@@ -3,12 +3,13 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -937,7 +938,7 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var simRes sdk.SimulationResponse
-		require.NoError(t, json.Unmarshal(queryResult.Value, &simRes))
+		require.NoError(t, jsonpb.Unmarshal(strings.NewReader(string(queryResult.Value)), &simRes))
 
 		require.Equal(t, gInfo, simRes.GasInfo)
 		require.Equal(t, result.Log, simRes.Result.Log)

@@ -2,11 +2,13 @@ package tx
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/gogo/protobuf/jsonpb"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -277,7 +279,7 @@ func CalculateGas(
 	}
 
 	var simRes sdk.SimulationResponse
-	if err := json.Unmarshal(bz, &simRes); err != nil {
+	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
 

@@ -1,13 +1,13 @@
 package tx_test
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -20,12 +20,12 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := sdk.SimulationResponse{
+			simRes := &sdk.SimulationResponse{
 				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
 
-			bz, err := json.Marshal(simRes)
+			bz, err := codec.ProtoMarshalJSON(simRes)
 			if err != nil {
 				return nil, 0, err
 			}

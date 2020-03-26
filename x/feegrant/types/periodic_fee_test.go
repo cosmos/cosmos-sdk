@@ -27,7 +27,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		remove        bool
 		remains       sdk.Coins
 		remainsPeriod sdk.Coins
-		periodReset   *ExpiresAt
+		periodReset   ExpiresAt
 	}{
 		"empty": {
 			allow: PeriodicFeeAllowance{},

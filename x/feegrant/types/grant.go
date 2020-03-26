@@ -41,15 +41,7 @@ func (grant FeeAllowanceGrant) GetGranter() sdk.AccAddress {
 func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
 	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
 	if err != nil {
-		//TODO handle this error
+		return FeeAllowanceGrant{}
 	}
 	return a
-}
-
-func NewFeeAllowanceGrant(granter sdk.AccAddress, grantee sdk.AccAddress, allowance *FeeAllowance) FeeAllowanceGrant {
-	return FeeAllowanceGrant{
-		Granter:   granter,
-		Grantee:   grantee,
-		Allowance: allowance,
-	}
 }

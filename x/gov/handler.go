@@ -59,7 +59,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	return &sdk.Result{
 		Data:   GetProposalIDBytes(proposal.ProposalID),
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }
 
@@ -86,7 +86,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) (*sdk.Resu
 		)
 	}
 
-	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) (*sdk.Result, error) {
@@ -103,5 +103,5 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) (*sdk.Result, er
 		),
 	)
 
-	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

@@ -260,7 +260,7 @@ func (ctx CLIContext) Println(toPrint interface{}) error {
 		// error. The re-encoded JSON uses the standard library as the initial encoded
 		// JSON should have the correct output produced by ctx.Marshaler.
 		if ctx.Indent && err == nil {
-			out, err = sdk.MarshalIndentFromJSON(out)
+			out, err = codec.MarshalIndentFromJSON(out)
 		}
 	}
 

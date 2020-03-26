@@ -14,19 +14,6 @@ var (
 	DBBackend = ""
 )
 
-// MarshalIndentFromJSON returns indented JSON-encoded bytes from already encoded
-// JSON bytes. The output encoding will adhere to the original input's encoding
-// (e.g. Proto3).
-func MarshalIndentFromJSON(bz []byte) ([]byte, error) {
-	var generic interface{}
-
-	if err := json.Unmarshal(bz, &generic); err != nil {
-		return nil, err
-	}
-
-	return json.MarshalIndent(generic, "", "  ")
-}
-
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.
 // This method can be used to canonicalize JSON to be returned by GetSignBytes,

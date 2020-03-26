@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestBaseReq_Sanitize(t *testing.T) {
@@ -210,7 +209,7 @@ func TestProcessPostResponse(t *testing.T) {
 	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 
-	expectedWithIndent, err := sdk.MarshalIndentFromJSON(expectedNoIndent)
+	expectedWithIndent, err := codec.MarshalIndentFromJSON(expectedNoIndent)
 	require.Nil(t, err)
 
 	// check that negative height writes an error
@@ -416,7 +415,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 	require.NoError(t, err)
 
 	if indent {
-		marshalled, err = sdk.MarshalIndentFromJSON(marshalled)
+		marshalled, err = codec.MarshalIndentFromJSON(marshalled)
 		require.NoError(t, err)
 	}
 

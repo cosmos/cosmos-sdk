@@ -254,7 +254,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body
 		resp, err = marshaler.MarshalJSON(body)
 
 		if ctx.Indent && err == nil {
-			resp, err = sdk.MarshalIndentFromJSON(resp)
+			resp, err = codec.MarshalIndentFromJSON(resp)
 		}
 
 		if err != nil {
@@ -299,7 +299,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp int
 		result, err = marshaler.MarshalJSON(resp)
 
 		if ctx.Indent && err == nil {
-			result, err = sdk.MarshalIndentFromJSON(result)
+			result, err = codec.MarshalIndentFromJSON(result)
 		}
 
 		if err != nil {
@@ -312,7 +312,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp int
 
 	output, err := marshaler.MarshalJSON(wrappedResp)
 	if ctx.Indent && err == nil {
-		output, err = sdk.MarshalIndentFromJSON(output)
+		output, err = codec.MarshalIndentFromJSON(output)
 	}
 
 	if err != nil {

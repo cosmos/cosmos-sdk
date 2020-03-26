@@ -240,7 +240,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
-	events := ctx.EventManager().Events()
+	events := ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(2, len(events))
 
 	event1 := sdk.Event{
@@ -272,7 +272,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
-	events = ctx.EventManager().Events()
+	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(4, len(events))
 	suite.Require().Equal(event1, events[2])
 	suite.Require().Equal(event2, events[3])
@@ -306,7 +306,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	events := ctx.EventManager().Events()
+	events := ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(0, len(events))
 
 	// Set addr's coins but not addr2's coins
@@ -314,7 +314,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	events = ctx.EventManager().Events()
+	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(1, len(events))
 
 	event1 := sdk.Event{
@@ -336,7 +336,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	events = ctx.EventManager().Events()
+	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(5, len(events))
 
 	event2 := sdk.Event{

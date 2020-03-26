@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestKeyCompatibility(t *testing.T) {
+func TestSr25519Compatibility(t *testing.T) {
 	tmPrivKey := sr25519.GenPrivKey()
 	tmPubKey := tmPrivKey.PubKey()
 

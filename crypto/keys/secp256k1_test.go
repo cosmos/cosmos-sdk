@@ -1,14 +1,18 @@
 package keys
 
 import (
+	"bytes"
+	"crypto/subtle"
 	"encoding/hex"
 	"math/big"
 	"testing"
 
 	"github.com/btcsuite/btcutil/base58"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
 )
@@ -64,25 +68,17 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	require.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
-// This test is intended to justify the removal of calls to the underlying library
-// in creating the privkey.
-func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
-	numberOfTests := 256
-	for i := 0; i < numberOfTests; i++ {
-		// Seed the test case with some random bytes
-		var privKeyBytes [PrivKeySecp256k1Size]byte
-		copy(privKeyBytes[:], crypto.CRandBytes(32))
+func TestSecp256k1Compatibility(t *testing.T) {
+	tmPrivKey := secp256k1.GenPrivKey()
+	tmPubKey := tmPrivKey.PubKey()
 
-		// This function creates a private and public key in the underlying libraries format.
-		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes
-		priv, _ := underlyingSecp256k1.PrivKeyFromBytes(underlyingSecp256k1.S256(), privKeyBytes[:])
-		// this takes the bytes returned by `(big int).Bytes()`, and if the length is less than 32 bytes,
-		// pads the bytes from the left with zero bytes. Therefore these two functions composed
-		// result in the identity function on privKeyBytes, hence the following equality check
-		// always returning true.
-		serializedBytes := priv.Serialize()
-		require.Equal(t, privKeyBytes[:], serializedBytes)
-	}
+	privKey, err := GenPrivKey(SECP256K1)
+	require.NoError(t, err)
+	pubKey := privKey.PubKey()
+
+	require.Equal(t, sdk.AccAddress(tmPubKey.Address()).String(), sdk.AccAddress(pubKey.Address()).String())
+	require.True(t, bytes.Equal(tmPubKey.Bytes()[:], pubKey.Bytes()))
+	require.True(t, subtle.ConstantTimeCompare(privKey.Bytes()[:], privKey.Bytes()) == 1)
 }
 
 func TestGenPrivKeySecp256k1(t *testing.T) {

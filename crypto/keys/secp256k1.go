@@ -154,6 +154,9 @@ func (privKey *PrivKeySecp256K1) String() string {
 // generator point to get the pubkey.
 func (privKey PrivKeySecp256K1) PubKey() crypto.PubKey {
 	_, pubkeyObject := btcec.PrivKeyFromBytes(secp256k1.S256(), privKey.Bytes())
+	if pubkeyObject == nil {
+		panic("nil pubkey")
+	}
 	return PubKeySecp256K1{bytes: pubkeyObject.SerializeCompressed()}
 }
 

@@ -61,7 +61,7 @@ func genPrivKeySecp256k1(rand io.Reader) PrivKeySecp256K1 {
 	var privKeyBytes [PrivKeySecp256k1Size]byte
 	d := new(big.Int)
 	for {
-		var privKeyBytes [PrivKeySecp256k1Size]byte
+		privKeyBytes = [PrivKeySecp256k1Size]byte{}
 		_, err := io.ReadFull(rand, privKeyBytes[:])
 		if err != nil {
 			panic(err)

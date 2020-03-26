@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -68,5 +69,5 @@ type ConnectionKeeper interface {
 
 // PortKeeper expected account IBC port keeper
 type PortKeeper interface {
-	Authenticate(key sdk.CapabilityKey, portID string) bool
+	Authenticate(ctx, key capability.Capability, portID string) bool
 }

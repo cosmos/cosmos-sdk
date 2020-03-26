@@ -58,7 +58,7 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, portCap, portID) {
+	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
@@ -103,7 +103,7 @@ func (k Keeper) ChanOpenTry(
 		sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, portCap, portID) {
+	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
@@ -184,7 +184,7 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, portCap, portID) {
+	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
@@ -254,7 +254,7 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, portCap, portID) {
+	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
@@ -313,7 +313,7 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, portCap, portID) {
+	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
@@ -358,7 +358,7 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "channel capability not found")
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, portCap, portID) {
+	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 

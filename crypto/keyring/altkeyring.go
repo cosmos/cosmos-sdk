@@ -25,8 +25,8 @@ type Keyring interface {
 
 	// Key and KeyByAddress return keys by uid and address respectively.
 	Key(uid string) (Info, error)
+	KeyByAddress(address types.Address) (Info, error)
 
-	//KeyByAddress(address types.Address) (Info, error)
 	//
 	//// Delete and DeleteByAddress remove keys.
 	//Delete(uid string) error
@@ -115,6 +115,24 @@ func NewAltKeyring(
 
 type altKeyring struct {
 	db keyring.Keyring
+}
+
+func (a altKeyring) KeyByAddress(address types.Address) (Info, error) {
+	ik, err := a.db.Get(string(addrKey(address)))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ik.Data) == 0 {
+		return nil, fmt.Errorf("key with address %s not found", address)
+	}
+
+	bs, err := a.db.Get(string(ik.Data))
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalInfo(bs.Data)
 }
 
 func (a altKeyring) List() ([]Info, error) {

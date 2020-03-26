@@ -417,7 +417,7 @@ func (kb dbKeybase) writeInfo(name string, info Info) {
 	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }
 
-func addrKey(address types.AccAddress) []byte {
+func addrKey(address types.Address) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 

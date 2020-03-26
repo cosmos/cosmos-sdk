@@ -202,6 +202,13 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 	return nil
 }
 
+// ReleaseCapability allows a scoped module to release a capability which it had
+// previously claimed or created. After releasing the capability, if no more
+// owners exist, the capability will be globally removed.
+func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) error {
+	return nil
+}
+
 // GetCapability allows a module to fetch a capability which it previously claimed
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.

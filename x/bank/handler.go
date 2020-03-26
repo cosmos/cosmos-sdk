@@ -20,7 +20,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgMultiSend(ctx, k, msg)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized bank message type: %T", msg)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized bank message type: %T", msg)
 		}
 	}
 }
@@ -32,7 +32,7 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgSend) (*sdk.Re
 	}
 
 	if k.BlacklistedAddr(msg.ToAddress) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
+		return nil, sdkerrors.Extendf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
 	}
 
 	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
@@ -59,7 +59,7 @@ func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgMultiSend
 
 	for _, out := range msg.Outputs {
 		if k.BlacklistedAddr(out.Address) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}
 

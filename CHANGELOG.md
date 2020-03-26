@@ -51,6 +51,7 @@ that parse log messages.
 * (client) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) The `tx encode/decode` commands, due to change on encoding break compatibility with
 older clients.
 * (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
+* (types/errors) [\#5876](https://github.com/cosmos/cosmos-sdk/pull/5876) rename Wrap{,f} to Extend{,f}.
 
 ### API Breaking Changes
 

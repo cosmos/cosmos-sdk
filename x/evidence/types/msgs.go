@@ -30,7 +30,7 @@ func (m MsgSubmitEvidenceBase) Type() string { return TypeMsgSubmitEvidence }
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidenceBase.
 func (m MsgSubmitEvidenceBase) ValidateBasic() error {
 	if m.Submitter.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidAddress, m.Submitter.String())
 	}
 
 	return nil

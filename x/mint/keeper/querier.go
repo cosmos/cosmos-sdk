@@ -23,7 +23,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryAnnualProvisions(ctx, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
 	}
 }
@@ -33,7 +33,7 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
 
 	res, err := codec.MarshalJSONIndent(k.cdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil
@@ -44,7 +44,7 @@ func queryInflation(ctx sdk.Context, k Keeper) ([]byte, error) {
 
 	res, err := codec.MarshalJSONIndent(k.cdc, minter.Inflation)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil
@@ -55,7 +55,7 @@ func queryAnnualProvisions(ctx sdk.Context, k Keeper) ([]byte, error) {
 
 	res, err := codec.MarshalJSONIndent(k.cdc, minter.AnnualProvisions)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil

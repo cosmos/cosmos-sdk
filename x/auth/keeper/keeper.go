@@ -48,7 +48,7 @@ func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
 func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	return acc.GetPubKey(), nil
@@ -58,7 +58,7 @@ func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.
 func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return 0, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return 0, sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	return acc.GetSequence(), nil

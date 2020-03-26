@@ -563,7 +563,7 @@ func (k Keeper) Unbond(
 
 	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
-		return amount, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, delegation.Shares.String())
+		return amount, sdkerrors.Extend(types.ErrNotEnoughDelegationShares, delegation.Shares.String())
 	}
 
 	// get validator

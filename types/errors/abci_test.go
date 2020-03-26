@@ -26,7 +26,7 @@ func TestABCInfo(t *testing.T) {
 			wantSpace: RootCodespace,
 		},
 		"wrapped SDK error": {
-			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
+			err:       Extend(Extend(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
 			wantLog:   "unauthorized: foo: bar",
 			wantCode:  ErrUnauthorized.code,
@@ -61,7 +61,7 @@ func TestABCInfo(t *testing.T) {
 			wantSpace: UndefinedCodespace,
 		},
 		"wrapped stdlib is only a generic message": {
-			err:       Wrap(io.EOF, "cannot read file"),
+			err:       Extend(io.EOF, "cannot read file"),
 			debug:     false,
 			wantLog:   "internal error",
 			wantCode:  1,
@@ -70,7 +70,7 @@ func TestABCInfo(t *testing.T) {
 		// This is hard to test because of attached stacktrace. This
 		// case is tested in an another test.
 		//"wrapped stdlib is a full message in debug mode": {
-		//	err:      Wrap(io.EOF, "cannot read file"),
+		//	err:      Extend(io.EOF, "cannot read file"),
 		//	debug:    true,
 		//	wantLog:  "cannot read file: EOF",
 		//	wantCode: 1,
@@ -116,25 +116,25 @@ func TestABCIInfoStacktrace(t *testing.T) {
 		wantErrMsg     string
 	}{
 		"wrapped SDK error in debug mode provides stacktrace": {
-			err:            Wrap(ErrUnauthorized, "wrapped"),
+			err:            Extend(ErrUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
 			wantErrMsg:     "unauthorized: wrapped",
 		},
 		"wrapped SDK error in non-debug mode does not have stacktrace": {
-			err:            Wrap(ErrUnauthorized, "wrapped"),
+			err:            Extend(ErrUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
 			wantErrMsg:     "unauthorized: wrapped",
 		},
 		"wrapped stdlib error in debug mode provides stacktrace": {
-			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
+			err:            Extend(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
 			wantErrMsg:     "stdlib: wrapped",
 		},
 		"wrapped stdlib error in non-debug mode does not have stacktrace": {
-			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
+			err:            Extend(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
 			wantErrMsg:     "internal error",
@@ -163,7 +163,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 }
 
 func TestABCIInfoHidesStacktrace(t *testing.T) {
-	err := Wrap(ErrUnauthorized, "wrapped")
+	err := Extend(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
 
 	if log != "unauthorized: wrapped" {
@@ -195,8 +195,8 @@ func TestRedact(t *testing.T) {
 func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
 		// Create errors with stacktrace for equal comparison.
-		myErrDecode = Wrap(ErrTxDecode, "test")
-		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
+		myErrDecode = Extend(ErrTxDecode, "test")
+		myErrAddr   = Extend(ErrInvalidAddress, "tester")
 		myPanic     = ErrPanic
 	)
 
@@ -251,7 +251,7 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		// `,
 		// 		},
 		// 		"wrapped multi error with redact": {
-		// 			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
+		// 			src:   Extend(Append(myPanic, myErrMsg), "wrap"),
 		// 			debug: false,
 		// 			exp:   "internal error",
 		// 		},

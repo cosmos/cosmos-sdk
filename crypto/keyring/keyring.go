@@ -145,7 +145,7 @@ func (kb keyringKeybase) List() ([]Info, error) {
 			}
 
 			if len(rawInfo.Data) == 0 {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+				return nil, sdkerrors.Extend(sdkerrors.ErrKeyNotFound, key)
 			}
 
 			info, err := unmarshalInfo(rawInfo.Data)
@@ -170,7 +170,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 	}
 
 	if len(bs.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
+		return nil, sdkerrors.Extend(sdkerrors.ErrKeyNotFound, name)
 	}
 
 	return unmarshalInfo(bs.Data)

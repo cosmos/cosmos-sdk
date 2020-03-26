@@ -709,7 +709,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+			return sdkerrors.Extendf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
 	})
 

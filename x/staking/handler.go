@@ -34,7 +34,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgUndelegate(ctx, msg, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
@@ -68,7 +68,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(pk)
 		if !tmstrings.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return nil, sdkerrors.Wrapf(
+			return nil, sdkerrors.Extendf(
 				ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
 			)

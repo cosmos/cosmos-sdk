@@ -44,13 +44,13 @@ func (msg MsgSubmitProposalBase) Type() string { return TypeMsgSubmitProposal }
 // ValidateBasic implements Msg
 func (msg MsgSubmitProposalBase) ValidateBasic() error {
 	if msg.Proposer.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
 	}
 	if !msg.InitialDeposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
 	}
 	if msg.InitialDeposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
 	}
 
 	return nil
@@ -87,13 +87,13 @@ func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
 // ValidateBasic implements Msg
 func (msg MsgDeposit) ValidateBasic() error {
 	if msg.Depositor.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
 	}
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 	if msg.Amount.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	return nil
@@ -130,10 +130,10 @@ func (msg MsgVote) Type() string { return TypeMsgVote }
 // ValidateBasic implements Msg
 func (msg MsgVote) ValidateBasic() error {
 	if msg.Voter.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidAddress, msg.Voter.String())
 	}
 	if !ValidVoteOption(msg.Option) {
-		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
+		return sdkerrors.Extend(ErrInvalidVote, msg.Option.String())
 	}
 
 	return nil
@@ -182,19 +182,19 @@ func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sd
 // ValidateBasic implements Msg
 func (msg MsgSubmitProposal) ValidateBasic() error {
 	if msg.Content == nil {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
+		return sdkerrors.Extend(ErrInvalidProposalContent, "missing content")
 	}
 	if msg.Proposer.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
 	}
 	if !msg.InitialDeposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
 	}
 	if msg.InitialDeposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
 	}
 	if !IsValidProposalType(msg.Content.ProposalType()) {
-		return sdkerrors.Wrap(ErrInvalidProposalType, msg.Content.ProposalType())
+		return sdkerrors.Extend(ErrInvalidProposalType, msg.Content.ProposalType())
 	}
 
 	return msg.Content.ValidateBasic()

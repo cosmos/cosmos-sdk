@@ -69,7 +69,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 		k, v := split[0], split[1]
 		tx = kvstoreTx{k, v, txBytes}
 	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
+		return nil, sdkerrors.Extend(sdkerrors.ErrTxDecode, "too many '='")
 	}
 
 	return tx, nil

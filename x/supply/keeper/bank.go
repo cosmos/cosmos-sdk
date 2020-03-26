@@ -16,7 +16,7 @@ func (k Keeper) SendCoinsFromModuleToAccount(
 
 	senderAddr := k.GetModuleAddress(senderModule)
 	if senderAddr == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
 	return k.bk.SendCoins(ctx, senderAddr, recipientAddr, amt)
@@ -30,12 +30,12 @@ func (k Keeper) SendCoinsFromModuleToModule(
 
 	senderAddr := k.GetModuleAddress(senderModule)
 	if senderAddr == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
 	recipientAcc := k.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
 	return k.bk.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
@@ -49,7 +49,7 @@ func (k Keeper) SendCoinsFromAccountToModule(
 
 	recipientAcc := k.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
 	return k.bk.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
@@ -64,11 +64,11 @@ func (k Keeper) DelegateCoinsFromAccountToModule(
 
 	recipientAcc := k.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
 	if !recipientAcc.HasPermission(types.Staking) {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule))
 	}
 
 	return k.bk.DelegateCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
@@ -83,11 +83,11 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(
 
 	acc := k.GetModuleAccount(ctx, senderModule)
 	if acc == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
 	if !acc.HasPermission(types.Staking) {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
 	return k.bk.UndelegateCoins(ctx, acc.GetAddress(), recipientAddr, amt)
@@ -98,11 +98,11 @@ func (k Keeper) UndelegateCoinsFromModuleToAccount(
 func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
 	acc := k.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
 	if !acc.HasPermission(types.Minter) {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
 	_, err := k.bk.AddCoins(ctx, acc.GetAddress(), amt)
@@ -127,11 +127,11 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) err
 func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
 	acc := k.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
 	if !acc.HasPermission(types.Burner) {
-		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
+		panic(sdkerrors.Extendf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
 	_, err := k.bk.SubtractCoins(ctx, acc.GetAddress(), amt)

@@ -24,7 +24,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 			return handleMsgVote(ctx, keeper, msg)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }

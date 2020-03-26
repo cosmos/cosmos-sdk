@@ -43,7 +43,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryCommunityPool(ctx, path[1:], req, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
 	}
 }
@@ -53,7 +53,7 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 
 	res, err := codec.MarshalJSONIndent(k.cdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil
@@ -63,7 +63,7 @@ func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.R
 	var params types.QueryValidatorOutstandingRewardsParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	rewards := k.GetValidatorOutstandingRewards(ctx, params.ValidatorAddress)
@@ -73,7 +73,7 @@ func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.R
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, rewards)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -83,7 +83,7 @@ func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQu
 	var params types.QueryValidatorCommissionParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	commission := k.GetValidatorAccumulatedCommission(ctx, params.ValidatorAddress)
@@ -93,7 +93,7 @@ func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQu
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, commission)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -103,7 +103,7 @@ func queryValidatorSlashes(ctx sdk.Context, path []string, req abci.RequestQuery
 	var params types.QueryValidatorSlashesParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	events := make([]types.ValidatorSlashEvent, 0)
@@ -116,7 +116,7 @@ func queryValidatorSlashes(ctx sdk.Context, path []string, req abci.RequestQuery
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, events)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -126,7 +126,7 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	var params types.QueryDelegationRewardsParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	// cache-wrap context as to not persist state changes during querying
@@ -134,7 +134,7 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 
 	val := k.stakingKeeper.Validator(ctx, params.ValidatorAddress)
 	if val == nil {
-		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, params.ValidatorAddress.String())
+		return nil, sdkerrors.Extend(types.ErrNoValidatorExists, params.ValidatorAddress.String())
 	}
 
 	del := k.stakingKeeper.Delegation(ctx, params.DelegatorAddress, params.ValidatorAddress)
@@ -150,7 +150,7 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, rewards)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -160,7 +160,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 	var params types.QueryDelegatorParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	// cache-wrap context as to not persist state changes during querying
@@ -187,7 +187,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 
 	bz, err := json.Marshal(totalRewards)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -197,7 +197,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 	var params types.QueryDelegatorParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	// cache-wrap context as to not persist state changes during querying
@@ -215,7 +215,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, validators)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -225,7 +225,7 @@ func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.Request
 	var params types.QueryDelegatorWithdrawAddrParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	// cache-wrap context as to not persist state changes during querying
@@ -234,7 +234,7 @@ func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.Request
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, withdrawAddr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -248,7 +248,7 @@ func queryCommunityPool(ctx sdk.Context, _ []string, req abci.RequestQuery, k Ke
 
 	bz, err := k.cdc.MarshalJSON(pool)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil

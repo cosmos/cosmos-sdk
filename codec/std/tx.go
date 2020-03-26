@@ -71,12 +71,12 @@ func (tx Transaction) ValidateBasic() error {
 	stdSigs := tx.GetSignatures()
 
 	if tx.Fee.Gas > auth.MaxGasWanted {
-		return sdkerrors.Wrapf(
+		return sdkerrors.Extendf(
 			sdkerrors.ErrInvalidRequest, "invalid gas supplied; %d > %d", tx.Fee.Gas, auth.MaxGasWanted,
 		)
 	}
 	if tx.Fee.Amount.IsAnyNegative() {
-		return sdkerrors.Wrapf(
+		return sdkerrors.Extendf(
 			sdkerrors.ErrInsufficientFee, "invalid fee provided: %s", tx.Fee.Amount,
 		)
 	}
@@ -84,7 +84,7 @@ func (tx Transaction) ValidateBasic() error {
 		return sdkerrors.ErrNoSignatures
 	}
 	if len(stdSigs) != len(tx.GetSigners()) {
-		return sdkerrors.Wrapf(
+		return sdkerrors.Extendf(
 			sdkerrors.ErrUnauthorized, "wrong number of signers; expected %d, got %d", tx.GetSigners(), len(stdSigs),
 		)
 	}

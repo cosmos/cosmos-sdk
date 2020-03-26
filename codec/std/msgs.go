@@ -33,7 +33,7 @@ func (msg MsgSubmitEvidence) ValidateBasic() error {
 		return nil
 	}
 	if msg.Evidence == nil {
-		return sdkerrors.Wrap(evidence.ErrInvalidEvidence, "missing evidence")
+		return sdkerrors.Extend(evidence.ErrInvalidEvidence, "missing evidence")
 	}
 	if err := msg.Evidence.GetEvidence().ValidateBasic(); err != nil {
 		return err
@@ -66,10 +66,10 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 		return nil
 	}
 	if msg.Content == nil {
-		return sdkerrors.Wrap(gov.ErrInvalidProposalContent, "missing content")
+		return sdkerrors.Extend(gov.ErrInvalidProposalContent, "missing content")
 	}
 	if !gov.IsValidProposalType(msg.Content.GetContent().ProposalType()) {
-		return sdkerrors.Wrap(gov.ErrInvalidProposalType, msg.Content.GetContent().ProposalType())
+		return sdkerrors.Extend(gov.ErrInvalidProposalType, msg.Content.GetContent().ProposalType())
 	}
 	if err := msg.Content.GetContent().ValidateBasic(); err != nil {
 		return err

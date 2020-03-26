@@ -268,6 +268,6 @@ func ProposalHandler(_ sdk.Context, c Content) error {
 		return nil
 
 	default:
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
+		return sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
 	}
 }

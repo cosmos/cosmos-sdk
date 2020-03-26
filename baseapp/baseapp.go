@@ -389,7 +389,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	if len(msgs) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must contain at least one message")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "must contain at least one message")
 	}
 
 	for _, msg := range msgs {
@@ -467,7 +467,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
 		gInfo = sdk.GasInfo{GasUsed: ctx.BlockGasMeter().GasConsumed()}
-		return gInfo, nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+		return gInfo, nil, sdkerrors.Extend(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
 	var startingGas uint64
@@ -481,7 +481,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 			// TODO: Use ErrOutOfGas instead of ErrorOutOfGas which would allow us
 			// to keep the stracktrace.
 			case sdk.ErrorOutOfGas:
-				err = sdkerrors.Wrap(
+				err = sdkerrors.Extend(
 					sdkerrors.ErrOutOfGas, fmt.Sprintf(
 						"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 						rType.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
@@ -489,7 +489,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 				)
 
 			default:
-				err = sdkerrors.Wrap(
+				err = sdkerrors.Extend(
 					sdkerrors.ErrPanic, fmt.Sprintf(
 						"recovered: %v\nstack:\n%v", r, string(debug.Stack()),
 					),
@@ -595,12 +595,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		msgRoute := msg.Route()
 		handler := app.router.Route(ctx, msgRoute)
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 		}
 
 		msgResult, err := handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
+			return nil, sdkerrors.Extendf(err, "failed to execute message; message index: %d", i)
 		}
 
 		msgEvents := sdk.Events{

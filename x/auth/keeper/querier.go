@@ -20,7 +20,7 @@ func NewQuerier(k AccountKeeper) sdk.Querier {
 			return queryParams(ctx, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
 	}
 }
@@ -28,17 +28,17 @@ func NewQuerier(k AccountKeeper) sdk.Querier {
 func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper) ([]byte, error) {
 	var params types.QueryAccountParams
 	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	account := k.GetAccount(ctx, params.Address)
 	if account == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", params.Address)
+		return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "account %s does not exist", params.Address)
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, account)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -49,7 +49,7 @@ func queryParams(ctx sdk.Context, k AccountKeeper) ([]byte, error) {
 
 	res, err := codec.MarshalJSONIndent(k.cdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil

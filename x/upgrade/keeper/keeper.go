@@ -60,14 +60,14 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 	if !plan.Time.IsZero() {
 		if !plan.Time.After(ctx.BlockHeader().Time) {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
+			return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 		}
 	} else if plan.Height <= ctx.BlockHeight() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
 	if k.GetDoneHeight(ctx, plan.Name) != 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
+		return sdkerrors.Extendf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(&plan)

@@ -14,27 +14,27 @@ func TestStackTrace(t *testing.T) {
 		wantError string
 	}{
 		"New gives us a stacktrace": {
-			err:       Wrap(ErrNoSignatures, "name"),
+			err:       Extend(ErrNoSignatures, "name"),
 			wantError: "no signatures supplied: name",
 		},
 		"Wrapping stderr gives us a stacktrace": {
-			err:       Wrap(fmt.Errorf("foo"), "standard"),
+			err:       Extend(fmt.Errorf("foo"), "standard"),
 			wantError: "foo: standard",
 		},
 		"Wrapping pkg/errors gives us clean stacktrace": {
-			err:       Wrap(errors.New("bar"), "pkg"),
+			err:       Extend(errors.New("bar"), "pkg"),
 			wantError: "bar: pkg",
 		},
 		"Wrapping inside another function is still clean": {
-			err:       Wrap(fmt.Errorf("indirect"), "do the do"),
+			err:       Extend(fmt.Errorf("indirect"), "do the do"),
 			wantError: "indirect: do the do",
 		},
 	}
 
 	// Wrapping code is unwanted in the errors stack trace.
 	unwantedSrc := []string{
-		"github.com/cosmos/cosmos-sdk/types/errors.Wrap\n",
-		"github.com/cosmos/cosmos-sdk/types/errors.Wrapf\n",
+		"github.com/cosmos/cosmos-sdk/types/errors.Extend\n",
+		"github.com/cosmos/cosmos-sdk/types/errors.Extendf\n",
 		"runtime.goexit\n",
 	}
 	const thisTestSrc = "types/errors/stacktrace_test.go"
@@ -74,7 +74,7 @@ func TestStackTrace(t *testing.T) {
 				t.Fatal("only one stack line is expected")
 			}
 			// contains a link to where it was created, which must
-			// be here, not the Wrap() function
+			// be here, not the Extend() function
 			if !strings.Contains(tinyStack, thisTestSrc) {
 				t.Fatalf("this file missing in stack info:\n %s", tinyStack)
 			}

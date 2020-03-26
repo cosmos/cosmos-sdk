@@ -21,16 +21,16 @@ func (p Plan) String() string {
 // ValidateBasic does basic validation of a Plan
 func (p Plan) ValidateBasic() error {
 	if len(p.Name) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}
 	if p.Height < 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "height cannot be negative")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "height cannot be negative")
 	}
 	if p.Time.IsZero() && p.Height == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must set either time or height")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "must set either time or height")
 	}
 	if !p.Time.IsZero() && p.Height != 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot set both time and height")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "cannot set both time and height")
 	}
 
 	return nil

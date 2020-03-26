@@ -18,7 +18,7 @@ func NewParamChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return handleParameterChangeProposal(ctx, k, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized param proposal content type: %T", c)
+			return sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized param proposal content type: %T", c)
 		}
 	}
 }
@@ -27,7 +27,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p proposal.
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {
-			return sdkerrors.Wrap(proposal.ErrUnknownSubspace, c.Subspace)
+			return sdkerrors.Extend(proposal.ErrUnknownSubspace, c.Subspace)
 		}
 
 		k.Logger(ctx).Info(
@@ -35,7 +35,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p proposal.
 		)
 
 		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
-			return sdkerrors.Wrapf(proposal.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
+			return sdkerrors.Extendf(proposal.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
 		}
 	}
 

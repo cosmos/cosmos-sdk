@@ -85,10 +85,10 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return ErrBadDelegationAmount
 	}
 	if msg.Description == (Description{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 	if msg.Commission == (CommissionRates{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "empty commission")
 	}
 	if err := msg.Commission.Validate(); err != nil {
 		return err
@@ -136,14 +136,14 @@ func (msg MsgEditValidator) ValidateBasic() error {
 		return ErrEmptyValidatorAddr
 	}
 	if msg.Description == (Description{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+		return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid
 	}
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
+			return sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
 		}
 	}
 

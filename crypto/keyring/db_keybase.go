@@ -117,7 +117,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	}
 
 	if len(bs) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
+		return nil, sdkerrors.Extend(sdkerrors.ErrKeyNotFound, name)
 	}
 
 	return unmarshalInfo(bs)

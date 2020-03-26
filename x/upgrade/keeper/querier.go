@@ -23,7 +23,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryApplied(ctx, req, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }
@@ -36,7 +36,7 @@ func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 
 	res, err := k.cdc.MarshalJSON(&plan)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil
@@ -47,7 +47,7 @@ func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	applied := k.GetDoneHeight(ctx, params.Name)

@@ -294,7 +294,7 @@ func (app *BaseApp) halt() {
 func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := splitPath(req.Path)
 	if len(path) == 0 {
-		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"))
+		sdkerrors.QueryResult(sdkerrors.Extend(sdkerrors.ErrUnknownRequest, "no query path provided"))
 	}
 
 	switch path[0] {
@@ -312,7 +312,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return handleQueryCustom(app, path, req)
 	}
 
-	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
+	return sdkerrors.QueryResult(sdkerrors.Extend(sdkerrors.ErrUnknownRequest, "unknown query path"))
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
@@ -323,12 +323,12 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 			tx, err := app.txDecoder(txBytes)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to decode tx"))
+				return sdkerrors.QueryResult(sdkerrors.Extend(err, "failed to decode tx"))
 			}
 
 			gInfo, res, err := app.Simulate(txBytes, tx)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"))
+				return sdkerrors.QueryResult(sdkerrors.Extend(err, "failed to simulate tx"))
 			}
 
 			simRes := &sdk.SimulationResponse{
@@ -338,7 +338,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 			bz, err := codec.ProtoMarshalJSON(simRes)
 			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"))
+				return sdkerrors.QueryResult(sdkerrors.Extend(err, "failed to JSON encode simulation response"))
 			}
 
 			return abci.ResponseQuery{
@@ -355,12 +355,12 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			}
 
 		default:
-			return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path))
+			return sdkerrors.QueryResult(sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path))
 		}
 	}
 
 	return sdkerrors.QueryResult(
-		sdkerrors.Wrap(
+		sdkerrors.Extend(
 			sdkerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
 		),
@@ -371,7 +371,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"))
+		return sdkerrors.QueryResult(sdkerrors.Extend(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"))
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
@@ -383,7 +383,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
+			sdkerrors.Extend(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			),
@@ -411,12 +411,12 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 			}
 
 		default:
-			return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"))
+			return sdkerrors.QueryResult(sdkerrors.Extend(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"))
 		}
 	}
 
 	return sdkerrors.QueryResult(
-		sdkerrors.Wrap(
+		sdkerrors.Extend(
 			sdkerrors.ErrUnknownRequest, "expected path is p2p filter <addr|id> <parameter>",
 		),
 	)
@@ -429,12 +429,12 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 	// The QueryRouter routes using path[1]. For example, in the path
 	// "custom/gov/proposal", QueryRouter routes using "gov".
 	if len(path) < 2 || path[1] == "" {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no route for custom query specified"))
+		return sdkerrors.QueryResult(sdkerrors.Extend(sdkerrors.ErrUnknownRequest, "no route for custom query specified"))
 	}
 
 	querier := app.queryRouter.Route(path[1])
 	if querier == nil {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]))
+		return sdkerrors.QueryResult(sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]))
 	}
 
 	// when a client did not provide a query height, manually inject the latest
@@ -444,7 +444,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
+			sdkerrors.Extend(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			),
@@ -454,7 +454,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
 	if err != nil {
 		return sdkerrors.QueryResult(
-			sdkerrors.Wrapf(
+			sdkerrors.Extendf(
 				sdkerrors.ErrInvalidRequest,
 				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
 			),

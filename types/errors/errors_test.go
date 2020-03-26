@@ -21,12 +21,12 @@ func TestCause(t *testing.T) {
 			err:  ErrUnauthorized,
 			root: ErrUnauthorized,
 		},
-		"Wrap reveals root cause": {
-			err:  Wrap(ErrUnauthorized, "foo"),
+		"Extend reveals root cause": {
+			err:  Extend(ErrUnauthorized, "foo"),
 			root: ErrUnauthorized,
 		},
 		"Cause works for stderr as root": {
-			err:  Wrap(std, "Some helpful text"),
+			err:  Extend(std, "Some helpful text"),
 			root: std,
 		},
 	}
@@ -109,7 +109,7 @@ func TestErrorIs(t *testing.T) {
 		// },
 		// "multierr with wrapped err": {
 		// 	a:      ErrUnauthorized,
-		// 	b:      Append(ErrState, Wrap(ErrUnauthorized, "test")),
+		// 	b:      Append(ErrState, Extend(ErrUnauthorized, "test")),
 		// 	wantIs: true,
 		// },
 		// "multierr with nil error": {
@@ -155,56 +155,95 @@ func (customError) Error() string {
 	return "custom error"
 }
 
-func TestWrapEmpty(t *testing.T) {
-	if err := Wrap(nil, "wrapping <nil>"); err != nil {
-		t.Fatal(err)
-	}
+func TestExtendEmpty(t *testing.T) {
+	require.NoError(t, Extend(nil, "wrapping <nil>"))
 }
 
-func TestWrappedIs(t *testing.T) {
-	err := Wrap(ErrTxTooLarge, "context")
+func TestExtendedIs(t *testing.T) {
+	err := Extend(ErrTxTooLarge, "context")
 	require.True(t, stdlib.Is(err, ErrTxTooLarge))
 
-	err = Wrap(err, "more context")
+	err = Extend(err, "more context")
 	require.True(t, stdlib.Is(err, ErrTxTooLarge))
 
-	err = Wrap(err, "even more context")
+	err = Extend(err, "even more context")
 	require.True(t, stdlib.Is(err, ErrTxTooLarge))
 
-	err = Wrap(ErrInsufficientFee, "...")
+	err = Extend(ErrInsufficientFee, "...")
 	require.False(t, stdlib.Is(err, ErrTxTooLarge))
 }
 
-func TestWrappedIsMultiple(t *testing.T) {
+func TestExtendedIsMultiple(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
-	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	err := Extend(errTest2, Extend(errTest, "some random description").Error())
 	require.True(t, stdlib.Is(err, errTest2))
 }
 
-func TestWrappedIsFail(t *testing.T) {
+func TestExtendedIsFail(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
-	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	err := Extend(errTest2, Extend(errTest, "some random description").Error())
 	require.False(t, stdlib.Is(err, errTest))
 }
 
-func TestWrappedUnwrap(t *testing.T) {
+func TestExtendedUnwrap(t *testing.T) {
 	var errTest = errors.New("test error")
-	err := Wrap(errTest, "some random description")
+	err := Extend(errTest, "some random description")
 	require.Equal(t, errTest, stdlib.Unwrap(err))
 }
 
-func TestWrappedUnwrapMultiple(t *testing.T) {
+func TestExtendedUnwrapMultiple(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
-	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	err := Extend(errTest2, Extend(errTest, "some random description").Error())
 	require.Equal(t, errTest2, stdlib.Unwrap(err))
 }
 
-func TestWrappedUnwrapFail(t *testing.T) {
+func TestExtendedUnwrapFail(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
-	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	err := Extend(errTest2, Extend(errTest, "some random description").Error())
 	require.NotEqual(t, errTest, stdlib.Unwrap(err))
+}
+
+func TestExtendf(t *testing.T) {
+	tests := []struct {
+		name          string
+		err           error
+		format        string
+		args          []interface{}
+		wantNilErr    bool
+		wantErrString string
+	}{
+		{"nil", nil, "", []interface{}{}, true, ""},
+		{"no format", errors.New("error"), "", []interface{}{}, false, "error: "},
+		{"format and args", errors.New("error"), "%s %d", []interface{}{"code", -1}, false, "error: code -1"},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := Extendf(tt.err, tt.format, tt.args...)
+			if tt.wantNilErr {
+				require.Nil(t, err)
+				return
+			}
+			require.Equal(t, tt.wantErrString, err.Error())
+		})
+	}
+}
+
+func ExampleExtend() {
+	err := Extend(ErrInsufficientFunds, "90 is smaller than 100")
+	fmt.Println(err.Error())
+	// Output:
+	// insufficient funds: 90 is smaller than 100
+}
+
+func ExampleExtendf() {
+	availableBalance, cost := 99, 100
+	err := Extendf(ErrInsufficientFunds, "%d is smaller than %d", availableBalance, cost)
+	fmt.Println(err.Error())
+	// Output:
+	// insufficient funds: 99 is smaller than 100
 }

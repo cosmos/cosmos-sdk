@@ -576,7 +576,7 @@ func (msg msgCounter) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
 	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+	return sdkerrors.Extend(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
 }
 
 func newTxCounter(counter int64, msgCounters ...int64) *txTest {
@@ -616,7 +616,7 @@ func (msg msgCounter2) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
 	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+	return sdkerrors.Extend(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
 }
 
 // amino decode
@@ -624,7 +624,7 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx txTest
 		if len(txBytes) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+			return nil, sdkerrors.Extend(sdkerrors.ErrTxDecode, "tx bytes are empty")
 		}
 
 		err := cdc.UnmarshalBinaryBare(txBytes, &tx)
@@ -642,7 +642,7 @@ func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.A
 		txTest := tx.(txTest)
 
 		if txTest.FailOnAnte {
-			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return newCtx, sdkerrors.Extend(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
 		_, err = incrementingCounter(t, store, storeKey, txTest.Counter)
@@ -662,7 +662,7 @@ func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk
 		switch m := msg.(type) {
 		case *msgCounter:
 			if m.FailOnHandler {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+				return nil, sdkerrors.Extend(sdkerrors.ErrInvalidRequest, "message handler failure")
 			}
 
 			msgCount = m.Counter
@@ -1066,7 +1066,7 @@ func TestTxGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = sdkerrors.Extendf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1150,7 +1150,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = sdkerrors.Extendf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1321,7 +1321,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+						err = sdkerrors.Extend(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1331,7 +1331,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 			txTest := tx.(txTest)
 			newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
 			if txTest.FailOnAnte {
-				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+				return newCtx, sdkerrors.Extend(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
 			return

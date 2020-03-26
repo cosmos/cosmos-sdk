@@ -19,7 +19,7 @@ func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
 			return handleCancelSoftwareUpgradeProposal(ctx, k, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized software upgrade proposal content type: %T", c)
+			return sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized software upgrade proposal content type: %T", c)
 		}
 	}
 }

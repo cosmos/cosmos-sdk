@@ -60,14 +60,14 @@ func NewValidateMemoDecorator(ak keeper.AccountKeeper) ValidateMemoDecorator {
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	memoTx, ok := tx.(TxWithMemo)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return ctx, sdkerrors.Extend(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	params := vmd.ak.GetParams(ctx)
 
 	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
+		return ctx, sdkerrors.Extendf(sdkerrors.ErrMemoTooLarge,
 			"maximum number of characters is %d but received %d characters",
 			params.MaxMemoCharacters, memoLength,
 		)
@@ -98,7 +98,7 @@ func NewConsumeGasForTxSizeDecorator(ak keeper.AccountKeeper) ConsumeTxSizeGasDe
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+		return ctx, sdkerrors.Extend(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 	params := cgts.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")

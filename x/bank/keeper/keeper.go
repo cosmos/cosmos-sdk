@@ -54,11 +54,11 @@ func NewBaseKeeper(
 func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error {
 	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
+		return sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
 	}
 
 	if !amt.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
 	balances := sdk.NewCoins()
@@ -66,7 +66,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, delegatorAddr, coin.Denom)
 		if balance.IsLT(coin) {
-			return sdkerrors.Wrapf(
+			return sdkerrors.Extendf(
 				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
 			)
 		}
@@ -79,7 +79,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	}
 
 	if err := k.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, balances, amt); err != nil {
-		return sdkerrors.Wrap(err, "failed to track delegation")
+		return sdkerrors.Extend(err, "failed to track delegation")
 	}
 
 	_, err := k.AddCoins(ctx, moduleAccAddr, amt)
@@ -98,11 +98,11 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error {
 	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
 	if moduleAcc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
+		return sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
 	}
 
 	if !amt.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
 	_, err := k.SubtractCoins(ctx, moduleAccAddr, amt)
@@ -111,7 +111,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 	}
 
 	if err := k.trackUndelegation(ctx, delegatorAddr, amt); err != nil {
-		return sdkerrors.Wrap(err, "failed to track undelegation")
+		return sdkerrors.Extend(err, "failed to track undelegation")
 	}
 
 	_, err = k.AddCoins(ctx, delegatorAddr, amt)
@@ -255,7 +255,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 // returned if the resulting balance is negative or the initial amount is invalid.
 func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error) {
 	if !amt.IsValid() {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+		return nil, sdkerrors.Extend(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
 	resultCoins := sdk.NewCoins()
@@ -268,7 +268,7 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
 		if hasNeg {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}
 
 		newBalance := balance.Sub(coin)
@@ -288,7 +288,7 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 // balance is negative.
 func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error) {
 	if !amt.IsValid() {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+		return nil, sdkerrors.Extend(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
 	var resultCoins sdk.Coins
@@ -343,7 +343,7 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 // SetBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
 	store := ctx.KVStore(k.storeKey)
@@ -531,7 +531,7 @@ func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk
 func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	balances := k.GetAllBalances(ctx, addr)
@@ -553,7 +553,7 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, balance, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	vacc, ok := acc.(vestexported.VestingAccount)
@@ -568,7 +568,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockT
 func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+		return sdkerrors.Extendf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 	}
 
 	vacc, ok := acc.(vestexported.VestingAccount)

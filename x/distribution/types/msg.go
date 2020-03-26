@@ -135,10 +135,10 @@ func (msg MsgFundCommunityPool) GetSignBytes() []byte {
 // ValidateBasic performs basic MsgFundCommunityPool message validation.
 func (msg MsgFundCommunityPool) ValidateBasic() error {
 	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 	if msg.Depositor.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
+		return sdkerrors.Extend(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
 	}
 
 	return nil

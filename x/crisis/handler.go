@@ -19,7 +19,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized crisis message type: %T", msg)
+			return nil, sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unrecognized crisis message type: %T", msg)
 		}
 	}
 }

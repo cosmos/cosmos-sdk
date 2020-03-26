@@ -178,13 +178,13 @@ func (tx StdTx) ValidateBasic() error {
 	stdSigs := tx.GetSignatures()
 
 	if tx.Fee.Gas > MaxGasWanted {
-		return sdkerrors.Wrapf(
+		return sdkerrors.Extendf(
 			sdkerrors.ErrInvalidRequest,
 			"invalid gas supplied; %d > %d", tx.Fee.Gas, MaxGasWanted,
 		)
 	}
 	if tx.Fee.Amount.IsAnyNegative() {
-		return sdkerrors.Wrapf(
+		return sdkerrors.Extendf(
 			sdkerrors.ErrInsufficientFee,
 			"invalid fee provided: %s", tx.Fee.Amount,
 		)
@@ -193,7 +193,7 @@ func (tx StdTx) ValidateBasic() error {
 		return sdkerrors.ErrNoSignatures
 	}
 	if len(stdSigs) != len(tx.GetSigners()) {
-		return sdkerrors.Wrapf(
+		return sdkerrors.Extendf(
 			sdkerrors.ErrUnauthorized,
 			"wrong number of signers; expected %d, got %d", tx.GetSigners(), len(stdSigs),
 		)
@@ -326,14 +326,14 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 		var tx = StdTx{}
 
 		if len(txBytes) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+			return nil, sdkerrors.Extend(sdkerrors.ErrTxDecode, "tx bytes are empty")
 		}
 
 		// StdTx.Msg is an interface. The concrete types
 		// are registered by MakeTxCodec
 		err := cdc.UnmarshalBinaryBare(txBytes, &tx)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+			return nil, sdkerrors.Extend(sdkerrors.ErrTxDecode, err.Error())
 		}
 
 		return tx, nil

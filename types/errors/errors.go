@@ -138,11 +138,11 @@ func setUsed(err *Error) {
 // The server (abci app / blockchain) should only refer to registered errors
 func ABCIError(codespace string, code uint32, log string) error {
 	if e := getUsed(codespace, code); e != nil {
-		return Wrap(e, log)
+		return Extend(e, log)
 	}
 	// This is a unique error, will never match on .Is()
-	// Use Wrap here to get a stack trace
-	return Wrap(New(codespace, code, "unknown"), log)
+	// Use Extend here to get a stack trace
+	return Extend(New(codespace, code, "unknown"), log)
 }
 
 // Error represents a root error.
@@ -220,14 +220,14 @@ func isNilErr(err error) bool {
 	return reflect.ValueOf(err).IsNil()
 }
 
-// Wrap extends given error with an additional information.
+// Extend an error with additional information.
 //
-// If the wrapped error does not provide ABCICode method (ie. stdlib errors),
+// If the original error does not provide ABCICode method (ie. stdlib errors),
 // it will be labeled as internal error.
 //
 // If err is nil, this returns nil, avoiding the need for an if statement when
 // wrapping a error returned at the end of a function
-func Wrap(err error, description string) error {
+func Extend(err error, description string) error {
 	if err == nil {
 		return nil
 	}
@@ -245,13 +245,13 @@ func Wrap(err error, description string) error {
 	}
 }
 
-// Wrapf extends given error with an additional information.
+// Extendf extends an error with additional information.
 //
-// This function works like Wrap function with additional functionality of
+// This function works like Extend with additional functionality of
 // formatting the input as specified.
-func Wrapf(err error, format string, args ...interface{}) error {
+func Extendf(err error, format string, args ...interface{}) error {
 	desc := fmt.Sprintf(format, args...)
-	return Wrap(err, desc)
+	return Extend(err, desc)
 }
 
 type wrappedError struct {
@@ -302,13 +302,13 @@ func (e *wrappedError) Unwrap() error {
 // function using defer in order to work as expected.
 func Recover(err *error) {
 	if r := recover(); r != nil {
-		*err = Wrapf(ErrPanic, "%v", r)
+		*err = Extendf(ErrPanic, "%v", r)
 	}
 }
 
 // WithType is a helper to augment an error with a corresponding type message
 func WithType(err error, obj interface{}) error {
-	return Wrap(err, fmt.Sprintf("%T", obj))
+	return Extend(err, fmt.Sprintf("%T", obj))
 }
 
 // causer is an interface implemented by an error that supports wrapping. Use

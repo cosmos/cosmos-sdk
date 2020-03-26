@@ -31,7 +31,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			res, err = queryAllEvidence(ctx, req, k)
 
 		default:
-			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
+			err = sdkerrors.Extendf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 
 		return res, err
@@ -43,7 +43,7 @@ func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
 
 	res, err := codec.MarshalJSONIndent(k.cdc, params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil
@@ -54,22 +54,22 @@ func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, er
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	hash, err := hex.DecodeString(params.EvidenceHash)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to decode evidence hash string query")
+		return nil, sdkerrors.Extend(err, "failed to decode evidence hash string query")
 	}
 
 	evidence, ok := k.GetEvidence(ctx, hash)
 	if !ok {
-		return nil, sdkerrors.Wrap(types.ErrNoEvidenceExists, params.EvidenceHash)
+		return nil, sdkerrors.Extend(types.ErrNoEvidenceExists, params.EvidenceHash)
 	}
 
 	res, err := codec.MarshalJSONIndent(k.cdc, evidence)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil
@@ -80,7 +80,7 @@ func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	evidence := k.GetAllEvidence(ctx)
@@ -94,7 +94,7 @@ func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 
 	res, err := codec.MarshalJSONIndent(k.cdc, evidence)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+		return nil, sdkerrors.Extend(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return res, nil

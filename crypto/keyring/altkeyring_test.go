@@ -37,3 +37,23 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Equal(t, uid3, list[1].GetName())
 	require.Equal(t, uid1, list[2].GetName())
 }
+
+func TestAltKeyring_Get(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "theKey"
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, Secp256k1)
+	require.NoError(t, err)
+
+	key, err := keyring.Key(uid)
+	require.NoError(t, err)
+	require.Equal(t, key.GetName(), mnemonic.GetName())
+	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())
+	require.Equal(t, key.GetPubKey(), mnemonic.GetPubKey())
+	require.Equal(t, key.GetAlgo(), mnemonic.GetAlgo())
+	require.Equal(t, key.GetType(), mnemonic.GetType())
+}

@@ -62,21 +62,18 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 
 	var info Info
 
-	//if encryptPasswd != "" {
-	info = a.writeLocalKey(uid, privKey, encryptPasswd, algo)
-	//} else {
-	//	info = a.writeOfflineKey(keyWriter, name, privKey.PubKey(), algo)
-	//}
+	info = a.writeLocalKey(uid, privKey, algo)
 
 	return info, nil
 }
 
-func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
+func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
-	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
 
+	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
 	a.writeInfo(name, info)
+
 	return info
 }
 

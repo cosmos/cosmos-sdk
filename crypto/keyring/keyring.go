@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 import (
 	"bufio"
@@ -18,9 +18,9 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -34,6 +34,7 @@ const (
 const (
 	keyringDirNameFmt     = "keyring-%s"
 	testKeyringDirNameFmt = "keyring-test-%s"
+	passKeyringPrefix     = keyringDirNameFmt
 )
 
 var _ Keybase = keyringKeybase{}
@@ -56,7 +57,7 @@ func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
-// Available backends are "os", "file", "test".
+// Available backends are "os", "file", "kwallet", "pass", "test".
 func NewKeyring(
 	appName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {
@@ -144,7 +145,7 @@ func (kb keyringKeybase) List() ([]Info, error) {
 			}
 
 			if len(rawInfo.Data) == 0 {
-				return nil, keyerror.NewErrKeyNotFound(key)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 			}
 
 			info, err := unmarshalInfo(rawInfo.Data)
@@ -169,7 +170,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 	}
 
 	if len(bs.Data) == 0 {
-		return nil, keyerror.NewErrKeyNotFound(name)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
 	return unmarshalInfo(bs.Data)
@@ -219,7 +220,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		return SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return kb.base.DecodeSignature(info, msg)
+		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
 	}
 
 	sig, err = priv.Sign(msg)
@@ -490,7 +491,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 }
 
 func newPassBackendKeyringConfig(appName, dir string, _ io.Reader) keyring.Config {
-	prefix := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, appName))
+	prefix := fmt.Sprintf(passKeyringPrefix, appName)
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.PassBackend},
 		ServiceName:     appName,

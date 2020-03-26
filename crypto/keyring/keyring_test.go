@@ -1,5 +1,4 @@
-// nolint: goconst
-package keys
+package keyring
 
 import (
 	"bytes"
@@ -155,7 +154,8 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 	// Import a public key
 	armor, err := kb.ExportPubKey(n2)
 	require.Nil(t, err)
-	kb.ImportPubKey(n3, armor)
+	err = kb.ImportPubKey(n3, armor)
+	require.NoError(t, err)
 	i3, err := kb.Get(n3)
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
@@ -208,7 +208,8 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 
 	// Now try to sign data with a secret-less key
 	_, _, err = kb.Sign(n3, p3, d3)
-	require.NotNil(t, err)
+	require.Error(t, err)
+	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
 func TestLazyExportImportKeyRing(t *testing.T) {

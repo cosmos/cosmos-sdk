@@ -64,7 +64,8 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
-		multisignature1.AddSignatureFromPubKey(sigSet1[i], pkSet1[i], pkSet1)
+		err := multisignature1.AddSignatureFromPubKey(sigSet1[i], pkSet1[i], pkSet1)
+		require.NoError(t, err)
 	}
 
 	type args struct {

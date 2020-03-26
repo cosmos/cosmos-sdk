@@ -1,28 +1,18 @@
-package keys
+package keyring
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
+	bip39 "github.com/cosmos/go-bip39"
 )
 
 type (
-	kbOptions struct {
-		keygenFunc           PrivKeyGenFunc
-		deriveFunc           DeriveKeyFunc
-		supportedAlgos       []SigningAlgo
-		supportedAlgosLedger []SigningAlgo
-	}
-
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
 	baseKeybase struct {
@@ -42,34 +32,6 @@ type (
 		writeInfo(name string, info Info)
 	}
 )
-
-// WithKeygenFunc applies an overridden key generation function to generate the private key.
-func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
-	return func(o *kbOptions) {
-		o.keygenFunc = f
-	}
-}
-
-// WithDeriveFunc applies an overridden key derivation function to generate the private key.
-func WithDeriveFunc(f DeriveKeyFunc) KeybaseOption {
-	return func(o *kbOptions) {
-		o.deriveFunc = f
-	}
-}
-
-// WithSupportedAlgos defines the list of accepted SigningAlgos.
-func WithSupportedAlgos(algos []SigningAlgo) KeybaseOption {
-	return func(o *kbOptions) {
-		o.supportedAlgos = algos
-	}
-}
-
-// WithSupportedAlgosLedger defines the list of accepted SigningAlgos compatible with Ledger.
-func WithSupportedAlgosLedger(algos []SigningAlgo) KeybaseOption {
-	return func(o *kbOptions) {
-		o.supportedAlgosLedger = algos
-	}
-}
 
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
@@ -102,33 +64,6 @@ func SecpPrivKeyGen(bz []byte) tmcrypto.PrivKey {
 	var bzArr [32]byte
 	copy(bzArr[:], bz)
 	return secp256k1.PrivKeySecp256k1(bzArr)
-}
-
-// DecodeSignature decodes a an length-prefixed binary signature from standard input
-// and return it as a byte slice.
-func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
-	_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	buf := bufio.NewReader(os.Stdin)
-	_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// will block until user inputs the signature
-	signed, err := buf.ReadString('\n')
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := CryptoCdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to decode signature")
-	}
-
-	return sig, info.GetPubKey(), nil
 }
 
 // CreateAccount creates an account Info object.
@@ -267,16 +202,6 @@ func (kb baseKeybase) SupportedAlgos() []SigningAlgo {
 // SupportedAlgosLedger returns a list of supported ledger signing algorithms.
 func (kb baseKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.options.supportedAlgosLedger
-}
-
-// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
-func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
-	for _, supportedAlgo := range supported {
-		if algo == supportedAlgo {
-			return true
-		}
-	}
-	return false
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object

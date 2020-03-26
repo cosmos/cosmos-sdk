@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,10 +19,10 @@ import (
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
 	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
-	tmp := keys.NewMultiInfo("myMultisig", pk)
+	tmp := keyring.NewMultiInfo("myMultisig", pk)
 
 	require.Equal(t, "myMultisig", tmp.GetName())
-	require.Equal(t, keys.TypeMulti, tmp.GetType())
+	require.Equal(t, keyring.TypeMulti, tmp.GetType())
 	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
 	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", tmp.GetAddress().String())
 }
@@ -49,7 +49,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("runShowCmd_Key1", "", false)
@@ -58,13 +58,13 @@ func Test_runShowCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keyring.Secp256k1)
 	require.NoError(t, err)
 
 	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keyring.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key
@@ -161,9 +161,9 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{sdk.PrefixAccount}, keys.Bech32KeyOutput, false},
-		{"val", args{sdk.PrefixValidator}, keys.Bech32ValKeyOutput, false},
-		{"cons", args{sdk.PrefixConsensus}, keys.Bech32ConsKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, keyring.Bech32KeyOutput, false},
+		{"val", args{sdk.PrefixValidator}, keyring.Bech32ValKeyOutput, false},
+		{"cons", args{sdk.PrefixConsensus}, keyring.Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		tt := tt

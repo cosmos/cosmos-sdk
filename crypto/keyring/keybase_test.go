@@ -1,10 +1,7 @@
-//nolint: goconst
-package keys
+package keyring
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -227,7 +224,8 @@ func TestSignVerify(t *testing.T) {
 	// Import a public key
 	armor, err := cstore.ExportPubKey(n2)
 	require.Nil(t, err)
-	cstore.ImportPubKey(n3, armor)
+	err = cstore.ImportPubKey(n3, armor)
+	require.NoError(t, err)
 	i3, err := cstore.Get(n3)
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
@@ -280,7 +278,8 @@ func TestSignVerify(t *testing.T) {
 
 	// Now try to sign data with a secret-less key
 	_, _, err = cstore.Sign(n3, p3, d3)
-	require.True(t, errors.Is(io.EOF, err))
+	require.Error(t, err)
+	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
 func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {

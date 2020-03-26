@@ -921,5 +921,8 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)
-	batch.Write()
+	err := batch.Write()
+	if err != nil {
+		panic(fmt.Errorf("error on batch write %w", err))
+	}
 }

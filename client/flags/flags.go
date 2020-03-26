@@ -10,7 +10,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 // nolint
@@ -23,7 +23,7 @@ const (
 	GasFlagAuto          = "auto"
 
 	// DefaultKeyringBackend
-	DefaultKeyringBackend = keys.BackendOS
+	DefaultKeyringBackend = keyring.BackendOS
 )
 
 const (
@@ -118,7 +118,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible)")
 		c.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
-		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(

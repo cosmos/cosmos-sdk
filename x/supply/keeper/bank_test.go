@@ -71,15 +71,15 @@ func TestSendCoins(t *testing.T) {
 	ak.SetAccount(ctx, baseAcc)
 
 	require.Panics(t, func() {
-		keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins)
+		keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) // nolint:errcheck
 	})
 
 	require.Panics(t, func() {
-		keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins)
+		keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins) // nolint:errcheck
 	})
 
 	require.Panics(t, func() {
-		keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins)
+		keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) // nolint:errcheck
 	})
 
 	require.Error(
@@ -129,12 +129,12 @@ func TestMintCoins(t *testing.T) {
 
 	initialSupply := keeper.GetSupply(ctx)
 
-	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")
-	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }, "invalid permission")
+	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")            // nolint:errcheck
+	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }, "invalid permission") // nolint:errcheck
 	err := keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
 	require.Error(t, err, "insufficient coins")
 
-	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) })
+	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
 
 	err = keeper.MintCoins(ctx, types.Minter, initCoins)
 	require.NoError(t, err)
@@ -149,7 +149,7 @@ func TestMintCoins(t *testing.T) {
 	require.Equal(t, initCoins, getCoinsByName(ctx, keeper, ak, bk, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
 
-	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) })
+	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }) // nolint:errcheck
 }
 
 func TestBurnCoins(t *testing.T) {
@@ -178,9 +178,9 @@ func TestBurnCoins(t *testing.T) {
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")
-	require.Panics(t, func() { keeper.BurnCoins(ctx, types.Minter, initCoins) }, "invalid permission")
-	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.GetTotal()) }, "random permission")
+	require.Panics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                        // nolint:errcheck
+	require.Panics(t, func() { keeper.BurnCoins(ctx, types.Minter, initCoins) }, "invalid permission")             // nolint:errcheck
+	require.Panics(t, func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.GetTotal()) }, "random permission") // nolint:errcheck
 	err := keeper.BurnCoins(ctx, types.Burner, initialSupply.GetTotal())
 	require.Error(t, err, "insufficient coins")
 

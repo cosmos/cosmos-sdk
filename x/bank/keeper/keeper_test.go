@@ -240,7 +240,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
-	events := ctx.EventManager().Events()
+	events := ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(2, len(events))
 
 	event1 := sdk.Event{
@@ -264,18 +264,18 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
-	suite.Require().Equal(event1, events[0])
-	suite.Require().Equal(event2, events[1])
+	suite.Require().Equal(abci.Event(event1), events[0])
+	suite.Require().Equal(abci.Event(event2), events[1])
 
 	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
-	events = ctx.EventManager().Events()
+	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(4, len(events))
-	suite.Require().Equal(event1, events[2])
-	suite.Require().Equal(event2, events[3])
+	suite.Require().Equal(abci.Event(event1), events[2])
+	suite.Require().Equal(abci.Event(event2), events[3])
 }
 
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
@@ -306,7 +306,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	events := ctx.EventManager().Events()
+	events := ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(0, len(events))
 
 	// Set addr's coins but not addr2's coins
@@ -314,7 +314,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	events = ctx.EventManager().Events()
+	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(1, len(events))
 
 	event1 := sdk.Event{
@@ -325,7 +325,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event1.Attributes,
 		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
-	suite.Require().Equal(event1, events[0])
+	suite.Require().Equal(abci.Event(event1), events[0])
 
 	// Set addr's coins and addr2's coins
 	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)))
@@ -336,7 +336,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	events = ctx.EventManager().Events()
+	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(5, len(events))
 
 	event2 := sdk.Event{
@@ -371,10 +371,10 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 
-	suite.Require().Equal(event1, events[1])
-	suite.Require().Equal(event2, events[2])
-	suite.Require().Equal(event3, events[3])
-	suite.Require().Equal(event4, events[4])
+	suite.Require().Equal(abci.Event(event1), events[1])
+	suite.Require().Equal(abci.Event(event2), events[2])
+	suite.Require().Equal(abci.Event(event3), events[3])
+	suite.Require().Equal(abci.Event(event4), events[4])
 }
 
 func (suite *IntegrationTestSuite) TestSpendableCoins() {

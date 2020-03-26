@@ -122,9 +122,11 @@ func (tx Transaction) GetSignatures() []sdk.Signature {
 // SetSignatures sets the transaction's signatures. It will overwrite any
 // existing signatures set.
 func (tx *Transaction) SetSignatures(sdkSigs ...sdk.Signature) {
-	sigs := make([]auth.StdSignature, len(tx.Signatures))
+	sigs := make([]auth.StdSignature, len(sdkSigs))
 	for i, sig := range sdkSigs {
-		sigs[i] = auth.NewStdSignature(sig.GetPubKey(), sig.GetSignature())
+		if sig != nil {
+			sigs[i] = auth.NewStdSignature(sig.GetPubKey(), sig.GetSignature())
+		}
 	}
 
 	tx.Signatures = sigs

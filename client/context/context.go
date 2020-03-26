@@ -7,14 +7,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +24,6 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	TxGenerator   clientx.Generator
 	Marshaler     codec.Marshaler
 	Keybase       keyring.Keybase
 	Input         io.Reader
@@ -138,12 +135,6 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 	return ctx
 }
 
-// WithTxGenerator returns a copy of the CLIContext with an updated TxGenerator.
-func (ctx CLIContext) WithTxGenerator(txg clientx.Generator) CLIContext {
-	ctx.TxGenerator = txg
-	return ctx
-}
-
 // WithMarshaler returns a copy of the CLIContext with an updated Marshaler.
 func (ctx CLIContext) WithMarshaler(m codec.Marshaler) CLIContext {
 	ctx.Marshaler = m
@@ -249,9 +240,44 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 	return ctx
 }
 
+// Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
+// will be JSON encoded using ctx.Marshaler. An error is returned upon failure.
+func (ctx CLIContext) Println(toPrint interface{}) error {
+	var (
+		out []byte
+		err error
+	)
+
+	switch ctx.OutputFormat {
+	case "text":
+		out, err = yaml.Marshal(&toPrint)
+
+	case "json":
+		out, err = ctx.Marshaler.MarshalJSON(toPrint)
+
+		// To JSON indent, we re-encode the already encoded JSON given there is no
+		// error. The re-encoded JSON uses the standard library as the initial encoded
+		// JSON should have the correct output produced by ctx.Marshaler.
+		if ctx.Indent && err == nil {
+			out, err = codec.MarshalIndentFromJSON(out)
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(ctx.Output, "%s\n", out)
+	return err
+}
+
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
-// because this function will panic on marshaling errors
+// because this function will panic on marshaling errors.
+//
+// TODO: Remove once client-side Protobuf migration has been completed.
+// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
 func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 	var (
 		out []byte

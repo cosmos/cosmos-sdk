@@ -119,16 +119,16 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	return true
 }
 
-// ReadRESTReq reads and unmarshals a Request's body to the the BaseReq stuct.
+// ReadRESTReq reads and unmarshals a Request's body to the the BaseReq struct.
 // Writes an error response to ResponseWriter and returns true if errors occurred.
-func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
+func ReadRESTReq(w http.ResponseWriter, r *http.Request, m codec.JSONMarshaler, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return false
 	}
 
-	err = cdc.UnmarshalJSON(body, req)
+	err = m.UnmarshalJSON(body, req)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to decode JSON payload: %s", err))
 		return false
@@ -158,9 +158,10 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 
 // WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
-func WriteSimulationResponse(w http.ResponseWriter, cdc *codec.Codec, gas uint64) {
+func WriteSimulationResponse(w http.ResponseWriter, m codec.JSONMarshaler, gas uint64) {
 	gasEst := GasEstimateResponse{GasEstimate: gas}
-	resp, err := cdc.MarshalJSON(gasEst)
+
+	resp, err := m.MarshalJSON(gasEst)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -229,21 +230,31 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 
 // PostProcessResponseBare post processes a body similar to PostProcessResponse
 // except it does not wrap the body and inject the height.
-func PostProcessResponseBare(w http.ResponseWriter, cliCtx context.CLIContext, body interface{}) {
+func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body interface{}) {
 	var (
 		resp []byte
 		err  error
 	)
+
+	// TODO: Remove once client-side Protobuf migration has been completed.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+	var marshaler codec.JSONMarshaler
+
+	if ctx.Marshaler != nil {
+		marshaler = ctx.Marshaler
+	} else {
+		marshaler = ctx.Codec
+	}
 
 	switch b := body.(type) {
 	case []byte:
 		resp = b
 
 	default:
-		if cliCtx.Indent {
-			resp, err = cliCtx.Codec.MarshalJSONIndent(body, "", "  ")
-		} else {
-			resp, err = cliCtx.Codec.MarshalJSON(body)
+		resp, err = marshaler.MarshalJSON(body)
+
+		if ctx.Indent && err == nil {
+			resp, err = codec.MarshalIndentFromJSON(resp)
 		}
 
 		if err != nil {
@@ -259,12 +270,25 @@ func PostProcessResponseBare(w http.ResponseWriter, cliCtx context.CLIContext, b
 // PostProcessResponse performs post processing for a REST response. The result
 // returned to clients will contain two fields, the height at which the resource
 // was queried at and the original result.
-func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp interface{}) {
-	var result []byte
+func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp interface{}) {
+	var (
+		result []byte
+		err    error
+	)
 
-	if cliCtx.Height < 0 {
+	if ctx.Height < 0 {
 		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height in response").Error())
 		return
+	}
+
+	// TODO: Remove once client-side Protobuf migration has been completed.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+	var marshaler codec.JSONMarshaler
+
+	if ctx.Marshaler != nil {
+		marshaler = ctx.Marshaler
+	} else {
+		marshaler = ctx.Codec
 	}
 
 	switch res := resp.(type) {
@@ -272,11 +296,10 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp 
 		result = res
 
 	default:
-		var err error
-		if cliCtx.Indent {
-			result, err = cliCtx.Codec.MarshalJSONIndent(resp, "", "  ")
-		} else {
-			result, err = cliCtx.Codec.MarshalJSON(resp)
+		result, err = marshaler.MarshalJSON(resp)
+
+		if ctx.Indent && err == nil {
+			result, err = codec.MarshalIndentFromJSON(result)
 		}
 
 		if err != nil {
@@ -285,17 +308,11 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp 
 		}
 	}
 
-	wrappedResp := NewResponseWithHeight(cliCtx.Height, result)
+	wrappedResp := NewResponseWithHeight(ctx.Height, result)
 
-	var (
-		output []byte
-		err    error
-	)
-
-	if cliCtx.Indent {
-		output, err = cliCtx.Codec.MarshalJSONIndent(wrappedResp, "", "  ")
-	} else {
-		output, err = cliCtx.Codec.MarshalJSON(wrappedResp)
+	output, err := marshaler.MarshalJSON(wrappedResp)
+	if ctx.Indent && err == nil {
+		output, err = codec.MarshalIndentFromJSON(output)
 	}
 
 	if err != nil {
@@ -312,10 +329,12 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp 
 // default limit can be provided.
 func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, page, limit int, err error) {
 	tags = make([]string, 0, len(r.Form))
+
 	for key, values := range r.Form {
 		if key == "page" || key == "limit" {
 			continue
 		}
+
 		var value string
 		value, err = url.QueryUnescape(values[0])
 		if err != nil {
@@ -326,13 +345,17 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 		switch key {
 		case types.TxHeightKey:
 			tag = fmt.Sprintf("%s=%s", key, value)
+
 		case TxMinHeightKey:
 			tag = fmt.Sprintf("%s>=%s", types.TxHeightKey, value)
+
 		case TxMaxHeightKey:
 			tag = fmt.Sprintf("%s<=%s", types.TxHeightKey, value)
+
 		default:
 			tag = fmt.Sprintf("%s='%s'", key, value)
 		}
+
 		tags = append(tags, tag)
 	}
 

@@ -5,9 +5,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -936,12 +938,13 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var simRes sdk.SimulationResponse
-		err = codec.Cdc.UnmarshalBinaryBare(queryResult.Value, &simRes)
-		require.NoError(t, err)
+		require.NoError(t, jsonpb.Unmarshal(strings.NewReader(string(queryResult.Value)), &simRes))
+
 		require.Equal(t, gInfo, simRes.GasInfo)
 		require.Equal(t, result.Log, simRes.Result.Log)
 		require.Equal(t, result.Events, simRes.Result.Events)
 		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
+
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}

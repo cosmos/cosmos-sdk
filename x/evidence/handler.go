@@ -41,6 +41,6 @@ func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg exported.MsgSubmitEv
 
 	return &sdk.Result{
 		Data:   evidence.Hash(),
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }

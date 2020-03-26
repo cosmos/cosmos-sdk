@@ -103,6 +103,11 @@ to handle all the types, but also knows how to generate transactions, signatures
 and messages.
 
 ```go
+type AccountRetriever interface {
+  EnsureExists(addr sdk.AccAddress) error
+  GetAccountNumberSequence(addr sdk.AccAddress) (uint64, uint64, error)
+}
+
 type Generator interface {
   NewTx() ClientTx
 }
@@ -123,11 +128,13 @@ type ClientTx interface {
 }
 ```
 
-We then update `CLIContext` to have two new fields: `Generator` and `Marshler`.
+We then update `CLIContext` to have a new field: `Marshaler`.
 
-Then, each module will at the minimum accept a `Marshaler` instead of a concrete
-Amino codec. If the module needs to work with any interface types, it will use
-the `Codec` interface defined by the module which also extends `Marshaler`.
+Then, each module's client handler will at the minimum accept a `Marshaler` instead
+of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
+that account fields can be retrieved for signing. If the module needs to work with
+any interface types, it will use the `Codec` interface defined by the module which
+also extends `Marshaler`.
 
 ## Future Improvements
 

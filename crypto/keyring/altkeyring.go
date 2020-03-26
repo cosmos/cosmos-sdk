@@ -23,8 +23,9 @@ type Keyring interface {
 	// List all keys.
 	List() ([]Info, error)
 
-	//// Key and KeyByAddress return keys by uid and address respectively.
-	//Key(uid string) (Info, error)
+	// Key and KeyByAddress return keys by uid and address respectively.
+	Key(uid string) (Info, error)
+
 	//KeyByAddress(address types.Address) (Info, error)
 	//
 	//// Delete and DeleteByAddress remove keys.
@@ -194,6 +195,21 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 	info = a.writeLocalKey(uid, privKey, algo)
 
 	return info, nil
+}
+
+func (a altKeyring) Key(uid string) (Info, error) {
+	key := infoKey(uid)
+
+	bs, err := a.db.Get(string(key))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(bs.Data) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
+	}
+
+	return unmarshalInfo(bs.Data)
 }
 
 func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info {

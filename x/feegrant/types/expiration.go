@@ -7,13 +7,13 @@ import (
 )
 
 // ExpiresAtTime creates an expiration at the given time
-func ExpiresAtTime(t time.Time) ExpiresAt {
-	return ExpiresAt{Time: t}
+func ExpiresAtTime(t time.Time) *ExpiresAt {
+	return &ExpiresAt{Time: t}
 }
 
 // ExpiresAtHeight creates an expiration at the given height
-func ExpiresAtHeight(h int64) ExpiresAt {
-	return ExpiresAt{Height: h}
+func ExpiresAtHeight(h int64) *ExpiresAt {
+	return &ExpiresAt{Height: h}
 }
 
 // ValidateBasic performs basic sanity checks.
@@ -35,7 +35,7 @@ func (e ExpiresAt) IsZero() bool {
 
 // FastForward produces a new Expiration with the time or height set to the
 // new value, depending on what was set on the original expiration
-func (e ExpiresAt) FastForward(t time.Time, h int64) ExpiresAt {
+func (e ExpiresAt) FastForward(t time.Time, h int64) *ExpiresAt {
 	if !e.Time.IsZero() {
 		return ExpiresAtTime(t)
 	}
@@ -65,20 +65,20 @@ func (e ExpiresAt) IsCompatible(d *Duration) bool {
 
 // Step will increase the expiration point by one Duration
 // It returns an error if the Duration is incompatible
-func (e ExpiresAt) Step(d *Duration) (ExpiresAt, error) {
+func (e ExpiresAt) Step(d *Duration) (*ExpiresAt, error) {
 	if !e.IsCompatible(d) {
-		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
+		return &ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
 	}
 	if !e.Time.IsZero() {
 		e.Time = e.Time.Add(d.Clock)
 	} else {
 		e.Height += d.Block
 	}
-	return e, nil
+	return &e, nil
 }
 
 // MustStep is like Step, but panics on error
-func (e ExpiresAt) MustStep(d *Duration) ExpiresAt {
+func (e ExpiresAt) MustStep(d *Duration) *ExpiresAt {
 	res, err := e.Step(d)
 	if err != nil {
 		panic(err)
@@ -88,11 +88,11 @@ func (e ExpiresAt) MustStep(d *Duration) ExpiresAt {
 
 // PrepareForExport will deduct the dumpHeight from the expiration, so when this is
 // reloaded after a hard fork, the actual number of allowed blocks is constant
-func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) ExpiresAt {
+func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) *ExpiresAt {
 	if e.Height != 0 {
 		e.Height -= dumpHeight
 	}
-	return e
+	return &e
 }
 
 // ClockDuration creates an Duration by clock time

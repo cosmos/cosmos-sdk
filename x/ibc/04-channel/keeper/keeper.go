@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -19,13 +20,14 @@ type Keeper struct {
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
+	scopedKeeper     capability.ScopedKeeper
 }
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
-	portKeeper types.PortKeeper,
+	portKeeper types.PortKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
@@ -33,6 +35,7 @@ func NewKeeper(
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
 		portKeeper:       portKeeper,
+		scopedKeeper:     scopedKeeper,
 	}
 }
 
@@ -62,20 +65,24 @@ func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel ty
 }
 
 // GetChannelCapability gets a channel's capability key from the store
-func (k Keeper) GetChannelCapability(ctx sdk.Context, portID, channelID string) (string, bool) {
+func (k Keeper) GetChannelCapability(ctx sdk.Context, portID, channelID string) (capability.Capability, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(ibctypes.KeyChannelCapabilityPath(portID, channelID))
 	if bz == nil {
-		return "", false
+		return nil, false
 	}
 
-	return string(bz), true
+	var capKey capability.Capability
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &capKey)
+
+	return capKey, true
 }
 
 // SetChannelCapability sets a channel's capability key to the store
-func (k Keeper) SetChannelCapability(ctx sdk.Context, portID, channelID string, key string) {
+func (k Keeper) SetChannelCapability(ctx sdk.Context, portID, channelID string, key capability.Capability) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(ibctypes.KeyChannelCapabilityPath(portID, channelID), []byte(key))
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(key)
+	store.Set(ibctypes.KeyChannelCapabilityPath(portID, channelID), bz)
 }
 
 // GetNextSequenceSend gets a channel's next send sequence from the store

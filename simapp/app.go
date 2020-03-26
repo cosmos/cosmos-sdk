@@ -176,15 +176,18 @@ func NewSimApp(
 	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
 	app.subspaces[evidence.ModuleName] = app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 
+	// add capability keeper and ScopeToModule for ibc module
+	app.CapabilityKeeper = capability.NewKeeper(
+		app.cdc, keys[capability.StoreKey], memKeys[capability.MemStoreKey],
+	)
+	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule("ibc")
+
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
 		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
 		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
-	)
-	app.CapabilityKeeper = capability.NewKeeper(
-		app.cdc, keys[capability.StoreKey], memKeys[capability.MemStoreKey],
 	)
 	app.SupplyKeeper = supply.NewKeeper(
 		appCodec, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
@@ -236,7 +239,7 @@ func NewSimApp(
 	)
 
 	app.IBCKeeper = ibc.NewKeeper(
-		app.cdc, keys[ibc.StoreKey], app.StakingKeeper,
+		app.cdc, keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	transferCapKey := app.IBCKeeper.PortKeeper.BindPort(bank.ModuleName)

@@ -75,6 +75,7 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 * (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
 `Result` from the execution.
 * (crypto/keys) [\#5866](https://github.com/cosmos/cosmos-sdk/pull/5866) Move `Keyring` and `Keybase` implementations and their associated types from `crypto/keys/` to `crypto/keybase/`.
+* (crypto) [\#5880](https://github.com/cosmos/cosmos-sdk/pull/5880) Merge `crypto/keys/mintkey` into `crypto`.
 
 ### Features
 

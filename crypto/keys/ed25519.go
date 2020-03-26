@@ -42,7 +42,7 @@ func (pubKey PubKeyEd25519) Address() crypto.Address {
 func (pubKey PubKeyEd25519) Bytes() []byte {
 	if len(pubKey.bytes) != PubKeyEd25519Size {
 		panic(
-			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeyEd25519Size),
+			fmt.Errorf("invalid pubKey bytes length: got (%d), expected (%d)", len(pubKey.bytes), PubKeyEd25519Size),
 		)
 	}
 	return pubKey.bytes[:]
@@ -82,6 +82,11 @@ func (pubKey PubKeyEd25519) Equals(other crypto.PubKey) bool {
 
 // Bytes marshals the privkey using amino encoding.
 func (privKey PrivKeyEd25519) Bytes() []byte {
+	if len(privKey.bytes) != PrivKeyEd25519Size {
+		panic(
+			fmt.Errorf("invalid privKey bytes length: got (%d), expected (%d)", len(privKey.bytes), PrivKeyEd25519Size),
+		)
+	}
 	return privKey.bytes
 }
 
@@ -126,9 +131,7 @@ func (privKey PrivKeyEd25519) PubKey() crypto.PubKey {
 		panic("expected PrivKeyEd25519 to include concatenated pubkey bytes")
 	}
 
-	var pubkeyBytes []byte
-	copy(pubkeyBytes[:32], privKey.Bytes()[32:])
-	return PubKeyEd25519{bytes: pubkeyBytes}
+	return PubKeyEd25519{bytes: privKey.Bytes()[32:]}
 }
 
 // Equals checks if two privkeys are equal in constant time based on length

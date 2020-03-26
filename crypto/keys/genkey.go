@@ -53,17 +53,15 @@ func genPrivKeyEd25519(rand io.Reader) PrivKeyEd25519 {
 	}
 
 	privKey := ed25519.NewKeyFromSeed(seed)
-	var privKeyEd []byte
-	copy(privKeyEd[:], privKey)
-	return PrivKeyEd25519{bytes: privKeyEd}
+	return PrivKeyEd25519{bytes: privKey}
 }
 
 // genPrivKeySecp256k1 generates a new secp256k1 private key using the provided reader.
 func genPrivKeySecp256k1(rand io.Reader) PrivKeySecp256K1 {
-	var privKeyBytes []byte
+	var privKeyBytes [PrivKeySecp256k1Size]byte
 	d := new(big.Int)
 	for {
-		privKeyBytes = []byte{}
+		var privKeyBytes [PrivKeySecp256k1Size]byte
 		_, err := io.ReadFull(rand, privKeyBytes[:])
 		if err != nil {
 			panic(err)
@@ -77,7 +75,7 @@ func genPrivKeySecp256k1(rand io.Reader) PrivKeySecp256K1 {
 		}
 	}
 
-	return PrivKeySecp256K1{bytes: privKeyBytes}
+	return PrivKeySecp256K1{bytes: privKeyBytes[:]}
 }
 
 // genPrivKeySr25519 generates a new sr25519 private key.
@@ -134,11 +132,11 @@ func genPrivKeySecp256k1FromSecret(secret []byte) PrivKeySecp256K1 {
 	fe.Add(fe, one)
 
 	feB := fe.Bytes()
-	var privKey32 []byte
+	var privKey32 [PrivKeySecp256k1Size]byte
 	// copy feB over to fixed 32 byte privKey32 and pad (if necessary)
 	copy(privKey32[32-len(feB):32], feB)
 
-	return PrivKeySecp256K1{bytes: privKey32}
+	return PrivKeySecp256K1{bytes: privKey32[:]}
 }
 
 // genPrivKeySr25519FromSecret hashes the secret with SHA2, and uses

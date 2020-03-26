@@ -59,12 +59,15 @@ func (pubKey PubKeySecp256K1) Address() crypto.Address {
 // Bytes returns the pubkey bytes.
 func (pubKey PubKeySecp256K1) Bytes() []byte {
 	if len(pubKey.bytes) != PubKeySecp256k1Size {
-		fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeySecp256k1Size)
+		panic(
+			fmt.Errorf("invalid bytes length: got (%d), expected (%d)", len(pubKey.bytes), PubKeySecp256k1Size),
+		)
 	}
 	return pubKey.bytes
 }
 
-// ByteArray returns a byte array with a fixed size equals to the pubkey spec.
+// ByteArray copies the pubkey bytes into a byte array with a fixed size that equals
+// the pubkey spec.
 func (pubKey PubKeySecp256K1) ByteArray() [33]byte {
 	var byteArray [PubKeySecp256k1Size]byte
 	copy(byteArray[:], pubKey.Bytes())
@@ -85,44 +88,52 @@ func (pubKey PubKeySecp256K1) Equals(other crypto.PubKey) bool {
 	return bytes.Equal(pubKey.bytes, otherSecp.bytes)
 }
 
-// Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.
-// The returned signature will be of the form R || S (in lower-S form).
-func (privKey PubKeySecp256K1) Sign(msg []byte) ([]byte, error) {
-	priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), privKey.Bytes())
-	sig, err := priv.Sign(crypto.Sha256(msg))
-	if err != nil {
-		return nil, err
-	}
-	sigBytes := serializeSig(sig)
-	return sigBytes, nil
-}
+// // Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.
+// // The returned signature will be of the form R || S (in lower-S form).
+// func (pubKey PubKeySecp256K1) Sign(msg []byte) ([]byte, error) {
+// 	priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), pubKey.Bytes())
+// 	sig, err := priv.Sign(crypto.Sha256(msg))
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	sigBytes := serializeSig(sig)
+// 	return sigBytes, nil
+// }
+
+// // VerifyBytes verifies a signature of the form R || S.
+// // It rejects signatures which are not in lower-S form.
+// func (pubKey PubKeySecp256K1) VerifyBytes(msg []byte, sigStr []byte) bool {
+// 	if len(sigStr) != 64 {
+// 		return false
+// 	}
+// 	pub, err := btcec.ParsePubKey(pubKey.Bytes(), btcec.S256())
+// 	if err != nil {
+// 		return false
+// 	}
+// 	// parse the signature:
+// 	signature := signatureFromBytes(sigStr)
+// 	// Reject malleable signatures. libsecp256k1 does this check but btcec doesn't.
+// 	// see: https://github.com/ethereum/go-ethereum/blob/f9401ae011ddf7f8d2d95020b7446c17f8d98dc1/crypto/signature_nocgo.go#L90-L93
+// 	if signature.S.Cmp(secp256k1halfN) > 0 {
+// 		return false
+// 	}
+// 	return signature.Verify(crypto.Sha256(msg), pub)
+// }
 
 // VerifyBytes verifies a signature of the form R || S.
 // It rejects signatures which are not in lower-S form.
-func (pubKey PubKeySecp256K1) VerifyBytes(msg []byte, sigStr []byte) bool {
-	if len(sigStr) != 64 {
-		return false
-	}
-	pub, err := btcec.ParsePubKey(pubKey.Bytes(), btcec.S256())
-	if err != nil {
-		return false
-	}
-	// parse the signature:
-	signature := signatureFromBytes(sigStr)
-	// Reject malleable signatures. libsecp256k1 does this check but btcec doesn't.
-	// see: https://github.com/ethereum/go-ethereum/blob/f9401ae011ddf7f8d2d95020b7446c17f8d98dc1/crypto/signature_nocgo.go#L90-L93
-	if signature.S.Cmp(secp256k1halfN) > 0 {
-		return false
-	}
-	return signature.Verify(crypto.Sha256(msg), pub)
+func (pubKey PubKeySecp256K1) VerifyBytes(msg []byte, sig []byte) bool {
+	return secp256k1.VerifySignature(pubKey.Bytes(), crypto.Sha256(msg), sig)
 }
 
 //-------------------------------------
 
 // Bytes marshalls the private key using amino encoding.
 func (privKey PrivKeySecp256K1) Bytes() []byte {
-	if len(privKey.bytes) != PubKeySecp256k1Size {
-		fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(privKey.bytes), PrivKeySecp256k1Size)
+	if len(privKey.bytes) != PrivKeySecp256k1Size {
+		panic(
+			fmt.Errorf("invalid bytes length: got (%d), expected (%d)", len(privKey.bytes), PrivKeySecp256k1Size),
+		)
 	}
 	return privKey.bytes
 }
@@ -142,10 +153,8 @@ func (privKey *PrivKeySecp256K1) String() string {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey PrivKeySecp256K1) PubKey() crypto.PubKey {
-	_, pubkeyObject := btcec.PrivKeyFromBytes(secp256k1.S256(), privKey.Bytes()[:])
-	var pubkeyBytes []byte
-	copy(pubkeyBytes, pubkeyObject.SerializeCompressed())
-	return PubKeySecp256K1{bytes: pubkeyBytes}
+	_, pubkeyObject := btcec.PrivKeyFromBytes(secp256k1.S256(), privKey.Bytes())
+	return PubKeySecp256K1{bytes: pubkeyObject.SerializeCompressed()}
 }
 
 // Equals checks if two privkeys are equal in constant time based on length
@@ -167,10 +176,6 @@ func (privKey PrivKeySecp256K1) Sign(msg []byte) ([]byte, error) {
 	// we do not need v  in r||s||v:
 	rs := rsv[:len(rsv)-1]
 	return rs, nil
-}
-
-func (pubKey PrivKeySecp256K1) VerifyBytes(msg []byte, sig []byte) bool {
-	return secp256k1.VerifySignature(pubKey.Bytes(), crypto.Sha256(msg), sig)
 }
 
 //-------------------------------------

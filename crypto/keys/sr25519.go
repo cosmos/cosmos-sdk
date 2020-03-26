@@ -40,7 +40,7 @@ func (pubKey PubKeySr25519) Address() crypto.Address {
 func (pubKey PubKeySr25519) Bytes() []byte {
 	if len(pubKey.bytes) != PubKeyEd25519Size {
 		panic(
-			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(pubKey.bytes), PubKeySr25519Size),
+			fmt.Errorf("invalid bytes length: got (%d), expected (%d)", len(pubKey.bytes), PubKeySr25519Size),
 		)
 	}
 	return pubKey.bytes
@@ -98,7 +98,7 @@ func (pubKey PubKeySr25519) Equals(other crypto.PubKey) bool {
 func (privKey PrivKeySr25519) Bytes() []byte {
 	if len(privKey.bytes) != PubKeyEd25519Size {
 		panic(
-			fmt.Errorf("invalid bytes length: got (%s), expected (%d)", len(privKey.bytes), PrivKeySr25519Size),
+			fmt.Errorf("invalid bytes length: got (%d), expected (%d)", len(privKey.bytes), PrivKeySr25519Size),
 		)
 	}
 	return privKey.bytes

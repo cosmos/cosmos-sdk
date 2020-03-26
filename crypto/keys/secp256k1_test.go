@@ -6,11 +6,9 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
 )
@@ -33,36 +31,37 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 	for _, d := range secpDataTable {
 		privB, _ := hex.DecodeString(d.priv)
 		pubB, _ := hex.DecodeString(d.pub)
-		addrBbz, _, _ := base58.CheckDecode(d.addr)
+		addrBbz, _, err := base58.CheckDecode(d.addr)
+		require.NoError(t, err)
 		addrB := crypto.Address(addrBbz)
 
-		var priv secp256k1.PrivKeySecp256k1
-		copy(priv[:], privB)
-
+		priv := PrivKeySecp256K1{bytes: privB}
 		pubKey := priv.PubKey()
-		pubT, _ := pubKey.(secp256k1.PubKeySecp256k1)
-		pub := pubT[:]
+		pubT, ok := pubKey.(PubKeySecp256K1)
+		require.True(t, ok)
+		pub := pubT.bytes
 		addr := pubKey.Address()
 
-		assert.Equal(t, pub, pubB, "Expected pub keys to match")
-		assert.Equal(t, addr, addrB, "Expected addresses to match")
+		require.Equal(t, pub, pubB, "Expected pub keys to match")
+		require.Equal(t, addr, addrB, "Expected addresses to match")
 	}
 }
 
 func TestSignAndValidateSecp256k1(t *testing.T) {
-	privKey := secp256k1.GenPrivKey()
+	privKey, err := GenPrivKey(SECP256K1)
+	require.NoError(t, err)
 	pubKey := privKey.PubKey()
 
 	msg := crypto.CRandBytes(128)
 	sig, err := privKey.Sign(msg)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
-	assert.True(t, pubKey.VerifyBytes(msg, sig))
+	require.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
 	sig[3] ^= byte(0x01)
 
-	assert.False(t, pubKey.VerifyBytes(msg, sig))
+	require.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
 // This test is intended to justify the removal of calls to the underlying library
@@ -71,7 +70,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 	numberOfTests := 256
 	for i := 0; i < numberOfTests; i++ {
 		// Seed the test case with some random bytes
-		privKeyBytes := {}
+		var privKeyBytes [PrivKeySecp256k1Size]byte
 		copy(privKeyBytes[:], crypto.CRandBytes(32))
 
 		// This function creates a private and public key in the underlying libraries format.
@@ -106,10 +105,11 @@ func TestGenPrivKeySecp256k1(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotPrivKey := secp256k1.GenPrivKeySecp256k1(tt.secret)
+			gotPrivKey, err := GenPrivKeyFromSecret(SECP256K1, tt.secret)
 			require.NotNil(t, gotPrivKey)
+			require.NoError(t, err)
 			// interpret as a big.Int and make sure it is a valid field element:
-			fe := new(big.Int).SetBytes(gotPrivKey[:])
+			fe := new(big.Int).SetBytes(gotPrivKey.Bytes())
 			require.True(t, fe.Cmp(N) < 0)
 			require.True(t, fe.Sign() > 0)
 		})

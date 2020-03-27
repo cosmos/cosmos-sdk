@@ -37,7 +37,7 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
-	testChannelOrder   = channelibctypes.UNORDERED
+	testChannelOrder   = ibctypes.UNORDERED
 	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
@@ -99,7 +99,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	// Setup channel from A to B
 	suite.chainA.CreateClient(suite.chainB)
 	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
-	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelibctypes.OPEN, channelibctypes.ORDERED, testConnection)
+	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 
 	res, err = handler(ctx, msg)
 	suite.Require().Error(err)

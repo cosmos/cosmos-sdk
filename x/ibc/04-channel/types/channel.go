@@ -90,6 +90,16 @@ func NewCounterparty(portID, channelID string) Counterparty {
 	}
 }
 
+// GetPortID implements CounterpartyI interface
+func (c Counterparty) GetPortID() string {
+	return c.PortID
+}
+
+// GetChannelID implements CounterpartyI interface
+func (c Counterparty) GetChannelID() string {
+	return c.ChannelID
+}
+
 // ValidateBasic performs a basic validation check of the identifiers
 func (c Counterparty) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(c.PortID); err != nil {

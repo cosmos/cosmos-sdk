@@ -42,17 +42,17 @@ func (k Keeper) TimeoutPacket(
 	// NOTE: TimeoutPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	if packet.GetDestPort() != channel.Counterparty.GetPortID() {
+	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.GetChannelID() {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -157,17 +157,17 @@ func (k Keeper) TimeoutOnClose(
 	// 	return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
 	// }
 
-	if packet.GetDestPort() != channel.Counterparty.GetPortID() {
+	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.GetChannelID() {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
@@ -197,7 +197,7 @@ func (k Keeper) TimeoutOnClose(
 	// check that the opposing channel end has closed
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
-		channel.Counterparty.GetPortID(), channel.Counterparty.GetChannelID(),
+		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
 		expectedChannel,
 	); err != nil {
 		return nil, err

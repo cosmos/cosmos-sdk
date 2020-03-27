@@ -179,6 +179,8 @@ message Channel {
 }
 
 message Counterparty {
+  option (gogoproto.goproto_getters) = false;
+
   string port_id = 1 [
     (gogoproto.customname) = "PortID",
     (gogoproto.moretags)   = "yaml:\"port_id\""

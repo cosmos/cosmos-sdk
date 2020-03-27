@@ -44,7 +44,7 @@ func (qrt *QueryRouter) Route(path string) sdk.Querier {
 
 func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// adds a top-level querier based on the GRPC service name
-	qrt.AddRoute(sd.ServiceName,
+	qrt.routes[sd.ServiceName] =
 		func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 			path0 := path[0]
 			for _, md := range sd.Methods {
@@ -69,5 +69,5 @@ func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{
 				}
 			}
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
-		})
+		}
 }

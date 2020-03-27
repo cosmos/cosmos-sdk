@@ -258,7 +258,7 @@ func (c cliQueryConn) Invoke(ctx context.Context, method string, args, reply int
 	if err != nil {
 		return err
 	}
-	resBz, _, err := c.ctx.QueryWithData(fmt.Sprintf("custom/%s", method), reqBz)
+	resBz, _, err := c.ctx.QueryWithData(fmt.Sprintf("custom%s", method), reqBz)
 	if err != nil {
 		return err
 	}

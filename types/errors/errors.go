@@ -92,7 +92,7 @@ var (
 	ErrProtoMarshal = Register(RootCodespace, 25, "failed to marshal proto bytes")
 
 	// ErrProtoUnmarshal defines an ABCI typed protobuf unmarshalling error
-	ErrProtoUnmarshal = Register(RootCodespace, 25, "failed to unmarshal proto bytes")
+	ErrProtoUnmarshal = Register(RootCodespace, 26, "failed to unmarshal proto bytes")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info

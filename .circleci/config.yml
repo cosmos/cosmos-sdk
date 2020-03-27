@@ -86,6 +86,13 @@ jobs:
           target: proto-gen proto-lint proto-check-breaking
           description: "Lint and verify Protocol Buffer definitions"
 
+  test-sim-multi-seed-long:
+    executor: golang
+    steps:
+      - make:
+          target: test-sim-multi-seed-long
+          description: "Test multi-seed simulation (long)"
+
   test-cover:
     executor: golang
     parallelism: 4

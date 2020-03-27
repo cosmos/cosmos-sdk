@@ -29,7 +29,7 @@ type Keyring interface {
 
 	//// Delete and DeleteByAddress remove keys.
 	Delete(uid string) error
-	//DeleteByAddress(address types.Address) error
+	DeleteByAddress(address types.Address) error
 
 	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic
 	// key from that, and persists it to storage. Returns the generated mnemonic and the key
@@ -114,6 +114,20 @@ func NewAltKeyring(
 
 type altKeyring struct {
 	db keyring.Keyring
+}
+
+func (a altKeyring) DeleteByAddress(address types.Address) error {
+	info, err := a.KeyByAddress(address)
+	if err != nil {
+		return err
+	}
+
+	err = a.Delete(info.GetName())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a altKeyring) Delete(uid string) error {

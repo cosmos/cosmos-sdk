@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -57,7 +56,7 @@ func NewSendTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *
 			}
 
 			msg := types.NewMsgSend(cliCtx.GetFromAddress(), toAddr, coins)
-			return clientx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 

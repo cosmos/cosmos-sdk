@@ -49,7 +49,6 @@ type Keyring interface {
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
 
-	//
 	//// SupportedAlgos returns a list of signing algorithms supported by the keybase
 	//SupportedAlgos() []SigningAlgo
 	//
@@ -85,7 +84,7 @@ type Exporter interface {
 // options can be applied when generating this new Keybase.
 // Available backends are "os", "file", "kwallet", "pass", "test".
 func NewAltKeyring(
-	appName, backend, rootDir string, userInput io.Reader, opts ...KeybaseOption,
+	appName, backend, rootDir string, userInput io.Reader,
 ) (Keyring, error) {
 
 	var db keyring.Keyring
@@ -110,11 +109,23 @@ func NewAltKeyring(
 		return nil, err
 	}
 
-	return altKeyring{db: db}, nil
+	return altKeyring{
+		db: db,
+		options: altKrOptions{
+			supportedAlgos:       []SigningAlgo{Secp256k1},
+			supportedAlgosLedger: []SigningAlgo{Secp256k1},
+		},
+	}, nil
 }
 
 type altKeyring struct {
-	db keyring.Keyring
+	db      keyring.Keyring
+	options altKrOptions
+}
+
+type altKrOptions struct {
+	supportedAlgos       []SigningAlgo
+	supportedAlgosLedger []SigningAlgo
 }
 
 func (a altKeyring) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
@@ -213,9 +224,9 @@ func (a altKeyring) NewMnemonic(uid string, language Language, algo SigningAlgo)
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	//if !IsSupportedAlgorithm(a.SupportedAlgos(), algo) {
-	//	return nil, "", ErrUnsupportedSigningAlgo
-	//}
+	if !IsSupportedAlgorithm(a.options.supportedAlgos, algo) {
+		return nil, "", ErrUnsupportedSigningAlgo
+	}
 
 	// Default number of words (24): This generates a mnemonic directly from the
 	// number of words by reading system entropy.

@@ -76,13 +76,6 @@ jobs:
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
-  proto:
-    executor: protoc
-    steps:
-      - checkout
-      - run:
-          name: proto check
-          command: make proto-lint && make proto-check-breaking
 
   test-sim-multi-seed-long:
     executor: golang
@@ -166,7 +159,6 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - proto
       - test-sim-multi-seed-long:
           requires:
             - setup-dependencies

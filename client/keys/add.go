@@ -117,9 +117,10 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
 	algo := keyring.SigningAlgo(viper.GetString(flagKeyAlgo))
-	if algo == keyring.SigningAlgo("") {
+	if algo == "" {
 		algo = keyring.Secp256k1
 	}
+
 	if !keyring.IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
 		return keyring.ErrUnsupportedSigningAlgo
 	}

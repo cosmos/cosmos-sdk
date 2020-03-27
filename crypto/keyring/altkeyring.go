@@ -42,12 +42,12 @@ type Keyring interface {
 
 	//// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
-	//
+
 	// SavePubKey stores a public key and returns the persisted Info structure.
 	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error)
-	//
-	//// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
-	//SaveMultisig(uid string, pubkey crypto.PubKey) (Info, error)
+
+	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
+	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
 	//
 	//// SupportedAlgos returns a list of signing algorithms supported by the keybase
 	//SupportedAlgos() []SigningAlgo
@@ -116,8 +116,12 @@ type altKeyring struct {
 	db keyring.Keyring
 }
 
+func (a altKeyring) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
+	return a.writeMultisigKey(uid, pubkey)
+}
+
 func (a altKeyring) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
-	return a.writeOfflineKey(uid, pubkey, algo), nil
+	return a.writeOfflineKey(uid, pubkey, algo)
 }
 
 func (a altKeyring) DeleteByAddress(address types.Address) error {
@@ -244,11 +248,7 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 		return nil, err
 	}
 
-	var info Info
-
-	info = a.writeLocalKey(uid, privKey, algo)
-
-	return info, nil
+	return a.writeLocalKey(uid, privKey, algo)
 }
 
 func (a altKeyring) Key(uid string) (Info, error) {
@@ -266,17 +266,20 @@ func (a altKeyring) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info {
+func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
-	a.writeInfo(name, info)
+	err := a.writeInfo(name, info)
+	if err != nil {
+		return nil, err
+	}
 
-	return info
+	return info, nil
 }
 
-func (a altKeyring) writeInfo(name string, info Info) {
+func (a altKeyring) writeInfo(name string, info Info) error {
 	// write the info by key
 	key := infoKey(name)
 	serializedInfo := marshalInfo(info)
@@ -286,7 +289,7 @@ func (a altKeyring) writeInfo(name string, info Info) {
 		Data: serializedInfo,
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = a.db.Set(keyring.Item{
@@ -294,12 +297,28 @@ func (a altKeyring) writeInfo(name string, info Info) {
 		Data: key,
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
-func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo SigningAlgo) Info {
+func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
-	a.writeInfo(name, info)
-	return info
+	err := a.writeInfo(name, info)
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func (a altKeyring) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, error) {
+	info := NewMultiInfo(name, pub)
+	err := a.writeInfo(name, info)
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
 }

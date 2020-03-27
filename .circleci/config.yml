@@ -76,19 +76,20 @@ jobs:
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
+
   proto:
     executor: golang
     steps:
       - setup_remote_docker
       - checkout
       - run:
-        name: proto-lint
-        command: |
-          docker run -v pwd:/workspace --workdir /workspace bufbuild/buf check lint --error-format=json
+          name: proto-lint
+          command: |
+            docker run -v pwd:/workspace --workdir /workspace bufbuild/buf check lint --error-format=json
       - run:
-        name: check proto breakage
-        command: |
-          docker run -v pwd:/workspace --workdir /workspace bufbuild/buf check breaking --against-input .git#branch=master
+          name: check proto breakage
+          command: |
+            docker run -v pwd:/workspace --workdir /workspace bufbuild/buf check breaking --against-input .git#branch=master
 
   test-sim-nondeterminism:
     executor: golang

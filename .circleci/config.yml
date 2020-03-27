@@ -83,7 +83,6 @@ jobs:
       - run:
           name: proto check
           command: make proto-lint && make proto-check-breaking
-          description: "Lint and verify Protocol Buffer definitions"
 
   test-sim-multi-seed-long:
     executor: golang

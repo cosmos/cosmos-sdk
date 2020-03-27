@@ -25,6 +25,10 @@ func TestAltKeyring_List(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, list)
 
+	// Fails on creating unsupported SigningAlgo
+	_, _, err = keyring.NewMnemonic("failing", English, Ed25519)
+	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
+
 	// Create 3 keys
 	uid1, uid2, uid3 := "Zkey", "Bkey", "Rkey"
 	_, _, err = keyring.NewMnemonic(uid1, English, Secp256k1)

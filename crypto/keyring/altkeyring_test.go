@@ -3,6 +3,9 @@ package keyring
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/go-bip39"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -48,6 +51,35 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Equal(t, uid2, list[0].GetName())
 	require.Equal(t, uid3, list[1].GetName())
 	require.Equal(t, uid1, list[2].GetName())
+}
+
+func TestAltKeyring_NewAccount(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	entropy, err := bip39.NewEntropy(defaultEntropySize)
+	require.NoError(t, err)
+
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	require.NoError(t, err)
+
+	theUid := "newUid"
+
+	// Fails on creating unsupported SigningAlgo
+	info, err := keyring.NewAccount(theUid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), unsupportedAlgo)
+	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
+
+	info, err = keyring.NewAccount(theUid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), AltSecp256k1)
+	require.NoError(t, err)
+
+	require.Equal(t, theUid, info.GetName())
+
+	list, err := keyring.List()
+	require.NoError(t, err)
+	require.Len(t, list, 1)
 }
 
 func TestAltKeyring_Get(t *testing.T) {

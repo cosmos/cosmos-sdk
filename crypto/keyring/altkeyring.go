@@ -221,7 +221,7 @@ func (a altKeyring) NewMnemonic(uid string, language Language, algo AltSigningAl
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	if !a.options.supportedAlgos.Contains(algo) {
+	if !a.isSupportedSigningAlgo(algo) {
 		return nil, "", ErrUnsupportedSigningAlgo
 	}
 
@@ -246,10 +246,10 @@ func (a altKeyring) NewMnemonic(uid string, language Language, algo AltSigningAl
 }
 
 func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo AltSigningAlgo) (Info, error) {
-	//if !IsSupportedAlgorithm(a.options.supportedAlgos, algo) {
-	//	return nil, ErrUnsupportedSigningAlgo
-	//}
-	//
+	if !a.isSupportedSigningAlgo(algo) {
+		return nil, ErrUnsupportedSigningAlgo
+	}
+
 	// create master key and derive first key for keyring
 	derivedPriv, err := algo.DeriveKey(mnemonic, bip39Passphrase, hdPath)
 	if err != nil {
@@ -259,6 +259,10 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 	privKey := algo.PrivKeyGen(derivedPriv)
 
 	return a.writeLocalKey(uid, privKey, SigningAlgo(algo.Name))
+}
+
+func (a altKeyring) isSupportedSigningAlgo(algo AltSigningAlgo) bool {
+	return a.options.supportedAlgos.Contains(algo)
 }
 
 func (a altKeyring) Key(uid string) (Info, error) {

@@ -4,20 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func init() {
-	mintkey.BcryptSecurityParameter = 1
+	crypto.BcryptSecurityParameter = 1
 }
 
 const (
@@ -28,8 +27,8 @@ const (
 func TestLanguage(t *testing.T) {
 	kb := NewInMemory()
 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
-	assert.Error(t, err)
-	assert.Equal(t, "unsupported language: only english is supported", err.Error())
+	require.Error(t, err)
+	require.Equal(t, "unsupported language: only english is supported", err.Error())
 }
 
 func TestCreateAccountInvalidMnemonic(t *testing.T) {
@@ -38,8 +37,8 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
 		"", "", CreateHDPath(0, 0).String(), Secp256k1)
-	assert.Error(t, err)
-	assert.Equal(t, "Invalid mnemonic", err.Error())
+	require.Error(t, err)
+	require.Equal(t, "Invalid mnemonic", err.Error())
 }
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
@@ -48,13 +47,13 @@ func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 	supportedLedgerAlgos := kb.SupportedAlgosLedger()
 	for _, supportedAlgo := range supportedLedgerAlgos {
 		if Ed25519 == supportedAlgo {
-			assert.FailNow(t, "Was not an unsupported algorithm")
+			require.FailNow(t, "Was not an unsupported algorithm")
 		}
 	}
 
 	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
-	assert.Error(t, err)
-	assert.Equal(t, "unsupported signing algo", err.Error())
+	require.Error(t, err)
+	require.Equal(t, "unsupported signing algo", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
@@ -71,15 +70,15 @@ func TestCreateLedger(t *testing.T) {
 		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
 		edSupported = edSupported || (supportedAlgo == Ed25519)
 	}
-	assert.True(t, secpSupported)
-	assert.True(t, edSupported)
+	require.True(t, secpSupported)
+	require.True(t, edSupported)
 
 	ledger, err := kb.CreateLedger("some_account", Secp256k1, "cosmos", 3, 1)
 
 	if err != nil {
-		assert.Error(t, err)
-		assert.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-		assert.Nil(t, ledger)
+		require.Error(t, err)
+		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		require.Nil(t, ledger)
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
@@ -87,23 +86,23 @@ func TestCreateLedger(t *testing.T) {
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
 	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	assert.NoError(t, err)
-	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := kb.Get("some_account")
-	assert.NoError(t, err)
-	assert.NotNil(t, restoredKey)
-	assert.Equal(t, "some_account", restoredKey.GetName())
-	assert.Equal(t, TypeLedger, restoredKey.GetType())
+	require.NoError(t, err)
+	require.NotNil(t, restoredKey)
+	require.Equal(t, "some_account", restoredKey.GetName())
+	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
 	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	assert.NoError(t, err)
-	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
 	path, err := restoredKey.GetPath()
-	assert.NoError(t, err)
-	assert.Equal(t, "44'/118'/3'/0/1", path.String())
+	require.NoError(t, err)
+	require.Equal(t, "44'/118'/3'/0/1", path.String())
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well
@@ -121,9 +120,9 @@ func TestKeyManagement(t *testing.T) {
 		edSupported = edSupported || (supportedAlgo == Ed25519)
 		srSupported = srSupported || (supportedAlgo == Sr25519)
 	}
-	assert.True(t, secpSupported)
-	assert.False(t, edSupported)
-	assert.True(t, srSupported)
+	require.True(t, secpSupported)
+	require.False(t, edSupported)
+	require.True(t, srSupported)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -132,7 +131,7 @@ func TestKeyManagement(t *testing.T) {
 	// Check empty state
 	l, err := cstore.List()
 	require.Nil(t, err)
-	assert.Empty(t, l)
+	require.Empty(t, l)
 
 	_, _, err = cstore.CreateMnemonic(n1, English, p1, Ed25519)
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
@@ -254,7 +253,7 @@ func TestSignVerify(t *testing.T) {
 
 	// let's try to validate and make sure it only works when everything is proper
 	cases := []struct {
-		key   crypto.PubKey
+		key   tmcrypto.PubKey
 		data  []byte
 		sig   []byte
 		valid bool
@@ -418,7 +417,7 @@ func TestSeedPhrase(t *testing.T) {
 	info, mnemonic, err := cstore.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
 	require.Equal(t, n1, info.GetName())
-	assert.NotEmpty(t, mnemonic)
+	require.NotEmpty(t, mnemonic)
 
 	// now, let us delete this key
 	err = cstore.Delete(n1, p1, false)
@@ -438,7 +437,7 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	customKeyGenFunc := func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error) {
+	customKeyGenFunc := func(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
 		var bzArr [32]byte
 		copy(bzArr[:], bz)
 		return secp256k1.PrivKeySecp256k1(bzArr), nil

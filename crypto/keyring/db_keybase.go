@@ -10,7 +10,7 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -160,7 +160,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 			return
 		}
 
-		priv, _, err = mintkey.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
+		priv, _, err = crypto.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -199,7 +199,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 			return nil, err
 		}
 
-		priv, _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		priv, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +221,7 @@ func (kb dbKeybase) Export(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	return mintkey.ArmorInfoBytes(bz), nil
+	return crypto.ArmorInfoBytes(bz), nil
 }
 
 // ExportPubKey returns public keys in ASCII armored format. It retrieves a Info
@@ -241,7 +241,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return
 	}
 
-	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
 }
 
 // ExportPrivKey returns a private key in ASCII armored format.
@@ -259,7 +259,7 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 		return "", err
 	}
 
-	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ImportPrivKey imports a private key in ASCII armor format. It returns an
@@ -270,7 +270,7 @@ func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) 
 		return errors.New("Cannot overwrite key " + name)
 	}
 
-	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "couldn't import private key")
 	}
@@ -289,7 +289,7 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 		return errors.New("cannot overwrite data for name " + name)
 	}
 
-	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
+	infoBytes, err := crypto.UnarmorInfoBytes(armor)
 	if err != nil {
 		return
 	}
@@ -310,7 +310,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 		return errors.New("cannot overwrite data for name " + name)
 	}
 
-	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return
 	}
@@ -336,7 +336,7 @@ func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 	}
 
 	if linfo, ok := info.(localInfo); ok && !skipPass {
-		if _, _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
+		if _, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
 			return err
 		}
 	}
@@ -366,7 +366,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	case localInfo:
 		linfo := i
 
-		key, _, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
+		key, _, err := crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
 		if err != nil {
 			return err
 		}
@@ -396,7 +396,7 @@ func (kb dbKeybase) SupportedAlgosLedger() []SigningAlgo {
 
 func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info {
 	// encrypt private key using passphrase
-	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase, string(algo))
+	privArmor := crypto.EncryptArmorPrivKey(priv, passphrase, string(algo))
 
 	// make Info
 	pub := priv.PubKey()

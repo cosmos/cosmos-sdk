@@ -1,4 +1,4 @@
-package mintkey
+package crypto
 
 import (
 	"encoding/hex"

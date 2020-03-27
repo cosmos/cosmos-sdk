@@ -18,7 +18,7 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -270,7 +270,7 @@ func (kb keyringKeybase) Export(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name: %s", name)
 	}
 
-	return mintkey.ArmorInfoBytes(bz.Data), nil
+	return crypto.ArmorInfoBytes(bz.Data), nil
 }
 
 // ExportPubKey returns public keys in ASCII armored format. It retrieves an Info
@@ -285,7 +285,7 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name: %s", name)
 	}
 
-	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
 }
 
 // Import imports armored private key.
@@ -300,7 +300,7 @@ func (kb keyringKeybase) Import(name string, armor string) error {
 		}
 	}
 
-	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
+	infoBytes, err := crypto.UnarmorInfoBytes(armor)
 	if err != nil {
 		return err
 	}
@@ -336,7 +336,7 @@ func (kb keyringKeybase) ExportPrivKey(name, decryptPassphrase, encryptPassphras
 		return "", err
 	}
 
-	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ImportPrivKey imports a private key in ASCII armor format. An error is returned
@@ -347,7 +347,7 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 		return fmt.Errorf("cannot overwrite key: %s", name)
 	}
 
-	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
@@ -376,7 +376,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 		}
 	}
 
-	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return err
 	}

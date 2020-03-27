@@ -15,19 +15,19 @@ func TestStackTrace(t *testing.T) {
 	}{
 		"New gives us a stacktrace": {
 			err:       Wrap(ErrNoSignatures, "name"),
-			wantError: "no signatures supplied: name",
+			wantError: "name: no signatures supplied",
 		},
 		"Wrapping stderr gives us a stacktrace": {
 			err:       Wrap(fmt.Errorf("foo"), "standard"),
-			wantError: "foo: standard",
+			wantError: "standard: foo",
 		},
 		"Wrapping pkg/errors gives us clean stacktrace": {
 			err:       Wrap(errors.New("bar"), "pkg"),
-			wantError: "bar: pkg",
+			wantError: "pkg: bar",
 		},
 		"Wrapping inside another function is still clean": {
 			err:       Wrap(fmt.Errorf("indirect"), "do the do"),
-			wantError: "indirect: do the do",
+			wantError: "do the do: indirect",
 		},
 	}
 

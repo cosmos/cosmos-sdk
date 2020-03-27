@@ -202,6 +202,45 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 	return nil
 }
 
+// ReleaseCapability allows a scoped module to release a capability which it had
+// previously claimed or created. After releasing the capability, if no more
+// owners exist, the capability will be globally removed.
+func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) error {
+	memStore := ctx.KVStore(sk.memKey)
+
+	bz := memStore.Get(types.FwdCapabilityKey(sk.module, cap))
+	if len(bz) == 0 {
+		return sdkerrors.Wrap(types.ErrCapabilityNotOwned, sk.module)
+	}
+
+	name := string(bz)
+
+	// Remove the forward mapping between the module and capability tuple and the
+	// capability name in the in-memory store.
+	memStore.Delete(types.FwdCapabilityKey(sk.module, cap))
+
+	// Remove the reverse mapping between the module and capability name and the
+	// capability in the in-memory store.
+	memStore.Delete(types.RevCapabilityKey(sk.module, name))
+
+	// remove owner
+	capOwners := sk.getOwners(ctx, cap)
+	capOwners.Remove(types.NewOwner(sk.module, name))
+
+	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
+	indexKey := types.IndexToKey(cap.GetIndex())
+
+	if len(capOwners.Owners) == 0 {
+		// remove capability owner set
+		prefixStore.Delete(indexKey)
+	} else {
+		// update capability owner set
+		prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
+	}
+
+	return nil
+}
+
 // GetCapability allows a module to fetch a capability which it previously claimed
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
@@ -223,14 +262,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
-	var capOwners *types.CapabilityOwners
-
-	bz := prefixStore.Get(indexKey)
-	if len(bz) == 0 {
-		capOwners = types.NewCapabilityOwners()
-	} else {
-		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
-	}
+	capOwners := sk.getOwners(ctx, cap)
 
 	if err := capOwners.Set(types.NewOwner(sk.module, name)); err != nil {
 		return err
@@ -239,6 +271,20 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	// update capability owner set
 	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
 	return nil
+}
+
+func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) (capOwners *types.CapabilityOwners) {
+	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
+	indexKey := types.IndexToKey(cap.GetIndex())
+
+	bz := prefixStore.Get(indexKey)
+	if len(bz) == 0 {
+		capOwners = types.NewCapabilityOwners()
+	} else {
+		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
+	}
+
+	return capOwners
 }
 
 func logger(ctx sdk.Context) log.Logger {

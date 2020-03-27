@@ -23,7 +23,7 @@ func CommitAcknowledgement(data exported.PacketAcknowledgementI) []byte {
 	return tmhash.Sum(data.GetBytes())
 }
 
-var _ exported.PacketI = Packet{}
+var _ exported.PacketI = (*Packet)(nil)
 
 // NewPacket creates a new Packet instance
 func NewPacket(
@@ -38,10 +38,10 @@ func NewPacket(
 		packetData = PacketData{
 			Value: &PacketData_FungibleToken{&cast},
 		}
-	default: 
+	default:
 		panic(fmt.Sprintf("invalid packet data type %T", cast))
 	}
-	
+
 	return Packet{
 		Data:               packetData,
 		Sequence:           sequence,
@@ -62,10 +62,10 @@ func (p Packet) GetSourcePort() string { return p.SourcePort }
 func (p Packet) GetSourceChannel() string { return p.SourceChannel }
 
 // GetDestPort implements PacketI interface
-func (p Packet) GetDestinationPort() string { return p.DestinationPort }
+func (p Packet) GetDestPort() string { return p.DestinationPort }
 
 // GetDestChannel implements PacketI interface
-func (p Packet) GetDestinationChannel() string { return p.DestinationChannel }
+func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
 // GetData returns the concrete packet data type as an interface.
 func (p Packet) GetData() exported.PacketDataI {

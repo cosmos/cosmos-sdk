@@ -145,7 +145,7 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	// NOTE: packet data type already checked in handler.go
 
 	if data.Source {
-		prefix := types.GetDenomPrefix(packet.GetDestinationPort(), packet.GetDestinationChannel())
+		prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 		for _, coin := range data.Amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
 				return sdkerrors.Wrapf(
@@ -182,7 +182,7 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	// unescrow tokens
-	escrowAddress := types.GetEscrowAddress(packet.GetDestinationPort(), packet.GetDestinationChannel())
+	escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 }
 
@@ -203,7 +203,7 @@ func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 
 	if data.Source {
 		// unescrow tokens back to sender
-		escrowAddress := types.GetEscrowAddress(packet.GetDestinationPort(), packet.GetDestinationChannel())
+		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
 	}
 

@@ -133,8 +133,8 @@ of ordered channel.
 
 ```go
 func (keeper ChannelKeeper) WriteAcknowledgement(ctx Context, packet Packet, ack []byte) {
-  keeper.SetPacketAcknowledgement(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(), ack)
-  keeper.SetNextSequenceRecv(ctx, packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence())
+  keeper.SetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack)
+  keeper.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 }
 
 func (keeper ChannelKeeper) DeleteCommitment(ctx Context, packet Packet) {
@@ -261,7 +261,7 @@ func handleMsgTransfer(ctx Context, k Keeper, msg MsgTransfer) Result {
 }
 
 func handlePacketDataTransfer(ctx Context, k Keeper, packet Packet, data PacketDataTransfer) Result {
-  err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
+  err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
   if err != nil {
     // TODO: Source chain sent invalid packet, shutdown channel
   }
@@ -270,7 +270,7 @@ func handlePacketDataTransfer(ctx Context, k Keeper, packet Packet, data PacketD
 }
 
 func handleCustomTimeoutPacket(ctx Context, k Keeper, packet CustomPacket) Result {
-  err := k.RecoverTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
+  err := k.RecoverTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
   if err != nil {
     // This chain sent invalid packet or cannot recover the funds
     panic(err)

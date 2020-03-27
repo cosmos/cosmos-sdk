@@ -28,8 +28,8 @@ type PacketI interface {
 	GetTimeoutHeight() uint64
 	GetSourcePort() string
 	GetSourceChannel() string
-	GetDestinationPort() string
-	GetDestinationChannel() string
+	GetDestPort() string
+	GetDestChannel() string
 	GetData() PacketDataI
 	ValidateBasic() error
 }

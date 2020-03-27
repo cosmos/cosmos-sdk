@@ -42,17 +42,17 @@ func (k Keeper) TimeoutPacket(
 	// NOTE: TimeoutPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	if packet.GetDestinationPort() != channel.GetCounterparty().GetPortID() {
+	if packet.GetDestPort() != channel.GetCounterparty().GetPortID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.GetCounterparty().GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.GetCounterparty().GetPortID(),
 		)
 	}
 
-	if packet.GetDestinationChannel() != channel.GetCounterparty().GetChannelID() {
+	if packet.GetDestChannel() != channel.GetCounterparty().GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.GetCounterparty().GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.GetCounterparty().GetChannelID(),
 		)
 	}
 
@@ -87,12 +87,12 @@ func (k Keeper) TimeoutPacket(
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv,
+			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestinationPort(), packet.GetDestinationChannel(), packet.GetSequence(),
+			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 		)
 	default:
 		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.GetOrdering().String()))
@@ -157,17 +157,17 @@ func (k Keeper) TimeoutOnClose(
 	// 	return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
 	// }
 
-	if packet.GetDestinationPort() != channel.GetCounterparty().GetPortID() {
+	if packet.GetDestPort() != channel.GetCounterparty().GetPortID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.GetCounterparty().GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.GetCounterparty().GetPortID(),
 		)
 	}
 
-	if packet.GetDestinationChannel() != channel.GetCounterparty().GetChannelID() {
+	if packet.GetDestChannel() != channel.GetCounterparty().GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestinationChannel(), channel.GetCounterparty().GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.GetCounterparty().GetChannelID(),
 		)
 	}
 
@@ -209,7 +209,7 @@ func (k Keeper) TimeoutOnClose(
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
-			packet.GetDestinationPort(), packet.GetDestinationChannel(), nextSequenceRecv,
+			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(

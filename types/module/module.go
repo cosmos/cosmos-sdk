@@ -186,6 +186,8 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+func (gam GenesisOnlyAppModule) RegisterQueryServer(GRPCServer) {}
+
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 

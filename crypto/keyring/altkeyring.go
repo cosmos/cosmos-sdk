@@ -44,7 +44,7 @@ type Keyring interface {
 	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error)
+	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error)
 
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
@@ -129,8 +129,8 @@ func (a altKeyring) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, erro
 	return a.writeMultisigKey(uid, pubkey)
 }
 
-func (a altKeyring) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
-	return a.writeOfflineKey(uid, pubkey, algo)
+func (a altKeyring) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error) {
+	return a.writeOfflineKey(uid, pubkey, algo.Name)
 }
 
 func (a altKeyring) DeleteByAddress(address types.Address) error {

@@ -81,6 +81,26 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	require.Len(t, list, 1)
 }
 
+func TestAltKeyring_SaveLedgerKey(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	// Test unsupported Algo
+	i1, err := keyring.SaveLedgerKey("key", unsupportedAlgo, "cosmos", 0, 0)
+	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
+
+	i1, err = keyring.SaveLedgerKey("key", AltSecp256k1, "cosmos", 0, 0)
+	if err != nil {
+		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
+	}
+	require.Equal(t, "key", i1.GetName())
+}
+
 func TestAltKeyring_Get(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)

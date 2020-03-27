@@ -6,6 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/go-bip39"
@@ -40,17 +43,14 @@ type Keyring interface {
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path  and persists it.
 	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo AltSigningAlgo) (Info, error)
 
-	//// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
-	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
+	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
+	SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
 	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error)
 
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
-
-	//// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
-	//SupportedAlgosLedger() []SigningAlgo
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
@@ -118,6 +118,32 @@ func NewAltKeyring(
 type altKeyring struct {
 	db      keyring.Keyring
 	options altKrOptions
+}
+
+func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error) {
+	if !a.options.supportedAlgosLedger.Contains(algo) {
+		return nil, ErrUnsupportedSigningAlgo
+	}
+
+	coinType := types.GetConfig().GetCoinType()
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
+
+	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name)
+}
+
+func (a altKeyring) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo SigningAlgo) (Info, error) {
+	info := newLedgerInfo(name, pub, path, algo)
+	err := a.writeInfo(name, info)
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
 }
 
 type altKrOptions struct {

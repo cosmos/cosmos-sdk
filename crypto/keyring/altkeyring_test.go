@@ -3,16 +3,18 @@ package keyring
 import (
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto"
-
-	"github.com/tendermint/tendermint/crypto/multisig"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/tests"
 )
+
+var unsupportedAlgo = AltSigningAlgo{
+	Name:      "unsupported",
+	DeriveKey: nil,
+}
 
 func TestAltKeyring_List(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
@@ -26,16 +28,16 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Empty(t, list)
 
 	// Fails on creating unsupported SigningAlgo
-	_, _, err = keyring.NewMnemonic("failing", English, Ed25519)
+	_, _, err = keyring.NewMnemonic("failing", English, unsupportedAlgo)
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	// Create 3 keys
 	uid1, uid2, uid3 := "Zkey", "Bkey", "Rkey"
-	_, _, err = keyring.NewMnemonic(uid1, English, Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid1, English, AltSecp256k1)
 	require.NoError(t, err)
-	_, _, err = keyring.NewMnemonic(uid2, English, Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid2, English, AltSecp256k1)
 	require.NoError(t, err)
-	_, _, err = keyring.NewMnemonic(uid3, English, Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid3, English, AltSecp256k1)
 	require.NoError(t, err)
 
 	list, err = keyring.List()
@@ -56,7 +58,7 @@ func TestAltKeyring_Get(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := "theKey"
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
 	key, err := keyring.Key(uid)
@@ -72,7 +74,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := "theKey"
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
 	key, err := keyring.KeyByAddress(mnemonic.GetAddress())
@@ -88,7 +90,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := "theKey"
-	_, _, err = keyring.NewMnemonic(uid, English, Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -111,7 +113,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := "theKey"
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -158,9 +160,9 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	mnemonic1, _, err := keyring.NewMnemonic("key1", English, Secp256k1)
+	mnemonic1, _, err := keyring.NewMnemonic("key1", English, AltSecp256k1)
 	require.NoError(t, err)
-	mnemonic2, _, err := keyring.NewMnemonic("key2", English, Secp256k1)
+	mnemonic2, _, err := keyring.NewMnemonic("key2", English, AltSecp256k1)
 	require.NoError(t, err)
 
 	key := "multi"

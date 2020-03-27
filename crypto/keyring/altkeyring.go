@@ -35,10 +35,10 @@ type Keyring interface {
 	// key from that, and persists it to storage. Returns the generated mnemonic and the key
 	// Info. It returns an error if it fails to generate a key for the given algo type, or if
 	// another key is already stored under the same name.
-	NewMnemonic(uid string, language Language, algo SigningAlgo) (Info, string, error)
+	NewMnemonic(uid string, language Language, algo AltSigningAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path  and persists it.
-	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SigningAlgo) (Info, error)
+	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo AltSigningAlgo) (Info, error)
 
 	//// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
@@ -49,9 +49,6 @@ type Keyring interface {
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
 
-	//// SupportedAlgos returns a list of signing algorithms supported by the keybase
-	//SupportedAlgos() []SigningAlgo
-	//
 	//// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
 	//SupportedAlgosLedger() []SigningAlgo
 }
@@ -112,8 +109,8 @@ func NewAltKeyring(
 	return altKeyring{
 		db: db,
 		options: altKrOptions{
-			supportedAlgos:       []SigningAlgo{Secp256k1},
-			supportedAlgosLedger: []SigningAlgo{Secp256k1},
+			supportedAlgos:       []AltSigningAlgo{AltSecp256k1},
+			supportedAlgosLedger: []AltSigningAlgo{AltSecp256k1},
 		},
 	}, nil
 }
@@ -124,8 +121,8 @@ type altKeyring struct {
 }
 
 type altKrOptions struct {
-	supportedAlgos       []SigningAlgo
-	supportedAlgosLedger []SigningAlgo
+	supportedAlgos       AltSigningAlgoList
+	supportedAlgosLedger AltSigningAlgoList
 }
 
 func (a altKeyring) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
@@ -219,12 +216,12 @@ func (a altKeyring) List() ([]Info, error) {
 	return res, nil
 }
 
-func (a altKeyring) NewMnemonic(uid string, language Language, algo SigningAlgo) (Info, string, error) {
+func (a altKeyring) NewMnemonic(uid string, language Language, algo AltSigningAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	if !IsSupportedAlgorithm(a.options.supportedAlgos, algo) {
+	if !a.options.supportedAlgos.Contains(algo) {
 		return nil, "", ErrUnsupportedSigningAlgo
 	}
 
@@ -248,19 +245,20 @@ func (a altKeyring) NewMnemonic(uid string, language Language, algo SigningAlgo)
 	return info, mnemonic, err
 }
 
-func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo SigningAlgo) (Info, error) {
+func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo AltSigningAlgo) (Info, error) {
+	//if !IsSupportedAlgorithm(a.options.supportedAlgos, algo) {
+	//	return nil, ErrUnsupportedSigningAlgo
+	//}
+	//
 	// create master key and derive first key for keyring
-	derivedPriv, err := StdDeriveKey(mnemonic, bip39Passphrase, hdPath, algo)
+	derivedPriv, err := algo.DeriveKey(mnemonic, bip39Passphrase, hdPath)
 	if err != nil {
 		return nil, err
 	}
 
-	privKey, err := StdPrivKeyGen(derivedPriv, algo)
-	if err != nil {
-		return nil, err
-	}
+	privKey := algo.PrivKeyGen(derivedPriv)
 
-	return a.writeLocalKey(uid, privKey, algo)
+	return a.writeLocalKey(uid, privKey, SigningAlgo(algo.Name))
 }
 
 func (a altKeyring) Key(uid string) (Info, error) {

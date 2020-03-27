@@ -70,7 +70,6 @@ func SecpPrivKeyGen(bz []byte) tmcrypto.PrivKey {
 func (kb baseKeybase) CreateAccount(
 	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd, hdPath string, algo SigningAlgo,
 ) (Info, error) {
-
 	// create master key and derive first key for keyring
 	derivedPriv, err := kb.options.deriveFunc(mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {

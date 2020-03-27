@@ -43,8 +43,8 @@ type Keyring interface {
 	//// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	//SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
 	//
-	//// SavePubKey stores a public key and returns the persisted Info structure.
-	//SavePubKey(uid string, pubkey crypto.PubKey, algo SigningAlgo) (Info, error)
+	// SavePubKey stores a public key and returns the persisted Info structure.
+	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error)
 	//
 	//// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	//SaveMultisig(uid string, pubkey crypto.PubKey) (Info, error)
@@ -114,6 +114,10 @@ func NewAltKeyring(
 
 type altKeyring struct {
 	db keyring.Keyring
+}
+
+func (a altKeyring) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
+	return a.writeOfflineKey(uid, pubkey, algo), nil
 }
 
 func (a altKeyring) DeleteByAddress(address types.Address) error {
@@ -292,4 +296,10 @@ func (a altKeyring) writeInfo(name string, info Info) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo SigningAlgo) Info {
+	info := newOfflineInfo(name, pub, algo)
+	a.writeInfo(name, info)
+	return info
 }

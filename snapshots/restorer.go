@@ -57,7 +57,7 @@ func (r *Restorer) Add(chunk io.ReadCloser) (bool, error) {
 		return false, errors.New("no restore in progress")
 	}
 
-	// check if any errors have occured so far
+	// check if any errors have occurred so far
 	select {
 	case err := <-r.chDone:
 		r.Close()

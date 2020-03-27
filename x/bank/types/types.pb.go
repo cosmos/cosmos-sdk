@@ -5,11 +5,15 @@ package types
 
 import (
 	bytes "bytes"
+	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -246,43 +250,196 @@ func (m *MsgMultiSend) GetOutputs() []Output {
 	return nil
 }
 
+// QueryBalanceParams defines the params for querying an account balance.
+type QueryBalanceParams struct {
+	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
+	Denom   string                                        `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *QueryBalanceParams) Reset()         { *m = QueryBalanceParams{} }
+func (m *QueryBalanceParams) String() string { return proto.CompactTextString(m) }
+func (*QueryBalanceParams) ProtoMessage()    {}
+func (*QueryBalanceParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_934ff6b24d3432e2, []int{4}
+}
+func (m *QueryBalanceParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryBalanceParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryBalanceParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryBalanceParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryBalanceParams.Merge(m, src)
+}
+func (m *QueryBalanceParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryBalanceParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryBalanceParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryBalanceParams proto.InternalMessageInfo
+
+func (m *QueryBalanceParams) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
+func (m *QueryBalanceParams) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+// QueryAllBalancesParams defines the params for querying all account balances
+type QueryAllBalancesParams struct {
+	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
+}
+
+func (m *QueryAllBalancesParams) Reset()         { *m = QueryAllBalancesParams{} }
+func (m *QueryAllBalancesParams) String() string { return proto.CompactTextString(m) }
+func (*QueryAllBalancesParams) ProtoMessage()    {}
+func (*QueryAllBalancesParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_934ff6b24d3432e2, []int{5}
+}
+func (m *QueryAllBalancesParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllBalancesParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllBalancesParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllBalancesParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllBalancesParams.Merge(m, src)
+}
+func (m *QueryAllBalancesParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllBalancesParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllBalancesParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllBalancesParams proto.InternalMessageInfo
+
+func (m *QueryAllBalancesParams) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
+type QueryAllBalancesResponse struct {
+	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
+}
+
+func (m *QueryAllBalancesResponse) Reset()         { *m = QueryAllBalancesResponse{} }
+func (m *QueryAllBalancesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllBalancesResponse) ProtoMessage()    {}
+func (*QueryAllBalancesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_934ff6b24d3432e2, []int{6}
+}
+func (m *QueryAllBalancesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllBalancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllBalancesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllBalancesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllBalancesResponse.Merge(m, src)
+}
+func (m *QueryAllBalancesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllBalancesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllBalancesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllBalancesResponse proto.InternalMessageInfo
+
+func (m *QueryAllBalancesResponse) GetBalances() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Balances
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgSend)(nil), "cosmos_sdk.x.bank.v1.MsgSend")
 	proto.RegisterType((*Input)(nil), "cosmos_sdk.x.bank.v1.Input")
 	proto.RegisterType((*Output)(nil), "cosmos_sdk.x.bank.v1.Output")
 	proto.RegisterType((*MsgMultiSend)(nil), "cosmos_sdk.x.bank.v1.MsgMultiSend")
+	proto.RegisterType((*QueryBalanceParams)(nil), "cosmos_sdk.x.bank.v1.QueryBalanceParams")
+	proto.RegisterType((*QueryAllBalancesParams)(nil), "cosmos_sdk.x.bank.v1.QueryAllBalancesParams")
+	proto.RegisterType((*QueryAllBalancesResponse)(nil), "cosmos_sdk.x.bank.v1.QueryAllBalancesResponse")
 }
 
 func init() { proto.RegisterFile("x/bank/types/types.proto", fileDescriptor_934ff6b24d3432e2) }
 
 var fileDescriptor_934ff6b24d3432e2 = []byte{
-	// 413 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xa8, 0xd0, 0x4f, 0x4a,
-	0xcc, 0xcb, 0xd6, 0x2f, 0xa9, 0x2c, 0x48, 0x2d, 0x86, 0x90, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9,
-	0x42, 0x22, 0xc9, 0xf9, 0xc5, 0xb9, 0xf9, 0xc5, 0xf1, 0xc5, 0x29, 0xd9, 0x7a, 0x15, 0x7a, 0x20,
-	0x45, 0x7a, 0x65, 0x86, 0x52, 0x6a, 0x25, 0x19, 0x99, 0x45, 0x29, 0xf1, 0x05, 0x89, 0x45, 0x25,
-	0x95, 0xfa, 0x60, 0x85, 0xfa, 0xe9, 0xf9, 0xe9, 0xf9, 0x08, 0x16, 0x44, 0xb7, 0x94, 0x20, 0x86,
-	0x81, 0x4a, 0x87, 0x98, 0xb8, 0xd8, 0x7d, 0x8b, 0xd3, 0x83, 0x53, 0xf3, 0x52, 0x84, 0xb2, 0xb9,
-	0x78, 0xd2, 0x8a, 0xf2, 0x73, 0xe3, 0x13, 0x53, 0x52, 0x8a, 0x52, 0x8b, 0x8b, 0x25, 0x18, 0x15,
-	0x18, 0x35, 0x78, 0x9c, 0x3c, 0x3e, 0xdd, 0x93, 0x17, 0xae, 0x4c, 0xcc, 0xcd, 0xb1, 0x52, 0x42,
-	0x96, 0x55, 0xfa, 0x75, 0x4f, 0x5e, 0x37, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f,
-	0x57, 0x1f, 0xe2, 0x30, 0x28, 0xa5, 0x5b, 0x9c, 0x02, 0x75, 0xbd, 0x9e, 0x63, 0x72, 0xb2, 0x23,
-	0x44, 0x47, 0x10, 0x37, 0x48, 0x3f, 0x94, 0x23, 0x94, 0xca, 0xc5, 0x55, 0x92, 0x0f, 0xb7, 0x8a,
-	0x09, 0x6c, 0x95, 0xdb, 0xa7, 0x7b, 0xf2, 0x82, 0x10, 0xab, 0x10, 0x72, 0x64, 0x58, 0xc4, 0x59,
-	0x92, 0x0f, 0xb3, 0x26, 0x96, 0x8b, 0x2d, 0x31, 0x37, 0xbf, 0x34, 0xaf, 0x44, 0x82, 0x59, 0x81,
-	0x59, 0x83, 0xdb, 0x48, 0x58, 0x0f, 0x29, 0x04, 0xcb, 0x0c, 0xf5, 0x9c, 0xf3, 0x33, 0xf3, 0x9c,
-	0x0c, 0x4e, 0xdc, 0x93, 0x67, 0x58, 0x75, 0x5f, 0x5e, 0x83, 0x08, 0x6b, 0x40, 0x1a, 0x8a, 0x83,
-	0xa0, 0x86, 0x5a, 0xb1, 0xbc, 0x58, 0x20, 0xcf, 0xa8, 0xb4, 0x9d, 0x91, 0x8b, 0xd5, 0x33, 0xaf,
-	0xa0, 0xb4, 0x44, 0xc8, 0x9b, 0x8b, 0x1d, 0x35, 0xf4, 0x0c, 0x49, 0x77, 0x3d, 0xcc, 0x04, 0xa1,
-	0x68, 0x2e, 0xd6, 0x64, 0x90, 0x6d, 0x12, 0x4c, 0xd4, 0x74, 0x3a, 0xc4, 0x4c, 0xa8, 0xcb, 0x77,
-	0x30, 0x72, 0xb1, 0xf9, 0x97, 0x96, 0x0c, 0x45, 0xa7, 0xf7, 0x32, 0x72, 0xf1, 0xf8, 0x16, 0xa7,
-	0xfb, 0x96, 0xe6, 0x94, 0x64, 0x82, 0x93, 0xaf, 0x25, 0x17, 0x5b, 0x26, 0x28, 0x12, 0x40, 0xee,
-	0x07, 0x59, 0x2a, 0xad, 0x87, 0x2d, 0xb3, 0xe8, 0x81, 0x23, 0xca, 0x89, 0x05, 0x64, 0x79, 0x10,
-	0x54, 0x83, 0x90, 0x0d, 0x17, 0x7b, 0x3e, 0x38, 0x14, 0x60, 0x0e, 0x96, 0xc1, 0xae, 0x17, 0x12,
-	0x54, 0x50, 0xcd, 0x30, 0x2d, 0x10, 0xf7, 0x38, 0x39, 0x9f, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91,
-	0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3,
-	0xb1, 0x1c, 0x43, 0x94, 0x26, 0x5e, 0x0f, 0x22, 0xe7, 0xf5, 0x24, 0x36, 0x70, 0xae, 0x34, 0x06,
-	0x04, 0x00, 0x00, 0xff, 0xff, 0x57, 0x42, 0x17, 0x1f, 0x02, 0x04, 0x00, 0x00,
+	// 534 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0x31, 0x6f, 0xd3, 0x40,
+	0x18, 0x86, 0x73, 0x69, 0x93, 0xd0, 0xaf, 0x19, 0xe8, 0xb5, 0x42, 0x51, 0x40, 0x76, 0xe5, 0x01,
+	0x05, 0x89, 0x5e, 0x48, 0x99, 0xa8, 0x58, 0x92, 0x4a, 0x08, 0x84, 0x22, 0xc0, 0x6c, 0x20, 0x14,
+	0x5d, 0xec, 0xc3, 0xb5, 0x62, 0xfb, 0x2c, 0xdf, 0xb9, 0x34, 0x03, 0x3f, 0x01, 0x89, 0x9f, 0xc0,
+	0xcc, 0x1f, 0x80, 0x99, 0x29, 0x63, 0x47, 0xa6, 0x80, 0x92, 0x85, 0xb9, 0x23, 0x13, 0xb2, 0x7d,
+	0x6e, 0x43, 0x13, 0x55, 0x05, 0x85, 0x81, 0xc5, 0xf6, 0xf9, 0xee, 0xfd, 0x9e, 0xd7, 0xef, 0xe7,
+	0xb3, 0xa1, 0x76, 0xd4, 0xec, 0xd3, 0x60, 0xd0, 0x94, 0xc3, 0x90, 0x89, 0xec, 0x48, 0xc2, 0x88,
+	0x4b, 0x8e, 0xb7, 0x2c, 0x2e, 0x7c, 0x2e, 0x7a, 0xc2, 0x1e, 0x90, 0x23, 0x92, 0x2c, 0x22, 0x87,
+	0xad, 0xfa, 0x4d, 0x79, 0xe0, 0x46, 0x76, 0x2f, 0xa4, 0x91, 0x1c, 0x36, 0xd3, 0x85, 0x4d, 0x87,
+	0x3b, 0xfc, 0xec, 0x2a, 0x53, 0xd7, 0x37, 0xe6, 0x0a, 0x1a, 0x5f, 0x8a, 0x50, 0xe9, 0x0a, 0xe7,
+	0x39, 0x0b, 0x6c, 0x3c, 0x80, 0xea, 0xeb, 0x88, 0xfb, 0x3d, 0x6a, 0xdb, 0x11, 0x13, 0xa2, 0x86,
+	0xb6, 0x51, 0xa3, 0xda, 0x79, 0x78, 0x32, 0xd6, 0x37, 0x87, 0xd4, 0xf7, 0xf6, 0x8c, 0xd9, 0x59,
+	0xe3, 0xe7, 0x58, 0xdf, 0x71, 0x5c, 0x79, 0x10, 0xf7, 0x89, 0xc5, 0xfd, 0x66, 0x66, 0x4c, 0x9d,
+	0x76, 0x84, 0xad, 0xdc, 0x93, 0xb6, 0x65, 0xb5, 0x33, 0x85, 0xb9, 0x9e, 0xe8, 0xd5, 0x00, 0x33,
+	0x00, 0xc9, 0x4f, 0x51, 0xc5, 0x14, 0xf5, 0xe0, 0x64, 0xac, 0x6f, 0x64, 0xa8, 0xb3, 0xb9, 0xbf,
+	0x00, 0xad, 0x49, 0x9e, 0x63, 0x5e, 0x41, 0x99, 0xfa, 0x3c, 0x0e, 0x64, 0x6d, 0x65, 0x7b, 0xa5,
+	0xb1, 0xbe, 0xbb, 0x49, 0x66, 0x12, 0x3c, 0x6c, 0x91, 0x7d, 0xee, 0x06, 0x9d, 0x3b, 0xa3, 0xb1,
+	0x5e, 0xf8, 0xf8, 0x4d, 0x6f, 0x5c, 0x02, 0x93, 0x08, 0x84, 0xa9, 0x8a, 0xee, 0xad, 0xfe, 0xf8,
+	0xa0, 0x23, 0xe3, 0x13, 0x82, 0xd2, 0xa3, 0x20, 0x8c, 0x25, 0x7e, 0x0c, 0x95, 0xdf, 0xd3, 0x6b,
+	0xfd, 0xb9, 0xfb, 0xbc, 0x02, 0x7e, 0x09, 0x25, 0x2b, 0xa1, 0xd5, 0x8a, 0xcb, 0xb4, 0x9e, 0xd5,
+	0x54, 0xce, 0x3f, 0x23, 0x28, 0x3f, 0x89, 0xe5, 0xff, 0x68, 0xfd, 0x1d, 0x82, 0x6a, 0x57, 0x38,
+	0xdd, 0xd8, 0x93, 0x6e, 0xfa, 0xfa, 0xde, 0x83, 0xb2, 0x9b, 0x34, 0x21, 0xf1, 0x9f, 0x40, 0xaf,
+	0x93, 0x45, 0x9b, 0x85, 0xa4, 0x8d, 0xea, 0xac, 0x26, 0x70, 0x53, 0x09, 0xf0, 0x7d, 0xa8, 0xf0,
+	0x34, 0x85, 0xdc, 0xf0, 0x8d, 0xc5, 0xda, 0x2c, 0x2a, 0x25, 0xce, 0x25, 0xca, 0xcf, 0x1b, 0xc0,
+	0xcf, 0x62, 0x16, 0x0d, 0x3b, 0xd4, 0xa3, 0x81, 0xc5, 0x9e, 0xd2, 0x88, 0xfa, 0x62, 0xb9, 0xa9,
+	0x6e, 0x41, 0xc9, 0x66, 0x01, 0xf7, 0xd3, 0xed, 0xb2, 0x66, 0x66, 0x03, 0x83, 0xc1, 0xb5, 0x14,
+	0xdc, 0xf6, 0x3c, 0xc5, 0x16, 0xff, 0x00, 0x6e, 0xbc, 0x85, 0xda, 0x79, 0x8c, 0xc9, 0x44, 0xc8,
+	0x03, 0xc1, 0x30, 0x85, 0x2b, 0x7d, 0x75, 0x4f, 0x85, 0xbf, 0xa4, 0x8e, 0x9f, 0x96, 0xdd, 0x1d,
+	0x21, 0x28, 0xa5, 0x7c, 0xdc, 0x85, 0xea, 0x6c, 0xd0, 0xb8, 0xb1, 0xb8, 0x57, 0xf3, 0xcd, 0xa8,
+	0x2f, 0x32, 0x85, 0x43, 0xb8, 0x7a, 0xfe, 0xb9, 0xf0, 0xed, 0x0b, 0x4a, 0xce, 0xc5, 0x5c, 0x27,
+	0x97, 0x5b, 0x9d, 0xa7, 0xd5, 0xd9, 0x1f, 0x4d, 0x34, 0x74, 0x3c, 0xd1, 0xd0, 0xf7, 0x89, 0x86,
+	0xde, 0x4f, 0xb5, 0xc2, 0xf1, 0x54, 0x2b, 0x7c, 0x9d, 0x6a, 0x85, 0x17, 0xb7, 0x2e, 0x0c, 0x66,
+	0xf6, 0xaf, 0xd0, 0x2f, 0xa7, 0xdf, 0xef, 0xbb, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x24, 0x67,
+	0x25, 0xf2, 0x2c, 0x06, 0x00, 0x00,
 }
 
 func (this *MsgSend) Equal(that interface{}) bool {
@@ -421,6 +578,132 @@ func (this *MsgMultiSend) Equal(that interface{}) bool {
 	}
 	return true
 }
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// QueryClient is the client API for Query service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type QueryClient interface {
+	QueryBalance(ctx context.Context, in *QueryBalanceParams, opts ...grpc.CallOption) (*types.Coin, error)
+	QueryAllBalances(ctx context.Context, in *QueryAllBalancesParams, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
+}
+
+type ClientConn interface {
+	Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error
+	NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error)
+}
+
+type queryClient struct {
+	cc ClientConn
+}
+
+func NewQueryClient(cc ClientConn) QueryClient {
+	return &queryClient{cc}
+}
+
+func (c *queryClient) QueryBalance(ctx context.Context, in *QueryBalanceParams, opts ...grpc.CallOption) (*types.Coin, error) {
+	out := new(types.Coin)
+	err := c.cc.Invoke(ctx, "/cosmos_sdk.x.bank.v1.Query/QueryBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) QueryAllBalances(ctx context.Context, in *QueryAllBalancesParams, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error) {
+	out := new(QueryAllBalancesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos_sdk.x.bank.v1.Query/QueryAllBalances", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// QueryServer is the server API for Query service.
+type QueryServer interface {
+	QueryBalance(context.Context, *QueryBalanceParams) (*types.Coin, error)
+	QueryAllBalances(context.Context, *QueryAllBalancesParams) (*QueryAllBalancesResponse, error)
+}
+
+// UnimplementedQueryServer can be embedded to have forward compatible implementations.
+type UnimplementedQueryServer struct {
+}
+
+func (*UnimplementedQueryServer) QueryBalance(ctx context.Context, req *QueryBalanceParams) (*types.Coin, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryBalance not implemented")
+}
+func (*UnimplementedQueryServer) QueryAllBalances(ctx context.Context, req *QueryAllBalancesParams) (*QueryAllBalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryAllBalances not implemented")
+}
+
+type Server interface {
+	RegisterService(sd *grpc.ServiceDesc, ss interface{})
+}
+
+func RegisterQueryServer(s Server, srv QueryServer) {
+	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_QueryBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBalanceParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).QueryBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos_sdk.x.bank.v1.Query/QueryBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).QueryBalance(ctx, req.(*QueryBalanceParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_QueryAllBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllBalancesParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).QueryAllBalances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos_sdk.x.bank.v1.Query/QueryAllBalances",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).QueryAllBalances(ctx, req.(*QueryAllBalancesParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Query_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "cosmos_sdk.x.bank.v1.Query",
+	HandlerType: (*QueryServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "QueryBalance",
+			Handler:    _Query_QueryBalance_Handler,
+		},
+		{
+			MethodName: "QueryAllBalances",
+			Handler:    _Query_QueryAllBalances_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "x/bank/types/types.proto",
+}
+
 func (m *MsgSend) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -611,6 +894,110 @@ func (m *MsgMultiSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryBalanceParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryBalanceParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryBalanceParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllBalancesParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllBalancesParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllBalancesParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllBalancesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllBalancesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllBalancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Balances) > 0 {
+		for iNdEx := len(m.Balances) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Balances[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTypes(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -697,6 +1084,51 @@ func (m *MsgMultiSend) Size() (n int) {
 	}
 	if len(m.Outputs) > 0 {
 		for _, e := range m.Outputs {
+			l = e.Size()
+			n += 1 + l + sovTypes(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryBalanceParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllBalancesParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllBalancesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Balances) > 0 {
+		for _, e := range m.Balances {
 			l = e.Size()
 			n += 1 + l + sovTypes(uint64(l))
 		}
@@ -1201,6 +1633,299 @@ func (m *MsgMultiSend) Unmarshal(dAtA []byte) error {
 			}
 			m.Outputs = append(m.Outputs, Output{})
 			if err := m.Outputs[len(m.Outputs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryBalanceParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryBalanceParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryBalanceParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
+			if m.Address == nil {
+				m.Address = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllBalancesParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllBalancesParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllBalancesParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
+			if m.Address == nil {
+				m.Address = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllBalancesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllBalancesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllBalancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Balances", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Balances = append(m.Balances, types.Coin{})
+			if err := m.Balances[len(m.Balances)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -54,3 +54,34 @@ message MsgMultiSend {
   repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
   repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }
+
+//
+// Query
+//
+
+service Query {
+  rpc QueryBalance(QueryBalanceParams) returns (cosmos_sdk.v1.Coin);
+  rpc QueryAllBalances(QueryAllBalancesParams) returns (QueryAllBalancesResponse);
+}
+
+// QueryBalanceParams defines the params for querying an account balance.
+message QueryBalanceParams {
+  bytes address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+  ];
+  string denom = 2;
+}
+
+// QueryAllBalancesParams defines the params for querying all account balances
+message QueryAllBalancesParams {
+  bytes address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+  ];
+}
+
+message QueryAllBalancesResponse {
+  repeated cosmos_sdk.v1.Coin balances = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

@@ -77,6 +77,10 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
+func (am AppModule) RegisterQueryServer(server module.GRPCServer) {
+	types.RegisterQueryServer(server, keeper.Querier{am.keeper})
+}
+
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
@@ -101,11 +105,11 @@ func (AppModule) Route() string { return RouterKey }
 func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string { return RouterKey }
+func (AppModule) QuerierRoute() string { return "" }
 
 // NewQuerierHandler returns the bank module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the bank module. It returns

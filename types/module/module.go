@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+	"google.golang.org/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -141,12 +142,19 @@ type AppModule interface {
 	// routes
 	Route() string
 	NewHandler() sdk.Handler
+	// TODO: deprecate in favor of RegisterQueryServer
 	QuerierRoute() string
+	// TODO: deprecate in favor of RegisterQueryServer
 	NewQuerierHandler() sdk.Querier
+	RegisterQueryServer(GRPCServer)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
+}
+
+type GRPCServer interface {
+	RegisterService(sd *grpc.ServiceDesc, ss interface{})
 }
 
 //___________________________
@@ -253,6 +261,7 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
+		module.RegisterQueryServer(queryRouter)
 	}
 }
 

@@ -225,3 +225,11 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 	return cc, cms.Write
 }
+
+func UnwrapSDKContext(ctx context.Context) Context {
+	return ctx.Value(sdkContextKey).(Context)
+}
+
+func WrapSDKContext(ctx Context) context.Context {
+	return context.WithValue(ctx.ctx, sdkContextKey, ctx)
+}

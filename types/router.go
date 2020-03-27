@@ -1,6 +1,9 @@
 package types
 
-import "regexp"
+import (
+	"google.golang.org/grpc"
+	"regexp"
+)
 
 var (
 	// IsAlphaNumeric defines a regular expression for matching against alpha-numeric
@@ -34,4 +37,5 @@ type Router interface {
 type QueryRouter interface {
 	AddRoute(r string, h Querier) QueryRouter
 	Route(path string) Querier
+	RegisterService(sd *grpc.ServiceDesc, ss interface{})
 }

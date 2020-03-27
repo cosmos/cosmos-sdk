@@ -1,7 +1,10 @@
 package context
 
 import (
+	"context"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -229,4 +232,43 @@ func parseQueryStorePath(path string) (storeName string, err error) {
 	}
 
 	return paths[1], nil
+}
+
+func (ctx CLIContext) QueryConn() GRPCClientConn {
+	return cliQueryConn{ctx}
+}
+
+type GRPCClientConn interface {
+	Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error
+	NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error)
+}
+
+type cliQueryConn struct {
+	ctx CLIContext
+}
+
+var _ GRPCClientConn = cliQueryConn{}
+
+func (c cliQueryConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+	req, ok := args.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %+v", args)
+	}
+	reqBz, err := proto.Marshal(req)
+	if err != nil {
+		return err
+	}
+	resBz, _, err := c.ctx.QueryWithData(fmt.Sprintf("custom/%s", method), reqBz)
+	if err != nil {
+		return err
+	}
+	res, ok := reply.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto unmarshal %+v", reply)
+	}
+	return proto.Unmarshal(resBz, res)
+}
+
+func (c cliQueryConn) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+	return nil, fmt.Errorf("streaming rpc not supported")
 }

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	gocontext "context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ const (
 )
 
 // NewQueryCmd returns a root CLI command handler for all x/bank query commands.
-func NewQueryCmd(m codec.Marshaler) *cobra.Command {
+func NewQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the bank module",
@@ -28,67 +29,42 @@ func NewQueryCmd(m codec.Marshaler) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(NewBalancesCmd(m))
+	cmd.AddCommand(NewBalancesCmd())
 
 	return cmd
 }
 
 // NewBalancesCmd returns a CLI command handler for querying account balance(s).
-func NewBalancesCmd(m codec.Marshaler) *cobra.Command {
+func NewBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
 		Short: "Query for account balance(s) by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithMarshaler(m)
+			cliCtx := context.NewCLIContext()
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			var (
-				params interface{}
-				result interface{}
-				route  string
-			)
-
+			queryClient := types.NewQueryClient(cliCtx.QueryConn())
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params = types.NewQueryAllBalancesParams(addr)
-				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
-			} else {
-				params = types.NewQueryBalanceParams(addr, denom)
-				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
-			}
-
-			bz, err := m.MarshalJSON(params)
-			if err != nil {
-				return fmt.Errorf("failed to marshal params: %w", err)
-			}
-
-			res, _, err := cliCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
-			if denom == "" {
-				var balances sdk.Coins
-				if err := m.UnmarshalJSON(res, &balances); err != nil {
+				params := &types.QueryAllBalancesParams{addr}
+				result, err := queryClient.QueryAllBalances(gocontext.Background(), params)
+				if err != nil {
 					return err
 				}
-
-				result = balances
+				return cliCtx.Println(result.Balances)
 			} else {
-				var balance sdk.Coin
-				if err := m.UnmarshalJSON(res, &balance); err != nil {
+				params := &types.QueryBalanceParams{addr, denom}
+				result, err := queryClient.QueryBalance(gocontext.Background(), params)
+				if err != nil {
 					return err
 				}
-
-				result = balance
+				return cliCtx.Println(result)
 			}
-
-			return cliCtx.Println(result)
 		},
 	}
 

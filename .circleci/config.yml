@@ -77,8 +77,10 @@ jobs:
           paths:
             - ".git"
   proto:
+    executor: golang
     steps:
       - setup_remote_docker
+      - checkout
       - run:
         name: proto-lint
         command: |

@@ -144,7 +144,7 @@ func (a altKeyring) Delete(uid string) error {
 		return err
 	}
 
-	err = a.db.Remove(string(addrKey(info.GetAddress())))
+	err = a.db.Remove(addrKeyAsString(info.GetAddress()))
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (a altKeyring) Delete(uid string) error {
 }
 
 func (a altKeyring) KeyByAddress(address types.Address) (Info, error) {
-	ik, err := a.db.Get(string(addrKey(address)))
+	ik, err := a.db.Get(addrKeyAsString(address))
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +293,7 @@ func (a altKeyring) writeInfo(name string, info Info) error {
 	}
 
 	err = a.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  addrKeyAsString(info.GetAddress()),
 		Data: key,
 	})
 	if err != nil {

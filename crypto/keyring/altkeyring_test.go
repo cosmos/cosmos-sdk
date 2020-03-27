@@ -3,6 +3,8 @@ package keyring
 import (
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -114,6 +116,31 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	list, err = keyring.List()
 	require.NoError(t, err)
 	require.Empty(t, list)
+}
+
+func TestAltKeyring_SavePubKey(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	list, err := keyring.List()
+	require.NoError(t, err)
+	require.Empty(t, list)
+
+	key := "offline"
+	priv := ed25519.GenPrivKey()
+	pub := priv.PubKey()
+
+	info, err := keyring.SavePubKey(key, pub, Ed25519)
+	require.Nil(t, err)
+	require.Equal(t, pub, info.GetPubKey())
+	require.Equal(t, key, info.GetName())
+
+	list, err = keyring.List()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(list))
 }
 
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {

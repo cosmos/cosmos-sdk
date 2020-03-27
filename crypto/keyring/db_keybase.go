@@ -421,6 +421,10 @@ func addrKey(address types.Address) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 
+func addrKeyAsString(address types.Address) string {
+	return fmt.Sprintf("%s.%s", address.String(), addressSuffix)
+}
+
 func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
 }

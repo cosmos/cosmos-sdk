@@ -29,7 +29,6 @@ type UnjailReq struct {
 func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx = ctx.WithMarshaler(m)
-
 		vars := mux.Vars(r)
 		bech32Validator := vars["validatorAddr"]
 

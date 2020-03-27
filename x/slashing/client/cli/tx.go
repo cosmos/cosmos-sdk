@@ -27,7 +27,6 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 	}
 
 	slashingTxCmd.AddCommand(NewUnjailTxCmd(m, txg, ar))
-
 	return slashingTxCmd
 }
 

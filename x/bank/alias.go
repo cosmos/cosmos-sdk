@@ -29,7 +29,6 @@ var (
 	NewBaseKeeper               = keeper.NewBaseKeeper
 	NewBaseSendKeeper           = keeper.NewBaseSendKeeper
 	NewBaseViewKeeper           = keeper.NewBaseViewKeeper
-	NewQuerier                  = keeper.NewQuerier
 	RegisterCodec               = types.RegisterCodec
 	ErrNoInputs                 = types.ErrNoInputs
 	ErrNoOutputs                = types.ErrNoOutputs

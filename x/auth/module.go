@@ -113,6 +113,9 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.accountKeeper)
 }
 
+func (am AppModule) RegisterQueryServer(module.GRPCServer) {
+}
+
 // InitGenesis performs genesis initialization for the auth module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {

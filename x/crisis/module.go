@@ -107,6 +107,9 @@ func (AppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns no sdk.Querier.
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
+func (am AppModule) RegisterQueryServer(module.GRPCServer) {
+}
+
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {

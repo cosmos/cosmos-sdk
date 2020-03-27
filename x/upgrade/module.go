@@ -102,6 +102,9 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
+func (am AppModule) RegisterQueryServer(module.GRPCServer) {
+}
+
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}

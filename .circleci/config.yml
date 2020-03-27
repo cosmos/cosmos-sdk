@@ -76,6 +76,7 @@ jobs:
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
+
   proto:
     executor: protoc
     steps:
@@ -86,40 +87,12 @@ jobs:
           target: proto-gen proto-lint proto-check-breaking
           description: "Lint and verify Protocol Buffer definitions"
 
-  test-sim-nondeterminism:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim-nondeterminism
-          description: "Test individual module simulations"
-
-  test-sim-import-export:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim-import-export
-          description: "Test application import/export simulation"
-
-  test-sim-after-import:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim-after-import
-          description: "Test simulation after import"
-
   test-sim-multi-seed-long:
     executor: golang
     steps:
       - make:
           target: test-sim-multi-seed-long
           description: "Test multi-seed simulation (long)"
-
-  test-sim-multi-seed-short:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim-multi-seed-short
-          description: "Test multi-seed simulation (short)"
 
   test-cover:
     executor: golang
@@ -196,21 +169,6 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - proto:
-          requires:
-            - setup-dependencies                       
-      - test-sim-nondeterminism:
-          requires:
-            - setup-dependencies
-      - test-sim-import-export:
-          requires:
-            - setup-dependencies
-      - test-sim-after-import:
-          requires:
-            - setup-dependencies
-      - test-sim-multi-seed-short:
-          requires:
-            - setup-dependencies
       - test-sim-multi-seed-long:
           requires:
             - setup-dependencies
@@ -222,6 +180,9 @@ workflows:
               only:
                 - /^v.*/
       - test-cover:
+          requires:
+            - setup-dependencies
+      - proto:
           requires:
             - setup-dependencies
       - upload-coverage:

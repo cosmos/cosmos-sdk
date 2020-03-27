@@ -7,6 +7,6 @@ jobs:
       - uses: actions/checkout@master
       - uses: docker-practice/actions-setup-docker@master
       - name: lint
-        run: docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf check lint --error-format=json
+        run: docker run -v pwd:/workspace --workdir /workspace bufbuild/buf check lint --error-format=json
       - name: check-breakage
-        run: docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf --against-input .git#branch=master
+        run: docker run -v pwd:/workspace --workdir /workspace bufbuild/buf --against-input .git#branch=master

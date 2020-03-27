@@ -6,15 +6,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/99designs/keyring"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-
-	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/go-bip39"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (

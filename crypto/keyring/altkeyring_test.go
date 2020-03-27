@@ -3,6 +3,10 @@ package keyring
 import (
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/tendermint/tendermint/crypto/multisig"
+
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/stretchr/testify/require"
@@ -133,7 +137,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	info, err := keyring.SavePubKey(key, pub, Ed25519)
+	info, err := keyring.SavePubKey(key, pub, Secp256k1)
 	require.Nil(t, err)
 	require.Equal(t, pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())
@@ -141,6 +145,31 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	list, err = keyring.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(list))
+}
+
+func TestAltKeyring_SaveMultisig(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	mnemonic1, _, err := keyring.NewMnemonic("key1", English, Secp256k1)
+	require.NoError(t, err)
+	mnemonic2, _, err := keyring.NewMnemonic("key2", English, Secp256k1)
+	require.NoError(t, err)
+
+	key := "multi"
+	pub := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{mnemonic1.GetPubKey(), mnemonic2.GetPubKey()})
+
+	info, err := keyring.SaveMultisig(key, pub)
+	require.Nil(t, err)
+	require.Equal(t, pub, info.GetPubKey())
+	require.Equal(t, key, info.GetName())
+
+	list, err := keyring.List()
+	require.NoError(t, err)
+	require.Len(t, list, 3)
 }
 
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {

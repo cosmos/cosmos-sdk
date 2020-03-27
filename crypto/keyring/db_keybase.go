@@ -418,7 +418,7 @@ func (kb dbKeybase) writeInfo(name string, info Info) {
 }
 
 func addrKey(address types.Address) []byte {
-	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
+	return []byte(addrKeyAsString(address))
 }
 
 func addrKeyAsString(address types.Address) string {

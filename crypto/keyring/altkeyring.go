@@ -48,6 +48,7 @@ type Keyring interface {
 
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
+
 	//
 	//// SupportedAlgos returns a list of signing algorithms supported by the keybase
 	//SupportedAlgos() []SigningAlgo

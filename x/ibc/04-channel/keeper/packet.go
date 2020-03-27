@@ -30,10 +30,10 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.GetState() == ibctypes.CLOSED {
+	if channel.State == ibctypes.CLOSED {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel is CLOSED (got %s)", channel.GetState().String(),
+			"channel is CLOSED (got %s)", channel.State.String(),
 		)
 	}
 
@@ -49,23 +49,23 @@ func (k Keeper) SendPacket(
 	// 	return sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
 	// }
 
-	if packet.GetDestPort() != channel.GetCounterParty().GetPortID() {
+	if packet.GetDestPort() != channel.Counterparty.GetPortID() {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.GetCounterParty().GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.GetPortID(),
 		)
 	}
 
-	if packet.GetDestChannel() != channel.GetCounterParty().GetChannelID() {
+	if packet.GetDestChannel() != channel.Counterparty.GetChannelID() {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.GetCounterParty().GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.GetChannelID(),
 		)
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
@@ -134,10 +134,10 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
 
-	if channel.GetState() != ibctypes.OPEN {
+	if channel.State != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.GetState().String(),
+			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
@@ -145,23 +145,23 @@ func (k Keeper) RecvPacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.GetCounterParty().GetPortID() {
+	if packet.GetSourcePort() != channel.Counterparty.GetPortID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.GetCounterParty().GetPortID(),
+			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.GetPortID(),
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.GetCounterParty().GetChannelID() {
+	if packet.GetSourceChannel() != channel.Counterparty.GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.GetCounterParty().GetChannelID(),
+			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.GetChannelID(),
 		)
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.GetState() != ibctypes.OPEN {
@@ -201,21 +201,21 @@ func (k Keeper) PacketExecuted(
 	}
 
 	// sanity check
-	if channel.GetState() != ibctypes.OPEN {
+	if channel.State != ibctypes.OPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.GetState().String(),
+			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	if acknowledgement != nil || channel.GetOrdering() == ibctypes.UNORDERED {
+	if acknowledgement != nil || channel.Ordering == ibctypes.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 
-	if channel.GetOrdering() == ibctypes.ORDERED {
+	if channel.Ordering == ibctypes.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return types.ErrSequenceReceiveNotFound
@@ -255,10 +255,10 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.GetState() != ibctypes.OPEN {
+	if channel.State != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.GetState().String(),
+			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
@@ -266,23 +266,23 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty
-	if packet.GetDestPort() != channel.GetCounterParty().GetPortID() {
+	if packet.GetDestPort() != channel.Counterparty.GetPortID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.GetCounterParty().GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.GetPortID(),
 		)
 	}
 
-	if packet.GetDestChannel() != channel.GetCounterParty().GetChannelID() {
+	if packet.GetDestChannel() != channel.Counterparty.GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.GetCounterParty().GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.GetChannelID(),
 		)
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.GetState() != ibctypes.OPEN {
@@ -332,10 +332,10 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.GetState() != ibctypes.OPEN {
+	if channel.State != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.GetState().String(),
+			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
@@ -351,22 +351,22 @@ func (k Keeper) CleanupPacket(
 	// 	return nil, sdkerrors.Wrapf(port.ErrInvalidPort, "invalid source port: %s", packet.GetSourcePort())
 	// }
 
-	if packet.GetDestPort() != channel.GetCounterParty().GetPortID() {
+	if packet.GetDestPort() != channel.Counterparty.GetPortID() {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.GetCounterParty().GetPortID(),
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.GetPortID(),
 		)
 	}
 
-	if packet.GetDestChannel() != channel.GetCounterParty().GetChannelID() {
+	if packet.GetDestChannel() != channel.Counterparty.GetChannelID() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.GetCounterParty().GetChannelID(),
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.GetChannelID(),
 		)
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	// check that packet has been received on the other end
@@ -382,7 +382,7 @@ func (k Keeper) CleanupPacket(
 	}
 
 	var err error
-	switch channel.GetOrdering() {
+	switch channel.Ordering {
 	case ibctypes.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
@@ -396,7 +396,7 @@ func (k Keeper) CleanupPacket(
 			acknowledgement,
 		)
 	default:
-		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.GetOrdering().String()))
+		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))
 	}
 
 	if err != nil {

@@ -282,7 +282,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state types.State,
+	state ibctypes.State,
 ) types.ConnectionEnd {
 	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	connection := types.ConnectionEnd{
@@ -298,7 +298,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state channeltypes.State, order channeltypes.Order, connectionID string,
+	state ibctypes.State, order ibctypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty, []string{connectionID}, "1.0")

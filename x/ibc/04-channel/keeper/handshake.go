@@ -83,12 +83,12 @@ func (k Keeper) ChanOpenTry(
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
-	if found && !(previousChannel.GetState() == ibctypes.INIT &&
-		previousChannel.GetOrdering() == order &&
-		previousChannel.GetCounterparty().GetPortID() == counterparty.PortID &&
-		previousChannel.GetCounterparty().GetChannelID() == counterparty.ChannelID &&
-		previousChannel.GetConnectionHops()[0] == connectionHops[0] &&
-		previousChannel.GetVersion() == version) {
+	if found && !(previousChannel.State == ibctypes.INIT &&
+		previousChannel.Ordering == order &&
+		previousChannel.Counterparty.PortID == counterparty.PortID &&
+		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
+		previousChannel.ConnectionHops[0] == connectionHops[0] &&
+		previousChannel.Version == version) {
 		sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
 	}
 
@@ -124,7 +124,7 @@ func (k Keeper) ChanOpenTry(
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.INIT, channel.GetOrdering(), expectedCounterparty,
+		ibctypes.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -161,10 +161,10 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if !(channel.GetState() == ibctypes.INIT || channel.GetState() == ibctypes.TRYOPEN) {
+	if !(channel.State == ibctypes.INIT || channel.State == ibctypes.TRYOPEN) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state should be INIT or TRYOPEN (got %s)", channel.GetState().String(),
+			"channel state should be INIT or TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
@@ -174,9 +174,9 @@ func (k Keeper) ChanOpenAck(
 	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	// }
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.GetState() != ibctypes.OPEN {
@@ -195,14 +195,14 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.TRYOPEN, channel.GetOrdering(), counterparty,
+		ibctypes.TRYOPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
-		channel.GetCounterparty().GetPortID(),
-		channel.GetCounterparty().GetChannelID(),
+		channel.Counterparty.GetPortID(),
+		channel.Counterparty.GetChannelID(),
 		expectedChannel,
 	); err != nil {
 		return err
@@ -229,10 +229,10 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.GetState() != ibctypes.TRYOPEN {
+	if channel.State != ibctypes.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
-			"channel state is not TRYOPEN (got %s)", channel.GetState().String(),
+			"channel state is not TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
@@ -247,9 +247,9 @@ func (k Keeper) ChanOpenConfirm(
 	// 	return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	// }
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.GetState() != ibctypes.OPEN {
@@ -267,13 +267,13 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.OPEN, channel.GetOrdering(), counterparty,
-		counterpartyHops, channel.GetVersion(),
+		ibctypes.OPEN, channel.Ordering, counterparty,
+		counterpartyHops, channel.Version,
 	)
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofAck,
-		channel.GetCounterparty().GetPortID(), channel.GetCounterparty().GetPortID(),
+		channel.Counterparty.GetPortID(), channel.Counterparty.GetPortID(),
 		expectedChannel,
 	); err != nil {
 		return err
@@ -313,13 +313,13 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.GetState() == ibctypes.CLOSED {
+	if channel.State == ibctypes.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.GetState() != ibctypes.OPEN {
@@ -360,13 +360,13 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.GetState() == ibctypes.CLOSED {
+	if channel.State == ibctypes.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
-	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.GetConnectionHops()[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.GetState() != ibctypes.OPEN {
@@ -384,13 +384,13 @@ func (k Keeper) ChanCloseConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.CLOSED, channel.GetOrdering(), counterparty,
-		counterpartyHops, channel.GetVersion(),
+		ibctypes.CLOSED, channel.Ordering, counterparty,
+		counterpartyHops, channel.Version,
 	)
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		channel.GetCounterparty().GetPortID(), channel.GetCounterparty().GetChannelID(),
+		channel.Counterparty.GetPortID(), channel.Counterparty.GetChannelID(),
 		expectedChannel,
 	); err != nil {
 		return err

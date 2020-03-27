@@ -13,10 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
@@ -101,7 +98,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	// Setup channel from A to B
 	suite.chainA.CreateClient(suite.chainB)
-	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionibctypes.OPEN)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
 	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelibctypes.OPEN, channelibctypes.ORDERED, testConnection)
 
 	res, err = handler(ctx, msg)
@@ -287,7 +284,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state connectionexported.State,
+	state ibctypes.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	connection := connectiontypes.ConnectionEnd{
@@ -303,7 +300,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state channelexported.State, order exported.Order, connectionID string,
+	state ibctypes.State, order ibctypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,

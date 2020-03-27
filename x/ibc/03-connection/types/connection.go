@@ -5,6 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -20,6 +21,26 @@ func NewConnectionEnd(state ibctypes.State, clientID string, counterparty Counte
 		Counterparty: counterparty,
 		Versions:     versions,
 	}
+}
+
+// GetState implements the Connection interface
+func (c ConnectionEnd) GetState() ibctypes.State {
+	return c.State
+}
+
+// GetClientID implements the Connection interface
+func (c ConnectionEnd) GetClientID() string {
+	return c.ClientID
+}
+
+// GetCounterparty implements the Connection interface
+func (c ConnectionEnd) GetCounterparty() exported.CounterpartyI {
+	return c.Counterparty
+}
+
+// GetVersions implements the Connection interface
+func (c ConnectionEnd) GetVersions() []string {
+	return c.Versions
 }
 
 // ValidateBasic implements the Connection interface
@@ -47,6 +68,21 @@ func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.Merkl
 		ConnectionID: connectionID,
 		Prefix:       prefix,
 	}
+}
+
+// GetClientID implements the CounterpartyI interface
+func (c Counterparty) GetClientID() string {
+	return c.ClientID
+}
+
+// GetConnectionID implements the CounterpartyI interface
+func (c Counterparty) GetConnectionID() string {
+	return c.ConnectionID
+}
+
+// GetPrefix implements the CounterpartyI interface
+func (c Counterparty) GetPrefix() commitmentexported.Prefix {
+	return &c.Prefix
 }
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix

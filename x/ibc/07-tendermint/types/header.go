@@ -2,9 +2,7 @@ package types
 
 import (
 	"bytes"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"time"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -12,7 +10,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-var _ clientexported.Header = Header{}
+var _ clientexported.Header = (*Header)(nil)
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
 func (h Header) ClientType() clientexported.ClientType {
@@ -22,9 +20,9 @@ func (h Header) ClientType() clientexported.ClientType {
 // ConsensusState returns the consensus state associated with the header
 func (h Header) ConsensusState() ConsensusState {
 	return ConsensusState{
-		Height:       uint64(h.Height),
-		Timestamp:    h.Time,
-		Root:         commitmenttypes.NewMerkleRoot(h.AppHash),
+		Height:       h.GetHeight(),
+		Timestamp:    h.GetTime(),
+		Root:         commitmenttypes.NewMerkleRoot(h.SignedHeader.Header.AppHash),
 		ValidatorSet: h.ValidatorSet,
 	}
 }
@@ -36,23 +34,22 @@ func (h Header) GetHeight() uint64 {
 	return uint64(h.SignedHeader.Header.GetHeight())
 }
 
+// GetTime returns the signed header's time
+func (h Header) GetTime() time.Time {
+	return h.SignedHeader.Header.GetTime()
+}
+
 // ValidateBasic calls the SignedHeader ValidateBasic function
 // and checks that validatorsets are not nil
 func (h Header) ValidateBasic(chainID string) error {
-	if err := h.SignedHeader.ValidateBasic(chainID); err != nil {
+	if err := h.SignedHeader.Header.ValidateBasic(chainID); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
 	}
-	if h.ValidatorSet.Equal(nil) {
+	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
-	if !bytes.Equal(h.ValidatorsHash, h.ValidatorSet.Hash()) {
+	if !bytes.Equal(h.SignedHeader.Header.ValidatorsHash, h.ValidatorSet.Hash()) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
 	}
 	return nil
-}
-
-// ToABCIHeader parses the header to an ABCI header type.
-// NOTE: only for testing use.
-func (h Header) ToABCIHeader() abci.Header {
-	return tmtypes.TM2PB.Header(h.SignedHeader.Header)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // SendPacket  is called by a module in order to send an IBC packet on a channel
@@ -29,7 +30,7 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.GetState() == exported.CLOSED {
+	if channel.GetState() == ibctypes.CLOSED {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel is CLOSED (got %s)", channel.GetState().String(),
@@ -68,7 +69,7 @@ func (k Keeper) SendPacket(
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == connectionibctypes.UNINITIALIZED {
+	if connectionEnd.GetState() == ibctypes.UNINITIALIZED {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection is closed (i.e NONE)",
@@ -163,7 +164,7 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionibctypes.OPEN {
+	if connectionEnd.GetState() != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -284,7 +285,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.GetConnectionHops()[0])
 	}
 
-	if connectionEnd.GetState() != connectionibctypes.OPEN {
+	if connectionEnd.GetState() != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),

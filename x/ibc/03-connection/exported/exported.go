@@ -1,7 +1,7 @@
 package exported
 
 import (
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -18,6 +18,6 @@ type ConnectionI interface {
 type CounterpartyI interface {
 	GetClientID() string
 	GetConnectionID() string
-	GetPrefix() commitmenttypes.MerklePrefix
+	GetPrefix() commitmentexported.Prefix
 	ValidateBasic() error
 }

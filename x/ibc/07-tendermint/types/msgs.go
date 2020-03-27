@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -32,11 +33,16 @@ func NewMsgCreateClient(
 ) MsgCreateClient {
 	return MsgCreateClient{
 		ClientID:        id,
-		Header:          &header,
+		Header:          header,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		Signer:          signer,
 	}
+}
+
+// GetClientID implements clientexported.MsgCreateClient	
+func (msg MsgCreateClient) GetClientID() string {	
+	return msg.ClientID	
 }
 
 // Route implements sdk.Msg
@@ -61,7 +67,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress
 	}
 	// ValidateBasic of provided header with self-attested chain-id
-	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
+	if err := msg.Header.ValidateBasic(msg.Header.SignedHeader.GetHeader().GetChainID()); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
 	return host.DefaultClientIdentifierValidator(msg.ClientID)
@@ -85,11 +91,11 @@ func (msg MsgCreateClient) GetClientType() string {
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
-	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
-	return ConsensusState{
-		Timestamp:    msg.Header.Time,
+	root := commitmenttypes.NewMerkleRoot(msg.Header.SignedHeader.Header.AppHash)
+	return &ConsensusState{
+		Timestamp:    msg.Header.GetTime(),
 		Root:         root,
-		Height:       uint64(msg.Header.Height),
+		Height:       uint64(msg.Header.GetHeight()),
 		ValidatorSet: msg.Header.GetValidatorSet(),
 	}
 }
@@ -101,6 +107,16 @@ func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpda
 		Header:   header,
 		Signer:   signer,
 	}
+}
+
+// GetClientID implements clientexported.MsgUpdateClient	
+func (msg MsgUpdateClient) GetClientID() string {	
+	return msg.ClientID	
+}
+
+// GetHeader implements clientexported.MsgUpdateClient	
+func (msg MsgUpdateClient) GetHeader() clientexported.Header {	
+	return &msg.Header	
 }
 
 // Route implements sdk.Msg
@@ -135,7 +151,7 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 // instance.
 func NewMsgSubmitClientMisbehaviour(evidence Evidence, signer sdk.AccAddress) MsgSubmitClientMisbehaviour {
 	return MsgSubmitClientMisbehaviour{
-		Evidence:  evidence,
+		Evidence:  &evidence,
 		Submitter: signer,
 	}
 }
@@ -148,6 +164,9 @@ func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClien
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
+	if msg.Evidence == nil {	
+		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")	
+	}
 	if msg.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
 	}
@@ -164,4 +183,12 @@ func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Submitter}
+}
+
+func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {	
+	return msg.Evidence	
+}	
+
+func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {	
+	return msg.Submitter	
 }

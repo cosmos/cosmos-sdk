@@ -14,10 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -64,8 +62,8 @@ func (suite *HandlerTestSuite) SetupTest() {
 	// create client and connection during setups
 	suite.chainA.CreateClient(suite.chainB)
 	suite.chainB.CreateClient(suite.chainA)
-	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionibctypes.OPEN)
-	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectionibctypes.OPEN)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, ibctypes.OPEN)
 }
 
 func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
@@ -324,7 +322,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state connectionexported.State,
+	state ibctypes.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	connection := connectiontypes.ConnectionEnd{
@@ -340,7 +338,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state channelexported.State, order exported.Order, connectionID string,
+	state ibctypes.State, order ibctypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,

@@ -45,9 +45,11 @@ message MsgConnectionOpenTry {
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
-  string                                     connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
-  string                                     version       = 2;
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try     = 3 [
+  string connection_id = 1 [
+    (gogoproto.customname) = "ConnectionID"
+  ];
+  string                                     version   = 2;
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 3 [
     (gogoproto.nullable) = false
   ];
   uint64                                     proof_height    = 4;
@@ -63,8 +65,10 @@ message MsgConnectionOpenAck {
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
-  string                                     connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack     = 2 [
+  string connection_id = 1 [
+    (gogoproto.customname) = "ConnectionID"
+  ];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 2 [
     (gogoproto.nullable) = false
   ];
   uint64 proof_height = 3;
@@ -80,6 +84,8 @@ message MsgConnectionOpenConfirm {
 // NOTE: there must only be 2 defined ConnectionEnds to establish a connection
 // between two chains.
 message ConnectionEnd {
+  option (gogoproto.goproto_getters) = false;
+
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""
@@ -93,6 +99,8 @@ message ConnectionEnd {
 
 // Counterparty defines the counterparty chain associated with a connection end.
 message Counterparty {
+  option (gogoproto.goproto_getters) = false;
+
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""

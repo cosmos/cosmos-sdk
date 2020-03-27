@@ -14,11 +14,11 @@ var _ sdk.Msg = MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
 func NewMsgChannelOpenInit(
-	portID, channelID string, version string, channelOrder Order, connectionHops []string,
+	portID, channelID string, version string, channelOrder ibctypes.Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(ibctypes.INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
@@ -63,12 +63,12 @@ var _ sdk.Msg = MsgChannelOpenTry{}
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 func NewMsgChannelOpenTry(
-	portID, channelID, version string, channelOrder Order, connectionHops []string,
+	portID, channelID, version string, channelOrder ibctypes.Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
 ) MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(ibctypes.INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,

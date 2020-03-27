@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -121,7 +122,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	if channel.GetOrdering() == ibctypes.ORDERED {
-		channel.GetState() = exported.CLOSED
+		channel.State = ibctypes.CLOSED
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
@@ -190,7 +191,7 @@ func (k Keeper) TimeoutOnClose(
 
 	counterparty := types.NewCounterparty(packet.GetSourcePort(), packet.GetSourceChannel())
 	expectedChannel := types.NewChannel(
-		exported.CLOSED, channel.GetOrdering(), counterparty, counterpartyHops, channel.GetVersion(),
+		ibctypes.CLOSED, channel.GetOrdering(), counterparty, counterpartyHops, channel.GetVersion(),
 	)
 
 	// check that the opposing channel end has closed

@@ -12,11 +12,15 @@ import "x/ibc/23-commitment/types/types.proto";
 
 // MsgCreateClient defines a message to create a tendermint client state.
 message MsgCreateClient {
+  option (gogoproto.goproto_getters) = false;
+
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
-  Header                   header          = 2;
+  Header header = 2 [
+    (gogoproto.nullable) = false
+  ];
   google.protobuf.Duration trusting_period = 3 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
@@ -35,12 +39,16 @@ message MsgCreateClient {
 // MsgCreateClient defines an sdk.Msg to update a tendermint client state to
 // the given header.
 message MsgUpdateClient {
+  option (gogoproto.goproto_getters) = false;
+
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
-  Header header = 2;
-  bytes  signer = 3 [
+  Header header = 2 [
+    (gogoproto.nullable) = false
+  ];
+  bytes signer = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
@@ -48,10 +56,10 @@ message MsgUpdateClient {
 // MsgSubmitClientMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
 message MsgSubmitClientMisbehaviour {
-  Evidence evidence = 1 [
-    (gogoproto.nullable) = false
-  ];
-  bytes submitter = 2 [
+  option (gogoproto.goproto_getters) = false;
+
+  Evidence evidence  = 1;
+  bytes    submitter = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
@@ -85,6 +93,8 @@ message ClientState {
 
 // ConsensusState defines the consensus state from Tendermint.
 message ConsensusState {
+   option (gogoproto.goproto_getters) = false;
+   
   // timestamp that corresponds to the block height in which the ConsensusState
   // was stored.
   google.protobuf.Timestamp timestamp = 1 [
@@ -134,7 +144,6 @@ message Header {
   ];
 
   ValidatorSet validator_set = 2 [
-    (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"validator_set\""
   ];
 }
@@ -155,7 +164,7 @@ message ValidatorSet {
 // TODO: move to tendermint
 message SignedHeader {
   .tendermint.abci.types.Header header = 1;
-  // TODO: Commit
+  Commit                        commit = 2 [(gogoproto.nullable) = false];
 }
 
 // Commit contains the evidence that a block was committed by a set of validators.

@@ -23,7 +23,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func InitializeFromMsg(
 	msg MsgCreateClient,
 ) (ClientState, error) {
-	return Initialize(msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.Header)
+	return Initialize(msg.ClientID, msg.TrustingPeriod, msg.UnbondingPeriod, msg.Header)
 }
 
 // Initialize creates a client state and validates its contents, checking that
@@ -58,7 +58,7 @@ func NewClientState(
 
 // GetChainID returns the chain-id from the last header
 func (cs ClientState) GetChainID() string {
-	return cs.LastHeader.ChainID
+	return cs.LastHeader.SignedHeader.Header.GetChainID()
 }
 
 // ClientType is tendermint.
@@ -68,12 +68,12 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.LastHeader.Height)
+	return uint64(cs.LastHeader.SignedHeader.Header.GetHeight())
 }
 
 // GetLatestTimestamp returns latest block time.
 func (cs ClientState) GetLatestTimestamp() time.Time {
-	return cs.LastHeader.Time
+	return cs.LastHeader.SignedHeader.Header.GetTime()
 }
 
 // IsFrozen returns true if the frozen height has been set.

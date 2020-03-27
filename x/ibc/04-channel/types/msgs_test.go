@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // define constants used for testing
@@ -89,7 +90,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 		NewMsgChannelOpenInit("testportid", invalidShortChannel, "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", addr),                // too short channel id
 		NewMsgChannelOpenInit("testportid", invalidLongChannel, "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", addr),                 // too long channel id
 		NewMsgChannelOpenInit("testportid", invalidChannel, "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", addr),                     // channel id contains non-alpha
-		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", exported.Order(3), connHops, "testcpport", "testcpchannel", addr),                     // invalid channel order
+		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ibctypes.Order(3), connHops, "testcpport", "testcpchannel", addr),                     // invalid channel order
 		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ibctypes.ORDERED, invalidConnHops, "testcpport", "testcpchannel", addr),               // connection hops more than 1
 		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ibctypes.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", addr),        // too short connection id
 		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ibctypes.UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", addr),         // too long connection id
@@ -142,9 +143,8 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 		NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                 // too long channel id
 		NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // channel id contains non-alpha
 		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, 1, addr),                         // empty counterparty version
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", nil, 1, addr),                              // empty suite.proof
 		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 0, addr),                      // suite.proof height is zero
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", exported.Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid channel order
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid channel order
 		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),             // connection hops more than 1
 		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),        // too short connection id
 		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ibctypes.UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),         // too long connection id
@@ -167,16 +167,15 @@ func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty counterparty version"},
-		{testMsgs[8], false, "empty proof"},
-		{testMsgs[9], false, "proof height is zero"},
-		{testMsgs[10], false, "invalid channel order"},
-		{testMsgs[11], false, "connection hops more than 1 "},
-		{testMsgs[12], false, "too short connection id"},
-		{testMsgs[13], false, "too long connection id"},
-		{testMsgs[14], false, "connection id contains non-alpha"},
-		{testMsgs[15], false, "empty channel version"},
-		{testMsgs[16], false, "invalid counterparty port id"},
-		{testMsgs[17], false, "invalid counterparty channel id"},
+		{testMsgs[8], false, "proof height is zero"},
+		{testMsgs[9], false, "invalid channel order"},
+		{testMsgs[10], false, "connection hops more than 1 "},
+		{testMsgs[11], false, "too short connection id"},
+		{testMsgs[12], false, "too long connection id"},
+		{testMsgs[13], false, "connection id contains non-alpha"},
+		{testMsgs[14], false, "empty channel version"},
+		{testMsgs[15], false, "invalid counterparty port id"},
+		{testMsgs[16], false, "invalid counterparty channel id"},
 	}
 
 	for i, tc := range testCases {
@@ -200,7 +199,6 @@ func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 		NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, 1, addr),                        // too long channel id
 		NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, 1, addr),                            // channel id contains non-alpha
 		NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, 1, addr),                                // empty counterparty version
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", nil, 1, addr),                                     // empty proof
 		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
 		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 0, addr),                             // proof height is zero
 	}
@@ -219,8 +217,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty counterparty version"},
 		{testMsgs[8], false, "empty proof"},
-		{testMsgs[9], false, "empty proof"},
-		{testMsgs[10], false, "proof height is zero"},
+		{testMsgs[9], false, "proof height is zero"},
 	}
 
 	for i, tc := range testCases {
@@ -243,7 +240,6 @@ func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 		NewMsgChannelOpenConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),                       // too short channel id
 		NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),                        // too long channel id
 		NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, 1, addr),                            // channel id contains non-alpha
-		NewMsgChannelOpenConfirm("testportid", "testchannel", nil, 1, addr),                                     // empty proof
 		NewMsgChannelOpenConfirm("testportid", "testchannel", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
 		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 0, addr),                             // proof height is zero
 	}
@@ -261,8 +257,7 @@ func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty proof"},
-		{testMsgs[8], false, "empty proof"},
-		{testMsgs[9], false, "proof height is zero"},
+		{testMsgs[8], false, "proof height is zero"},
 	}
 
 	for i, tc := range testCases {
@@ -321,7 +316,6 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 		NewMsgChannelCloseConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),                       // too short channel id
 		NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),                        // too long channel id
 		NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, 1, addr),                            // channel id contains non-alpha
-		NewMsgChannelCloseConfirm("testportid", "testchannel", nil, 1, addr),                                     // empty proof
 		NewMsgChannelCloseConfirm("testportid", "testchannel", commitmenttypes.MerkleProof{Proof: nil}, 1, addr), // empty proof
 		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 0, addr),                             // proof height is zero
 	}
@@ -339,8 +333,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty proof"},
-		{testMsgs[8], false, "empty proof"},
-		{testMsgs[9], false, "proof height is zero"},
+		{testMsgs[8], false, "proof height is zero"},
 	}
 
 	for i, tc := range testCases {
@@ -439,7 +432,6 @@ func TestMsgPacketValidation(t *testing.T) {
 	testMsgs := []MsgPacket{
 		NewMsgPacket(packet, proof, 1, addr1),          // valid msg
 		NewMsgPacket(packet, proof, 0, addr1),          // proof height is zero
-		NewMsgPacket(packet, nil, 1, addr1),            // missing proof
 		NewMsgPacket(packet, invalidProofs1, 1, addr1), // missing proof
 		NewMsgPacket(packet, invalidProofs2, 1, addr1), // proof contain empty proof
 		NewMsgPacket(packet, proof, 1, emptyAddr),      // missing signer address
@@ -454,10 +446,9 @@ func TestMsgPacketValidation(t *testing.T) {
 		{testMsgs[0], true, ""},
 		{testMsgs[1], false, "proof height is zero"},
 		{testMsgs[2], false, "missing proof"},
-		{testMsgs[3], false, "missing proof"},
-		{testMsgs[4], false, "proof contain empty proof"},
-		{testMsgs[5], false, "missing signer address"},
-		{testMsgs[6], false, "invalid packet"},
+		{testMsgs[3], false, "proof contain empty proof"},
+		{testMsgs[4], false, "missing signer address"},
+		{testMsgs[5], false, "invalid packet"},
 	}
 
 	for i, tc := range testCases {

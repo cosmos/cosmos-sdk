@@ -93,8 +93,8 @@ message ClientState {
 
 // ConsensusState defines the consensus state from Tendermint.
 message ConsensusState {
-   option (gogoproto.goproto_getters) = false;
-   
+  option (gogoproto.goproto_getters) = false;
+
   // timestamp that corresponds to the block height in which the ConsensusState
   // was stored.
   google.protobuf.Timestamp timestamp = 1 [
@@ -150,14 +150,11 @@ message Header {
 
 // TODO: move to tendermint
 message ValidatorSet {
-  repeated .tendermint.abci.types.Validator validators = 1 [
-    (gogoproto.nullable) = false
-  ];
-  .tendermint.abci.types.Validator proposer = 2 [
-    (gogoproto.nullable) = false
-  ];
-  int64 total_voting_power = 3 [
-    (gogoproto.moretags) = "yaml:\"total_voting_power\""
+  repeated .tendermint.abci.types.Validator validators         = 1;
+  .tendermint.abci.types.Validator          proposer           = 2;
+  int64                                     total_voting_power = 3 [
+    (gogoproto.customname) = "totalVotingPower",
+    (gogoproto.moretags)   = "yaml:\"total_voting_power\""
   ];
 }
 
@@ -174,10 +171,10 @@ message Commit {
   // ValidatorSet order.
   // Any peer with a block can gossip signatures by index with a peer without
   // recalculating the active ValidatorSet.
-  int64                            height   = 1;
-  int32                            round    = 2;
-  .tendermint.types.proto3.BlockID block_id = 3 [(gogoproto.customname) = "BlockID"];
-  // repeated CommitSig               signatures = 4;
-  bytes hash = 5 [(gogoproto.customname) = "hash"];  // tmbytes.HexBytes
-  // BitArray                         bit_array  = 6 [(gogoproto.customname) = "bitArray"];
+  int64                            height     = 1;
+  int32                            round      = 2;
+  .tendermint.types.proto3.BlockID block_id   = 3 [(gogoproto.customname) = "BlockID"];
+  repeated bytes                   signatures = 4;
+  bytes                            hash       = 5 [(gogoproto.customname) = "hash"];  // tmbytes.HexBytes
+  bytes                            bit_array  = 6 [(gogoproto.customname) = "bitArray"];
 }

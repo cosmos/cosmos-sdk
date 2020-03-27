@@ -75,13 +75,13 @@ func (ev Evidence) ValidateBasic() error {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.GetHeight(), ev.Header2.GetHeight())
 	}
 	// Ensure that Commit Hashes are different
-	if ev.Header1.SignedHeader.Commit.BlockID.Equals(ev.Header2.SignedHeader.Commit.BlockID) {
+	if ev.Header1.SignedHeader.Commit.BlockID == ev.Header2.SignedHeader.Commit.BlockID {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit, ev.Header1.ValidatorSet); err != nil {
+	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit.ToTmTypes(), ev.Header1.ValidatorSet.ToTmTypes()); err != nil {
 		return err
 	}
-	return ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit, ev.Header2.ValidatorSet)
+	return ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit.ToTmTypes(), ev.Header2.ValidatorSet.ToTmTypes())
 }
 
 // ValidCommit checks if the given commit is a valid commit from the passed-in validatorset

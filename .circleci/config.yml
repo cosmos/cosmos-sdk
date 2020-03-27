@@ -11,7 +11,7 @@ executors:
       AWS_REGION: us-east-1
   protoc:
     docker:
-      - image: bufbuild/buf
+      - image: tendermintdev/docker-protoc
 
 commands:
   make:
@@ -76,6 +76,16 @@ jobs:
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
+
+  proto:
+    executor: protoc
+    steps:
+      - make:
+          target: protoc-gen-gocosmos
+          description: "Generate go plugin for protoc"
+      - make:
+          target: proto-gen proto-lint proto-check-breaking
+          description: "Lint and verify Protocol Buffer definitions"
 
   test-sim-multi-seed-long:
     executor: golang
@@ -170,6 +180,9 @@ workflows:
               only:
                 - /^v.*/
       - test-cover:
+          requires:
+            - setup-dependencies
+      - proto:
           requires:
             - setup-dependencies
       - upload-coverage:

@@ -79,8 +79,10 @@ jobs:
   proto:
     executor: protoc
     steps:
-      - make:
-          target: proto-gen proto-lint proto-check-breaking
+      - checkout
+      - run:
+          name: proto check
+          command: make proto-lint && make proto-check-breaking
           description: "Lint and verify Protocol Buffer definitions"
 
   test-sim-multi-seed-long:
@@ -165,9 +167,7 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - proto:
-          requires:
-            - setup-dependencies
+      - proto
       - test-sim-multi-seed-long:
           requires:
             - setup-dependencies

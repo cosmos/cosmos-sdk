@@ -11,7 +11,7 @@ executors:
       AWS_REGION: us-east-1
   protoc:
     docker:
-      - image: tendermintdev/docker-protoc
+      - image: bufbuild/buf
 
 commands:
   make:
@@ -79,9 +79,6 @@ jobs:
   proto:
     executor: protoc
     steps:
-      - make:
-          target: protoc-gen-gocosmos
-          description: "Generate go plugin for protoc"
       - make:
           target: proto-gen proto-lint proto-check-breaking
           description: "Lint and verify Protocol Buffer definitions"

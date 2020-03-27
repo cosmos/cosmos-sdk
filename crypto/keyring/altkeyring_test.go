@@ -93,6 +93,29 @@ func TestAltKeyring_Delete(t *testing.T) {
 	require.Empty(t, list)
 }
 
+func TestAltKeyring_DeleteByAddress(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "theKey"
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, Secp256k1)
+	require.NoError(t, err)
+
+	list, err := keyring.List()
+	require.NoError(t, err)
+	require.Len(t, list, 1)
+
+	err = keyring.DeleteByAddress(mnemonic.GetAddress())
+	require.NoError(t, err)
+
+	list, err = keyring.List()
+	require.NoError(t, err)
+	require.Empty(t, list)
+}
+
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())

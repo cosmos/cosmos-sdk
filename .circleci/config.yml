@@ -198,9 +198,7 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - proto:
-          requires:
-            - setup-dependencies
+      - proto
       - test-sim-nondeterminism:
           requires:
             - setup-dependencies

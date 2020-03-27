@@ -3,15 +3,14 @@ package keyring
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/go-bip39"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/go-bip39"
 )
 
 var unsupportedAlgo = AltSigningAlgo{
@@ -175,10 +174,11 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	info, err := keyring.SavePubKey(key, pub, Secp256k1)
+	info, err := keyring.SavePubKey(key, pub, AltSecp256k1)
 	require.Nil(t, err)
 	require.Equal(t, pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())
+	require.Equal(t, AltSecp256k1.Name, info.GetAlgo())
 
 	list, err = keyring.List()
 	require.NoError(t, err)

@@ -109,8 +109,8 @@ func NewAltKeyring(
 	return altKeyring{
 		db: db,
 		options: altKrOptions{
-			supportedAlgos:       []AltSigningAlgo{AltSecp256k1},
-			supportedAlgosLedger: []AltSigningAlgo{AltSecp256k1},
+			supportedAlgos:       AltSigningAlgoList{AltSecp256k1},
+			supportedAlgosLedger: AltSigningAlgoList{AltSecp256k1},
 		},
 	}, nil
 }

@@ -24,6 +24,7 @@ var (
 	KeyPrefixIndexCapability    = types.KeyPrefixIndexCapability
 	ErrCapabilityTaken          = types.ErrCapabilityTaken
 	ErrOwnerClaimed             = types.ErrOwnerClaimed
+	ErrCapabilityNotOwned       = types.ErrCapabilityNotOwned
 	RegisterCodec               = types.RegisterCodec
 	RegisterCapabilityTypeCodec = types.RegisterCapabilityTypeCodec
 	ModuleCdc                   = types.ModuleCdc

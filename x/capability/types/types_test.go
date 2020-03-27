@@ -23,7 +23,7 @@ func TestOwner(t *testing.T) {
 	require.Equal(t, "module: bank\nname: send\n", o.String())
 }
 
-func TestCapabilityOwners(t *testing.T) {
+func TestCapabilityOwners_Set(t *testing.T) {
 	co := types.NewCapabilityOwners()
 
 	owners := make([]types.Owner, 1024)
@@ -46,4 +46,24 @@ func TestCapabilityOwners(t *testing.T) {
 	for _, owner := range owners {
 		require.Error(t, co.Set(owner))
 	}
+}
+
+func TestCapabilityOwners_Remove(t *testing.T) {
+	co := types.NewCapabilityOwners()
+
+	co.Remove(types.NewOwner("bank", "send-0"))
+	require.Len(t, co.Owners, 0)
+
+	for i := 0; i < 5; i++ {
+		require.NoError(t, co.Set(types.NewOwner("bank", fmt.Sprintf("send-%d", i))))
+	}
+
+	require.Len(t, co.Owners, 5)
+
+	for i := 0; i < 5; i++ {
+		co.Remove(types.NewOwner("bank", fmt.Sprintf("send-%d", i)))
+		require.Len(t, co.Owners, 5-(i+1))
+	}
+
+	require.Len(t, co.Owners, 0)
 }

@@ -157,12 +157,12 @@ func (suite *KeeperTestSuite) TestReleaseCapability() {
 	suite.Require().Error(sk1.ReleaseCapability(suite.ctx, cap2))
 
 	suite.Require().NoError(sk2.ReleaseCapability(suite.ctx, cap1))
-	got, ok := sk1.GetCapability(suite.ctx, "transfer")
+	got, ok := sk2.GetCapability(suite.ctx, "transfer")
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
 
 	suite.Require().NoError(sk1.ReleaseCapability(suite.ctx, cap1))
-	got, ok = sk2.GetCapability(suite.ctx, "transfer")
+	got, ok = sk1.GetCapability(suite.ctx, "transfer")
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
 }

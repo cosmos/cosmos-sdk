@@ -37,7 +37,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		// IBC channel msgs
 		case channel.MsgChannelOpenInit:
-			return channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, msg)
+			res, cap, err := channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, msg)
 
 		case channel.MsgChannelOpenTry:
 			return channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, msg)

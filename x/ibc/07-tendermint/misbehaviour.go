@@ -86,15 +86,15 @@ func checkMisbehaviour(
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
-		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.GetHeight(),
-		evidence.Header1.Commit, lite.DefaultTrustLevel,
+		evidence.ChainID, evidence.Header1.SignedHeader.Commit.BlockID, evidence.Header1.GetHeight(),
+		evidence.Header1.SignedHeader.Commit, lite.DefaultTrustLevel,
 	); err != nil {
 		return fmt.Errorf("validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
-		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.GetHeight(),
-		evidence.Header2.Commit, lite.DefaultTrustLevel,
+		evidence.ChainID, evidence.Header2.SignedHeader.Commit.BlockID, evidence.Header2.GetHeight(),
+		evidence.Header2.SignedHeader.Commit, lite.DefaultTrustLevel,
 	); err != nil {
 		return fmt.Errorf("validator set in header 2 has too much change from last known validator set: %v", err)
 	}

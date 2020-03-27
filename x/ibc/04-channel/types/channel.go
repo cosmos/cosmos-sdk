@@ -4,8 +4,14 @@ import (
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+)
+
+var (
+	_ exported.ChannelI      = (*Channel)(nil)
+	_ exported.CounterpartyI = (*Counterparty)(nil)
 )
 
 // NewChannel creates a new Channel instance
@@ -20,6 +26,31 @@ func NewChannel(
 		ConnectionHops: hops,
 		Version:        version,
 	}
+}
+
+// GetState implements Channel interface.
+func (ch Channel) GetState() ibctypes.State {
+	return ch.State
+}
+
+// GetOrdering implements Channel interface.
+func (ch Channel) GetOrdering() ibctypes.Order {
+	return ch.Ordering
+}
+
+// GetCounterparty implements Channel interface.
+func (ch Channel) GetCounterparty() exported.CounterpartyI {
+	return ch.Counterparty
+}
+
+// GetConnectionHops implements Channel interface.
+func (ch Channel) GetConnectionHops() []string {
+	return ch.ConnectionHops
+}
+
+// GetVersion implements Channel interface.
+func (ch Channel) GetVersion() string {
+	return ch.Version
 }
 
 // ValidateBasic performs a basic validation of the channel fields

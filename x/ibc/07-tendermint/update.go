@@ -100,7 +100,7 @@ func update(clientState types.ClientState, header types.Header) (types.ClientSta
 		Height:       uint64(header.SignedHeader.Header.GetHeight()),
 		Timestamp:    header.SignedHeader.Header.GetTime(),
 		Root:         commitmenttypes.NewMerkleRoot(header.SignedHeader.Header.GetAppHash()),
-		ValidatorSet: &header.ValidatorSet,
+		ValidatorSet: header.ValidatorSet,
 	}
 
 	return clientState, consensusState

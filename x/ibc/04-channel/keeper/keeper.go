@@ -57,7 +57,7 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(&channel)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(channel)
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
 }
 

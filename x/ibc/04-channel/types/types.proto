@@ -165,6 +165,8 @@ message MsgAcknowledgement {
 }
 
 message Channel {
+  option (gogoproto.goproto_getters) = false;
+
   cosmos_sdk.x.ibc.v1.State state        = 1;
   cosmos_sdk.x.ibc.v1.Order ordering     = 2;
   Counterparty              counterparty = 3 [

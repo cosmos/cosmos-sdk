@@ -11,9 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
 var (
@@ -118,4 +123,124 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 // EndBlock implements the AppModule interface
 func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// Implement IBCModule callbacks
+func (am AppModule) OnChanOpenInit(
+	ctx sdk.Context,
+	order channelexported.Order,
+	connectionHops []string,
+	portID string,
+	channelID string,
+	counterparty channeltypes.Counterparty,
+	version string,
+) error {
+	// TODO: Enforce ordering, currently relayers use ORDERED channels
+
+	if counterparty.PortID != types.PortID {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "counterparty has invalid portid. expected: %s, got %s", types.PortID, counterparty.PortID)
+	}
+
+	if version != "ics20-1" {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
+	}
+
+	// TODO: escrow
+	return nil
+}
+
+func (am AppModule) OnChanOpenTry(
+	ctx sdk.Context,
+	order channelexported.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	counterparty channeltypes.Counterparty,
+	version,
+	counterpartyVersion string,
+) error {
+	// TODO: Enforce ordering, currently relayers use ORDERED channels
+
+	if counterparty.PortID != types.PortID {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "counterparty has invalid portid. expected: %s, got %s", types.PortID, counterparty.PortID)
+	}
+
+	if version != "ics20-1" {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
+	}
+
+	if counterpartyVersion != "ics20-1" {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
+	}
+
+	// TODO: escrow
+	return nil
+}
+
+func (am AppModule) OnChanOpenAck(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	counterpartyVersion string,
+) error {
+	if counterpartyVersion != "ics20-1" {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
+	}
+	return nil
+}
+
+func (am AppModule) OnChanOpenConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	return nil
+}
+
+func (am AppModule) OnChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	return nil
+}
+
+func (am AppModule) OnChanCloseConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	return nil
+}
+
+func (am AppModule) OnRecvPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) (*sdk.Result, error) {
+	switch data := packet.Data.(type) {
+	case FungibleTokenPacketData:
+		return handlePacketDataTransfer(ctx, am.keeper, packet, data)
+	default:
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
+	}
+}
+
+func (am AppModule) OnAcknowledgementPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledment []byte,
+) (*sdk.Result, error) {
+	return nil, nil
+}
+
+func (am AppModule) OnTimeoutPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) (*sdk.Result, error) {
+	switch data := packet.Data.(type) {
+	case FungibleTokenPacketData:
+		return handleTimeoutDataTransfer(ctx, am.keeper, packet, data)
+	default:
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
+	}
 }

@@ -13,6 +13,9 @@ const (
 	// ModuleName defines the IBC transfer name
 	ModuleName = "transfer"
 
+	// PortID that transfer module binds to
+	PortID = "bank"
+
 	// StoreKey is the store key string for IBC transfer
 	StoreKey = ModuleName
 

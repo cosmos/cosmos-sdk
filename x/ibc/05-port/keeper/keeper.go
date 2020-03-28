@@ -12,12 +12,14 @@ import (
 // Keeper defines the IBC connection keeper
 type Keeper struct {
 	scopedKeeper capability.ScopedKeeper
+	router       map[string]types.IBCModule
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
 func NewKeeper(sck capability.ScopedKeeper) Keeper {
 	return Keeper{
 		scopedKeeper: sck,
+		router:       make(map[string]types.IBCModule),
 	}
 }
 
@@ -31,7 +33,7 @@ func (k Keeper) isBounded(ctx sdk.Context, portID string) bool {
 // Ports must be bound statically when the chain starts in `app.go`.
 // The capability must then be passed to a module which will need to pass
 // it as an extra parameter when calling functions on the IBC module.
-func (k *Keeper) BindPort(ctx sdk.Context, portID string) capability.Capability {
+func (k *Keeper) BindPort(ctx sdk.Context, portID string, cbs types.IBCModule) capability.Capability {
 	if err := host.DefaultPortIdentifierValidator(portID); err != nil {
 		panic(err.Error())
 	}
@@ -44,6 +46,8 @@ func (k *Keeper) BindPort(ctx sdk.Context, portID string) capability.Capability 
 	if err != nil {
 		panic(err.Error())
 	}
+
+	k.router[portID] = cbs
 
 	return key
 }
@@ -58,4 +62,9 @@ func (k Keeper) Authenticate(ctx sdk.Context, key capability.Capability, portID 
 	}
 
 	return k.scopedKeeper.AuthenticateCapability(ctx, key, types.PortPath(portID))
+}
+
+// LookupModule will return the IBCModule associated with a given portID
+func (k Keeper) LookupModule(ctx sdk.Context, portID string) types.IBCModule {
+	return k.router[portID]
 }

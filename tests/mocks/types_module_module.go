@@ -9,6 +9,7 @@ import (
 	context "github.com/cosmos/cosmos-sdk/client/context"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/types"
+	grpc "github.com/gogo/protobuf/grpc"
 	gomock "github.com/golang/mock/gomock"
 	mux "github.com/gorilla/mux"
 	cobra "github.com/spf13/cobra"
@@ -489,6 +490,18 @@ func (m *MockAppModule) NewQuerierHandler() types.Querier {
 func (mr *MockAppModuleMockRecorder) NewQuerierHandler() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).NewQuerierHandler))
+}
+
+// RegisterQueryServer mocks base method
+func (m *MockAppModule) RegisterQueryServer(arg0 grpc.Server) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterQueryServer", arg0)
+}
+
+// RegisterQueryServer indicates an expected call of RegisterQueryServer
+func (mr *MockAppModuleMockRecorder) RegisterQueryServer(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterQueryServer", reflect.TypeOf((*MockAppModule)(nil).RegisterQueryServer), arg0)
 }
 
 // BeginBlock mocks base method

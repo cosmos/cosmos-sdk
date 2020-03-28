@@ -7,6 +7,7 @@ package mocks
 import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	grpc "google.golang.org/grpc"
 	reflect "reflect"
 )
 
@@ -110,4 +111,16 @@ func (m *MockQueryRouter) Route(path string) types.Querier {
 func (mr *MockQueryRouterMockRecorder) Route(path interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Route", reflect.TypeOf((*MockQueryRouter)(nil).Route), path)
+}
+
+// RegisterService mocks base method
+func (m *MockQueryRouter) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterService", sd, ss)
+}
+
+// RegisterService indicates an expected call of RegisterService
+func (mr *MockQueryRouterMockRecorder) RegisterService(sd, ss interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterService", reflect.TypeOf((*MockQueryRouter)(nil).RegisterService), sd, ss)
 }

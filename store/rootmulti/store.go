@@ -2,7 +2,7 @@ package rootmulti
 
 import (
 	"bufio"
-	"compress/gzip"
+	"compress/zlib"
 	"fmt"
 	"io"
 	"math"
@@ -534,7 +534,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 	ch := make(chan io.ReadCloser)
 	go func() {
 		// Set up a stream pipeline to serialize snapshot nodes:
-		// ExportNode -> delimited Protobuf -> gzip -> buffer -> chunkWriter -> chan io.ReadCloser
+		// ExportNode -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
 		chunkWriter := newChunkWriter(ch, snapshotChunkSize)
 		defer chunkWriter.Close()
 		bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
@@ -543,13 +543,17 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 				chunkWriter.CloseWithError(err)
 			}
 		}()
-		gzWriter := gzip.NewWriter(bufWriter)
+		zWriter, err := zlib.NewWriterLevel(bufWriter, 7)
+		if err != nil {
+			chunkWriter.CloseWithError(fmt.Errorf("zlib error: %w", err))
+			return
+		}
 		defer func() {
-			if err := gzWriter.Close(); err != nil {
+			if err := zWriter.Close(); err != nil {
 				chunkWriter.CloseWithError(err)
 			}
 		}()
-		protoWriter := protoio.NewDelimitedWriter(gzWriter)
+		protoWriter := protoio.NewDelimitedWriter(zWriter)
 		defer func() {
 			if err := protoWriter.Close(); err != nil {
 				chunkWriter.CloseWithError(err)
@@ -622,15 +626,15 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	}
 
 	// Set up a restore stream pipeline
-	// chan io.ReadCloser -> chunkReader -> gunzip -> delimited Protobuf -> ExportNode
+	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> ExportNode
 	chunkReader := newChunkReader(chunks)
 	defer chunkReader.Close()
-	gzReader, err := gzip.NewReader(chunkReader)
+	zReader, err := zlib.NewReader(chunkReader)
 	if err != nil {
-		return fmt.Errorf("gzip error: %w", err)
+		return fmt.Errorf("zlib error: %w", err)
 	}
-	defer gzReader.Close()
-	protoReader := protoio.NewDelimitedReader(gzReader, snapshotMaxItemSize)
+	defer zReader.Close()
+	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
 	defer protoReader.Close()
 
 	// Import nodes into stores. The first item is expected to be a SnapshotItem containing

@@ -1,7 +1,9 @@
 package rootmulti
 
 import (
+	"crypto/sha1" // nolint: gosec
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -446,6 +448,37 @@ func TestMultiStoreQuery(t *testing.T) {
 	qres = multi.Query(query)
 	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v2, qres.Value)
+}
+
+func TestMultistoreSnapshot_Checksum(t *testing.T) {
+	// Chunks from different nodes must fit together, so all nodes must produce identical chunks.
+	// This checksum test makes sure that the byte stream remains identical. If the test fails
+	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
+	// types.SnapshotFormat must be bumped.
+	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	version := uint64(store.LastCommitID().Version)
+
+	testcases := []struct {
+		format   uint32
+		checksum string
+	}{
+		{1, "ca95bd60ba53f91d6d0a6d2063bc7f35af53d74a"},
+	}
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
+			chunks, err := store.Snapshot(version, tc.format)
+			require.NoError(t, err)
+			hasher := sha1.New() // nolint: gosec
+			for chunk := range chunks {
+				_, err := io.Copy(hasher, chunk)
+				require.NoError(t, err)
+			}
+			checksum := hex.EncodeToString(hasher.Sum(nil))
+			assert.Equal(t, tc.checksum, checksum,
+				"Snapshot output for format %v has changed", tc.format)
+		})
+	}
 }
 
 func TestMultistoreSnapshot_Errors(t *testing.T) {

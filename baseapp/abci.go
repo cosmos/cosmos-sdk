@@ -385,10 +385,6 @@ func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseLi
 		return resp
 	}
 	for i, snapshot := range snapshots {
-		if i >= 100 {
-			// 100 snapshots should be sufficient
-			break
-		}
 		resp.Snapshots = append(resp.Snapshots, &abci.Snapshot{
 			Height:   snapshot.Height,
 			Format:   snapshot.Format,

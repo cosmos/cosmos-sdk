@@ -455,14 +455,14 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	// This checksum test makes sure that the byte stream remains identical. If the test fails
 	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
 	// types.SnapshotFormat must be bumped.
-	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	store := newMultiStoreWithGeneratedData(dbm.NewMemDB(), 5, 10000)
 	version := uint64(store.LastCommitID().Version)
 
 	testcases := []struct {
 		format   uint32
 		checksum string
 	}{
-		{1, "ca95bd60ba53f91d6d0a6d2063bc7f35af53d74a"},
+		{1, "4aabd44ea3b3bef4984d8fb1449d8c2273a63a1d"},
 	}
 	for _, tc := range testcases {
 		tc := tc

@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"encoding/json"
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -102,7 +103,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(module.GRPCServer) {
+func (am AppModule) RegisterQueryServer(grpc.Server) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

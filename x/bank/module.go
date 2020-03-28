@@ -3,6 +3,7 @@ package bank
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/grpc"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -77,7 +78,7 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
-func (am AppModule) RegisterQueryServer(server module.GRPCServer) {
+func (am AppModule) RegisterQueryServer(server grpc.Server) {
 	types.RegisterQueryServer(server, keeper.Querier{am.keeper})
 }
 

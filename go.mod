@@ -18,7 +18,7 @@ require (
 	github.com/pelletier/go-toml v1.7.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/regen-network/cosmos-proto v0.1.1-0.20200213154359-02baa11ea7c2
+	github.com/regen-network/cosmos-proto v0.2.2
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -31,12 +31,13 @@ require (
 	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.2
 	github.com/tendermint/tm-db v0.5.0
+	google.golang.org/genproto v0.0.0-20200324203455-a04cca1dde73
 	google.golang.org/grpc v1.28.0
 	github.com/tendermint/tm-db v0.5.1
 	google.golang.org/protobuf v1.20.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )
 
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
 
 go 1.14

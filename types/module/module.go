@@ -30,7 +30,7 @@ package module
 
 import (
 	"encoding/json"
-	"google.golang.org/grpc"
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -146,15 +146,11 @@ type AppModule interface {
 	QuerierRoute() string
 	// TODO: deprecate in favor of RegisterQueryServer
 	NewQuerierHandler() sdk.Querier
-	RegisterQueryServer(GRPCServer)
+	RegisterQueryServer(grpc.Server)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
-}
-
-type GRPCServer interface {
-	RegisterService(sd *grpc.ServiceDesc, ss interface{})
 }
 
 //___________________________
@@ -186,7 +182,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
-func (gam GenesisOnlyAppModule) RegisterQueryServer(GRPCServer) {}
+func (gam GenesisOnlyAppModule) RegisterQueryServer(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}

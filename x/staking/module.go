@@ -3,6 +3,7 @@ package staking
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/grpc"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -152,8 +153,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(module.GRPCServer) {
-}
+func (am AppModule) RegisterQueryServer(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.

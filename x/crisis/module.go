@@ -3,6 +3,7 @@ package crisis
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -107,7 +108,7 @@ func (AppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns no sdk.Querier.
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
-func (am AppModule) RegisterQueryServer(module.GRPCServer) {
+func (am AppModule) RegisterQueryServer(grpc.Server) {
 }
 
 // InitGenesis performs genesis initialization for the crisis module. It returns

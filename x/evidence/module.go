@@ -3,6 +3,7 @@ package evidence
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -135,8 +136,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(module.GRPCServer) {
-}
+func (am AppModule) RegisterQueryServer(grpc.Server) {}
 
 // RegisterInvariants registers the evidence module's invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}

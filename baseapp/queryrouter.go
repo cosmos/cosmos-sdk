@@ -1,14 +1,20 @@
 package baseapp
 
 import (
+	gocontext "context"
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/gogo/protobuf/proto"
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var protoCodec = encoding.GetCodec(proto.Name)
 
 type QueryRouter struct {
 	routes map[string]sdk.Querier
@@ -51,23 +57,47 @@ func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{
 				// checks each GRPC service method to see if it matches the path
 				if md.MethodName == path0 {
 					res, err := md.Handler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-						// unmarshal a protobuf message
-						protoMsg, ok := i.(proto.Message)
-						if !ok {
-							return sdkerrors.Wrapf(sdkerrors.ErrProtoUnmarshal, "can't proto unmarshal: %+v", i)
-						}
-						return proto.Unmarshal(req.Data, protoMsg)
+						return protoCodec.Unmarshal(req.Data, i)
 					}, nil)
 					if err != nil {
 						return nil, err
 					}
-					protoMsg, ok := res.(proto.Message)
-					if !ok {
-						return nil, sdkerrors.Wrapf(sdkerrors.ErrProtoMarshal, "can't proto marshal: %+v", res)
-					}
-					return proto.Marshal(protoMsg)
+					return protoCodec.Marshal(res)
 				}
 			}
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
 }
+
+type QueryServerTestHelper struct {
+	*QueryRouter
+	ctx sdk.Context
+}
+
+func NewQueryServerTestHelper(ctx sdk.Context) *QueryServerTestHelper {
+	return &QueryServerTestHelper{QueryRouter: NewQueryRouter(), ctx: ctx}
+}
+
+func (q *QueryServerTestHelper) Invoke(ctx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+	path := strings.Split(method, "/")
+	if len(path) != 3 {
+		return fmt.Errorf("unexpected method name %s", method)
+	}
+	querier := q.Route(path[1])
+	if querier == nil {
+		return fmt.Errorf("handler not found for %s", path[2])
+	}
+	reqBz, err := protoCodec.Marshal(args)
+	if err != nil {
+		return err
+	}
+	resBz, err := querier(q.ctx, path[2:], abci.RequestQuery{Data: reqBz})
+	return protoCodec.Unmarshal(resBz, reply)
+}
+
+func (q *QueryServerTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
+var _ gogogrpc.Server = &QueryServerTestHelper{}
+var _ gogogrpc.ClientConn = &QueryServerTestHelper{}

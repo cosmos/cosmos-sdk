@@ -3,8 +3,10 @@ package context
 import (
 	"context"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -234,27 +236,20 @@ func parseQueryStorePath(path string) (storeName string, err error) {
 	return paths[1], nil
 }
 
-func (ctx CLIContext) QueryConn() GRPCClientConn {
+func (ctx CLIContext) QueryConn() gogogrpc.ClientConn {
 	return cliQueryConn{ctx}
-}
-
-type GRPCClientConn interface {
-	Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error
-	NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error)
 }
 
 type cliQueryConn struct {
 	ctx CLIContext
 }
 
-var _ GRPCClientConn = cliQueryConn{}
+var _ gogogrpc.ClientConn = cliQueryConn{}
+
+var protoCodec = encoding.GetCodec(proto.Name)
 
 func (c cliQueryConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
-	req, ok := args.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %+v", args)
-	}
-	reqBz, err := proto.Marshal(req)
+	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {
 		return err
 	}
@@ -262,13 +257,9 @@ func (c cliQueryConn) Invoke(ctx context.Context, method string, args, reply int
 	if err != nil {
 		return err
 	}
-	res, ok := reply.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto unmarshal %+v", reply)
-	}
-	return proto.Unmarshal(resBz, res)
+	return protoCodec.Unmarshal(resBz, reply)
 }
 
-func (c cliQueryConn) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+func (c cliQueryConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
 }

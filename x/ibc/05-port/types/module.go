@@ -56,17 +56,20 @@ type IBCModule interface {
 	) error
 
 	OnRecvPacket(
+		ctx sdk.Context,
 		packet channeltypes.Packet,
-	) error
+	) (*sdk.Result, error)
 
 	OnAcknowledgementPacket(
+		ctx sdk.Context,
 		packet channeltypes.Packet,
 		acknowledment []byte,
-	) error
+	) (*sdk.Result, error)
 
 	OnTimeoutPacket(
+		ctx sdk.Context,
 		packet channeltypes.Packet,
-	) error
+	) (*sdk.Result, error)
 
 	GetCapability(ctx sdk.Context, name string) (capability.Capability, bool)
 

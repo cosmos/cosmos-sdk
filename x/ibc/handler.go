@@ -95,6 +95,19 @@ func NewHandler(k Keeper) sdk.Handler {
 			}
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, chanCap, msg)
 
+		// IBC packet msgs get routed to the appropriate module callback
+		case channel.MsgPacket:
+			cbs := k.PortKeeper.LookupModule(ctx, msg.Packet.DestinationPort)
+			return cbs.OnRecvPacket(ctx, msg.Packet)
+
+		case channel.MsgAcknowledgement:
+			cbs := k.PortKeeper.LookupModule(ctx, msg.Packet.DestinationPort)
+			return cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement.GetBytes())
+
+		case channel.MsgTimeout:
+			cbs := k.PortKeeper.LookupModule(ctx, msg.Packet.DestinationPort)
+			return cbs.OnTimeoutPacket(ctx, msg.Packet)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)
 		}

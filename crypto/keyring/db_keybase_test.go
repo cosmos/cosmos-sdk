@@ -270,7 +270,7 @@ func TestLazyExportPrivateKeyObject(t *testing.T) {
 
 	// export private key object
 	_, err = kb.ExportPrivateKeyObject("john", "invalid")
-	require.NotNil(t, err, "%+v", err)
+	require.NoError(t, err, "%+v", err)
 	exported, err := kb.ExportPrivateKeyObject("john", "secretcpw")
 	require.Nil(t, err, "%+v", err)
 	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
@@ -279,25 +279,12 @@ func TestLazyExportPrivateKeyObject(t *testing.T) {
 func TestLazyAdvancedKeyManagement(t *testing.T) {
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
-	p1, p2 := nums, foobar
+	p1 := nums
 
 	kb := NewInMemory()
 	// make sure key works with initial password
 	_, _, err := kb.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
-	assertPassword(t, kb, n1, p1, p2)
-
-	// update password requires the existing password
-	getNewpass := func() (string, error) { return p2, nil }
-	err = kb.Update(n1, "jkkgkg", getNewpass)
-	require.NotNil(t, err)
-	assertPassword(t, kb, n1, p1, p2)
-
-	// then it changes the password when correct
-	err = kb.Update(n1, p1, getNewpass)
-	require.NoError(t, err)
-	// p2 is now the proper one!
-	assertPassword(t, kb, n1, p2, p1)
 
 	// exporting requires the proper name and passphrase
 	_, err = kb.Export(n1 + ".notreal")

@@ -35,10 +35,13 @@ func newDBKeybase(db dbm.DB, opts ...KeybaseOption) dbKeybase {
 	}
 }
 
-// NewInMemory creates a transient keybase on top of in-memory storage
-// instance useful for testing purposes and on-the-fly key generation.
+// NewInMemory creates a transient keyring useful for testing
+// purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...KeybaseOption) Keybase { return newDBKeybase(dbm.NewMemDB(), opts...) }
+func NewInMemory(opts ...KeybaseOption) Keybase {
+	kb, _ := NewKeyring("inmemory", BackendMemory, "", nil, opts...)
+	return kb
+}
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
 // using the provided password. It returns the generated mnemonic and the key Info.

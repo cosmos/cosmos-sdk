@@ -281,14 +281,6 @@ func TestSignVerify(t *testing.T) {
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
-func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
-	getNewpass := func() (string, error) { return pass, nil }
-	err := cstore.Update(name, badpass, getNewpass)
-	require.NotNil(t, err)
-	err = cstore.Update(name, pass, getNewpass)
-	require.Nil(t, err, "%+v", err)
-}
-
 // TestExportImport tests exporting and importing
 func TestExportImport(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -363,24 +355,11 @@ func TestAdvancedKeyManagement(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
-	p1, p2 := nums, foobar
+	p1 := nums
 
 	// make sure key works with initial password
 	_, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
-	assertPassword(t, cstore, n1, p1, p2)
-
-	// update password requires the existing password
-	getNewpass := func() (string, error) { return p2, nil }
-	err = cstore.Update(n1, "jkkgkg", getNewpass)
-	require.NotNil(t, err)
-	assertPassword(t, cstore, n1, p1, p2)
-
-	// then it changes the password when correct
-	err = cstore.Update(n1, p1, getNewpass)
-	require.NoError(t, err)
-	// p2 is now the proper one!
-	assertPassword(t, cstore, n1, p2, p1)
 
 	// exporting requires the proper name and passphrase
 	_, err = cstore.Export(n1 + ".notreal")

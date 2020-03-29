@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"bytes"
-	"crypto/sha1" // nolint: gosec
 	"encoding/binary"
 	"fmt"
 	"math/rand"
@@ -1527,13 +1526,24 @@ func TestListSnapshots(t *testing.T) {
 
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
 	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 5, Format: 1, Chunks: 3, Metadata: nil},
-		{Height: 4, Format: 1, Chunks: 3, Metadata: nil},
-		{Height: 3, Format: 1, Chunks: 2, Metadata: nil},
+		{Height: 5, Format: 1, ChunkHashes: [][]byte{
+			[]byte("\233\021\r\260\2107\351\252;<\026\251s\"\272Xm\305\017\206"),
+			[]byte("\0137\246NF\214\311Q\352\010\352\263Y\377\200\364\262%\363\037"),
+			[]byte("\364XR\260\0220,\366\255\306\316\310+{KNs\026;m"),
+		}, Metadata: nil},
+		{Height: 4, Format: 1, ChunkHashes: [][]byte{
+			[]byte("\020\372\276\023\375\017\253\216\315\214_~\342\272H6\206h\237\r"),
+			[]byte("\023\364\362\314,4(\221:(\212\036\333AEh\201\330l\207"),
+			[]byte("\365\373M\302\021s\240?\3729\0306;p\263f\267\024\270\253"),
+		}, Metadata: nil},
+		{Height: 3, Format: 1, ChunkHashes: [][]byte{
+			[]byte("o\3756\260`\000\307!\014\334[\247\203\362[tia\355T"),
+			[]byte("z\016\177\2555\0236\371\307B:\310Vm\272Y\221\036\204\251"),
+		}, Metadata: nil},
 	}}, resp)
 }
 
-func TestGetSnapshotChunk(t *testing.T) {
+func TestLoadSnapshotChunk(t *testing.T) {
 	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
 	defer teardown()
 
@@ -1543,34 +1553,27 @@ func TestGetSnapshotChunk(t *testing.T) {
 		chunk       uint32
 		expectEmpty bool
 	}{
-		"Existing snapshot": {2, 1, 2, false},
+		"Existing snapshot": {2, 1, 1, false},
 		"Missing height":    {100, 1, 1, true},
 		"Missing format":    {2, 2, 1, true},
 		"Missing chunk":     {2, 1, 9, true},
 		"Zero height":       {0, 1, 1, true},
 		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, true},
+		"Zero chunk":        {2, 1, 0, false},
 	}
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			resp := app.GetSnapshotChunk(abci.RequestGetSnapshotChunk{
+			resp := app.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
 				Height: tc.height,
 				Format: tc.format,
 				Chunk:  tc.chunk,
 			})
 			if tc.expectEmpty {
-				assert.Equal(t, abci.ResponseGetSnapshotChunk{}, resp)
+				assert.Equal(t, abci.ResponseLoadSnapshotChunk{}, resp)
 				return
 			}
-			require.NotNil(t, resp.Chunk)
-			assert.Equal(t, tc.height, resp.Chunk.Height)
-			assert.Equal(t, tc.format, resp.Chunk.Format)
-			assert.Equal(t, tc.chunk, resp.Chunk.Chunk)
-			assert.NotEmpty(t, resp.Chunk.Data)
-			assert.NotEmpty(t, resp.Chunk.Checksum)
-			checksum := sha1.Sum(resp.Chunk.Data) // nolint: gosec
-			assert.Equal(t, resp.Chunk.Checksum, checksum[:])
+			assert.NotEmpty(t, resp.Chunk)
 		})
 	}
 }
@@ -1581,16 +1584,13 @@ func TestOfferSnapshotChunk_Errors(t *testing.T) {
 
 	// Nil snapshot should error
 	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{})
-	require.Equal(t, abci.ResponseOfferSnapshot{
-		Accepted: false,
-		Reason:   abci.ResponseOfferSnapshot_internal_error,
-	}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: false}, resp)
 
 	// Invalid snapshot format should error
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height: 1,
-		Format: 9,
-		Chunks: 3,
+		Height:      1,
+		Format:      9,
+		ChunkHashes: nil,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{
 		Accepted: false,
@@ -1599,23 +1599,20 @@ func TestOfferSnapshotChunk_Errors(t *testing.T) {
 
 	// Offering a snapshot after one has been accepted should error
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height: 1,
-		Format: store.SnapshotFormat,
-		Chunks: 3,
+		Height:      1,
+		Format:      store.SnapshotFormat,
+		ChunkHashes: nil,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{
 		Accepted: true,
 	}, resp)
 
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height: 1,
-		Format: store.SnapshotFormat,
-		Chunks: 3,
+		Height:      1,
+		Format:      store.SnapshotFormat,
+		ChunkHashes: nil,
 	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{
-		Accepted: false,
-		Reason:   abci.ResponseOfferSnapshot_internal_error,
-	}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: false}, resp)
 }
 
 func TestApplySnapshotChunk(t *testing.T) {
@@ -1631,15 +1628,15 @@ func TestApplySnapshotChunk(t *testing.T) {
 	snapshot := respList.Snapshots[0]
 
 	// Make sure the snapshot has at least 3 chunks
-	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
+	require.GreaterOrEqual(t, len(snapshot.ChunkHashes), 3, "Not enough snapshot chunks")
 
 	// Begin a snapshot restoration in the target
 	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
-	require.True(t, respOffer.Accepted)
+	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: true}, respOffer)
 
 	// Fetch each chunk from the source and apply it to the target
-	for chunk := uint32(1); chunk <= snapshot.Chunks; chunk++ {
-		respChunk := source.GetSnapshotChunk(abci.RequestGetSnapshotChunk{
+	for chunk := uint32(0); chunk < uint32(len(snapshot.ChunkHashes)); chunk++ {
+		respChunk := source.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
 			Height: snapshot.Height,
 			Format: snapshot.Format,
 			Chunk:  chunk,

@@ -12,25 +12,12 @@ import (
 
 func Test_updateKeyCommand(t *testing.T) {
 	require.NotNil(t, UpdateKeyCommand())
-	// No flags  or defaults to validate
 }
 
 func Test_runUpdateCmd(t *testing.T) {
 	fakeKeyName1 := "runUpdateCmd_Key1"
 	fakeKeyName2 := "runUpdateCmd_Key2"
-
 	cmd := UpdateKeyCommand()
-
-	// fails because it requests a password
-	err := runUpdateCmd(cmd, []string{fakeKeyName1})
-
-	require.EqualError(t, err, "EOF")
-
-	// try again
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
-	mockIn.Reset("pass1234\n")
-	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	require.Error(t, err)
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -52,6 +39,7 @@ func Test_runUpdateCmd(t *testing.T) {
 
 	// Try again now that we have keys
 	// Incorrect key type
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("pass1234\nNew1234\nNew1234")
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
 	require.EqualError(t, err, "locally stored key required. Received: keyring.offlineInfo")

@@ -1,7 +1,6 @@
 package snapshots
 
 import (
-	"bytes"
 	"crypto/sha1" // nolint: gosec // only used for checksumming
 	"encoding/binary"
 	"errors"
@@ -85,6 +84,28 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	return nil
 }
 
+// Get fetches snapshot metadata from the database.
+func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
+	bytes, err := s.db.Get(encodeKey(height, format))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch snapshot metadata for height %v format %v: %w",
+			height, format, err)
+	}
+	if bytes == nil {
+		return nil, nil
+	}
+	metadata := &types.Snapshot{}
+	err = proto.Unmarshal(bytes, metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode snapshot metadata for height %v format %v: %w",
+			height, format, err)
+	}
+	if metadata.Chunks == nil {
+		metadata.Chunks = []*types.Chunk{}
+	}
+	return metadata, nil
+}
+
 // List lists snapshots, in reverse order (newest first).
 func (s *Store) List() ([]*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
@@ -112,35 +133,29 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 // Load loads a snapshot (both metadata and binary chunks). The chunks must be consumed and closed.
 // Returns nil if the snapshot does not exist.
 func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.ReadCloser, error) {
-	metadata, err := s.LoadMetadata(height, format)
+	snapshot, err := s.Get(height, format)
 	if err != nil {
 		return nil, nil, err
 	}
-	if metadata == nil {
+	if snapshot == nil {
 		return nil, nil, nil
 	}
 
 	ch := make(chan io.ReadCloser)
 	go func() {
 		defer close(ch)
-		for _, chunkMetadata := range metadata.Chunks {
+		for i := range snapshot.Chunks {
 			pr, pw := io.Pipe()
 			ch <- pr
-			hasher := sha1.New() // nolint: gosec
-			chunk, err := s.loadChunkFile(height, format, chunkMetadata.Chunk)
+			chunk, err := s.loadChunkFile(height, format, uint32(i))
 			if err != nil {
 				pw.CloseWithError(err)
 				return
 			}
 			defer chunk.Close()
-			_, err = io.Copy(io.MultiWriter(pw, hasher), chunk)
+			_, err = io.Copy(pw, chunk)
 			if err != nil {
 				pw.CloseWithError(err)
-				return
-			}
-			if !bytes.Equal(chunkMetadata.Checksum, hasher.Sum(nil)) {
-				pw.CloseWithError(fmt.Errorf("checksum failure for chunk %v: expected %q got %q",
-					chunkMetadata.Chunk, chunkMetadata.Checksum, hasher.Sum(nil)))
 				return
 			}
 			chunk.Close()
@@ -148,70 +163,26 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 		}
 	}()
 
-	return metadata, ch, nil
+	return snapshot, ch, nil
 }
 
-// LoadMetadata loads snapshot metadata from the database.
-func (s *Store) LoadMetadata(height uint64, format uint32) (*types.Snapshot, error) {
-	bytes, err := s.db.Get(encodeKey(height, format))
-	if err != nil {
-		return nil, fmt.Errorf("failed to load snapshot metadata: %w", err)
-	}
-	if bytes == nil {
+// LoadChunk loads a chunk from disk, or returns nil if it does not exist. The caller must call
+// Close() on it when done.
+func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
+	path := s.pathChunk(height, format, chunk)
+	file, err := os.Open(path)
+	if os.IsNotExist(err) {
 		return nil, nil
 	}
-	metadata := &types.Snapshot{}
-	err = proto.Unmarshal(bytes, metadata)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load snapshot metadata for height %v format %v: %w",
-			height, format, err)
-	}
-	if metadata.Chunks == nil {
-		metadata.Chunks = []*types.SnapshotChunk{}
-	}
-	return metadata, nil
+	return file, err
 }
 
-// LoadChunk loads a chunk from disk, or nil if it does not exist. The caller must call Close() on
-// it when done.
-func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (*types.SnapshotChunk, io.ReadCloser, error) {
-	snapshot, err := s.LoadMetadata(height, format)
-	if err != nil {
-		return nil, nil, err
-	}
-	if snapshot == nil {
-		return nil, nil, nil
-	}
-	if chunk == 0 {
-		return nil, nil, nil
-	}
-	var metadata *types.SnapshotChunk
-	if chunk <= uint32(len(snapshot.Chunks)) && snapshot.Chunks[chunk-1].Chunk == chunk {
-		metadata = snapshot.Chunks[chunk-1]
-	} else {
-		for _, c := range snapshot.Chunks {
-			if c.Chunk == chunk {
-				metadata = c
-				break
-			}
-		}
-	}
-	if metadata == nil {
-		return nil, nil, nil
-	}
-	file, err := s.loadChunkFile(height, format, chunk)
-	if err != nil {
-		return nil, nil, err
-	}
-	return metadata, file, nil
-}
-
-// loadChunkFile loads a chunk file
+// loadChunkFile loads a chunk from disk, and errors if it does not exist.
 func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
 	path := s.pathChunk(height, format, chunk)
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch chunk %v from file %q: %w", chunk, path, err)
+		return nil, err
 	}
 	return file, nil
 }
@@ -293,24 +264,24 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 		return fmt.Errorf("snapshot already exists for height %v format %v", height, format)
 	}
 
-	metadata := &types.Snapshot{
+	snapshot := &types.Snapshot{
 		Height: height,
 		Format: format,
 	}
-	index := uint32(1)
-	for chunk := range chunks {
-		chunkMetadata, err := s.saveChunk(height, format, index, chunk)
+	index := uint32(0)
+	for chunkBody := range chunks {
+		chunk, err := s.saveChunk(height, format, index, chunkBody)
 		if err != nil {
 			return err
 		}
-		metadata.Chunks = append(metadata.Chunks, chunkMetadata)
+		snapshot.Chunks = append(snapshot.Chunks, chunk)
 		index++
 	}
-	return s.saveMetadata(height, format, metadata)
+	return s.saveSnapshot(snapshot)
 }
 
 // saveChunk saves a chunk to disk.
-func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.ReadCloser) (*types.SnapshotChunk, error) {
+func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.ReadCloser) (*types.Chunk, error) {
 	defer chunk.Close()
 	dir := s.pathSnapshot(height, format)
 	err := os.MkdirAll(dir, 0755)
@@ -332,19 +303,16 @@ func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.R
 	if err != nil {
 		return nil, fmt.Errorf("failed to close snapshot chunk file %q: %w", path, err)
 	}
-	return &types.SnapshotChunk{
-		Chunk:    index,
-		Checksum: hasher.Sum(nil),
-	}, nil
+	return &types.Chunk{Hash: hasher.Sum(nil)}, nil
 }
 
-// saveMetadata saves snapshot metadata to the database.
-func (s *Store) saveMetadata(height uint64, format uint32, metadata *types.Snapshot) error {
-	value, err := proto.Marshal(metadata)
+// saveSnapshot saves snapshot metadata to the database.
+func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
+	value, err := proto.Marshal(snapshot)
 	if err != nil {
 		return fmt.Errorf("failed to encode snapshot metadata: %w", err)
 	}
-	err = s.db.SetSync(encodeKey(height, format), value)
+	err = s.db.SetSync(encodeKey(snapshot.Height, snapshot.Format), value)
 	if err != nil {
 		return fmt.Errorf("failed to store snapshot: %w", err)
 	}

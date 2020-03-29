@@ -2,30 +2,28 @@ package snapshots
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// Restorer is a helper that manages an asynchronous snapshot restoration process
+// Restorer is a helper that manages an asynchronous snapshot restoration process.
 type Restorer struct {
-	height    uint64
-	format    uint32
-	chunks    uint32
-	nextChunk uint32
-	chChunks  chan<- io.ReadCloser
-	chDone    <-chan error
+	snapshot   types.Snapshot
+	chChunks   chan<- io.ReadCloser
+	chDone     <-chan error
+	chunksSeen int
 }
 
 // NewRestorer starts a snapshot restoration for the given target. The caller must call Close(),
 // and also Complete() when the final chunks has been given.
-func NewRestorer(target store.Snapshotter, height uint64, format uint32, chunks uint32) (*Restorer, error) {
+func NewRestorer(snapshot types.Snapshot, target store.Snapshotter) (*Restorer, error) {
 	chChunks := make(chan io.ReadCloser, 4)
 	chDone := make(chan error, 1)
 	go func() {
-		chDone <- target.Restore(height, format, chChunks)
+		chDone <- target.Restore(snapshot.Height, snapshot.Format, chChunks)
 		close(chDone)
 	}()
 
@@ -39,12 +37,9 @@ func NewRestorer(target store.Snapshotter, height uint64, format uint32, chunks 
 		return nil, err
 	case <-time.After(10 * time.Millisecond):
 		return &Restorer{
-			height:    height,
-			format:    format,
-			chunks:    chunks,
-			nextChunk: 1,
-			chChunks:  chChunks,
-			chDone:    chDone,
+			snapshot: snapshot,
+			chChunks: chChunks,
+			chDone:   chDone,
 		}, nil
 	}
 }
@@ -52,8 +47,9 @@ func NewRestorer(target store.Snapshotter, height uint64, format uint32, chunks 
 // Add adds a chunk to be restored. It will finalize the import when the final chunk is given,
 // returning true. The returned error may not be caused by the given chunk, since the
 // restore is asynchronous and since data records may span multiple chunks.
+// FIXME This should probably verify chunk checksums as well.
 func (r *Restorer) Add(chunk io.ReadCloser) (bool, error) {
-	if r.chChunks == nil {
+	if r == nil || r.chChunks == nil {
 		return false, errors.New("no restore in progress")
 	}
 
@@ -70,8 +66,8 @@ func (r *Restorer) Add(chunk io.ReadCloser) (bool, error) {
 
 	// pass the chunk, and wait for completion if it was the final one
 	r.chChunks <- chunk
-	r.nextChunk++
-	if r.nextChunk > r.chunks {
+	r.chunksSeen++
+	if r.chunksSeen >= len(r.snapshot.Chunks) {
 		r.Close()
 		return true, <-r.chDone
 	}
@@ -86,19 +82,10 @@ func (r *Restorer) Close() {
 	}
 }
 
-// Expects checks if a chunk is the next expected one
-func (r *Restorer) Expects(height uint64, format uint32, chunk uint32) error {
-	if r == nil || r.chChunks == nil {
-		return errors.New("no restore in progress")
+// Snapshot returns the snapshot being restored
+func (r *Restorer) Snapshot() *types.Snapshot {
+	if r == nil {
+		return nil
 	}
-	if height != r.height {
-		return fmt.Errorf("unexpected height %v, expected %v", height, r.height)
-	}
-	if format != r.format {
-		return fmt.Errorf("unexpected format %v, expected %v", format, r.format)
-	}
-	if chunk != r.nextChunk {
-		return fmt.Errorf("unexpected chunk %v, expected %v", chunk, r.nextChunk)
-	}
-	return nil
+	return &r.snapshot
 }

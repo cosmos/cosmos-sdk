@@ -30,9 +30,6 @@ func NewLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption
 	return geLegacyKeyBaseFromDir(rootDir, opts...)
 }
 
-// NewInMemoryKeyBase returns a storage-less keybase.
-func NewInMemoryKeyBase() cryptokeyring.Keybase { return cryptokeyring.NewInMemory() }
-
 func geLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
 	return cryptokeyring.NewLegacy(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -33,55 +32,6 @@ func newDBKeybase(db dbm.DB, opts ...KeybaseOption) dbKeybase {
 		base: newBaseKeybase(opts...),
 		db:   db,
 	}
-}
-
-// NewInMemory creates a transient keyring useful for testing
-// purposes and on-the-fly key generation.
-// Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...KeybaseOption) Keybase {
-	kb, _ := NewKeyring("inmemory", BackendMemory, "", nil, opts...)
-	return kb
-}
-
-// CreateMnemonic generates a new key and persists it to storage, encrypted
-// using the provided password. It returns the generated mnemonic and the key Info.
-// It returns an error if it fails to generate a key for the given key algorithm
-// type, or if another key is already stored under the same name.
-func (kb dbKeybase) CreateMnemonic(
-	name string, language Language, passwd string, algo SigningAlgo,
-) (info Info, mnemonic string, err error) {
-
-	return kb.base.CreateMnemonic(kb, name, language, passwd, algo)
-}
-
-// CreateAccount converts a mnemonic to a private key and persists it, encrypted
-// with the given password.
-func (kb dbKeybase) CreateAccount(
-	name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo,
-) (Info, error) {
-
-	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, hdPath, algo)
-}
-
-// CreateLedger creates a new locally-stored reference to a Ledger keypair.
-// It returns the created key info and an error if the Ledger could not be queried.
-func (kb dbKeybase) CreateLedger(
-	name string, algo SigningAlgo, hrp string, account, index uint32,
-) (Info, error) {
-
-	return kb.base.CreateLedger(kb, name, algo, hrp, account, index)
-}
-
-// CreateOffline creates a new reference to an offline keypair. It returns the
-// created key info.
-func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
-	return kb.base.writeOfflineKey(kb, name, pub, algo), nil
-}
-
-// CreateMulti creates a new reference to a multisig (offline) keypair. It
-// returns the created key info.
-func (kb dbKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) {
-	return kb.base.writeMultisigKey(kb, name, pub), nil
 }
 
 // List returns the keys from storage in alphabetical order.
@@ -124,63 +74,6 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	}
 
 	return unmarshalInfo(bs)
-}
-
-// GetByAddress returns Info based on a provided AccAddress. An error is returned
-// if the address does not exist.
-func (kb dbKeybase) GetByAddress(address sdk.AccAddress) (Info, error) {
-	ik, err := kb.db.Get(addrKey(address))
-	if err != nil {
-		return nil, err
-	}
-
-	if len(ik) == 0 {
-		return nil, fmt.Errorf("key with address %s not found", address)
-	}
-
-	bs, err := kb.db.Get(ik)
-	if err != nil {
-		return nil, err
-	}
-
-	return unmarshalInfo(bs)
-}
-
-// Sign signs the msg with the named key. It returns an error if the key doesn't
-// exist or the decryption fails.
-func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
-	info, err := kb.Get(name)
-	if err != nil {
-		return
-	}
-
-	var priv tmcrypto.PrivKey
-
-	switch i := info.(type) {
-	case localInfo:
-		if i.PrivKeyArmor == "" {
-			err = fmt.Errorf("private key not available")
-			return
-		}
-
-		priv, _, err = crypto.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
-		if err != nil {
-			return nil, nil, err
-		}
-
-	case ledgerInfo:
-		return SignWithLedger(info, msg)
-
-	case offlineInfo, multiInfo:
-		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
-	}
-
-	sig, err = priv.Sign(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return sig, priv.PubKey(), nil
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
@@ -265,94 +158,6 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
-// ImportPrivKey imports a private key in ASCII armor format. It returns an
-// error if a key with the same name exists or a wrong encryption passphrase is
-// supplied.
-func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
-	if _, err := kb.Get(name); err == nil {
-		return errors.New("Cannot overwrite key " + name)
-	}
-
-	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
-	if err != nil {
-		return errors.Wrap(err, "couldn't import private key")
-	}
-
-	kb.writeLocalKey(name, privKey, passphrase, SigningAlgo(algo))
-	return nil
-}
-
-func (kb dbKeybase) Import(name string, armor string) (err error) {
-	bz, err := kb.db.Get(infoKey(name))
-	if err != nil {
-		return err
-	}
-
-	if len(bz) > 0 {
-		return errors.New("cannot overwrite data for name " + name)
-	}
-
-	infoBytes, err := crypto.UnarmorInfoBytes(armor)
-	if err != nil {
-		return
-	}
-
-	return kb.db.Set(infoKey(name), infoBytes)
-}
-
-// ImportPubKey imports ASCII-armored public keys. Store a new Info object holding
-// a public key only, i.e. it will not be possible to sign with it as it lacks the
-// secret key.
-func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
-	bz, err := kb.db.Get(infoKey(name))
-	if err != nil {
-		return err
-	}
-
-	if len(bz) > 0 {
-		return errors.New("cannot overwrite data for name " + name)
-	}
-
-	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
-	if err != nil {
-		return
-	}
-
-	pubKey, err := cryptoAmino.PubKeyFromBytes(pubBytes)
-	if err != nil {
-		return
-	}
-
-	kb.base.writeOfflineKey(kb, name, pubKey, SigningAlgo(algo))
-	return
-}
-
-// Delete removes key forever, but we must present the proper passphrase before
-// deleting it (for security). It returns an error if the key doesn't exist or
-// passphrases don't match. Passphrase is ignored when deleting references to
-// offline and Ledger / HW wallet keys.
-func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
-	// verify we have the proper password before deleting
-	info, err := kb.Get(name)
-	if err != nil {
-		return err
-	}
-
-	if linfo, ok := info.(localInfo); ok && !skipPass {
-		if _, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
-			return err
-		}
-	}
-
-	batch := kb.db.NewBatch()
-	defer batch.Close()
-
-	batch.Delete(addrKey(info.GetAddress()))
-	batch.Delete(infoKey(name))
-
-	return batch.WriteSync()
-}
-
 // Update changes the passphrase with which an already stored key is
 // encrypted.
 //
@@ -385,16 +190,6 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	default:
 		return fmt.Errorf("locally stored key required. Received: %v", reflect.TypeOf(info).String())
 	}
-}
-
-// SupportedAlgos returns a list of supported signing algorithms.
-func (kb dbKeybase) SupportedAlgos() []SigningAlgo {
-	return kb.base.SupportedAlgos()
-}
-
-// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
-func (kb dbKeybase) SupportedAlgosLedger() []SigningAlgo {
-	return kb.base.SupportedAlgosLedger()
 }
 
 // Close the underlying storage.

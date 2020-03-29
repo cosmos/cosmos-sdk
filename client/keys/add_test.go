@@ -47,11 +47,19 @@ func Test_runAddCmdBasic(t *testing.T) {
 	}
 	assert.Error(t, runAddCmd(cmd, []string{"keyname1"}))
 
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname2"}))
+	assert.Error(t, runAddCmd(cmd, []string{"keyname2"}))
 	if runningUnattended {
 		mockIn.Reset("testpass1\nN\n")
 	} else {
 		mockIn.Reset("y\n")
 	}
-	err := runAddCmd(cmd, []string{"keyname2"})
-	assert.NoError(t, err)
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname2"}))
+
+	// test --dry-run
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname4"}))
+	assert.Error(t, runAddCmd(cmd, []string{"keyname4"}))
+
+	viper.Set(flags.FlagDryRun, true)
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname4"}))
 }

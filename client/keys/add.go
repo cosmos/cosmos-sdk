@@ -83,7 +83,7 @@ the flag --nosort is set.
 
 func getKeybase(transient bool, buf io.Reader) (keyring.Keybase, error) {
 	if transient {
-		return keyring.NewInMemory(), nil
+		return keyring.NewKeyring(sdk.KeyringServiceName(), keyring.BackendMemory, viper.GetString(flags.FlagHome), buf)
 	}
 
 	return keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)

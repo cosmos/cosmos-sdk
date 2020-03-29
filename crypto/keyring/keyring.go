@@ -29,6 +29,7 @@ const (
 	BackendKWallet = "kwallet"
 	BackendPass    = "pass"
 	BackendTest    = "test"
+	BackendMemory  = "memory"
 )
 
 const (
@@ -66,6 +67,8 @@ func NewKeyring(
 	var err error
 
 	switch backend {
+	case BackendMemory:
+		db = keyring.NewArrayKeyring(nil)
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:

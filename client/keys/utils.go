@@ -34,7 +34,7 @@ func NewKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cry
 func NewInMemoryKeyBase() cryptokeyring.Keybase { return cryptokeyring.NewInMemory() }
 
 func getLazyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
-	return cryptokeyring.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
+	return cryptokeyring.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 
 func printKeyInfo(keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {

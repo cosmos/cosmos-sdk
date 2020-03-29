@@ -1,10 +1,7 @@
 package keyring
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/crypto"
-	tmos "github.com/tendermint/tendermint/libs/os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,15 +13,6 @@ type lazyKeybase struct {
 	name    string
 	dir     string
 	options []KeybaseOption
-}
-
-// New creates a new instance of a lazy keybase.
-func New(name, dir string, opts ...KeybaseOption) Keybase {
-	if err := tmos.EnsureDir(dir, 0700); err != nil {
-		panic(fmt.Sprintf("failed to create Keybase directory: %s", err))
-	}
-
-	return lazyKeybase{name: name, dir: dir, options: opts}
 }
 
 func (lkb lazyKeybase) List() ([]Info, error) {

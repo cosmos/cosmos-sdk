@@ -16,7 +16,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ Keybase = dbKeybase{}
+var _ LegacyKeybase = dbKeybase{}
 
 // dbKeybase combines encryption and storage implementation to provide a
 // full-featured key manager.
@@ -29,7 +29,7 @@ type dbKeybase struct {
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
+func newDBKeybase(db dbm.DB, opts ...KeybaseOption) dbKeybase {
 	return dbKeybase{
 		base: newBaseKeybase(opts...),
 		db:   db,
@@ -37,7 +37,7 @@ func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
 }
 
 // New creates a new instance of a lazy keybase.
-func New(name, dir string, opts ...KeybaseOption) (Keybase, error) {
+func New(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err := tmos.EnsureDir(dir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create Keybase directory: %s", err)
 	}
@@ -406,6 +406,11 @@ func (kb dbKeybase) SupportedAlgos() []SigningAlgo {
 // SupportedAlgosLedger returns a list of supported ledger signing algorithms.
 func (kb dbKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.base.SupportedAlgosLedger()
+}
+
+// Close the underlying storage.
+func (kb dbKeybase) Close() error {
+	return kb.db.Close()
 }
 
 func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info {

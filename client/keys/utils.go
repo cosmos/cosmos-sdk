@@ -24,16 +24,16 @@ const (
 
 type bechKeyOutFn func(keyInfo cryptokeyring.Info) (cryptokeyring.KeyOutput, error)
 
-// NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
+// NewLegacyKeyBaseFromDir initializes a legacy keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
-func NewKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir, opts...)
+func NewLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
+	return geLegacyKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() cryptokeyring.Keybase { return cryptokeyring.NewInMemory() }
 
-func getLazyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
+func geLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
 	return cryptokeyring.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 

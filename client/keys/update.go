@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 // UpdateKeyCommand changes the password of a key in the keybase.
@@ -32,10 +33,13 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
+	var kb keyring.LegacyKeybase
+	kb, err := NewLegacyKeyBaseFromDir(viper.GetString(flags.FlagHome))
 	if err != nil {
 		return err
 	}
+	defer kb.Close()
+
 	oldpass, err := input.GetPassword("Enter the current passphrase:", buf)
 	if err != nil {
 		return err

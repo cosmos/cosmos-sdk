@@ -43,10 +43,12 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	// instantiate legacy keybase
 	rootDir := viper.GetString(flags.FlagHome)
-	legacyKb, err := NewKeyBaseFromDir(rootDir)
+	var legacyKb keyring.LegacyKeybase
+	legacyKb, err := NewLegacyKeyBaseFromDir(rootDir)
 	if err != nil {
 		return err
 	}
+	defer legacyKb.Close()
 
 	// fetch list of keys from legacy keybase
 	oldKeys, err := legacyKb.List()

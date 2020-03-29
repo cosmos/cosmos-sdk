@@ -81,6 +81,9 @@ type Keybase interface {
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
 	List() ([]Info, error)
+	Export(name string) (armor string, err error)
 	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
+	Update(name, oldpass string, getNewpass func() (string, error)) error
+	Close() error
 }

@@ -32,7 +32,7 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 
 	// Do not change chunk size without new snapshot format (must be uniform across nodes)
-	snapshotChunkSize   = uint64(8e6)
+	snapshotChunkSize   = uint64(10e6)
 	snapshotBufferSize  = int(snapshotChunkSize)
 	snapshotMaxItemSize = int(64e6) // FIXME SDK has no key/value limit, so we set an arbitrary limit
 )

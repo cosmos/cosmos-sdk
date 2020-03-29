@@ -2,7 +2,7 @@ package snapshots_test
 
 import (
 	"bytes"
-	"crypto/sha1" // nolint: gosec
+	"crypto/sha256"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -62,7 +62,7 @@ func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
 }
 
 func checksum(b []byte) []byte {
-	hash := sha1.Sum(b) // nolint: gosec
+	hash := sha256.Sum256(b)
 	return hash[:]
 }
 

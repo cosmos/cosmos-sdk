@@ -1,7 +1,7 @@
 package snapshots
 
 import (
-	"crypto/sha1" // nolint: gosec // only used for checksumming
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -294,7 +294,7 @@ func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.R
 		return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
 	}
 	defer file.Close()
-	hasher := sha1.New() // nolint: gosec
+	hasher := sha256.New()
 	_, err = io.Copy(io.MultiWriter(file, hasher), chunk)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate snapshot chunk file %q: %w", path, err)

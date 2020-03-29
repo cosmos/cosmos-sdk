@@ -1,7 +1,7 @@
 package rootmulti
 
 import (
-	"crypto/sha1" // nolint: gosec
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -459,23 +459,31 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	version := uint64(store.LastCommitID().Version)
 
 	testcases := []struct {
-		format   uint32
-		checksum string
+		format      uint32
+		chunkHashes []string
 	}{
-		{1, "4aabd44ea3b3bef4984d8fb1449d8c2273a63a1d"},
+		{1, []string{
+			"503e5b51b657055b77e88169fadae543619368744ad15f1de0736c0a20482f24",
+			"e1a0daaa738eeb43e778aefd2805e3dd720798288a410b06da4b8459c4d8f72e",
+			"aa048b4ee0f484965d7b3b06822cf0772cdcaad02f3b1b9055e69f2cb365ef3c",
+			"7921eaa3ed4921341e504d9308a9877986a879fe216a099c86e8db66fcba4c63",
+			"a4a864e6c02c9fca5837ec80dc84f650b25276ed7e4820cf7516ced9f9901b86",
+			"ca2879ac6e7205d257440131ba7e72bef784cd61642e32b847729e543c1928b9",
+		}},
 	}
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
 			chunks, err := store.Snapshot(version, tc.format)
 			require.NoError(t, err)
-			hasher := sha1.New() // nolint: gosec
+			hashes := []string{}
 			for chunk := range chunks {
+				hasher := sha256.New()
 				_, err := io.Copy(hasher, chunk)
 				require.NoError(t, err)
+				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))
 			}
-			checksum := hex.EncodeToString(hasher.Sum(nil))
-			assert.Equal(t, tc.checksum, checksum,
+			assert.Equal(t, tc.chunkHashes, hashes,
 				"Snapshot output for format %v has changed", tc.format)
 		})
 	}

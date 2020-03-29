@@ -12,22 +12,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestNew(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	_, err := New("keybasename", dir)
-	require.NoError(t, err)
-}
-
 func TestLazyKeyManagement(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -108,10 +97,7 @@ func TestLazyKeyManagement(t *testing.T) {
 }
 
 func TestLazySignVerify(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -185,10 +171,7 @@ func TestLazySignVerify(t *testing.T) {
 }
 
 func TestLazyExportImport(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -214,10 +197,7 @@ func TestLazyExportImport(t *testing.T) {
 }
 
 func TestLazyExportImportPrivKey(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -244,10 +224,7 @@ func TestLazyExportImportPrivKey(t *testing.T) {
 }
 
 func TestLazyExportImportPubKey(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 	algo := Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
@@ -285,10 +262,7 @@ func TestLazyExportImportPubKey(t *testing.T) {
 }
 
 func TestLazyExportPrivateKeyObject(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -303,17 +277,13 @@ func TestLazyExportPrivateKeyObject(t *testing.T) {
 }
 
 func TestLazyAdvancedKeyManagement(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
-
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
 	p1, p2 := nums, foobar
 
+	kb := NewInMemory()
 	// make sure key works with initial password
-	_, _, err = kb.CreateMnemonic(n1, English, p1, algo)
+	_, _, err := kb.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
 	assertPassword(t, kb, n1, p1, p2)
 
@@ -352,10 +322,7 @@ func TestLazyAdvancedKeyManagement(t *testing.T) {
 
 // TestSeedPhrase verifies restoring from a seed phrase
 func TestLazySeedPhrase(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", dir)
-	require.NoError(t, err)
+	kb := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
@@ -406,9 +373,6 @@ func (key testPub) VerifyBytes(msg []byte, sig []byte) bool { return true }
 func (key testPub) Equals(other crypto.PubKey) bool         { return true }
 
 func TestKeygenOverride(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-
 	// Save existing codec and reset after test
 	cryptoCdc := CryptoCdc
 	t.Cleanup(func() {
@@ -434,8 +398,7 @@ func TestKeygenOverride(t *testing.T) {
 		return testPriv(bz), nil
 	}
 
-	kb, err := New("keybasename", dir, WithKeygenFunc(dummyFunc))
-	require.NoError(t, err)
+	kb := NewInMemory(WithKeygenFunc(dummyFunc))
 
 	testName, pw := "name", "testPassword"
 

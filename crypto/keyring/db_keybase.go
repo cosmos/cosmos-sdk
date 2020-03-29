@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -34,19 +33,6 @@ func newDBKeybase(db dbm.DB, opts ...KeybaseOption) dbKeybase {
 		base: newBaseKeybase(opts...),
 		db:   db,
 	}
-}
-
-// New creates a new instance of a lazy keybase.
-func New(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
-	if err := tmos.EnsureDir(dir, 0700); err != nil {
-		return nil, fmt.Errorf("failed to create Keybase directory: %s", err)
-	}
-
-	db, err := sdk.NewLevelDB(name, dir)
-	if err != nil {
-		return nil, err
-	}
-	return newDBKeybase(db, opts...), nil
 }
 
 // NewInMemory creates a transient keybase on top of in-memory storage

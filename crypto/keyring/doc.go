@@ -6,9 +6,9 @@
 // The Keybase interface defines the methods that a type needs to implement to be used
 // as key storage backend. This package provides few implementations out-of-the-box.
 //
-// New
+// NewLegacy
 //
-// The New constructor returns an on-disk implementation backed by LevelDB storage that has been
+// The NewLegacy constructor returns an on-disk implementation backed by LevelDB storage that has been
 // the default implementation used by the SDK until v0.38.0. Due to security concerns, it is
 // recommended to drop it in favor of the NewKeyring or NewKeyringFile constructors as it will be
 // removed in future releases.

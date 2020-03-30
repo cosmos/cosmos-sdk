@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -17,7 +16,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	info, err := keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", keyring.CreateHDPath(0, 0).String(), keyring.Secp256k1)
+	info, err := keyring.NewInMemory().CreateAccount("xxx", mnemonic, "", "012345678", keyring.CreateHDPath(0, 0).String(), keyring.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -39,7 +38,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keys.NewInMemoryKeyBase().CreateAccount("xxx", mnemonic, "", "012345678", keyring.CreateHDPath(0, 0).String(), keyring.Secp256k1)
+	info, err = keyring.NewInMemory().CreateAccount("xxx", mnemonic, "", "012345678", keyring.CreateHDPath(0, 0).String(), keyring.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }

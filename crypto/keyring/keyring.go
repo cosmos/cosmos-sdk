@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,6 +30,7 @@ const (
 	BackendKWallet = "kwallet"
 	BackendPass    = "pass"
 	BackendTest    = "test"
+	BackendMemory  = "memory"
 )
 
 const (
@@ -66,6 +68,8 @@ func NewKeyring(
 	var err error
 
 	switch backend {
+	case BackendMemory:
+		return NewInMemory(opts...), nil
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:
@@ -84,6 +88,13 @@ func NewKeyring(
 	}
 
 	return newKeyringKeybase(db, opts...), nil
+}
+
+// NewInMemory creates a transient keyring useful for testing
+// purposes and on-the-fly key generation.
+// Keybase options can be applied when generating this new Keybase.
+func NewInMemory(opts ...KeybaseOption) Keybase {
+	return newKeyringKeybase(keyring.NewArrayKeyring(nil), opts...)
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -414,13 +425,6 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	return nil
 }
 
-// Update changes the passphrase with which an already stored key is encrypted.
-// The oldpass must be the current passphrase used for encryption, getNewpass is
-// a function to get the passphrase to permanently replace the current passphrase.
-func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	return errors.New("unsupported operation")
-}
-
 // SupportedAlgos returns a list of supported signing algorithms.
 func (kb keyringKeybase) SupportedAlgos() []SigningAlgo {
 	return kb.base.SupportedAlgos()
@@ -580,4 +584,8 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			return pass, nil
 		}
 	}
+}
+
+func addrHexKey(address types.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix))
 }

@@ -29,7 +29,7 @@ func RegisterCodec(cdc *codec.Codec) {
 // RegisterAccountTypeCodec registers an external account type defined in
 // another module for the internal ModuleCdc.
 func RegisterAccountTypeCodec(o interface{}, name string) {
-	 amino.RegisterConcrete(o, name, nil)
+	amino.RegisterConcrete(o, name, nil)
 }
 
 var (
@@ -47,5 +47,4 @@ var (
 func init() {
 	RegisterCodec(amino)
 	codec.RegisterCrypto(amino)
-	amino.Seal()
 }

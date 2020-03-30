@@ -299,6 +299,34 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "theId"
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
+	require.NoError(t, err)
+
+	passphrase := "somePass"
+	armor, err := keyring.ExportPrivKeyArmorByAddress(mnemonic.GetAddress(), passphrase)
+	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPrivKey(uid, armor, passphrase)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
+
+	newUid := "theNewId"
+	// Should fail importing with wrong password
+	err = keyring.ImportPrivKey(newUid, armor, "wrongPass")
+	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
+
+	err = keyring.ImportPrivKey(newUid, armor, passphrase)
+	assert.NoError(t, err)
+}
+
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())

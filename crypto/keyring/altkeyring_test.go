@@ -199,7 +199,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, list)
 
-	key := "offline"
+	key := someKey
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 

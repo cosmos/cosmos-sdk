@@ -45,16 +45,14 @@ var _ LegacyKeybase = dbKeybase{}
 //
 // NOTE: dbKeybase will be deprecated in favor of keyringKeybase.
 type dbKeybase struct {
-	base baseKeybase
-	db   dbm.DB
+	db dbm.DB
 }
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
 func newDBKeybase(db dbm.DB, opts ...KeybaseOption) dbKeybase {
 	return dbKeybase{
-		base: newBaseKeybase(opts...),
-		db:   db,
+		db: db,
 	}
 }
 

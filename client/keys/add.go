@@ -27,7 +27,6 @@ const (
 	flagInteractive = "interactive"
 	flagRecover     = "recover"
 	flagNoBackup    = "no-backup"
-	flagDryRun      = "dry-run"
 	flagAccount     = "account"
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
@@ -72,7 +71,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
-	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
+	cmd.Flags().Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
@@ -83,7 +82,7 @@ the flag --nosort is set.
 
 func getKeybase(transient bool, buf io.Reader) (keyring.Keybase, error) {
 	if transient {
-		return keyring.NewInMemory(), nil
+		return keyring.NewKeyring(sdk.KeyringServiceName(), keyring.BackendMemory, viper.GetString(flags.FlagHome), buf)
 	}
 
 	return keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
@@ -91,7 +90,7 @@ func getKeybase(transient bool, buf io.Reader) (keyring.Keybase, error) {
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf)
+	kb, err := getKeybase(viper.GetBool(flags.FlagDryRun), inBuf)
 	if err != nil {
 		return err
 	}
@@ -124,7 +123,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 		return keyring.ErrUnsupportedSigningAlgo
 	}
 
-	if !viper.GetBool(flagDryRun) {
+	if !viper.GetBool(flags.FlagDryRun) {
 		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation

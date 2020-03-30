@@ -5,7 +5,6 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 	"gopkg.in/yaml.v2"
@@ -25,17 +24,14 @@ const (
 
 type bechKeyOutFn func(keyInfo cryptokeyring.Info) (cryptokeyring.KeyOutput, error)
 
-// NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
+// NewLegacyKeyBaseFromDir initializes a legacy keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
-func NewKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir, opts...)
+func NewLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
+	return getLegacyKeyBaseFromDir(rootDir, opts...)
 }
 
-// NewInMemoryKeyBase returns a storage-less keybase.
-func NewInMemoryKeyBase() cryptokeyring.Keybase { return cryptokeyring.NewInMemory() }
-
-func getLazyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.Keybase, error) {
-	return cryptokeyring.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
+func getLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
+	return cryptokeyring.NewLegacy(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 
 func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
@@ -115,9 +111,4 @@ func printPubKey(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) 
 	}
 
 	fmt.Fprintln(w, ko.PubKey)
-}
-
-func isRunningUnattended() bool {
-	backends := keyring.AvailableBackends()
-	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
 }

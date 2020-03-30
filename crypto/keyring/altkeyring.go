@@ -6,6 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+
 	"github.com/99designs/keyring"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -50,12 +53,16 @@ type Keyring interface {
 
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
+
+	Signer
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
-	// Sign and SignByAddress sign byte messages with a user key.
+	// Sign sign byte messages with a user key.
 	Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
+
+	// SignByAddress sign byte messages with a user key providing the address.
 	SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error)
 }
 
@@ -117,6 +124,44 @@ func NewAltKeyring(
 type altKeyring struct {
 	db      keyring.Keyring
 	options altKrOptions
+}
+
+func (a altKeyring) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+	info, err := a.Key(uid)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var priv tmcrypto.PrivKey
+
+	switch i := info.(type) {
+	case localInfo:
+		if i.PrivKeyArmor == "" {
+			return nil, nil, fmt.Errorf("private key not available")
+		}
+
+		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		if err != nil {
+			return nil, nil, err
+		}
+
+	case ledgerInfo:
+		return SignWithLedger(info, msg)
+
+	case offlineInfo, multiInfo:
+		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
+	}
+
+	sig, err := priv.Sign(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sig, priv.PubKey(), nil
+}
+
+func (a altKeyring) SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+	panic("implement me")
 }
 
 func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error) {

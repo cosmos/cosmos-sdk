@@ -161,7 +161,12 @@ func (a altKeyring) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error
 }
 
 func (a altKeyring) SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error) {
-	panic("implement me")
+	key, err := a.KeyByAddress(address)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return a.Sign(key.GetName(), msg)
 }
 
 func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error) {

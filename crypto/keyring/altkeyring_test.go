@@ -249,6 +249,25 @@ func TestAltKeyring_Sign(t *testing.T) {
 	require.True(t, key.VerifyBytes(msg, sign))
 }
 
+func TestAltKeyring_SignByAddress(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "jack"
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
+	require.NoError(t, err)
+
+	msg := []byte("some message")
+
+	sign, key, err := keyring.SignByAddress(mnemonic.GetAddress(), msg)
+	require.NoError(t, err)
+
+	require.True(t, key.VerifyBytes(msg, sign))
+}
+
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())

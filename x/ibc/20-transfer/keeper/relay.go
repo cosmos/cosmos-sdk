@@ -130,7 +130,7 @@ func (k Keeper) createOutgoingPacket(
 	)
 
 	packet := channeltypes.NewPacket(
-		channeltypes.PacketData(packetData),
+		&packetData,
 		seq,
 		sourcePort,
 		sourceChannel,

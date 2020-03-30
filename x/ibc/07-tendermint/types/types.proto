@@ -5,7 +5,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/abci/types/types.proto";
-import "third_party/proto/tendermint/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "x/ibc/23-commitment/types/types.proto";
@@ -171,10 +170,41 @@ message Commit {
   // ValidatorSet order.
   // Any peer with a block can gossip signatures by index with a peer without
   // recalculating the active ValidatorSet.
-  int64                            height     = 1;
-  int32                            round      = 2;
-  .tendermint.types.proto3.BlockID block_id   = 3 [(gogoproto.customname) = "BlockID"];
-  repeated bytes                   signatures = 4;
-  bytes                            hash       = 5 [(gogoproto.customname) = "hash"];  // tmbytes.HexBytes
-  bytes                            bit_array  = 6 [(gogoproto.customname) = "bitArray"];
+  int64              height     = 1;
+  int32              round      = 2;
+  BlockID            block_id   = 3 [(gogoproto.customname) = "BlockID"];
+  repeated CommitSig signatures = 4;
+  bytes              hash       = 5 [
+    (gogoproto.customname) = "hash",
+    (gogoproto.casttype)   = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
+  ];
+  bytes bit_array = 6 [(gogoproto.customname) = "bitArray"];
+}
+
+message BlockID {
+  bytes hash = 1 [
+    (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
+  ];
+  PartSetHeader parts_header = 2;
+}
+
+message PartSetHeader {
+  int32 total = 1;
+  bytes hash  = 2 [
+    (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
+  ];
+}
+
+message CommitSig {
+  bytes block_id_flag = 1 [
+    (gogoproto.customname) = "BlockIDFlag"
+  ];
+  bytes validator_address = 2 [
+    (gogoproto.casttype) = "github.com/tendermint/tendermint/types.Address"
+  ];
+  google.protobuf.Timestamp timestamp = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime)  = true
+  ];
+  bytes signature = 4;
 }

@@ -1,14 +1,11 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -25,25 +22,20 @@ func CommitAcknowledgement(data exported.PacketAcknowledgementI) []byte {
 
 var _ exported.PacketI = (*Packet)(nil)
 
-// NewPacket creates a new Packet instance
+// NewPacket creates a new Packet instance. It panics if the provided
+// packet data interface is not registered.
 func NewPacket(
 	data exported.PacketDataI,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
 ) Packet {
-	var packetData PacketData
-
-	switch cast := data.(type) {
-	case transfertypes.FungibleTokenPacketData:
-		packetData = PacketData{
-			Value: &PacketData_FungibleToken{&cast},
-		}
-	default:
-		panic(fmt.Sprintf("invalid packet data type %T", cast))
+	var packetData *PacketData
+	if err := packetData.SetPacketDataI(data); err != nil {
+		panic(err)
 	}
 
 	return Packet{
-		Data:               packetData,
+		Data:               *packetData,
 		Sequence:           sequence,
 		SourcePort:         sourcePort,
 		SourceChannel:      sourceChannel,

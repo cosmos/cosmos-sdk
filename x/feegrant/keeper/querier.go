@@ -54,7 +54,6 @@ func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byt
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, grants)
-	//bz, err := keeper.cdc.MarshalJSON(grants)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

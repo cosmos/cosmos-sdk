@@ -10,7 +10,6 @@ import (
 
 func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowanceI exported.FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
 	feeallowance := &FeeAllowance{}
-
 	if err := feeallowance.SetFeeAllowance(feeAllowanceI); err != nil {
 		return MsgGrantFeeAllowance{}, err
 	}

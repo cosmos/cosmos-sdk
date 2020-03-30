@@ -228,9 +228,9 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 
 	// for testing limits of the contract
 	hugeAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 9999))
-	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 2))
+	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
 	futureAfterSmall := &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 553)),
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
 		Expiration: types.ExpiresAtHeight(5678),
 	},
 	},

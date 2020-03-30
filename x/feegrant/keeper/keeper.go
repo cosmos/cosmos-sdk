@@ -34,7 +34,7 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
 	bz, err := grant.Marshal()
 	if err != nil {
-		panic(fmt.Errorf("failed to encode fee allowance: %w", err))
+		panic(fmt.Errorf("failed to marshal fee allowance: %w", err))
 	}
 	store.Set(key, bz)
 
@@ -76,7 +76,7 @@ func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 }
 
 // GetFeeGrant returns entire grant between both accounts
-func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant types.FeeAllowanceGrant, ok bool) {
+func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
@@ -84,6 +84,7 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 		return types.FeeAllowanceGrant{}, false
 	}
 
+	var feegrant types.FeeAllowanceGrant
 	err := feegrant.Unmarshal(bz)
 	if err != nil {
 		return types.FeeAllowanceGrant{}, false
@@ -94,7 +95,7 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 
 // IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
 // Callback to get all data, returns true to stop, false to keep reading
-func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(feegrant types.FeeAllowanceGrant) bool) error {
+func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(types.FeeAllowanceGrant) bool) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.FeeAllowancePrefixByGrantee(grantee)
 	iter := sdk.KVStorePrefixIterator(store, prefix)

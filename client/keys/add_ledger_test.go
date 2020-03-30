@@ -17,7 +17,6 @@ import (
 )
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
-	runningUnattended := isRunningUnattended()
 	config := sdk.GetConfig()
 
 	bech32PrefixAccAddr := "terra"
@@ -58,9 +57,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		kb.Delete("keyname1", "", false)
 	})
 	mockIn.Reset("test1234\n")
-	if runningUnattended {
-		mockIn.Reset("test1234\ntest1234\n")
-	}
 	key1, err := kb.Get("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)
@@ -79,7 +75,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 }
 
 func Test_runAddCmdLedger(t *testing.T) {
-	runningUnattended := isRunningUnattended()
 	cmd := AddKeyCommand()
 	require.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
@@ -105,9 +100,6 @@ func Test_runAddCmdLedger(t *testing.T) {
 		kb.Delete("keyname1", "", false)
 	})
 	mockIn.Reset("test1234\n")
-	if runningUnattended {
-		mockIn.Reset("test1234\ntest1234\n")
-	}
 	key1, err := kb.Get("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)

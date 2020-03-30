@@ -13,7 +13,6 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-	runningUnattended := isRunningUnattended()
 	exportKeyCommand := ExportKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)
 
@@ -25,23 +24,14 @@ func Test_runExportCmd(t *testing.T) {
 	// create a key
 	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
-	if !runningUnattended {
-		t.Cleanup(func() {
-			kb.Delete("keyname1", "", false) // nolint:errcheck
-		})
-	}
+	t.Cleanup(func() {
+		kb.Delete("keyname1", "", false) // nolint:errcheck
+	})
 
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
 	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", "", keyring.Secp256k1)
 	require.NoError(t, err)
 
 	// Now enter password
-	if runningUnattended {
-		mockIn.Reset("123456789\n123456789\ntestpass1\n")
-	} else {
-		mockIn.Reset("123456789\n123456789\n")
-	}
+	mockIn.Reset("123456789\n123456789\n")
 	require.NoError(t, runExportCmd(exportKeyCommand, []string{"keyname1"}))
 }

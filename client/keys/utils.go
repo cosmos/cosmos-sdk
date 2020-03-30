@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 	yaml "gopkg.in/yaml.v2"
@@ -111,9 +110,4 @@ func printPubKey(info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	}
 
 	fmt.Println(ko.PubKey)
-}
-
-func isRunningUnattended() bool {
-	backends := keyring.AvailableBackends()
-	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
 }

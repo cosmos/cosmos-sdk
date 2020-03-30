@@ -16,6 +16,8 @@ import (
 	"github.com/cosmos/go-bip39"
 )
 
+const someKey = "theKey"
+
 var unsupportedAlgo = AltSigningAlgo{
 	Name:      "unsupported",
 	DeriveKey: nil,
@@ -111,7 +113,7 @@ func TestAltKeyring_Get(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := "theKey"
+	uid := someKey
 	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -127,7 +129,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := "theKey"
+	uid := someKey
 	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -143,7 +145,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := "theKey"
+	uid := someKey
 	_, _, err = keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -166,7 +168,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := "theKey"
+	uid := someKey
 	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 

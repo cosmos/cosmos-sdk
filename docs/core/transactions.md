@@ -1,11 +1,12 @@
 <!--
 order: 2
-synopsis: "`Transactions` are objects created by end-users to trigger state changes in the application."
 -->
 
 # Transactions
 
-## Pre-requisite Readings {hide}
+`Transactions` are objects created by end-users to trigger state changes in the application. {synopsis}
+
+## Pre-requisite Readings
 
 * [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 

@@ -1,11 +1,12 @@
 <!--
 order: 4
-synopsis: "This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest)."
 -->
 
 # REST Interface
 
-## Prerequisites {hide}
+This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest). {synopsis}
+
+## Pre-requisite Readings
 
 - [Query Lifecycle](./query-lifecycle.md) {prereq}
 - [Application CLI](./cli.md) {prereq}

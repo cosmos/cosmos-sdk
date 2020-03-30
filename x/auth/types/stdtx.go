@@ -59,7 +59,12 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 }
 
 func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
-	return StdSignature{PubKey: pk.Bytes(), Signature: sig}
+	var pkBz []byte
+	if pk != nil {
+		pkBz = pk.Bytes()
+	}
+
+	return StdSignature{PubKey: pkBz, Signature: sig}
 }
 
 // GetSignature returns the raw signature bytes.

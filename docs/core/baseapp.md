@@ -1,11 +1,12 @@
 <!--
 order: 1
-synopsis: This document describes `BaseApp`, the abstraction that implements the core functionalities of an SDK application.
 -->
 
 # Baseapp
 
-## Pre-requisite Readings {hide}
+This document describes `BaseApp`, the abstraction that implements the core functionalities of an SDK application. {synopsis}
+
+## Pre-requisite Readings
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of an SDK transaction](../basics/tx-lifecycle.md) {prereq}

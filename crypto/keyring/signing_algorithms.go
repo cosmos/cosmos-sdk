@@ -1,4 +1,4 @@
-package keys
+package keyring
 
 // SigningAlgo defines an algorithm to derive key-pairs which can be used for cryptographic signing.
 type SigningAlgo string
@@ -14,3 +14,13 @@ const (
 	// Sr25519 represents the Sr25519 signature system.
 	Sr25519 = SigningAlgo("sr25519")
 )
+
+// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
+func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
+	for _, supportedAlgo := range supported {
+		if algo == supportedAlgo {
+			return true
+		}
+	}
+	return false
+}

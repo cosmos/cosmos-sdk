@@ -606,7 +606,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		msgEvents := sdk.Events{
 			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
 		}
-		msgEvents = msgEvents.AppendEvents(msgResult.Events)
+		msgEvents = msgEvents.AppendEvents(msgResult.GetEvents())
 
 		// append message events, data and logs
 		//
@@ -620,6 +620,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 	return &sdk.Result{
 		Data:   data,
 		Log:    strings.TrimSpace(msgLogs.String()),
-		Events: events,
+		Events: events.ToABCIEvents(),
 	}, nil
 }

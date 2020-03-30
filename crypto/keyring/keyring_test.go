@@ -11,6 +11,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +30,7 @@ const (
 	foobar = "foobar"
 )
 
-func TestLazyKeyManagementKeyRing(t *testing.T) {
+func TestKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -114,7 +115,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
-func TestLazySignVerifyKeyRingWithLedger(t *testing.T) {
+func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -149,7 +150,7 @@ func TestLazySignVerifyKeyRingWithLedger(t *testing.T) {
 	require.Equal(t, "not a ledger object", err.Error())
 }
 
-func TestLazySignVerifyKeyRing(t *testing.T) {
+func TestSignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -227,7 +228,7 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
-func TestLazyExportImportKeyRing(t *testing.T) {
+func TestExportImportKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -256,7 +257,7 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 	require.Equal(t, john, john2)
 }
 
-func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
+func TestExportImportPubKeyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -297,7 +298,7 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
+func TestExportPrivateKeyObjectKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -313,7 +314,7 @@ func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
 }
 
-func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
+func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -347,7 +348,7 @@ func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func TestLazySeedPhraseKeyRing(t *testing.T) {
+func TestSeedPhraseKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
@@ -431,6 +432,17 @@ func TestInMemoryLanguage(t *testing.T) {
 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
 	require.Error(t, err)
 	require.Equal(t, "unsupported language: only english is supported", err.Error())
+}
+
+func TestInMemoryCreateMultisig(t *testing.T) {
+	kb, err := NewKeyring("keybasename", "memory", "", nil)
+	require.NoError(t, err)
+	multi := multisig.PubKeyMultisigThreshold{
+		K:       1,
+		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
+	}
+	_, err = kb.CreateMulti("multi", multi)
+	require.NoError(t, err)
 }
 
 func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {

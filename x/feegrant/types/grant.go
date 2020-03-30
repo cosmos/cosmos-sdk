@@ -22,8 +22,8 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 	return a.GetFeeGrant().ValidateBasic()
 }
 
-func (grant FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
-	return grant.Allowance.GetFeeAllowanceI()
+func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
+	return a.Allowance.GetFeeAllowanceI()
 }
 
 // PrepareForExport will m	ake all needed changes to the allowance to prepare to be

@@ -181,7 +181,12 @@ func (a altKeyring) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error)
 }
 
 func (a altKeyring) ExportPrivKeyArmorByAddress(address types.Address, encryptPassphrase string) (armor string, err error) {
-	panic("implement me")
+	byAddress, err := a.KeyByAddress(address)
+	if err != nil {
+		return "", err
+	}
+
+	return a.ExportPrivKeyArmor(byAddress.GetName(), encryptPassphrase)
 }
 
 func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {

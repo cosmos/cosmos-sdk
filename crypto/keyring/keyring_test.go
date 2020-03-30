@@ -409,15 +409,6 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 }
 
-func TestKeyringKeybaseUpdate(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := NewKeyring("keybasename", "test", dir, nil)
-	require.NoError(t, err)
-	require.Equal(t, "unsupported operation", kb.Update("john", "oldpassword",
-		func() (string, error) { return "", nil }).Error())
-}
-
 func TestSupportedAlgos(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)

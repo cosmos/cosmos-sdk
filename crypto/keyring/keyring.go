@@ -425,13 +425,6 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	return nil
 }
 
-// Update changes the passphrase with which an already stored key is encrypted.
-// The oldpass must be the current passphrase used for encryption, getNewpass is
-// a function to get the passphrase to permanently replace the current passphrase.
-func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	return errors.New("unsupported operation")
-}
-
 // SupportedAlgos returns a list of supported signing algorithms.
 func (kb keyringKeybase) SupportedAlgos() []SigningAlgo {
 	return kb.base.SupportedAlgos()

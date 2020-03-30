@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -21,7 +20,6 @@ type LegacyKeybase interface {
 	Export(name string) (armor string, err error)
 	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
-	Update(name, oldpass string, getNewpass func() (string, error)) error
 	Close() error
 }
 
@@ -180,66 +178,9 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
-// Update changes the passphrase with which an already stored key is
-// encrypted.
-//
-// oldpass must be the current passphrase used for encryption,
-// getNewpass is a function to get the passphrase to permanently replace
-// the current passphrase
-func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	info, err := kb.Get(name)
-	if err != nil {
-		return err
-	}
-
-	switch i := info.(type) {
-	case localInfo:
-		linfo := i
-
-		key, _, err := crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
-		if err != nil {
-			return err
-		}
-
-		newpass, err := getNewpass()
-		if err != nil {
-			return err
-		}
-
-		kb.writeLocalKey(name, key, newpass, i.GetAlgo())
-		return nil
-
-	default:
-		return fmt.Errorf("locally stored key required. Received: %v", reflect.TypeOf(info).String())
-	}
-}
-
 // Close the underlying storage.
 func (kb dbKeybase) Close() error {
 	return kb.db.Close()
-}
-
-func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info {
-	// encrypt private key using passphrase
-	privArmor := crypto.EncryptArmorPrivKey(priv, passphrase, string(algo))
-
-	// make Info
-	pub := priv.PubKey()
-	info := newLocalInfo(name, pub, privArmor, algo)
-
-	kb.writeInfo(name, info)
-	return info
-}
-
-func (kb dbKeybase) writeInfo(name string, info Info) {
-	// write the info by key
-	key := infoKey(name)
-	serializedInfo := marshalInfo(info)
-
-	kb.db.SetSync(key, serializedInfo)
-
-	// store a pointer to the infokey by address for fast lookup
-	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }
 
 func addrKey(address sdk.AccAddress) []byte {

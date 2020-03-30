@@ -1,7 +1,10 @@
 package keyring
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -266,6 +269,34 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, key.VerifyBytes(msg, sign))
+}
+
+func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "theId"
+	_, _, err = keyring.NewMnemonic(uid, English, AltSecp256k1)
+	require.NoError(t, err)
+
+	passphrase := "somePass"
+	armor, err := keyring.ExportPrivKeyArmor(uid, passphrase)
+	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPrivKey(uid, armor, passphrase)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
+
+	newUid := "theNewId"
+	// Should fail importing with wrong password
+	err = keyring.ImportPrivKey(newUid, armor, "wrongPass")
+	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
+
+	err = keyring.ImportPrivKey(newUid, armor, passphrase)
+	assert.NoError(t, err)
 }
 
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {

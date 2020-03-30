@@ -6,10 +6,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 
 	"github.com/99designs/keyring"
+	"github.com/pkg/errors"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -55,6 +56,9 @@ type Keyring interface {
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
 
 	Signer
+
+	Importer
+	Exporter
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
@@ -124,6 +128,88 @@ func NewAltKeyring(
 type altKeyring struct {
 	db      keyring.Keyring
 	options altKrOptions
+}
+
+func (a altKeyring) ExportPubKeyArmor(uid string) (string, error) {
+	panic("implement me")
+}
+
+func (a altKeyring) ExportPubKeyArmorByAddress(address types.Address) (string, error) {
+	panic("implement me")
+}
+
+func (a altKeyring) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
+	priv, err := a.ExportPrivateKeyObject(uid)
+	if err != nil {
+		return "", err
+	}
+
+	info, err := a.Key(uid)
+	if err != nil {
+		return "", err
+	}
+
+	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+}
+
+// ExportPrivateKeyObject exports an armored private key object.
+func (a altKeyring) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) {
+	info, err := a.Key(uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var priv tmcrypto.PrivKey
+
+	switch linfo := info.(type) {
+	case localInfo:
+		if linfo.PrivKeyArmor == "" {
+			err = fmt.Errorf("private key not available")
+			return nil, err
+		}
+
+		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		if err != nil {
+			return nil, err
+		}
+
+	case ledgerInfo, offlineInfo, multiInfo:
+		return nil, errors.New("only works on local private keys")
+	}
+
+	return priv, nil
+}
+
+func (a altKeyring) ExportPrivKeyArmorByAddress(address types.Address, encryptPassphrase string) (armor string, err error) {
+	panic("implement me")
+}
+
+func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {
+	if a.hasKey(uid) {
+		return fmt.Errorf("cannot overwrite key: %s", uid)
+	}
+
+	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	if err != nil {
+		return errors.Wrap(err, "failed to decrypt private key")
+	}
+
+	_, err = a.writeLocalKey(uid, privKey, SigningAlgo(algo))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// HasKey returns whether the key exists in the keyring.
+func (a altKeyring) hasKey(name string) bool {
+	bz, _ := a.Key(name)
+	return bz != nil
+}
+
+func (a altKeyring) ImportPubKey(uid string, armor string) error {
+	panic("implement me")
 }
 
 func (a altKeyring) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {
@@ -333,7 +419,7 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 
 	privKey := algo.PrivKeyGen(derivedPriv)
 
-	return a.writeLocalKey(uid, privKey, SigningAlgo(algo.Name))
+	return a.writeLocalKey(uid, privKey, algo.Name)
 }
 
 func (a altKeyring) isSupportedSigningAlgo(algo AltSigningAlgo) bool {

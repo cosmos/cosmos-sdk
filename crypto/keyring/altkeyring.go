@@ -6,14 +6,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-
 	"github.com/99designs/keyring"
 	"github.com/pkg/errors"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/go-bip39"
@@ -131,11 +130,25 @@ type altKeyring struct {
 }
 
 func (a altKeyring) ExportPubKeyArmor(uid string) (string, error) {
-	panic("implement me")
+	bz, err := a.Key(uid)
+	if err != nil {
+		return "", err
+	}
+
+	if bz == nil {
+		return "", fmt.Errorf("no key to export with name: %s", uid)
+	}
+
+	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
 }
 
 func (a altKeyring) ExportPubKeyArmorByAddress(address types.Address) (string, error) {
-	panic("implement me")
+	info, err := a.KeyByAddress(address)
+	if err != nil {
+		return "", err
+	}
+
+	return a.ExportPubKeyArmor(info.GetName())
 }
 
 func (a altKeyring) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
@@ -214,7 +227,31 @@ func (a altKeyring) hasKey(name string) bool {
 }
 
 func (a altKeyring) ImportPubKey(uid string, armor string) error {
-	panic("implement me")
+	bz, _ := a.Key(uid)
+	if bz != nil {
+		pubkey := bz.GetPubKey()
+
+		if len(pubkey.Bytes()) > 0 {
+			return fmt.Errorf("cannot overwrite data for name: %s", uid)
+		}
+	}
+
+	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
+	if err != nil {
+		return err
+	}
+
+	pubKey, err := cryptoAmino.PubKeyFromBytes(pubBytes)
+	if err != nil {
+		return err
+	}
+
+	_, err = a.writeOfflineKey(uid, pubKey, SigningAlgo(algo))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a altKeyring) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {

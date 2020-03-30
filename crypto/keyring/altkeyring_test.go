@@ -327,6 +327,52 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestAltKeyring_ImportExportPubKey(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "theId"
+	_, _, err = keyring.NewMnemonic(uid, English, AltSecp256k1)
+	require.NoError(t, err)
+
+	armor, err := keyring.ExportPubKeyArmor(uid)
+	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPubKey(uid, armor)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite data for name: %s", uid))
+
+	newUid := "theNewId"
+	err = keyring.ImportPubKey(newUid, armor)
+	assert.NoError(t, err)
+}
+
+func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	uid := "theId"
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
+	require.NoError(t, err)
+
+	armor, err := keyring.ExportPubKeyArmorByAddress(mnemonic.GetAddress())
+	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPubKey(uid, armor)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite data for name: %s", uid))
+
+	newUid := "theNewId"
+	err = keyring.ImportPubKey(newUid, armor)
+	assert.NoError(t, err)
+}
+
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())

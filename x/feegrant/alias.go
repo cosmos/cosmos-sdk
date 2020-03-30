@@ -61,5 +61,6 @@ type (
 	FeeGrantTx                = types.FeeGrantTx
 	GrantedFee                = types.GrantedFee
 	DelegatedSignDoc          = types.DelegatedSignDoc
+	SupplyKeeper              = types.SupplyKeeper
 	Keeper                    = keeper.Keeper
 )

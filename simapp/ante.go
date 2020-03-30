@@ -6,14 +6,13 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
-	feegrantexported "github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewAnteHandler(
-	ak auth.AccountKeeper, supplyKeeper feegrantexported.SupplyKeeper, feeGrantKeeper feegrant.Keeper,
+	ak auth.AccountKeeper, supplyKeeper feegrant.SupplyKeeper, feeGrantKeeper feegrant.Keeper,
 	sigGasConsumer auth.SignatureVerificationGasConsumer,
 ) sdk.AnteHandler {
 

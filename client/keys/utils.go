@@ -2,11 +2,12 @@ package keys
 
 import (
 	"fmt"
+	"io"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -33,7 +34,7 @@ func geLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption)
 	return cryptokeyring.NewLegacy(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 
-func printKeyInfo(keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
+func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
 		panic(err)
@@ -41,7 +42,7 @@ func printKeyInfo(keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		printTextInfos([]cryptokeyring.KeyOutput{ko})
+		printTextInfos(w, []cryptokeyring.KeyOutput{ko})
 
 	case OutputFormatJSON:
 		var out []byte
@@ -55,11 +56,11 @@ func printKeyInfo(keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 			panic(err)
 		}
 
-		fmt.Println(string(out))
+		fmt.Fprintln(w, string(out))
 	}
 }
 
-func printInfos(infos []cryptokeyring.Info) {
+func printInfos(w io.Writer, infos []cryptokeyring.Info) {
 	kos, err := cryptokeyring.Bech32KeysOutput(infos)
 	if err != nil {
 		panic(err)
@@ -67,7 +68,7 @@ func printInfos(infos []cryptokeyring.Info) {
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
-		printTextInfos(kos)
+		printTextInfos(w, kos)
 
 	case OutputFormatJSON:
 		var out []byte
@@ -82,32 +83,32 @@ func printInfos(infos []cryptokeyring.Info) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("%s", out)
+		fmt.Fprintf(w, "%s", out)
 	}
 }
 
-func printTextInfos(kos []cryptokeyring.KeyOutput) {
+func printTextInfos(w io.Writer, kos []cryptokeyring.KeyOutput) {
 	out, err := yaml.Marshal(&kos)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(out))
+	fmt.Fprintln(w, string(out))
 }
 
-func printKeyAddress(info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
+func printKeyAddress(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(ko.Address)
+	fmt.Fprintln(w, ko.Address)
 }
 
-func printPubKey(info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
+func printPubKey(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(ko.PubKey)
+	fmt.Fprintln(w, ko.PubKey)
 }

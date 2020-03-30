@@ -26,6 +26,13 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
 }
 
+// RegisterKeyTypeCodec registers an external concrete type defined in
+// another module for the internal ModuleCdc.
+func RegisterKeyTypeCodec(o interface{}, name string) {
+	amino.RegisterConcrete(o, name, nil)
+	ModuleCdc = codec.NewHybridCodec(amino)
+}
+
 var (
 	amino = codec.New()
 
@@ -41,5 +48,4 @@ var (
 func init() {
 	RegisterCodec(amino)
 	codec.RegisterCrypto(amino)
-	amino.Seal()
 }

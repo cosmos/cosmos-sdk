@@ -18,7 +18,8 @@ import (
 
 const (
 	someKey = "theKey"
-	theId   = "theId"
+	theID   = "theID"
+	otherID = "otherID"
 )
 
 var unsupportedAlgo = AltSigningAlgo{
@@ -283,7 +284,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := theId
+	uid := theID
 	_, _, err = keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -295,7 +296,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	err = keyring.ImportPrivKey(uid, armor, passphrase)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
 
-	newUID := "theNewId"
+	newUID := otherID
 	// Should fail importing with wrong password
 	err = keyring.ImportPrivKey(newUID, armor, "wrongPass")
 	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
@@ -311,7 +312,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := theId
+	uid := theID
 	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -323,7 +324,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	err = keyring.ImportPrivKey(uid, armor, passphrase)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
 
-	newUID := "theNewId"
+	newUID := otherID
 	// Should fail importing with wrong password
 	err = keyring.ImportPrivKey(newUID, armor, "wrongPass")
 	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
@@ -339,7 +340,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := theId
+	uid := theID
 	_, _, err = keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -350,7 +351,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	err = keyring.ImportPubKey(uid, armor)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite data for name: %s", uid))
 
-	newUID := "theNewId"
+	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
 	assert.NoError(t, err)
 }
@@ -362,7 +363,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	uid := theId
+	uid := theID
 	mnemonic, _, err := keyring.NewMnemonic(uid, English, AltSecp256k1)
 	require.NoError(t, err)
 
@@ -373,7 +374,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	err = keyring.ImportPubKey(uid, armor)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite data for name: %s", uid))
 
-	newUID := "theNewId"
+	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
 	assert.NoError(t, err)
 }

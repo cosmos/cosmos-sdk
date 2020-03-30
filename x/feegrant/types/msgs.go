@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -17,18 +15,6 @@ func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance *FeeAllowan
 
 func (msg MsgGrantFeeAllowance) GetFeeGrant() FeeAllowanceI {
 	return msg.Allowance.GetFeeAllowanceI()
-}
-
-// PrepareForExport will make all needed changes to the allowance to prepare to be
-// re-imported at height 0, and return a copy of this grant.
-func (a MsgGrantFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
-	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
-	if err != nil {
-		return FeeAllowanceGrant{}
-	}
-
-	feegrant := FeeAllowanceGrant{Granter: a.Granter, Grantee: a.Grantee, Allowance: a.Allowance}
-	return feegrant
 }
 
 func (msg MsgGrantFeeAllowance) Route() string {

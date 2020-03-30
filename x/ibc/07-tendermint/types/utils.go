@@ -1,6 +1,7 @@
 package types
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 )
@@ -16,10 +17,18 @@ func (valset ValidatorSet) ToTmTypes() *tmtypes.ValidatorSet {
 }
 
 // ToTmTypes casts a proto ValidatorSet to tendendermint type.
-func ValSetFromTmTypes(valset tmtypes.ValidatorSet) ValidatorSet {
-	return ValidatorSet{
-		Validators:       valset.Validators,
-		Proposer:         valset.Proposer,
+func ValSetFromTmTypes(valset *tmtypes.ValidatorSet) *ValidatorSet {
+	vals := make([]*abci.Validator, len(valset.Validators))
+
+	for i := range valset.Validators {
+		val := tmtypes.TM2PB.Validator(valset.Validators[i])
+		vals[i] = &val
+	}
+
+	proposer := tmtypes.TM2PB.Validator(valset.Proposer)
+	return &ValidatorSet{
+		Validators:       vals,
+		Proposer:         &proposer,
 		TotalVotingPower: valset.TotalVotingPower(),
 	}
 }
@@ -31,10 +40,16 @@ func (sh SignedHeader) ToTmTypes() *tmtypes.SignedHeader {
 			Block: version.Protocol(sh.Header.Version.Block),
 			App:   version.Protocol(sh.Header.Version.App),
 		},
-		ChainID:            sh.Header.ChainID,
-		Height:             sh.Header.Height,
-		Time:               sh.Header.Time,
-		LastBlockID:        tmtypes.TM2PB.BlockID(sh.Header.LastBlockId),
+		ChainID: sh.Header.ChainID,
+		Height:  sh.Header.Height,
+		Time:    sh.Header.Time,
+		LastBlockID: tmtypes.BlockID{
+			Hash: sh.Header.LastBlockId.Hash,
+			PartsHeader: tmtypes.PartSetHeader{
+				Total: int(sh.Header.LastBlockId.PartsHeader.Total),
+				Hash:  sh.Header.LastBlockId.PartsHeader.Hash,
+			},
+		},
 		LastCommitHash:     sh.Header.LastCommitHash,
 		DataHash:           sh.Header.DataHash,
 		ValidatorsHash:     sh.Header.ValidatorsHash,

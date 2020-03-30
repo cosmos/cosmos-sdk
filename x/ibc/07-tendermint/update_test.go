@@ -137,9 +137,9 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		tc.setup()
 
 		expectedConsensus := ibctmtypes.ConsensusState{
-			Height:       uint64(newHeader.Height),
-			Timestamp:    newHeader.Time,
-			Root:         commitmenttypes.NewMerkleRoot(newHeader.AppHash),
+			Height:       newHeader.GetHeight(),
+			Timestamp:    newHeader.GetTime(),
+			Root:         commitmenttypes.NewMerkleRoot(newHeader.SignedHeader.Header.AppHash),
 			ValidatorSet: newHeader.ValidatorSet,
 		}
 

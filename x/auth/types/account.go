@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
@@ -61,7 +60,7 @@ func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
 		return nil
 	}
 
-	codec.Cdc.MustUnmarshalBinaryBare(acc.PubKey, &pk)
+	amino.MustUnmarshalBinaryBare(acc.PubKey, &pk)
 	return pk
 }
 

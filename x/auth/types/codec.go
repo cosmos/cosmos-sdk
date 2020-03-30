@@ -30,6 +30,7 @@ func RegisterCodec(cdc *codec.Codec) {
 // another module for the internal ModuleCdc.
 func RegisterAccountTypeCodec(o interface{}, name string) {
 	amino.RegisterConcrete(o, name, nil)
+	ModuleCdc = codec.NewHybridCodec(amino)
 }
 
 var (

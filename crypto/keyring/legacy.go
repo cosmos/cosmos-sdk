@@ -25,6 +25,19 @@ type LegacyKeybase interface {
 	Close() error
 }
 
+// NewLegacy creates a new instance of a legacy keybase.
+func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
+	if err := tmos.EnsureDir(dir, 0700); err != nil {
+		return nil, fmt.Errorf("failed to create Keybase directory: %s", err)
+	}
+
+	db, err := sdk.NewLevelDB(name, dir)
+	if err != nil {
+		return nil, err
+	}
+	return newDBKeybase(db, opts...), nil
+}
+
 var _ LegacyKeybase = dbKeybase{}
 
 // dbKeybase combines encryption and storage implementation to provide a
@@ -237,17 +250,4 @@ func addrKey(address sdk.AccAddress) []byte {
 
 func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
-}
-
-// NewLegacy creates a new instance of a lazy keybase.
-func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
-	if err := tmos.EnsureDir(dir, 0700); err != nil {
-		return nil, fmt.Errorf("failed to create Keybase directory: %s", err)
-	}
-
-	db, err := sdk.NewLevelDB(name, dir)
-	if err != nil {
-		return nil, err
-	}
-	return newDBKeybase(db, opts...), nil
 }

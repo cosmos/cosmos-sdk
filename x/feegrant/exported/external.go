@@ -1,8 +1,6 @@
 package exported
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	supply "github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -20,18 +18,4 @@ type AccountKeeper interface {
 	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) auth.Account
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.Account
 	SetAccount(ctx sdk.Context, acc auth.Account)
-}
-
-type MsgGrantFeeAllowance interface {
-	sdk.Msg
-
-	GetFeeGrant() *FeeAllowance
-	PrepareForExport(time.Time, int64) FeeAllowanceGrant
-}
-
-type FeeAllowanceGrant interface {
-	GetFeeGrant() *FeeAllowance
-
-	ValidateBasic() error
-	PrepareForExport(time.Time, int64) FeeAllowanceGrant
 }

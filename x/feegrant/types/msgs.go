@@ -5,24 +5,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowanceI exported.FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
-	feeallowance := &FeeAllowance{}
-	if err := feeallowance.SetFeeAllowance(feeAllowanceI); err != nil {
-		return MsgGrantFeeAllowance{}, err
-	}
-
+func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance *FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
 	return MsgGrantFeeAllowance{
 		Granter:   granter,
 		Grantee:   grantee,
-		Allowance: feeallowance,
+		Allowance: feeAllowance,
 	}, nil
 }
 
-func (msg MsgGrantFeeAllowance) GetFeeGrant() exported.FeeAllowance {
-	return msg.Allowance.GetFeeAllowance()
+func (msg MsgGrantFeeAllowance) GetFeeGrant() FeeAllowanceI {
+	return msg.Allowance.GetFeeAllowanceI()
 }
 
 // PrepareForExport will make all needed changes to the allowance to prepare to be

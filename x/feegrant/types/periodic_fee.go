@@ -5,10 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-var _ exported.FeeAllowance = (*PeriodicFeeAllowance)(nil)
+var _ FeeAllowanceI = (*PeriodicFeeAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp/height of the current block
 // to determine whether or not to process this. This is checked in
@@ -70,7 +69,7 @@ func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight i
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
 // (For PeriodReset and Basic.Expiration)
-func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
+func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
 	return &PeriodicFeeAllowance{
 		Basic: BasicFeeAllowance{
 			SpendLimit: a.Basic.SpendLimit,

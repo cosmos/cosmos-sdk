@@ -2,7 +2,6 @@ package feegrant
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 // GenesisState contains a set of fee allowances, persisted from the store
@@ -37,7 +36,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()
 	var grants []FeeAllowanceGrant
 
-	err := k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
+	err := k.IterateAllFeeAllowances(ctx, func(grant FeeAllowanceGrant) bool {
 		grants = append(grants, grant.PrepareForExport(time, height))
 		return false
 	})

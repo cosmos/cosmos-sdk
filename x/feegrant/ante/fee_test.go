@@ -70,8 +70,10 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
-		Allowance: &types.BasicFeeAllowance{
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+		},
+		},
 		},
 	})
 
@@ -79,8 +81,10 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr4,
-		Allowance: &types.BasicFeeAllowance{
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
+		},
+		},
 		},
 	})
 
@@ -88,8 +92,10 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
-		Allowance: &types.BasicFeeAllowance{
+		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+		},
+		},
 		},
 	})
 

@@ -56,7 +56,7 @@ func (e ExpiresAt) IsExpired(t time.Time, h int64) bool {
 
 // IsCompatible returns true iff the two use the same units.
 // If false, they cannot be added.
-func (e ExpiresAt) IsCompatible(d *Duration) bool {
+func (e ExpiresAt) IsCompatible(d Duration) bool {
 	if !e.Time.IsZero() {
 		return d.Clock > 0
 	}
@@ -65,7 +65,7 @@ func (e ExpiresAt) IsCompatible(d *Duration) bool {
 
 // Step will increase the expiration point by one Duration
 // It returns an error if the Duration is incompatible
-func (e ExpiresAt) Step(d *Duration) (ExpiresAt, error) {
+func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
 	if !e.IsCompatible(d) {
 		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
 	}
@@ -78,7 +78,7 @@ func (e ExpiresAt) Step(d *Duration) (ExpiresAt, error) {
 }
 
 // MustStep is like Step, but panics on error
-func (e ExpiresAt) MustStep(d *Duration) ExpiresAt {
+func (e ExpiresAt) MustStep(d Duration) ExpiresAt {
 	res, err := e.Step(d)
 	if err != nil {
 		panic(err)
@@ -96,13 +96,13 @@ func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) Expire
 }
 
 // ClockDuration creates an Duration by clock time
-func ClockDuration(d time.Duration) *Duration {
-	return &Duration{Clock: d}
+func ClockDuration(d time.Duration) Duration {
+	return Duration{Clock: d}
 }
 
 // BlockDuration creates an Duration by block height
-func BlockDuration(h int64) *Duration {
-	return &Duration{Block: h}
+func BlockDuration(h int64) Duration {
+	return Duration{Block: h}
 }
 
 // ValidateBasic performs basic sanity checks

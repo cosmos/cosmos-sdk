@@ -73,7 +73,7 @@ func TestDurationValid(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
-		period       *Duration
+		period       Duration
 		valid        bool
 		compatible   ExpiresAt
 		incompatible ExpiresAt
@@ -91,11 +91,11 @@ func TestDurationValid(t *testing.T) {
 			incompatible: ExpiresAtHeight(50),
 		},
 		"zero": {
-			period: &Duration{},
+			period: Duration{},
 			valid:  false,
 		},
 		"double": {
-			period: &Duration{Block: 100, Clock: time.Hour},
+			period: Duration{Block: 100, Clock: time.Hour},
 			valid:  false,
 		},
 		"negative clock": {
@@ -129,7 +129,7 @@ func TestDurationStep(t *testing.T) {
 
 	cases := map[string]struct {
 		expires ExpiresAt
-		period  *Duration
+		period  Duration
 		valid   bool
 		result  ExpiresAt
 	}{

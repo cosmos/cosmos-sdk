@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
 // ValidateBasic performs basic validation on
@@ -23,8 +22,8 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 	return a.GetFeeGrant().ValidateBasic()
 }
 
-func (grant FeeAllowanceGrant) GetFeeGrant() exported.FeeAllowance {
-	return grant.Allowance.GetFeeAllowance()
+func (grant FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
+	return grant.Allowance.GetFeeAllowanceI()
 }
 
 // PrepareForExport will m	ake all needed changes to the allowance to prepare to be

@@ -182,6 +182,7 @@ internet connection. Previously, `--generate-only` served this purpose in additi
 allows txs to be generated without being broadcasted and disallows Keybase use and `--offline` allows the use of Keybase but does not allow any
 functionality that requires an online connection.
 * (types/module) [\#5724](https://github.com/cosmos/cosmos-sdk/issues/5724) The `types/module` package does no longer depend on `x/simulation`.
+* (client) [\#5856](https://github.com/cosmos/cosmos-sdk/pull/5856) Added the possibility to set `--offline` flag with config command.
 
 ## [v0.38.2] - 2020-03-25
 

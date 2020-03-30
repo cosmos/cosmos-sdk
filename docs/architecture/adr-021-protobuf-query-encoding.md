@@ -143,7 +143,7 @@ under the hood. In this way, clients could use their host languages' existing
 GRPC implementations to make direct queries against Cosmos SDK app's using
 these `service` definitions.
 
-### REST Queries
+### REST Queries and Swagger Generation
 
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) is a project that
 translates REST calls into GRPC calls using special annotations on service

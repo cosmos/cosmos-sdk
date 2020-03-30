@@ -183,10 +183,6 @@ func (kb dbKeybase) Close() error {
 	return kb.db.Close()
 }
 
-func addrKey(address sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
-}
-
 func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
 }

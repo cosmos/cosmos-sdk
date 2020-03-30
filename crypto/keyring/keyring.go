@@ -178,7 +178,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 
 // GetByAddress fetches a key by address and returns its public information.
 func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
-	ik, err := kb.db.Get(string(addrKey(address)))
+	ik, err := kb.db.Get(string(addrHexKey(address)))
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +313,7 @@ func (kb keyringKeybase) Import(name string, armor string) error {
 	kb.writeInfo(name, info)
 
 	err = kb.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  string(addrHexKey(info.GetAddress())),
 		Data: infoKey(name),
 	})
 	if err != nil {
@@ -401,7 +401,7 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 		return err
 	}
 
-	err = kb.db.Remove(string(addrKey(info.GetAddress())))
+	err = kb.db.Remove(string(addrHexKey(info.GetAddress())))
 	if err != nil {
 		return err
 	}
@@ -454,7 +454,7 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 	}
 
 	err = kb.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  string(addrHexKey(info.GetAddress())),
 		Data: key,
 	})
 	if err != nil {

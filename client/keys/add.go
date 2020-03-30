@@ -291,7 +291,7 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 	switch output {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(info, keyring.Bech32KeyOutput)
+		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {

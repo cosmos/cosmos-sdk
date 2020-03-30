@@ -38,8 +38,8 @@ func Test_runShowCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
 	cmd := ShowKeysCmd()
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
-	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
-	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "The specified item could not be found in the keyring")
+	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
+	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -78,7 +78,13 @@ func Test_runShowCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
+
+	// try fetch by name
 	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
+	// try fetch by addr
+	info, err := kb.Get(fakeKeyName1)
+	require.NoError(t, err)
+	require.NoError(t, runShowCmd(cmd, []string{info.GetAddress().String()}))
 
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)

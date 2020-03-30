@@ -3,6 +3,7 @@ package keyring
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,19 @@ const (
 	nums   = "1234"
 	foobar = "foobar"
 )
+
+func TestNewKeyring(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	mockIn := strings.NewReader("")
+	t.Cleanup(cleanup)
+	kr, err := NewKeyring("cosmos", BackendFile, dir, mockIn)
+	require.NoError(t, err)
+
+	mockIn.Reset("password\npassword\n")
+	info, _, err := kr.CreateMnemonic("foo", English, "password", Secp256k1)
+	require.NoError(t, err)
+	require.Equal(t, "foo", info.GetName())
+}
 
 func TestKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)

@@ -30,7 +30,7 @@ func NewLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption
 	return getLegacyKeyBaseFromDir(rootDir, opts...)
 }
 
-func geLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
+func getLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
 	return cryptokeyring.NewLegacy(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 

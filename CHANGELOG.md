@@ -76,6 +76,10 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 `Result` from the execution.
 * (crypto/keys) [\#5866](https://github.com/cosmos/cosmos-sdk/pull/5866) Move `Keyring` and `Keybase` implementations and their associated types from `crypto/keys/` to `crypto/keybase/`.
 * (crypto) [\#5880](https://github.com/cosmos/cosmos-sdk/pull/5880) Merge `crypto/keys/mintkey` into `crypto`.
+* (crypto/keyring) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Depreacate old keybase implementation:
+  - `NewKeyring()` now accepts a new backend: `MemoryBackend`.
+  - `New()` has been renamed to`NewLegacy()`, which now returns a `LegacyKeybase` type that only allows migration of keys from the legacy keybase to a new keyring.
+* (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Rename `NeyKeyBaseFromDir()` ->  `NewLegacyKeyBaseFromDir()`.
 
 ### Features
 

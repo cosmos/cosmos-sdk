@@ -26,15 +26,11 @@ type MsgGrantFeeAllowance interface {
 	sdk.Msg
 
 	GetFeeGrant() *FeeAllowance
-	GetGranter() sdk.AccAddress
-	GetGrantee() sdk.AccAddress
 	PrepareForExport(time.Time, int64) FeeAllowanceGrant
 }
 
 type FeeAllowanceGrant interface {
 	GetFeeGrant() *FeeAllowance
-	GetGranter() sdk.AccAddress
-	GetGrantee() sdk.AccAddress
 
 	ValidateBasic() error
 	PrepareForExport(time.Time, int64) FeeAllowanceGrant

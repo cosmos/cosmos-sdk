@@ -72,7 +72,7 @@ func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight i
 // (For PeriodReset and Basic.Expiration)
 func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
 	return &PeriodicFeeAllowance{
-		Basic: &BasicFeeAllowance{
+		Basic: BasicFeeAllowance{
 			SpendLimit: a.Basic.SpendLimit,
 			Expiration: a.Basic.Expiration.PrepareForExport(dumpTime, dumpHeight),
 		},

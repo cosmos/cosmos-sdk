@@ -31,7 +31,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GrantFeeAllowance creates a new grant
 func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.FeeAllowanceKey(grant.GetGranter(), grant.GetGrantee())
+	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
 	bz, err := grant.Marshal()
 	if err != nil {
 		panic(fmt.Errorf("failed to encode fee allowance: %w", err))
@@ -41,8 +41,8 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSetFeeGrant,
-			sdk.NewAttribute(types.AttributeKeyGranter, grant.GetGranter().String()),
-			sdk.NewAttribute(types.AttributeKeyGrantee, grant.GetGrantee().String()),
+			sdk.NewAttribute(types.AttributeKeyGranter, grant.Granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGrantee, grant.Grantee.String()),
 		),
 	)
 }

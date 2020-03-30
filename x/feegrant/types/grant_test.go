@@ -75,8 +75,7 @@ func TestGrant(t *testing.T) {
 				Grantee: addr,
 				Granter: addr2,
 				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
-					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: ExpiresAtHeight(0),
 				},
 				},
 				},

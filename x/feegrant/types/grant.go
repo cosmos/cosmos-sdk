@@ -3,7 +3,6 @@ package types
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
@@ -21,22 +20,14 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	return a.ValidateBasic()
+	return a.GetFeeGrant().ValidateBasic()
 }
 
 func (grant FeeAllowanceGrant) GetFeeGrant() exported.FeeAllowance {
 	return grant.Allowance.GetFeeAllowance()
 }
 
-func (grant FeeAllowanceGrant) GetGrantee() sdk.AccAddress {
-	return grant.Grantee
-}
-
-func (grant FeeAllowanceGrant) GetGranter() sdk.AccAddress {
-	return grant.Granter
-}
-
-// PrepareForExport will make all needed changes to the allowance to prepare to be
+// PrepareForExport will m	ake all needed changes to the allowance to prepare to be
 // re-imported at height 0, and return a copy of this grant.
 func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
 	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)

@@ -27,7 +27,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		remove        bool
 		remains       sdk.Coins
 		remainsPeriod sdk.Coins
-		periodReset   *ExpiresAt
+		periodReset   ExpiresAt
 	}{
 		"empty": {
 			allow: PeriodicFeeAllowance{},
@@ -35,7 +35,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"only basic": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -51,7 +51,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"mismatched currencies": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -62,7 +62,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"first time": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -80,7 +80,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"same period": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -100,7 +100,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"step one period": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -119,7 +119,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"step limited by global allowance": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: smallAtom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -138,7 +138,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"expired": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},
@@ -153,7 +153,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"over period limit": {
 			allow: PeriodicFeeAllowance{
-				Basic: &BasicFeeAllowance{
+				Basic: BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: ExpiresAtHeight(100),
 				},

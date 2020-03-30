@@ -45,7 +45,7 @@ func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int6
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a *BasicFeeAllowance) ValidateBasic() error {
+func (a BasicFeeAllowance) ValidateBasic() error {
 	if !a.SpendLimit.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)
 	}

@@ -25,7 +25,7 @@ message BasicFeeAllowance{
                                            (gogoproto.nullable)     = false,
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
                                            ];
-    ExpiresAt expiration = 2 ;
+    ExpiresAt expiration = 2  [(gogoproto.nullable) = false];
 }
 
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
@@ -34,7 +34,7 @@ message PeriodicFeeAllowance{
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters)  = false;
 
-    BasicFeeAllowance basic = 1;
+    BasicFeeAllowance basic = 1[(gogoproto.nullable) = false];
     Duration period = 2;
     repeated cosmos_sdk.v1.Coin period_spend_limit = 3 [
                                            (gogoproto.nullable)     = false,
@@ -45,7 +45,7 @@ message PeriodicFeeAllowance{
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
                                            ];
 
-    ExpiresAt period_reset = 5 ;
+    ExpiresAt period_reset = 5 [(gogoproto.nullable) = false];
 }
 
 // Duration is a repeating unit of either clock time or number of blocks.

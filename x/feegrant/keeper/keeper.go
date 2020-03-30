@@ -32,10 +32,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
-	bz, err := grant.Marshal()
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal fee allowance: %w", err))
-	}
+	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	store.Set(key, bz)
 
 	ctx.EventManager().EmitEvent(
@@ -85,10 +82,7 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	}
 
 	var feegrant types.FeeAllowanceGrant
-	err := feegrant.Unmarshal(bz)
-	if err != nil {
-		return types.FeeAllowanceGrant{}, false
-	}
+	k.cdc.MustUnmarshalBinaryBare(bz, &feegrant)
 
 	return feegrant, true
 }

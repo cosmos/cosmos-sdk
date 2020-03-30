@@ -14,15 +14,6 @@ func NewHybridCodec(amino *Codec) Marshaler {
 	}
 }
 
-// func (hc HybridCodec) GetAminoCodec() *Codec {
-// 	cdc, ok := hc.amino.(*Codec)
-// 	if !ok {
-// 		return nil
-// 	}
-
-// 	return cdc
-// }
-
 func (hc *HybridCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
 	return hc.proto.MarshalBinaryBare(o)
 }

@@ -27,7 +27,7 @@ type bechKeyOutFn func(keyInfo cryptokeyring.Info) (cryptokeyring.KeyOutput, err
 // NewLegacyKeyBaseFromDir initializes a legacy keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
 func NewLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {
-	return geLegacyKeyBaseFromDir(rootDir, opts...)
+	return getLegacyKeyBaseFromDir(rootDir, opts...)
 }
 
 func geLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption) (cryptokeyring.LegacyKeybase, error) {

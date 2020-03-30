@@ -26,6 +26,12 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
 }
 
+// RegisterAccountTypeCodec registers an external account type defined in
+// another module for the internal ModuleCdc.
+func RegisterAccountTypeCodec(o interface{}, name string) {
+	ModuleCdc.RegisterConcrete(o, name, nil)
+}
+
 var (
 	amino = codec.New()
 

@@ -259,7 +259,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		Height:       uint64(client.Header.SignedHeader.Header.GetHeight()),
 		Timestamp:    client.Header.GetTime(),
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: client.Vals,
+		ValidatorSet: ibctmtypes.ValSetFromTmTypes(client.Vals),
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(

@@ -40,9 +40,9 @@ func NewMsgCreateClient(
 	}
 }
 
-// GetClientID implements clientexported.MsgCreateClient	
-func (msg MsgCreateClient) GetClientID() string {	
-	return msg.ClientID	
+// GetClientID implements clientexported.MsgCreateClient
+func (msg MsgCreateClient) GetClientID() string {
+	return msg.ClientID
 }
 
 // Route implements sdk.Msg
@@ -109,14 +109,14 @@ func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpda
 	}
 }
 
-// GetClientID implements clientexported.MsgUpdateClient	
-func (msg MsgUpdateClient) GetClientID() string {	
-	return msg.ClientID	
+// GetClientID implements clientexported.MsgUpdateClient
+func (msg MsgUpdateClient) GetClientID() string {
+	return msg.ClientID
 }
 
-// GetHeader implements clientexported.MsgUpdateClient	
-func (msg MsgUpdateClient) GetHeader() clientexported.Header {	
-	return &msg.Header	
+// GetHeader implements clientexported.MsgUpdateClient
+func (msg MsgUpdateClient) GetHeader() clientexported.Header {
+	return &msg.Header
 }
 
 // Route implements sdk.Msg
@@ -149,9 +149,14 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(evidence Evidence, signer sdk.AccAddress) MsgSubmitClientMisbehaviour {
+func NewMsgSubmitClientMisbehaviour(evidence evidenceexported.Evidence, signer sdk.AccAddress) MsgSubmitClientMisbehaviour {
+	ev, ok := evidence.(*Evidence)
+	if !ok {
+		// TODO: panic or return error?
+		return MsgSubmitClientMisbehaviour{}
+	}
 	return MsgSubmitClientMisbehaviour{
-		Evidence:  &evidence,
+		Evidence:  ev,
 		Submitter: signer,
 	}
 }
@@ -164,8 +169,8 @@ func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClien
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
-	if msg.Evidence == nil {	
-		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")	
+	if msg.Evidence == nil {
+		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
 	}
 	if msg.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
@@ -185,10 +190,10 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Submitter}
 }
 
-func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {	
-	return msg.Evidence	
-}	
+func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
+	return msg.Evidence
+}
 
-func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {	
-	return msg.Submitter	
+func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {
+	return msg.Submitter
 }

@@ -26,6 +26,11 @@ func NewMerkleRoot(hash []byte) MerkleRoot {
 	}
 }
 
+// GetHash implements RootI interface
+func (mr MerkleRoot) GetHash() []byte {
+	return mr.Hash
+}
+
 // GetCommitmentType implements RootI interface
 func (MerkleRoot) GetCommitmentType() exported.Type {
 	return exported.Merkle

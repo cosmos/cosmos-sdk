@@ -6,11 +6,23 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
+func abciValidatorToTmTypes(val *abci.Validator) *tmtypes.Validator {
+	return &tmtypes.Validator{
+		Address:     val.Address,
+		VotingPower: val.Power,
+	}
+}
+
 // ToTmTypes casts a proto ValidatorSet to tendendermint type.
 func (valset ValidatorSet) ToTmTypes() *tmtypes.ValidatorSet {
+	vals := make([]*tmtypes.Validator, len(valset.Validators))
+	for i := range valset.Validators {
+		vals[i] = abciValidatorToTmTypes(valset.Validators[i])
+	}
+
 	vs := tmtypes.ValidatorSet{
-		Validators: valset.Validators,
-		Proposer:   valset.Proposer,
+		Validators: vals,
+		Proposer:   abciValidatorToTmTypes(valset.Proposer),
 	}
 	_ = vs.TotalVotingPower()
 	return &vs
@@ -29,7 +41,7 @@ func ValSetFromTmTypes(valset *tmtypes.ValidatorSet) *ValidatorSet {
 	return &ValidatorSet{
 		Validators:       vals,
 		Proposer:         &proposer,
-		TotalVotingPower: valset.TotalVotingPower(),
+		totalVotingPower: valset.TotalVotingPower(),
 	}
 }
 
@@ -68,9 +80,9 @@ func (sh SignedHeader) ToTmTypes() *tmtypes.SignedHeader {
 }
 
 // ToTmTypes casts a proto ValidatorSet to tendendermint type.
-func SignedHeaderFromTmTypes(sh *tmtypes.SignedHeader) *SignedHeader {
+func SignedHeaderFromTmTypes(sh tmtypes.SignedHeader) SignedHeader {
 	abciHeader := tmtypes.TM2PB.Header(sh.Header)
-	return &SignedHeader{
+	return SignedHeader{
 		Header: &abciHeader,
 		Commit: CommitFromTmTypes(sh.Commit),
 	}
@@ -106,13 +118,28 @@ func PartSetHeaderFromTmTypes(ph tmtypes.PartSetHeader) *PartSetHeader {
 	}
 }
 
+// ToTmTypes
+func (cs *CommitSig) ToTmTypes() tmtypes.CommitSig {
+	return tmtypes.CommitSig{
+		BlockIDFlag:      tmtypes.BlockIDFlag(cs.BlockIDFlag[0]),
+		ValidatorAddress: cs.ValidatorAddress,
+		Timestamp:        cs.Timestamp,
+		Signature:        cs.Signature,
+	}
+}
+
 // ToTmTypes casts a proto ToTmTypes to tendendermint type.
 func (c Commit) ToTmTypes() *tmtypes.Commit {
+	cSigs := make([]tmtypes.CommitSig, len(c.Signatures))
+	for i := range c.Signatures {
+		cSigs[i] = c.Signatures[i].ToTmTypes()
+	}
+
 	tmCommit := &tmtypes.Commit{
 		Height:     c.Height,
 		Round:      int(c.Round),
 		BlockID:    c.BlockID.ToTmTypes(),
-		Signatures: c.Signatures.ToTmTypes(),
+		Signatures: cSigs,
 	}
 	_ = tmCommit.Hash()
 	_ = tmCommit.BitArray()

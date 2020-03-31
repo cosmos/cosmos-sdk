@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.chainA.updateClient(suite.chainB)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
-			return uint64(suite.chainB.Header.Height - 1)
+			return suite.chainB.Header.GetHeight() - 1
 		}, true},
 		{"consensus height > latest height", func() uint64 {
 			return 0
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, false},
 		{"invalid previous connection", func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
 			suite.chainA.updateClient(suite.chainB)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, true},
 		{"consensus height > latest height", version, func() uint64 {
 			return 10
@@ -161,12 +161,12 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		{"connection state is not INIT", version, func() uint64 {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, false},
 		{"incompatible IBC versions", "2.0", func() uint64 {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.INIT)
 			suite.chainB.updateClient(suite.chainA)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, false},
 		{"self consensus state not found", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.TRYOPEN)
 			suite.chainB.updateClient(suite.chainA)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, false},
 		{"connection state verification failed", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, false},
 		{"consensus state verification failed", version, func() uint64 {
 			suite.chainB.CreateClient(suite.chainA)
@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.INIT)
 			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.UNINITIALIZED)
 			suite.chainB.updateClient(suite.chainA)
-			return uint64(suite.chainB.Header.Height)
+			return suite.chainB.Header.GetHeight()
 		}, false},
 	}
 

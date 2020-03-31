@@ -116,6 +116,7 @@ message ConsensusState {
 // Evidence defines two distinct headers at the same hight, chain id and client.
 // It is used to verify and penalize light client misbehaviour.
 message Evidence {
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
@@ -142,6 +143,8 @@ message Evidence {
 // Header defines a tendermint signed header and the validator set that
 // corresponds to the header.
 message Header {
+  option (gogoproto.equal) = true;
+
   SignedHeader signed_header = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"signed_header\""
@@ -154,6 +157,8 @@ message Header {
 
 // TODO: move to tendermint
 message ValidatorSet {
+  option (gogoproto.equal) = true;
+
   repeated .tendermint.abci.types.Validator validators         = 1;
   .tendermint.abci.types.Validator          proposer           = 2;
   int64                                     total_voting_power = 3 [
@@ -164,6 +169,8 @@ message ValidatorSet {
 
 // TODO: move to tendermint
 message SignedHeader {
+  option (gogoproto.equal) = true;
+
   .tendermint.abci.types.Header header = 1;
   Commit                        commit = 2 [(gogoproto.nullable) = false];
 }
@@ -171,6 +178,8 @@ message SignedHeader {
 // Commit contains the evidence that a block was committed by a set of validators.
 // NOTE: Commit is empty for height 1, but never nil.
 message Commit {
+  option (gogoproto.equal) = true;
+
   // NOTE: The signatures are in order of address to preserve the bonded
   // ValidatorSet order.
   // Any peer with a block can gossip signatures by index with a peer without
@@ -187,6 +196,8 @@ message Commit {
 }
 
 message BlockID {
+  option (gogoproto.equal) = true;
+
   bytes hash = 1 [
     (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
   ];
@@ -194,6 +205,8 @@ message BlockID {
 }
 
 message PartSetHeader {
+  option (gogoproto.equal) = true;
+
   int32 total = 1;
   bytes hash  = 2 [
     (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
@@ -201,6 +214,8 @@ message PartSetHeader {
 }
 
 message CommitSig {
+  option (gogoproto.equal) = true;
+
   bytes block_id_flag = 1 [
     (gogoproto.customname) = "BlockIDFlag"
   ];

@@ -23,11 +23,12 @@ const (
 type TendermintTestSuite struct {
 	suite.Suite
 
-	cdc     *codec.Codec
-	privVal tmtypes.PrivValidator
-	valSet  *tmtypes.ValidatorSet
-	header  ibctmtypes.Header
-	now     time.Time
+	cdc      *codec.Codec
+	privVal  tmtypes.PrivValidator
+	tmValSet *tmtypes.ValidatorSet
+	valSet   *ibctmtypes.ValidatorSet
+	header   ibctmtypes.Header
+	now      time.Time
 }
 
 func (suite *TendermintTestSuite) SetupTest() {
@@ -39,8 +40,9 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()
 	val := tmtypes.NewValidator(suite.privVal.GetPubKey(), 10)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.tmValSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
+	suite.valSet = ibctmtypes.ValSetFromTmTypes(suite.tmValSet)
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.tmValSet, []tmtypes.PrivValidator{suite.privVal})
 }
 
 func TestTendermintTestSuite(t *testing.T) {

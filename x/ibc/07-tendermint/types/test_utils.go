@@ -77,9 +77,9 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		},
 	}
 
-	valset := ValSetFromTmTypes(*valSet)
+	valset := ValSetFromTmTypes(valSet)
 	return Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: &valset,
+		ValidatorSet: valset,
 	}
 }

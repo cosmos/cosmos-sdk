@@ -17,7 +17,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
 
 	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	bothValSet := tmtypes.NewValidatorSet(append(suite.tmValSet.Validators, altVal))
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
@@ -42,7 +42,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		{
 			"valid misbehavior evidence",
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: ibctmtypes.ValSetFromTmTypes(bothValSet)},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
@@ -55,7 +55,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		{
 			"valid misbehavior at height greater than last consensusState",
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Height: height - 1, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: ibctmtypes.ValSetFromTmTypes(bothValSet)},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
@@ -81,7 +81,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		{
 			"first valset has too much change",
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: ibctmtypes.ValSetFromTmTypes(bothValSet)},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, altSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), bothValSet, bothSigners),
@@ -94,7 +94,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		{
 			"second valset has too much change",
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: ibctmtypes.ValSetFromTmTypes(bothValSet)},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), altValSet, altSigners),
@@ -107,7 +107,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		{
 			"both valsets have too much change",
 			ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
-			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: bothValSet},
+			ibctmtypes.ConsensusState{Timestamp: suite.now, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), ValidatorSet: ibctmtypes.ValSetFromTmTypes(bothValSet)},
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, altValSet, altSigners),
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), altValSet, altSigners),

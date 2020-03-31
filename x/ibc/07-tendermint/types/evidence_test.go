@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -17,7 +16,7 @@ func (suite *TendermintTestSuite) TestEvidence() {
 
 	ev := ibctmtypes.Evidence{
 		Header1:  suite.header,
-		Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, signers),
+		Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.tmValSet, signers),
 		ChainID:  chainID,
 		ClientID: "gaiamainnet",
 	}
@@ -26,7 +25,6 @@ func (suite *TendermintTestSuite) TestEvidence() {
 	suite.Require().Equal(ev.GetClientID(), "gaiamainnet")
 	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
-	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(ibctmtypes.SubModuleCdc.MustMarshalBinaryBare(ev))))
 	suite.Require().Equal(ev.GetHeight(), int64(height))
 }
 
@@ -35,7 +33,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), height)
 
 	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	bothValSet := tmtypes.NewValidatorSet(append(suite.tmValSet.Validators, altVal))
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
@@ -60,7 +58,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"valid evidence",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now.Add(time.Minute), suite.tmValSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -71,7 +69,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"invalid client ID ",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.tmValSet, signers),
 				ChainID:  chainID,
 				ClientID: "GAIA",
 			},
@@ -82,7 +80,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"wrong chainID on header1",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.tmValSet, signers),
 				ChainID:  "ethermint",
 				ClientID: "gaiamainnet",
 			},
@@ -93,7 +91,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"wrong chainID on header2",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, suite.now, suite.tmValSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -104,7 +102,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"mismatched heights",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
-				Header2:  ibctmtypes.CreateTestHeader(chainID, 6, suite.now, suite.valSet, signers),
+				Header2:  ibctmtypes.CreateTestHeader(chainID, 6, suite.now, suite.tmValSet, signers),
 				ChainID:  chainID,
 				ClientID: "gaiamainnet",
 			},
@@ -133,9 +131,12 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
 				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.SignedHeader.Header.Height, 1, tmtypes.PrecommitType, altValSet)
-				var err error
-				ev.Header1.SignedHeader.Commit, err = tmtypes.MakeCommit(ev.Header1.SignedHeader.Commit.BlockID, ev.Header2.SignedHeader.Header.Height, ev.Header1.SignedHeader.Commit.Round, wrongVoteSet, altSigners, suite.now)
-				return err
+				commit, err := tmtypes.MakeCommit(ev.Header1.SignedHeader.Commit.BlockID.ToTmTypes(), ev.Header2.SignedHeader.Header.Height, ev.Header1.SignedHeader.Commit.ToTmTypes().Round, wrongVoteSet, altSigners, suite.now)
+				if err != nil {
+					return err
+				}
+				ev.Header1.SignedHeader.Commit = ibctmtypes.CommitFromTmTypes(commit)
+				return nil
 			},
 			false,
 		},
@@ -150,9 +151,12 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
 				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.SignedHeader.Header.Height, 1, tmtypes.PrecommitType, altValSet)
-				var err error
-				ev.Header2.SignedHeader.Commit, err = tmtypes.MakeCommit(ev.Header2.SignedHeader.Commit.BlockID, ev.Header2.SignedHeader.Header.Height, ev.Header2.SignedHeader.Commit.Round, wrongVoteSet, altSigners, suite.now)
-				return err
+				commit, err := tmtypes.MakeCommit(ev.Header2.SignedHeader.Commit.BlockID.ToTmTypes(), ev.Header2.SignedHeader.Header.Height, ev.Header2.SignedHeader.Commit.ToTmTypes().Round, wrongVoteSet, altSigners, suite.now)
+				if err != nil {
+					return err
+				}
+				ev.Header2.SignedHeader.Commit = ibctmtypes.CommitFromTmTypes(commit)
+				return nil
 			},
 			false,
 		},
@@ -165,7 +169,8 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 				ClientID: "gaiamainnet",
 			},
 			func(ev *ibctmtypes.Evidence) error {
-				ev.Header2.SignedHeader.Commit.BlockID = ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				blockID := ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				ev.Header2.SignedHeader.Commit.BlockID = ibctmtypes.BlockIDFromTmTypes(blockID)
 				return nil
 			},
 			false,

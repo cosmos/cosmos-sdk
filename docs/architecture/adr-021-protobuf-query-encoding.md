@@ -45,7 +45,7 @@ service Query {
 Modules that use interface types and need true polymorphism generally force a
 `oneof` up to the app-level that provides the set of concrete implementations of
 that interface that the app supports. While app's are welcome to do the same for
-queries and implement and app-level query service, it is recommended that modules
+queries and implement an app-level query service, it is recommended that modules
 provide query methods that expose these interfaces via `google.protobuf.Any`.
 There is a concern on the transaction level that the overhead of `Any` is too
 high to justify its usage. However for queries this is not a concern, and

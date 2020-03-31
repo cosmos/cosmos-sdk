@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/go-bip39"
@@ -139,7 +138,7 @@ func (a altKeyring) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
 }
 
 func (a altKeyring) ExportPubKeyArmorByAddress(address types.Address) (string, error) {
@@ -162,7 +161,7 @@ func (a altKeyring) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor str
 		return "", err
 	}
 
-	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
@@ -207,7 +206,7 @@ func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
-	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
@@ -236,7 +235,7 @@ func (a altKeyring) ImportPubKey(uid string, armor string) error {
 		}
 	}
 
-	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return err
 	}
@@ -356,7 +355,7 @@ func (a altKeyring) Delete(uid string) error {
 		return err
 	}
 
-	err = a.db.Remove(addrKeyAsString(info.GetAddress()))
+	err = a.db.Remove(addrHexKeyAsString(info.GetAddress()))
 	if err != nil {
 		return err
 	}
@@ -370,7 +369,7 @@ func (a altKeyring) Delete(uid string) error {
 }
 
 func (a altKeyring) KeyByAddress(address types.Address) (Info, error) {
-	ik, err := a.db.Get(addrKeyAsString(address))
+	ik, err := a.db.Get(addrHexKeyAsString(address))
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +509,7 @@ func (a altKeyring) writeInfo(name string, info Info) error {
 	}
 
 	err = a.db.Set(keyring.Item{
-		Key:  addrKeyAsString(info.GetAddress()),
+		Key:  addrHexKeyAsString(info.GetAddress()),
 		Data: key,
 	})
 	if err != nil {

@@ -1,12 +1,14 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
+	"text/template"
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
@@ -39,7 +41,8 @@ var configBoolDefaults = map[string]bool{
 func ConfigCmd(defaultCLIHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
-		Short: "Create or query an application CLI configuration file",
+		Short: "Get and set client options",
+		Long:  configCommandLongDescription(),
 		RunE:  runConfigCmd,
 		Args:  cobra.RangeArgs(0, 2),
 	}
@@ -166,4 +169,23 @@ func saveConfigFile(cfgFile string, tree io.WriterTo) error {
 
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
+}
+
+func configCommandLongDescription() string {
+	longDescTemplate := template.Must(template.New("configCommandLongDescription").
+		Parse(`{{ range $key, $value := . }}  {{ $key }} = {{ $value }}
+{{ end }}`))
+	defaultsTextBuffer := bytes.NewBufferString("")
+	must(longDescTemplate.Execute(defaultsTextBuffer, configDefaults))
+	must(longDescTemplate.Execute(defaultsTextBuffer, configBoolDefaults))
+	return fmt.Sprintf(`Display or change client application configuration values.
+
+Defaults:
+%s`, defaultsTextBuffer)
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -23,19 +23,25 @@ func Test_runConfigCmdTwiceWithShorterNodeValue(t *testing.T) {
 
 	// Init command config
 	cmd := ConfigCmd(configHome)
-	assert.NotNil(t, cmd)
+	require.NotNil(t, cmd)
+	require.NoError(t, cmd.RunE(cmd, []string{"node", "tcp://localhost:26657"}))
+	require.NoError(t, cmd.RunE(cmd, []string{"node", "--get"}))
+	require.NoError(t, cmd.RunE(cmd, []string{"node", "tcp://local:26657"}))
+	require.NoError(t, cmd.RunE(cmd, []string{"node", "--get"}))
+}
 
-	err := cmd.RunE(cmd, []string{"node", "tcp://localhost:26657"})
-	assert.Nil(t, err)
+func TestConfigCmd_UnknownOption(t *testing.T) {
+	// Prepare environment
+	configHome, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
 
-	err = cmd.RunE(cmd, []string{"node", "--get"})
-	assert.Nil(t, err)
+	_ = os.RemoveAll(filepath.Join(configHome, "config"))
+	viper.Set(flags.FlagHome, configHome)
 
-	err = cmd.RunE(cmd, []string{"node", "tcp://local:26657"})
-	assert.Nil(t, err)
-
-	err = cmd.RunE(cmd, []string{"node", "--get"})
-	assert.Nil(t, err)
+	// Init command config
+	cmd := ConfigCmd(configHome)
+	require.NotNil(t, cmd)
+	require.Error(t, cmd.RunE(cmd, []string{"invalid", "true"}), "unknown configuration key: \"invalid\"")
 }
 
 func TestConfigCmd_OfflineFlag(t *testing.T) {
@@ -49,20 +55,17 @@ func TestConfigCmd_OfflineFlag(t *testing.T) {
 	// Init command config
 	cmd := ConfigCmd(configHome)
 	_, out, _ := tests.ApplyMockIO(cmd)
-	assert.NotNil(t, cmd)
+	require.NotNil(t, cmd)
 
 	viper.Set(flagGet, true)
-	err := cmd.RunE(cmd, []string{"offline"})
-	assert.Nil(t, err)
-	assert.Contains(t, out.String(), "false")
+	require.NoError(t, cmd.RunE(cmd, []string{"offline"}))
+	require.Contains(t, out.String(), "false")
 	out.Reset()
 
 	viper.Set(flagGet, false)
-	err = cmd.RunE(cmd, []string{"offline", "true"})
-	assert.Nil(t, err)
+	require.NoError(t, cmd.RunE(cmd, []string{"offline", "true"}))
 
 	viper.Set(flagGet, true)
-	err = cmd.RunE(cmd, []string{"offline"})
-	assert.Nil(t, err)
-	assert.Contains(t, out.String(), "true")
+	require.NoError(t, cmd.RunE(cmd, []string{"offline"}))
+	require.Contains(t, out.String(), "true")
 }

@@ -168,11 +168,16 @@ func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string)
 		return "", nil, false
 	}
 	if len(capOwners.Owners) < 2 {
-		return "", nil, false
+		panic("more than one module has bound to this port; currently not supported")
 	}
-	// the module that owns the channel, for now, is the first module that isn't "ibc"
-	// that owns the module
-	module := capOwners.Owners[1].Module
+	// the module that owns the channel, for now, is the only module owner that isn't "ibc"
+	var module string
+	if capOwners.Owners[0].Module == "ibc" {
+		module = capOwners.Owners[1].Module
+	} else {
+		module = capOwners.Owners[0].Module
+	}
+
 	cap, _ := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
 	return module, cap, true
 

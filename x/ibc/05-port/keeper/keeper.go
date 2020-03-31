@@ -12,14 +12,12 @@ import (
 // Keeper defines the IBC connection keeper
 type Keeper struct {
 	scopedKeeper capability.ScopedKeeper
-	router       map[string]types.IBCModule
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
 func NewKeeper(sck capability.ScopedKeeper) Keeper {
 	return Keeper{
 		scopedKeeper: sck,
-		router:       make(map[string]types.IBCModule),
 	}
 }
 
@@ -33,7 +31,7 @@ func (k Keeper) isBounded(ctx sdk.Context, portID string) bool {
 // Ports must be bound statically when the chain starts in `app.go`.
 // The capability must then be passed to a module which will need to pass
 // it as an extra parameter when calling functions on the IBC module.
-func (k *Keeper) BindPort(ctx sdk.Context, portID string, cbs types.IBCModule) capability.Capability {
+func (k *Keeper) BindPort(ctx sdk.Context, portID string) capability.Capability {
 	if err := host.DefaultPortIdentifierValidator(portID); err != nil {
 		panic(err.Error())
 	}
@@ -46,8 +44,6 @@ func (k *Keeper) BindPort(ctx sdk.Context, portID string, cbs types.IBCModule) c
 	if err != nil {
 		panic(err.Error())
 	}
-
-	k.router[portID] = cbs
 
 	return key
 }
@@ -70,12 +66,19 @@ func (k Keeper) LookupModuleByPort(ctx sdk.Context, portID string) (string, capa
 	if !ok {
 		return "", nil, false
 	}
-	if len(capOwners.Owners) < 2 {
-		return "", nil, false
+	// For now, we enforce that only IBC and the module bound to port can own the capability
+	// while future implementations may allow multiple modules to bind to a port, currently we
+	// only allow one module to be bound to a port at any given time
+	if len(capOwners.Owners) != 2 {
+		panic("more than one module has bound to this port; currently not supported")
 	}
-	// the module that owns the port, for now, is the first module that isn't "ibc"
-	// that owns the module
-	module := capOwners.Owners[1].Module
+	// the module that owns the port, for now, is the only module owner that isn't "ibc"
+	var module string
+	if capOwners.Owners[0].Module == "ibc" {
+		module = capOwners.Owners[1].Module
+	} else {
+		module = capOwners.Owners[0].Module
+	}
 	cap, _ := k.scopedKeeper.GetCapability(ctx, types.PortPath(portID))
 	return module, cap, true
 }

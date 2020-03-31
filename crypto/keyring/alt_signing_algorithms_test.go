@@ -18,7 +18,7 @@ func TestAltSigningAlgoList_Contains(t *testing.T) {
 type notSupportedAlgo struct {
 }
 
-func (n notSupportedAlgo) String() string {
+func (n notSupportedAlgo) Name() SigningAlgo {
 	return "notSupported"
 }
 

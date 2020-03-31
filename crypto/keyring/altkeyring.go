@@ -127,7 +127,7 @@ func NewAltKeyring(
 	}
 
 	return altKeyring{
-		db:      db,
+		db: db,
 		options: options,
 	}, nil
 }
@@ -318,7 +318,7 @@ func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, a
 		return nil, err
 	}
 
-	return a.writeLedgerKey(uid, priv.PubKey(), *hdPath, SigningAlgo(algo.String()))
+	return a.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
 }
 
 func (a altKeyring) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo SigningAlgo) (Info, error) {
@@ -341,7 +341,7 @@ func (a altKeyring) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, erro
 }
 
 func (a altKeyring) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error) {
-	return a.writeOfflineKey(uid, pubkey, SigningAlgo(algo.String()))
+	return a.writeOfflineKey(uid, pubkey, algo.Name())
 }
 
 func (a altKeyring) DeleteByAddress(address types.Address) error {
@@ -469,7 +469,7 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 
 	privKey := algo.PrivKeyGen()(derivedPriv)
 
-	return a.writeLocalKey(uid, privKey, SigningAlgo(algo.String()))
+	return a.writeLocalKey(uid, privKey, algo.Name())
 }
 
 func (a altKeyring) isSupportedSigningAlgo(algo AltSigningAlgo) bool {

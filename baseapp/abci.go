@@ -189,7 +189,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events.ToABCIEvents(),
+		Events:    result.Events,
 	}
 }
 
@@ -214,7 +214,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events.ToABCIEvents(),
+		Events:    result.Events,
 	}
 }
 
@@ -331,15 +331,20 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"))
 			}
 
-			simRes := sdk.SimulationResponse{
+			simRes := &sdk.SimulationResponse{
 				GasInfo: gInfo,
 				Result:  res,
+			}
+
+			bz, err := codec.ProtoMarshalJSON(simRes)
+			if err != nil {
+				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"))
 			}
 
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     codec.Cdc.MustMarshalBinaryBare(simRes),
+				Value:     bz,
 			}
 
 		case "version":

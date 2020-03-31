@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -14,7 +15,7 @@ import (
 
 // QueryBalancesRequestHandlerFn returns a REST handler that queries for all
 // account balances or a specific balance by denomination.
-func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -26,7 +27,7 @@ func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		ctx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, ctx, r)
 		if !ok {
 			return
 		}
@@ -35,6 +36,16 @@ func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			params interface{}
 			route  string
 		)
+
+		// TODO: Remove once client-side Protobuf migration has been completed.
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+		var marshaler codec.JSONMarshaler
+
+		if ctx.Marshaler != nil {
+			marshaler = ctx.Marshaler
+		} else {
+			marshaler = ctx.Codec
+		}
 
 		denom := r.FormValue("denom")
 		if denom == "" {
@@ -45,19 +56,19 @@ func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 		}
 
-		bz, err := cliCtx.Codec.MarshalJSON(params)
+		bz, err := marshaler.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData(route, bz)
+		res, height, err := ctx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
+		ctx = ctx.WithHeight(height)
+		rest.PostProcessResponse(w, ctx, res)
 	}
 }

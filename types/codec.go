@@ -1,10 +1,7 @@
 package types
 
 import (
-	"bytes"
-
 	jsonc "github.com/gibson042/canonicaljson-go"
-	"github.com/gogo/protobuf/jsonpb"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -19,19 +16,17 @@ func RegisterCodec(cdc *codec.Codec) {
 // can be signed over. The JSON encoding ensures all field names adhere to their
 // Proto definition, default values are omitted, and follows the JSON Canonical
 // Form.
-func CanonicalSignBytes(m codec.ProtoMarshaler) ([]byte, error) {
-	jm := &jsonpb.Marshaler{EmitDefaults: false, OrigName: false}
-	buf := new(bytes.Buffer)
-
-	// first, encode via canonical Protocol Buffer JSON
-	if err := jm.Marshal(buf, m); err != nil {
+func CanonicalSignBytes(msg codec.ProtoMarshaler) ([]byte, error) {
+	// first, encode via canonical Proto3 JSON
+	bz, err := codec.ProtoMarshalJSON(msg)
+	if err != nil {
 		return nil, err
 	}
 
 	genericJSON := make(map[string]interface{})
 
 	// decode canonical proto encoding into a generic map
-	if err := jsonc.Unmarshal(buf.Bytes(), &genericJSON); err != nil {
+	if err := jsonc.Unmarshal(bz, &genericJSON); err != nil {
 		return nil, err
 	}
 

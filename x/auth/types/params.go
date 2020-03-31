@@ -156,7 +156,7 @@ func (p Params) Validate() error {
 	if err := validateSigVerifyCostSecp256k1(p.SigVerifyCostSecp256k1); err != nil {
 		return err
 	}
-	if err := validateSigVerifyCostSecp256k1(p.MaxMemoCharacters); err != nil {
+	if err := validateMaxMemoCharacters(p.MaxMemoCharacters); err != nil {
 		return err
 	}
 	if err := validateTxSizeCostPerByte(p.TxSizeCostPerByte); err != nil {

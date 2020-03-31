@@ -28,7 +28,7 @@ func TestABCInfo(t *testing.T) {
 		"wrapped SDK error": {
 			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
-			wantLog:   "unauthorized: foo: bar",
+			wantLog:   "bar: foo: unauthorized",
 			wantCode:  ErrUnauthorized.code,
 			wantSpace: RootCodespace,
 		},
@@ -95,15 +95,9 @@ func TestABCInfo(t *testing.T) {
 		tc := tc
 		t.Run(testName, func(t *testing.T) {
 			space, code, log := ABCIInfo(tc.err, tc.debug)
-			if space != tc.wantSpace {
-				t.Errorf("want %s space, got %s", tc.wantSpace, space)
-			}
-			if code != tc.wantCode {
-				t.Errorf("want %d code, got %d", tc.wantCode, code)
-			}
-			if log != tc.wantLog {
-				t.Errorf("want %q log, got %q", tc.wantLog, log)
-			}
+			require.Equal(t, tc.wantSpace, space)
+			require.Equal(t, tc.wantCode, code)
+			require.Equal(t, tc.wantLog, log)
 		})
 	}
 }
@@ -119,19 +113,19 @@ func TestABCIInfoStacktrace(t *testing.T) {
 			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "unauthorized: wrapped",
+			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped SDK error in non-debug mode does not have stacktrace": {
 			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
-			wantErrMsg:     "unauthorized: wrapped",
+			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped stdlib error in debug mode provides stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "stdlib: wrapped",
+			wantErrMsg:     "wrapped: stdlib",
 		},
 		"wrapped stdlib error in non-debug mode does not have stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
@@ -165,10 +159,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 func TestABCIInfoHidesStacktrace(t *testing.T) {
 	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
-
-	if log != "unauthorized: wrapped" {
-		t.Fatalf("unexpected message in non debug mode: %s", log)
-	}
+	require.Equal(t, "wrapped: unauthorized", log)
 }
 
 func TestRedact(t *testing.T) {
@@ -208,12 +199,12 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		"single error": {
 			src:   myErrDecode,
 			debug: false,
-			exp:   "tx parse error: test",
+			exp:   "test: tx parse error",
 		},
 		"second error": {
 			src:   myErrAddr,
 			debug: false,
-			exp:   "invalid address: tester",
+			exp:   "tester: invalid address",
 		},
 		"single error with debug": {
 			src:   myErrDecode,
@@ -260,9 +251,7 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		spec := spec
 		t.Run(msg, func(t *testing.T) {
 			_, _, log := ABCIInfo(spec.src, spec.debug)
-			if exp, got := spec.exp, log; exp != got {
-				t.Errorf("expected %v but got %v", exp, got)
-			}
+			require.Equal(t, spec.exp, log)
 		})
 	}
 }

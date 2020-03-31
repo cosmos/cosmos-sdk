@@ -1,9 +1,13 @@
 package keyring
 
-import "github.com/tendermint/tendermint/crypto"
+import (
+	"fmt"
+
+	"github.com/tendermint/tendermint/crypto"
+)
 
 type AltSigningAlgo interface {
-	Name() SigningAlgo
+	fmt.Stringer
 	DeriveKey() AltDeriveKeyFunc
 	PrivKeyGen() AltPrivKeyGenFunc
 }
@@ -14,8 +18,8 @@ type AltPrivKeyGenFunc func(bz []byte) crypto.PrivKey
 type secp256k1Algo struct {
 }
 
-func (s secp256k1Algo) Name() SigningAlgo {
-	return Secp256k1
+func (s secp256k1Algo) String() string {
+	return string(Secp256k1)
 }
 
 func (s secp256k1Algo) DeriveKey() AltDeriveKeyFunc {
@@ -35,7 +39,7 @@ type AltSigningAlgoList []AltSigningAlgo
 
 func (l AltSigningAlgoList) Contains(algo AltSigningAlgo) bool {
 	for _, cAlgo := range l {
-		if cAlgo.Name() == algo.Name() {
+		if cAlgo.String() == algo.String() {
 			return true
 		}
 	}

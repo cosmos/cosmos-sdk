@@ -202,7 +202,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())
-	require.Equal(t, AltSecp256k1.Name(), info.GetAlgo())
+	require.Equal(t, SigningAlgo(AltSecp256k1.String()), info.GetAlgo())
 
 	list, err = keyring.List()
 	require.NoError(t, err)

@@ -107,8 +107,8 @@ func (k Keeper) SendPacket(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
-			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData().GetBytes())),
-			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetData().GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
@@ -193,7 +193,7 @@ func (k Keeper) RecvPacket(
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketAcknowledgementI,
+	acknowledgement []byte,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -246,7 +246,7 @@ func (k Keeper) PacketExecuted(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketAcknowledgementI,
+	acknowledgement []byte,
 	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
@@ -301,7 +301,7 @@ func (k Keeper) AcknowledgePacket(
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement.GetBytes(),
+		packet.GetSequence(), acknowledgement,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}

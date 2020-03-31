@@ -65,7 +65,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccount
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 transfer handler.
-func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketAcknowledgementI) error {
+func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
 	return k.channelKeeper.PacketExecuted(ctx, packet, acknowledgement)
 }
 
@@ -79,4 +79,17 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 // in order to expose it to the ICS20 transfer handler.
 func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error {
 	return k.channelKeeper.TimeoutExecuted(ctx, packet)
+}
+
+// UnmarshalPacketData tries to extract an application type from raw channel packet data.
+func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) interface{} {
+	var ftpd types.FungibleTokenPacketData
+
+	err := k.cdc.UnmarshalBinaryBare(rawData, &ftpd)
+	if err == nil {
+		return ftpd
+	}
+
+	// Cannot unmarshal, so wrap in an opaque object.
+	return channelexported.NewOpaquePacketData(rawData)
 }

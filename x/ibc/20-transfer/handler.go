@@ -14,14 +14,16 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
-			switch data := msg.Data.(type) {
+			pd := k.UnmarshalPacketData(ctx, msg.GetData())
+			switch data := pd.(type) {
 			case FungibleTokenPacketData:
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
 			}
 		case channeltypes.MsgTimeout:
-			switch data := msg.Data.(type) {
+			pd := k.UnmarshalPacketData(ctx, msg.GetData())
+			switch data := pd.(type) {
 			case FungibleTokenPacketData:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
@@ -74,7 +76,7 @@ func handlePacketDataTransfer(
 	}
 
 	acknowledgement := AckDataTransfer{}
-	if err := k.PacketExecuted(ctx, msg.Packet, acknowledgement); err != nil {
+	if err := k.PacketExecuted(ctx, msg.Packet, acknowledgement.GetBytes()); err != nil {
 		return nil, err
 	}
 

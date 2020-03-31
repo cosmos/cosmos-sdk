@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/base64"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -440,9 +441,20 @@ func (msg MsgPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
+// GetDataSignBytes returns the bytes used for the data field when signing the packet.
+func (msg MsgPacket) GetDataSignBytes() []byte {
+	s := "\"" + base64.StdEncoding.EncodeToString(msg.Data) + "\""
+	return []byte(s)
+}
+
 // GetSigners implements sdk.Msg
 func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// Type implements sdk.Msg
+func (msg MsgPacket) Type() string {
+	return "ics04/opaque"
 }
 
 var _ sdk.Msg = MsgTimeout{}
@@ -500,19 +512,24 @@ func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+// Type implements sdk.Msg
+func (msg MsgTimeout) Type() string {
+	return "ics04/timeout"
+}
+
 var _ sdk.Msg = MsgAcknowledgement{}
 
 // MsgAcknowledgement receives incoming IBC acknowledgement
 type MsgAcknowledgement struct {
 	Packet          `json:"packet" yaml:"packet"`
-	Acknowledgement exported.PacketAcknowledgementI `json:"acknowledgement" yaml:"acknowledgement"`
-	Proof           commitmentexported.Proof        `json:"proof" yaml:"proof"`
-	ProofHeight     uint64                          `json:"proof_height" yaml:"proof_height"`
-	Signer          sdk.AccAddress                  `json:"signer" yaml:"signer"`
+	Acknowledgement []byte                   `json:"acknowledgement" yaml:"acknowledgement"`
+	Proof           commitmentexported.Proof `json:"proof" yaml:"proof"`
+	ProofHeight     uint64                   `json:"proof_height" yaml:"proof_height"`
+	Signer          sdk.AccAddress           `json:"signer" yaml:"signer"`
 }
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
-func NewMsgAcknowledgement(packet Packet, ack exported.PacketAcknowledgementI, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
+func NewMsgAcknowledgement(packet Packet, ack []byte, proof commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
 	return MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
@@ -535,7 +552,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if err := msg.Proof.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
-	if len(msg.Acknowledgement.GetBytes()) > 100 {
+	if len(msg.Acknowledgement) > 100 {
 		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
 	}
 	if msg.ProofHeight == 0 {
@@ -556,4 +573,9 @@ func (msg MsgAcknowledgement) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// Type implements sdk.Msg
+func (msg MsgAcknowledgement) Type() string {
+	return "ics04/opaque"
 }

@@ -160,3 +160,20 @@ func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.Channel) {
 	})
 	return channels
 }
+
+// LookupModuleByChannel will return the IBCModule along with the capability associated with a given channel defined by its portID and channelID
+func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, capability.Capability, bool) {
+	capOwners, ok := k.scopedKeeper.GetOwners(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	if !ok {
+		return "", nil, false
+	}
+	if len(capOwners.Owners) < 2 {
+		return "", nil, false
+	}
+	// the module that owns the channel, for now, is the first module that isn't "ibc"
+	// that owns the module
+	module := capOwners.Owners[1].Module
+	cap, _ := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	return module, cap, true
+
+}

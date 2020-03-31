@@ -64,7 +64,18 @@ func (k Keeper) Authenticate(ctx sdk.Context, key capability.Capability, portID 
 	return k.scopedKeeper.AuthenticateCapability(ctx, key, types.PortPath(portID))
 }
 
-// LookupModule will return the IBCModule associated with a given portID
-func (k Keeper) LookupModule(ctx sdk.Context, portID string) types.IBCModule {
-	return k.router[portID]
+// LookupModuleByPort will return the IBCModule along with the capability associated with a given portID
+func (k Keeper) LookupModuleByPort(ctx sdk.Context, portID string) (string, capability.Capability, bool) {
+	capOwners, ok := k.scopedKeeper.GetOwners(ctx, types.PortPath(portID))
+	if !ok {
+		return "", nil, false
+	}
+	if len(capOwners.Owners) < 2 {
+		return "", nil, false
+	}
+	// the module that owns the port, for now, is the first module that isn't "ibc"
+	// that owns the module
+	module := capOwners.Owners[1].Module
+	cap, _ := k.scopedKeeper.GetCapability(ctx, types.PortPath(portID))
+	return module, cap, true
 }

@@ -16,6 +16,7 @@ type Keeper struct {
 	ConnectionKeeper connection.Keeper
 	ChannelKeeper    channel.Keeper
 	PortKeeper       port.Keeper
+	Router           *port.Router
 }
 
 // NewKeeper creates a new ibc Keeper
@@ -33,4 +34,10 @@ func NewKeeper(
 		ChannelKeeper:    channelKeeper,
 		PortKeeper:       portKeeper,
 	}
+}
+
+// Set the Router in IBC Keeper and seal it
+func (k Keeper) SetRouter(rtr *port.Router) {
+	k.Router = rtr
+	k.Router.Seal()
 }

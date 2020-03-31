@@ -15,6 +15,7 @@ type IBCModule interface {
 		connectionHops []string,
 		portID string,
 		channelID string,
+		chanCap capability.Capability,
 		counterParty channeltypes.Counterparty,
 		version string,
 	) error
@@ -25,6 +26,7 @@ type IBCModule interface {
 		connectionHops []string,
 		portID,
 		channelID string,
+		portCap capability.Capability,
 		counterparty channeltypes.Counterparty,
 		version,
 		counterpartyVersion string,
@@ -70,8 +72,4 @@ type IBCModule interface {
 		ctx sdk.Context,
 		packet channeltypes.Packet,
 	) (*sdk.Result, error)
-
-	GetCapability(ctx sdk.Context, name string) (capability.Capability, bool)
-
-	ClaimCapability(ctx sdk.Context, cap capability.Capability, name string) error
 }

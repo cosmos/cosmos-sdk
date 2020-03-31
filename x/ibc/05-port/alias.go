@@ -21,6 +21,7 @@ const (
 var (
 	// functions aliases
 	NewKeeper       = keeper.NewKeeper
+	NewRouter       = types.NewRouter
 	ErrPortExists   = types.ErrPortExists
 	ErrPortNotFound = types.ErrPortNotFound
 	ErrInvalidPort  = types.ErrInvalidPort
@@ -29,5 +30,7 @@ var (
 )
 
 type (
-	Keeper = keeper.Keeper
+	Keeper    = keeper.Keeper
+	Router    = types.Router
+	IBCModule = types.IBCModule
 )

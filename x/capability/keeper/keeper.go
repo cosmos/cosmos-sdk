@@ -219,6 +219,30 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (types.Capabi
 	return cap, true
 }
 
+// Get all the Owners that own the capability associated with the name this ScopedKeeper uses
+// to refer to the capability
+func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.CapabilityOwners, bool) {
+	cap, ok := sk.GetCapability(ctx, name)
+	if !ok {
+		return nil, false
+	}
+
+	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
+	indexKey := types.IndexToKey(cap.GetIndex())
+
+	var capOwners *types.CapabilityOwners
+
+	bz := prefixStore.Get(indexKey)
+	if len(bz) == 0 {
+		return nil, false
+	} else {
+		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
+	}
+
+	return capOwners, true
+
+}
+
 func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name string) error {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())

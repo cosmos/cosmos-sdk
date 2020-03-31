@@ -178,7 +178,10 @@ func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string)
 		module = capOwners.Owners[0].Module
 	}
 
-	cap, _ := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	cap, found := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	if !found {
+		return "", nil, false
+	}
 	return module, cap, true
 
 }

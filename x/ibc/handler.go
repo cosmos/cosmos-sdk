@@ -54,7 +54,7 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, err
 			}
 
-			return res, err
+			return res, nil
 
 		case channel.MsgChannelOpenTry:
 			// Lookup module by port capability
@@ -63,6 +63,9 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "could not retrieve module from portID")
 			}
 			res, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
+			if err != nil {
+				return nil, err
+			}
 			// Retrieve callbacks from router
 			cbs := k.Router.GetRoute(module)
 			err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion)
@@ -70,7 +73,7 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, err
 			}
 
-			return res, err
+			return res, nil
 
 		case channel.MsgChannelOpenAck:
 			// Lookup module by channel capability

@@ -8,6 +8,8 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
+// IBCModule defines an interface that implements all the callbacks
+// that modules must define as specified in ICS-26
 type IBCModule interface {
 	OnChanOpenInit(
 		ctx sdk.Context,

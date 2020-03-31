@@ -147,7 +147,7 @@ func (am AppModule) OnChanOpenInit(
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "counterparty has invalid portid. expected: %s, got %s", types.PortID, counterparty.PortID)
 	}
 
-	if version != "ics20-1" {
+	if version != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
 	}
 
@@ -177,11 +177,11 @@ func (am AppModule) OnChanOpenTry(
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "counterparty has invalid portid. expected: %s, got %s", types.PortID, counterparty.PortID)
 	}
 
-	if version != "ics20-1" {
+	if version != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
 	}
 
-	if counterpartyVersion != "ics20-1" {
+	if counterpartyVersion != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
 	}
 
@@ -200,7 +200,7 @@ func (am AppModule) OnChanOpenAck(
 	channelID string,
 	counterpartyVersion string,
 ) error {
-	if counterpartyVersion != "ics20-1" {
+	if counterpartyVersion != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid counterparty version: %s, expected %s", counterpartyVersion, "ics20-1")
 	}
 	return nil

@@ -79,6 +79,9 @@ func (k Keeper) LookupModuleByPort(ctx sdk.Context, portID string) (string, capa
 	} else {
 		module = capOwners.Owners[0].Module
 	}
-	cap, _ := k.scopedKeeper.GetCapability(ctx, types.PortPath(portID))
+	cap, found := k.scopedKeeper.GetCapability(ctx, types.PortPath(portID))
+	if !found {
+		return "", nil, false
+	}
 	return module, cap, true
 }

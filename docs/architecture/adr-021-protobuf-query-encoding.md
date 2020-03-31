@@ -119,15 +119,22 @@ func (am AppModule) RegisterQueryServer(server grpc.Server) {
 }
 ```
 
-Underneath the hood, a new method `QueryRouter.RegisterService(sd *grpc.ServiceDesc, handler interface{})`
-would be added to actually add the queries to the routing table.
+Underneath the hood, a new method `RegisterService(sd *grpc.ServiceDesc, handler interface{})`
+will be added to the existing `baseapp.QueryRouter` to add the queries to the custom
+query routing table (with the routing method being described below).
+The signature for this method matches the existing
+`RegisterServer` method on the GRPC `Server` type where `handler` is the custom
+query server implementation described above.
+
 
 GRPC-like requests are routed by the service name (ex. `cosmos_sdk.x.bank.v1.Query`)
 and method name (ex. `QueryBalance`) combined with `/`s to form a full
 method name (ex. `/cosmos_sdk.x.bank.v1.Query/QueryBalance`). This gets translated
-into an ABCI query as `custom/cosmos_sdk.x.bank.v1.Query/QueryBalance`. Beyond the
-method name, GRPC requests carry a protobuf encoded payload - mapped naturally
-to `RequestQuery.Data` and receive a protobuf encoded response or error. Thus
+into an ABCI query as `custom/cosmos_sdk.x.bank.v1.Query/QueryBalance`. Service handlers
+registered with `QueryRouter.RegisterService` will be routed this way.
+
+Beyond the method name, GRPC requests carry a protobuf encoded payload, which maps naturally
+to `RequestQuery.Data`, and receive a protobuf encoded response or error. Thus
 there is a quite natural mapping of GRPC-like rpc methods to the existing
 `sdk.Query` and `QueryRouter` infrastructure.
 
@@ -141,14 +148,22 @@ In addition to providing an ABCI query pathway, we can easily provide a GRPC
 proxy server that routes requests in the GRPC protocol to ABCI query requests
 under the hood. In this way, clients could use their host languages' existing
 GRPC implementations to make direct queries against Cosmos SDK app's using
-these `service` definitions.
+these `service` definitions. In order for this server to work, the `QueryRouter`
+on `BaseApp` will need to expose the service handlers registered with
+`QueryRouter.RegisterService` to the proxy server implementation. Nodes could
+launch the proxy server on a separate port in the same process as the ABCI app
+with a command-line flag.
 
 ### REST Queries and Swagger Generation
 
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) is a project that
 translates REST calls into GRPC calls using special annotations on service
 methods. Apps that want to expose REST queries should add `google.api.http`
-annotations to their `rpc` methods as in this example below.
+annotations to their `rpc` methods as in this example below. By convention
+HTTP method paths registered this way should correspond to the protobuf
+package paths for their respective modules, i.e. `cosmos_sdk.x.bank.v1` translates
+to `/cosmos_sdk/x/bank/v1/`.
+
 
 ```proto
 // x/bank/types/types.proto
@@ -168,10 +183,19 @@ service Query {
 ```
 
 grpc-gateway will work direcly against the GRPC proxy described above which will 
-translate requests to ABCI queries under the hood.
+translate requests to ABCI queries under the hood. grpc-gateway can also
+generate Swagger definitions automatically.
 
-grpc-gateway can also generate swagger definitions automatically thus obviating
-the need for both manually implemented REST query handlers and swagger definitions.
+In the current implementation of REST queries, each module needs to implement
+REST queries manually in addition to ABCI querier methods. Using the grpc-gateway
+approach, there will be no need to generate separate REST query handlers, just
+query servers as described above as grpc-gateway handles the translation of protobuf
+to REST as well as Swagger definitions.
+
+The SDK should provide CLI commands for apps to start GRPC gateway either in
+a separate process or the same process as the ABCI app, as well as provide a
+command for generating grpc-gateway proxy `.proto` files and the `swagger.json`
+file.
 
 ### Client Usage
 

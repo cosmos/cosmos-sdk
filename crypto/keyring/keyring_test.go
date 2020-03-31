@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -430,6 +431,14 @@ func TestSupportedAlgos(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgos())
 	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgosLedger())
+}
+
+func TestCustomDerivFuncKey(t *testing.T) {
+	kb := NewInMemory(WithDeriveFunc(func(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
+		return nil, errors.New("cannot derive keys")
+	}))
+	_, _, err := kb.CreateMnemonic("test", English, "", "")
+	require.Error(t, err, "cannot derive keys")
 }
 
 func TestInMemoryLanguage(t *testing.T) {

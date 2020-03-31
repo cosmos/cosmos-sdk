@@ -166,7 +166,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		ValidatorSet: suite.valSet,
 	}
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.Time.Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.GetTime().Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
 	clientState.LastHeader = header

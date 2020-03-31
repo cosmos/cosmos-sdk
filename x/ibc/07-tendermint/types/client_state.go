@@ -56,6 +56,11 @@ func NewClientState(
 	}
 }
 
+// GetID returns the client state identifier
+func (cs ClientState) GetID() string {
+	return cs.ID
+}
+
 // GetChainID returns the chain-id from the last header
 func (cs ClientState) GetChainID() string {
 	return cs.LastHeader.SignedHeader.Header.GetChainID()

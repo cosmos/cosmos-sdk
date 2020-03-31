@@ -3,6 +3,8 @@ package types
 import (
 	"math"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -19,6 +21,11 @@ var (
 	_ clientexported.Misbehaviour = (*Evidence)(nil)
 )
 
+// GetClientID returns the ID of the client that committed a misbehaviour.
+func (ev Evidence) GetClientID() string {
+	return ev.ClientID
+}
+
 // ClientType is Tendermint light client
 func (ev Evidence) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
@@ -27,6 +34,16 @@ func (ev Evidence) ClientType() clientexported.ClientType {
 // Route implements Evidence interface
 func (ev Evidence) Route() string {
 	return clienttypes.SubModuleName
+}
+
+// String implements Evidence interface
+func (ev Evidence) String() string {
+	// FIXME: implement custom marshaller
+	bz, err := yaml.Marshal(ev)
+	if err != nil {
+		panic(err)
+	}
+	return string(bz)
 }
 
 // Type implements Evidence interface

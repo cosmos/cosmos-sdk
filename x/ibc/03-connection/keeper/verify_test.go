@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	// create connection on chainA to chainB
 	counterparty := types.NewCounterparty(
 		testClientIDA, testConnectionIDA,
-		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
 	)
 	connection1 := types.NewConnectionEnd(
 		ibctypes.UNINITIALIZED, testClientIDB, counterparty,
@@ -152,7 +152,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	// create connection of chainB to pass into verify function
 	counterparty := types.NewCounterparty(
 		testClientIDB, testConnectionIDB,
-		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
 	)
 
 	connection := types.NewConnectionEnd(

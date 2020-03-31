@@ -132,9 +132,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.SignedHeader.Header.Height, 1, tmtypes.PrecommitType, altValSet)
 				var err error
-				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, ev.Header2.Height, ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				ev.Header1.SignedHeader.Commit, err = tmtypes.MakeCommit(ev.Header1.SignedHeader.Commit.BlockID, ev.Header2.SignedHeader.Header.Height, ev.Header1.SignedHeader.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err
 			},
 			false,
@@ -149,9 +149,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.SignedHeader.Header.Height, 1, tmtypes.PrecommitType, altValSet)
 				var err error
-				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				ev.Header2.SignedHeader.Commit, err = tmtypes.MakeCommit(ev.Header2.SignedHeader.Commit.BlockID, ev.Header2.SignedHeader.Header.Height, ev.Header2.SignedHeader.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err
 			},
 			false,
@@ -165,7 +165,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 				ClientID: "gaiamainnet",
 			},
 			func(ev *ibctmtypes.Evidence) error {
-				ev.Header2.Commit.BlockID = ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				ev.Header2.SignedHeader.Commit.BlockID = ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
 				return nil
 			},
 			false,

@@ -65,6 +65,8 @@ message MsgSubmitClientMisbehaviour {
 
 // ClientState defines a Tendermint consensus light client state.
 message ClientState {
+  option (gogoproto.goproto_getters) = false;
+
   string id = 1 [(gogoproto.customname) = "ID"];
   // duration of the period since the LastestTimestamp during which the submitted
   // headers are valid for upgrade
@@ -114,6 +116,9 @@ message ConsensusState {
 // Evidence defines two distinct headers at the same hight, chain id and client.
 // It is used to verify and penalize light client misbehaviour.
 message Evidence {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""

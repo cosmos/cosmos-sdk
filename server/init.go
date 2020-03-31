@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,7 +13,7 @@ import (
 func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 	// generate a private key, with recovery phrase
-	info, secret, err := clkeys.NewInMemoryKeyBase().CreateMnemonic(
+	info, secret, err := keyring.NewInMemory().CreateMnemonic(
 		"name", keyring.English, "pass", keyring.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err

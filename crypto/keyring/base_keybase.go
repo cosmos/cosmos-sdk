@@ -33,6 +33,8 @@ type (
 	}
 )
 
+var fundraiserPath = types.GetConfig().GetFullFundraiserPath()
+
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
@@ -138,7 +140,7 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", err
 	}
 
-	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
+	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, fundraiserPath, algo)
 	if err != nil {
 		return nil, "", err
 	}

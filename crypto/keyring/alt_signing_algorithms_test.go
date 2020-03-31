@@ -23,9 +23,9 @@ func (n notSupportedAlgo) Name() SigningAlgo {
 }
 
 func (n notSupportedAlgo) DeriveKey() AltDeriveKeyFunc {
-	panic("implement me")
+	return SecpDeriveKey
 }
 
 func (n notSupportedAlgo) PrivKeyGen() AltPrivKeyGenFunc {
-	panic("implement me")
+	return SecpPrivKeyGen
 }

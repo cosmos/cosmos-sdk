@@ -85,11 +85,13 @@ type Exporter interface {
 	ExportPrivKeyArmorByAddress(address types.Address, encryptPassphrase string) (armor string, err error)
 }
 
+type AltKeyringOption func(options *altKrOptions)
+
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
 // Available backends are "os", "file", "kwallet", "pass", "test".
 func NewAltKeyring(
-	appName, backend, rootDir string, userInput io.Reader,
+	appName, backend, rootDir string, userInput io.Reader, opts ...AltKeyringOption,
 ) (Keyring, error) {
 
 	var db keyring.Keyring
@@ -114,12 +116,19 @@ func NewAltKeyring(
 		return nil, err
 	}
 
+	// Default options for keybase
+	options := altKrOptions{
+		supportedAlgos:       AltSigningAlgoList{AltSecp256k1},
+		supportedAlgosLedger: AltSigningAlgoList{AltSecp256k1},
+	}
+
+	for _, optionFn := range opts {
+		optionFn(&options)
+	}
+
 	return altKeyring{
 		db: db,
-		options: altKrOptions{
-			supportedAlgos:       AltSigningAlgoList{AltSecp256k1},
-			supportedAlgosLedger: AltSigningAlgoList{AltSecp256k1},
-		},
+		options: options,
 	}, nil
 }
 

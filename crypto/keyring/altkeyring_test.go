@@ -374,6 +374,37 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	// should fail when using unsupported signing algorythm.
+	_, _, err = keyring.NewMnemonic("test", English, notSupportedAlgo{})
+	require.EqualError(t, err, "unsupported signing algo")
+
+	// but works with default signing algo.
+	_, _, err = keyring.NewMnemonic("test", English, AltSecp256k1)
+	require.NoError(t, err)
+
+	// but we can create a new keybase with our provided algos.
+	dir2, clean2 := tests.NewTestCaseDir(t)
+	t.Cleanup(clean2)
+
+	keyring2, err := NewAltKeyring(t.Name(), BackendTest, dir2, nil, func(options *altKrOptions) {
+		options.supportedAlgos = AltSigningAlgoList{
+			notSupportedAlgo{},
+		}
+	})
+	require.NoError(t, err)
+
+	// now this new keyring does not fail when signing with provided algo
+	_, _, err = keyring2.NewMnemonic("test", English, notSupportedAlgo{})
+	require.NoError(t, err)
+}
+
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())

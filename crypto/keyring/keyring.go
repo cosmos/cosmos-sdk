@@ -44,7 +44,6 @@ var _ Keybase = keyringKeybase{}
 
 // Keyring exposes operations on a generic keystore
 type Keyring interface {
-
 	// List all keys.
 	List() ([]Info, error)
 
@@ -52,7 +51,7 @@ type Keyring interface {
 	Key(uid string) (Info, error)
 	KeyByAddress(address types.Address) (Info, error)
 
-	// Delete and DeleteByAddress remove keys.
+	//// Delete and DeleteByAddress remove keys.
 	Delete(uid string) error
 	DeleteByAddress(address types.Address) error
 
@@ -69,23 +68,24 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey crypto.PubKey, algo SigningAlgo) (Info, error)
+	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo SigningAlgo) (Info, error)
 
 	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
-	SaveMultisig(uid string, pubkey crypto.PubKey) (Info, error)
+	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
 
-	// SupportedAlgos returns a list of signing algorithms supported by the keybase
-	SupportedAlgos() []SigningAlgo
+	Signer
 
-	// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
-	SupportedAlgosLedger() []SigningAlgo
+	Importer
+	Exporter
 }
 
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
-	// Sign and SignByAddress sign byte messages with a user key.
-	Sign(uid string, msg []byte) ([]byte, crypto.PubKey, error)
-	SignByAddress(address types.Address, msg []byte) ([]byte, crypto.PubKey, error)
+	// Sign sign byte messages with a user key.
+	Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
+
+	// SignByAddress sign byte messages with a user key providing the address.
+	SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.

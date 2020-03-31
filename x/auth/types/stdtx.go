@@ -79,7 +79,7 @@ func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
 		return nil
 	}
 
-	codec.Cdc.MustUnmarshalBinaryBare(ss.PubKey, &pk)
+	amino.MustUnmarshalBinaryBare(ss.PubKey, &pk)
 	return pk
 }
 

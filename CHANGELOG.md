@@ -94,6 +94,8 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 * (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
 * (crypto/keyring) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) Keybase/Keyring `Sign()` methods no longer decode amino signatures
 when method receivers are offline/multisig keys.
+* (x/auth) [\#5892](https://github.com/cosmos/cosmos-sdk/pull/5892) Add `RegisterKeyTypeCodec` to register new
+types (eg. keys) to the `auth` module internal amino codec.
 
 ### State Machine Breaking
 

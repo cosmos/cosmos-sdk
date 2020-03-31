@@ -13,7 +13,7 @@ func NewOpaquePacketData(data []byte) OpaquePacketData {
 	}
 }
 
-// GetData is a helper for serialising
-func (opd OpaquePacketData) GetData() []byte {
+// GetBytes is a helper for serialising
+func (opd OpaquePacketData) GetBytes() []byte {
 	return opd.data
 }

@@ -82,7 +82,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI)
 }
 
 // UnmarshalPacketData tries to extract an application type from raw channel packet data.
-func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) interface{} {
+func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) types.PacketDataI {
 	var ftpd types.FungibleTokenPacketData
 
 	err := k.cdc.UnmarshalBinaryBare(rawData, &ftpd)

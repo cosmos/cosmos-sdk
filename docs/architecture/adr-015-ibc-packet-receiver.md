@@ -192,22 +192,22 @@ func NewAnteHandler(
 }
 ```
 
-The implementation of this ADR will also create a `RawData` field of the `Packet` of type `[]byte`, which can be deserialised by the receiving module into the `Data` field of type `PacketDataI`. It is up to the application modules to do this according to their own interpretation, not by the IBC keeper.  This is crucial for dynamic IBC.
+The implementation of this ADR will also create a `Data` field of the `Packet` of type `[]byte`, which can be deserialised by the receiving module into its own private type. It is up to the application modules to do this according to their own interpretation, not by the IBC keeper.  This is crucial for dynamic IBC.
 
-By having the `GetCommitment()` method, the applications can define their own commitment method, including bare bytes, hashing, etc.
-
-This also removes the `Timeout` field from the `Packet` struct. This is because the `PacketDataI` interface now contains this information. You can see details about this in [ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#definitions). 
-
-The `PacketDataI` is the application specific interface that provides information for the execution of the application packet. In the case of ICS20 this would be `denom`, `amount` and `address`
+By convention, the application's `Keeper` can deserialise the `Data` with a `UnmarshalPacketData` method.
 
 ```go
-// PacketDataI defines the standard interface for IBC packet data
-type PacketDataI interface {
-	GetCommitment() []byte // Commitment form that will be stored in the state.
-	GetTimeoutHeight() uint64
+// UnmarshalPacketData tries to extract an application type from raw channel packet data.
+func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) types.PacketDataI {
+        var pdt types.PacketDataTransfer
 
-	ValidateBasic() error
-	Type() string
+        err := k.cdc.UnmarshalBinaryBare(rawData, &pdt)
+        if err == nil {
+                return pdt
+        }
+
+        // Cannot unmarshal, so wrap in an opaque object.
+        return channelexported.NewOpaquePacketData(rawData)
 }
 ```
 
@@ -236,17 +236,18 @@ func NewHandler(k Keeper) Handler {
     case MsgTransfer:
       return handleMsgTransfer(ctx, k, msg)
     case ibc.MsgPacket:
-      msg.Data = k.MustUnmarshalPacketData(ctx, msg.RawData)
-      switch data := msg.Data.(type) {
-      case PacketDataTransfer: // i.e fulfills the PacketDataI interface
+      pd = k.UnmarshalPacketData(ctx, msg.GetData())
+      switch data := pd.(type) {
+      case PacketDataTransfer: // any packet type known by the keeper
         return handlePacketDataTransfer(ctx, k, msg, data)
       default:
         return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
       }
-    case ibc.MsgTimeoutPacket: 
-      switch packet := msg.Packet.Data.(type) {
-      case PacketDataTransfer: // i.e fulfills the PacketDataI interface
-        return handleTimeoutPacketDataTransfer(ctx, k, msg.Packet)
+    case ibc.MsgTimeoutPacket:
+      pd = k.UnmarshalPacketData(ctx, msg.GetData())
+      switch packet := pd.(type) {
+      case PacketDataTransfer: // any packet type known by the keeper
+        return handleTimeoutPacketDataTransfer(ctx, k, packet)
       }
     // interface { PortID() string; ChannelID() string; Channel() ibc.Channel }
     // MsgChanInit, MsgChanTry implements ibc.MsgChannelOpen

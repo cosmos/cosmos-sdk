@@ -198,16 +198,16 @@ By convention, the application's `Keeper` can deserialise the `Data` with a `Unm
 
 ```go
 // UnmarshalPacketData tries to extract an application type from raw channel packet data.
-func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) types.PacketDataI {
-        var pdt types.PacketDataTransfer
+func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) (types.PacketDataI, error) {
+  var pdt types.PacketDataTransfer
 
-        err := k.cdc.UnmarshalBinaryBare(rawData, &pdt)
-        if err == nil {
-                return pdt
-        }
+  err := k.cdc.UnmarshalBinaryBare(rawData, &pdt)
+  if err == nil {
+    return pdt, nil
+  }
 
-        // Cannot unmarshal, so wrap in an opaque object.
-        return channelexported.NewOpaquePacketData(rawData)
+  // Cannot unmarshal, so return the error.
+  return nil, err
 }
 ```
 
@@ -236,7 +236,10 @@ func NewHandler(k Keeper) Handler {
     case MsgTransfer:
       return handleMsgTransfer(ctx, k, msg)
     case ibc.MsgPacket:
-      pd = k.UnmarshalPacketData(ctx, msg.GetData())
+      pd, err = k.UnmarshalPacketData(ctx, msg.GetData())
+      if err {
+        return nil, err
+      }
       switch data := pd.(type) {
       case PacketDataTransfer: // any packet type known by the keeper
         return handlePacketDataTransfer(ctx, k, msg, data)
@@ -244,7 +247,10 @@ func NewHandler(k Keeper) Handler {
         return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
       }
     case ibc.MsgTimeoutPacket:
-      pd = k.UnmarshalPacketData(ctx, msg.GetData())
+      pd, err = k.UnmarshalPacketData(ctx, msg.GetData())
+      if err {
+        return nil, err
+      }
       switch packet := pd.(type) {
       case PacketDataTransfer: // any packet type known by the keeper
         return handleTimeoutPacketDataTransfer(ctx, k, packet)

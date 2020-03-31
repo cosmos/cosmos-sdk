@@ -83,8 +83,7 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 		}
 
 		msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -118,8 +117,7 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 		}
 
 		msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
@@ -148,8 +146,7 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 		}
 
 		msg := types.NewMsgSetWithdrawAddress(delAddr, req.WithdrawAddress)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
@@ -179,8 +176,7 @@ func withdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFu
 
 		// prepare multi-message transaction
 		msgs, err := common.WithdrawValidatorRewardsAndCommission(valAddr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -201,14 +197,12 @@ func fundCommunityPoolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		msg := types.NewMsgFundCommunityPool(req.Amount, fromAddr)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
@@ -220,8 +214,7 @@ func fundCommunityPoolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 func checkDelegatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.AccAddress, bool) {
 	addr, err := sdk.AccAddressFromBech32(mux.Vars(r)["delegatorAddr"])
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if rest.CheckBadRequestError(w, err) {
 		return nil, false
 	}
 
@@ -230,8 +223,7 @@ func checkDelegatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.AccAd
 
 func checkValidatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.ValAddress, bool) {
 	addr, err := sdk.ValAddressFromBech32(mux.Vars(r)["validatorAddr"])
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if rest.CheckBadRequestError(w, err) {
 		return nil, false
 	}
 

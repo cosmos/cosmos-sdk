@@ -15,7 +15,7 @@ This ADR is a continuation of the motivation, design, and context established in
 [ARD 020](./adr-019-protobuf-transaction-encoding.md), namely, we aim to design the
 Protocol Buffer migration path for the client-side of the Cosmos SDK.
 
-This ADR continues from [ARD 020](./adr-019-protobuf-transaction-encoding.md)
+This ADR continues from [ARD 020](./adr-020-protobuf-transaction-encoding.md)
 to specify the encoding of queries.
 
 ## Decision

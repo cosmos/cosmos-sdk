@@ -135,7 +135,7 @@ This basic specification allows us to reuse protocol buffer `service` definition
 for ABCI custom queries substantially reducing the need for manual decoding and
 encoding in query methods. 
 
-### GRPC Protocol SUpport
+### GRPC Protocol Support
 
 In addition to providing an ABCI query pathway, we can easily provide a GRPC
 proxy server that routes requests in the GRPC protocol to ABCI query requests

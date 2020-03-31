@@ -22,11 +22,6 @@ const (
 	otherID = "otherID"
 )
 
-var unsupportedAlgo = AltSigningAlgo{
-	Name:      "unsupported",
-	DeriveKey: nil,
-}
-
 func TestAltKeyring_List(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
@@ -39,7 +34,7 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Empty(t, list)
 
 	// Fails on creating unsupported SigningAlgo
-	_, _, err = keyring.NewMnemonic("failing", English, unsupportedAlgo)
+	_, _, err = keyring.NewMnemonic("failing", English, notSupportedAlgo{})
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	// Create 3 keys
@@ -77,7 +72,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	uid := "newUid"
 
 	// Fails on creating unsupported SigningAlgo
-	_, err = keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), unsupportedAlgo)
+	_, err = keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), notSupportedAlgo{})
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	info, err := keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), AltSecp256k1)
@@ -98,7 +93,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test unsupported Algo
-	_, err = keyring.SaveLedgerKey("key", unsupportedAlgo, "cosmos", 0, 0)
+	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 0, 0)
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	info, err := keyring.SaveLedgerKey("key", AltSecp256k1, "cosmos", 0, 0)
@@ -207,7 +202,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())
-	require.Equal(t, AltSecp256k1.Name, info.GetAlgo())
+	require.Equal(t, AltSecp256k1.Name(), info.GetAlgo())
 
 	list, err = keyring.List()
 	require.NoError(t, err)

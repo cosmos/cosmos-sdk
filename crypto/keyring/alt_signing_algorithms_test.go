@@ -11,10 +11,21 @@ func TestAltSigningAlgoList_Contains(t *testing.T) {
 		AltSecp256k1,
 	}
 
-	notSupportedAlgo := AltSigningAlgo{
-		Name:      "anotherAlgo",
-		DeriveKey: nil,
-	}
 	assert.True(t, list.Contains(AltSecp256k1))
-	assert.False(t, list.Contains(notSupportedAlgo))
+	assert.False(t, list.Contains(notSupportedAlgo{}))
+}
+
+type notSupportedAlgo struct {
+}
+
+func (n notSupportedAlgo) Name() SigningAlgo {
+	return "notSupported"
+}
+
+func (n notSupportedAlgo) DeriveKey() AltDeriveKeyFunc {
+	panic("implement me")
+}
+
+func (n notSupportedAlgo) PrivKeyGen() AltPrivKeyGenFunc {
+	panic("implement me")
 }

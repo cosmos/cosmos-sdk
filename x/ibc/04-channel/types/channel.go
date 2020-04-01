@@ -58,8 +58,8 @@ func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
 		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}
-	if ch.Ordering.String() == "" {
-		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelOrdering.Error())
+	if !(ch.Ordering == ibctypes.ORDERED || ch.Ordering == ibctypes.UNORDERED) {
+		return sdkerrors.Wrap(ErrInvalidChannelOrdering, ch.Ordering.String())
 	}
 	if len(ch.ConnectionHops) != 1 {
 		return sdkerrors.Wrap(

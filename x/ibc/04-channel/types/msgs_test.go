@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -43,7 +42,7 @@ var (
 	invalidShortConnHops = []string{invalidShortConnection}
 	invalidLongConnHops  = []string{invalidLongConnection}
 
-	proof = commitmenttypes.MerkleProof{Proof: &merkle.Proof{}}
+	proof = commitmenttypes.MerkleProof{Proof: &merkle.Proof{Ops: []merkle.ProofOp{merkle.ProofOp{Type: "proof", Key: []byte("key"), Data: []byte("data")}}}}
 
 	addr = sdk.AccAddress("testaddr")
 )
@@ -380,7 +379,7 @@ func TestMsgPacketRoute(t *testing.T) {
 func TestMsgPacketType(t *testing.T) {
 	msg := NewMsgPacket(packet, proof, 1, addr1)
 
-	require.Equal(t, []byte("testdata"), msg.GetData())
+	require.Equal(t, []byte("testdata"), msg.Packet.GetData())
 }
 
 // TestMsgPacketValidation tests ValidateBasic for MsgPacket
@@ -388,7 +387,6 @@ func TestMsgPacketValidation(t *testing.T) {
 	testMsgs := []MsgPacket{
 		NewMsgPacket(packet, proof, 1, addr1),          // valid msg
 		NewMsgPacket(packet, proof, 0, addr1),          // proof height is zero
-		NewMsgPacket(packet, invalidProofs1, 1, addr1), // missing proof
 		NewMsgPacket(packet, invalidProofs2, 1, addr1), // proof contain empty proof
 		NewMsgPacket(packet, proof, 1, emptyAddr),      // missing signer address
 		NewMsgPacket(unknownPacket, proof, 1, addr1),   // unknown packet
@@ -401,10 +399,9 @@ func TestMsgPacketValidation(t *testing.T) {
 	}{
 		{testMsgs[0], true, ""},
 		{testMsgs[1], false, "proof height is zero"},
-		{testMsgs[2], false, "missing proof"},
-		{testMsgs[3], false, "proof contain empty proof"},
-		{testMsgs[4], false, "missing signer address"},
-		{testMsgs[5], false, "invalid packet"},
+		{testMsgs[2], false, "proof contain empty proof"},
+		{testMsgs[3], false, "missing signer address"},
+		{testMsgs[4], false, "invalid packet"},
 	}
 
 	for i, tc := range testCases {
@@ -423,7 +420,7 @@ func TestMsgPacketGetSignBytes(t *testing.T) {
 	res := msg.GetSignBytes()
 
 	expected := fmt.Sprintf(
-		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
+		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100"},"proof":{"proof":{"ops":[{"data":"ZGF0YQ==","key":"a2V5","type":"proof"}]}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
 		string(msg.GetDataSignBytes()),
 	)
 	require.Equal(t, expected, string(res))
@@ -441,12 +438,11 @@ func TestMsgPacketGetSigners(t *testing.T) {
 // TestMsgTimeout tests ValidateBasic for MsgTimeout
 func (suite *MsgTestSuite) TestMsgTimeout() {
 	testMsgs := []MsgTimeout{
-		NewMsgTimeout(packet, 0, proof, 1, addr),
-		NewMsgTimeout(packet, 0, proof, 0, addr),
-		NewMsgTimeout(packet, 0, proof, 1, emptyAddr),
-		NewMsgTimeout(packet, 0, emptyProof, 1, addr),
-		NewMsgTimeout(unknownPacket, 0, proof, 1, addr),
-		NewMsgTimeout(packet, 0, invalidProofs1, 1, addr),
+		NewMsgTimeout(packet, 1, proof, 1, addr),
+		NewMsgTimeout(packet, 1, proof, 0, addr),
+		NewMsgTimeout(packet, 1, proof, 1, emptyAddr),
+		NewMsgTimeout(packet, 1, emptyProof, 1, addr),
+		NewMsgTimeout(unknownPacket, 1, proof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -459,7 +455,6 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 		{testMsgs[2], false, "missing signer address"},
 		{testMsgs[3], false, "cannot submit an empty proof"},
 		{testMsgs[4], false, "invalid packet"},
-		{testMsgs[5], false, "cannot submit an invalid proof"},
 	}
 
 	for i, tc := range testCases {
@@ -481,7 +476,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
 		NewMsgAcknowledgement(unknownPacket, packet.GetData(), proof, 1, addr),
 		NewMsgAcknowledgement(packet, invalidAck, proof, 1, addr),
-		NewMsgAcknowledgement(packet, packet.GetData(), invalidProofs1, 1, addr),
 	}
 
 	testCases := []struct {
@@ -495,7 +489,6 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		{testMsgs[3], false, "cannot submit an empty proof"},
 		{testMsgs[4], false, "invalid packet"},
 		{testMsgs[5], false, "invalid acknowledgement"},
-		{testMsgs[6], false, "cannot submit an invalid proof"},
 	}
 
 	for i, tc := range testCases {

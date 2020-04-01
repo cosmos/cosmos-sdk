@@ -68,7 +68,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		tc := tc
 
 		suite.Require().Equal(tc.consensusState.ClientType(), clientexported.Tendermint)
-		suite.Require().Equal(tc.consensusState.GetRoot(), tc.consensusState.Root)
+		suite.Require().Equal(tc.consensusState.GetRoot(), &tc.consensusState.Root)
 
 		if tc.expectPass {
 			suite.Require().NoError(tc.consensusState.ValidateBasic(), "valid test case %d failed: %s", i, tc.msg)

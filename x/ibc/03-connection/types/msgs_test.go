@@ -120,12 +120,12 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		{testMsgs[3], false, "invalid counterparty client ID"},
 		{testMsgs[4], false, "empty counterparty prefix"},
 		{testMsgs[5], false, "empty counterpartyVersions"},
-		{testMsgs[7], false, "empty proofInit"},
-		{testMsgs[9], false, "empty proofConsensus"},
-		{testMsgs[10], false, "invalid proofHeight"},
-		{testMsgs[11], false, "invalid consensusHeight"},
-		{testMsgs[12], false, "empty singer"},
-		{testMsgs[13], true, "success"},
+		{testMsgs[6], false, "empty proofInit"},
+		{testMsgs[7], false, "empty proofConsensus"},
+		{testMsgs[8], false, "invalid proofHeight"},
+		{testMsgs[9], false, "invalid consensusHeight"},
+		{testMsgs[10], false, "empty singer"},
+		{testMsgs[11], true, "success"},
 	}
 
 	for i, tc := range testCases {
@@ -158,12 +158,12 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	}{
 		{testMsgs[0], false, "invalid connection ID"},
 		{testMsgs[1], false, "empty proofTry"},
-		{testMsgs[3], false, "empty proofConsensus"},
-		{testMsgs[5], false, "invalid proofHeight"},
-		{testMsgs[6], false, "invalid consensusHeight"},
-		{testMsgs[7], false, "invalid version"},
-		{testMsgs[8], false, "empty signer"},
-		{testMsgs[9], true, "success"},
+		{testMsgs[2], false, "empty proofConsensus"},
+		{testMsgs[3], false, "invalid proofHeight"},
+		{testMsgs[4], false, "invalid consensusHeight"},
+		{testMsgs[5], false, "invalid version"},
+		{testMsgs[6], false, "empty signer"},
+		{testMsgs[7], true, "success"},
 	}
 
 	for i, tc := range testCases {
@@ -193,10 +193,10 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 		errMsg  string
 	}{
 		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[2], false, "empty proofTry"},
-		{testMsgs[3], false, "invalid proofHeight"},
-		{testMsgs[4], false, "empty signer"},
-		{testMsgs[5], true, "success"},
+		{testMsgs[1], false, "empty proofTry"},
+		{testMsgs[2], false, "invalid proofHeight"},
+		{testMsgs[3], false, "empty signer"},
+		{testMsgs[4], true, "success"},
 	}
 
 	for i, tc := range testCases {

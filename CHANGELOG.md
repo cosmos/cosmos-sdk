@@ -96,6 +96,7 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 when method receivers are offline/multisig keys.
 * (x/auth) [\#5892](https://github.com/cosmos/cosmos-sdk/pull/5892) Add `RegisterKeyTypeCodec` to register new
 types (eg. keys) to the `auth` module internal amino codec.
+* (x/auth) Allow more than one Tx per account per block
 
 ### State Machine Breaking
 

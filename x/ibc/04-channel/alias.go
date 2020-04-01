@@ -39,7 +39,7 @@ var (
 	ErrInvalidChannelState       = types.ErrInvalidChannelState
 	ErrAcknowledgementTooLong    = types.ErrAcknowledgementTooLong
 	NewMsgChannelOpenInit        = types.NewMsgChannelOpenInit
-	NewMsgChannelOpenTry         = types.NewMsgChannelOpenTry
+	NewMsgChannelTryOpen         = types.NewMsgChannelTryOpen
 	NewMsgChannelOpenAck         = types.NewMsgChannelOpenAck
 	NewMsgChannelOpenConfirm     = types.NewMsgChannelOpenConfirm
 	NewMsgChannelCloseInit       = types.NewMsgChannelCloseInit
@@ -53,7 +53,7 @@ var (
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc
 	EventTypeChannelOpenInit     = types.EventTypeChannelOpenInit
-	EventTypeChannelOpenTry      = types.EventTypeChannelOpenTry
+	EventTypeChannelTryOpen      = types.EventTypeChannelTryOpen
 	EventTypeChannelOpenAck      = types.EventTypeChannelOpenAck
 	EventTypeChannelOpenConfirm  = types.EventTypeChannelOpenConfirm
 	EventTypeChannelCloseInit    = types.EventTypeChannelCloseInit
@@ -69,7 +69,7 @@ type (
 	ConnectionKeeper       = types.ConnectionKeeper
 	PortKeeper             = types.PortKeeper
 	MsgChannelOpenInit     = types.MsgChannelOpenInit
-	MsgChannelOpenTry      = types.MsgChannelOpenTry
+	MsgChannelTryOpen      = types.MsgChannelTryOpen
 	MsgChannelOpenAck      = types.MsgChannelOpenAck
 	MsgChannelOpenConfirm  = types.MsgChannelOpenConfirm
 	MsgChannelCloseInit    = types.MsgChannelCloseInit

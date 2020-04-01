@@ -25,7 +25,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 
 	cdc.RegisterConcrete(MsgChannelOpenInit{}, "ibc/channel/MsgChannelOpenInit", nil)
-	cdc.RegisterConcrete(MsgChannelOpenTry{}, "ibc/channel/MsgChannelOpenTry", nil)
+	cdc.RegisterConcrete(MsgChannelTryOpen{}, "ibc/channel/MsgChannelTryOpen", nil)
 	cdc.RegisterConcrete(MsgChannelOpenAck{}, "ibc/channel/MsgChannelOpenAck", nil)
 	cdc.RegisterConcrete(MsgChannelOpenConfirm{}, "ibc/channel/MsgChannelOpenConfirm", nil)
 	cdc.RegisterConcrete(MsgChannelCloseInit{}, "ibc/channel/MsgChannelCloseInit", nil)

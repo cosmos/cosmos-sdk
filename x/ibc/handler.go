@@ -26,8 +26,8 @@ func NewHandler(k Keeper) sdk.Handler {
 		case connection.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
 
-		case connection.MsgConnectionOpenTry:
-			return connection.HandleMsgConnectionOpenTry(ctx, k.ConnectionKeeper, msg)
+		case connection.MsgConnectionTryOpen:
+			return connection.HandleMsgConnectionTryOpen(ctx, k.ConnectionKeeper, msg)
 
 		case connection.MsgConnectionOpenAck:
 			return connection.HandleMsgConnectionOpenAck(ctx, k.ConnectionKeeper, msg)
@@ -39,8 +39,8 @@ func NewHandler(k Keeper) sdk.Handler {
 		case channel.MsgChannelOpenInit:
 			return channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, msg)
 
-		case channel.MsgChannelOpenTry:
-			return channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, msg)
+		case channel.MsgChannelTryOpen:
+			return channel.HandleMsgChannelTryOpen(ctx, k.ChannelKeeper, msg)
 
 		case channel.MsgChannelOpenAck:
 			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, msg)

@@ -74,9 +74,9 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 	return cmd
 }
 
-// GetCmdConnectionOpenTry defines the command to relay a try open a connection on
+// GetCmdConnectionTryOpen defines the command to relay a try open a connection on
 // chain B
-func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdConnectionTryOpen(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
@@ -123,7 +123,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 				return err
 			}
 
-			msg := types.NewMsgConnectionOpenTry(
+			msg := types.NewMsgConnectionTryOpen(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
 				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofInit, proofHeight,
 				consensusHeight, cliCtx.GetFromAddress(),

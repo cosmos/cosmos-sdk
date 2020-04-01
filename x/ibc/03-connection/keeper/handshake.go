@@ -39,13 +39,13 @@ func (k Keeper) ConnOpenInit(
 	return nil
 }
 
-// ConnOpenTry relays notice of a connection attempt on chain A to chain B (this
+// ConnTryOpen relays notice of a connection attempt on chain A to chain B (this
 // code is executed on chain B).
 //
 // NOTE:
 //  - Here chain A acts as the counterparty
 //  - Identifiers are checked on msg validation
-func (k Keeper) ConnOpenTry(
+func (k Keeper) ConnTryOpen(
 	ctx sdk.Context,
 	connectionID string, // desiredIdentifier
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
@@ -124,8 +124,8 @@ func (k Keeper) ConnOpenTry(
 func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
-	version string, // version that ChainB chose in ConnOpenTry
-	proofTry commitmentexported.Proof, // proof that connectionEnd was added to ChainB state in ConnOpenTry
+	version string, // version that ChainB chose in ConnTryOpen
+	proofTry commitmentexported.Proof, // proof that connectionEnd was added to ChainB state in ConnTryOpen
 	proofConsensus commitmentexported.Proof, // proof that chainB has stored ConsensusState of chainA on its client
 	proofHeight uint64, // height that relayer constructed proofTry
 	consensusHeight uint64, // latest height of chainA that chainB has stored on its chainA client
@@ -167,7 +167,7 @@ func (k Keeper) ConnOpenAck(
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConnection := types.NewConnectionEnd(exported.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
-	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
+	// Ensure that ChainB stored expected connectionEnd in its state during ConnTryOpen
 	if err := k.VerifyConnectionState(
 		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionID,
 		expectedConnection,

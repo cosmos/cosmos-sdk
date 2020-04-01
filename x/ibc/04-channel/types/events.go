@@ -27,7 +27,7 @@ const (
 // IBC channel events vars
 var (
 	EventTypeChannelOpenInit     = MsgChannelOpenInit{}.Type()
-	EventTypeChannelOpenTry      = MsgChannelOpenTry{}.Type()
+	EventTypeChannelTryOpen      = MsgChannelTryOpen{}.Type()
 	EventTypeChannelOpenAck      = MsgChannelOpenAck{}.Type()
 	EventTypeChannelOpenConfirm  = MsgChannelOpenConfirm{}.Type()
 	EventTypeChannelCloseInit    = MsgChannelCloseInit{}.Type()

@@ -28,13 +28,13 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
-// HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
-func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
-	if err := k.ConnOpenTry(
+// HandleMsgConnectionTryOpen defines the sdk.Handler for MsgConnectionTryOpen
+func HandleMsgConnectionTryOpen(ctx sdk.Context, k Keeper, msg MsgConnectionTryOpen) (*sdk.Result, error) {
+	if err := k.ConnTryOpen(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
@@ -44,7 +44,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeConnectionOpenTry,
+			types.EventTypeConnectionTryOpen,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
@@ -57,7 +57,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -83,7 +83,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -108,6 +108,6 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnection
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }

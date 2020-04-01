@@ -32,7 +32,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	ics03ConnectionTxCmd.AddCommand(flags.PostCommands(
 		GetCmdConnectionOpenInit(storeKey, cdc),
-		GetCmdConnectionOpenTry(storeKey, cdc),
+		GetCmdConnectionTryOpen(storeKey, cdc),
 		GetCmdConnectionOpenAck(storeKey, cdc),
 		GetCmdConnectionOpenConfirm(storeKey, cdc),
 	)...)

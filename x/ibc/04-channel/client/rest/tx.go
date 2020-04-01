@@ -16,7 +16,7 @@ import (
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/ibc/channels/open-init", channelOpenInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/channels/open-try", channelOpenTryHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/channels/open-try", channelTryOpenHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-ack", RestPortID, RestChannelID), channelOpenAckHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-confirm", RestPortID, RestChannelID), channelOpenConfirmHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-init", RestPortID, RestChannelID), channelCloseInitHandlerFn(cliCtx)).Methods("POST")
@@ -73,19 +73,19 @@ func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// channelOpenTryHandlerFn implements a channel open try handler
+// channelTryOpenHandlerFn implements a channel open try handler
 //
 // @Summary Channel open-try
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body rest.ChannelOpenTryReq true "Channel open-try request body"
-// @Success 200 {object} PostChannelOpenTry "OK"
+// @Param body body rest.ChannelTryOpenReq true "Channel open-try request body"
+// @Success 200 {object} PostChannelTryOpen "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-try [post]
-func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelTryOpenHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req ChannelOpenTryReq
+		var req ChannelTryOpenReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -102,7 +102,7 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgChannelOpenTry(
+		msg := types.NewMsgChannelTryOpen(
 			req.PortID,
 			req.ChannelID,
 			req.Version,

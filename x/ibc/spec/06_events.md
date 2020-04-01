@@ -48,7 +48,7 @@ The IBC module emits the following events:
 | message              | action                 | connection_open_init    |
 | message              | sender                 | {signer}                |
 
-### MsgConnectionOpenTry
+### MsgConnectionTryOpen
 
 | Type                | Attribute Key | Attribute Value     |
 |---------------------|---------------|---------------------|
@@ -93,7 +93,7 @@ The IBC module emits the following events:
 | message           | action                  | channel_open_init                |
 | message           | sender                  | {signer}                         |
 
-### MsgChannelOpenTry
+### MsgChannelTryOpen
 
 | Type             | Attribute Key           | Attribute Value                  |
 |------------------|-------------------------|----------------------------------|

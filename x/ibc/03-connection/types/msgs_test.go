@@ -85,29 +85,29 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	}
 }
 
-func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
+func (suite *MsgTestSuite) TestNewMsgConnectionTryOpen() {
 	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenTry{
-		NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, nil, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitmenttypes.MerkleProof{Proof: nil}, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, nil, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, commitmenttypes.MerkleProof{Proof: nil}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 0, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 0, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, nil),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
+	testMsgs := []MsgConnectionTryOpen{
+		NewMsgConnectionTryOpen("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{}, suite.proof, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, nil, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitmenttypes.MerkleProof{Proof: nil}, suite.proof, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, nil, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, commitmenttypes.MerkleProof{Proof: nil}, 10, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 0, 10, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 0, signer),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, nil),
+		NewMsgConnectionTryOpen("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
 	}
 
 	var testCases = []struct {
-		msg     MsgConnectionOpenTry
+		msg     MsgConnectionTryOpen
 		expPass bool
 		errMsg  string
 	}{

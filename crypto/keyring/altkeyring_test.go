@@ -26,7 +26,7 @@ func TestAltKeyring_List(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -60,7 +60,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	entropy, err := bip39.NewEntropy(defaultEntropySize)
@@ -89,7 +89,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	// Test unsupported Algo
@@ -109,7 +109,7 @@ func TestAltKeyring_Get(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -125,7 +125,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -141,7 +141,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -164,7 +164,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -187,7 +187,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -213,7 +213,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	mnemonic1, _, err := keyring.NewMnemonic("key1", English, AltSecp256k1)
@@ -238,7 +238,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := "jack"
@@ -257,7 +257,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := "jack"
@@ -276,7 +276,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -304,7 +304,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -332,7 +332,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -355,7 +355,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -378,7 +378,7 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	dir, clean := tests.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
-	keyring, err := NewAltKeyring(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
 	// should fail when using unsupported signing algorythm.
@@ -393,7 +393,7 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	dir2, clean2 := tests.NewTestCaseDir(t)
 	t.Cleanup(clean2)
 
-	keyring2, err := NewAltKeyring(t.Name(), BackendTest, dir2, nil, func(options *altKrOptions) {
+	keyring2, err := New(t.Name(), BackendTest, dir2, nil, func(options *altKrOptions) {
 		options.supportedAlgos = AltSigningAlgoList{
 			notSupportedAlgo{},
 		}

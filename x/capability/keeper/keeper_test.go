@@ -82,6 +82,7 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	got, ok := sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
+	suite.Require().True(cap == got, "pointers not equal")
 
 	got, ok = sk.GetCapability(suite.ctx, "invalid")
 	suite.Require().False(ok)
@@ -107,7 +108,11 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap2)
 
+	got, ok := sk1.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+
 	suite.Require().True(sk1.AuthenticateCapability(suite.ctx, cap1, "transfer"))
+	suite.Require().True(sk1.AuthenticateCapability(suite.ctx, got, "transfer"))
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, cap1, "invalid"))
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, cap2, "transfer"))
 

@@ -57,6 +57,7 @@ func (k Keeper) Authenticate(ctx sdk.Context, key capability.Capability, portID 
 		panic(err.Error())
 	}
 
+	fmt.Println(key.String())
 	return k.scopedKeeper.AuthenticateCapability(ctx, key, types.PortPath(portID))
 }
 

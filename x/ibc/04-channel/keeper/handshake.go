@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -59,6 +61,7 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
+	fmt.Println(portID)
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
@@ -67,6 +70,7 @@ func (k Keeper) ChanOpenInit(
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	fmt.Println("In chan init", capKey.String())
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}

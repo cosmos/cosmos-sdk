@@ -125,6 +125,10 @@ type SimApp struct {
 	EvidenceKeeper   evidence.Keeper
 	TransferKeeper   transfer.Keeper
 
+	// make scoped keepers public for test purposes
+	ScopedIBCKeeper      capability.ScopedKeeper
+	ScopedTransferKeeper capability.ScopedKeeper
+
 	// the module manager
 	mm *module.Manager
 
@@ -341,6 +345,9 @@ func NewSimApp(
 	// sub-keepers.
 	ctx := app.BaseApp.NewContext(true, abci.Header{})
 	app.CapabilityKeeper.InitializeAndSeal(ctx)
+
+	app.ScopedIBCKeeper = scopedIBCKeeper
+	app.ScopedTransferKeeper = scopedTransferKeeper
 
 	return app
 }

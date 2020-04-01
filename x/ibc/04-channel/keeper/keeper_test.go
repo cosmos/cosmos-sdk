@@ -133,19 +133,6 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	suite.Require().Equal(expChannels, channels)
 }
 
-func (suite *KeeperTestSuite) TestSetChannelCapability() {
-	ctx := suite.chainB.GetContext()
-	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannelCapability(ctx, testPort1, testChannel1)
-	suite.False(found)
-
-	channelCap := "test-channel-capability"
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannelCapability(ctx, testPort1, testChannel1, channelCap)
-
-	storedChannelCap, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannelCapability(ctx, testPort1, testChannel1)
-	suite.True(found)
-	suite.Equal(channelCap, storedChannelCap)
-}
-
 func (suite *KeeperTestSuite) TestSetSequence() {
 	ctx := suite.chainB.GetContext()
 	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)

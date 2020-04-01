@@ -161,8 +161,7 @@ func WriteGeneratedTxResponse(
 	}
 
 	simAndExec, gas, err := flags.ParseGas(br.Gas)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if rest.CheckBadRequestError(w, err) {
 		return
 	}
 
@@ -182,8 +181,7 @@ func WriteGeneratedTxResponse(
 		}
 
 		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -196,14 +194,12 @@ func WriteGeneratedTxResponse(
 	}
 
 	tx, err := BuildUnsignedTx(txf, msgs...)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if rest.CheckBadRequestError(w, err) {
 		return
 	}
 
 	output, err := ctx.Marshaler.MarshalJSON(tx)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 

@@ -22,8 +22,7 @@ func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 		bech32addr := vars["address"]
 
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -57,14 +56,12 @@ func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 		}
 
 		bz, err := marshaler.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := ctx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

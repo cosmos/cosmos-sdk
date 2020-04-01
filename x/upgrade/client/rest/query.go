@@ -23,8 +23,7 @@ func getCurrentPlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, 
 	return func(w http.ResponseWriter, request *http.Request) {
 		// ignore height for now
 		res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 		if len(res) == 0 {
@@ -34,8 +33,7 @@ func getCurrentPlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, 
 
 		var plan types.Plan
 		err = cliCtx.Codec.UnmarshalBinaryBare(res, &plan)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -49,14 +47,12 @@ func getDonePlanHandler(cliCtx context.CLIContext) func(http.ResponseWriter, *ht
 
 		params := types.NewQueryAppliedParams(name)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryApplied), bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 

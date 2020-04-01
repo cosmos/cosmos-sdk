@@ -112,9 +112,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	conn3 := types.NewConnectionEnd(exported.UNINITIALIZED, testClientID3, counterparty2, types.GetCompatibleVersions())
 
 	expConnections := []types.IdentifiedConnectionEnd{
-		{conn1, Identifier: testConnectionIDA},
-		{conn2, Identifier: testConnectionIDB},
-		{conn3, Identifier: testConnectionID3},
+		{Connection: conn1, Identifier: testConnectionIDA},
+		{Connection: conn2, Identifier: testConnectionIDB},
+		{Connection: conn3, Identifier: testConnectionID3},
 	}
 
 	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, conn1)

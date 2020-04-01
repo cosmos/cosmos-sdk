@@ -67,9 +67,9 @@ func (k Keeper) ChanOpenInit(
 	return nil
 }
 
-// ChanTryOpen is called by a module to accept the first step of a channel opening
+// ChanOpenTry is called by a module to accept the first step of a channel opening
 // handshake initiated by a module on another chain.
-func (k Keeper) ChanTryOpen(
+func (k Keeper) ChanOpenTry(
 	ctx sdk.Context,
 	order exported.Order,
 	connectionHops []string,

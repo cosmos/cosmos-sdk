@@ -15,7 +15,7 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/ibc/connections/open-init", connectionOpenInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/connections/open-try", connectionTryOpenHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/connections/open-try", connectionOpenTryHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-ack", RestConnectionID), connectionOpenAckHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-confirm", RestConnectionID), connectionOpenConfirmHandlerFn(cliCtx)).Methods("POST")
 }
@@ -63,19 +63,19 @@ func connectionOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// connectionTryOpenHandlerFn implements a connection open try handler
+// connectionOpenTryHandlerFn implements a connection open try handler
 //
 // @Summary Connection open-try
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body rest.ConnectionTryOpenReq true "Connection open-try request body"
-// @Success 200 {object} PostConnectionTryOpen "OK"
+// @Param body body rest.ConnectionOpenTryReq true "Connection open-try request body"
+// @Success 200 {object} PostConnectionOpenTry "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/open-try [post]
-func connectionTryOpenHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func connectionOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req ConnectionTryOpenReq
+		var req ConnectionOpenTryReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -92,7 +92,7 @@ func connectionTryOpenHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgConnectionTryOpen(
+		msg := types.NewMsgConnectionOpenTry(
 			req.ConnectionID, req.ClientID, req.CounterpartyConnectionID,
 			req.CounterpartyClientID, req.CounterpartyPrefix, req.CounterpartyVersions,
 			req.ProofInit, req.ProofConsensus, req.ProofHeight,

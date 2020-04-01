@@ -32,9 +32,9 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 	}, nil
 }
 
-// HandleMsgConnectionTryOpen defines the sdk.Handler for MsgConnectionTryOpen
-func HandleMsgConnectionTryOpen(ctx sdk.Context, k Keeper, msg MsgConnectionTryOpen) (*sdk.Result, error) {
-	if err := k.ConnTryOpen(
+// HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
+func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
+	if err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
@@ -44,7 +44,7 @@ func HandleMsgConnectionTryOpen(ctx sdk.Context, k Keeper, msg MsgConnectionTryO
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeConnectionTryOpen,
+			types.EventTypeConnectionOpenTry,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),

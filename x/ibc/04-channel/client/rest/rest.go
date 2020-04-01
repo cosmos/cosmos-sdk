@@ -33,8 +33,8 @@ type ChannelOpenInitReq struct {
 	CounterpartyChannelID string         `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`
 }
 
-// ChannelTryOpenReq defines the properties of a channel open try request's body.
-type ChannelTryOpenReq struct {
+// ChannelOpenTryReq defines the properties of a channel open try request's body.
+type ChannelOpenTryReq struct {
 	BaseReq               rest.BaseReq             `json:"base_req" yaml:"base_req"`
 	PortID                string                   `json:"port_id" yaml:"port_id"`
 	ChannelID             string                   `json:"channel_id" yaml:"channel_id"`

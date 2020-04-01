@@ -37,7 +37,7 @@ var (
 	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
 	ErrInvalidCounterparty           = types.ErrInvalidCounterparty
 	NewMsgConnectionOpenInit         = types.NewMsgConnectionOpenInit
-	NewMsgConnectionTryOpen          = types.NewMsgConnectionTryOpen
+	NewMsgConnectionOpenTry          = types.NewMsgConnectionOpenTry
 	NewMsgConnectionOpenAck          = types.NewMsgConnectionOpenAck
 	NewMsgConnectionOpenConfirm      = types.NewMsgConnectionOpenConfirm
 	NewConnectionResponse            = types.NewConnectionResponse
@@ -50,7 +50,7 @@ var (
 	// variable aliases
 	SubModuleCdc                   = types.SubModuleCdc
 	EventTypeConnectionOpenInit    = types.EventTypeConnectionOpenInit
-	EventTypeConnectionTryOpen     = types.EventTypeConnectionTryOpen
+	EventTypeConnectionOpenTry     = types.EventTypeConnectionOpenTry
 	EventTypeConnectionOpenAck     = types.EventTypeConnectionOpenAck
 	EventTypeConnectionOpenConfirm = types.EventTypeConnectionOpenConfirm
 	AttributeValueCategory         = types.AttributeValueCategory
@@ -62,7 +62,7 @@ type (
 	Counterparty                 = types.Counterparty
 	ClientKeeper                 = types.ClientKeeper
 	MsgConnectionOpenInit        = types.MsgConnectionOpenInit
-	MsgConnectionTryOpen         = types.MsgConnectionTryOpen
+	MsgConnectionOpenTry         = types.MsgConnectionOpenTry
 	MsgConnectionOpenAck         = types.MsgConnectionOpenAck
 	MsgConnectionOpenConfirm     = types.MsgConnectionOpenConfirm
 	ConnectionResponse           = types.ConnectionResponse

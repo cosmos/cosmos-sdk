@@ -29,8 +29,8 @@ type ConnectionOpenInitReq struct {
 	CounterpartyPrefix       commitmentexported.Prefix `json:"counterparty_prefix" yaml:"counterparty_prefix"`
 }
 
-// ConnectionTryOpenReq defines the properties of a connection open try request's body.
-type ConnectionTryOpenReq struct {
+// ConnectionOpenTryReq defines the properties of a connection open try request's body.
+type ConnectionOpenTryReq struct {
 	BaseReq                  rest.BaseReq              `json:"base_req" yaml:"base_req"`
 	ConnectionID             string                    `json:"connection_id" yaml:"connection_id"`
 	ClientID                 string                    `json:"client_id" yaml:"client_id"`

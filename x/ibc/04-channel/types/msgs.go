@@ -69,9 +69,9 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChannelTryOpen{}
+var _ sdk.Msg = MsgChannelOpenTry{}
 
-type MsgChannelTryOpen struct {
+type MsgChannelOpenTry struct {
 	PortID              string                   `json:"port_id"`
 	ChannelID           string                   `json:"channel_id"`
 	Channel             Channel                  `json:"channel"`
@@ -81,15 +81,15 @@ type MsgChannelTryOpen struct {
 	Signer              sdk.AccAddress           `json:"signer"`
 }
 
-// NewMsgChannelTryOpen creates a new MsgChannelTryOpen instance
-func NewMsgChannelTryOpen(
+// NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
+func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder exported.Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
-) MsgChannelTryOpen {
+) MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(exported.INIT, channelOrder, counterparty, connectionHops, version)
-	return MsgChannelTryOpen{
+	return MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,
 		Channel:             channel,
@@ -101,17 +101,17 @@ func NewMsgChannelTryOpen(
 }
 
 // Route implements sdk.Msg
-func (msg MsgChannelTryOpen) Route() string {
+func (msg MsgChannelOpenTry) Route() string {
 	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
-func (msg MsgChannelTryOpen) Type() string {
+func (msg MsgChannelOpenTry) Type() string {
 	return "channel_open_try"
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelTryOpen) ValidateBasic() error {
+func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
@@ -135,12 +135,12 @@ func (msg MsgChannelTryOpen) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgChannelTryOpen) GetSignBytes() []byte {
+func (msg MsgChannelOpenTry) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgChannelTryOpen) GetSigners() []sdk.AccAddress {
+func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 

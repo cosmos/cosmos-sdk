@@ -61,11 +61,11 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 	return cmd
 }
 
-// GetMsgChannelTryOpenCmd returns the command to create a MsgChannelTryOpen transaction
-func GetMsgChannelTryOpenCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// GetMsgChannelOpenTryCmd returns the command to create a MsgChannelOpenTry transaction
+func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-try [port-id] [channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops] [/path/to/proof_init.json] [proof-height]",
-		Short: "Creates and sends a ChannelTryOpen message",
+		Short: "Creates and sends a ChannelOpenTry message",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -90,7 +90,7 @@ func GetMsgChannelTryOpenCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgChannelTryOpen(
+			msg := types.NewMsgChannelOpenTry(
 				portID, channelID, version, order, hops,
 				counterpartyPortID, counterpartyChannelID, version,
 				proofInit, uint64(proofHeight), cliCtx.GetFromAddress(),

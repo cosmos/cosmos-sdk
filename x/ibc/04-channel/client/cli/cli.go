@@ -31,7 +31,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
 		GetMsgChannelOpenInitCmd(storeKey, cdc),
-		GetMsgChannelTryOpenCmd(storeKey, cdc),
+		GetMsgChannelOpenTryCmd(storeKey, cdc),
 		GetMsgChannelOpenAckCmd(storeKey, cdc),
 		GetMsgChannelOpenConfirmCmd(storeKey, cdc),
 		GetMsgChannelCloseInitCmd(storeKey, cdc),

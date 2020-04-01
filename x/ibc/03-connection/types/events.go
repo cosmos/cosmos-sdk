@@ -16,7 +16,7 @@ const (
 // IBC connection events vars
 var (
 	EventTypeConnectionOpenInit    = MsgConnectionOpenInit{}.Type()
-	EventTypeConnectionTryOpen     = MsgConnectionTryOpen{}.Type()
+	EventTypeConnectionOpenTry     = MsgConnectionOpenTry{}.Type()
 	EventTypeConnectionOpenAck     = MsgConnectionOpenAck{}.Type()
 	EventTypeConnectionOpenConfirm = MsgConnectionOpenConfirm{}.Type()
 

@@ -13,7 +13,7 @@ func TestChannelStateString(t *testing.T) {
 	}{
 		{StateUninitialized, UNINITIALIZED},
 		{StateInit, INIT},
-		{StateTryOpen, TRYOPEN},
+		{StateOpenTry, TRYOPEN},
 		{StateOpen, OPEN},
 		{StateClosed, CLOSED},
 	}
@@ -32,7 +32,7 @@ func TestChannelStateMarshalJSON(t *testing.T) {
 	}{
 		{StateUninitialized, UNINITIALIZED},
 		{StateInit, INIT},
-		{StateTryOpen, TRYOPEN},
+		{StateOpenTry, TRYOPEN},
 		{StateOpen, OPEN},
 		{StateClosed, CLOSED},
 	}

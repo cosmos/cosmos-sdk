@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestChanTryOpen() {
+func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
@@ -108,14 +108,14 @@ func (suite *KeeperTestSuite) TestChanTryOpen() {
 			proof, proofHeight := queryProof(suite.chainB, channelKey)
 
 			if tc.expPass {
-				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanTryOpen(
+				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
 					proof, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
-				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanTryOpen(
+				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion,
 					invalidProof{}, uint64(proofHeight),

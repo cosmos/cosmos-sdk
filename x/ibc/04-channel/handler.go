@@ -37,9 +37,9 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCha
 	}, nil
 }
 
-// HandleMsgChannelTryOpen defines the sdk.Handler for MsgChannelTryOpen
-func HandleMsgChannelTryOpen(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelTryOpen) (*sdk.Result, error) {
-	err := k.ChanTryOpen(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
+// HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
+func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenTry) (*sdk.Result, error) {
+	err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {
@@ -48,7 +48,7 @@ func HandleMsgChannelTryOpen(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeChannelTryOpen,
+			types.EventTypeChannelOpenTry,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),

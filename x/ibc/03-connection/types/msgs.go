@@ -71,11 +71,11 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgConnectionTryOpen{}
+var _ sdk.Msg = MsgConnectionOpenTry{}
 
-// MsgConnectionTryOpen defines a msg sent by a Relayer to try to open a connection
+// MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
 // on Chain B.
-type MsgConnectionTryOpen struct {
+type MsgConnectionOpenTry struct {
 	ConnectionID         string                   `json:"connection_id"`
 	ClientID             string                   `json:"client_id"`
 	Counterparty         Counterparty             `json:"counterparty"`
@@ -87,15 +87,15 @@ type MsgConnectionTryOpen struct {
 	Signer               sdk.AccAddress           `json:"signer"`
 }
 
-// NewMsgConnectionTryOpen creates a new MsgConnectionTryOpen instance
-func NewMsgConnectionTryOpen(
+// NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
+func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmentexported.Prefix,
 	counterpartyVersions []string, proofInit, proofConsensus commitmentexported.Proof,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
-) MsgConnectionTryOpen {
+) MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
-	return MsgConnectionTryOpen{
+	return MsgConnectionOpenTry{
 		ConnectionID:         connectionID,
 		ClientID:             clientID,
 		Counterparty:         counterparty,
@@ -109,17 +109,17 @@ func NewMsgConnectionTryOpen(
 }
 
 // Route implements sdk.Msg
-func (msg MsgConnectionTryOpen) Route() string {
+func (msg MsgConnectionOpenTry) Route() string {
 	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
-func (msg MsgConnectionTryOpen) Type() string {
+func (msg MsgConnectionOpenTry) Type() string {
 	return "connection_open_try"
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgConnectionTryOpen) ValidateBasic() error {
+func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
 	}
@@ -156,12 +156,12 @@ func (msg MsgConnectionTryOpen) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgConnectionTryOpen) GetSignBytes() []byte {
+func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgConnectionTryOpen) GetSigners() []sdk.AccAddress {
+func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 

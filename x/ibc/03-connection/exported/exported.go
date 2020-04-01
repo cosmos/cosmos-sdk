@@ -39,7 +39,7 @@ const (
 const (
 	StateUninitialized string = "UNINITIALIZED"
 	StateInit          string = "INIT"
-	StateTryOpen       string = "TRYOPEN"
+	StateOpenTry       string = "TRYOPEN"
 	StateOpen          string = "OPEN"
 )
 
@@ -49,7 +49,7 @@ func (s State) String() string {
 	case INIT:
 		return StateInit
 	case TRYOPEN:
-		return StateTryOpen
+		return StateOpenTry
 	case OPEN:
 		return StateOpen
 	default:
@@ -62,7 +62,7 @@ func StateFromString(state string) State {
 	switch state {
 	case StateInit:
 		return INIT
-	case StateTryOpen:
+	case StateOpenTry:
 		return TRYOPEN
 	case StateOpen:
 		return OPEN

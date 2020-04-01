@@ -43,9 +43,9 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 	}
 }
 
-// TestConnTryOpen - Chain B (ID #2) calls ConnTryOpen to verify the state of
+// TestConnOpenTry - Chain B (ID #2) calls ConnOpenTry to verify the state of
 // connection on Chain A (ID #1) is INIT
-func (suite *KeeperTestSuite) TestConnTryOpen() {
+func (suite *KeeperTestSuite) TestConnOpenTry() {
 	// counterparty for A on B
 	counterparty := connection.NewCounterparty(
 		testClientIDB, testConnectionIDA, suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestConnTryOpen() {
 			consensusKey := ibctypes.KeyConsensusState(testClientIDB, consensusHeight)
 			proofConsensus, _ := queryProof(suite.chainA, consensusKey)
 
-			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnTryOpen(
+			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), testConnectionIDB, counterparty, testClientIDA,
 				connection.GetCompatibleVersions(), proofInit, proofConsensus,
 				uint64(proofHeight+1), consensusHeight,

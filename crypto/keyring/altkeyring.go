@@ -127,7 +127,7 @@ func NewAltKeyring(
 	}
 
 	return altKeyring{
-		db: db,
+		db:      db,
 		options: options,
 	}, nil
 }

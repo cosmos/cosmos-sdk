@@ -14,9 +14,6 @@ func TestConfig_SetCoinType(t *testing.T) {
 	require.Equal(t, uint32(0), config.GetCoinType())
 	config.SetCoinType(99)
 	require.Equal(t, uint32(99), config.GetCoinType())
-
-	config.Seal()
-	require.Panics(t, func() { config.SetCoinType(99) })
 }
 
 func TestConfig_SetTxEncoder(t *testing.T) {
@@ -27,9 +24,6 @@ func TestConfig_SetTxEncoder(t *testing.T) {
 	config.SetTxEncoder(encFunc)
 	_, err := config.GetTxEncoder()(sdk.Tx(nil))
 	require.Error(t, mockErr, err)
-
-	config.Seal()
-	require.Panics(t, func() { config.SetTxEncoder(encFunc) })
 }
 
 func TestConfig_SetFullFundraiserPath(t *testing.T) {
@@ -37,9 +31,6 @@ func TestConfig_SetFullFundraiserPath(t *testing.T) {
 	require.Equal(t, "", config.GetFullFundraiserPath())
 	config.SetFullFundraiserPath("test/path")
 	require.Equal(t, "test/path", config.GetFullFundraiserPath())
-
-	config.Seal()
-	require.Panics(t, func() { config.SetFullFundraiserPath("x/test/path") })
 }
 
 func TestKeyringServiceName(t *testing.T) {

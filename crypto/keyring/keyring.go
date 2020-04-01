@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,7 +19,7 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -29,6 +30,7 @@ const (
 	BackendKWallet = "kwallet"
 	BackendPass    = "pass"
 	BackendTest    = "test"
+	BackendMemory  = "memory"
 )
 
 const (
@@ -66,6 +68,8 @@ func NewKeyring(
 	var err error
 
 	switch backend {
+	case BackendMemory:
+		return NewInMemory(opts...), nil
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:
@@ -84,6 +88,13 @@ func NewKeyring(
 	}
 
 	return newKeyringKeybase(db, opts...), nil
+}
+
+// NewInMemory creates a transient keyring useful for testing
+// purposes and on-the-fly key generation.
+// Keybase options can be applied when generating this new Keybase.
+func NewInMemory(opts ...KeybaseOption) Keybase {
+	return newKeyringKeybase(keyring.NewArrayKeyring(nil), opts...)
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -178,7 +189,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 
 // GetByAddress fetches a key by address and returns its public information.
 func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
-	ik, err := kb.db.Get(string(addrKey(address)))
+	ik, err := kb.db.Get(string(addrHexKey(address)))
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +281,7 @@ func (kb keyringKeybase) Export(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name: %s", name)
 	}
 
-	return mintkey.ArmorInfoBytes(bz.Data), nil
+	return crypto.ArmorInfoBytes(bz.Data), nil
 }
 
 // ExportPubKey returns public keys in ASCII armored format. It retrieves an Info
@@ -285,7 +296,7 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name: %s", name)
 	}
 
-	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
 }
 
 // Import imports armored private key.
@@ -300,7 +311,7 @@ func (kb keyringKeybase) Import(name string, armor string) error {
 		}
 	}
 
-	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
+	infoBytes, err := crypto.UnarmorInfoBytes(armor)
 	if err != nil {
 		return err
 	}
@@ -313,7 +324,7 @@ func (kb keyringKeybase) Import(name string, armor string) error {
 	kb.writeInfo(name, info)
 
 	err = kb.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  string(addrHexKey(info.GetAddress())),
 		Data: infoKey(name),
 	})
 	if err != nil {
@@ -336,7 +347,7 @@ func (kb keyringKeybase) ExportPrivKey(name, decryptPassphrase, encryptPassphras
 		return "", err
 	}
 
-	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ImportPrivKey imports a private key in ASCII armor format. An error is returned
@@ -347,7 +358,7 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 		return fmt.Errorf("cannot overwrite key: %s", name)
 	}
 
-	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
@@ -376,7 +387,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 		}
 	}
 
-	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return err
 	}
@@ -401,7 +412,7 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 		return err
 	}
 
-	err = kb.db.Remove(string(addrKey(info.GetAddress())))
+	err = kb.db.Remove(string(addrHexKey(info.GetAddress())))
 	if err != nil {
 		return err
 	}
@@ -412,13 +423,6 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	}
 
 	return nil
-}
-
-// Update changes the passphrase with which an already stored key is encrypted.
-// The oldpass must be the current passphrase used for encryption, getNewpass is
-// a function to get the passphrase to permanently replace the current passphrase.
-func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	return errors.New("unsupported operation")
 }
 
 // SupportedAlgos returns a list of supported signing algorithms.
@@ -454,7 +458,7 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 	}
 
 	err = kb.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  string(addrHexKey(info.GetAddress())),
 		Data: key,
 	})
 	if err != nil {
@@ -580,4 +584,8 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			return pass, nil
 		}
 	}
+}
+
+func addrHexKey(address types.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix))
 }

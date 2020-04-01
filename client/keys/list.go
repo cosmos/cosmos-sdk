@@ -36,12 +36,12 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cmd.SetOut(cmd.OutOrStdout())
 	if !viper.GetBool(flagListNames) {
-		printInfos(infos)
+		printInfos(cmd.OutOrStdout(), infos)
 		return nil
 	}
 
-	cmd.SetOut(cmd.OutOrStdout())
 	for _, info := range infos {
 		cmd.Println(info.GetName())
 	}

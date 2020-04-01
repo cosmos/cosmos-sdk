@@ -17,8 +17,8 @@ const (
 
 // IdentifiedConnectionEnd defines the union of a connection end & an identifier.
 type IdentifiedConnectionEnd struct {
-	ConnectionEnd
-	Identifier string `json:"identifier" yaml:"identifier"`
+	Connection ConnectionEnd `json:"connection_end" yaml:"connection_end"`
+	Identifier string        `json:"identifier" yaml:"identifier"`
 }
 
 // ConnectionResponse defines the client query response for a connection which

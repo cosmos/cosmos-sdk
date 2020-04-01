@@ -170,6 +170,24 @@ func TestStore_Get(t *testing.T) {
 	}, snapshot)
 }
 
+func TestStore_GetLatest(t *testing.T) {
+	store, teardown := setup(t)
+	defer teardown()
+
+	// Loading a missing snapshot should return nil
+	snapshot, err := store.GetLatest()
+	require.NoError(t, err)
+	assert.Equal(t, &types.Snapshot{
+		Height: 3,
+		Format: 2,
+		Chunks: []*types.Chunk{
+			{Hash: checksum([]byte{3, 2, 0})},
+			{Hash: checksum([]byte{3, 2, 1})},
+			{Hash: checksum([]byte{3, 2, 2})},
+		},
+	}, snapshot)
+}
+
 func TestStore_List(t *testing.T) {
 	store, teardown := setup(t)
 	defer teardown()

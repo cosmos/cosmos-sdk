@@ -106,6 +106,29 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	return metadata, nil
 }
 
+// Get fetches the latest snapshot from the database, if any.
+func (s *Store) GetLatest() (*types.Snapshot, error) {
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	if err != nil {
+		return nil, fmt.Errorf("failed to find latest snapshot: %w", err)
+	}
+	defer iter.Close()
+
+	var snapshot *types.Snapshot
+	if iter.Valid() {
+		snapshot = &types.Snapshot{}
+		err := proto.Unmarshal(iter.Value(), snapshot)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode latest snapshot: %w", err)
+		}
+	}
+	err = iter.Error()
+	if err != nil {
+		return nil, fmt.Errorf("failed to find latest snapshot: %w", err)
+	}
+	return snapshot, nil
+}
+
 // List lists snapshots, in reverse order (newest first).
 func (s *Store) List() ([]*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))

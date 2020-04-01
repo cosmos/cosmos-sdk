@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -43,7 +43,7 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
+	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
+		if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
 			// confirm deletion, unless -y is passed
 			if !viper.GetBool(flagYes) {
 				if err := confirmDeletion(buf); err != nil {

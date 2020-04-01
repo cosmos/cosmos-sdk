@@ -37,8 +37,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+		if rest.CheckNotFoundError(w, err) {
 			return
 		}
 
@@ -71,14 +70,12 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		params := types.NewQueryProposalParams(proposalID)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -105,20 +102,17 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		params := types.NewQueryProposalParams(proposalID)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		var proposal types.Proposal
-		if err := cliCtx.Codec.UnmarshalJSON(res, &proposal); err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, cliCtx.Codec.UnmarshalJSON(res, &proposal)) {
 			return
 		}
 
@@ -131,8 +125,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			res, _, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
 		}
 
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -156,8 +149,7 @@ func queryProposerHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		res, err := gcutils.QueryProposerByTxQuery(cliCtx, proposalID)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -189,8 +181,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -202,20 +193,17 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		params := types.NewQueryDepositParams(proposalID, depositorAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, _, err := cliCtx.QueryWithData("custom/gov/deposit", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		var deposit types.Deposit
-		if err := cliCtx.Codec.UnmarshalJSON(res, &deposit); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, cliCtx.Codec.UnmarshalJSON(res, &deposit)) {
 			return
 		}
 
@@ -224,8 +212,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		// for directly via a txs query.
 		if deposit.Empty() {
 			bz, err := cliCtx.Codec.MarshalJSON(types.NewQueryProposalParams(proposalID))
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 
@@ -237,8 +224,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 
 			res, err = gcutils.QueryDepositByTxQuery(cliCtx, params)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			if rest.CheckInternalServerError(w, err) {
 				return
 			}
 		}
@@ -284,20 +270,17 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		params := types.NewQueryVoteParams(proposalID, voterAddr)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, _, err := cliCtx.QueryWithData("custom/gov/vote", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		var vote types.Vote
-		if err := cliCtx.Codec.UnmarshalJSON(res, &vote); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, cliCtx.Codec.UnmarshalJSON(res, &vote)) {
 			return
 		}
 
@@ -306,8 +289,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		// directly via a txs query.
 		if vote.Empty() {
 			bz, err := cliCtx.Codec.MarshalJSON(types.NewQueryProposalParams(proposalID))
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 
@@ -319,8 +301,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			}
 
 			res, err = gcutils.QueryVoteByTxQuery(cliCtx, params)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			if rest.CheckInternalServerError(w, err) {
 				return
 			}
 		}
@@ -333,8 +314,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -360,20 +340,17 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		params := types.NewQueryProposalVotesParams(proposalID, page, limit)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		var proposal types.Proposal
-		if err := cliCtx.Codec.UnmarshalJSON(res, &proposal); err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, cliCtx.Codec.UnmarshalJSON(res, &proposal)) {
 			return
 		}
 
@@ -386,8 +363,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			res, _, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		}
 
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -399,8 +375,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -417,39 +392,34 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		if v := r.URL.Query().Get(RestVoter); len(v) != 0 {
 			voterAddr, err = sdk.AccAddressFromBech32(v)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 		}
 
 		if v := r.URL.Query().Get(RestDepositor); len(v) != 0 {
 			depositorAddr, err = sdk.AccAddressFromBech32(v)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 		}
 
 		if v := r.URL.Query().Get(RestProposalStatus); len(v) != 0 {
 			proposalStatus, err = types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(v))
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 		}
 
 		params := types.NewQueryProposalsParams(page, limit, proposalStatus, voterAddr, depositorAddr)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryProposals)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -483,14 +453,12 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		params := types.NewQueryProposalParams(proposalID)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData("custom/gov/tally", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

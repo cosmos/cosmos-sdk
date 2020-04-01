@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/binary"
+
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,8 +13,11 @@ import (
 // CommitPacket return the hash of commitment bytes
 // TODO: no specification for packet commitment currently,
 // make it spec compatible once we have it
-func CommitPacket(data []byte) []byte {
-	return tmhash.Sum(data)
+func CommitPacket(packet exported.PacketI) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, packet.GetTimeoutHeight())
+	buf = append(buf, packet.GetData()...)
+	return tmhash.Sum(buf)
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes

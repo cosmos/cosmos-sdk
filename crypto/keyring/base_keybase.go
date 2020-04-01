@@ -25,7 +25,7 @@ type (
 	}
 
 	writeLocalKeyer interface {
-		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info
+		writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info
 	}
 
 	infoWriter interface {
@@ -87,7 +87,7 @@ func (kb baseKeybase) CreateAccount(
 	var info Info
 
 	if encryptPasswd != "" {
-		info = keyWriter.writeLocalKey(name, privKey, encryptPasswd, algo)
+		info = keyWriter.writeLocalKey(name, privKey, algo)
 	} else {
 		info = kb.writeOfflineKey(keyWriter, name, privKey.PubKey(), algo)
 	}

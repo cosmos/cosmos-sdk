@@ -62,7 +62,7 @@ func (kt KeyType) String() string {
 
 type (
 	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
-	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error)
+	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo pubKeyType) ([]byte, error)
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error)
+	PrivKeyGenFunc func(bz []byte, algo pubKeyType) (crypto.PrivKey, error)
 )

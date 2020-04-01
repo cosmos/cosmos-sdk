@@ -25,17 +25,17 @@ type Keybase interface {
 	// It returns the generated mnemonic and the key Info. It returns an error if it fails to
 	// generate a key for the given algo type, or if another key is already stored under the
 	// same name.
-	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
+	CreateMnemonic(name string, language Language, passwd string, algo pubKeyType) (info Info, seed string, err error)
 
 	// CreateAccount converts a mnemonic to a private key and BIP 32 HD Path
 	// and persists it, encrypted with the given password.
-	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo) (Info, error)
+	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo pubKeyType) (Info, error)
 
 	// CreateLedger creates, stores, and returns a new Ledger key reference
-	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)
+	CreateLedger(name string, algo pubKeyType, hrp string, account, index uint32) (info Info, err error)
 
 	// CreateOffline creates, stores, and returns a new offline key reference
-	CreateOffline(name string, pubkey crypto.PubKey, algo SigningAlgo) (info Info, err error)
+	CreateOffline(name string, pubkey crypto.PubKey, algo pubKeyType) (info Info, err error)
 
 	// CreateMulti creates, stores, and returns a new multsig (offline) key reference
 	CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error)
@@ -69,8 +69,8 @@ type Keybase interface {
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
 
 	// SupportedAlgos returns a list of signing algorithms supported by the keybase
-	SupportedAlgos() []SigningAlgo
+	SupportedAlgos() []pubKeyType
 
 	// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
-	SupportedAlgosLedger() []SigningAlgo
+	SupportedAlgosLedger() []pubKeyType
 }

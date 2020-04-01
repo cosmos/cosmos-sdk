@@ -429,12 +429,12 @@ func TestSupportedAlgos(t *testing.T) {
 	t.Cleanup(cleanup)
 	kb, err := NewKeyring("keybasename", "test", dir, nil)
 	require.NoError(t, err)
-	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgos())
-	require.Equal(t, []SigningAlgo{"secp256k1"}, kb.SupportedAlgosLedger())
+	require.Equal(t, []pubKeyType{"secp256k1"}, kb.SupportedAlgos())
+	require.Equal(t, []pubKeyType{"secp256k1"}, kb.SupportedAlgosLedger())
 }
 
 func TestCustomDerivFuncKey(t *testing.T) {
-	kb := NewInMemory(WithDeriveFunc(func(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
+	kb := NewInMemory(WithDeriveFunc(func(mnemonic string, bip39Passphrase, hdPath string, algo pubKeyType) ([]byte, error) {
 		return nil, errors.New("cannot derive keys")
 	}))
 	_, _, err := kb.CreateMnemonic("test", English, "", "")
@@ -485,7 +485,7 @@ func TestInMemoryCreateLedgerUnsupportedAlgo(t *testing.T) {
 }
 
 func TestInMemoryCreateLedger(t *testing.T) {
-	kb := NewInMemory(WithSupportedAlgosLedger([]SigningAlgo{Secp256k1, Ed25519}))
+	kb := NewInMemory(WithSupportedAlgosLedger([]pubKeyType{Secp256k1, Ed25519}))
 
 	// test_cover and test_unit will result in different answers
 	// test_cover does not compile some dependencies so ledger is disabled
@@ -536,7 +536,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 func TestInMemoryKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory(WithSupportedAlgos([]SigningAlgo{Secp256k1, Sr25519}))
+	cstore := NewInMemory(WithSupportedAlgos([]pubKeyType{Secp256k1, Sr25519}))
 
 	// Test modified supported algos
 	supportedAlgos := cstore.SupportedAlgos()
@@ -885,7 +885,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	customKeyGenFunc := func(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
+	customKeyGenFunc := func(bz []byte, algo pubKeyType) (tmcrypto.PrivKey, error) {
 		var bzArr [32]byte
 		copy(bzArr[:], bz)
 		return secp256k1.PrivKeySecp256k1(bzArr), nil
@@ -985,7 +985,7 @@ func TestInMemoryKeygenOverride(t *testing.T) {
 	CryptoCdc = testCdc
 
 	overrideCalled := false
-	dummyFunc := func(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
+	dummyFunc := func(bz []byte, algo pubKeyType) (tmcrypto.PrivKey, error) {
 		overrideCalled = true
 		return testPriv(bz), nil
 	}

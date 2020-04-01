@@ -220,7 +220,7 @@ func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
-	_, err = a.writeLocalKey(uid, privKey, SigningAlgo(algo))
+	_, err = a.writeLocalKey(uid, privKey, pubKeyType(algo))
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (a altKeyring) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	_, err = a.writeOfflineKey(uid, pubKey, SigningAlgo(algo))
+	_, err = a.writeOfflineKey(uid, pubKey, pubKeyType(algo))
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,7 @@ func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, a
 	return a.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
 }
 
-func (a altKeyring) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo SigningAlgo) (Info, error) {
+func (a altKeyring) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo pubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
 	err := a.writeInfo(name, info)
 	if err != nil {
@@ -491,7 +491,7 @@ func (a altKeyring) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) (Info, error) {
+func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo pubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
@@ -528,7 +528,7 @@ func (a altKeyring) writeInfo(name string, info Info) error {
 	return nil
 }
 
-func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
+func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo pubKeyType) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
 	err := a.writeInfo(name, info)
 	if err != nil {

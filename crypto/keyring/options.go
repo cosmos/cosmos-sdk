@@ -6,8 +6,8 @@ type KeybaseOption func(*kbOptions)
 type kbOptions struct {
 	keygenFunc           PrivKeyGenFunc
 	deriveFunc           DeriveKeyFunc
-	supportedAlgos       []SigningAlgo
-	supportedAlgosLedger []SigningAlgo
+	supportedAlgos       []pubKeyType
+	supportedAlgosLedger []pubKeyType
 }
 
 // WithKeygenFunc applies an overridden key generation function to generate the private key.
@@ -25,14 +25,14 @@ func WithDeriveFunc(f DeriveKeyFunc) KeybaseOption {
 }
 
 // WithSupportedAlgos defines the list of accepted SigningAlgos.
-func WithSupportedAlgos(algos []SigningAlgo) KeybaseOption {
+func WithSupportedAlgos(algos []pubKeyType) KeybaseOption {
 	return func(o *kbOptions) {
 		o.supportedAlgos = algos
 	}
 }
 
 // WithSupportedAlgosLedger defines the list of accepted SigningAlgos compatible with Ledger.
-func WithSupportedAlgosLedger(algos []SigningAlgo) KeybaseOption {
+func WithSupportedAlgosLedger(algos []pubKeyType) KeybaseOption {
 	return func(o *kbOptions) {
 		o.supportedAlgosLedger = algos
 	}

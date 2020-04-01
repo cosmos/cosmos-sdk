@@ -33,7 +33,7 @@ func TestAltKeyring_List(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, list)
 
-	// Fails on creating unsupported SigningAlgo
+	// Fails on creating unsupported pubKeyType
 	_, _, err = keyring.NewMnemonic("failing", English, notSupportedAlgo{})
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
@@ -71,7 +71,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 
 	uid := "newUid"
 
-	// Fails on creating unsupported SigningAlgo
+	// Fails on creating unsupported pubKeyType
 	_, err = keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), notSupportedAlgo{})
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 

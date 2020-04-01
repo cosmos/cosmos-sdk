@@ -102,7 +102,7 @@ func NewInMemory(opts ...KeybaseOption) Keybase {
 // An error is returned if it fails to generate a key for the given algo type,
 // or if another key is already stored under the same name.
 func (kb keyringKeybase) CreateMnemonic(
-	name string, language Language, passwd string, algo SigningAlgo,
+	name string, language Language, passwd string, algo pubKeyType,
 ) (info Info, mnemonic string, err error) {
 
 	return kb.base.CreateMnemonic(kb, name, language, passwd, algo)
@@ -111,7 +111,7 @@ func (kb keyringKeybase) CreateMnemonic(
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted
 // with the given password.
 func (kb keyringKeybase) CreateAccount(
-	name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo,
+	name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo pubKeyType,
 ) (Info, error) {
 
 	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, hdPath, algo)
@@ -120,7 +120,7 @@ func (kb keyringKeybase) CreateAccount(
 // CreateLedger creates a new locally-stored reference to a Ledger keypair.
 // It returns the created key info and an error if the Ledger could not be queried.
 func (kb keyringKeybase) CreateLedger(
-	name string, algo SigningAlgo, hrp string, account, index uint32,
+	name string, algo pubKeyType, hrp string, account, index uint32,
 ) (Info, error) {
 
 	return kb.base.CreateLedger(kb, name, algo, hrp, account, index)
@@ -128,7 +128,7 @@ func (kb keyringKeybase) CreateLedger(
 
 // CreateOffline creates a new reference to an offline keypair. It returns the
 // created key info.
-func (kb keyringKeybase) CreateOffline(name string, pub tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
+func (kb keyringKeybase) CreateOffline(name string, pub tmcrypto.PubKey, algo pubKeyType) (Info, error) {
 	return kb.base.writeOfflineKey(kb, name, pub, algo), nil
 }
 
@@ -364,7 +364,7 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 	}
 
 	// NOTE: The keyring keystore has no need for a passphrase.
-	kb.writeLocalKey(name, privKey, SigningAlgo(algo))
+	kb.writeLocalKey(name, privKey, pubKeyType(algo))
 	return nil
 }
 
@@ -397,7 +397,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 		return err
 	}
 
-	kb.base.writeOfflineKey(kb, name, pubKey, SigningAlgo(algo))
+	kb.base.writeOfflineKey(kb, name, pubKey, pubKeyType(algo))
 	return nil
 }
 
@@ -426,16 +426,16 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 }
 
 // SupportedAlgos returns a list of supported signing algorithms.
-func (kb keyringKeybase) SupportedAlgos() []SigningAlgo {
+func (kb keyringKeybase) SupportedAlgos() []pubKeyType {
 	return kb.base.SupportedAlgos()
 }
 
 // SupportedAlgosLedger returns a list of supported ledger signing algorithms.
-func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
+func (kb keyringKeybase) SupportedAlgosLedger() []pubKeyType {
 	return kb.base.SupportedAlgosLedger()
 }
 
-func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info {
+func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, algo pubKeyType) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)

@@ -3,7 +3,7 @@ package keyring
 import "github.com/tendermint/tendermint/crypto"
 
 type AltSigningAlgo interface {
-	Name() SigningAlgo
+	Name() pubKeyType
 	DeriveKey() AltDeriveKeyFunc
 	PrivKeyGen() AltPrivKeyGenFunc
 }
@@ -14,7 +14,7 @@ type AltPrivKeyGenFunc func(bz []byte) crypto.PrivKey
 type secp256k1Algo struct {
 }
 
-func (s secp256k1Algo) Name() SigningAlgo {
+func (s secp256k1Algo) Name() pubKeyType {
 	return Secp256k1
 }
 

@@ -232,7 +232,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
 				ibctypes.TRYOPEN,
 			)
-			suite.chainB.createConnection(
+			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
 				ibctypes.OPEN,
 			)
@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
 				ibctypes.ORDERED, testConnectionIDB,
 			)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
+			_ = suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
 				ibctypes.TRYOPEN, ibctypes.ORDERED, testConnectionIDA)
 		}, true},
 		{"channel doesn't exist", func() {}, false},

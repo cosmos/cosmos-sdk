@@ -248,7 +248,7 @@ func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state ibctypes.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,

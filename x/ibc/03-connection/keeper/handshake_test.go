@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -24,7 +25,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		{"couldn't add connection to client", func() {}, false},
 	}
 
-	counterparty := connection.NewCounterparty(testClientIDA, testConnectionIDB, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connection.NewCounterparty(testClientIDA, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 
 	for i, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
@@ -47,7 +48,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 func (suite *KeeperTestSuite) TestConnOpenTry() {
 	// counterparty for A on B
 	counterparty := connection.NewCounterparty(
-		testClientIDB, testConnectionIDA, suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		testClientIDB, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainB.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
 	)
 
 	testCases := []struct {

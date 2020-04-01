@@ -125,7 +125,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 		suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(cctx, cpportid, cpchanid, uint64(i))
 		_, err := handler(cctx, suite.newTx(msg), false)
 		if err == nil {
-			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, packet, packet.Data.GetPacketDataI())
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, packet, packet.Data)
 		}
 		if i == 1 {
 			suite.NoError(err, "%d", i) // successfully executed
@@ -296,7 +296,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		Height:       client.Header.GetHeight() - 1,
 		Timestamp:    client.Header.GetTime(),
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: client.Vals,
+		ValidatorSet: ibctmtypes.ValSetFromTmTypes(client.Vals),
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
@@ -323,7 +323,7 @@ func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state ibctypes.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,

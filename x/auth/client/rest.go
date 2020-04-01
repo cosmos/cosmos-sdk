@@ -19,8 +19,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 	}
 
 	simAndExec, gas, err := flags.ParseGas(br.Gas)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if rest.CheckBadRequestError(w, err) {
 		return
 	}
 
@@ -36,8 +35,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 		}
 
 		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -48,14 +46,12 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 	}
 
 	stdMsg, err := txBldr.BuildSignMsg(msgs)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if rest.CheckBadRequestError(w, err) {
 		return
 	}
 
 	output, err := cliCtx.Codec.MarshalJSON(types.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 

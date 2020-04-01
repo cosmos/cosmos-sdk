@@ -43,14 +43,12 @@ func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx
 		}
 
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		valAddr, err := sdk.ValAddressFromBech32(bech32Validator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -60,9 +58,7 @@ func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx
 		}
 
 		msg := types.NewMsgUnjail(valAddr)
-		err = msg.ValidateBasic()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 		tx.WriteGeneratedTxResponse(ctx, w, txg, req.BaseReq, msg)
@@ -99,14 +95,12 @@ func unjailRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -116,9 +110,7 @@ func unjailRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		msg := types.NewMsgUnjail(valAddr)
-		err = msg.ValidateBasic()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 

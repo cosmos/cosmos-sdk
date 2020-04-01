@@ -30,8 +30,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 		bech32Addr := vars["address"]
 
 		toAddr, err := sdk.AccAddressFromBech32(bech32Addr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -46,8 +45,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 		}
 
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -72,8 +70,7 @@ func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		bech32Addr := vars["address"]
 
 		toAddr, err := sdk.AccAddressFromBech32(bech32Addr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -88,8 +85,7 @@ func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 

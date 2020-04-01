@@ -8,14 +8,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // CommitPacket return the hash of commitment bytes
 // TODO: no specification for packet commitment currently,
 // make it spec compatible once we have it
 func CommitPacket(packet exported.PacketI) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, packet.GetTimeoutHeight())
+	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }

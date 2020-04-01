@@ -3,9 +3,7 @@ package cosmos_sdk.x.ibc.channel.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
-import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
-import "x/ibc/20-transfer/types/types.proto";
 import "x/ibc/23-commitment/types/types.proto";
 import "x/ibc/types/types.proto";
 
@@ -152,10 +150,8 @@ message MsgAcknowledgement {
   Packet packet = 1 [
     (gogoproto.nullable) = false
   ];
-  PacketAck acknowledgement = 2 [
-    (gogoproto.nullable) = false
-  ];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 3 [
+  bytes                                      acknowledgement = 2;
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof           = 3 [
     (gogoproto.nullable) = false
   ];
   uint64 proof_height = 4;
@@ -198,24 +194,10 @@ message Counterparty {
 message Packet {
   option (gogoproto.goproto_getters) = false;
 
-  uint64     sequence            = 1;
-  string     source_port         = 2 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  string     source_channel      = 3 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  string     destination_port    = 4 [(gogoproto.moretags) = "yaml:\"destination_port\""];
-  string     destination_channel = 5 [(gogoproto.moretags) = "yaml:\"destination_channel\""];
-  PacketData data                = 6 [(gogoproto.nullable) = false];
-}
-
-message PacketData {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketDataI";
-  oneof value {
-    cosmos_sdk.x.ibc.transfer.v1.FungibleTokenPacketData fungible_token = 1;
-  }
-}
-
-message PacketAck {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketAcknowledgementI";
-  oneof value {
-    cosmos_sdk.x.ibc.transfer.v1.AckDataTransfer ack_data_transfer = 1;
-  }
+  uint64 sequence            = 1;
+  string source_port         = 2 [(gogoproto.moretags) = "yaml:\"source_port\""];
+  string source_channel      = 3 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  string destination_port    = 4 [(gogoproto.moretags) = "yaml:\"destination_port\""];
+  string destination_channel = 5 [(gogoproto.moretags) = "yaml:\"destination_channel\""];
+  bytes  data                = 6 [(gogoproto.moretags) = "yaml:\"data\""];
 }

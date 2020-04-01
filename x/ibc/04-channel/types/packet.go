@@ -10,8 +10,9 @@ import (
 )
 
 //CommitPacket
-func CommitPacket(data exported.PacketDataI) []byte {
-	bz := sdk.Uint64ToBigEndian(data.GetTimeoutHeight())
+func CommitPacket(data []byte, timeoutHeight uint64) []byte {
+	bz := sdk.Uint64ToBigEndian(timeoutHeight)
+	bz = append(bz, data...)
 	return tmhash.Sum(bz)
 }
 
@@ -25,17 +26,12 @@ var _ exported.PacketI = (*Packet)(nil)
 // NewPacket creates a new Packet instance. It panics if the provided
 // packet data interface is not registered.
 func NewPacket(
-	data exported.PacketDataI,
+	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
 ) Packet {
-	var packetData *PacketData
-	if err := packetData.SetPacketDataI(data); err != nil {
-		panic(err)
-	}
-
 	return Packet{
-		Data:               *packetData,
+		Data:               data,
 		Sequence:           sequence,
 		SourcePort:         sourcePort,
 		SourceChannel:      sourceChannel,
@@ -60,17 +56,19 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
 // GetData returns the concrete packet data type as an interface.
-func (p Packet) GetData() exported.PacketDataI {
-	return p.Data.GetPacketDataI()
+func (p Packet) GetData() []byte {
+	return p.Data
 }
 
+// FIXME: add type
 // Type exports Packet.Data.Type
 func (p Packet) Type() string {
-	return p.Data.GetPacketDataI().Type()
+	return ""
 }
 
+// FIXME: add timeout
 // GetTimeoutHeight implements PacketI interface
-func (p Packet) GetTimeoutHeight() uint64 { return p.Data.GetPacketDataI().GetTimeoutHeight() }
+func (p Packet) GetTimeoutHeight() uint64 { return 0 }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -101,11 +99,11 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	if p.Data.GetPacketDataI().GetTimeoutHeight() == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
-	}
-	if len(p.Data.GetPacketDataI().GetBytes()) == 0 {
+	// if p.Data.GetPacketDataI().GetTimeoutHeight() == 0 {
+	// 	return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
+	// }
+	if len(p.Data) == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet data bytes cannot be empty")
 	}
-	return p.Data.GetPacketDataI().ValidateBasic()
+	return nil
 }

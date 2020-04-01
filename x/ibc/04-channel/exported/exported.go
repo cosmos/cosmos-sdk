@@ -30,7 +30,7 @@ type PacketI interface {
 	GetSourceChannel() string
 	GetDestPort() string
 	GetDestChannel() string
-	GetData() PacketDataI
+	GetData() []byte
 	ValidateBasic() error
 }
 

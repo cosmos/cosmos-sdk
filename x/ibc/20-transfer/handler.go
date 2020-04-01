@@ -17,13 +17,13 @@ func NewHandler(k Keeper) sdk.Handler {
 		case channeltypes.MsgPacket:
 			var data FungibleTokenPacketData
 			if err := types.ModuleCdc.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %w", err)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 			}
 			return handlePacketDataTransfer(ctx, k, msg, data)
 		case channeltypes.MsgTimeout:
 			var data FungibleTokenPacketData
 			if err := types.ModuleCdc.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %w", err)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 			}
 			return handleTimeoutDataTransfer(ctx, k, msg, data)
 		default:

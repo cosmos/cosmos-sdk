@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -346,59 +345,16 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 	}
 }
 
-var _ exported.PacketDataI = validPacketT{}
-
-type validPacketT struct{}
-
-func (validPacketT) GetBytes() []byte {
-	return []byte("testdata")
-}
-
-func (validPacketT) GetTimeoutHeight() uint64 {
-	return 100
-}
-
-func (validPacketT) ValidateBasic() error {
-	return nil
-}
-
-func (validPacketT) Type() string {
-	return "valid"
-}
-
-var _ exported.PacketDataI = invalidPacketT{}
-
-type invalidPacketT struct{}
-
-func (invalidPacketT) GetBytes() []byte {
-	return []byte("testdata")
-}
-
-func (invalidPacketT) GetTimeoutHeight() uint64 {
-	return 100
-}
-
-func (invalidPacketT) ValidateBasic() error {
-	return errors.New("invalid packet")
-}
-
-func (invalidPacketT) Type() string {
-	return "invalid"
-}
-
-var _ exported.PacketAcknowledgementI = invalidAckT{}
-
-type invalidAckT struct{}
-
-func (invalidAckT) GetBytes() []byte {
-	return []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
-}
-
 // define variables used for testing
 var (
-	packet        = NewPacket(validPacketT{}, 1, portid, chanid, cpportid, cpchanid)
-	invalidPacket = NewPacket(invalidPacketT{}, 0, portid, chanid, cpportid, cpchanid)
-	invalidAck    = invalidAckT{}
+	timeout           = uint64(100)
+	validPacketData   = []byte("testdata")
+	unknownPacketData = []byte("unknown")
+	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
+
+	packet        = NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, 100)
+	unknownPacket = NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, 100)
+	invalidAck    = invalidAckData
 
 	emptyProof     = commitmenttypes.MerkleProof{Proof: nil}
 	invalidProofs1 = commitmentexported.Proof(nil)
@@ -424,7 +380,7 @@ func TestMsgPacketRoute(t *testing.T) {
 func TestMsgPacketType(t *testing.T) {
 	msg := NewMsgPacket(packet, proof, 1, addr1)
 
-	require.Equal(t, "valid", msg.Type())
+	require.Equal(t, []byte("testdata"), msg.GetData())
 }
 
 // TestMsgPacketValidation tests ValidateBasic for MsgPacket
@@ -435,7 +391,7 @@ func TestMsgPacketValidation(t *testing.T) {
 		NewMsgPacket(packet, invalidProofs1, 1, addr1), // missing proof
 		NewMsgPacket(packet, invalidProofs2, 1, addr1), // proof contain empty proof
 		NewMsgPacket(packet, proof, 1, emptyAddr),      // missing signer address
-		NewMsgPacket(invalidPacket, proof, 1, addr1),   // invalid packet
+		NewMsgPacket(unknownPacket, proof, 1, addr1),   // unknown packet
 	}
 
 	testCases := []struct {
@@ -464,10 +420,12 @@ func TestMsgPacketValidation(t *testing.T) {
 // TestMsgPacketGetSignBytes tests GetSignBytes for MsgPacket
 func TestMsgPacketGetSignBytes(t *testing.T) {
 	msg := NewMsgPacket(packet, proof, 1, addr1)
-	SubModuleCdc.RegisterConcrete(validPacketT{}, "test/validPacketT", nil)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`
+	expected := fmt.Sprintf(
+		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
+		string(msg.GetDataSignBytes()),
+	)
 	require.Equal(t, expected, string(res))
 }
 
@@ -487,7 +445,7 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 		NewMsgTimeout(packet, 0, proof, 0, addr),
 		NewMsgTimeout(packet, 0, proof, 1, emptyAddr),
 		NewMsgTimeout(packet, 0, emptyProof, 1, addr),
-		NewMsgTimeout(invalidPacket, 0, proof, 1, addr),
+		NewMsgTimeout(unknownPacket, 0, proof, 1, addr),
 		NewMsgTimeout(packet, 0, invalidProofs1, 1, addr),
 	}
 
@@ -521,7 +479,7 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		NewMsgAcknowledgement(packet, packet.GetData(), proof, 0, addr),
 		NewMsgAcknowledgement(packet, packet.GetData(), proof, 1, emptyAddr),
 		NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
-		NewMsgAcknowledgement(invalidPacket, packet.GetData(), proof, 1, addr),
+		NewMsgAcknowledgement(unknownPacket, packet.GetData(), proof, 1, addr),
 		NewMsgAcknowledgement(packet, invalidAck, proof, 1, addr),
 		NewMsgAcknowledgement(packet, packet.GetData(), invalidProofs1, 1, addr),
 	}

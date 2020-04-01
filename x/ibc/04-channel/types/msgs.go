@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/base64"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -364,11 +365,6 @@ func (msg MsgPacket) Route() string {
 	return msg.Packet.DestinationPort
 }
 
-// Type implements sdk.Msg
-func (msg MsgPacket) Type() string {
-	return "packet"
-}
-
 // ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
 	if msg.Proof.IsEmpty() {
@@ -392,9 +388,21 @@ func (msg MsgPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
+// GetDataSignBytes returns the base64-encoded bytes used for the
+// data field when signing the packet.
+func (msg MsgPacket) GetDataSignBytes() []byte {
+	s := "\"" + base64.StdEncoding.EncodeToString(msg.Packet.Data) + "\""
+	return []byte(s)
+}
+
 // GetSigners implements sdk.Msg
 func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// Type implements sdk.Msg
+func (msg MsgPacket) Type() string {
+	return "ics04/opaque"
 }
 
 var _ sdk.Msg = MsgTimeout{}
@@ -416,11 +424,6 @@ func NewMsgTimeout(
 // Route implements sdk.Msg
 func (msg MsgTimeout) Route() string {
 	return msg.Packet.SourcePort
-}
-
-// Type implements sdk.Msg
-func (msg MsgTimeout) Type() string {
-	return "timeout"
 }
 
 // ValidateBasic implements sdk.Msg
@@ -451,13 +454,16 @@ func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+// Type implements sdk.Msg
+func (msg MsgTimeout) Type() string {
+	return "ics04/timeout"
+}
+
 var _ sdk.Msg = MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof commitmenttypes.MerkleProof,
-	proofHeight uint64, signer sdk.AccAddress,
-) MsgAcknowledgement {
+	packet Packet, ack []byte, proof commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
 	return MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
@@ -470,11 +476,6 @@ func NewMsgAcknowledgement(
 // Route implements sdk.Msg
 func (msg MsgAcknowledgement) Route() string {
 	return msg.Packet.SourcePort
-}
-
-// Type implements sdk.Msg
-func (msg MsgAcknowledgement) Type() string {
-	return "acknowledgement"
 }
 
 // ValidateBasic implements sdk.Msg
@@ -506,4 +507,9 @@ func (msg MsgAcknowledgement) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// Type implements sdk.Msg
+func (msg MsgAcknowledgement) Type() string {
+	return "ics04/opaque"
 }

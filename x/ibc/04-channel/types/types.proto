@@ -146,6 +146,7 @@ message MsgTimeout {
   ];
 }
 
+// MsgAcknowledgement receives incoming IBC acknowledgement
 message MsgAcknowledgement {
   Packet packet = 1 [
     (gogoproto.nullable) = false
@@ -187,10 +188,7 @@ message Counterparty {
   ];
 }
 
-// CommitPacket appends bigendian encoded timeout height and commitment bytes
-// and then returns the hash of the result bytes.
-// TODO: no specification for packet commitment currently,
-// make it spec compatible once we have it.
+// Packet defines a type that carries data across different chains through IBC
 message Packet {
   option (gogoproto.goproto_getters) = false;
 
@@ -200,4 +198,5 @@ message Packet {
   string destination_port    = 4 [(gogoproto.moretags) = "yaml:\"destination_port\""];
   string destination_channel = 5 [(gogoproto.moretags) = "yaml:\"destination_channel\""];
   bytes  data                = 6 [(gogoproto.moretags) = "yaml:\"data\""];
+  uint64 timeout_height      = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
 }

@@ -5,6 +5,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
@@ -15,10 +16,10 @@ type BankKeeper interface {
 
 // ChannelKeeper defines the expected IBC channel keeper
 type ChannelKeeper interface {
-	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channelexported.ChannelI, found bool)
+	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
 	SendPacket(ctx sdk.Context, packet channelexported.PacketI) error
-	PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketAcknowledgementI) error
+	PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error
 	ChanCloseInit(ctx sdk.Context, portID, channelID string) error
 	TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error
 }

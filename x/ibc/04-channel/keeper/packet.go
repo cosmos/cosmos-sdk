@@ -100,15 +100,15 @@ func (k Keeper) SendPacket(
 
 	nextSequenceSend++
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.GetData()))
+	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet))
 
 	// Emit Event with Packet data along with other packet information for relayer to pick up
 	// and relay to other chain
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
-			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData().GetBytes())),
-			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetData().GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
@@ -179,7 +179,7 @@ func (k Keeper) RecvPacket(
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
-		types.CommitPacket(packet.GetData()),
+		types.CommitPacket(packet),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
@@ -193,7 +193,7 @@ func (k Keeper) RecvPacket(
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketAcknowledgementI,
+	acknowledgement []byte,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -246,7 +246,7 @@ func (k Keeper) PacketExecuted(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement exported.PacketAcknowledgementI,
+	acknowledgement []byte,
 	proof commitmentexported.Proof,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
@@ -295,13 +295,13 @@ func (k Keeper) AcknowledgePacket(
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	// verify we sent the packet and haven't cleared it out yet
-	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
+	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement.GetBytes(),
+		packet.GetSequence(), acknowledgement,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
@@ -377,7 +377,7 @@ func (k Keeper) CleanupPacket(
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	// verify we sent the packet and haven't cleared it out yet
-	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
+	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 

@@ -9,19 +9,33 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-//CommitPacket
-func CommitPacket(data []byte, timeoutHeight uint64) []byte {
-	bz := sdk.Uint64ToBigEndian(timeoutHeight)
-	bz = append(bz, data...)
-	return tmhash.Sum(bz)
+// CommitPacket return the hash of commitment bytes
+// TODO: no specification for packet commitment currently,
+// make it spec compatible once we have it
+func CommitPacket(packet exported.PacketI) []byte {
+	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())
+	buf = append(buf, packet.GetData()...)
+	return tmhash.Sum(buf)
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes
-func CommitAcknowledgement(data exported.PacketAcknowledgementI) []byte {
-	return tmhash.Sum(data.GetBytes())
+func CommitAcknowledgement(data []byte) []byte {
+	return tmhash.Sum(data)
 }
 
 var _ exported.PacketI = (*Packet)(nil)
+
+// // Packet defines a type that carries data across different chains through IBC
+// type Packet struct {
+// 	Data []byte `json:"data" yaml:"data"` // Actual opaque bytes transferred directly to the application module
+
+// 	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
+// 	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
+// 	SourceChannel      string `json:"source_channel" yaml:"source_channel"`           // identifies the channel end on the sending chain.
+// 	DestinationPort    string `json:"destination_port" yaml:"destination_port"`       // identifies the port on the receiving chain.
+// 	DestinationChannel string `json:"destination_channel" yaml:"destination_channel"` // identifies the channel end on the receiving chain.
+// 	TimeoutHeight      uint64 `json:"timeout_height" yaml:"timeout_height"`           // block height after which the packet times out
+// }
 
 // NewPacket creates a new Packet instance. It panics if the provided
 // packet data interface is not registered.
@@ -29,6 +43,7 @@ func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
+	timeoutHeight uint64,
 ) Packet {
 	return Packet{
 		Data:               data,
@@ -37,6 +52,7 @@ func NewPacket(
 		SourceChannel:      sourceChannel,
 		DestinationPort:    destinationPort,
 		DestinationChannel: destinationChannel,
+		TimeoutHeight:      timeoutHeight,
 	}
 }
 
@@ -55,20 +71,11 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 // GetDestChannel implements PacketI interface
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
-// GetData returns the concrete packet data type as an interface.
-func (p Packet) GetData() []byte {
-	return p.Data
-}
+// GetData implements PacketI interface
+func (p Packet) GetData() []byte { return p.Data }
 
-// FIXME: add type
-// Type exports Packet.Data.Type
-func (p Packet) Type() string {
-	return ""
-}
-
-// FIXME: add timeout
 // GetTimeoutHeight implements PacketI interface
-func (p Packet) GetTimeoutHeight() uint64 { return 0 }
+func (p Packet) GetTimeoutHeight() uint64 { return p.TimeoutHeight }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -99,9 +106,9 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	// if p.Data.GetPacketDataI().GetTimeoutHeight() == 0 {
-	// 	return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
-	// }
+	if p.TimeoutHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
+	}
 	if len(p.Data) == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet data bytes cannot be empty")
 	}

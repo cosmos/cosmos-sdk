@@ -157,20 +157,6 @@ message MsgUpdateClient {
   }
 }
 
-message PacketData {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketDataI";
-  oneof sum {
-    cosmos_sdk.x.ibc.transfer.v1.FungibleTokenPacketData fungible_token = 1;
-  }
-}
-
-message PacketAck {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.PacketAcknowledgementI";
-  oneof sum {
-    cosmos_sdk.x.ibc.transfer.v1.AckDataTransfer ack_data_transfer = 1;
-  }
-}
-
 // Transaction defines the application-level transaction that can be signed and
 // processed by the state-machine. It contains a base of common fields and
 // repeated set of Message types.

@@ -80,13 +80,3 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error {
 	return k.channelKeeper.TimeoutExecuted(ctx, packet)
 }
-
-// UnmarshalPacketData tries to extract an application type from raw channel packet data.
-func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) (types.PacketDataI, error) {
-	var ftpd types.FungibleTokenPacketData
-
-	if err := k.cdc.UnmarshalBinaryBare(rawData, &ftpd); err != nil {
-		return nil, err
-	}
-	return ftpd, nil
-}

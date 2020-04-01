@@ -306,7 +306,7 @@ func (app *BaseApp) snapshot(height uint64) {
 	if err != nil {
 		app.logger.Error("Failed to examine latest snapshot", "err", err)
 	}
-	if latest.Height >= height {
+	if latest != nil && latest.Height >= height {
 		app.logger.Error("A more recent snapshot already exists", "height", latest.Height, "format", latest.Format)
 		return
 	}

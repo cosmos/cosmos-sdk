@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	_ Keyring = &altKeyring{}
+	_ Keyring = &keystore{}
 )
 
 // NewKeyring creates a new instance of a keyring. Keybase
@@ -63,19 +63,19 @@ func New(
 		optionFn(&options)
 	}
 
-	return altKeyring{
+	return keystore{
 		db:      db,
 		options: options,
 	}, nil
 }
 
-type altKeyring struct {
+type keystore struct {
 	db      keyring.Keyring
 	options altKrOptions
 }
 
-func (a altKeyring) ExportPubKeyArmor(uid string) (string, error) {
-	bz, err := a.Key(uid)
+func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
+	bz, err := ks.Key(uid)
 	if err != nil {
 		return "", err
 	}
@@ -87,22 +87,22 @@ func (a altKeyring) ExportPubKeyArmor(uid string) (string, error) {
 	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
 }
 
-func (a altKeyring) ExportPubKeyArmorByAddress(address types.Address) (string, error) {
-	info, err := a.KeyByAddress(address)
+func (ks keystore) ExportPubKeyArmorByAddress(address types.Address) (string, error) {
+	info, err := ks.KeyByAddress(address)
 	if err != nil {
 		return "", err
 	}
 
-	return a.ExportPubKeyArmor(info.GetName())
+	return ks.ExportPubKeyArmor(info.GetName())
 }
 
-func (a altKeyring) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
-	priv, err := a.ExportPrivateKeyObject(uid)
+func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
+	priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}
 
-	info, err := a.Key(uid)
+	info, err := ks.Key(uid)
 	if err != nil {
 		return "", err
 	}
@@ -111,8 +111,8 @@ func (a altKeyring) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor str
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
-func (a altKeyring) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) {
-	info, err := a.Key(uid)
+func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) {
+	info, err := ks.Key(uid)
 	if err != nil {
 		return nil, err
 	}
@@ -138,17 +138,17 @@ func (a altKeyring) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error)
 	return priv, nil
 }
 
-func (a altKeyring) ExportPrivKeyArmorByAddress(address types.Address, encryptPassphrase string) (armor string, err error) {
-	byAddress, err := a.KeyByAddress(address)
+func (ks keystore) ExportPrivKeyArmorByAddress(address types.Address, encryptPassphrase string) (armor string, err error) {
+	byAddress, err := ks.KeyByAddress(address)
 	if err != nil {
 		return "", err
 	}
 
-	return a.ExportPrivKeyArmor(byAddress.GetName(), encryptPassphrase)
+	return ks.ExportPrivKeyArmor(byAddress.GetName(), encryptPassphrase)
 }
 
-func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {
-	if a.hasKey(uid) {
+func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
+	if ks.hasKey(uid) {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
@@ -157,7 +157,7 @@ func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
-	_, err = a.writeLocalKey(uid, privKey, pubKeyType(algo))
+	_, err = ks.writeLocalKey(uid, privKey, pubKeyType(algo))
 	if err != nil {
 		return err
 	}
@@ -166,13 +166,13 @@ func (a altKeyring) ImportPrivKey(uid, armor, passphrase string) error {
 }
 
 // HasKey returns whether the key exists in the keyring.
-func (a altKeyring) hasKey(name string) bool {
-	bz, _ := a.Key(name)
+func (ks keystore) hasKey(name string) bool {
+	bz, _ := ks.Key(name)
 	return bz != nil
 }
 
-func (a altKeyring) ImportPubKey(uid string, armor string) error {
-	bz, _ := a.Key(uid)
+func (ks keystore) ImportPubKey(uid string, armor string) error {
+	bz, _ := ks.Key(uid)
 	if bz != nil {
 		pubkey := bz.GetPubKey()
 
@@ -191,7 +191,7 @@ func (a altKeyring) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	_, err = a.writeOfflineKey(uid, pubKey, pubKeyType(algo))
+	_, err = ks.writeOfflineKey(uid, pubKey, pubKeyType(algo))
 	if err != nil {
 		return err
 	}
@@ -199,8 +199,8 @@ func (a altKeyring) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
-func (a altKeyring) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {
-	info, err := a.Key(uid)
+func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+	info, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -233,17 +233,17 @@ func (a altKeyring) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error
 	return sig, priv.PubKey(), nil
 }
 
-func (a altKeyring) SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error) {
-	key, err := a.KeyByAddress(address)
+func (ks keystore) SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+	key, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return a.Sign(key.GetName(), msg)
+	return ks.Sign(key.GetName(), msg)
 }
 
-func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error) {
-	if !a.options.supportedAlgosLedger.Contains(algo) {
+func (ks keystore) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error) {
+	if !ks.options.supportedAlgosLedger.Contains(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -255,12 +255,12 @@ func (a altKeyring) SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, a
 		return nil, err
 	}
 
-	return a.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
+	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
 }
 
-func (a altKeyring) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo pubKeyType) (Info, error) {
+func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo pubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
-	err := a.writeInfo(name, info)
+	err := ks.writeInfo(name, info)
 	if err != nil {
 		return nil, err
 	}
@@ -273,21 +273,21 @@ type altKrOptions struct {
 	supportedAlgosLedger AltSigningAlgoList
 }
 
-func (a altKeyring) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
-	return a.writeMultisigKey(uid, pubkey)
+func (ks keystore) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
+	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (a altKeyring) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error) {
-	return a.writeOfflineKey(uid, pubkey, algo.Name())
+func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error) {
+	return ks.writeOfflineKey(uid, pubkey, algo.Name())
 }
 
-func (a altKeyring) DeleteByAddress(address types.Address) error {
-	info, err := a.KeyByAddress(address)
+func (ks keystore) DeleteByAddress(address types.Address) error {
+	info, err := ks.KeyByAddress(address)
 	if err != nil {
 		return err
 	}
 
-	err = a.Delete(info.GetName())
+	err = ks.Delete(info.GetName())
 	if err != nil {
 		return err
 	}
@@ -295,18 +295,18 @@ func (a altKeyring) DeleteByAddress(address types.Address) error {
 	return nil
 }
 
-func (a altKeyring) Delete(uid string) error {
-	info, err := a.Key(uid)
+func (ks keystore) Delete(uid string) error {
+	info, err := ks.Key(uid)
 	if err != nil {
 		return err
 	}
 
-	err = a.db.Remove(addrHexKeyAsString(info.GetAddress()))
+	err = ks.db.Remove(addrHexKeyAsString(info.GetAddress()))
 	if err != nil {
 		return err
 	}
 
-	err = a.db.Remove(string(infoKey(uid)))
+	err = ks.db.Remove(string(infoKey(uid)))
 	if err != nil {
 		return err
 	}
@@ -314,8 +314,8 @@ func (a altKeyring) Delete(uid string) error {
 	return nil
 }
 
-func (a altKeyring) KeyByAddress(address types.Address) (Info, error) {
-	ik, err := a.db.Get(addrHexKeyAsString(address))
+func (ks keystore) KeyByAddress(address types.Address) (Info, error) {
+	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +324,7 @@ func (a altKeyring) KeyByAddress(address types.Address) (Info, error) {
 		return nil, fmt.Errorf("key with address %s not found", address)
 	}
 
-	bs, err := a.db.Get(string(ik.Data))
+	bs, err := ks.db.Get(string(ik.Data))
 	if err != nil {
 		return nil, err
 	}
@@ -332,9 +332,9 @@ func (a altKeyring) KeyByAddress(address types.Address) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-func (a altKeyring) List() ([]Info, error) {
+func (ks keystore) List() ([]Info, error) {
 	var res []Info
-	keys, err := a.db.Keys()
+	keys, err := ks.db.Keys()
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +343,7 @@ func (a altKeyring) List() ([]Info, error) {
 
 	for _, key := range keys {
 		if strings.HasSuffix(key, infoSuffix) {
-			rawInfo, err := a.db.Get(key)
+			rawInfo, err := ks.db.Get(key)
 			if err != nil {
 				return nil, err
 			}
@@ -364,12 +364,12 @@ func (a altKeyring) List() ([]Info, error) {
 	return res, nil
 }
 
-func (a altKeyring) NewMnemonic(uid string, language Language, algo AltSigningAlgo) (Info, string, error) {
+func (ks keystore) NewMnemonic(uid string, language Language, algo AltSigningAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	if !a.isSupportedSigningAlgo(algo) {
+	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, "", ErrUnsupportedSigningAlgo
 	}
 
@@ -385,7 +385,7 @@ func (a altKeyring) NewMnemonic(uid string, language Language, algo AltSigningAl
 		return nil, "", err
 	}
 
-	info, err := a.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), algo)
+	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, types.GetConfig().GetFullFundraiserPath(), algo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -393,8 +393,8 @@ func (a altKeyring) NewMnemonic(uid string, language Language, algo AltSigningAl
 	return info, mnemonic, err
 }
 
-func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo AltSigningAlgo) (Info, error) {
-	if !a.isSupportedSigningAlgo(algo) {
+func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo AltSigningAlgo) (Info, error) {
+	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -406,17 +406,17 @@ func (a altKeyring) NewAccount(uid string, mnemonic string, bip39Passphrase stri
 
 	privKey := algo.PrivKeyGen()(derivedPriv)
 
-	return a.writeLocalKey(uid, privKey, algo.Name())
+	return ks.writeLocalKey(uid, privKey, algo.Name())
 }
 
-func (a altKeyring) isSupportedSigningAlgo(algo AltSigningAlgo) bool {
-	return a.options.supportedAlgos.Contains(algo)
+func (ks keystore) isSupportedSigningAlgo(algo AltSigningAlgo) bool {
+	return ks.options.supportedAlgos.Contains(algo)
 }
 
-func (a altKeyring) Key(uid string) (Info, error) {
+func (ks keystore) Key(uid string) (Info, error) {
 	key := infoKey(uid)
 
-	bs, err := a.db.Get(string(key))
+	bs, err := ks.db.Get(string(key))
 	if err != nil {
 		return nil, err
 	}
@@ -428,12 +428,12 @@ func (a altKeyring) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo pubKeyType) (Info, error) {
+func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo pubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
-	err := a.writeInfo(name, info)
+	err := ks.writeInfo(name, info)
 	if err != nil {
 		return nil, err
 	}
@@ -441,12 +441,12 @@ func (a altKeyring) writeLocalKey(name string, priv tmcrypto.PrivKey, algo pubKe
 	return info, nil
 }
 
-func (a altKeyring) writeInfo(name string, info Info) error {
+func (ks keystore) writeInfo(name string, info Info) error {
 	// write the info by key
 	key := infoKey(name)
 	serializedInfo := marshalInfo(info)
 
-	err := a.db.Set(keyring.Item{
+	err := ks.db.Set(keyring.Item{
 		Key:  string(key),
 		Data: serializedInfo,
 	})
@@ -454,7 +454,7 @@ func (a altKeyring) writeInfo(name string, info Info) error {
 		return err
 	}
 
-	err = a.db.Set(keyring.Item{
+	err = ks.db.Set(keyring.Item{
 		Key:  addrHexKeyAsString(info.GetAddress()),
 		Data: key,
 	})
@@ -465,9 +465,9 @@ func (a altKeyring) writeInfo(name string, info Info) error {
 	return nil
 }
 
-func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo pubKeyType) (Info, error) {
+func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo pubKeyType) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
-	err := a.writeInfo(name, info)
+	err := ks.writeInfo(name, info)
 	if err != nil {
 		return nil, err
 	}
@@ -475,9 +475,9 @@ func (a altKeyring) writeOfflineKey(name string, pub tmcrypto.PubKey, algo pubKe
 	return info, nil
 }
 
-func (a altKeyring) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, error) {
+func (ks keystore) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, error) {
 	info := NewMultiInfo(name, pub)
-	err := a.writeInfo(name, info)
+	err := ks.writeInfo(name, info)
 	if err != nil {
 		return nil, err
 	}

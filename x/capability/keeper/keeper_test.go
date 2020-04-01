@@ -145,6 +145,36 @@ func (suite *KeeperTestSuite) TestClaimCapability() {
 	suite.Require().Equal(cap, got)
 }
 
+func (suite *KeeperTestSuite) TestGetOwners() {
+	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk3 := suite.keeper.ScopeToModule("foo")
+
+	sks := []keeper.ScopedKeeper{sk1, sk2, sk3}
+
+	cap, err := sk1.NewCapability(suite.ctx, "transfer")
+	suite.Require().NoError(err)
+	suite.Require().NotNil(cap)
+
+	suite.Require().NoError(sk2.ClaimCapability(suite.ctx, cap, "transfer"))
+	suite.Require().NoError(sk3.ClaimCapability(suite.ctx, cap, "transfer"))
+
+	expectedOrder := []string{bank.ModuleName, "foo", staking.ModuleName}
+	// Ensure all scoped keepers can get owners
+	for _, sk := range sks {
+		owners, ok := sk.GetOwners(suite.ctx, "transfer")
+
+		suite.Require().True(ok, "could not retrieve owners")
+		suite.Require().NotNil(owners, "owners is nil")
+
+		suite.Require().Equal(len(expectedOrder), len(owners.Owners), "length of owners is unexpected")
+		for i, o := range owners.Owners {
+			// Require owner is in expected position
+			suite.Require().Equal(expectedOrder[i], o.Module, "module is unexpected")
+		}
+	}
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

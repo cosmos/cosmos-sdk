@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
-	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2, true, 100)
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2, true)
 
 	testCases := []struct {
 		msg      string
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			}, true},
 	}
 
-	packet := channeltypes.NewPacket(data, 1, testPort1, testChannel1, testPort2, testChannel2)
+	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100)
 
 	for i, tc := range testCases {
 		tc := tc
@@ -152,7 +152,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestTimeoutTransfer() {
-	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2, true, 100)
+	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2, true)
 
 	testCases := []struct {
 		msg      string
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestTimeoutTransfer() {
 			}, false},
 	}
 
-	packet := channeltypes.NewPacket(data, 1, testPort1, testChannel1, testPort2, testChannel2)
+	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100)
 
 	for i, tc := range testCases {
 		tc := tc

@@ -22,7 +22,7 @@ func QuerierChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 
 	start, end := client.Paginate(len(channels), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		channels = []types.Channel{}
+		channels = []types.IdentifiedChannel{}
 	} else {
 		channels = channels[start:end]
 	}
@@ -45,16 +45,16 @@ func QuerierConnectionChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 
 	channels := k.GetAllChannels(ctx)
 
-	connectionChannels := []types.Channel{}
+	connectionChannels := []types.IdentifiedChannel{}
 	for _, channel := range channels {
-		if channel.ConnectionHops[0] == params.Connection {
+		if channel.Channel.ConnectionHops[0] == params.Connection {
 			connectionChannels = append(connectionChannels, channel)
 		}
 	}
 
 	start, end := client.Paginate(len(connectionChannels), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		connectionChannels = []types.Channel{}
+		connectionChannels = []types.IdentifiedChannel{}
 	} else {
 		connectionChannels = channels[start:end]
 	}

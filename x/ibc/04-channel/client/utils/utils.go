@@ -30,8 +30,8 @@ func QueryPacket(
 		return types.PacketResponse{}, err
 	}
 
-	destPortID := channelRes.Channel.Counterparty.PortID
-	destChannelID := channelRes.Channel.Counterparty.ChannelID
+	destPortID := channelRes.Channel.Channel.Counterparty.PortID
+	destChannelID := channelRes.Channel.Channel.Counterparty.ChannelID
 
 	var data exported.PacketDataI
 	// TODO: commitment data is stored, not the data

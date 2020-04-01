@@ -13,7 +13,7 @@ func TestConnectionStateString(t *testing.T) {
 	}{
 		{StateUninitialized, UNINITIALIZED},
 		{StateInit, INIT},
-		{StateOpenTry, TRYOPEN},
+		{StateTryOpen, TRYOPEN},
 		{StateOpen, OPEN},
 	}
 
@@ -31,7 +31,7 @@ func TestConnectionlStateMarshalJSON(t *testing.T) {
 	}{
 		{StateUninitialized, UNINITIALIZED},
 		{StateInit, INIT},
-		{StateOpenTry, TRYOPEN},
+		{StateTryOpen, TRYOPEN},
 		{StateOpen, OPEN},
 	}
 

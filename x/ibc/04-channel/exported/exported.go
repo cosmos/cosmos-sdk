@@ -115,7 +115,7 @@ const (
 const (
 	StateUninitialized string = "UNINITIALIZED"
 	StateInit          string = "INIT"
-	StateOpenTry       string = "TRYOPEN"
+	StateTryOpen       string = "TRYOPEN"
 	StateOpen          string = "OPEN"
 	StateClosed        string = "CLOSED"
 )
@@ -126,7 +126,7 @@ func (s State) String() string {
 	case INIT:
 		return StateInit
 	case TRYOPEN:
-		return StateOpenTry
+		return StateTryOpen
 	case OPEN:
 		return StateOpen
 	case CLOSED:
@@ -160,7 +160,7 @@ func StateFromString(state string) State {
 		return CLOSED
 	case StateInit:
 		return INIT
-	case StateOpenTry:
+	case StateTryOpen:
 		return TRYOPEN
 	case StateOpen:
 		return OPEN

@@ -302,6 +302,14 @@ func (app *BaseApp) snapshot(height uint64) {
 		app.logger.Error("No snapshot store configured")
 		return
 	}
+	latest, err := app.snapshotStore.GetLatest()
+	if err != nil {
+		app.logger.Error("Failed to examine latest snapshot", "err", err)
+	}
+	if latest.Height >= height {
+		app.logger.Error("A more recent snapshot already exists", "height", latest.Height, "format", latest.Format)
+		return
+	}
 	if app.snapshotStore.Active() {
 		app.logger.Error("A state snapshot is already in progress")
 		return

@@ -194,23 +194,6 @@ func NewAnteHandler(
 
 The implementation of this ADR will also create a `Data` field of the `Packet` of type `[]byte`, which can be deserialised by the receiving module into its own private type. It is up to the application modules to do this according to their own interpretation, not by the IBC keeper.  This is crucial for dynamic IBC.
 
-By convention, the application's `Keeper` can deserialise the `Data` with a `UnmarshalPacketData` method.
-
-```go
-// UnmarshalPacketData tries to extract an application type from raw channel packet data.
-func (k Keeper) UnmarshalPacketData(ctx sdk.Context, rawData []byte) (types.PacketDataI, error) {
-  var pdt types.PacketDataTransfer
-
-  err := k.cdc.UnmarshalBinaryBare(rawData, &pdt)
-  if err == nil {
-    return pdt, nil
-  }
-
-  // Cannot unmarshal, so return the error.
-  return nil, err
-}
-```
-
 Example application-side usage:
 
 ```go
@@ -236,25 +219,17 @@ func NewHandler(k Keeper) Handler {
     case MsgTransfer:
       return handleMsgTransfer(ctx, k, msg)
     case ibc.MsgPacket:
-      pd, err = k.UnmarshalPacketData(ctx, msg.GetData())
-      if err {
-        return nil, err
+      var data PacketDataTransfer
+      if err := types.ModuleCodec.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
+        return err
       }
-      switch data := pd.(type) {
-      case PacketDataTransfer: // any packet type known by the keeper
-        return handlePacketDataTransfer(ctx, k, msg, data)
-      default:
-        return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
-      }
+      return handlePacketDataTransfer(ctx, k, msg, data)
     case ibc.MsgTimeoutPacket:
-      pd, err = k.UnmarshalPacketData(ctx, msg.GetData())
-      if err {
-        return nil, err
+      var data PacketDataTransfer
+      if err := types.ModuleCodec.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
+        return err
       }
-      switch packet := pd.(type) {
-      case PacketDataTransfer: // any packet type known by the keeper
-        return handleTimeoutPacketDataTransfer(ctx, k, packet)
-      }
+      return handleTimeoutPacketDataTransfer(ctx, k, packet)
     // interface { PortID() string; ChannelID() string; Channel() ibc.Channel }
     // MsgChanInit, MsgChanTry implements ibc.MsgChannelOpen
     case ibc.MsgChannelOpen: 

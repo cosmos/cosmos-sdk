@@ -441,7 +441,8 @@ func (msg MsgPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
-// GetDataSignBytes returns the bytes used for the data field when signing the packet.
+// GetDataSignBytes returns the base64-encoded bytes used for the
+// data field when signing the packet.
 func (msg MsgPacket) GetDataSignBytes() []byte {
 	s := "\"" + base64.StdEncoding.EncodeToString(msg.Data) + "\""
 	return []byte(s)

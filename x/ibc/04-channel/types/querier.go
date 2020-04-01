@@ -11,8 +11,9 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryAllChannels = "channels"
-	QueryChannel     = "channel"
+	QueryAllChannels        = "channels"
+	QueryChannel            = "channel"
+	QueryConnectionChannels = "connection-channels"
 )
 
 // ChannelResponse defines the client query response for a channel which also
@@ -48,6 +49,23 @@ func NewQueryAllChannelsParams(page, limit int) QueryAllChannelsParams {
 	return QueryAllChannelsParams{
 		Page:  page,
 		Limit: limit,
+	}
+}
+
+// QueryConnectionChannelsParams defines the parameters necessary for querying
+// for all channels associated with a given connection.
+type QueryConnectionChannelsParams struct {
+	Connection string `json:"connection" yaml:"connection"`
+	Page       int    `json:"page" yaml:"page"`
+	Limit      int    `json:"limit" yaml:"limit"`
+}
+
+// NewQueryConnectionChannelsParams creates a new QueryConnectionChannelsParams instance.
+func NewQueryConnectionChannelsParams(connection string, page, limit int) QueryConnectionChannelsParams {
+	return QueryConnectionChannelsParams{
+		Connection: connection,
+		Page:       page,
+		Limit:      limit,
 	}
 }
 

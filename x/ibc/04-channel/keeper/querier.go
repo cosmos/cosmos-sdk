@@ -34,3 +34,35 @@ func QuerierChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 
 	return res, nil
 }
+
+// QuerierConnectionChannels defines the sdk.Querier to query all the channels for a connection.
+func QuerierConnectionChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	var params types.QueryConnectionChannelsParams
+
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	channels := k.GetAllChannels(ctx)
+
+	connectionChannels := []types.Channel{}
+	for _, channel := range channels {
+		if channel.ConnectionHops[0] == params.Connection {
+			connectionChannels = append(connectionChannels, channel)
+		}
+	}
+
+	start, end := client.Paginate(len(connectionChannels), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		connectionChannels = []types.Channel{}
+	} else {
+		connectionChannels = channels[start:end]
+	}
+
+	res, err := codec.MarshalJSONIndent(k.cdc, connectionChannels)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}

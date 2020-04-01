@@ -97,7 +97,7 @@ func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.IdentifiedConn
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &connection)
 		identifier := string(iterator.Key()[len(ibctypes.KeyConnectionPrefix)+1:])
 
-		if cb(types.IdentifiedConnectionEnd{connection, identifier}) {
+		if cb(types.IdentifiedConnectionEnd{connection, Identifier: identifier}) {
 			break
 		}
 	}

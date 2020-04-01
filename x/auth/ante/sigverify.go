@@ -218,7 +218,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
-// there is no need to execute IncrementSequenceDecorator on RecheckTX
+// there is no need to execute IncrementSequenceDecorator on CheckTx or RecheckTX
 // since it is merely updating the nonce.
 //
 // CONTRACT: The tx must implement the SigVerifiableTx interface.

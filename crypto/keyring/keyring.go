@@ -364,7 +364,7 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 	}
 
 	// NOTE: The keyring keystore has no need for a passphrase.
-	kb.writeLocalKey(name, privKey, "", SigningAlgo(algo))
+	kb.writeLocalKey(name, privKey, SigningAlgo(algo))
 	return nil
 }
 
@@ -435,7 +435,7 @@ func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.base.SupportedAlgosLedger()
 }
 
-func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
+func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)

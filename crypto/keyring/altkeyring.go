@@ -22,71 +22,6 @@ var (
 	_ Keyring = &altKeyring{}
 )
 
-// Keyring exposes operations on a generic keystore
-type Keyring interface {
-	// List all keys.
-	List() ([]Info, error)
-
-	// Key and KeyByAddress return keys by uid and address respectively.
-	Key(uid string) (Info, error)
-	KeyByAddress(address types.Address) (Info, error)
-
-	//// Delete and DeleteByAddress remove keys.
-	Delete(uid string) error
-	DeleteByAddress(address types.Address) error
-
-	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic
-	// key from that, and persists it to storage. Returns the generated mnemonic and the key
-	// Info. It returns an error if it fails to generate a key for the given algo type, or if
-	// another key is already stored under the same name.
-	NewMnemonic(uid string, language Language, algo AltSigningAlgo) (Info, string, error)
-
-	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path  and persists it.
-	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo AltSigningAlgo) (Info, error)
-
-	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
-	SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error)
-
-	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error)
-
-	// SaveMultisig stores, stores, and returns a new multsig (offline) key reference
-	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
-
-	Signer
-
-	Importer
-	Exporter
-}
-
-// Signer is implemented by key stores that want to provide signing capabilities.
-type Signer interface {
-	// Sign sign byte messages with a user key.
-	Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
-
-	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address types.Address, msg []byte) ([]byte, tmcrypto.PubKey, error)
-}
-
-// Importer is implemented by key stores that support import of public and private keys.
-type Importer interface {
-	ImportPrivKey(uid, armor, passphrase string) error
-	ImportPubKey(uid string, armor string) error
-}
-
-// Exporter is implemented by key stores that support export of public and private keys.
-type Exporter interface {
-	// Export public key
-	ExportPubKeyArmor(uid string) (string, error)
-	ExportPubKeyArmorByAddress(address types.Address) (string, error)
-	// ExportPrivKey returns a private key in ASCII armored format.
-	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
-	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
-	ExportPrivKeyArmorByAddress(address types.Address, encryptPassphrase string) (armor string, err error)
-}
-
-type AltKeyringOption func(options *altKrOptions)
-
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
 // Available backends are "os", "file", "kwallet", "pass", "test".
@@ -98,6 +33,8 @@ func NewAltKeyring(
 	var err error
 
 	switch backend {
+	case BackendMemory:
+		panic("not implemented")
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:

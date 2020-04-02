@@ -507,6 +507,14 @@ func (ks keystore) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
+// KeyringOption overrides keyring configuratoin options.
+type KeyringOption func(options *keyringOptions)
+
+type keyringOptions struct {
+	supportedAlgos       SigningAlgoList
+	supportedAlgosLedger SigningAlgoList
+}
+
 // CreateHDPath returns BIP 44 object from account and index parameters.
 func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)

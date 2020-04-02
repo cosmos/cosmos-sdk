@@ -36,6 +36,11 @@ func TestNewKeyring(t *testing.T) {
 	kr, err := New("cosmos", BackendFile, dir, mockIn)
 	require.NoError(t, err)
 
+	nilKr, err := New("cosmos", "fuzzy", dir, mockIn)
+	require.Error(t, err)
+	require.Nil(t, nilKr)
+	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
+
 	mockIn.Reset("password\npassword\n")
 	info, _, err := kr.NewMnemonic("foo", English, AltSecp256k1)
 	require.NoError(t, err)

@@ -71,7 +71,7 @@ type Keyring interface {
 	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
-	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, index uint32) (Info, error)
+	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, coinType, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
 	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo pubKeyType) (Info, error)
@@ -328,12 +328,11 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcry
 	return ks.Sign(key.GetName(), msg)
 }
 
-func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, index uint32) (Info, error) {
+func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, coinType, index uint32) (Info, error) {
 	if !ks.options.supportedAlgosLedger.Contains(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	coinType := config.GetCoinType()
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
@@ -515,11 +514,6 @@ type Option func(options *keyringOptions)
 type keyringOptions struct {
 	supportedAlgos       SigningAlgoList
 	supportedAlgosLedger SigningAlgoList
-}
-
-// CreateHDPath returns BIP 44 object from account and index parameters.
-func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
-	return hd.NewFundraiserParams(account, config.GetCoinType(), index)
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object

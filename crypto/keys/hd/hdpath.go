@@ -14,7 +14,6 @@ package hd
 import (
 	"crypto/hmac"
 	"crypto/sha512"
-
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -254,4 +253,9 @@ func i64(key []byte, data []byte) (il [32]byte, ir [32]byte) {
 	copy(ir[:], I[32:])
 
 	return
+}
+
+// CreateHDPath returns BIP 44 object from account and index parameters.
+func CreateHDPath(coinType, account, index uint32) *BIP44Params {
+	return NewFundraiserParams(account, coinType, index)
 }

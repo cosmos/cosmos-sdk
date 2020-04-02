@@ -137,7 +137,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	kb, err := New("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
-	i1, err := kb.SaveLedgerKey("key", AltSecp256k1, "cosmos", 0, 0)
+	i1, err := kb.SaveLedgerKey("key", AltSecp256k1, "cosmos", 0, 118, 0)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
@@ -431,7 +431,7 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	_, err := kb.NewAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-		"", CreateHDPath(0, 0).String(), AltSecp256k1)
+		"", hd.CreateHDPath(118, 0, 0).String(), AltSecp256k1)
 	require.Error(t, err)
 	require.Equal(t, "Invalid mnemonic", err.Error())
 }
@@ -439,7 +439,7 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 func TestInMemoryCreateLedger(t *testing.T) {
 	kb := NewInMemory()
 
-	ledger, err := kb.SaveLedgerKey("some_account", AltSecp256k1, "cosmos", 3, 1)
+	ledger, err := kb.SaveLedgerKey("some_account", AltSecp256k1, "cosmos", 3, 118, 1)
 
 	if err != nil {
 		require.Error(t, err)
@@ -909,10 +909,10 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test unsupported Algo
-	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 0, 0)
+	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 0, 118, 0)
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
-	ledger, err := keyring.SaveLedgerKey("some_account", AltSecp256k1, "cosmos", 3, 1)
+	ledger, err := keyring.SaveLedgerKey("some_account", AltSecp256k1, "cosmos", 3, 118, 1)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")

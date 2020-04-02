@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -27,6 +28,7 @@ const (
 	flagInteractive = "interactive"
 	flagRecover     = "recover"
 	flagNoBackup    = "no-backup"
+	flagCoinType    = "coin-type"
 	flagAccount     = "account"
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
@@ -73,6 +75,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	cmd.Flags().Uint32(flagCoinType, sdk.CoinType, "coin type number for HD derivation")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
@@ -179,6 +182,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		return nil
 	}
 
+	coinType := uint32(viper.GetInt(flagCoinType))
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
 
@@ -186,7 +190,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	var hdPath string
 
 	if useBIP44 {
-		hdPath = keyring.CreateHDPath(account, index).String()
+		hdPath = hd.CreateHDPath(coinType, account, index).String()
 	} else {
 		hdPath = viper.GetString(flagHDPath)
 	}
@@ -199,7 +203,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		}
 
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.SaveLedgerKey(name, keyring.AltSecp256k1, bech32PrefixAccAddr, account, index)
+		info, err := kb.SaveLedgerKey(name, keyring.AltSecp256k1, bech32PrefixAccAddr, account, coinType, index)
 		if err != nil {
 			return err
 		}

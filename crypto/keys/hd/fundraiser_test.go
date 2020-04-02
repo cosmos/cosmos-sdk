@@ -24,6 +24,10 @@ type addrData struct {
 	Addr     string
 }
 
+func TestFullFundraiserPath(t *testing.T) {
+	require.Equal(t, "44'/118'/0'/0/0", NewFundraiserParams(0, 118, 0).String())
+}
+
 func initFundraiserTestVectors(t *testing.T) []addrData {
 	// NOTE: atom fundraiser address
 	// var hdPath string = "m/44'/118'/0'/0/0"

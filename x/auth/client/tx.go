@@ -182,7 +182,7 @@ func SignStdTx(
 
 	var signedStdTx authtypes.StdTx
 
-	info, err := txBldr.Keybase().Get(name)
+	info, err := txBldr.Keybase().Key(name)
 	if err != nil {
 		return signedStdTx, err
 	}

@@ -34,6 +34,7 @@ const (
 	// bits of entropy to draw when creating a mnemonic
 	defaultEntropySize = 256
 	addressSuffix      = "address"
+	addressPrefix      = "addr"
 	infoSuffix         = "info"
 )
 

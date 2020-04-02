@@ -77,7 +77,7 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
-	source := amount[0].Denom[len(prefix):] == prefix
+	source := strings.HasPrefix(amount[0].Denom, prefix)
 
 	if source {
 		// clear the denomination from the prefix to send the coins to the escrow account
@@ -152,7 +152,7 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	}
 
 	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-	source := data.Amount[0].Denom[:len(prefix)] == prefix
+	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
 	if source {
 		// mint new tokens if the source of the transfer is the same chain
@@ -195,7 +195,7 @@ func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data typ
 
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-	source := data.Amount[0].Denom[:len(prefix)] == prefix
+	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
 	if source {
 		coins := make(sdk.Coins, len(data.Amount))

@@ -266,47 +266,46 @@ func TestExportImportKeyRing(t *testing.T) {
 	require.Equal(t, john.GetType(), john2.GetType())
 }
 
-// func TestExportImportPubKeyKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-// 	algo := Secp256k1
-//
-// 	// CreateMnemonic a private-public key pair and ensure consistency
-// 	notPasswd := "n9y25ah7"
-// 	info, _, err := kb.CreateMnemonic("john", English, notPasswd, algo)
-// 	require.Nil(t, err)
-// 	require.NotEqual(t, info, "")
-// 	require.Equal(t, info.GetName(), "john")
-// 	addr := info.GetPubKey().Address()
-// 	john, err := kb.Get("john")
-// 	require.NoError(t, err)
-// 	require.Equal(t, john.GetName(), "john")
-// 	require.Equal(t, john.GetPubKey().Address(), addr)
-//
-// 	// Export the public key only
-// 	armor, err := kb.ExportPubKey("john")
-// 	require.NoError(t, err)
-// 	// Import it under a different name
-// 	err = kb.ImportPubKey("john-pubkey-only", armor)
-// 	require.NoError(t, err)
-// 	// Ensure consistency
-// 	john2, err := kb.Get("john-pubkey-only")
-// 	require.NoError(t, err)
-// 	// Compare the public keys
-// 	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
-// 	// Ensure the original key hasn't changed
-// 	john, err = kb.Get("john")
-// 	require.NoError(t, err)
-// 	require.Equal(t, john.GetPubKey().Address(), addr)
-// 	require.Equal(t, john.GetName(), "john")
-//
-// 	// Ensure keys cannot be overwritten
-// 	err = kb.ImportPubKey("john-pubkey-only", armor)
-// 	require.NotNil(t, err)
-// }
-//
+func TestExportImportPubKeyKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+	algo := AltSecp256k1
+
+	// CreateMnemonic a private-public key pair and ensure consistency
+	info, _, err := kb.NewMnemonic("john", English, algo)
+	require.Nil(t, err)
+	require.NotEqual(t, info, "")
+	require.Equal(t, info.GetName(), "john")
+	addr := info.GetPubKey().Address()
+	john, err := kb.Key("john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.GetPubKey().Address(), addr)
+
+	// Export the public key only
+	armor, err := kb.ExportPubKeyArmor("john")
+	require.NoError(t, err)
+	// Import it under a different name
+	err = kb.ImportPubKey("john-pubkey-only", armor)
+	require.NoError(t, err)
+	// Ensure consistency
+	john2, err := kb.Key("john-pubkey-only")
+	require.NoError(t, err)
+	// Compare the public keys
+	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
+	// Ensure the original key hasn't changed
+	john, err = kb.Key("john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetPubKey().Address(), addr)
+	require.Equal(t, john.GetName(), "john")
+
+	// Ensure keys cannot be overwritten
+	err = kb.ImportPubKey("john-pubkey-only", armor)
+	require.NotNil(t, err)
+}
+
 // func TestExportPrivateKeyObjectKeyRing(t *testing.T) {
 // 	dir, cleanup := tests.NewTestCaseDir(t)
 // 	t.Cleanup(cleanup)

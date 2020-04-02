@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/pkg/errors"
@@ -43,10 +43,12 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	// instantiate legacy keybase
 	rootDir := viper.GetString(flags.FlagHome)
-	legacyKb, err := NewKeyBaseFromDir(rootDir)
+	var legacyKb keyring.LegacyKeybase
+	legacyKb, err := NewLegacyKeyBaseFromDir(rootDir)
 	if err != nil {
 		return err
 	}
+	defer legacyKb.Close()
 
 	// fetch list of keys from legacy keybase
 	oldKeys, err := legacyKb.List()
@@ -59,7 +61,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 	var (
 		tmpDir  string
-		keybase keys.Keybase
+		keybase keyring.Keybase
 	)
 
 	if viper.GetBool(flags.FlagDryRun) {
@@ -70,9 +72,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		defer os.RemoveAll(tmpDir)
 
-		keybase, err = keys.NewKeyring(keyringServiceName, "test", tmpDir, buf)
+		keybase, err = keyring.NewKeyring(keyringServiceName, "test", tmpDir, buf)
 	} else {
-		keybase, err = keys.NewKeyring(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
+		keybase, err = keyring.NewKeyring(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
 	}
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(
@@ -107,7 +109,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if keyType != keys.TypeLocal {
+		if keyType != keyring.TypeLocal {
 			if err := keybase.Import(keyName, legKeyInfo); err != nil {
 				return err
 			}

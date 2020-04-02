@@ -11,15 +11,12 @@ import (
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
 func GenerateCoinKey() (sdk.AccAddress, string, error) {
-
 	// generate a private key, with recovery phrase
-	info, secret, err := keyring.NewInMemory().CreateMnemonic(
-		"name", keyring.English, "pass", keyring.Secp256k1)
+	info, secret, err := keyring.NewInMemory().NewMnemonic("name", keyring.English, keyring.AltSecp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
-	addr := info.GetPubKey().Address()
-	return sdk.AccAddress(addr), secret, nil
+	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret

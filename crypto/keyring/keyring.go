@@ -134,7 +134,7 @@ func NewKeyring(
 
 	switch backend {
 	case BackendMemory:
-		return NewInMemory(opts...), nil
+		panic("not implemented")
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:
@@ -158,8 +158,8 @@ func NewKeyring(
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...KeybaseOption) Keybase {
-	return newKeyringKeybase(keyring.NewArrayKeyring(nil), opts...)
+func NewInMemory(opts ...AltKeyringOption) Keyring {
+	return newKeystore(keyring.NewArrayKeyring(nil), opts...)
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted

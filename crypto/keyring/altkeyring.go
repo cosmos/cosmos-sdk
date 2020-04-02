@@ -34,7 +34,7 @@ func New(
 
 	switch backend {
 	case BackendMemory:
-		panic("not implemented")
+		return NewInMemory(opts...), err
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:
@@ -53,6 +53,15 @@ func New(
 		return nil, err
 	}
 
+	return newKeystore(db, opts...), nil
+}
+
+type keystore struct {
+	db      keyring.Keyring
+	options altKrOptions
+}
+
+func newKeystore(kr keyring.Keyring, opts ...AltKeyringOption) keystore {
 	// Default options for keybase
 	options := altKrOptions{
 		supportedAlgos:       AltSigningAlgoList{AltSecp256k1},
@@ -63,15 +72,7 @@ func New(
 		optionFn(&options)
 	}
 
-	return keystore{
-		db:      db,
-		options: options,
-	}, nil
-}
-
-type keystore struct {
-	db      keyring.Keyring
-	options altKrOptions
+	return keystore{kr, options}
 }
 
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {

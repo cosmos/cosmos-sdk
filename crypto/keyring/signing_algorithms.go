@@ -3,7 +3,12 @@ package keyring
 import (
 	"fmt"
 
+	"github.com/cosmos/go-bip39"
 	"github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 // pubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
@@ -21,16 +26,13 @@ const (
 	Sr25519 = pubKeyType("sr25519")
 )
 
-type SigningAlgo interface {
+type SignatureAlgo interface {
 	Name() pubKeyType
 	DeriveKey() DeriveKeyFn
 	PrivKeyGen() PrivKeyGenFn
 }
 
-type DeriveKeyFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
-type PrivKeyGenFn func(bz []byte) crypto.PrivKey
-
-func NewSigningAlgoFromString(str string) (SigningAlgo, error) {
+func NewSigningAlgoFromString(str string) (SignatureAlgo, error) {
 	if str != string(AltSecp256k1.Name()) {
 		return nil, fmt.Errorf("provided algorithm `%s` is not supported", str)
 	}
@@ -46,11 +48,11 @@ func (s secp256k1Algo) Name() pubKeyType {
 }
 
 func (s secp256k1Algo) DeriveKey() DeriveKeyFn {
-	return SecpDeriveKey
+	return Secp256k1DeriveKey
 }
 
 func (s secp256k1Algo) PrivKeyGen() PrivKeyGenFn {
-	return SecpPrivKeyGen
+	return Secp256k1PrivKeyGen
 }
 
 var (
@@ -58,9 +60,9 @@ var (
 	AltSecp256k1 = secp256k1Algo{}
 )
 
-type SigningAlgoList []SigningAlgo
+type SigningAlgoList []SignatureAlgo
 
-func (l SigningAlgoList) Contains(algo SigningAlgo) bool {
+func (l SigningAlgoList) Contains(algo SignatureAlgo) bool {
 	for _, cAlgo := range l {
 		if cAlgo.Name() == algo.Name() {
 			return true
@@ -69,3 +71,28 @@ func (l SigningAlgoList) Contains(algo SigningAlgo) bool {
 
 	return false
 }
+
+// Secp256k1PrivKeyGen generates a secp256k1 private key from the given bytes
+func Secp256k1PrivKeyGen(bz []byte) tmcrypto.PrivKey {
+	var bzArr [32]byte
+	copy(bzArr[:], bz)
+	return secp256k1.PrivKeySecp256k1(bzArr)
+}
+
+// Secp256k1DeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
+func Secp256k1DeriveKey(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+	if len(hdPath) == 0 {
+		return masterPriv[:], nil
+	}
+	derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, hdPath)
+	return derivedKey[:], err
+}
+
+type DeriveKeyFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
+type PrivKeyGenFn func(bz []byte) crypto.PrivKey

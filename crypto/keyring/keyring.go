@@ -63,13 +63,13 @@ type Keyring interface {
 	// key from that, and persists it to the storage. Returns the generated mnemonic and the key
 	// Info. It returns an error if it fails to generate a key for the given algo type, or if
 	// another key is already stored under the same name.
-	NewMnemonic(uid string, language Language, algo SigningAlgo) (Info, string, error)
+	NewMnemonic(uid string, language Language, algo SignatureAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
-	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SigningAlgo) (Info, error)
+	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
-	SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error)
+	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
 	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo pubKeyType) (Info, error)
@@ -112,7 +112,7 @@ type Exporter interface {
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...KeyringOption) Keyring {
+func NewInMemory(opts ...Option) Keyring {
 	return newKeystore(keyring.NewArrayKeyring(nil), opts...)
 }
 
@@ -120,7 +120,7 @@ func NewInMemory(opts ...KeyringOption) Keyring {
 // Keyring ptions can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
 func New(
-	appName, backend, rootDir string, userInput io.Reader, opts ...KeyringOption,
+	appName, backend, rootDir string, userInput io.Reader, opts ...Option,
 ) (Keyring, error) {
 
 	var db keyring.Keyring
@@ -155,7 +155,7 @@ type keystore struct {
 	options keyringOptions
 }
 
-func newKeystore(kr keyring.Keyring, opts ...KeyringOption) keystore {
+func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
 	// Default options for keybase
 	options := keyringOptions{
 		supportedAlgos:       SigningAlgoList{AltSecp256k1},
@@ -326,7 +326,7 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcry
 	return ks.Sign(key.GetName(), msg)
 }
 
-func (ks keystore) SaveLedgerKey(uid string, algo SigningAlgo, hrp string, account, index uint32) (Info, error) {
+func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, index uint32) (Info, error) {
 	if !ks.options.supportedAlgosLedger.Contains(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -443,7 +443,7 @@ func (ks keystore) List() ([]Info, error) {
 	return res, nil
 }
 
-func (ks keystore) NewMnemonic(uid string, language Language, algo SigningAlgo) (Info, string, error) {
+func (ks keystore) NewMnemonic(uid string, language Language, algo SignatureAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -472,7 +472,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, algo SigningAlgo) 
 	return info, mnemonic, err
 }
 
-func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo SigningAlgo) (Info, error) {
+func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -488,7 +488,7 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 	return ks.writeLocalKey(uid, privKey, algo.Name())
 }
 
-func (ks keystore) isSupportedSigningAlgo(algo SigningAlgo) bool {
+func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 	return ks.options.supportedAlgos.Contains(algo)
 }
 
@@ -507,8 +507,8 @@ func (ks keystore) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-// KeyringOption overrides keyring configuratoin options.
-type KeyringOption func(options *keyringOptions)
+// Option overrides keyring configuration options.
+type Option func(options *keyringOptions)
 
 type keyringOptions struct {
 	supportedAlgos       SigningAlgoList

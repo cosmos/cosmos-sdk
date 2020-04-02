@@ -14,7 +14,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 		name         string
 		algoStr      string
 		isSupported  bool
-		expectedAlgo SigningAlgo
+		expectedAlgo SignatureAlgo
 		expectedErr  error
 	}{
 		{
@@ -62,9 +62,9 @@ func (n notSupportedAlgo) Name() pubKeyType {
 }
 
 func (n notSupportedAlgo) DeriveKey() DeriveKeyFn {
-	return SecpDeriveKey
+	return Secp256k1DeriveKey
 }
 
 func (n notSupportedAlgo) PrivKeyGen() PrivKeyGenFn {
-	return SecpPrivKeyGen
+	return Secp256k1PrivKeyGen
 }

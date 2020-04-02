@@ -1,134 +1,122 @@
 package keyring
 
-//
-// import (
-// 	"bytes"
-// 	"errors"
-// 	"fmt"
-// 	"strings"
-// 	"testing"
-//
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/require"
-// 	"github.com/tendermint/go-amino"
-// 	tmcrypto "github.com/tendermint/tendermint/crypto"
-// 	"github.com/tendermint/tendermint/crypto/ed25519"
-// 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
-// 	"github.com/tendermint/tendermint/crypto/multisig"
-// 	"github.com/tendermint/tendermint/crypto/secp256k1"
-//
-// 	"github.com/cosmos/cosmos-sdk/codec"
-// 	"github.com/cosmos/cosmos-sdk/crypto"
-// 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-// 	"github.com/cosmos/cosmos-sdk/tests"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// )
-//
-// func init() {
-// 	crypto.BcryptSecurityParameter = 1
-// }
-//
-// const (
-// 	nums   = "1234"
-// 	foobar = "foobar"
-// )
-//
-// func TestNewKeyring(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	mockIn := strings.NewReader("")
-// 	t.Cleanup(cleanup)
-// 	kr, err := NewKeyring("cosmos", BackendFile, dir, mockIn)
-// 	require.NoError(t, err)
-//
-// 	mockIn.Reset("password\npassword\n")
-// 	info, _, err := kr.CreateMnemonic("foo", English, "password", Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, "foo", info.GetName())
-// }
-//
-// func TestKeyManagementKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-//
-// 	algo := Secp256k1
-// 	n1, n2, n3 := "personal", "business", "other"
-// 	p1, p2 := "1234", "really-secure!@#$"
-//
-// 	// Check empty state
-// 	l, err := kb.List()
-// 	require.Nil(t, err)
-// 	assert.Empty(t, l)
-//
-// 	_, _, err = kb.CreateMnemonic(n1, English, p1, Ed25519)
-// 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
-//
-// 	// create some keys
-// 	_, err = kb.Get(n1)
-// 	require.Error(t, err)
-// 	i, _, err := kb.CreateMnemonic(n1, English, p1, algo)
-//
-// 	require.NoError(t, err)
-// 	require.Equal(t, n1, i.GetName())
-// 	_, _, err = kb.CreateMnemonic(n2, English, p2, algo)
-// 	require.NoError(t, err)
-//
-// 	// we can get these keys
-// 	i2, err := kb.Get(n2)
-// 	require.NoError(t, err)
-// 	_, err = kb.Get(n3)
-// 	require.NotNil(t, err)
-// 	_, err = kb.GetByAddress(accAddr(i2))
-// 	require.NoError(t, err)
-// 	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
-// 	require.NoError(t, err)
-// 	_, err = kb.GetByAddress(addr)
-// 	require.NotNil(t, err)
-//
-// 	// list shows them in order
-// 	keyS, err := kb.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 2, len(keyS))
-// 	// note these are in alphabetical order
-// 	require.Equal(t, n2, keyS[0].GetName())
-// 	require.Equal(t, n1, keyS[1].GetName())
-// 	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
-//
-// 	// deleting a key removes it
-// 	err = kb.Delete("bad name", "foo", false)
-// 	require.NotNil(t, err)
-// 	err = kb.Delete(n1, p1, false)
-// 	require.NoError(t, err)
-// 	keyS, err = kb.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 1, len(keyS))
-// 	_, err = kb.Get(n1)
-// 	require.Error(t, err)
-//
-// 	// create an offline key
-// 	o1 := "offline"
-// 	priv1 := ed25519.GenPrivKey()
-// 	pub1 := priv1.PubKey()
-// 	i, err = kb.CreateOffline(o1, pub1, Ed25519)
-// 	require.Nil(t, err)
-// 	require.Equal(t, pub1, i.GetPubKey())
-// 	require.Equal(t, o1, i.GetName())
-// 	keyS, err = kb.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 2, len(keyS))
-//
-// 	// delete the offline key
-// 	err = kb.Delete(o1, "", false)
-// 	require.NoError(t, err)
-// 	keyS, err = kb.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 1, len(keyS))
-//
-// 	// addr cache gets nuked - and test skip flag
-// 	require.NoError(t, kb.Delete(n2, "", true))
-// }
-//
+import (
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+func init() {
+	crypto.BcryptSecurityParameter = 1
+}
+
+const (
+	nums   = "1234"
+	foobar = "foobar"
+)
+
+func TestNewKeyring(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	mockIn := strings.NewReader("")
+	t.Cleanup(cleanup)
+	kr, err := New("cosmos", BackendFile, dir, mockIn)
+	require.NoError(t, err)
+
+	mockIn.Reset("password\npassword\n")
+	info, _, err := kr.NewMnemonic("foo", English, AltSecp256k1)
+	require.NoError(t, err)
+	require.Equal(t, "foo", info.GetName())
+}
+
+func TestKeyManagementKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+
+	algo := AltSecp256k1
+	n1, n2, n3 := "personal", "business", "other"
+
+	// Check empty state
+	l, err := kb.List()
+	require.Nil(t, err)
+	assert.Empty(t, l)
+
+	_, _, err = kb.NewMnemonic(n1, English, notSupportedAlgo{})
+	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
+
+	// create some keys
+	_, err = kb.Key(n1)
+	require.Error(t, err)
+	i, _, err := kb.NewMnemonic(n1, English, algo)
+
+	require.NoError(t, err)
+	require.Equal(t, n1, i.GetName())
+	_, _, err = kb.NewMnemonic(n2, English, algo)
+	require.NoError(t, err)
+
+	// we can get these keys
+	i2, err := kb.Key(n2)
+	require.NoError(t, err)
+	_, err = kb.Key(n3)
+	require.NotNil(t, err)
+	_, err = kb.KeyByAddress(accAddr(i2))
+	require.NoError(t, err)
+	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	require.NoError(t, err)
+	_, err = kb.KeyByAddress(addr)
+	require.NotNil(t, err)
+
+	// list shows them in order
+	keyS, err := kb.List()
+	require.NoError(t, err)
+	require.Equal(t, 2, len(keyS))
+	// note these are in alphabetical order
+	require.Equal(t, n2, keyS[0].GetName())
+	require.Equal(t, n1, keyS[1].GetName())
+	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
+
+	// deleting a key removes it
+	err = kb.Delete("bad name")
+	require.NotNil(t, err)
+	err = kb.Delete(n1)
+	require.NoError(t, err)
+	keyS, err = kb.List()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(keyS))
+	_, err = kb.Key(n1)
+	require.Error(t, err)
+
+	// create an offline key
+	o1 := "offline"
+	priv1 := ed25519.GenPrivKey()
+	pub1 := priv1.PubKey()
+	i, err = kb.SavePubKey(o1, pub1, Ed25519)
+	require.Nil(t, err)
+	require.Equal(t, pub1, i.GetPubKey())
+	require.Equal(t, o1, i.GetName())
+	keyS, err = kb.List()
+	require.NoError(t, err)
+	require.Equal(t, 2, len(keyS))
+
+	// delete the offline key
+	err = kb.Delete(o1)
+	require.NoError(t, err)
+	keyS, err = kb.List()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(keyS))
+
+	// addr cache gets nuked - and test skip flag
+	require.NoError(t, kb.Delete(n2))
+}
+
 // // TestSignVerify does some detailed checks on how we sign and validate
 // // signatures
 // func TestSignVerifyKeyRingWithLedger(t *testing.T) {
@@ -939,10 +927,10 @@ package keyring
 // 	// signed by Bob
 // }
 //
-// func accAddr(info Info) sdk.AccAddress {
-// 	return (sdk.AccAddress)(info.GetPubKey().Address())
-// }
-//
+func accAddr(info Info) sdk.AccAddress {
+	return (sdk.AccAddress)(info.GetPubKey().Address())
+}
+
 // var _ tmcrypto.PrivKey = testPriv{}
 // var _ tmcrypto.PubKey = testPub{}
 // var testCdc *amino.Codec

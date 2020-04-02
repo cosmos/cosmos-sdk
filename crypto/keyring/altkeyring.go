@@ -278,8 +278,8 @@ func (ks keystore) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error
 	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error) {
-	return ks.writeOfflineKey(uid, pubkey, algo.Name())
+func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo pubKeyType) (Info, error) {
+	return ks.writeOfflineKey(uid, pubkey, algo)
 }
 
 func (ks keystore) DeleteByAddress(address types.Address) error {

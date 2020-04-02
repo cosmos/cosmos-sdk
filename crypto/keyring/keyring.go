@@ -67,7 +67,7 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo AltSigningAlgo, hrp string, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo AltSigningAlgo) (Info, error)
+	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo pubKeyType) (Info, error)
 
 	// SaveMultisig stores and returns a new multsig (offline) key reference.
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)

@@ -111,11 +111,15 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	conn2 := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty1, types.GetCompatibleVersions())
 	conn3 := types.NewConnectionEnd(exported.UNINITIALIZED, testClientID3, counterparty2, types.GetCompatibleVersions())
 
-	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
+	expConnections := []types.IdentifiedConnectionEnd{
+		{Connection: conn1, Identifier: testConnectionIDA},
+		{Connection: conn2, Identifier: testConnectionIDB},
+		{Connection: conn3, Identifier: testConnectionID3},
+	}
 
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConnections[0])
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDB, expConnections[1])
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionID3, expConnections[2])
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, conn1)
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDB, conn2)
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionID3, conn3)
 
 	connections := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
 	suite.Require().Len(connections, len(expConnections))

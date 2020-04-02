@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,10 +19,10 @@ import (
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
 	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
-	tmp := keys.NewMultiInfo("myMultisig", pk)
+	tmp := keyring.NewMultiInfo("myMultisig", pk)
 
 	require.Equal(t, "myMultisig", tmp.GetName())
-	require.Equal(t, keys.TypeMulti, tmp.GetType())
+	require.Equal(t, keyring.TypeMulti, tmp.GetType())
 	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
 	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", tmp.GetAddress().String())
 }
@@ -35,11 +35,10 @@ func Test_showKeysCmd(t *testing.T) {
 }
 
 func Test_runShowCmd(t *testing.T) {
-	runningUnattended := isRunningUnattended()
 	cmd := ShowKeysCmd()
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
-	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
-	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "The specified item could not be found in the keyring")
+	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
+	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -49,50 +48,38 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("runShowCmd_Key1", "", false)
 		kb.Delete("runShowCmd_Key2", "", false)
 	})
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keyring.Secp256k1)
 	require.NoError(t, err)
 
-	if runningUnattended {
-		mockIn.Reset("testpass1\n")
-	}
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keyring.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key
-	if runningUnattended {
-		mockIn.Reset("testpass1\n")
-	}
 	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1}), "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	if runningUnattended {
-		mockIn.Reset("testpass1\n")
-	}
+
+	// try fetch by name
 	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
+	// try fetch by addr
+	info, err := kb.Get(fakeKeyName1)
+	require.NoError(t, err)
+	require.NoError(t, runShowCmd(cmd, []string{info.GetAddress().String()}))
 
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
 	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2}), "threshold must be a positive integer")
 
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	require.NoError(t, err)
 
@@ -100,23 +87,14 @@ func Test_runShowCmd(t *testing.T) {
 	viper.Set(FlagBechPrefix, "acc")
 	viper.Set(FlagDevice, true)
 	viper.Set(flagMultiSigThreshold, 2)
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	require.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
 
 	viper.Set(FlagBechPrefix, "val")
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	require.EqualError(t, err, "the device flag (-d) can only be used for accounts")
 
 	viper.Set(FlagPublicKey, true)
-	if runningUnattended {
-		mockIn.Reset("testpass1\ntestpass1\n")
-	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	require.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
 
@@ -161,9 +139,9 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{sdk.PrefixAccount}, keys.Bech32KeyOutput, false},
-		{"val", args{sdk.PrefixValidator}, keys.Bech32ValKeyOutput, false},
-		{"cons", args{sdk.PrefixConsensus}, keys.Bech32ConsKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, keyring.Bech32KeyOutput, false},
+		{"val", args{sdk.PrefixValidator}, keyring.Bech32ValKeyOutput, false},
+		{"cons", args{sdk.PrefixConsensus}, keyring.Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		tt := tt

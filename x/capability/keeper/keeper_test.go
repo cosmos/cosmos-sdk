@@ -120,6 +120,9 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap2, "invalid"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap1, "bond"))
 
+	sk2.ReleaseCapability(suite.ctx, cap2)
+	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap2, "bond"))
+
 	badCap := types.NewCapabilityKey(100)
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
@@ -173,6 +176,33 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 			suite.Require().Equal(expectedOrder[i], o.Module, "module is unexpected")
 		}
 	}
+}
+
+func (suite *KeeperTestSuite) TestReleaseCapability() {
+	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+
+	cap1, err := sk1.NewCapability(suite.ctx, "transfer")
+	suite.Require().NoError(err)
+	suite.Require().NotNil(cap1)
+
+	suite.Require().NoError(sk2.ClaimCapability(suite.ctx, cap1, "transfer"))
+
+	cap2, err := sk2.NewCapability(suite.ctx, "bond")
+	suite.Require().NoError(err)
+	suite.Require().NotNil(cap2)
+
+	suite.Require().Error(sk1.ReleaseCapability(suite.ctx, cap2))
+
+	suite.Require().NoError(sk2.ReleaseCapability(suite.ctx, cap1))
+	got, ok := sk2.GetCapability(suite.ctx, "transfer")
+	suite.Require().False(ok)
+	suite.Require().Nil(got)
+
+	suite.Require().NoError(sk1.ReleaseCapability(suite.ctx, cap1))
+	got, ok = sk1.GetCapability(suite.ctx, "transfer")
+	suite.Require().False(ok)
+	suite.Require().Nil(got)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

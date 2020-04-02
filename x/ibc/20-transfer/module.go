@@ -234,12 +234,11 @@ func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) (*sdk.Result, error) {
-	switch data := packet.Data.(type) {
-	case FungibleTokenPacketData:
-		return handlePacketDataTransfer(ctx, am.keeper, packet, data)
-	default:
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
+	var data FungibleTokenPacketData
+	if err := types.ModuleCdc.UnmarshalBinaryBare(packet.GetData(), &data); err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
+	return handlePacketDataTransfer(ctx, am.keeper, packet, data)
 }
 
 func (am AppModule) OnAcknowledgementPacket(
@@ -254,10 +253,9 @@ func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) (*sdk.Result, error) {
-	switch data := packet.Data.(type) {
-	case FungibleTokenPacketData:
-		return handleTimeoutDataTransfer(ctx, am.keeper, packet, data)
-	default:
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
+	var data FungibleTokenPacketData
+	if err := types.ModuleCdc.UnmarshalBinaryBare(packet.GetData(), &data); err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
+	return handleTimeoutDataTransfer(ctx, am.keeper, packet, data)
 }

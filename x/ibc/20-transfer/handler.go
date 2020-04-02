@@ -60,7 +60,7 @@ func handlePacketDataTransfer(
 	}
 
 	acknowledgement := AckDataTransfer{}
-	if err := k.PacketExecuted(ctx, packet, acknowledgement); err != nil {
+	if err := k.PacketExecuted(ctx, packet, acknowledgement.GetBytes()); err != nil {
 		return nil, err
 	}
 

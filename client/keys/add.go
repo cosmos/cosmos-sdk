@@ -172,7 +172,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		if err != nil {
 			return err
 		}
-		_, err = kb.SavePubKey(name, pk, algo)
+		_, err = kb.SavePubKey(name, pk, algo.Name())
 		if err != nil {
 			return err
 		}

@@ -234,36 +234,38 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
-//
-// func TestExportImportKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-//
-// 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-//
-// 	john, err := kb.Get("john")
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-// 	johnAddr := info.GetPubKey().Address()
-//
-// 	armor, err := kb.Export("john")
-// 	require.NoError(t, err)
-//
-// 	err = kb.Import("john2", armor)
-// 	require.NoError(t, err)
-//
-// 	john2, err := kb.Get("john2")
-// 	require.NoError(t, err)
-//
-// 	require.Equal(t, john.GetPubKey().Address(), johnAddr)
-// 	require.Equal(t, john.GetName(), "john")
-// 	require.Equal(t, john, john2)
-// }
-//
+func TestExportImportKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+
+	info, _, err := kb.NewMnemonic("john", English, AltSecp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+
+	john, err := kb.Key("john")
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+	johnAddr := info.GetPubKey().Address()
+
+	armor, err := kb.ExportPrivKeyArmor("john", "apassphrase")
+	require.NoError(t, err)
+
+	err = kb.ImportPrivKey("john2", armor, "apassphrase")
+	require.NoError(t, err)
+
+	john2, err := kb.Key("john2")
+	require.NoError(t, err)
+
+	require.Equal(t, john.GetPubKey().Address(), johnAddr)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.GetAddress(), john2.GetAddress())
+	require.Equal(t, john.GetAlgo(), john2.GetAlgo())
+	require.Equal(t, john.GetPubKey(), john2.GetPubKey())
+	require.Equal(t, john.GetType(), john2.GetType())
+}
+
 // func TestExportImportPubKeyKeyRing(t *testing.T) {
 // 	dir, cleanup := tests.NewTestCaseDir(t)
 // 	t.Cleanup(cleanup)

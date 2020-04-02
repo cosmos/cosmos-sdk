@@ -80,12 +80,12 @@ the flag --nosort is set.
 	return cmd
 }
 
-func getKeybase(transient bool, buf io.Reader) (keyring.Keybase, error) {
+func getKeybase(transient bool, buf io.Reader) (keyring.Keyring, error) {
 	if transient {
-		return keyring.NewKeyring(sdk.KeyringServiceName(), keyring.BackendMemory, viper.GetString(flags.FlagHome), buf)
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, viper.GetString(flags.FlagHome), buf)
 	}
 
-	return keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
+	return keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
@@ -107,7 +107,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *bufio.Reader) error {
+func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
@@ -115,16 +115,13 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
-	algo := keyring.SigningAlgo(viper.GetString(flagKeyAlgo))
-	if algo == keyring.SigningAlgo("") {
-		algo = keyring.Secp256k1
-	}
-	if !keyring.IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
-		return keyring.ErrUnsupportedSigningAlgo
+	algo, err := keyring.NewSigningAlgoFromString(viper.GetString(flagKeyAlgo))
+	if err != nil {
+		algo = keyring.AltSecp256k1
 	}
 
 	if !viper.GetBool(flags.FlagDryRun) {
-		_, err = kb.Get(name)
+		_, err = kb.Key(name)
 		if err == nil {
 			// account exists, ask for user confirmation
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
@@ -146,7 +143,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 			}
 
 			for _, keyname := range multisigKeys {
-				k, err := kb.Get(keyname)
+				k, err := kb.Key(keyname)
 				if err != nil {
 					return err
 				}
@@ -161,7 +158,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 			}
 
 			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-			if _, err := kb.CreateMulti(name, pk); err != nil {
+			if _, err := kb.SaveMultisig(name, pk); err != nil {
 				return err
 			}
 
@@ -175,7 +172,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 		if err != nil {
 			return err
 		}
-		_, err = kb.CreateOffline(name, pk, algo)
+		_, err = kb.SavePubKey(name, pk, algo)
 		if err != nil {
 			return err
 		}
@@ -201,12 +198,8 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 			return errors.New("cannot set custom bip32 path with ledger")
 		}
 
-		if !keyring.IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
-			return keyring.ErrUnsupportedSigningAlgo
-		}
-
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.CreateLedger(name, keyring.Secp256k1, bech32PrefixAccAddr, account, index)
+		info, err := kb.SaveLedgerKey(name, keyring.AltSecp256k1, bech32PrefixAccAddr, account, index)
 		if err != nil {
 			return err
 		}
@@ -269,7 +262,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, hdPath, algo)
+	info, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return err
 	}

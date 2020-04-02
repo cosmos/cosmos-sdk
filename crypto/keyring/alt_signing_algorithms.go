@@ -1,6 +1,10 @@
 package keyring
 
-import "github.com/tendermint/tendermint/crypto"
+import (
+	"fmt"
+
+	"github.com/tendermint/tendermint/crypto"
+)
 
 type AltSigningAlgo interface {
 	Name() pubKeyType
@@ -10,6 +14,14 @@ type AltSigningAlgo interface {
 
 type AltDeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
 type AltPrivKeyGenFunc func(bz []byte) crypto.PrivKey
+
+func NewSigningAlgoFromString(str string) (AltSigningAlgo, error) {
+	if str != string(AltSecp256k1.Name()) {
+		return nil, fmt.Errorf("provided algorithm `%s` is not supported", str)
+	}
+
+	return AltSecp256k1, nil
+}
 
 type secp256k1Algo struct {
 }

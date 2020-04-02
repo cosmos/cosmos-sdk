@@ -363,7 +363,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 
 	// Should fail importing private key on existing key.
 	err = keyring.ImportPubKey(uid, armor)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite data for name: %s", uid))
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
 
 	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
@@ -386,7 +386,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 
 	// Should fail importing private key on existing key.
 	err = keyring.ImportPubKey(uid, armor)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite data for name: %s", uid))
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
 
 	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)

@@ -447,70 +447,41 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	require.Equal(t, "Invalid mnemonic", err.Error())
 }
 
-//
-// func TestInMemoryCreateLedgerUnsupportedAlgo(t *testing.T) {
-// 	kb := NewInMemory()
-//
-// 	supportedLedgerAlgos := kb.SupportedAlgosLedger()
-// 	for _, supportedAlgo := range supportedLedgerAlgos {
-// 		if Ed25519 == supportedAlgo {
-// 			require.FailNow(t, "Was not an unsupported algorithm")
-// 		}
-// 	}
-//
-// 	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
-// 	require.Error(t, err)
-// 	require.Equal(t, "unsupported signing algo", err.Error())
-// }
-//
-// func TestInMemoryCreateLedger(t *testing.T) {
-// 	kb := NewInMemory(WithSupportedAlgosLedger([]pubKeyType{Secp256k1, Ed25519}))
-//
-// 	// test_cover and test_unit will result in different answers
-// 	// test_cover does not compile some dependencies so ledger is disabled
-// 	// test_unit may add a ledger mock
-// 	// both cases are acceptable
-// 	supportedLedgerAlgos := kb.SupportedAlgosLedger()
-// 	secpSupported := false
-// 	edSupported := false
-// 	for _, supportedAlgo := range supportedLedgerAlgos {
-// 		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
-// 		edSupported = edSupported || (supportedAlgo == Ed25519)
-// 	}
-// 	require.True(t, secpSupported)
-// 	require.True(t, edSupported)
-//
-// 	ledger, err := kb.CreateLedger("some_account", Secp256k1, "cosmos", 3, 1)
-//
-// 	if err != nil {
-// 		require.Error(t, err)
-// 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-// 		require.Nil(t, ledger)
-// 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
-// 		return
-// 	}
-//
-// 	// The mock is available, check that the address is correct
-// 	pubKey := ledger.GetPubKey()
-// 	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-// 	require.NoError(t, err)
-// 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
-//
-// 	// Check that restoring the key gets the same results
-// 	restoredKey, err := kb.Get("some_account")
-// 	require.NoError(t, err)
-// 	require.NotNil(t, restoredKey)
-// 	require.Equal(t, "some_account", restoredKey.GetName())
-// 	require.Equal(t, TypeLedger, restoredKey.GetType())
-// 	pubKey = restoredKey.GetPubKey()
-// 	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-// 	require.NoError(t, err)
-// 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
-//
-// 	path, err := restoredKey.GetPath()
-// 	require.NoError(t, err)
-// 	require.Equal(t, "44'/118'/3'/0/1", path.String())
-// }
+func TestInMemoryCreateLedger(t *testing.T) {
+	kb := NewInMemory()
+
+	ledger, err := kb.SaveLedgerKey("some_account", AltSecp256k1, "cosmos", 3, 1)
+
+	if err != nil {
+		require.Error(t, err)
+		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		require.Nil(t, ledger)
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
+	}
+
+	// The mock is available, check that the address is correct
+	pubKey := ledger.GetPubKey()
+	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+
+	// Check that restoring the key gets the same results
+	restoredKey, err := kb.Key("some_account")
+	require.NoError(t, err)
+	require.NotNil(t, restoredKey)
+	require.Equal(t, "some_account", restoredKey.GetName())
+	require.Equal(t, TypeLedger, restoredKey.GetType())
+	pubKey = restoredKey.GetPubKey()
+	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+
+	path, err := restoredKey.GetPath()
+	require.NoError(t, err)
+	require.Equal(t, "44'/118'/3'/0/1", path.String())
+}
+
 //
 // // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 // func TestInMemoryKeyManagement(t *testing.T) {

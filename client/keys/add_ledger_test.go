@@ -41,6 +41,9 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	t.Cleanup(kbCleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(flags.FlagUseLedger, true)
+	viper.Set(flagAccount, "0")
+	viper.Set(flagIndex, "0")
+	viper.Set(flagCoinType, "330")
 
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
@@ -90,6 +93,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	mockIn.Reset("test1234\ntest1234\n")
+	viper.Set(flagCoinType, sdk.CoinType)
 	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly

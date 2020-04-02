@@ -203,7 +203,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		}
 
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.SaveLedgerKey(name, keyring.AltSecp256k1, bech32PrefixAccAddr, account, coinType, index)
+		info, err := kb.SaveLedgerKey(name, keyring.AltSecp256k1, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {
 			return err
 		}

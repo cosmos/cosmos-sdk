@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestArmorUnarmorPrivKey(t *testing.T) {
@@ -70,7 +71,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory()
 
 	// Add keys and see they return in alphabetical order
-	info, _, err := cstore.NewMnemonic("Bob", keyring.English, keyring.AltSecp256k1)
+	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, keyring.AltSecp256k1)
 	require.NoError(t, err)
 	armored := crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)

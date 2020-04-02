@@ -43,9 +43,6 @@ const (
 var (
 	_                          Keyring = &keystore{}
 	maxPassphraseEntryAttempts         = 3
-
-	// TODO: remove and add to methods parameters
-	config = sdk.GetConfig()
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -65,13 +62,13 @@ type Keyring interface {
 	// key from that, and persists it to the storage. Returns the generated mnemonic and the key
 	// Info. It returns an error if it fails to generate a key for the given algo type, or if
 	// another key is already stored under the same name.
-	NewMnemonic(uid string, language Language, algo SignatureAlgo) (Info, string, error)
+	NewMnemonic(uid string, language Language, hdPath string, algo SignatureAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
 	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
-	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, coinType, index uint32) (Info, error)
+	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
 	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo pubKeyType) (Info, error)
@@ -328,7 +325,7 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcry
 	return ks.Sign(key.GetName(), msg)
 }
 
-func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, account, coinType, index uint32) (Info, error) {
+func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error) {
 	if !ks.options.supportedAlgosLedger.Contains(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -444,7 +441,7 @@ func (ks keystore) List() ([]Info, error) {
 	return res, nil
 }
 
-func (ks keystore) NewMnemonic(uid string, language Language, algo SignatureAlgo) (Info, string, error) {
+func (ks keystore) NewMnemonic(uid string, language Language, hdPath string, algo SignatureAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -465,7 +462,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, algo SignatureAlgo
 		return nil, "", err
 	}
 
-	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, config.GetFullFundraiserPath(), algo)
+	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, hdPath, algo)
 	if err != nil {
 		return nil, "", err
 	}

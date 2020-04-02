@@ -307,7 +307,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(uid)
+	err = ks.db.Remove(string(infoKey(uid)))
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,9 @@ func (ks keystore) isSupportedSigningAlgo(algo AltSigningAlgo) bool {
 }
 
 func (ks keystore) Key(uid string) (Info, error) {
-	bs, err := ks.db.Get(uid)
+	key := infoKey(uid)
+
+	bs, err := ks.db.Get(string(key))
 	if err != nil {
 		return nil, err
 	}
@@ -440,11 +442,13 @@ func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo pubKey
 	return info, nil
 }
 
-func (ks keystore) writeInfo(uid string, info Info) error {
+func (ks keystore) writeInfo(name string, info Info) error {
 	// write the info by key
+	key := infoKey(name)
 	serializedInfo := marshalInfo(info)
+
 	err := ks.db.Set(keyring.Item{
-		Key:  uid,
+		Key:  string(key),
 		Data: serializedInfo,
 	})
 	if err != nil {
@@ -453,7 +457,7 @@ func (ks keystore) writeInfo(uid string, info Info) error {
 
 	err = ks.db.Set(keyring.Item{
 		Key:  addrHexKeyAsString(info.GetAddress()),
-		Data: []byte(uid),
+		Data: key,
 	})
 	if err != nil {
 		return err

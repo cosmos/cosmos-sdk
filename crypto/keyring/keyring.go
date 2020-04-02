@@ -652,9 +652,9 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 }
 
 func addrHexKey(address types.Address) []byte {
-	return []byte(fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix))
+	return []byte(addrHexKeyAsString(address))
 }
 
 func addrHexKeyAsString(address types.Address) string {
-	return fmt.Sprintf("%s:%s", addressPrefix, hex.EncodeToString(address.Bytes()))
+	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }

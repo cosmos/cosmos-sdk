@@ -82,6 +82,7 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	got, ok := sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
+	suite.Require().True(cap == got, "expected memory addresses to be equal")
 
 	got, ok = sk.GetCapability(suite.ctx, "invalid")
 	suite.Require().False(ok)

@@ -43,13 +43,13 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 	if err != nil {
 		return err
 	}
 
 	for _, name := range args {
-		info, err := kb.Get(name)
+		info, err := kb.Key(name)
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			if err := kb.Delete(name, "", true); err != nil {
+			if err := kb.Delete(name); err != nil {
 				return err
 			}
 			cmd.PrintErrln("Public key reference deleted")
@@ -70,7 +70,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// old password and skip flag arguments are ignored
-		if err := kb.Delete(name, "", true); err != nil {
+		if err := kb.Delete(name); err != nil {
 			return err
 		}
 		cmd.PrintErrln("Key deleted forever (uh oh!)")

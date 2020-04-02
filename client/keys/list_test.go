@@ -31,14 +31,15 @@ func Test_runListCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome2)
 
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 
-	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", "", keyring.Secp256k1)
+	path := "" //sdk.GetConfig().GetFullFundraiserPath()
+	_, err = kb.NewAccount("something", tests.TestMnemonic, "", path, keyring.AltSecp256k1)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		kb.Delete("something", "", false) // nolint:errcheck
+		kb.Delete("something") // nolint:errcheck
 
 	})
 	testData := []struct {

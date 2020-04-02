@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -48,16 +49,18 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("runShowCmd_Key1", "", false)
-		kb.Delete("runShowCmd_Key2", "", false)
+		kb.Delete("runShowCmd_Key1")
+		kb.Delete("runShowCmd_Key2")
 	})
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keyring.Secp256k1)
+
+	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, keyring.AltSecp256k1)
 	require.NoError(t, err)
 
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keyring.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path, keyring.AltSecp256k1)
 	require.NoError(t, err)
 
 	// Now try single key
@@ -69,7 +72,7 @@ func Test_runShowCmd(t *testing.T) {
 	// try fetch by name
 	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
 	// try fetch by addr
-	info, err := kb.Get(fakeKeyName1)
+	info, err := kb.Key(fakeKeyName1)
 	require.NoError(t, err)
 	require.NoError(t, runShowCmd(cmd, []string{info.GetAddress().String()}))
 

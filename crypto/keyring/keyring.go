@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"bufio"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,8 +37,6 @@ const (
 	testKeyringDirNameFmt = "keyring-test-%s"
 	passKeyringPrefix     = keyringDirNameFmt
 )
-
-var _ Keybase = keyringKeybase{}
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
@@ -653,8 +650,4 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 func addrHexKey(address types.Address) []byte {
 	return []byte(addrHexKeyAsString(address))
-}
-
-func addrHexKeyAsString(address types.Address) string {
-	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }

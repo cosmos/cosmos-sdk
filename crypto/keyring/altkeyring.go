@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"sort"
@@ -473,4 +474,8 @@ func (ks keystore) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, err
 	}
 
 	return info, nil
+}
+
+func addrHexKeyAsString(address types.Address) string {
+	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }

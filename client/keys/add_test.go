@@ -27,11 +27,11 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	mockIn.Reset("y\n")
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("keyname1", "", false) // nolint:errcheck
-		kb.Delete("keyname2", "", false) // nolint:errcheck
+		kb.Delete("keyname1") // nolint:errcheck
+		kb.Delete("keyname2") // nolint:errcheck
 	})
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 

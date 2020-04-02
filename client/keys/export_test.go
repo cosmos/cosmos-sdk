@@ -22,13 +22,14 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("keyname1", "", false) // nolint:errcheck
+		kb.Delete("keyname1") // nolint:errcheck
 	})
 
-	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", "", keyring.Secp256k1)
+	path := sdk.GetConfig().GetFullFundraiserPath()
+	_, err = kb.NewAccount("keyname1", tests.TestMnemonic, "", path, keyring.AltSecp256k1)
 	require.NoError(t, err)
 
 	// Now enter password

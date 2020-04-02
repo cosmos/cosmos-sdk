@@ -25,11 +25,11 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("runDeleteCmd_Key1", "", false) // nolint:errcheck
-		kb.Delete("runDeleteCmd_Key2", "", false) // nolint:errcheck
+		kb.Delete("runDeleteCmd_Key1") // nolint:errcheck
+		kb.Delete("runDeleteCmd_Key2") // nolint:errcheck
 
 	})
 	// Now add a temporary keybase
@@ -38,12 +38,13 @@ func Test_runDeleteCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb, err = keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	path := sdk.GetConfig().GetFullFundraiserPath()
+	kb, err = keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keyring.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, keyring.AltSecp256k1)
 	require.NoError(t, err)
 
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keyring.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path, keyring.AltSecp256k1)
 	require.NoError(t, err)
 
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
@@ -56,23 +57,23 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	{
-		_, err = kb.Get(fakeKeyName1)
+		_, err = kb.Key(fakeKeyName1)
 		require.NoError(t, err)
 
 		// Now there is a confirmation
 		viper.Set(flagYes, true)
 		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 
-		_, err = kb.Get(fakeKeyName1)
+		_, err = kb.Key(fakeKeyName1)
 		require.Error(t, err) // Key1 is gone
 	}
 
 	viper.Set(flagYes, true)
-	_, err = kb.Get(fakeKeyName2)
+	_, err = kb.Key(fakeKeyName2)
 	require.NoError(t, err)
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
-	_, err = kb.Get(fakeKeyName2)
+	_, err = kb.Key(fakeKeyName2)
 	require.Error(t, err) // Key2 is gone
 }
 

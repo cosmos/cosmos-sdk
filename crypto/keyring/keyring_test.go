@@ -5,6 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/multisig"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/stretchr/testify/assert"
@@ -322,145 +326,127 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 // 	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
 // }
 //
-// func TestAdvancedKeyManagementKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-//
-// 	algo := Secp256k1
-// 	n1, n2 := "old-name", "new name"
-// 	p1 := "1234"
-//
-// 	// make sure key works with initial password
-// 	_, _, err = kb.CreateMnemonic(n1, English, p1, algo)
-// 	require.Nil(t, err, "%+v", err)
-//
-// 	_, err = kb.Export(n1 + ".notreal")
-// 	require.NotNil(t, err)
-// 	_, err = kb.Export(" " + n1)
-// 	require.NotNil(t, err)
-// 	_, err = kb.Export(n1 + " ")
-// 	require.NotNil(t, err)
-// 	_, err = kb.Export("")
-// 	require.NotNil(t, err)
-// 	exported, err := kb.Export(n1)
-// 	require.Nil(t, err, "%+v", err)
-//
-// 	// import succeeds
-// 	err = kb.Import(n2, exported)
-// 	require.NoError(t, err)
-//
-// 	// second import fails
-// 	err = kb.Import(n2, exported)
-// 	require.NotNil(t, err)
-// }
-//
-// func TestSeedPhraseKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-//
-// 	algo := Secp256k1
-// 	n1, n2 := "lost-key", "found-again"
-// 	p1, p2 := "1234", "foobar"
-//
-// 	// make sure key works with initial password
-// 	info, mnemonic, err := kb.CreateMnemonic(n1, English, p1, algo)
-// 	require.Nil(t, err, "%+v", err)
-// 	require.Equal(t, n1, info.GetName())
-// 	assert.NotEmpty(t, mnemonic)
-//
-// 	// now, let us delete this key
-// 	err = kb.Delete(n1, p1, false)
-// 	require.Nil(t, err, "%+v", err)
-// 	_, err = kb.Get(n1)
-// 	require.NotNil(t, err)
-//
-// 	// let us re-create it from the mnemonic-phrase
-// 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-// 	hdPath := params.String()
-// 	newInfo, err := kb.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, n2, newInfo.GetName())
-// 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
-// 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
-// }
-//
-// func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-// 	_, _, err = kb.CreateMnemonic("john", English, "password", Secp256k1)
-// 	require.NoError(t, err)
-//
-// 	// no error, password is irrelevant, keystr cointains ASCII armored private key
-// 	keystr, err := kb.ExportPrivKey("john", "wrongpassword", "password")
-// 	require.NoError(t, err)
-// 	require.NotEmpty(t, keystr)
-//
-// 	// try import the key - wrong password
-// 	err = kb.ImportPrivKey("john2", keystr, "somepassword")
-// 	require.Equal(t, "failed to decrypt private key: ciphertext decryption failed", err.Error())
-//
-// 	// try import the key with the correct password
-// 	require.NoError(t, kb.ImportPrivKey("john2", keystr, "password"))
-//
-// 	// overwrite is not allowed
-// 	err = kb.ImportPrivKey("john2", keystr, "password")
-// 	require.Equal(t, "cannot overwrite key: john2", err.Error())
-//
-// 	// try export non existing key
-// 	_, err = kb.ExportPrivKey("john3", "wrongpassword", "password")
-// 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
-// }
-//
-// func TestSupportedAlgos(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-// 	require.Equal(t, []pubKeyType{"secp256k1"}, kb.SupportedAlgos())
-// 	require.Equal(t, []pubKeyType{"secp256k1"}, kb.SupportedAlgosLedger())
-// }
-//
-// func TestCustomDerivFuncKey(t *testing.T) {
-// 	kb := NewInMemory(WithDeriveFunc(func(mnemonic string, bip39Passphrase, hdPath string, algo pubKeyType) ([]byte, error) {
-// 		return nil, errors.New("cannot derive keys")
-// 	}))
-// 	_, _, err := kb.CreateMnemonic("test", English, "", "")
-// 	require.Error(t, err, "cannot derive keys")
-// }
-//
-// func TestInMemoryLanguage(t *testing.T) {
-// 	kb := NewInMemory()
-// 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
-// 	require.Error(t, err)
-// 	require.Equal(t, "unsupported language: only english is supported", err.Error())
-// }
-//
-// func TestInMemoryCreateMultisig(t *testing.T) {
-// 	kb, err := NewKeyring("keybasename", "memory", "", nil)
-// 	require.NoError(t, err)
-// 	multi := multisig.PubKeyMultisigThreshold{
-// 		K:       1,
-// 		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
-// 	}
-// 	_, err = kb.CreateMulti("multi", multi)
-// 	require.NoError(t, err)
-// }
-//
-// func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
-// 	kb := NewInMemory()
-// 	_, err := kb.CreateAccount(
-// 		"some_account",
-// 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-// 		"", "", CreateHDPath(0, 0).String(), Secp256k1)
-// 	require.Error(t, err)
-// 	require.Equal(t, "Invalid mnemonic", err.Error())
-// }
+func TestAdvancedKeyManagementKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+
+	algo := AltSecp256k1
+	n1, n2 := "old-name", "new name"
+
+	// make sure key works with initial password
+	_, _, err = kb.NewMnemonic(n1, English, algo)
+	require.Nil(t, err, "%+v", err)
+
+	_, err = kb.ExportPubKeyArmor(n1 + ".notreal")
+	require.NotNil(t, err)
+	_, err = kb.ExportPubKeyArmor(" " + n1)
+	require.NotNil(t, err)
+	_, err = kb.ExportPubKeyArmor(n1 + " ")
+	require.NotNil(t, err)
+	_, err = kb.ExportPubKeyArmor("")
+	require.NotNil(t, err)
+	exported, err := kb.ExportPubKeyArmor(n1)
+	require.Nil(t, err, "%+v", err)
+
+	// import succeeds
+	err = kb.ImportPubKey(n2, exported)
+	require.NoError(t, err)
+
+	// second import fails
+	err = kb.ImportPubKey(n2, exported)
+	require.NotNil(t, err)
+}
+
+func TestSeedPhraseKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+
+	algo := AltSecp256k1
+	n1, n2 := "lost-key", "found-again"
+
+	// make sure key works with initial password
+	info, mnemonic, err := kb.NewMnemonic(n1, English, algo)
+	require.Nil(t, err, "%+v", err)
+	require.Equal(t, n1, info.GetName())
+	assert.NotEmpty(t, mnemonic)
+
+	// now, let us delete this key
+	err = kb.Delete(n1)
+	require.Nil(t, err, "%+v", err)
+	_, err = kb.Key(n1)
+	require.NotNil(t, err)
+
+	// let us re-create it from the mnemonic-phrase
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
+	hdPath := params.String()
+	newInfo, err := kb.NewAccount(n2, mnemonic, DefaultBIP39Passphrase, hdPath, AltSecp256k1)
+	require.NoError(t, err)
+	require.Equal(t, n2, newInfo.GetName())
+	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
+	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
+func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+
+	_, _, err = kb.NewMnemonic("john", English, AltSecp256k1)
+	require.NoError(t, err)
+
+	keystr, err := kb.ExportPrivKeyArmor("john", "somepassword")
+	require.NoError(t, err)
+	require.NotEmpty(t, keystr)
+
+	// try import the key - wrong password
+	err = kb.ImportPrivKey("john2", keystr, "bad pass")
+	require.Equal(t, "failed to decrypt private key: ciphertext decryption failed", err.Error())
+
+	// try import the key with the correct password
+	require.NoError(t, kb.ImportPrivKey("john2", keystr, "somepassword"))
+
+	// overwrite is not allowed
+	err = kb.ImportPrivKey("john2", keystr, "password")
+	require.Equal(t, "cannot overwrite key: john2", err.Error())
+
+	// try export non existing key
+	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
+	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
+}
+
+func TestInMemoryLanguage(t *testing.T) {
+	kb := NewInMemory()
+	_, _, err := kb.NewMnemonic("something", Japanese, AltSecp256k1)
+	require.Error(t, err)
+	require.Equal(t, "unsupported language: only english is supported", err.Error())
+}
+
+func TestInMemoryCreateMultisig(t *testing.T) {
+	kb, err := New("keybasename", "memory", "", nil)
+	require.NoError(t, err)
+	multi := multisig.PubKeyMultisigThreshold{
+		K:       1,
+		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
+	}
+	_, err = kb.SaveMultisig("multi", multi)
+	require.NoError(t, err)
+}
+
+func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
+	kb := NewInMemory()
+	_, err := kb.NewAccount(
+		"some_account",
+		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
+		"", CreateHDPath(0, 0).String(), AltSecp256k1)
+	require.Error(t, err)
+	require.Equal(t, "Invalid mnemonic", err.Error())
+}
+
 //
 // func TestInMemoryCreateLedgerUnsupportedAlgo(t *testing.T) {
 // 	kb := NewInMemory()

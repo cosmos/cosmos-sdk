@@ -62,6 +62,7 @@ func TestDecodeStore(t *testing.T) {
 		{"Delegation", fmt.Sprintf("%v\n%v", del, del)},
 		{"UnbondingDelegation", fmt.Sprintf("%v\n%v", ubd, ubd)},
 		{"Redelegation", fmt.Sprintf("%v\n%v", red, red)},
+		{"HistoricalInfo", fmt.Sprintf("%v\n%v", histInfo, histInfo)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

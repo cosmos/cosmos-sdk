@@ -53,8 +53,8 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 
 	case bytes.Equal(kvA.Key[:1], types.HistoricalInfoKey):
 		var histInfoA, histInfoB types.HistoricalInfo
-		cdc.MustUnmarshalBinaryBare(kvA.Value, histInfoA)
-		cdc.MustUnmarshalBinaryBare(kvB.Value, histInfoB)
+		cdc.MustUnmarshalBinaryBare(kvA.Value, &histInfoA)
+		cdc.MustUnmarshalBinaryBare(kvB.Value, &histInfoB)
 		return fmt.Sprintf("%v\n%v", histInfoA, histInfoB)
 
 	default:

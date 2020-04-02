@@ -87,8 +87,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 
 		route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -134,8 +133,7 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute stri
 
 		bz := cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -177,14 +175,12 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 
 		// query commission
 		bz, err := common.QueryValidatorCommission(cliCtx, queryRoute, valAddr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		var commission types.ValidatorAccumulatedCommission
-		if err := cliCtx.Codec.UnmarshalJSON(bz, &commission); err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, cliCtx.Codec.UnmarshalJSON(bz, &commission)) {
 			return
 		}
 
@@ -196,14 +192,12 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 		}
 
 		var rewards sdk.DecCoins
-		if err := cliCtx.Codec.UnmarshalJSON(bz, &rewards); err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, cliCtx.Codec.UnmarshalJSON(bz, &rewards)) {
 			return
 		}
 
 		bz, err = cliCtx.Codec.MarshalJSON(NewValidatorDistInfo(delAddr, rewards, commission))
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -247,8 +241,7 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
 		res, height, err := cliCtx.QueryWithData(route, nil)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -265,14 +258,12 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 		}
 
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		var result sdk.DecCoins
-		if err := cliCtx.Codec.UnmarshalJSON(res, &result); err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, cliCtx.Codec.UnmarshalJSON(res, &result)) {
 			return
 		}
 
@@ -296,8 +287,7 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 
 		bin := cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -311,8 +301,7 @@ func checkResponseQueryDelegationRewards(
 ) (res []byte, height int64, ok bool) {
 
 	res, height, err := common.QueryDelegationRewards(cliCtx, queryRoute, delAddr, valAddr)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	if rest.CheckInternalServerError(w, err) {
 		return nil, 0, false
 	}
 

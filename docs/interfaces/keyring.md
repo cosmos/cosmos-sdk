@@ -44,9 +44,10 @@ to execute commands using the `file` option you may want to utilize the followin
 for multiple prompts:
 
 ```sh
-$ gaiacli config keyring-backend file                                               # use file backend
-$ (echo '1234567890'; echo '1234567890') | gaiacli keys add me                      # add the key 'me'
-$ (echo '1234567890'; echo '1234567890'; echo '1234567890') | gaiad collect-gentxs  # multiple prompts
+# assuming that KEYPASSWD is set in the environment
+$ gaiacli config keyring-backend file                             # use file backend
+$ (echo $KEYPASSWD; echo $KEYPASSWD) | gaiacli keys add me        # multiple prompts
+$ echo $KEYPASSWD | gaiacli keys show me                          # single prompt
 ```
 
 ::: tip

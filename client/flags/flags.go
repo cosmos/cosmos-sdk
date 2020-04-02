@@ -10,7 +10,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 // nolint
@@ -23,7 +23,7 @@ const (
 	GasFlagAuto          = "auto"
 
 	// DefaultKeyringBackend
-	DefaultKeyringBackend = keys.BackendOS
+	DefaultKeyringBackend = keyring.BackendOS
 )
 
 const (

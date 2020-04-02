@@ -72,9 +72,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		defer os.RemoveAll(tmpDir)
 
-		migrator, err = keyring.NewMigrator(keyringServiceName, "test", tmpDir, buf)
+		migrator, err = keyring.NewInfoImporter(keyringServiceName, "test", tmpDir, buf)
 	} else {
-		migrator, err = keyring.NewMigrator(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
+		migrator, err = keyring.NewInfoImporter(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
 	}
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(

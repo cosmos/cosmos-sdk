@@ -41,4 +41,8 @@ func TestLegacyKeybase(t *testing.T) {
 	armoredInfo, err := kb.Export(keys[0].GetName())
 	require.NoError(t, err)
 	require.NotEmpty(t, armoredInfo)
+
+	importer, err := keyring.NewInfoImporter("cosmos", "memory", "", nil)
+	require.NoError(t, err)
+	require.NoError(t, importer.Import("test", armoredInfo))
 }

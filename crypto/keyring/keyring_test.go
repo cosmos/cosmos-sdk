@@ -482,106 +482,90 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.Equal(t, "44'/118'/3'/0/1", path.String())
 }
 
-//
-// // TestInMemoryKeyManagement makes sure we can manipulate these keys well
-// func TestInMemoryKeyManagement(t *testing.T) {
-// 	// make the storage with reasonable defaults
-// 	cstore := NewInMemory(WithSupportedAlgos([]pubKeyType{Secp256k1, Sr25519}))
-//
-// 	// Test modified supported algos
-// 	supportedAlgos := cstore.SupportedAlgos()
-// 	secpSupported := false
-// 	edSupported := false
-// 	srSupported := false
-// 	for _, supportedAlgo := range supportedAlgos {
-// 		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
-// 		edSupported = edSupported || (supportedAlgo == Ed25519)
-// 		srSupported = srSupported || (supportedAlgo == Sr25519)
-// 	}
-// 	require.True(t, secpSupported)
-// 	require.False(t, edSupported)
-// 	require.True(t, srSupported)
-//
-// 	algo := Secp256k1
-// 	n1, n2, n3 := "personal", "business", "other"
-// 	p1, p2 := nums, "really-secure!@#$"
-//
-// 	// Check empty state
-// 	l, err := cstore.List()
-// 	require.Nil(t, err)
-// 	require.Empty(t, l)
-//
-// 	_, _, err = cstore.CreateMnemonic(n1, English, p1, Ed25519)
-// 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
-//
-// 	// create some keys
-// 	_, err = cstore.Get(n1)
-// 	require.Error(t, err)
-// 	i, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
-//
-// 	require.NoError(t, err)
-// 	require.Equal(t, n1, i.GetName())
-// 	_, _, err = cstore.CreateMnemonic(n2, English, p2, algo)
-// 	require.NoError(t, err)
-//
-// 	// we can get these keys
-// 	i2, err := cstore.Get(n2)
-// 	require.NoError(t, err)
-// 	_, err = cstore.Get(n3)
-// 	require.NotNil(t, err)
-// 	_, err = cstore.GetByAddress(accAddr(i2))
-// 	require.NoError(t, err)
-// 	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
-// 	require.NoError(t, err)
-// 	_, err = cstore.GetByAddress(addr)
-// 	require.NotNil(t, err)
-//
-// 	// list shows them in order
-// 	keyS, err := cstore.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 2, len(keyS))
-// 	// note these are in alphabetical order
-// 	require.Equal(t, n2, keyS[0].GetName())
-// 	require.Equal(t, n1, keyS[1].GetName())
-// 	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
-//
-// 	// deleting a key removes it
-// 	err = cstore.Delete("bad name", "foo", false)
-// 	require.NotNil(t, err)
-// 	err = cstore.Delete(n1, p1, false)
-// 	require.NoError(t, err)
-// 	keyS, err = cstore.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 1, len(keyS))
-// 	_, err = cstore.Get(n1)
-// 	require.Error(t, err)
-//
-// 	// create an offline key
-// 	o1 := "offline"
-// 	priv1 := ed25519.GenPrivKey()
-// 	pub1 := priv1.PubKey()
-// 	i, err = cstore.CreateOffline(o1, pub1, algo)
-// 	require.Nil(t, err)
-// 	require.Equal(t, pub1, i.GetPubKey())
-// 	require.Equal(t, o1, i.GetName())
-// 	iOffline := i.(*offlineInfo)
-// 	require.Equal(t, algo, iOffline.GetAlgo())
-// 	keyS, err = cstore.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 2, len(keyS))
-//
-// 	// delete the offline key
-// 	err = cstore.Delete(o1, "", false)
-// 	require.NoError(t, err)
-// 	keyS, err = cstore.List()
-// 	require.NoError(t, err)
-// 	require.Equal(t, 1, len(keyS))
-//
-// 	// addr cache gets nuked - and test skip flag
-// 	err = cstore.Delete(n2, "", true)
-// 	require.NoError(t, err)
-// }
-//
+// TestInMemoryKeyManagement makes sure we can manipulate these keys well
+func TestInMemoryKeyManagement(t *testing.T) {
+	// make the storage with reasonable defaults
+	cstore := NewInMemory()
+
+	algo := AltSecp256k1
+	n1, n2, n3 := "personal", "business", "other"
+
+	// Check empty state
+	l, err := cstore.List()
+	require.Nil(t, err)
+	require.Empty(t, l)
+
+	_, _, err = cstore.NewMnemonic(n1, English, notSupportedAlgo{})
+	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
+
+	// create some keys
+	_, err = cstore.Key(n1)
+	require.Error(t, err)
+	i, _, err := cstore.NewMnemonic(n1, English, algo)
+
+	require.NoError(t, err)
+	require.Equal(t, n1, i.GetName())
+	_, _, err = cstore.NewMnemonic(n2, English, algo)
+	require.NoError(t, err)
+
+	// we can get these keys
+	i2, err := cstore.Key(n2)
+	require.NoError(t, err)
+	_, err = cstore.Key(n3)
+	require.NotNil(t, err)
+	_, err = cstore.KeyByAddress(accAddr(i2))
+	require.NoError(t, err)
+	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	require.NoError(t, err)
+	_, err = cstore.KeyByAddress(addr)
+	require.NotNil(t, err)
+
+	// list shows them in order
+	keyS, err := cstore.List()
+	require.NoError(t, err)
+	require.Equal(t, 2, len(keyS))
+	// note these are in alphabetical order
+	require.Equal(t, n2, keyS[0].GetName())
+	require.Equal(t, n1, keyS[1].GetName())
+	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
+
+	// deleting a key removes it
+	err = cstore.Delete("bad name")
+	require.NotNil(t, err)
+	err = cstore.Delete(n1)
+	require.NoError(t, err)
+	keyS, err = cstore.List()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(keyS))
+	_, err = cstore.Key(n1)
+	require.Error(t, err)
+
+	// create an offline key
+	o1 := "offline"
+	priv1 := ed25519.GenPrivKey()
+	pub1 := priv1.PubKey()
+	i, err = cstore.SavePubKey(o1, pub1, Ed25519)
+	require.Nil(t, err)
+	require.Equal(t, pub1, i.GetPubKey())
+	require.Equal(t, o1, i.GetName())
+	iOffline := i.(*offlineInfo)
+	require.Equal(t, Ed25519, iOffline.GetAlgo())
+	keyS, err = cstore.List()
+	require.NoError(t, err)
+	require.Equal(t, 2, len(keyS))
+
+	// delete the offline key
+	err = cstore.Delete(o1)
+	require.NoError(t, err)
+	keyS, err = cstore.List()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(keyS))
+
+	// addr cache gets nuked - and test skip flag
+	err = cstore.Delete(n2)
+	require.NoError(t, err)
+}
+
 // // TestInMemorySignVerify does some detailed checks on how we sign and validate
 // // signatures
 // func TestInMemorySignVerify(t *testing.T) {

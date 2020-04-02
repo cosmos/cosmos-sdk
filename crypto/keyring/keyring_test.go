@@ -698,44 +698,43 @@ func TestInMemoryExportImportPrivKey(t *testing.T) {
 	require.True(t, priv1.GetPubKey().Equals(priv2.GetPubKey()))
 }
 
-// func TestInMemoryExportImportPubKey(t *testing.T) {
-// 	// make the storage with reasonable defaults
-// 	cstore := NewInMemory()
-//
-// 	// CreateMnemonic a private-public key pair and ensure consistency
-// 	notPasswd := "n9y25ah7"
-// 	info, _, err := cstore.CreateMnemonic("john", English, notPasswd, Secp256k1)
-// 	require.Nil(t, err)
-// 	require.NotEqual(t, info, "")
-// 	require.Equal(t, info.GetName(), "john")
-// 	addr := info.GetPubKey().Address()
-// 	john, err := cstore.Get("john")
-// 	require.NoError(t, err)
-// 	require.Equal(t, john.GetName(), "john")
-// 	require.Equal(t, john.GetPubKey().Address(), addr)
-//
-// 	// Export the public key only
-// 	armor, err := cstore.ExportPubKey("john")
-// 	require.NoError(t, err)
-// 	// Import it under a different name
-// 	err = cstore.ImportPubKey("john-pubkey-only", armor)
-// 	require.NoError(t, err)
-// 	// Ensure consistency
-// 	john2, err := cstore.Get("john-pubkey-only")
-// 	require.NoError(t, err)
-// 	// Compare the public keys
-// 	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
-// 	// Ensure the original key hasn't changed
-// 	john, err = cstore.Get("john")
-// 	require.NoError(t, err)
-// 	require.Equal(t, john.GetPubKey().Address(), addr)
-// 	require.Equal(t, john.GetName(), "john")
-//
-// 	// Ensure keys cannot be overwritten
-// 	err = cstore.ImportPubKey("john-pubkey-only", armor)
-// 	require.NotNil(t, err)
-// }
-//
+func TestInMemoryExportImportPubKey(t *testing.T) {
+	// make the storage with reasonable defaults
+	cstore := NewInMemory()
+
+	// CreateMnemonic a private-public key pair and ensure consistency
+	info, _, err := cstore.NewMnemonic("john", English, AltSecp256k1)
+	require.Nil(t, err)
+	require.NotEqual(t, info, "")
+	require.Equal(t, info.GetName(), "john")
+	addr := info.GetPubKey().Address()
+	john, err := cstore.Key("john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.GetPubKey().Address(), addr)
+
+	// Export the public key only
+	armor, err := cstore.ExportPubKeyArmor("john")
+	require.NoError(t, err)
+	// Import it under a different name
+	err = cstore.ImportPubKey("john-pubkey-only", armor)
+	require.NoError(t, err)
+	// Ensure consistency
+	john2, err := cstore.Key("john-pubkey-only")
+	require.NoError(t, err)
+	// Compare the public keys
+	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
+	// Ensure the original key hasn't changed
+	john, err = cstore.Key("john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetPubKey().Address(), addr)
+	require.Equal(t, john.GetName(), "john")
+
+	// Ensure keys cannot be overwritten
+	err = cstore.ImportPubKey("john-pubkey-only", armor)
+	require.NotNil(t, err)
+}
+
 // func TestInMemoryExportPrivateKeyObject(t *testing.T) {
 // 	kb := NewInMemory()
 //

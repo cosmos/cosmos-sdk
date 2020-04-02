@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -9,30 +10,42 @@ import (
 
 // ValidateCmd returns unknown command error or Help display if help flag set
 func ValidateCmd(cmd *cobra.Command, args []string) error {
-	var cmds []string
-	var help bool
+	var unknownCmd string
+	var skipNext bool
 
-	// construct array of commands and search for help flag
 	for _, arg := range args {
+		// search for help flag
 		if arg == "--help" || arg == "-h" {
-			help = true
-		} else if len(arg) > 0 && !(arg[0] == '-') {
-			cmds = append(cmds, arg)
+			return cmd.Help()
 		}
-	}
 
-	if !help && len(cmds) > 0 {
-		err := fmt.Sprintf("unknown command \"%s\" for \"%s\"", cmds[0], cmd.CalledAs())
-
-		// build suggestions for unknown argument
-		if suggestions := cmd.SuggestionsFor(cmds[0]); len(suggestions) > 0 {
-			err += "\n\nDid you mean this?\n"
-			for _, s := range suggestions {
-				err += fmt.Sprintf("\t%v\n", s)
+		// check if the current arg is a flag
+		if len(arg) > 0 && (arg[0] == '-') {
+			// the next arg should be skipped if the current arg is a
+			// flag and does not use "=" to assign the flag's value
+			if !strings.Contains(arg, "=") {
+				skipNext = true
+			} else {
+				skipNext = false
 			}
+		} else if skipNext {
+			// skip current arg
+			skipNext = false
+		} else {
+			// unknown command found
+			unknownCmd = arg
+			break
 		}
-		return errors.New(err)
 	}
 
-	return cmd.Help()
+	err := fmt.Sprintf("unknown command \"%s\" for \"%s\"", unknownCmd, cmd.CalledAs())
+
+	// build suggestions for unknown argument
+	if suggestions := cmd.SuggestionsFor(unknownCmd); len(suggestions) > 0 {
+		err += "\n\nDid you mean this?\n"
+		for _, s := range suggestions {
+			err += fmt.Sprintf("\t%v\n", s)
+		}
+	}
+	return errors.New(err)
 }

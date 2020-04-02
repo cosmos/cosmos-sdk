@@ -719,40 +719,39 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-// // TestInMemoryAdvancedKeyManagement verifies update, import, export functionality
-// func TestInMemoryAdvancedKeyManagement(t *testing.T) {
-// 	// make the storage with reasonable defaults
-// 	cstore := NewInMemory()
-//
-// 	algo := Secp256k1
-// 	n1, n2 := "old-name", "new name"
-// 	p1 := nums
-//
-// 	// make sure key works with initial password
-// 	_, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
-// 	require.Nil(t, err, "%+v", err)
-//
-// 	// exporting requires the proper name and passphrase
-// 	_, err = cstore.Export(n1 + ".notreal")
-// 	require.NotNil(t, err)
-// 	_, err = cstore.Export(" " + n1)
-// 	require.NotNil(t, err)
-// 	_, err = cstore.Export(n1 + " ")
-// 	require.NotNil(t, err)
-// 	_, err = cstore.Export("")
-// 	require.NotNil(t, err)
-// 	exported, err := cstore.Export(n1)
-// 	require.Nil(t, err, "%+v", err)
-//
-// 	// import succeeds
-// 	err = cstore.Import(n2, exported)
-// 	require.NoError(t, err)
-//
-// 	// second import fails
-// 	err = cstore.Import(n2, exported)
-// 	require.NotNil(t, err)
-// }
-//
+// TestInMemoryAdvancedKeyManagement verifies update, import, export functionality
+func TestInMemoryAdvancedKeyManagement(t *testing.T) {
+	// make the storage with reasonable defaults
+	cstore := NewInMemory()
+
+	algo := AltSecp256k1
+	n1, n2 := "old-name", "new name"
+
+	// make sure key works with initial password
+	_, _, err := cstore.NewMnemonic(n1, English, algo)
+	require.Nil(t, err, "%+v", err)
+
+	// exporting requires the proper name and passphrase
+	_, err = cstore.ExportPubKeyArmor(n1 + ".notreal")
+	require.NotNil(t, err)
+	_, err = cstore.ExportPubKeyArmor(" " + n1)
+	require.NotNil(t, err)
+	_, err = cstore.ExportPubKeyArmor(n1 + " ")
+	require.NotNil(t, err)
+	_, err = cstore.ExportPubKeyArmor("")
+	require.NotNil(t, err)
+	exported, err := cstore.ExportPubKeyArmor(n1)
+	require.Nil(t, err, "%+v", err)
+
+	// import succeeds
+	err = cstore.ImportPubKey(n2, exported)
+	require.NoError(t, err)
+
+	// second import fails
+	err = cstore.ImportPubKey(n2, exported)
+	require.NotNil(t, err)
+}
+
 // // TestInMemorySeedPhrase verifies restoring from a seed phrase
 // func TestInMemorySeedPhrase(t *testing.T) {
 //

@@ -310,22 +310,6 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-// func TestExportPrivateKeyObjectKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-//
-// 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-//
-// 	// export private key object
-// 	exported, err := kb.ExportPrivateKeyObject("john", "secretcpw")
-// 	require.Nil(t, err, "%+v", err)
-// 	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
-// }
-//
 func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
@@ -735,21 +719,6 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-// func TestInMemoryExportPrivateKeyObject(t *testing.T) {
-// 	kb := NewInMemory()
-//
-// 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-//
-// 	// export private key object
-// 	_, err = kb.ExportPrivateKeyObject("john", "invalid")
-// 	require.NoError(t, err, "%+v", err)
-// 	exported, err := kb.ExportPrivateKeyObject("john", "secretcpw")
-// 	require.Nil(t, err, "%+v", err)
-// 	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
-// }
-//
 // // TestInMemoryAdvancedKeyManagement verifies update, import, export functionality
 // func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 // 	// make the storage with reasonable defaults

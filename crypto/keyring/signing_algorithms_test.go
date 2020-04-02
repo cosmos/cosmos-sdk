@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestDefaults(t *testing.T) {
+	require.Equal(t, pubKeyType("multi"), MultiAlgo)
+	require.Equal(t, pubKeyType("secp256k1"), Secp256k1)
+	require.Equal(t, pubKeyType("ed25519"), Ed25519)
+	require.Equal(t, pubKeyType("sr25519"), Sr25519)
+}
+
 func TestNewSigningAlgoByString(t *testing.T) {
 	tests := []struct {
 		name         string

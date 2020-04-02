@@ -1244,6 +1244,4 @@ func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 
-func accAddr(info Info) sdk.AccAddress {
-	return sdk.AccAddress(info.GetAddress())
-}
+func accAddr(info Info) sdk.AccAddress { return info.GetAddress() }

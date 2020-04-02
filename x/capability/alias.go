@@ -30,6 +30,7 @@ var (
 	ModuleCdc                   = types.ModuleCdc
 	NewOwner                    = types.NewOwner
 	NewCapabilityOwners         = types.NewCapabilityOwners
+	NewCapabilityStore          = types.NewCapabilityStore
 )
 
 // nolint
@@ -39,4 +40,5 @@ type (
 	Capability       = types.Capability
 	CapabilityKey    = types.CapabilityKey
 	CapabilityOwners = types.CapabilityOwners
+	CapabilityStore  = types.CapabilityStore
 )

@@ -28,7 +28,7 @@ type (
 	Keeper struct {
 		cdc           *codec.Codec
 		storeKey      sdk.StoreKey
-		memKey        sdk.StoreKey
+		capStore      types.CapabilityStore
 		scopedModules map[string]struct{}
 		sealed        bool
 	}
@@ -42,16 +42,16 @@ type (
 	ScopedKeeper struct {
 		cdc      *codec.Codec
 		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
+		capStore types.CapabilityStore // shared amongst all scoped keepers
 		module   string
 	}
 )
 
-func NewKeeper(cdc *codec.Codec, storeKey, memKey sdk.StoreKey) *Keeper {
+func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
-		memKey:        memKey,
+		capStore:      types.NewCapabilityStore(),
 		scopedModules: make(map[string]struct{}),
 		sealed:        false,
 	}
@@ -74,7 +74,7 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	return ScopedKeeper{
 		cdc:      k.cdc,
 		storeKey: k.storeKey,
-		memKey:   k.memKey,
+		capStore: k.capStore,
 		module:   moduleName,
 	}
 }
@@ -86,13 +86,6 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	if k.sealed {
 		panic("cannot initialize and seal an already sealed capability keeper")
-	}
-
-	memStore := ctx.KVStore(k.memKey)
-	memStoreType := memStore.GetStoreType()
-
-	if memStoreType != sdk.StoreTypeMemory {
-		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
 	}
 
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
@@ -110,11 +103,11 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		for _, owner := range capOwners.Owners {
 			// Set the forward mapping between the module and capability tuple and the
 			// capability name in the in-memory store.
-			memStore.Set(types.FwdCapabilityKey(owner.Module, cap), []byte(owner.Name))
+			k.capStore.SetCapabilityName(owner.Module, owner.Name, cap)
 
 			// Set the reverse mapping between the module and capability name and the
 			// capability in the in-memory store.
-			memStore.Set(types.RevCapabilityKey(owner.Module, owner.Name), k.cdc.MustMarshalBinaryBare(cap))
+			k.capStore.SetCapability(owner.Module, owner.Name, cap)
 		}
 	}
 
@@ -132,10 +125,10 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 // with the module name and no two ScopedKeeper can have the same module name.
 func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capability, error) {
 	store := ctx.KVStore(sk.storeKey)
-	memStore := ctx.KVStore(sk.memKey)
 
-	if memStore.Has(types.RevCapabilityKey(sk.module, name)) {
+	if cap := sk.capStore.GetCapability(sk.module, name); cap != nil {
 		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
+
 	}
 
 	// create new capability with the current global index
@@ -152,11 +145,11 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capabi
 
 	// Set the forward mapping between the module and capability tuple and the
 	// capability name in the in-memory store.
-	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
+	sk.capStore.SetCapabilityName(sk.module, name, cap)
 
 	// Set the reverse mapping between the module and capability name and the
 	// capability in the in-memory store.
-	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
+	sk.capStore.SetCapability(sk.module, name, cap)
 
 	logger(ctx).Info("created new capability", "module", sk.module, "name", name)
 	return cap, nil
@@ -171,10 +164,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capabi
 // Note, the capability's forward mapping is indexed by a string which should
 // contain its unique memory reference.
 func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capability, name string) bool {
-	memStore := ctx.KVStore(sk.memKey)
-
-	bz := memStore.Get(types.FwdCapabilityKey(sk.module, cap))
-	return string(bz) == name
+	return sk.capStore.GetCapabilityName(sk.module, cap) == name
 }
 
 // ClaimCapability attempts to claim a given Capability. The provided name and
@@ -188,15 +178,13 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 		return err
 	}
 
-	memStore := ctx.KVStore(sk.memKey)
-
 	// Set the forward mapping between the module and capability tuple and the
 	// capability name in the in-memory store.
-	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
+	sk.capStore.SetCapabilityName(sk.module, name, cap)
 
 	// Set the reverse mapping between the module and capability name and the
 	// capability in the in-memory store.
-	memStore.Set(types.RevCapabilityKey(sk.module, name), sk.cdc.MustMarshalBinaryBare(cap))
+	sk.capStore.SetCapability(sk.module, name, cap)
 
 	logger(ctx).Info("claimed capability", "module", sk.module, "name", name, "capability", cap.GetIndex())
 	return nil
@@ -206,22 +194,18 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 // previously claimed or created. After releasing the capability, if no more
 // owners exist, the capability will be globally removed.
 func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) error {
-	memStore := ctx.KVStore(sk.memKey)
-
-	bz := memStore.Get(types.FwdCapabilityKey(sk.module, cap))
-	if len(bz) == 0 {
+	name := sk.capStore.GetCapabilityName(sk.module, cap)
+	if len(name) == 0 {
 		return sdkerrors.Wrap(types.ErrCapabilityNotOwned, sk.module)
 	}
 
-	name := string(bz)
-
 	// Remove the forward mapping between the module and capability tuple and the
 	// capability name in the in-memory store.
-	memStore.Delete(types.FwdCapabilityKey(sk.module, cap))
+	sk.capStore.DeleteCapabilityName(sk.module, cap)
 
 	// Remove the reverse mapping between the module and capability name and the
 	// capability in the in-memory store.
-	memStore.Delete(types.RevCapabilityKey(sk.module, name))
+	sk.capStore.DeleteCapability(sk.module, name)
 
 	// remove owner
 	capOwners := sk.getOwners(ctx, cap)
@@ -245,15 +229,10 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) 
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (types.Capability, bool) {
-	memStore := ctx.KVStore(sk.memKey)
-
-	bz := memStore.Get(types.RevCapabilityKey(sk.module, name))
-	if len(bz) == 0 {
+	cap := sk.capStore.GetCapability(sk.module, name)
+	if cap == nil {
 		return nil, false
 	}
-
-	var cap types.Capability
-	sk.cdc.MustUnmarshalBinaryBare(bz, &cap)
 
 	return cap, true
 }

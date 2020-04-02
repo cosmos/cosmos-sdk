@@ -6,7 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmentexported  "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 var _ clientexported.ConsensusState = (*ConsensusState)(nil)
@@ -16,19 +16,19 @@ func (ConsensusState) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
 }
 
-// GetRoot returns the commitment Root for the specific	
-func (cs ConsensusState) GetRoot() commitmentexported.Root {	
-	return &cs.Root	
-}	
+// GetRoot returns the commitment Root for the specific
+func (cs ConsensusState) GetRoot() commitmentexported.Root {
+	return &cs.Root
+}
 
-// GetHeight returns the height for the specific consensus state	
-func (cs ConsensusState) GetHeight() uint64 {	
-	return cs.Height	
-}	
+// GetHeight returns the height for the specific consensus state
+func (cs ConsensusState) GetHeight() uint64 {
+	return cs.Height
+}
 
-// GetTimestamp returns block time at which the consensus state was stored	
-func (cs ConsensusState) GetTimestamp() time.Time {	
-	return cs.Timestamp	
+// GetTimestamp returns block time at which the consensus state was stored
+func (cs ConsensusState) GetTimestamp() time.Time {
+	return cs.Timestamp
 }
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.

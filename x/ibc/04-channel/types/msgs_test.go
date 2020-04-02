@@ -42,7 +42,7 @@ var (
 	invalidShortConnHops = []string{invalidShortConnection}
 	invalidLongConnHops  = []string{invalidLongConnection}
 
-	proof = commitmenttypes.MerkleProof{Proof: &merkle.Proof{Ops: []merkle.ProofOp{merkle.ProofOp{Type: "proof", Key: []byte("key"), Data: []byte("data")}}}}
+	proof = commitmenttypes.MerkleProof{Proof: &merkle.Proof{Ops: []merkle.ProofOp{{Type: "proof", Key: []byte("key"), Data: []byte("data")}}}}
 
 	addr = sdk.AccAddress("testaddr")
 )

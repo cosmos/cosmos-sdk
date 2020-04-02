@@ -752,38 +752,37 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-// // TestInMemorySeedPhrase verifies restoring from a seed phrase
-// func TestInMemorySeedPhrase(t *testing.T) {
-//
-// 	// make the storage with reasonable defaults
-// 	cstore := NewInMemory()
-//
-// 	algo := Secp256k1
-// 	n1, n2 := "lost-key", "found-again"
-// 	p1, p2 := nums, foobar
-//
-// 	// make sure key works with initial password
-// 	info, mnemonic, err := cstore.CreateMnemonic(n1, English, p1, algo)
-// 	require.Nil(t, err, "%+v", err)
-// 	require.Equal(t, n1, info.GetName())
-// 	require.NotEmpty(t, mnemonic)
-//
-// 	// now, let us delete this key
-// 	err = cstore.Delete(n1, p1, false)
-// 	require.Nil(t, err, "%+v", err)
-// 	_, err = cstore.Get(n1)
-// 	require.NotNil(t, err)
-//
-// 	// let us re-create it from the mnemonic-phrase
-// 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-// 	hdPath := params.String()
-// 	newInfo, err := cstore.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, n2, newInfo.GetName())
-// 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
-// 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
-// }
-//
+// TestInMemorySeedPhrase verifies restoring from a seed phrase
+func TestInMemorySeedPhrase(t *testing.T) {
+
+	// make the storage with reasonable defaults
+	cstore := NewInMemory()
+
+	algo := AltSecp256k1
+	n1, n2 := "lost-key", "found-again"
+
+	// make sure key works with initial password
+	info, mnemonic, err := cstore.NewMnemonic(n1, English, algo)
+	require.Nil(t, err, "%+v", err)
+	require.Equal(t, n1, info.GetName())
+	require.NotEmpty(t, mnemonic)
+
+	// now, let us delete this key
+	err = cstore.Delete(n1)
+	require.Nil(t, err, "%+v", err)
+	_, err = cstore.Key(n1)
+	require.NotNil(t, err)
+
+	// let us re-create it from the mnemonic-phrase
+	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
+	hdPath := params.String()
+	newInfo, err := cstore.NewAccount(n2, mnemonic, DefaultBIP39Passphrase, hdPath, algo)
+	require.NoError(t, err)
+	require.Equal(t, n2, newInfo.GetName())
+	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
+	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
 // func ExampleNew() {
 // 	// Select the encryption and storage for your cryptostore
 // 	customKeyGenFunc := func(bz []byte, algo pubKeyType) (tmcrypto.PrivKey, error) {

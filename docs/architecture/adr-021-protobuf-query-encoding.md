@@ -158,12 +158,8 @@ with a command-line flag.
 
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) is a project that
 translates REST calls into GRPC calls using special annotations on service
-methods. Apps that want to expose REST queries should add `google.api.http`
-annotations to their `rpc` methods as in this example below. By convention
-HTTP method paths registered this way should correspond to the protobuf
-package paths for their respective modules, i.e. `cosmos_sdk.x.bank.v1` translates
-to `/cosmos_sdk/x/bank/v1/`.
-
+methods. Modules that want to expose REST queries should add `google.api.http`
+annotations to their `rpc` methods as in this example below.
 
 ```proto
 // x/bank/types/types.proto
@@ -171,12 +167,12 @@ to `/cosmos_sdk/x/bank/v1/`.
 service Query {
   rpc QueryBalance(QueryBalanceParams) returns (cosmos_sdk.v1.Coin) {
     option (google.api.http) = {
-      get: "/cosmos_sdk/x/bank/v1/balance/{address}/{denom}"
+      get: "/x/bank/v1/balance/{address}/{denom}"
     };
   }
   rpc QueryAllBalances(QueryAllBalancesParams) returns (QueryAllBalancesResponse) {
     option (google.api.http) = {
-      get: "/cosmos_sdk/x/bank/v1/balances/{address}"
+      get: "/x/bank/v1/balances/{address}"
     };
   }
 }

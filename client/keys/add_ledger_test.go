@@ -50,14 +50,14 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1", "", false)
+		kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
-	key1, err := kb.Get("keyname1")
+	key1, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 

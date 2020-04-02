@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bufio"
-	"errors"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -54,38 +53,25 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
-			// confirm deletion, unless -y is passed
-			if !viper.GetBool(flagYes) {
-				if err := confirmDeletion(buf); err != nil {
-					return err
-				}
-			}
-
-			if err := kb.Delete(name); err != nil {
+		// confirm deletion, unless -y is passed
+		if !viper.GetBool(flagYes) {
+			if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf); err != nil {
 				return err
+			} else if !yes {
+				continue
 			}
-			cmd.PrintErrln("Public key reference deleted")
-			return nil
 		}
 
-		// old password and skip flag arguments are ignored
 		if err := kb.Delete(name); err != nil {
 			return err
+		}
+
+		if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
+			cmd.PrintErrln("Public key reference deleted")
+			continue
 		}
 		cmd.PrintErrln("Key deleted forever (uh oh!)")
 	}
 
-	return nil
-}
-
-func confirmDeletion(buf *bufio.Reader) error {
-	answer, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf)
-	if err != nil {
-		return err
-	}
-	if !answer {
-		return errors.New("aborted")
-	}
 	return nil
 }

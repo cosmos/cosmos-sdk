@@ -14,7 +14,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 		name         string
 		algoStr      string
 		isSupported  bool
-		expectedAlgo AltSigningAlgo
+		expectedAlgo SigningAlgo
 		expectedErr  error
 	}{
 		{

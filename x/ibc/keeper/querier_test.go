@@ -80,6 +80,12 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			"",
 		},
 		{
+			"channel - QuerierConnectionChannels",
+			[]string{channel.SubModuleName, channel.QueryConnectionChannels},
+			false,
+			"",
+		},
+		{
 			"channel - invalid query",
 			[]string{channel.SubModuleName, "foo"},
 			true,

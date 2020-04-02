@@ -37,7 +37,7 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 	)
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -72,7 +72,7 @@ func handlePacketDataTransfer(
 	)
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -92,6 +92,6 @@ func handleTimeoutDataTransfer(
 	}
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }

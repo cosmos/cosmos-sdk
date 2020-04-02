@@ -29,9 +29,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(
-		app.Codec(), app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey),
-	)
+	keeper := keeper.NewKeeper(app.Codec(), app.GetKey(capability.StoreKey))
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.keeper = keeper
@@ -82,7 +80,7 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	got, ok := sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
-	suite.Require().True(cap == got, "pointers not equal")
+	suite.Require().True(cap == got, "expected memory addresses to be equal")
 
 	got, ok = sk.GetCapability(suite.ctx, "invalid")
 	suite.Require().False(ok)

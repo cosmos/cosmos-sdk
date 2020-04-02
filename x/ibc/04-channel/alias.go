@@ -12,18 +12,20 @@ import (
 )
 
 const (
-	SubModuleName    = types.SubModuleName
-	StoreKey         = types.StoreKey
-	RouterKey        = types.RouterKey
-	QuerierRoute     = types.QuerierRoute
-	QueryAllChannels = types.QueryAllChannels
-	QueryChannel     = types.QueryChannel
+	SubModuleName           = types.SubModuleName
+	StoreKey                = types.StoreKey
+	RouterKey               = types.RouterKey
+	QuerierRoute            = types.QuerierRoute
+	QueryAllChannels        = types.QueryAllChannels
+	QueryConnectionChannels = types.QueryConnectionChannels
+	QueryChannel            = types.QueryChannel
 )
 
 var (
 	// functions aliases
 	NewKeeper                    = keeper.NewKeeper
 	QuerierChannels              = keeper.QuerierChannels
+	QuerierConnectionChannels    = keeper.QuerierConnectionChannels
 	NewChannel                   = types.NewChannel
 	NewCounterparty              = types.NewCounterparty
 	RegisterCodec                = types.RegisterCodec

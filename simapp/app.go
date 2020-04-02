@@ -101,9 +101,8 @@ type SimApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
+	keys  map[string]*sdk.KVStoreKey
+	tkeys map[string]*sdk.TransientStoreKey
 
 	// subspaces
 	subspaces map[string]params.Subspace
@@ -157,7 +156,6 @@ func NewSimApp(
 		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
 
 	app := &SimApp{
 		BaseApp:        bApp,
@@ -165,7 +163,6 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
-		memKeys:        memKeys,
 		subspaces:      make(map[string]params.Subspace),
 	}
 
@@ -182,9 +179,7 @@ func NewSimApp(
 	app.subspaces[evidence.ModuleName] = app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 
 	// add capability keeper and ScopeToModule for ibc module
-	app.CapabilityKeeper = capability.NewKeeper(
-		app.cdc, keys[capability.StoreKey], memKeys[capability.MemStoreKey],
-	)
+	app.CapabilityKeeper = capability.NewKeeper(app.cdc, keys[capability.StoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibc.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(transfer.ModuleName)
 
@@ -320,7 +315,6 @@ func NewSimApp(
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -417,13 +411,6 @@ func (app *SimApp) GetKey(storeKey string) *sdk.KVStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
-}
-
-// GetMemKey returns the MemoryStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
-	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.

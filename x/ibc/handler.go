@@ -155,7 +155,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 			// Retrieve callbacks from router
 			cbs := k.Router.GetRoute(module)
-			return cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement.GetBytes())
+			return cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
 
 		case channel.MsgTimeout:
 			// Lookup module by channel capability

@@ -196,7 +196,7 @@ type keyringMigrator struct {
 }
 
 func NewInfoImporter(
-	appName, backend, rootDir string, userInput io.Reader, opts ...AltKeyringOption,
+	appName, backend, rootDir string, userInput io.Reader, opts ...KeyringOption,
 ) (InfoImporter, error) {
 	keyring, err := New(appName, backend, rootDir, userInput, opts...)
 	if err != nil {
@@ -223,4 +223,42 @@ func (m keyringMigrator) Import(uid string, armor string) error {
 	}
 
 	return m.kr.writeInfo(uid, info)
+}
+
+// KeybaseOption overrides options for the db
+type KeybaseOption func(*kbOptions)
+
+type kbOptions struct {
+	keygenFunc           PrivKeyGenFunc
+	deriveFunc           DeriveKeyFunc
+	supportedAlgos       []pubKeyType
+	supportedAlgosLedger []pubKeyType
+}
+
+// WithKeygenFunc applies an overridden key generation function to generate the private key.
+func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
+	return func(o *kbOptions) {
+		o.keygenFunc = f
+	}
+}
+
+// WithDeriveFunc applies an overridden key derivation function to generate the private key.
+func WithDeriveFunc(f DeriveKeyFunc) KeybaseOption {
+	return func(o *kbOptions) {
+		o.deriveFunc = f
+	}
+}
+
+// WithSupportedAlgos defines the list of accepted SigningAlgos.
+func WithSupportedAlgos(algos []pubKeyType) KeybaseOption {
+	return func(o *kbOptions) {
+		o.supportedAlgos = algos
+	}
+}
+
+// WithSupportedAlgosLedger defines the list of accepted SigningAlgos compatible with Ledger.
+func WithSupportedAlgosLedger(algos []pubKeyType) KeybaseOption {
+	return func(o *kbOptions) {
+		o.supportedAlgosLedger = algos
+	}
 }

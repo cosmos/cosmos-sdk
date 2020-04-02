@@ -109,12 +109,10 @@ type Exporter interface {
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
 }
 
-type AltKeyringOption func(options *altKrOptions)
-
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...AltKeyringOption) Keyring {
+func NewInMemory(opts ...KeyringOption) Keyring {
 	return newKeystore(keyring.NewArrayKeyring(nil), opts...)
 }
 
@@ -122,7 +120,7 @@ func NewInMemory(opts ...AltKeyringOption) Keyring {
 // Keyring ptions can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
 func New(
-	appName, backend, rootDir string, userInput io.Reader, opts ...AltKeyringOption,
+	appName, backend, rootDir string, userInput io.Reader, opts ...KeyringOption,
 ) (Keyring, error) {
 
 	var db keyring.Keyring
@@ -154,14 +152,14 @@ func New(
 
 type keystore struct {
 	db      keyring.Keyring
-	options altKrOptions
+	options keyringOptions
 }
 
-func newKeystore(kr keyring.Keyring, opts ...AltKeyringOption) keystore {
+func newKeystore(kr keyring.Keyring, opts ...KeyringOption) keystore {
 	// Default options for keybase
-	options := altKrOptions{
-		supportedAlgos:       AltSigningAlgoList{AltSecp256k1},
-		supportedAlgosLedger: AltSigningAlgoList{AltSecp256k1},
+	options := keyringOptions{
+		supportedAlgos:       SigningAlgoList{AltSecp256k1},
+		supportedAlgosLedger: SigningAlgoList{AltSecp256k1},
 	}
 
 	for _, optionFn := range opts {
@@ -352,11 +350,6 @@ func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP4
 	}
 
 	return info, nil
-}
-
-type altKrOptions struct {
-	supportedAlgos       AltSigningAlgoList
-	supportedAlgosLedger AltSigningAlgoList
 }
 
 func (ks keystore) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {

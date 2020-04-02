@@ -46,7 +46,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 }
 
 func TestAltSigningAlgoList_Contains(t *testing.T) {
-	list := AltSigningAlgoList{
+	list := SigningAlgoList{
 		AltSecp256k1,
 	}
 
@@ -61,10 +61,10 @@ func (n notSupportedAlgo) Name() pubKeyType {
 	return "notSupported"
 }
 
-func (n notSupportedAlgo) DeriveKey() AltDeriveKeyFunc {
+func (n notSupportedAlgo) DeriveKey() DeriveKeyFn {
 	return SecpDeriveKey
 }
 
-func (n notSupportedAlgo) PrivKeyGen() AltPrivKeyGenFunc {
+func (n notSupportedAlgo) PrivKeyGen() PrivKeyGenFn {
 	return SecpPrivKeyGen
 }

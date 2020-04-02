@@ -1224,8 +1224,8 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	dir2, clean2 := tests.NewTestCaseDir(t)
 	t.Cleanup(clean2)
 
-	keyring2, err := New(t.Name(), BackendTest, dir2, nil, func(options *altKrOptions) {
-		options.supportedAlgos = AltSigningAlgoList{
+	keyring2, err := New(t.Name(), BackendTest, dir2, nil, func(options *keyringOptions) {
+		options.supportedAlgos = SigningAlgoList{
 			notSupportedAlgo{},
 		}
 	})

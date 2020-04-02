@@ -21,24 +21,14 @@ const (
 	Sr25519 = pubKeyType("sr25519")
 )
 
-// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
-func IsSupportedAlgorithm(supported []pubKeyType, algo pubKeyType) bool {
-	for _, supportedAlgo := range supported {
-		if algo == supportedAlgo {
-			return true
-		}
-	}
-	return false
-}
-
 type SigningAlgo interface {
 	Name() pubKeyType
-	DeriveKey() AltDeriveKeyFunc
-	PrivKeyGen() AltPrivKeyGenFunc
+	DeriveKey() DeriveKeyFn
+	PrivKeyGen() PrivKeyGenFn
 }
 
-type AltDeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
-type AltPrivKeyGenFunc func(bz []byte) crypto.PrivKey
+type DeriveKeyFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
+type PrivKeyGenFn func(bz []byte) crypto.PrivKey
 
 func NewSigningAlgoFromString(str string) (SigningAlgo, error) {
 	if str != string(AltSecp256k1.Name()) {
@@ -55,11 +45,11 @@ func (s secp256k1Algo) Name() pubKeyType {
 	return Secp256k1
 }
 
-func (s secp256k1Algo) DeriveKey() AltDeriveKeyFunc {
+func (s secp256k1Algo) DeriveKey() DeriveKeyFn {
 	return SecpDeriveKey
 }
 
-func (s secp256k1Algo) PrivKeyGen() AltPrivKeyGenFunc {
+func (s secp256k1Algo) PrivKeyGen() PrivKeyGenFn {
 	return SecpPrivKeyGen
 }
 
@@ -68,9 +58,9 @@ var (
 	AltSecp256k1 = secp256k1Algo{}
 )
 
-type AltSigningAlgoList []SigningAlgo
+type SigningAlgoList []SigningAlgo
 
-func (l AltSigningAlgoList) Contains(algo SigningAlgo) bool {
+func (l SigningAlgoList) Contains(algo SigningAlgo) bool {
 	for _, cAlgo := range l {
 		if cAlgo.Name() == algo.Name() {
 			return true

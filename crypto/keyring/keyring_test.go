@@ -642,61 +642,62 @@ func TestInMemorySignVerify(t *testing.T) {
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
-// // TestInMemoryExportImport tests exporting and importing
-// func TestInMemoryExportImport(t *testing.T) {
-// 	// make the storage with reasonable defaults
-// 	cstore := NewInMemory()
-//
-// 	info, _, err := cstore.CreateMnemonic("john", English, "secretcpw", Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-//
-// 	john, err := cstore.Get("john")
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-// 	johnAddr := info.GetPubKey().Address()
-//
-// 	armor, err := cstore.Export("john")
-// 	require.NoError(t, err)
-//
-// 	err = cstore.Import("john2", armor)
-// 	require.NoError(t, err)
-//
-// 	john2, err := cstore.Get("john2")
-// 	require.NoError(t, err)
-//
-// 	require.Equal(t, john.GetPubKey().Address(), johnAddr)
-// 	require.Equal(t, john.GetName(), "john")
-// 	require.Equal(t, john, john2)
-// }
-//
-// func TestInMemoryExportImportPrivKey(t *testing.T) {
-// 	kb := NewInMemory()
-//
-// 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
-// 	require.NoError(t, err)
-// 	require.Equal(t, info.GetName(), "john")
-// 	priv1, err := kb.Get("john")
-// 	require.NoError(t, err)
-//
-// 	// decrypt local private key, and produce encrypted ASCII armored output
-// 	armored, err := kb.ExportPrivKey("john", "secretcpw", "new_secretcpw")
-// 	require.NoError(t, err)
-//
-// 	// delete exported key
-// 	require.NoError(t, kb.Delete("john", "", true))
-// 	_, err = kb.Get("john")
-// 	require.Error(t, err)
-//
-// 	// import armored key
-// 	require.NoError(t, kb.ImportPrivKey("john", armored, "new_secretcpw"))
-//
-// 	// ensure old and new keys match
-// 	priv2, err := kb.Get("john")
-// 	require.NoError(t, err)
-// 	require.True(t, priv1.GetPubKey().Equals(priv2.GetPubKey()))
-// }
-//
+// TestInMemoryExportImport tests exporting and importing
+func TestInMemoryExportImport(t *testing.T) {
+	// make the storage with reasonable defaults
+	cstore := NewInMemory()
+
+	info, _, err := cstore.NewMnemonic("john", English, AltSecp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+
+	john, err := cstore.Key("john")
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+	johnAddr := info.GetPubKey().Address()
+
+	armor, err := cstore.ExportPubKeyArmor("john")
+	require.NoError(t, err)
+
+	err = cstore.ImportPubKey("john2", armor)
+	require.NoError(t, err)
+
+	john2, err := cstore.Key("john2")
+	require.NoError(t, err)
+
+	require.Equal(t, john.GetPubKey().Address(), johnAddr)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.GetAddress(), john2.GetAddress())
+	require.Equal(t, john.GetAlgo(), john2.GetAlgo())
+	require.Equal(t, john.GetPubKey(), john2.GetPubKey())
+}
+
+func TestInMemoryExportImportPrivKey(t *testing.T) {
+	kb := NewInMemory()
+
+	info, _, err := kb.NewMnemonic("john", English, AltSecp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
+	priv1, err := kb.Key("john")
+	require.NoError(t, err)
+
+	armored, err := kb.ExportPrivKeyArmor("john", "secretcpw")
+	require.NoError(t, err)
+
+	// delete exported key
+	require.NoError(t, kb.Delete("john"))
+	_, err = kb.Key("john")
+	require.Error(t, err)
+
+	// import armored key
+	require.NoError(t, kb.ImportPrivKey("john", armored, "secretcpw"))
+
+	// ensure old and new keys match
+	priv2, err := kb.Key("john")
+	require.NoError(t, err)
+	require.True(t, priv1.GetPubKey().Equals(priv2.GetPubKey()))
+}
+
 // func TestInMemoryExportImportPubKey(t *testing.T) {
 // 	// make the storage with reasonable defaults
 // 	cstore := NewInMemory()

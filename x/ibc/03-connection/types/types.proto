@@ -28,11 +28,13 @@ message MsgConnectionOpenTry {
   Counterparty counterparty  = 3 [
     (gogoproto.nullable) = false
   ];
-  repeated string                            counterparty_versions = 4;
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init            = 5 [
+  repeated string counterparty_versions = 4;
+  // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 5 [
     (gogoproto.nullable) = false
   ];
-  uint64                                     proof_height    = 6;
+  uint64 proof_height = 6;
+  // proof of client consensus state
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_consensus = 7 [
     (gogoproto.nullable) = false
   ];
@@ -48,11 +50,13 @@ message MsgConnectionOpenAck {
   string connection_id = 1 [
     (gogoproto.customname) = "ConnectionID"
   ];
-  string                                     version   = 2;
+  string version = 2;
+  // proof of the initialization the connection on Chain B: `UNITIALIZED -> TRYOPEN`
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 3 [
     (gogoproto.nullable) = false
   ];
-  uint64                                     proof_height    = 4;
+  uint64 proof_height = 4;
+  // proof of client consensus state
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_consensus = 5 [
     (gogoproto.nullable) = false
   ];
@@ -68,6 +72,7 @@ message MsgConnectionOpenConfirm {
   string connection_id = 1 [
     (gogoproto.customname) = "ConnectionID"
   ];
+  // proof for the change of the connection state on Chain A: `INIT -> OPEN`
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 2 [
     (gogoproto.nullable) = false
   ];
@@ -86,13 +91,18 @@ message MsgConnectionOpenConfirm {
 message ConnectionEnd {
   option (gogoproto.goproto_getters) = false;
 
+  // client associated with this connection.
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
-  repeated string           versions     = 2;
-  cosmos_sdk.x.ibc.v1.State state        = 3;
-  Counterparty              counterparty = 4 [
+  // opaque string which can be utilised to determine encodings or protocols for
+  // channels or packets utilising this connection
+  repeated string versions = 2;
+  // current state of the connection end.
+  cosmos_sdk.x.ibc.v1.State state = 3;
+  // counterparty chain associated with this connection.
+  Counterparty counterparty = 4 [
     (gogoproto.nullable) = false
   ];
 }
@@ -101,14 +111,17 @@ message ConnectionEnd {
 message Counterparty {
   option (gogoproto.goproto_getters) = false;
 
+  // identifies the client on the counterparty chain associated with a given connection.
   string client_id = 1 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
+  // identifies the connection end on the counterparty chain associated with a given connection.
   string connection_id = 2 [
     (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags)   = "yaml:\"connection_id\""
   ];
+  // commitment merkle prefix of the counterparty chain
   cosmos_sdk.x.ibc.commitment.v1.MerklePrefix prefix = 3 [
     (gogoproto.nullable) = false
   ];

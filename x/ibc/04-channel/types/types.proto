@@ -40,8 +40,10 @@ message MsgChannelOpenTry {
   Channel channel = 3 [
     (gogoproto.nullable) = false
   ];
-  string                                     counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init           = 5 [
+  string counterparty_version = 4 [
+    (gogoproto.moretags) = "yaml:\"counterparty_version\""
+  ];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 5 [
     (gogoproto.nullable) = false
   ];
   uint64 proof_height = 6;
@@ -59,8 +61,10 @@ message MsgChannelOpenAck {
     (gogoproto.customname) = "ChannelID",
     (gogoproto.moretags)   = "yaml:\"channel_id\""
   ];
-  string                                     counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try            = 4 [
+  string counterparty_version = 3 [
+    (gogoproto.moretags) = "yaml:\"counterparty_version\""
+  ];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 4 [
     (gogoproto.nullable) = false
   ];
   uint64 proof_height = 5;
@@ -119,6 +123,7 @@ message MsgChannelCloseConfirm {
   ];
 }
 
+// MsgPacket receives incoming IBC packet
 message MsgPacket {
   Packet packet = 1 [
     (gogoproto.nullable) = false
@@ -132,6 +137,7 @@ message MsgPacket {
   ];
 }
 
+// MsgTimeout receives timed-out packet
 message MsgTimeout {
   Packet packet = 1 [
     (gogoproto.nullable) = false
@@ -161,27 +167,39 @@ message MsgAcknowledgement {
   ];
 }
 
+// Channel defines pipeline for exactly-once packet delivery between specific
+// modules on separate blockchains, which has at least one end capable of sending
+// packets and one end capable of receiving packets.
 message Channel {
   option (gogoproto.goproto_getters) = false;
 
-  cosmos_sdk.x.ibc.v1.State state        = 1;
-  cosmos_sdk.x.ibc.v1.Order ordering     = 2;
-  Counterparty              counterparty = 3 [
+  // current state of the channel end
+  cosmos_sdk.x.ibc.v1.State state = 1;
+  // whether the channel is ordered or unordered
+  cosmos_sdk.x.ibc.v1.Order ordering = 2;
+  // counterparty channel end
+  Counterparty counterparty = 3 [
     (gogoproto.nullable) = false
   ];
+  // list of connection identifiers, in order, along which packets sent on this
+  // channel will travel
   repeated string connection_hops = 4 [
     (gogoproto.moretags) = "yaml:\"connection_hops\""
   ];
+  // opaque channel version, which is agreed upon during the handshake
   string version = 5;
 }
 
+// Counterparty defines a channel end counterparty
 message Counterparty {
   option (gogoproto.goproto_getters) = false;
 
+  // port on the counterparty chain which owns the other end of the channel.
   string port_id = 1 [
     (gogoproto.customname) = "PortID",
     (gogoproto.moretags)   = "yaml:\"port_id\""
   ];
+  // channel end on the counterparty chain
   string channel_id = 2 [
     (gogoproto.customname) = "ChannelID",
     (gogoproto.moretags)   = "yaml:\"channel_id\""
@@ -192,11 +210,20 @@ message Counterparty {
 message Packet {
   option (gogoproto.goproto_getters) = false;
 
-  uint64 sequence            = 1;
-  string source_port         = 2 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  string source_channel      = 3 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  string destination_port    = 4 [(gogoproto.moretags) = "yaml:\"destination_port\""];
+  // number corresponds to the order of sends and receives, where a Packet with
+  // an earlier sequence number must be sent and received before a Packet with a
+  // later sequence number.
+  uint64 sequence = 1;
+  // identifies the port on the sending chain.
+  string source_port = 2 [(gogoproto.moretags) = "yaml:\"source_port\""];
+  // identifies the channel end on the sending chain.
+  string source_channel = 3 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  // identifies the port on the receiving chain.
+  string destination_port = 4 [(gogoproto.moretags) = "yaml:\"destination_port\""];
+  // identifies the channel end on the receiving chain.
   string destination_channel = 5 [(gogoproto.moretags) = "yaml:\"destination_channel\""];
-  bytes  data                = 6 [(gogoproto.moretags) = "yaml:\"data\""];
-  uint64 timeout_height      = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  // actual opaque bytes transferred directly to the application module
+  bytes data = 6 [(gogoproto.moretags) = "yaml:\"data\""];
+  // block height after which the packet times out
+  uint64 timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
 }

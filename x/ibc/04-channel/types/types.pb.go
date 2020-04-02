@@ -486,6 +486,7 @@ func (m *MsgChannelCloseConfirm) GetSigner() github_com_cosmos_cosmos_sdk_types.
 	return nil
 }
 
+// MsgPacket receives incoming IBC packet
 type MsgPacket struct {
 	Packet      Packet                                        `protobuf:"bytes,1,opt,name=packet,proto3" json:"packet"`
 	Proof       types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof"`
@@ -554,6 +555,7 @@ func (m *MsgPacket) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
+// MsgTimeout receives timed-out packet
 type MsgTimeout struct {
 	Packet           Packet                                        `protobuf:"bytes,1,opt,name=packet,proto3" json:"packet"`
 	Proof            types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof"`
@@ -707,12 +709,21 @@ func (m *MsgAcknowledgement) GetSigner() github_com_cosmos_cosmos_sdk_types.AccA
 	return nil
 }
 
+// Channel defines pipeline for exactly-once packet delivery between specific
+// modules on separate blockchains, which has at least one end capable of sending
+// packets and one end capable of receiving packets.
 type Channel struct {
-	State          types1.State `protobuf:"varint,1,opt,name=state,proto3,enum=cosmos_sdk.x.ibc.v1.State" json:"state,omitempty"`
-	Ordering       types1.Order `protobuf:"varint,2,opt,name=ordering,proto3,enum=cosmos_sdk.x.ibc.v1.Order" json:"ordering,omitempty"`
-	Counterparty   Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	ConnectionHops []string     `protobuf:"bytes,4,rep,name=connection_hops,json=connectionHops,proto3" json:"connection_hops,omitempty" yaml:"connection_hops"`
-	Version        string       `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
+	// current state of the channel end
+	State types1.State `protobuf:"varint,1,opt,name=state,proto3,enum=cosmos_sdk.x.ibc.v1.State" json:"state,omitempty"`
+	// whether the channel is ordered or unordered
+	Ordering types1.Order `protobuf:"varint,2,opt,name=ordering,proto3,enum=cosmos_sdk.x.ibc.v1.Order" json:"ordering,omitempty"`
+	// counterparty channel end
+	Counterparty Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
+	// list of connection identifiers, in order, along which packets sent on this
+	// channel will travel
+	ConnectionHops []string `protobuf:"bytes,4,rep,name=connection_hops,json=connectionHops,proto3" json:"connection_hops,omitempty" yaml:"connection_hops"`
+	// opaque channel version, which is agreed upon during the handshake
+	Version string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
 }
 
 func (m *Channel) Reset()         { *m = Channel{} }
@@ -748,8 +759,11 @@ func (m *Channel) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Channel proto.InternalMessageInfo
 
+// Counterparty defines a channel end counterparty
 type Counterparty struct {
-	PortID    string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	// port on the counterparty chain which owns the other end of the channel.
+	PortID string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	// channel end on the counterparty chain
 	ChannelID string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
 }
 
@@ -788,13 +802,22 @@ var xxx_messageInfo_Counterparty proto.InternalMessageInfo
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	Sequence           uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	SourcePort         string `protobuf:"bytes,2,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty" yaml:"source_port"`
-	SourceChannel      string `protobuf:"bytes,3,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty" yaml:"source_channel"`
-	DestinationPort    string `protobuf:"bytes,4,opt,name=destination_port,json=destinationPort,proto3" json:"destination_port,omitempty" yaml:"destination_port"`
+	// number corresponds to the order of sends and receives, where a Packet with
+	// an earlier sequence number must be sent and received before a Packet with a
+	// later sequence number.
+	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	// identifies the port on the sending chain.
+	SourcePort string `protobuf:"bytes,2,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty" yaml:"source_port"`
+	// identifies the channel end on the sending chain.
+	SourceChannel string `protobuf:"bytes,3,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty" yaml:"source_channel"`
+	// identifies the port on the receiving chain.
+	DestinationPort string `protobuf:"bytes,4,opt,name=destination_port,json=destinationPort,proto3" json:"destination_port,omitempty" yaml:"destination_port"`
+	// identifies the channel end on the receiving chain.
 	DestinationChannel string `protobuf:"bytes,5,opt,name=destination_channel,json=destinationChannel,proto3" json:"destination_channel,omitempty" yaml:"destination_channel"`
-	Data               []byte `protobuf:"bytes,6,opt,name=data,proto3" json:"data,omitempty" yaml:"data"`
-	TimeoutHeight      uint64 `protobuf:"varint,7,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty" yaml:"timeout_height"`
+	// actual opaque bytes transferred directly to the application module
+	Data []byte `protobuf:"bytes,6,opt,name=data,proto3" json:"data,omitempty" yaml:"data"`
+	// block height after which the packet times out
+	TimeoutHeight uint64 `protobuf:"varint,7,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty" yaml:"timeout_height"`
 }
 
 func (m *Packet) Reset()         { *m = Packet{} }

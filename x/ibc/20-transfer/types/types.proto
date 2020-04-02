@@ -41,18 +41,21 @@ message MsgTransfer {
 // FungibleTokenPacketData defines a struct for the packet payload
 // See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message FungibleTokenPacketData {
+  // the tokens to be transferred
   repeated cosmos_sdk.v1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  // the sender address
   bytes sender = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
+  // the recipient address on the destination chain
   bytes receiver = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
-  uint64 timeout = 4;
-  bool   source  = 5;
+  // indicates if the sending chain is the source chain of the tokens to be transferred
+  bool source = 4;
 }
 
 // AckDataTransfer is a no-op packet

@@ -99,15 +99,17 @@ func (m *MsgConnectionOpenInit) GetSigner() github_com_cosmos_cosmos_sdk_types.A
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
 // on Chain B.
 type MsgConnectionOpenTry struct {
-	ClientID             string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ConnectionID         string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
-	Counterparty         Counterparty                                  `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	CounterpartyVersions []string                                      `protobuf:"bytes,4,rep,name=counterparty_versions,json=counterpartyVersions,proto3" json:"counterparty_versions,omitempty"`
-	ProofInit            types.MerkleProof                             `protobuf:"bytes,5,opt,name=proof_init,json=proofInit,proto3" json:"proof_init"`
-	ProofHeight          uint64                                        `protobuf:"varint,6,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
-	ProofConsensus       types.MerkleProof                             `protobuf:"bytes,7,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus"`
-	ConsensusHeight      uint64                                        `protobuf:"varint,8,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
-	Signer               github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,9,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	ClientID             string       `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ConnectionID         string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	Counterparty         Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
+	CounterpartyVersions []string     `protobuf:"bytes,4,rep,name=counterparty_versions,json=counterpartyVersions,proto3" json:"counterparty_versions,omitempty"`
+	// proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
+	ProofInit   types.MerkleProof `protobuf:"bytes,5,opt,name=proof_init,json=proofInit,proto3" json:"proof_init"`
+	ProofHeight uint64            `protobuf:"varint,6,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+	// proof of client consensus state
+	ProofConsensus  types.MerkleProof                             `protobuf:"bytes,7,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus"`
+	ConsensusHeight uint64                                        `protobuf:"varint,8,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
+	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,9,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenTry) Reset()         { *m = MsgConnectionOpenTry{} }
@@ -209,10 +211,12 @@ func (m *MsgConnectionOpenTry) GetSigner() github_com_cosmos_cosmos_sdk_types.Ac
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
-	ConnectionID    string                                        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
-	Version         string                                        `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	ProofTry        types.MerkleProof                             `protobuf:"bytes,3,opt,name=proof_try,json=proofTry,proto3" json:"proof_try"`
-	ProofHeight     uint64                                        `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	Version      string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	// proof of the initialization the connection on Chain B: `UNITIALIZED -> TRYOPEN`
+	ProofTry    types.MerkleProof `protobuf:"bytes,3,opt,name=proof_try,json=proofTry,proto3" json:"proof_try"`
+	ProofHeight uint64            `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+	// proof of client consensus state
 	ProofConsensus  types.MerkleProof                             `protobuf:"bytes,5,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus"`
 	ConsensusHeight uint64                                        `protobuf:"varint,6,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
 	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
@@ -303,10 +307,11 @@ func (m *MsgConnectionOpenAck) GetSigner() github_com_cosmos_cosmos_sdk_types.Ac
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
-	ConnectionID string                                        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
-	ProofAck     types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack"`
-	ProofHeight  uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
-	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	// proof for the change of the connection state on Chain A: `INIT -> OPEN`
+	ProofAck    types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack"`
+	ProofHeight uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenConfirm) Reset()         { *m = MsgConnectionOpenConfirm{} }
@@ -375,9 +380,14 @@ func (m *MsgConnectionOpenConfirm) GetSigner() github_com_cosmos_cosmos_sdk_type
 // NOTE: there must only be 2 defined ConnectionEnds to establish a connection
 // between two chains.
 type ConnectionEnd struct {
-	ClientID     string       `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	Versions     []string     `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
-	State        types1.State `protobuf:"varint,3,opt,name=state,proto3,enum=cosmos_sdk.x.ibc.v1.State" json:"state,omitempty"`
+	// client associated with this connection.
+	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// opaque string which can be utilised to determine encodings or protocols for
+	// channels or packets utilising this connection
+	Versions []string `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
+	// current state of the connection end.
+	State types1.State `protobuf:"varint,3,opt,name=state,proto3,enum=cosmos_sdk.x.ibc.v1.State" json:"state,omitempty"`
+	// counterparty chain associated with this connection.
 	Counterparty Counterparty `protobuf:"bytes,4,opt,name=counterparty,proto3" json:"counterparty"`
 }
 
@@ -416,9 +426,12 @@ var xxx_messageInfo_ConnectionEnd proto.InternalMessageInfo
 
 // Counterparty defines the counterparty chain associated with a connection end.
 type Counterparty struct {
-	ClientID     string             `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	ConnectionID string             `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	Prefix       types.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix"`
+	// identifies the client on the counterparty chain associated with a given connection.
+	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// identifies the connection end on the counterparty chain associated with a given connection.
+	ConnectionID string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	// commitment merkle prefix of the counterparty chain
+	Prefix types.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix"`
 }
 
 func (m *Counterparty) Reset()         { *m = Counterparty{} }

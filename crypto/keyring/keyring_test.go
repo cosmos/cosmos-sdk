@@ -888,10 +888,10 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	uid := "newUid"
 
 	// Fails on creating unsupported pubKeyType
-	_, err = keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, sdk.GetConfig().GetFullFundraiserPath(), notSupportedAlgo{})
+	_, err = keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, config.GetFullFundraiserPath(), notSupportedAlgo{})
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
-	info, err := keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, sdk.GetConfig().GetFullFundraiserPath(), AltSecp256k1)
+	info, err := keyring.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, config.GetFullFundraiserPath(), AltSecp256k1)
 	require.NoError(t, err)
 
 	require.Equal(t, uid, info.GetName())

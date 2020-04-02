@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -44,6 +43,9 @@ const (
 var (
 	_                          Keyring = &keystore{}
 	maxPassphraseEntryAttempts         = 3
+
+	// TODO: remove and add to methods parameters
+	config = sdk.GetConfig()
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -331,7 +333,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, acc
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	coinType := sdk.GetConfig().GetCoinType()
+	coinType := config.GetCoinType()
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
@@ -464,7 +466,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, algo SignatureAlgo
 		return nil, "", err
 	}
 
-	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, sdk.GetConfig().GetFullFundraiserPath(), algo)
+	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, config.GetFullFundraiserPath(), algo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -517,7 +519,7 @@ type keyringOptions struct {
 
 // CreateHDPath returns BIP 44 object from account and index parameters.
 func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
-	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
+	return hd.NewFundraiserParams(account, config.GetCoinType(), index)
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object

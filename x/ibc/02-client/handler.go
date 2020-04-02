@@ -57,7 +57,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -86,7 +86,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClie
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 

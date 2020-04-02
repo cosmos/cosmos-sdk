@@ -95,12 +95,12 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 		suite.chainA.App.IBCKeeper.ChannelKeeper,
 	))
 
-	packet := channel.NewPacket(newPacket(12345), 1, portid, chanid, cpportid, cpchanid)
+	packet := channel.NewPacket(newPacket(12345).GetData(), 1, portid, chanid, cpportid, cpchanid, 100)
 
 	ctx := suite.chainA.GetContext()
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet.Data))
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
 	msg := channel.NewMsgPacket(packet, nil, 0, addr1)
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
@@ -149,8 +149,8 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	var packet channeltypes.Packet
 	for i := 0; i < 5; i++ {
-		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
-		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(i), channeltypes.CommitPacket(packet.Data))
+		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(i), channeltypes.CommitPacket(packet))
 	}
 
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(10))
@@ -161,7 +161,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	for i := 10; i >= 0; i-- {
 		cctx, write := suite.chainA.GetContext().CacheContext()
-		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
+		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100)
 		packetCommitmentPath := ibctypes.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
 		proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
 		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
@@ -356,26 +356,12 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }
 
-var _ channelexported.PacketDataI = packetT{}
-
 type packetT struct {
 	Data uint64
 }
 
-func (packet packetT) GetBytes() []byte {
+func (packet packetT) GetData() []byte {
 	return []byte(fmt.Sprintf("%d", packet.Data))
-}
-
-func (packetT) GetTimeoutHeight() uint64 {
-	return 100
-}
-
-func (packetT) ValidateBasic() error {
-	return nil
-}
-
-func (packetT) Type() string {
-	return "valid"
 }
 
 func newPacket(data uint64) packetT {

@@ -4,7 +4,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -33,23 +32,14 @@ func QueryPacket(
 	destPortID := channelRes.Channel.Channel.Counterparty.PortID
 	destChannelID := channelRes.Channel.Channel.Counterparty.ChannelID
 
-	var data exported.PacketDataI
-	// TODO: commitment data is stored, not the data
-	// but we are unmarshalling the commitment in a json format
-	// because the current ICS 20 implementation uses json commitment form
-	// need to be changed to use external source of packet(e.g. event logs)
-	err = ctx.Codec.UnmarshalJSON(res.Value, &data)
-	if err != nil {
-		return types.PacketResponse{}, err
-	}
-
 	packet := types.NewPacket(
-		data,
+		res.Value,
 		sequence,
 		portID,
 		channelID,
 		destPortID,
 		destChannelID,
+		timeout,
 	)
 
 	// FIXME: res.Height+1 is hack, fix later

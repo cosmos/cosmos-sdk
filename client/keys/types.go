@@ -1,6 +1,6 @@
 package keys
 
-// used for outputting keys.Info over REST
+// used for outputting keyring.Info over REST
 
 // AddNewKey request a new key
 type AddNewKey struct {

@@ -5,6 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
 // NewHandler returns sdk.Handler for IBC token transfer module messages
@@ -14,19 +15,17 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
-			switch data := msg.Data.(type) {
-			case FungibleTokenPacketData:
-				return handlePacketDataTransfer(ctx, k, msg, data)
-			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
+			var data FungibleTokenPacketData
+			if err := types.ModuleCdc.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 			}
+			return handlePacketDataTransfer(ctx, k, msg, data)
 		case channeltypes.MsgTimeout:
-			switch data := msg.Data.(type) {
-			case FungibleTokenPacketData:
-				return handleTimeoutDataTransfer(ctx, k, msg, data)
-			default:
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer packet data type: %T", data)
+			var data FungibleTokenPacketData
+			if err := types.ModuleCdc.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 			}
+			return handleTimeoutDataTransfer(ctx, k, msg, data)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer message type: %T", msg)
 		}
@@ -51,7 +50,7 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 	)
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -74,7 +73,7 @@ func handlePacketDataTransfer(
 	}
 
 	acknowledgement := AckDataTransfer{}
-	if err := k.PacketExecuted(ctx, msg.Packet, acknowledgement); err != nil {
+	if err := k.PacketExecuted(ctx, msg.Packet, acknowledgement.GetBytes()); err != nil {
 		return nil, err
 	}
 
@@ -87,7 +86,7 @@ func handlePacketDataTransfer(
 	)
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -107,6 +106,6 @@ func handleTimeoutDataTransfer(
 	}
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }

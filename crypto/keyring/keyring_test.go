@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 
@@ -117,43 +118,42 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, kb.Delete(n2))
 }
 
-// // TestSignVerify does some detailed checks on how we sign and validate
-// // signatures
-// func TestSignVerifyKeyRingWithLedger(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-//
-// 	i1, err := kb.CreateLedger("key", Secp256k1, "cosmos", 0, 0)
-// 	if err != nil {
-// 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-// 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
-// 		return
-// 	}
-// 	require.Equal(t, "key", i1.GetName())
-//
-// 	p1 := "1234"
-// 	d1 := []byte("my first message")
-// 	s1, pub1, err := kb.Sign("key", p1, d1)
-// 	require.NoError(t, err)
-//
-// 	s2, pub2, err := SignWithLedger(i1, d1)
-// 	require.NoError(t, err)
-//
-// 	require.Equal(t, i1.GetPubKey(), pub1)
-// 	require.Equal(t, i1.GetPubKey(), pub2)
-// 	require.True(t, pub1.VerifyBytes(d1, s1))
-// 	require.True(t, i1.GetPubKey().VerifyBytes(d1, s1))
-// 	require.True(t, bytes.Equal(s1, s2))
-//
-// 	localInfo, _, err := kb.CreateMnemonic("test", English, p1, Secp256k1)
-// 	require.NoError(t, err)
-// 	_, _, err = SignWithLedger(localInfo, d1)
-// 	require.Error(t, err)
-// 	require.Equal(t, "not a ledger object", err.Error())
-// }
-//
+// TestSignVerify does some detailed checks on how we sign and validate
+// signatures
+func TestSignVerifyKeyRingWithLedger(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+
+	i1, err := kb.SaveLedgerKey("key", AltSecp256k1, "cosmos", 0, 0)
+	if err != nil {
+		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
+	}
+	require.Equal(t, "key", i1.GetName())
+
+	d1 := []byte("my first message")
+	s1, pub1, err := kb.Sign("key", d1)
+	require.NoError(t, err)
+
+	s2, pub2, err := SignWithLedger(i1, d1)
+	require.NoError(t, err)
+
+	require.Equal(t, i1.GetPubKey(), pub1)
+	require.Equal(t, i1.GetPubKey(), pub2)
+	require.True(t, pub1.VerifyBytes(d1, s1))
+	require.True(t, i1.GetPubKey().VerifyBytes(d1, s1))
+	require.True(t, bytes.Equal(s1, s2))
+
+	localInfo, _, err := kb.NewMnemonic("test", English, AltSecp256k1)
+	require.NoError(t, err)
+	_, _, err = SignWithLedger(localInfo, d1)
+	require.Error(t, err)
+	require.Equal(t, "not a ledger object", err.Error())
+}
+
 // func TestSignVerifyKeyRing(t *testing.T) {
 // 	dir, cleanup := tests.NewTestCaseDir(t)
 // 	t.Cleanup(cleanup)

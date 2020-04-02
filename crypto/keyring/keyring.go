@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -511,6 +512,38 @@ func (ks keystore) Key(uid string) (Info, error) {
 	}
 
 	return unmarshalInfo(bs.Data)
+}
+
+// CreateHDPath returns BIP 44 object from account and index parameters.
+func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
+	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
+}
+
+// SignWithLedger signs a binary message with the ledger device referenced by an Info object
+// and returns the signed bytes and the public key. It returns an error if the device could
+// not be queried or it returned an error.
+func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+	switch info.(type) {
+	case *ledgerInfo, ledgerInfo:
+	default:
+		return nil, nil, errors.New("not a ledger object")
+	}
+	path, err := info.GetPath()
+	if err != nil {
+		return
+	}
+
+	priv, err := crypto.NewPrivKeyLedgerSecp256k1Unsafe(*path)
+	if err != nil {
+		return
+	}
+
+	sig, err = priv.Sign(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sig, priv.PubKey(), nil
 }
 
 func lkbToKeyringConfig(appName, dir string, buf io.Reader, test bool) keyring.Config {

@@ -24,10 +24,10 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(keybase keyring.Keybase, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
+func GenerateSaveCoinKey(keybase keyring.Keyring, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 	// ensure no overwrite
 	if !overwrite {
-		_, err := keybase.Get(keyName)
+		_, err := keybase.Key(keyName)
 		if err == nil {
 			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
 				"key already exists, overwrite is disabled")
@@ -35,7 +35,7 @@ func GenerateSaveCoinKey(keybase keyring.Keybase, keyName, keyPass string, overw
 	}
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.CreateMnemonic(keyName, keyring.English, keyPass, keyring.Secp256k1)
+	info, secret, err := keybase.NewMnemonic(keyName, keyring.English, keyring.AltSecp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

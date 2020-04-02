@@ -28,7 +28,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -57,7 +57,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -83,7 +83,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -108,6 +108,6 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnection
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }

@@ -33,7 +33,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCha
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -63,7 +63,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -90,7 +90,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -115,7 +115,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -140,7 +140,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCh
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
 
@@ -165,6 +165,6 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Ms
 	})
 
 	return &sdk.Result{
-		Events: ctx.EventManager().Events(),
+		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }

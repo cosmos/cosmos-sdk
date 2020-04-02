@@ -31,10 +31,9 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 		} else if skipNext {
 			// skip current arg
 			skipNext = false
-		} else {
+		} else if unknownCmd == "" {
 			// unknown command found
 			unknownCmd = arg
-			break
 		}
 	}
 

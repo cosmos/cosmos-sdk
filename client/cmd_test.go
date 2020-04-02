@@ -37,8 +37,7 @@ func TestValidateCmd(t *testing.T) {
 		args    []string
 		wantErr bool
 	}{
-		{"misspelled command", []string{"commission"}, true}, // nolint: misspell
-		{"no command provided", []string{}, false},
+		{"misspelled command", []string{"commission"}, true},         // nolint: misspell
 		{"help flag", []string{"commission", "--help"}, false},       // nolint: misspell
 		{"shorthand help flag", []string{"commission", "-h"}, false}, // nolint: misspell
 	}

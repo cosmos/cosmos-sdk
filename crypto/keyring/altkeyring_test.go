@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
+	"github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/go-bip39"
 )
 
 const (
@@ -96,13 +95,33 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 0, 0)
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
-	info, err := keyring.SaveLedgerKey("key", AltSecp256k1, "cosmos", 0, 0)
+	ledger, err := keyring.SaveLedgerKey("some_account", AltSecp256k1, "cosmos", 3, 1)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
-	require.Equal(t, "key", info.GetName())
+	// The mock is available, check that the address is correct
+	require.Equal(t, "some_account", ledger.GetName())
+	pubKey := ledger.GetPubKey()
+	pk, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pubKey)
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+
+	// Check that restoring the key gets the same results
+	restoredKey, err := keyring.Key("some_account")
+	require.NoError(t, err)
+	require.NotNil(t, restoredKey)
+	require.Equal(t, "some_account", restoredKey.GetName())
+	require.Equal(t, TypeLedger, restoredKey.GetType())
+	pubKey = restoredKey.GetPubKey()
+	pk, err = types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pubKey)
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+
+	path, err := restoredKey.GetPath()
+	require.NoError(t, err)
+	require.Equal(t, "44'/118'/3'/0/1", path.String())
 }
 
 func TestAltKeyring_Get(t *testing.T) {
@@ -297,7 +316,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
 
 	err = keyring.ImportPrivKey(newUID, armor, passphrase)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
@@ -325,7 +344,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	require.EqualError(t, err, "failed to decrypt private key: ciphertext decryption failed")
 
 	err = keyring.ImportPrivKey(newUID, armor, passphrase)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
@@ -348,7 +367,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 
 	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
@@ -371,7 +390,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 
 	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {

@@ -329,7 +329,7 @@ func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 		return nil, err
 	}
 
-	sigBytes, pubkey, err := txf.keybase.Sign(name, passphrase, signBytes)
+	sigBytes, pubkey, err := txf.keybase.Sign(name, signBytes)
 	if err != nil {
 		return nil, err
 	}

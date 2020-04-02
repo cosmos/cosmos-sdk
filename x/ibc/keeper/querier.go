@@ -39,6 +39,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 			switch path[1] {
 			case channel.QueryAllChannels:
 				res, err = channel.QuerierChannels(ctx, req, k.ChannelKeeper)
+			case channel.QueryConnectionChannels:
+				res, err = channel.QuerierConnectionChannels(ctx, req, k.ChannelKeeper)
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channel.SubModuleName)
 			}

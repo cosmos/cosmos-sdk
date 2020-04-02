@@ -60,21 +60,21 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	keyringServiceName := sdk.KeyringServiceName()
 
 	var (
-		tmpDir  string
-		keybase keyring.Keybase
+		tmpDir   string
+		migrator keyring.Migrator
 	)
 
 	if viper.GetBool(flags.FlagDryRun) {
-		tmpDir, err = ioutil.TempDir("", "keybase-migrate-dryrun")
+		tmpDir, err = ioutil.TempDir("", "migrator-migrate-dryrun")
 		if err != nil {
 			return errors.Wrap(err, "failed to create temporary directory for dryrun migration")
 		}
 
 		defer os.RemoveAll(tmpDir)
 
-		keybase, err = keyring.NewKeyring(keyringServiceName, "test", tmpDir, buf)
+		migrator, err = keyring.NewMigrator(keyringServiceName, "test", tmpDir, buf)
 	} else {
-		keybase, err = keyring.NewKeyring(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
+		migrator, err = keyring.NewMigrator(keyringServiceName, viper.GetString(flags.FlagKeyringBackend), rootDir, buf)
 	}
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(
@@ -92,12 +92,6 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		keyName := key.GetName()
 		keyType := key.GetType()
 
-		// skip key if already migrated
-		if _, err := keybase.Get(keyName); err == nil {
-			cmd.PrintErrf("Key '%s (%s)' already exists; skipping ...\n", key.GetName(), keyType)
-			continue
-		}
-
 		cmd.PrintErrf("Migrating key: '%s (%s)' ...\n", key.GetName(), keyType)
 
 		// allow user to skip migrating specific keys
@@ -110,7 +104,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		if keyType != keyring.TypeLocal {
-			if err := keybase.Import(keyName, legKeyInfo); err != nil {
+			if err := migrator.Import(keyName, legKeyInfo); err != nil {
 				return err
 			}
 
@@ -130,7 +124,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if err := keybase.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
+		if err := migrator.Import(keyName, armoredPriv); err != nil {
 			return err
 		}
 	}

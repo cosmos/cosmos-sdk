@@ -149,7 +149,7 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address types.Address, encryptPas
 }
 
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
-	if ks.hasKey(uid) {
+	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
@@ -166,20 +166,9 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-// HasKey returns whether the key exists in the keyring.
-func (ks keystore) hasKey(name string) bool {
-	bz, _ := ks.Key(name)
-	return bz != nil
-}
-
 func (ks keystore) ImportPubKey(uid string, armor string) error {
-	bz, _ := ks.Key(uid)
-	if bz != nil {
-		pubkey := bz.GetPubKey()
-
-		if len(pubkey.Bytes()) > 0 {
-			return fmt.Errorf("cannot overwrite data for name: %s", uid)
-		}
+	if _, err := ks.Key(uid); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)

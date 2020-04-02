@@ -1,12 +1,12 @@
-# SDK 应用程序架构
+# 区块链架构
 
 ## 状态机
 
-区块链应用的核心是[具有最终确定性的复制状态机](https://en.wikipedia.org/wiki/State_machine_replication)。
+区块链的核心是[复制确定状态机](https://en.wikipedia.org/wiki/State_machine_replication)（replicated deterministic state machine）。
 
-状态机是计算机科学概念，一台机器可以具有多个状态，但在任何给定时间只有一个`状态`，其描述了系统的当前状态，及触发这些状态转变的交易（译者注：也对应数据库中事务的概念）。
+状态机是计算机科学领域的一个概念，即一台机器可以具有多个状态，但在任意给定时刻只具有一个确定的状态。我们用`state`描述系统当前状态，`transactions`触发状态转换。
 
-给定一个状态S和交易T，状态机会返回一个新的状态S'。
+给定一个状态S和Transaction T，状态机会返回新的状态S'。
 
 ```
 +--------+                 +--------+
@@ -16,7 +16,7 @@
 +--------+                 +--------+
 ```
 
-实际上，交易以区块的形式打包在一起以提高过程的效率。给定状态S和包含交易的区块B，状态机将返回新状态S'。
+在实际中，Transaction集会被打包进区块中，以让处理过程更加高效。给定一个状态S和一个包含Transaction集 B的区块，状态机就会返回新的状态S'。
 
 ```
 +--------+                              +--------+
@@ -26,70 +26,66 @@
 +--------+                              +--------+
 ```
 
-在区块链上下文环境中，状态机是确定性的。这意味着如果你从一个给定的状态开始，重放相同顺序的交易，将始终以相同的最终状态结束。
+在区块链的上下文环境中，状态机是确定的。这意味着节点从给定状态开始，重放相同的Transaction序列，总能得到相同的最终状态。
 
-Cosmos SDK 为你提供了最大的灵活性用以定义自身应用程序的状态、交易类型和状态转换函数。在接下来的章节中会更深入细致的描述如何使用 SDK 来构建状态机。但首先，让我们看看状态机是如何使用 **Tendermint** 进行复制的。
+Cosmos SDK为开发者提供了最大程度的灵活性去定义应用程序的状态，Transaction类型和状态转换功能。接下来的章节中会更详细地介绍使用SDK构建状态机的过程。在此之前，先让我们看看如何使用Tendermint复制状态机。
 
-### Tendermint
+## Tendermint
 
-作为一个开发者，你只需要使用 Cosmos-SDK 定义状态机，而[Tendermint](https://tendermint.com/docs/introduction/introduction.html)将会为你处理网络层的状态复制。
+得益于Cosmos SDK，开发者只需要定义好状态机，[Tendermint](https://tendermint.com/docs/introduction/what-is-tendermint.html)就会处理好状态复制的工作。
 
 ```
                 ^  +-------------------------------+  ^
-                |  |                               |  |   通过 Cosmos SDK 构建
-                |  |         状态机 = 应用（层）      |  |
+                |  |                               |  |   Built with Cosmos SDK
+                |  |  State-machine = Application  |  |
                 |  |                               |  v
                 |  +-------------------------------+
                 |  |                               |  ^
-       链节点    |  |             共识层             |  |
+Blockchain node |  |           Consensus           |  |
                 |  |                               |  |
                 |  +-------------------------------+  |   Tendermint Core
                 |  |                               |  |
-                |  |              网络层            |  |
+                |  |           Networking          |  |
                 |  |                               |  |
                 v  +-------------------------------+  v
 ```
 
-Tendermint是一个与应用程序无关的引擎，负责处理区块链的*网络层*和*共识层*。实际上，这意味着Tendermint负责传播和排序交易字节。Tendermint Core 依赖于拜占庭容错（BFT）算法来达成交易顺序的共识。要深入了解Tendermint，可点击[这里](https://tendermint.com/docs/introduction/what-is-tendermint.html)。
+[Tendermint](https://tendermint.com/docs/introduction/what-is-tendermint.html) 是一个与应用程序无关的引擎，负责处理区块链的网络层和共识层。这意味着Tendermint负责对Transaction字节进行传播和排序。Tendermint Core 通过同名的拜占庭容错算法来达成Transaction顺序的共识。
 
-Tendermint一致性算法通过一组称为*验证人*的特殊节点一起运作。验证人负责向区块链添加交易区块。对于任何给定的区块，有一组验证人V。通过算法选择V中的验证人A作为下一个区块的提议人。如果超过三分之二的V签署了[prevote](https://tendermint.com/docs/spec/consensus/consensus.html#state-machine-spec)和[precommit](https://tendermint.com/docs/spec/consensus/consensus.html#state-machine-spec)，并且区块包含的所有交易都是有效的，则该区块被认为是有效的。验证人集合可以通过状态机中编写的规则进行更改。要深入了解算法，[点击](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview)。
-
-Cosmos SDK 应用程序的主要部分是一个区块链服务后台（daemon），它在每个网络节点的本地运行。如果验证人集合中三分之一以下的是拜占庭（即恶意的），则每个节点在同时查询状态时应获得相同的结果。
-
+Tendermint[共识算法](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview)与一组被称为Validator的特殊节点共同运作。Validator负责向区块链中添加包含transaction的区块。在任何给定的区块中，都有一组Validator集合V。算法会从集合V中选出一个Validator作为下一个区块的Proposer。如果一个区块被集合V中超过三分之二的Validator签署了[prevote](https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r)和[precommit](https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r)，且区块中所有Transaction都是有效的，则认为该区块有效。Validator集合可以按照状态机中写定的规则更改。
 
 ## ABCI
 
-Tendermint通过名为[ABCI](https://github.com/tendermint/tendermint/tree/master/abci)的接口将交易从网络层传递给应用程序，因此应用程序必须要实现 ABCI 。
+Tendermint通过被称为[ABCI](https://tendermint.com/docs/spec/abci/)的接口向应用程序传递Transactions，该接口必须由应用程序实现。
 
 ```
-+---------------------+
-|                     |
-|         应用         |
-|                     |
-+--------+---+--------+
-         ^   |
-         |   | ABCI
-         |   v
-+--------+---+--------+
-|                     |
-|                     |
-|     Tendermint      |
-|                     |
-|                     |
-+---------------------+
+              +---------------------+
+              |                     |
+              |     Application     |
+              |                     |
+              +--------+---+--------+
+                       ^   |
+                       |   | ABCI
+                       |   v
+              +--------+---+--------+
+              |                     |
+              |                     |
+              |     Tendermint      |
+              |                     |
+              |                     |
+              +---------------------+
 ```
 
-注意，Tendermint 仅处理交易字节。它不知道这些字节究竟是什么意思。Tendermint 所做的只是对交易确定性地排序。赋予这些字节意义是应用程序的工作。Tendermint通过ABCI将交易字节传递给应用程序，并期望返回代码以知晓消息是否成功。
+需要注意的是，Tendermint仅处理transaction字节，它并不知道这些字节的含义。Tendermint所做的只是对transaction字节进行确定性地排序。Tendermint通过ABCI向应用程序传递字节，并期望返回状态码以获知包含在transactions中的messages是否成功处理。
 
-以下是ABCI中最重要的消息类型：
+以下是ABCI最重要的Messages：
 
-- `CheckTx` : 当 Tendermint Core 收到交易时，如果符合一些的基本的要求会将其传递给应用程序。`Checkx` 用于保护全节点的交易池免受垃圾邮件的侵害。一个名为“Ante Handler”的特殊处理器用于执行一系列验证步骤，例如检查手续费用是否足够和验证签名是否合法。如果交易有效，则将交易添加到[交易池（mempool）](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality)中并广播到对等节点。注意， `CheckTx` 不会处理交易（即不会对修改状态），因为它们尚未包含在区块中。
-- `DeliverTx` : 当 Tendermint Core 接收到[有效区块](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation)时，块中的每条交易都将通过 `DeliverTx `传递给应用程序进行处理。正是在这一阶段发生了状态转换。“Ante Handler”也将连同实际处理交易中每条消息的handler一起再次执行。
-- `BeginBlock`/`EndBlock` : 无论区块是否包含交易，这两个消息都将在每个区块的开头和结尾执行。触发自动的逻辑执行是很有用的。过程中要足够小心，因为计算成本高昂的循环运算可能会减慢区块链的速度，甚至发生无限循环引起区块链本身停滞。
+`CheckTx`：当Tendermint Core接收到一个Transaction时，它会传递给应用程序以检查是否满足一些基本要求。`CheckTx` 用于保护全节点的内存池免受垃圾transactions攻击。`AnteHandler`这一特殊处理程序用于执行一系列验证步骤，例如检查手续费是否足够以及验证签名。如果检查通过，该transaction会被添加进[mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality)，并广播给其他共识节点。请注意，此时transactions尚未被`CheckTx`处理（即未进行状态修改），因为它们还没有被包含在区块中。
 
+`DeliverTx`：当Tendermint Core收到一个[有效区块](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation)时，区块中的每一个Transaction都会通过`DeliverTx`传递给应用程序以进行处理。状态转换会在这个阶段中发生。`AnteHandler`会与Transaction中每个Message的实际[`handlers`](https://docs.cosmos.network/master/building-modules/handler.html)一起再次执行。
 
-有关 ABCI 方法和类型的详细介绍请[点击](https://tendermint.com/docs/spec/abci/abci.html#overview)。
+`BeginBlock/EndBlock`：无论区块中是否包含transaction，messages都会在每个区块的开头和结尾处执行。触发自动执行的逻辑是很有用的。但需要谨慎使用，因为计算量庞大的循环会严重降低区块链的性能，而无限循环甚至会导致区块链宕机。
 
-在 Tendermint 上构建的任何应用程序都需要实现ABCI接口，来同本地的底层 Tendermint 引擎进行通信。幸运的是，你不用必需实现ABCI接口。Cosmos SDK以[baseapp](./sdk-design.md#baseapp)的形式提供了样板实现。
+获知更多关于ABCI的详细内容可以访问[Tendermint docs](https://tendermint.com/docs/spec/abci/abci.html#overview).
 
-### 接下来，让我们学习[SDK的高级设计原则](./sdk-design.md)
+基于Tendermint构建的任何程序都需要实现ABCI接口，以便和底层的本地Tendermint引擎通信。幸运的是，您不需要实现ABCI接口，Cosmos SDK 以 [baseapp](https://docs.cosmos.network/master/intro/sdk-design.html#baseapp) 的形式提供了样板实现。

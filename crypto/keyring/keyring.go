@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,6 +30,7 @@ const (
 	BackendKWallet = "kwallet"
 	BackendPass    = "pass"
 	BackendTest    = "test"
+	BackendMemory  = "memory"
 )
 
 const (
@@ -66,6 +68,8 @@ func NewKeyring(
 	var err error
 
 	switch backend {
+	case BackendMemory:
+		return NewInMemory(opts...), nil
 	case BackendTest:
 		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
 	case BackendFile:
@@ -84,6 +88,13 @@ func NewKeyring(
 	}
 
 	return newKeyringKeybase(db, opts...), nil
+}
+
+// NewInMemory creates a transient keyring useful for testing
+// purposes and on-the-fly key generation.
+// Keybase options can be applied when generating this new Keybase.
+func NewInMemory(opts ...KeybaseOption) Keybase {
+	return newKeyringKeybase(keyring.NewArrayKeyring(nil), opts...)
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -178,7 +189,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 
 // GetByAddress fetches a key by address and returns its public information.
 func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
-	ik, err := kb.db.Get(string(addrKey(address)))
+	ik, err := kb.db.Get(string(addrHexKey(address)))
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +324,7 @@ func (kb keyringKeybase) Import(name string, armor string) error {
 	kb.writeInfo(name, info)
 
 	err = kb.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  string(addrHexKey(info.GetAddress())),
 		Data: infoKey(name),
 	})
 	if err != nil {
@@ -353,7 +364,7 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 	}
 
 	// NOTE: The keyring keystore has no need for a passphrase.
-	kb.writeLocalKey(name, privKey, "", SigningAlgo(algo))
+	kb.writeLocalKey(name, privKey, SigningAlgo(algo))
 	return nil
 }
 
@@ -401,7 +412,7 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 		return err
 	}
 
-	err = kb.db.Remove(string(addrKey(info.GetAddress())))
+	err = kb.db.Remove(string(addrHexKey(info.GetAddress())))
 	if err != nil {
 		return err
 	}
@@ -414,13 +425,6 @@ func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	return nil
 }
 
-// Update changes the passphrase with which an already stored key is encrypted.
-// The oldpass must be the current passphrase used for encryption, getNewpass is
-// a function to get the passphrase to permanently replace the current passphrase.
-func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	return errors.New("unsupported operation")
-}
-
 // SupportedAlgos returns a list of supported signing algorithms.
 func (kb keyringKeybase) SupportedAlgos() []SigningAlgo {
 	return kb.base.SupportedAlgos()
@@ -431,7 +435,7 @@ func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.base.SupportedAlgosLedger()
 }
 
-func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
+func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
@@ -454,7 +458,7 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 	}
 
 	err = kb.db.Set(keyring.Item{
-		Key:  string(addrKey(info.GetAddress())),
+		Key:  string(addrHexKey(info.GetAddress())),
 		Data: key,
 	})
 	if err != nil {
@@ -580,4 +584,8 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			return pass, nil
 		}
 	}
+}
+
+func addrHexKey(address types.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix))
 }

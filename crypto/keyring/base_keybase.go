@@ -25,13 +25,15 @@ type (
 	}
 
 	writeLocalKeyer interface {
-		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info
+		writeLocalKey(name string, priv tmcrypto.PrivKey, algo SigningAlgo) Info
 	}
 
 	infoWriter interface {
 		writeInfo(name string, info Info)
 	}
 )
+
+var fundraiserPath = types.GetConfig().GetFullFundraiserPath()
 
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
@@ -85,7 +87,7 @@ func (kb baseKeybase) CreateAccount(
 	var info Info
 
 	if encryptPasswd != "" {
-		info = keyWriter.writeLocalKey(name, privKey, encryptPasswd, algo)
+		info = keyWriter.writeLocalKey(name, privKey, algo)
 	} else {
 		info = kb.writeOfflineKey(keyWriter, name, privKey.PubKey(), algo)
 	}
@@ -139,7 +141,7 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", err
 	}
 
-	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
+	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, fundraiserPath, algo)
 	if err != nil {
 		return nil, "", err
 	}

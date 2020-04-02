@@ -440,3 +440,35 @@ func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Requ
 	require.NoError(t, err)
 	return req
 }
+
+func TestCheckErrors(t *testing.T) {
+	t.Parallel()
+	err := errors.New("ERROR")
+	tests := []struct {
+		name       string
+		checkerFn  func(w http.ResponseWriter, err error) bool
+		error      error
+		wantErr    bool
+		wantString string
+		wantStatus int
+	}{
+		{"500", CheckInternalServerError, err, true, `{"error":"ERROR"}`, http.StatusInternalServerError},
+		{"500 (no error)", CheckInternalServerError, nil, false, ``, http.StatusInternalServerError},
+		{"400", CheckBadRequestError, err, true, `{"error":"ERROR"}`, http.StatusBadRequest},
+		{"400 (no error)", CheckBadRequestError, nil, false, ``, http.StatusBadRequest},
+		{"404", CheckNotFoundError, err, true, `{"error":"ERROR"}`, http.StatusNotFound},
+		{"404 (no error)", CheckNotFoundError, nil, false, ``, http.StatusNotFound},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			require.Equal(t, tt.wantErr, tt.checkerFn(w, tt.error))
+			if tt.wantErr {
+				require.Equal(t, w.Body.String(), tt.wantString)
+				require.Equal(t, w.Code, tt.wantStatus)
+			}
+		})
+	}
+}

@@ -41,8 +41,7 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		content := types.ContentFromProposalType(req.Title, req.Description, proposalType)
 
 		msg := types.NewMsgSubmitProposal(content, req.InitialDeposit, req.Proposer)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
@@ -77,8 +76,7 @@ func depositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgDeposit(req.Depositor, proposalID, req.Amount)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
@@ -112,15 +110,13 @@ func voteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		voteOption, err := types.VoteOptionFromString(gcutils.NormalizeVoteOption(req.Option))
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		// create the message
 		msg := types.NewMsgVote(req.Voter, proposalID, voteOption)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 

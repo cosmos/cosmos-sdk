@@ -123,8 +123,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 // Writes an error response to ResponseWriter and returns true if errors occurred.
 func ReadRESTReq(w http.ResponseWriter, r *http.Request, m codec.JSONMarshaler, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if CheckBadRequestError(w, err) {
 		return false
 	}
 
@@ -148,6 +147,34 @@ func NewErrorResponse(code int, err string) ErrorResponse {
 	return ErrorResponse{Code: code, Error: err}
 }
 
+// CheckError takes care of writing an error response if err is not nil.
+// Returns false when err is nil; it returns true otherwise.
+func CheckError(w http.ResponseWriter, status int, err error) bool {
+	if err != nil {
+		WriteErrorResponse(w, status, err.Error())
+		return true
+	}
+	return false
+}
+
+// CheckBadRequestError attaches an error message to an HTTP 400 BAD REQUEST response.
+// Returns false when err is nil; it returns true otherwise.
+func CheckBadRequestError(w http.ResponseWriter, err error) bool {
+	return CheckError(w, http.StatusBadRequest, err)
+}
+
+// CheckInternalServerError attaches an error message to an HTTP 500 INTERNAL SERVER ERROR response.
+// Returns false when err is nil; it returns true otherwise.
+func CheckInternalServerError(w http.ResponseWriter, err error) bool {
+	return CheckError(w, http.StatusInternalServerError, err)
+}
+
+// CheckNotFoundError attaches an error message to an HTTP 404 NOT FOUND response.
+// Returns false when err is nil; it returns true otherwise.
+func CheckNotFoundError(w http.ResponseWriter, err error) bool {
+	return CheckError(w, http.StatusNotFound, err)
+}
+
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
 func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
@@ -162,8 +189,7 @@ func WriteSimulationResponse(w http.ResponseWriter, m codec.JSONMarshaler, gas u
 	gasEst := GasEstimateResponse{GasEstimate: gas}
 
 	resp, err := m.MarshalJSON(gasEst)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	if CheckInternalServerError(w, err) {
 		return
 	}
 
@@ -194,8 +220,7 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 	}
 
 	n, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+	if CheckBadRequestError(w, err) {
 		return n, false
 	}
 
@@ -208,8 +233,7 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 	heightStr := r.FormValue("height")
 	if heightStr != "" {
 		height, err := strconv.ParseInt(heightStr, 10, 64)
-		if err != nil {
-			WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if CheckBadRequestError(w, err) {
 			return cliCtx, false
 		}
 
@@ -257,8 +281,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body
 			resp, err = codec.MarshalIndentFromJSON(resp)
 		}
 
-		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if CheckInternalServerError(w, err) {
 			return
 		}
 	}
@@ -302,8 +325,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp int
 			result, err = codec.MarshalIndentFromJSON(result)
 		}
 
-		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if CheckInternalServerError(w, err) {
 			return
 		}
 	}
@@ -315,8 +337,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp int
 		output, err = codec.MarshalIndentFromJSON(output)
 	}
 
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	if CheckInternalServerError(w, err) {
 		return
 	}
 

@@ -40,9 +40,6 @@ type Keybase interface {
 	// CreateMulti creates, stores, and returns a new multsig (offline) key reference
 	CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error)
 
-	// The following operations will *only* work on locally-stored keys
-	Update(name, oldpass string, getNewpass func() (string, error)) error
-
 	// Import imports ASCII armored Info objects.
 	Import(name string, armor string) (err error)
 

@@ -36,7 +36,7 @@ var (
 	defaultMinSelfDelegation       = "1"
 )
 
-// NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
+// NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
 func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,

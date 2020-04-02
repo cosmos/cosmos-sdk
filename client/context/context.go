@@ -25,7 +25,6 @@ type CLIContext struct {
 	Client        rpcclient.Client
 	ChainID       string
 	Marshaler     codec.Marshaler
-	Keybase       keyring.Keybase
 	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
@@ -321,7 +320,7 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keyring.NewKeyring(sdk.KeyringServiceName(),
+	keybase, err := keyring.New(sdk.KeyringServiceName(),
 		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		return nil, "", err
@@ -329,12 +328,12 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 
 	var info keyring.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		info, err = keybase.GetByAddress(addr)
+		info, err = keybase.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", err
 		}
 	} else {
-		info, err = keybase.Get(from)
+		info, err = keybase.Key(from)
 		if err != nil {
 			return nil, "", err
 		}

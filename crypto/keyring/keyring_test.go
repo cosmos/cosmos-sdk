@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -154,83 +156,84 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	require.Equal(t, "not a ledger object", err.Error())
 }
 
-// func TestSignVerifyKeyRing(t *testing.T) {
-// 	dir, cleanup := tests.NewTestCaseDir(t)
-// 	t.Cleanup(cleanup)
-// 	kb, err := NewKeyring("keybasename", "test", dir, nil)
-// 	require.NoError(t, err)
-// 	algo := Secp256k1
-//
-// 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
-// 	p1, p2, p3 := "1234", "foobar", "foobar"
-//
-// 	// create two users and get their info
-// 	i1, _, err := kb.CreateMnemonic(n1, English, p1, algo)
-// 	require.Nil(t, err)
-//
-// 	i2, _, err := kb.CreateMnemonic(n2, English, p2, algo)
-// 	require.Nil(t, err)
-//
-// 	// Import a public key
-// 	armor, err := kb.ExportPubKey(n2)
-// 	require.Nil(t, err)
-// 	err = kb.ImportPubKey(n3, armor)
-// 	require.NoError(t, err)
-// 	i3, err := kb.Get(n3)
-// 	require.NoError(t, err)
-// 	require.Equal(t, i3.GetName(), n3)
-//
-// 	// let's try to sign some messages
-// 	d1 := []byte("my first message")
-// 	d2 := []byte("some other important info!")
-// 	d3 := []byte("feels like I forgot something...")
-//
-// 	// try signing both data with both ..
-// 	s11, pub1, err := kb.Sign(n1, p1, d1)
-// 	require.Nil(t, err)
-// 	require.Equal(t, i1.GetPubKey(), pub1)
-//
-// 	s12, pub1, err := kb.Sign(n1, p1, d2)
-// 	require.Nil(t, err)
-// 	require.Equal(t, i1.GetPubKey(), pub1)
-//
-// 	s21, pub2, err := kb.Sign(n2, p2, d1)
-// 	require.Nil(t, err)
-// 	require.Equal(t, i2.GetPubKey(), pub2)
-//
-// 	s22, pub2, err := kb.Sign(n2, p2, d2)
-// 	require.Nil(t, err)
-// 	require.Equal(t, i2.GetPubKey(), pub2)
-//
-// 	// let's try to validate and make sure it only works when everything is proper
-// 	cases := []struct {
-// 		key   tmcrypto.PubKey
-// 		data  []byte
-// 		sig   []byte
-// 		valid bool
-// 	}{
-// 		// proper matches
-// 		{i1.GetPubKey(), d1, s11, true},
-// 		// change data, pubkey, or signature leads to fail
-// 		{i1.GetPubKey(), d2, s11, false},
-// 		{i2.GetPubKey(), d1, s11, false},
-// 		{i1.GetPubKey(), d1, s21, false},
-// 		// make sure other successes
-// 		{i1.GetPubKey(), d2, s12, true},
-// 		{i2.GetPubKey(), d1, s21, true},
-// 		{i2.GetPubKey(), d2, s22, true},
-// 	}
-//
-// 	for i, tc := range cases {
-// 		valid := tc.key.VerifyBytes(tc.data, tc.sig)
-// 		require.Equal(t, tc.valid, valid, "%d", i)
-// 	}
-//
-// 	// Now try to sign data with a secret-less key
-// 	_, _, err = kb.Sign(n3, p3, d3)
-// 	require.Error(t, err)
-// 	require.Equal(t, "cannot sign with offline keys", err.Error())
-// }
+func TestSignVerifyKeyRing(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	t.Cleanup(cleanup)
+
+	kb, err := New("keybasename", "test", dir, nil)
+	require.NoError(t, err)
+	algo := AltSecp256k1
+
+	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
+
+	// create two users and get their info
+	i1, _, err := kb.NewMnemonic(n1, English, algo)
+	require.Nil(t, err)
+
+	i2, _, err := kb.NewMnemonic(n2, English, algo)
+	require.Nil(t, err)
+
+	// Import a public key
+	armor, err := kb.ExportPubKeyArmor(n2)
+	require.Nil(t, err)
+	err = kb.ImportPubKey(n3, armor)
+	require.NoError(t, err)
+	i3, err := kb.Key(n3)
+	require.NoError(t, err)
+	require.Equal(t, i3.GetName(), n3)
+
+	// let's try to sign some messages
+	d1 := []byte("my first message")
+	d2 := []byte("some other important info!")
+	d3 := []byte("feels like I forgot something...")
+
+	// try signing both data with both ..
+	s11, pub1, err := kb.Sign(n1, d1)
+	require.Nil(t, err)
+	require.Equal(t, i1.GetPubKey(), pub1)
+
+	s12, pub1, err := kb.Sign(n1, d2)
+	require.Nil(t, err)
+	require.Equal(t, i1.GetPubKey(), pub1)
+
+	s21, pub2, err := kb.Sign(n2, d1)
+	require.Nil(t, err)
+	require.Equal(t, i2.GetPubKey(), pub2)
+
+	s22, pub2, err := kb.Sign(n2, d2)
+	require.Nil(t, err)
+	require.Equal(t, i2.GetPubKey(), pub2)
+
+	// let's try to validate and make sure it only works when everything is proper
+	cases := []struct {
+		key   tmcrypto.PubKey
+		data  []byte
+		sig   []byte
+		valid bool
+	}{
+		// proper matches
+		{i1.GetPubKey(), d1, s11, true},
+		// change data, pubkey, or signature leads to fail
+		{i1.GetPubKey(), d2, s11, false},
+		{i2.GetPubKey(), d1, s11, false},
+		{i1.GetPubKey(), d1, s21, false},
+		// make sure other successes
+		{i1.GetPubKey(), d2, s12, true},
+		{i2.GetPubKey(), d1, s21, true},
+		{i2.GetPubKey(), d2, s22, true},
+	}
+
+	for i, tc := range cases {
+		valid := tc.key.VerifyBytes(tc.data, tc.sig)
+		require.Equal(t, tc.valid, valid, "%d", i)
+	}
+
+	// Now try to sign data with a secret-less key
+	_, _, err = kb.Sign(n3, d3)
+	require.Error(t, err)
+	require.Equal(t, "cannot sign with offline keys", err.Error())
+}
+
 //
 // func TestExportImportKeyRing(t *testing.T) {
 // 	dir, cleanup := tests.NewTestCaseDir(t)

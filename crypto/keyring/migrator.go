@@ -7,22 +7,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto"
 )
 
-type Migrator struct {
+// InfoImporter is implemented by those types that want to provide functions necessary
+// to migrate keys from LegacyKeybase types to Keyring types.
+type InfoImporter interface {
+	Import(uid string, armor string) error
+}
+
+type keyringMigrator struct {
 	kr keystore
 }
 
 func NewMigrator(
 	appName, backend, rootDir string, userInput io.Reader, opts ...AltKeyringOption,
-) (Migrator, error) {
+) (InfoImporter, error) {
 	keyring, err := New(appName, backend, rootDir, userInput, opts...)
 	if err != nil {
-		return Migrator{}, err
+		return keyringMigrator{}, err
 	}
 	kr := keyring.(keystore)
-	return Migrator{kr}, nil
+	return keyringMigrator{kr}, nil
 }
 
-func (m Migrator) Import(uid string, armor string) error {
+func (m keyringMigrator) Import(uid string, armor string) error {
 	_, err := m.kr.Key(uid)
 	if err == nil {
 		return fmt.Errorf("cannot overwrite key %q", uid)

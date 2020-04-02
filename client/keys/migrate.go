@@ -61,7 +61,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 	var (
 		tmpDir   string
-		migrator keyring.Migrator
+		migrator keyring.InfoImporter
 	)
 
 	if viper.GetBool(flags.FlagDryRun) {

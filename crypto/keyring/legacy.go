@@ -225,12 +225,8 @@ func (m keyringMigrator) Import(uid string, armor string) error {
 	return m.kr.writeInfo(uid, info)
 }
 
-// KeybaseOption overrides options for the db
+// KeybaseOption overrides options for the db.
 type KeybaseOption func(*kbOptions)
 
 type kbOptions struct {
-	keygenFunc           PrivKeyGenFunc
-	deriveFunc           DeriveKeyFunc
-	supportedAlgos       []pubKeyType
-	supportedAlgosLedger []pubKeyType
 }

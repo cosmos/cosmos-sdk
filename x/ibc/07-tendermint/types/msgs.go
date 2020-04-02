@@ -68,7 +68,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	}
 	// ValidateBasic of provided header with self-attested chain-id
 	if err := msg.Header.ValidateBasic(msg.Header.SignedHeader.GetHeader().GetChainID()); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
+		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validate basic with its own chain-id: %v", err)
 	}
 	return host.DefaultClientIdentifierValidator(msg.ClientID)
 }
@@ -91,7 +91,7 @@ func (msg MsgCreateClient) GetClientType() string {
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
-	root := commitmenttypes.NewMerkleRoot(msg.Header.SignedHeader.Header.AppHash)
+	root := commitmenttypes.NewMerkleRoot(msg.Header.SignedHeader.GetHeader().GetAppHash())
 	return &ConsensusState{
 		Timestamp:    msg.Header.GetTime(),
 		Root:         root,

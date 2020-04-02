@@ -103,7 +103,7 @@ func BlockIDFromTmTypes(bid tmtypes.BlockID) *BlockID {
 	}
 }
 
-func (ph *PartSetHeader) ToTmTypes() tmtypes.PartSetHeader {
+func (ph *PartsHeader) ToTmTypes() tmtypes.PartSetHeader {
 	return tmtypes.PartSetHeader{
 		Total: int(ph.Total),
 		Hash:  ph.Hash,
@@ -111,8 +111,8 @@ func (ph *PartSetHeader) ToTmTypes() tmtypes.PartSetHeader {
 }
 
 // ToTmTypes casts a proto ValidatorSet to tendendermint type.
-func PartSetHeaderFromTmTypes(ph tmtypes.PartSetHeader) *PartSetHeader {
-	return &PartSetHeader{
+func PartSetHeaderFromTmTypes(ph tmtypes.PartSetHeader) *PartsHeader {
+	return &PartsHeader{
 		Total: int32(ph.Total),
 		Hash:  ph.Hash,
 	}
@@ -141,8 +141,9 @@ func (c Commit) ToTmTypes() *tmtypes.Commit {
 		BlockID:    c.BlockID.ToTmTypes(),
 		Signatures: cSigs,
 	}
-	_ = tmCommit.Hash()
+	// populate hash and bitarray
 	_ = tmCommit.BitArray()
+	_ = tmCommit.Hash()
 	return tmCommit
 }
 

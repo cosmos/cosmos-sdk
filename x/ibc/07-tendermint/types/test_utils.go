@@ -39,7 +39,7 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    valSet.Proposer.Address,
 	}
-	abciHeader := tmtypes.TM2PB.Header(tmHeader)
+
 	blockID := MakeBlockID(tmHeader.Hash(), 3, tmhash.Sum([]byte("part_set")))
 	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
@@ -59,16 +59,19 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		commitSigs[i] = &cs
 	}
 
+	abciBlockID := tmtypes.TM2PB.BlockID(blockID)
+	abciHeader := tmtypes.TM2PB.Header(tmHeader)
+
 	signedHeader := SignedHeader{
 		Header: &abciHeader,
 		Commit: Commit{
 			Height: commit.Height,
 			Round:  int32(commit.Round),
 			BlockID: &BlockID{
-				Hash: blockID.Hash,
-				PartsHeader: &PartSetHeader{
-					Total: int32(blockID.PartsHeader.Total),
-					Hash:  blockID.PartsHeader.Hash,
+				Hash: abciBlockID.Hash,
+				PartsHeader: &PartsHeader{
+					Total: abciBlockID.PartsHeader.Total,
+					Hash:  abciBlockID.PartsHeader.Hash,
 				},
 			},
 			Signatures: commitSigs,

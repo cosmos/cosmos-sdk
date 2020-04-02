@@ -201,10 +201,12 @@ message BlockID {
   bytes hash = 1 [
     (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
   ];
-  PartSetHeader parts_header = 2;
+  PartsHeader parts_header = 2 [
+    (gogoproto.moretags) = "yaml:\"parts_header\""
+  ];
 }
 
-message PartSetHeader {
+message PartsHeader {
   option (gogoproto.equal) = true;
 
   int32 total = 1;

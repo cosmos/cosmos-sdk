@@ -151,14 +151,14 @@ func New(
 
 type keystore struct {
 	db      keyring.Keyring
-	options keyringOptions
+	options Options
 }
 
 func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
 	// Default options for keybase
-	options := keyringOptions{
-		supportedAlgos:       SigningAlgoList{AltSecp256k1},
-		supportedAlgosLedger: SigningAlgoList{AltSecp256k1},
+	options := Options{
+		SupportedAlgos:       SigningAlgoList{AltSecp256k1},
+		SupportedAlgosLedger: SigningAlgoList{AltSecp256k1},
 	}
 
 	for _, optionFn := range opts {
@@ -326,7 +326,7 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcry
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error) {
-	if !ks.options.supportedAlgosLedger.Contains(algo) {
+	if !ks.options.SupportedAlgosLedger.Contains(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -487,7 +487,7 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 }
 
 func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
-	return ks.options.supportedAlgos.Contains(algo)
+	return ks.options.SupportedAlgos.Contains(algo)
 }
 
 func (ks keystore) Key(uid string) (Info, error) {
@@ -506,11 +506,12 @@ func (ks keystore) Key(uid string) (Info, error) {
 }
 
 // Option overrides keyring configuration options.
-type Option func(options *keyringOptions)
+type Option func(options *Options)
 
-type keyringOptions struct {
-	supportedAlgos       SigningAlgoList
-	supportedAlgosLedger SigningAlgoList
+//Options define the options of the Keyring
+type Options struct {
+	SupportedAlgos       SigningAlgoList
+	SupportedAlgosLedger SigningAlgoList
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object

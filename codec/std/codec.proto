@@ -6,7 +6,6 @@ import "third_party/proto/gogoproto/gogo.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
 import "x/bank/types/types.proto";
-import "x/capability/types/types.proto";
 import "x/crisis/types/types.proto";
 import "x/distribution/types/types.proto";
 import "x/supply/types/types.proto";
@@ -30,16 +29,6 @@ message Account {
     cosmos_sdk.x.auth.vesting.v1.DelayedVestingAccount    delayed_vesting_account    = 3;
     cosmos_sdk.x.auth.vesting.v1.PeriodicVestingAccount   periodic_vesting_account   = 4;
     cosmos_sdk.x.supply.v1.ModuleAccount                  module_account             = 5;
-  }
-}
-
-// Capability defines the application-level Capability type.
-message Capability {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/capability/types.Capability";
-
-  // sum defines a list of all acceptable concrete Capability implementations.
-  oneof sum {
-    cosmos_sdk.x.capability.v1.CapabilityKey capability_key = 1;
   }
 }
 

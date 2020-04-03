@@ -67,7 +67,7 @@ type IBCModule interface {
 	OnAcknowledgementPacket(
 		ctx sdk.Context,
 		packet channeltypes.Packet,
-		acknowledment []byte,
+		acknowledgement []byte,
 	) (*sdk.Result, error)
 
 	OnTimeoutPacket(

@@ -235,6 +235,21 @@ func (k Keeper) PacketExecuted(
 
 	// log that a packet has been received & acknowledged
 	k.Logger(ctx).Info(fmt.Sprintf("packet received %v", packet)) // TODO: use packet.String()
+
+	// emit an event that the relayer can query for
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRecvPacket,
+			sdk.NewAttribute(types.AttributeKeyData, string(acknowledgement)),
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
+
 	return nil
 }
 

@@ -28,6 +28,8 @@ func TestParseQueryResponse(t *testing.T) {
 	}
 
 	bz, err := codec.ProtoMarshalJSON(simRes)
+	require.NoError(t, err)
+
 	res, err := parseQueryResponse(bz)
 	require.NoError(t, err)
 	require.Equal(t, 10, int(res.GasInfo.GasUsed))

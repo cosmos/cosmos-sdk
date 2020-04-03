@@ -2,7 +2,6 @@ package snapshots_test
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -19,26 +18,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
-func setup(t *testing.T) (*snapshots.Store, func()) {
+func setupStore(t *testing.T) (*snapshots.Store, func()) {
 	tempdir, err := ioutil.TempDir("", "snapshots")
 	require.NoError(t, err)
 
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 
-	err = store.Save(1, 1, makeChunks([][]byte{
+	_, err = store.Save(1, 1, makeChunks([][]byte{
 		{1, 1, 0}, {1, 1, 1},
 	}))
 	require.NoError(t, err)
-	err = store.Save(2, 1, makeChunks([][]byte{
+	_, err = store.Save(2, 1, makeChunks([][]byte{
 		{2, 1, 0}, {2, 1, 1},
 	}))
 	require.NoError(t, err)
-	err = store.Save(2, 2, makeChunks([][]byte{
+	_, err = store.Save(2, 2, makeChunks([][]byte{
 		{2, 2, 0}, {2, 2, 1}, {2, 2, 2},
 	}))
 	require.NoError(t, err)
-	err = store.Save(3, 2, makeChunks([][]byte{
+	_, err = store.Save(3, 2, makeChunks([][]byte{
 		{3, 2, 0}, {3, 2, 1}, {3, 2, 2},
 	}))
 	require.NoError(t, err)
@@ -46,24 +45,10 @@ func setup(t *testing.T) (*snapshots.Store, func()) {
 	teardown := func() {
 		err := os.RemoveAll(tempdir)
 		if err != nil {
-			t.Logf("Failed to remove tempdir %q", tempdir)
+			t.Logf("Failed to remove tempdir %q: %v", tempdir, err)
 		}
 	}
 	return store, teardown
-}
-
-func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
-	ch := make(chan io.ReadCloser, len(chunks))
-	for _, chunk := range chunks {
-		ch <- ioutil.NopCloser(bytes.NewReader(chunk))
-	}
-	close(ch)
-	return ch
-}
-
-func checksum(b []byte) []byte {
-	hash := sha256.Sum256(b)
-	return hash[:]
 }
 
 func TestNewStore(t *testing.T) {
@@ -93,28 +78,8 @@ func TestNewStore_ErrDirFailure(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestStore_Active(t *testing.T) {
-	store, teardown := setup(t)
-	defer teardown()
-
-	require.False(t, store.Active())
-
-	// Start saving a snapshot, but don't give it any data
-	ch := make(chan io.ReadCloser)
-	go store.Save(9, 1, ch)
-
-	// The store should now be active (it's saving the above snapshot)
-	time.Sleep(10 * time.Millisecond)
-	require.True(t, store.Active())
-
-	// When we close the channel, the snapshot is done
-	close(ch)
-	time.Sleep(10 * time.Millisecond)
-	require.False(t, store.Active())
-}
-
 func TestStore_Delete(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	// Deleting a snapshot should remove it
@@ -149,7 +114,7 @@ func TestStore_Delete(t *testing.T) {
 }
 
 func TestStore_Get(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	// Loading a missing snapshot should return nil
@@ -163,15 +128,15 @@ func TestStore_Get(t *testing.T) {
 	assert.Equal(t, &types.Snapshot{
 		Height: 2,
 		Format: 1,
-		Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{2, 1, 0})},
-			{Hash: checksum([]byte{2, 1, 1})},
+		ChunkHashes: [][]byte{
+			checksum([]byte{2, 1, 0}),
+			checksum([]byte{2, 1, 1}),
 		},
 	}, snapshot)
 }
 
 func TestStore_GetLatest(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	// Loading a missing snapshot should return nil
@@ -180,45 +145,45 @@ func TestStore_GetLatest(t *testing.T) {
 	assert.Equal(t, &types.Snapshot{
 		Height: 3,
 		Format: 2,
-		Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{3, 2, 0})},
-			{Hash: checksum([]byte{3, 2, 1})},
-			{Hash: checksum([]byte{3, 2, 2})},
+		ChunkHashes: [][]byte{
+			checksum([]byte{3, 2, 0}),
+			checksum([]byte{3, 2, 1}),
+			checksum([]byte{3, 2, 2}),
 		},
 	}, snapshot)
 }
 
 func TestStore_List(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	snapshots, err := store.List()
 	require.NoError(t, err)
 
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{3, 2, 0})},
-			{Hash: checksum([]byte{3, 2, 1})},
-			{Hash: checksum([]byte{3, 2, 2})},
+		{Height: 3, Format: 2, ChunkHashes: [][]byte{
+			checksum([]byte{3, 2, 0}),
+			checksum([]byte{3, 2, 1}),
+			checksum([]byte{3, 2, 2}),
 		}},
-		{Height: 2, Format: 2, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{2, 2, 0})},
-			{Hash: checksum([]byte{2, 2, 1})},
-			{Hash: checksum([]byte{2, 2, 2})},
+		{Height: 2, Format: 2, ChunkHashes: [][]byte{
+			checksum([]byte{2, 2, 0}),
+			checksum([]byte{2, 2, 1}),
+			checksum([]byte{2, 2, 2}),
 		}},
-		{Height: 2, Format: 1, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{2, 1, 0})},
-			{Hash: checksum([]byte{2, 1, 1})},
+		{Height: 2, Format: 1, ChunkHashes: [][]byte{
+			checksum([]byte{2, 1, 0}),
+			checksum([]byte{2, 1, 1}),
 		}},
-		{Height: 1, Format: 1, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{1, 1, 0})},
-			{Hash: checksum([]byte{1, 1, 1})},
+		{Height: 1, Format: 1, ChunkHashes: [][]byte{
+			checksum([]byte{1, 1, 0}),
+			checksum([]byte{1, 1, 1}),
 		}},
 	}, snapshots)
 }
 
 func TestStore_Load(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	// Loading a missing snapshot should return nil
@@ -233,13 +198,13 @@ func TestStore_Load(t *testing.T) {
 	assert.Equal(t, &types.Snapshot{
 		Height: 2,
 		Format: 1,
-		Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{2, 1, 0})},
-			{Hash: checksum([]byte{2, 1, 1})},
+		ChunkHashes: [][]byte{
+			checksum([]byte{2, 1, 0}),
+			checksum([]byte{2, 1, 1}),
 		},
 	}, snapshot)
 
-	for i := range snapshot.Chunks {
+	for i := range snapshot.ChunkHashes {
 		reader, ok := <-chunks
 		require.True(t, ok)
 		chunk, err := ioutil.ReadAll(reader)
@@ -252,7 +217,7 @@ func TestStore_Load(t *testing.T) {
 }
 
 func TestStore_LoadChunk(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	// Loading a missing snapshot should return nil
@@ -277,7 +242,7 @@ func TestStore_LoadChunk(t *testing.T) {
 }
 
 func TestStore_Prune(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
 	// Pruning too many snapshots should be fine
@@ -297,19 +262,19 @@ func TestStore_Prune(t *testing.T) {
 	snapshots, err = store.List()
 	require.NoError(t, err)
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{3, 2, 0})},
-			{Hash: checksum([]byte{3, 2, 1})},
-			{Hash: checksum([]byte{3, 2, 2})},
+		{Height: 3, Format: 2, ChunkHashes: [][]byte{
+			checksum([]byte{3, 2, 0}),
+			checksum([]byte{3, 2, 1}),
+			checksum([]byte{3, 2, 2}),
 		}},
-		{Height: 2, Format: 2, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{2, 2, 0})},
-			{Hash: checksum([]byte{2, 2, 1})},
-			{Hash: checksum([]byte{2, 2, 2})},
+		{Height: 2, Format: 2, ChunkHashes: [][]byte{
+			checksum([]byte{2, 2, 0}),
+			checksum([]byte{2, 2, 1}),
+			checksum([]byte{2, 2, 2}),
 		}},
-		{Height: 2, Format: 1, Chunks: []*types.Chunk{
-			{Hash: checksum([]byte{2, 1, 0})},
-			{Hash: checksum([]byte{2, 1, 1})},
+		{Height: 2, Format: 1, ChunkHashes: [][]byte{
+			checksum([]byte{2, 1, 0}),
+			checksum([]byte{2, 1, 1}),
 		}},
 	}, snapshots)
 
@@ -324,31 +289,42 @@ func TestStore_Prune(t *testing.T) {
 }
 
 func TestStore_Save(t *testing.T) {
-	store, teardown := setup(t)
+	store, teardown := setupStore(t)
 	defer teardown()
 
-	// Saving a snapshot should work (TestStore_Load checks that it loads correctly)
-	err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
+	// Saving a snapshot should work
+	snapshot, err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
 	require.NoError(t, err)
+	assert.Equal(t, &snapshots.Snapshot{
+		Height: 4,
+		Format: 1,
+		ChunkHashes: [][]byte{
+			checksum([]byte{1}),
+			checksum([]byte{2}),
+		},
+	}, snapshot)
+	loaded, err := store.Get(snapshot.Height, snapshot.Format)
+	require.NoError(t, err)
+	assert.Equal(t, snapshot, loaded)
 
 	// Saving an existing snapshot should error
-	err = store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
+	_, err = store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
 	require.Error(t, err)
 
 	// Saving at height 0 should error
-	err = store.Save(0, 1, makeChunks([][]byte{{1}, {2}}))
+	_, err = store.Save(0, 1, makeChunks([][]byte{{1}, {2}}))
 	require.Error(t, err)
 
 	// Saving at format 0 should be fine
-	err = store.Save(1, 0, makeChunks([][]byte{{1}, {2}}))
+	_, err = store.Save(1, 0, makeChunks([][]byte{{1}, {2}}))
 	require.NoError(t, err)
 
 	// Saving a snapshot with no chunks should be fine, as should loading it
-	err = store.Save(5, 1, makeChunks([][]byte{}))
+	_, err = store.Save(5, 1, makeChunks([][]byte{}))
 	require.NoError(t, err)
 	snapshot, chunks, err := store.Load(5, 1)
 	require.NoError(t, err)
-	assert.Equal(t, &types.Snapshot{Height: 5, Format: 1, Chunks: []*types.Chunk{}}, snapshot)
+	assert.Equal(t, &types.Snapshot{Height: 5, Format: 1, ChunkHashes: [][]byte{}}, snapshot)
 	assert.Empty(t, chunks)
 
 	// Saving a snapshot should error if a chunk reader returns an error, and it should empty out
@@ -363,7 +339,7 @@ func TestStore_Save(t *testing.T) {
 	ch <- ioutil.NopCloser(bytes.NewBuffer([]byte{0xff}))
 	close(ch)
 
-	err = store.Save(6, 1, ch)
+	_, err = store.Save(6, 1, ch)
 	require.Error(t, err)
 	require.True(t, errors.Is(err, someErr))
 	assert.Empty(t, ch)
@@ -373,9 +349,9 @@ func TestStore_Save(t *testing.T) {
 	ch = make(chan io.ReadCloser)
 	go store.Save(7, 1, ch)
 	time.Sleep(10 * time.Millisecond)
-	err = store.Save(7, 2, makeChunks(nil))
+	_, err = store.Save(7, 2, makeChunks(nil))
 	require.Error(t, err)
-	err = store.Save(8, 1, makeChunks(nil))
+	_, err = store.Save(8, 1, makeChunks(nil))
 	require.NoError(t, err)
 	close(ch)
 }

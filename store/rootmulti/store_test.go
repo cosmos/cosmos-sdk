@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,6 +17,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -454,7 +456,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	// Chunks from different nodes must fit together, so all nodes must produce identical chunks.
 	// This checksum test makes sure that the byte stream remains identical. If the test fails
 	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
-	// types.SnapshotFormat must be bumped.
+	// snapshots.CurrentFormat must be bumped.
 	store := newMultiStoreWithGeneratedData(dbm.NewMemDB(), 5, 10000)
 	version := uint64(store.LastCommitID().Version)
 
@@ -493,19 +495,23 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
 
 	testcases := map[string]struct {
-		height uint64
-		format uint32
+		height     uint64
+		format     uint32
+		expectType error
 	}{
-		"0 height":       {0, types.SnapshotFormat},
-		"0 format":       {1, 0},
-		"unknown height": {9, types.SnapshotFormat},
-		"unknown format": {1, 9},
+		"0 height":       {0, snapshots.CurrentFormat, nil},
+		"0 format":       {1, 0, snapshots.ErrUnknownFormat},
+		"unknown height": {9, snapshots.CurrentFormat, nil},
+		"unknown format": {1, 9, snapshots.ErrUnknownFormat},
 	}
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			_, err := store.Snapshot(tc.height, tc.format)
 			require.Error(t, err)
+			if tc.expectType != nil {
+				assert.True(t, errors.Is(err, tc.expectType))
+			}
 		})
 	}
 }
@@ -514,18 +520,22 @@ func TestMultistoreRestore_Errors(t *testing.T) {
 	store := newMultiStoreWithMixedMounts(dbm.NewMemDB())
 
 	testcases := map[string]struct {
-		height uint64
-		format uint32
+		height     uint64
+		format     uint32
+		expectType error
 	}{
-		"0 height":       {0, types.SnapshotFormat},
-		"0 format":       {1, 0},
-		"unknown format": {1, 9},
+		"0 height":       {0, snapshots.CurrentFormat, nil},
+		"0 format":       {1, 0, snapshots.ErrUnknownFormat},
+		"unknown format": {1, 9, snapshots.ErrUnknownFormat},
 	}
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := store.Restore(tc.height, tc.format, nil)
 			require.Error(t, err)
+			if tc.expectType != nil {
+				assert.True(t, errors.Is(err, tc.expectType))
+			}
 		})
 	}
 }
@@ -536,9 +546,9 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
 
-	chunks, err := source.Snapshot(version, types.SnapshotFormat)
+	chunks, err := source.Snapshot(version, snapshots.CurrentFormat)
 	require.NoError(t, err)
-	err = target.Restore(version, types.SnapshotFormat, chunks)
+	err = target.Restore(version, snapshots.CurrentFormat, chunks)
 	require.NoError(t, err)
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
@@ -586,7 +596,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 		require.NoError(b, err)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		chunks, err := source.Snapshot(uint64(version), types.SnapshotFormat)
+		chunks, err := source.Snapshot(uint64(version), snapshots.CurrentFormat)
 		require.NoError(b, err)
 		for reader := range chunks {
 			_, err := io.Copy(ioutil.Discard, reader)
@@ -613,9 +623,9 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 		require.NoError(b, err)
 		require.EqualValues(b, 0, target.LastCommitID().Version)
 
-		chunks, err := source.Snapshot(version, types.SnapshotFormat)
+		chunks, err := source.Snapshot(version, snapshots.CurrentFormat)
 		require.NoError(b, err)
-		err = target.Restore(version, types.SnapshotFormat, chunks)
+		err = target.Restore(version, snapshots.CurrentFormat, chunks)
 		require.NoError(b, err)
 		require.Equal(b, source.LastCommitID(), target.LastCommitID())
 	}

@@ -71,11 +71,10 @@ type BaseApp struct { // nolint: maligned
 	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
-	// snapshot storage, i.e. dumps of app state at certain intervals
-	snapshotStore     *snapshots.Store
-	snapshotInterval  uint64              // interval (in blocks) between snapshots (0 to disable)
-	snapshotRetention uint32              // number of snapshots to keep (0 for all)
-	snapshotRestorer  *snapshots.Restorer // active snapshot restoration, if any
+	// manages snapshots, i.e. dumps of app state at certain intervals
+	snapshotManager   *snapshots.Manager
+	snapshotInterval  uint64 // interval (in blocks) between snapshots (0 to disable)
+	snapshotRetention uint32 // number of snapshots to keep (0 for all)
 
 	// volatile states:
 	//

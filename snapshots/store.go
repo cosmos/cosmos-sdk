@@ -49,20 +49,6 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	}, nil
 }
 
-// Active checks whether there are currently any active snapshots being saved.
-func (s *Store) Active() bool {
-	s.mtx.Lock()
-	active := false
-	for _, saving := range s.saving {
-		if saving {
-			active = true
-			break
-		}
-	}
-	s.mtx.Unlock()
-	return active
-}
-
 // Delete deletes a snapshot.
 func (s *Store) Delete(height uint64, format uint32) error {
 	s.mtx.Lock()
@@ -100,8 +86,8 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 		return nil, fmt.Errorf("failed to decode snapshot metadata for height %v format %v: %w",
 			height, format, err)
 	}
-	if metadata.Chunks == nil {
-		metadata.Chunks = []*types.Chunk{}
+	if metadata.ChunkHashes == nil {
+		metadata.ChunkHashes = [][]byte{}
 	}
 	return metadata, nil
 }
@@ -167,7 +153,7 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 	ch := make(chan io.ReadCloser)
 	go func() {
 		defer close(ch)
-		for i := range snapshot.Chunks {
+		for i := range snapshot.ChunkHashes {
 			pr, pw := io.Pipe()
 			ch <- pr
 			chunk, err := s.loadChunkFile(height, format, uint32(i))
@@ -211,7 +197,7 @@ func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.Re
 }
 
 // Prune removes old snapshots. The given number of most recent heights (regardless of format) are retained.
-func (s *Store) Prune(retainHeights uint32) (uint64, error) {
+func (s *Store) Prune(retain uint32) (uint64, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
 	if err != nil {
 		return 0, fmt.Errorf("failed to prune snapshots: %w", err)
@@ -226,7 +212,7 @@ func (s *Store) Prune(retainHeights uint32) (uint64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("failed to prune snapshots: %w", err)
 		}
-		if skip[height] || uint32(len(skip)) < retainHeights {
+		if skip[height] || uint32(len(skip)) < retain {
 			skip[height] = true
 			continue
 		}
@@ -254,16 +240,11 @@ func (s *Store) Prune(retainHeights uint32) (uint64, error) {
 	return pruned, nil
 }
 
-// Save saves a snapshot to disk.
-func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
-	// Make sure we close all of the chunks on error
-	defer func() {
-		for c := range chunks {
-			c.Close()
-		}
-	}()
+// Save saves a snapshot to disk, returning it.
+func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) (*Snapshot, error) {
+	defer DrainChunks(chunks)
 	if height == 0 {
-		return errors.New("snapshot height cannot be 0")
+		return nil, errors.New("snapshot height cannot be 0")
 	}
 
 	s.mtx.Lock()
@@ -271,7 +252,7 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 	s.saving[height] = true
 	s.mtx.Unlock()
 	if saving {
-		return fmt.Errorf("a snapshot for height %v is already being saved", height)
+		return nil, fmt.Errorf("a snapshot for height %v is already being saved", height)
 	}
 	defer func() {
 		s.mtx.Lock()
@@ -281,10 +262,10 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 
 	exists, err := s.db.Has(encodeKey(height, format))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if exists {
-		return fmt.Errorf("snapshot already exists for height %v format %v", height, format)
+		return nil, fmt.Errorf("snapshot already exists for height %v format %v", height, format)
 	}
 
 	snapshot := &types.Snapshot{
@@ -293,18 +274,22 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 	}
 	index := uint32(0)
 	for chunkBody := range chunks {
-		chunk, err := s.saveChunk(height, format, index, chunkBody)
+		hash, err := s.saveChunk(height, format, index, chunkBody)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		snapshot.Chunks = append(snapshot.Chunks, chunk)
+		snapshot.ChunkHashes = append(snapshot.ChunkHashes, hash)
 		index++
 	}
-	return s.saveSnapshot(snapshot)
+	err = s.saveSnapshot(snapshot)
+	if err != nil {
+		return nil, err
+	}
+	return snapshot, nil
 }
 
-// saveChunk saves a chunk to disk.
-func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.ReadCloser) (*types.Chunk, error) {
+// saveChunk saves a chunk to disk, returning its hash.
+func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.ReadCloser) ([]byte, error) {
 	defer chunk.Close()
 	dir := s.pathSnapshot(height, format)
 	err := os.MkdirAll(dir, 0755)
@@ -326,7 +311,7 @@ func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.R
 	if err != nil {
 		return nil, fmt.Errorf("failed to close snapshot chunk file %q: %w", path, err)
 	}
-	return &types.Chunk{Hash: hasher.Sum(nil)}, nil
+	return hasher.Sum(nil), nil
 }
 
 // saveSnapshot saves snapshot metadata to the database.
@@ -370,7 +355,7 @@ func decodeKey(k []byte) (uint64, uint32, error) {
 	return height, format, nil
 }
 
-// encodeKey encodes a snapshot encodeKey.
+// encodeKey encodes a snapshot key.
 func encodeKey(height uint64, format uint32) []byte {
 	k := make([]byte, 0, 13)
 	k = append(k, keyPrefixSnapshot)

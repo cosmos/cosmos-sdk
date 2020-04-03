@@ -75,7 +75,7 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
 * (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
 * (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
 `Result` from the execution.
-* (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) The `store.CommitMultiStore` interface now includes the new `store.Snapshotter` interface as well.
+* (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) The `store.CommitMultiStore` interface now includes the new `snapshots.Snapshotter` interface as well.
 * (crypto/keyring) [\#5866](https://github.com/cosmos/cosmos-sdk/pull/5866) Move `Keyring` and `Keybase` implementations and their associated types from `crypto/keys/` to `crypto/keyring/`.
 * (crypto) [\#5880](https://github.com/cosmos/cosmos-sdk/pull/5880) Merge `crypto/keys/mintkey` into `crypto`.
 * (crypto/keyring) [\#5858](https://github.com/cosmos/cosmos-sdk/pull/5858) Make Keyring store keys by name and address's hexbytes representation.

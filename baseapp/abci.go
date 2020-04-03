@@ -1,9 +1,7 @@
 package baseapp
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -13,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -267,7 +264,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 
 	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
-		go app.snapshot(uint64(header.Height))
+		go app.snapshot(header.Height)
 	}
 
 	return abci.ResponseCommit{
@@ -298,42 +295,18 @@ func (app *BaseApp) halt() {
 }
 
 // snapshot takes a snapshot of the current state and prunes any old snapshots
-func (app *BaseApp) snapshot(height uint64) {
-	format := store.SnapshotFormat
-	app.logger.Info("Taking state snapshot", "height", height, "format", format)
-	if app.snapshotStore == nil {
-		app.logger.Error("No snapshot store configured")
-		return
-	}
-	latest, err := app.snapshotStore.GetLatest()
+func (app *BaseApp) snapshot(height int64) {
+	app.logger.Info("Taking state snapshot", "height", height)
+	snapshot, err := app.snapshotManager.Take(uint64(height))
 	if err != nil {
-		app.logger.Error("Failed to examine latest snapshot", "err", err)
-	}
-	if latest != nil && latest.Height >= height {
-		app.logger.Error("A more recent snapshot already exists", "height", latest.Height, "format", latest.Format)
+		app.logger.Error("Failed to take state snapshot", "height", height, "err", err)
 		return
 	}
-	if app.snapshotStore.Active() {
-		app.logger.Error("A state snapshot is already in progress")
-		return
-	}
-	chunks, err := app.cms.Snapshot(height, format)
-	if err != nil {
-		app.logger.Error("Failed to take state snapshot", "height", height, "format", format,
-			"err", err.Error())
-		return
-	}
-	err = app.snapshotStore.Save(height, format, chunks)
-	if err != nil {
-		app.logger.Error("Failed to take state snapshot", "height", height, "format", format,
-			"err", err.Error())
-		return
-	}
-	app.logger.Info("Completed state snapshot", "height", height, "format", format)
+	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)
 
 	if app.snapshotRetention > 0 {
 		app.logger.Debug("Pruning state snapshots")
-		pruned, err := app.snapshotStore.Prune(app.snapshotRetention)
+		pruned, err := app.snapshotManager.Prune(app.snapshotRetention)
 		if err != nil {
 			app.logger.Error("Failed to prune state snapshots", "err", err.Error())
 			return
@@ -368,29 +341,23 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
 }
 
-// ListSnapshots implements the ABCI interface. It delegates to app.snapshotStore if set.
+// ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
-	resp := abci.ResponseListSnapshots{
-		Snapshots: []*abci.Snapshot{},
-	}
-	if app.snapshotStore == nil {
+	resp := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
+	if app.snapshotManager == nil {
 		return resp
 	}
 
-	snapshots, err := app.snapshotStore.List()
+	snapshots, err := app.snapshotManager.List()
 	if err != nil {
 		app.logger.Error("Failed to list snapshots", "err", err.Error())
 		return resp
 	}
 	for _, snapshot := range snapshots {
-		hashes := make([][]byte, 0, len(snapshot.Chunks))
-		for _, chunk := range snapshot.Chunks {
-			hashes = append(hashes, chunk.Hash)
-		}
 		resp.Snapshots = append(resp.Snapshots, &abci.Snapshot{
 			Height:      snapshot.Height,
 			Format:      snapshot.Format,
-			ChunkHashes: hashes,
+			ChunkHashes: snapshot.ChunkHashes,
 			Metadata:    nil,
 		})
 	}
@@ -398,86 +365,50 @@ func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseLi
 	return resp
 }
 
-// LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotStore if set.
+// LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
-	resp := abci.ResponseLoadSnapshotChunk{}
-	if app.snapshotStore == nil {
-		return resp
+	if app.snapshotManager == nil {
+		return abci.ResponseLoadSnapshotChunk{}
 	}
-
-	chunk, err := app.snapshotStore.LoadChunk(req.Height, req.Format, req.Chunk)
+	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
 	if err != nil {
 		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
 			"chunk", req.Chunk, "err", err.Error())
-		return resp
+		return abci.ResponseLoadSnapshotChunk{}
 	}
-	if chunk == nil {
-		return resp
-	}
-	defer chunk.Close()
-
-	resp.Chunk, err = ioutil.ReadAll(chunk)
-	if err != nil {
-		app.logger.Error("Failed to load snapshot chunk contents", "height", req.Height,
-			"format", req.Format, "chunk", req.Chunk, "err", err.Error())
-		return resp
-	}
-
-	return resp
+	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
 }
 
-// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotStore if set.
+// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
 	if req.Snapshot == nil {
 		app.logger.Error("Received nil snapshot")
 		return abci.ResponseOfferSnapshot{Accepted: false}
 	}
-	if app.snapshotRestorer != nil {
-		app.logger.Error("Snapshot restoration already in progress")
-		return abci.ResponseOfferSnapshot{Accepted: false}
-	}
-	if req.Snapshot.Format != store.SnapshotFormat {
-		app.logger.Info("Unsupported snapshot format", "format", req.Snapshot.Format)
+
+	err := app.snapshotManager.Restore(snapshots.Snapshot{
+		Height:      req.Snapshot.Height,
+		Format:      req.Snapshot.Format,
+		ChunkHashes: req.Snapshot.ChunkHashes,
+	})
+	switch err {
+	case nil:
+		return abci.ResponseOfferSnapshot{Accepted: true}
+	case snapshots.ErrUnknownFormat:
 		return abci.ResponseOfferSnapshot{Reason: abci.ResponseOfferSnapshot_invalid_format}
-	}
-
-	snapshot := snapshots.Snapshot{
-		Height: req.Snapshot.Height,
-		Format: req.Snapshot.Format,
-		Chunks: make([]*snapshots.Chunk, 0, len(req.Snapshot.ChunkHashes)),
-	}
-	for _, hash := range req.Snapshot.ChunkHashes {
-		snapshot.Chunks = append(snapshot.Chunks, &snapshots.Chunk{Hash: hash})
-	}
-	restorer, err := snapshots.NewRestorer(snapshot, app.cms)
-	if err != nil {
-		app.logger.Error("Snapshot restoration failed", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "error", err.Error())
+	default:
+		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "err", err.Error())
 		return abci.ResponseOfferSnapshot{Accepted: false}
 	}
-	app.snapshotRestorer = restorer
-
-	return abci.ResponseOfferSnapshot{Accepted: true}
 }
 
-// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotStore if set.
-// The checksum should already have been checked by the caller.
+// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
-	snapshot := app.snapshotRestorer.Snapshot()
-	if snapshot == nil {
-		app.logger.Error("No snapshot in progress")
-		return abci.ResponseApplySnapshotChunk{Applied: false}
-	}
-	done, err := app.snapshotRestorer.Add(ioutil.NopCloser(bytes.NewReader(req.Chunk)))
+	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	if err != nil {
-		app.logger.Error("Failed to restore snapshot", "height", snapshot.Height,
-			"format", snapshot.Format, "error", err.Error())
-		app.snapshotRestorer.Close()
+		app.logger.Error("Failed to restore snapshot", "err", err.Error())
 		return abci.ResponseApplySnapshotChunk{Applied: false}
-	}
-	if done {
-		app.snapshotRestorer.Close()
-		app.snapshotRestorer = nil
 	}
 	return abci.ResponseApplySnapshotChunk{Applied: true}
 }

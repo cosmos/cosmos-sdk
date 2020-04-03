@@ -124,7 +124,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 		// Wait for snapshot to be taken, since it happens asynchronously. This
 		// heuristic is likely to be flaky on low-IO machines.
-		time.Sleep(time.Duration(int(height)*blockTxs) * 100 * time.Millisecond)
+		time.Sleep(time.Duration(int(height)*blockTxs) * 200 * time.Millisecond)
 	}
 
 	return app, teardown
@@ -1599,7 +1599,7 @@ func TestOfferSnapshotChunk_Errors(t *testing.T) {
 	// Offering a snapshot after one has been accepted should error
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:      1,
-		Format:      store.SnapshotFormat,
+		Format:      snapshots.CurrentFormat,
 		ChunkHashes: nil,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{
@@ -1608,7 +1608,7 @@ func TestOfferSnapshotChunk_Errors(t *testing.T) {
 
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:      1,
-		Format:      store.SnapshotFormat,
+		Format:      snapshots.CurrentFormat,
 		ChunkHashes: nil,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: false}, resp)

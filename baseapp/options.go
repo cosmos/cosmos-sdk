@@ -160,7 +160,7 @@ func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 	if app.sealed {
 		panic("SetSnapshotStore() on sealed BaseApp")
 	}
-	app.snapshotStore = snapshotStore
+	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms)
 }
 
 // SetSnapshotPolicy sets the snapshotting policy. 0 interval disables snapshotting, and 0 retention

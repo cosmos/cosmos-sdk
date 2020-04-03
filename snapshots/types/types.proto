@@ -7,10 +7,5 @@ option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 message Snapshot {
   uint64         height = 1;
   uint32         format = 2;
-  repeated Chunk chunks = 3;
-}
-
-// Chunk contains snapshot chunk metadata.
-message Chunk {
-  bytes hash = 1; // SHA-1 checksum hash
+  repeated bytes chunk_hashes = 3; // SHA-256 chunk hashes
 }

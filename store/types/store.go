@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
@@ -34,19 +35,6 @@ type CommitStore interface {
 type Queryable interface {
 	Query(abci.RequestQuery) abci.ResponseQuery
 }
-
-// Snapshotter is something that can take and restore snapshots. Snapshot data
-// consists of streamed chunks. All chunks must be retrieved and closed.
-type Snapshotter interface {
-	Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error)
-	Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error
-}
-
-const (
-	// SnapshotFormat is the currently used format for snapshots. Snapshots using the same format
-	// must be identical across all nodes for a given height.
-	SnapshotFormat uint32 = 1
-)
 
 //----------------------------------------
 // MultiStore
@@ -141,7 +129,7 @@ type CacheMultiStore interface {
 type CommitMultiStore interface {
 	Committer
 	MultiStore
-	Snapshotter
+	snapshots.Snapshotter
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.

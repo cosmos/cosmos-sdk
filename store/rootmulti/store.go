@@ -18,6 +18,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -497,13 +498,14 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 
 //---------------------- Snapshotting ------------------
 
-// Snapshot implements Snapshotter. The snapshot output for a given format must be identical across
-// nodes such that chunks from different sources fit together, and thus the format must be stable
-// and deterministic across versions and environments. If the output for a given format changes (at
-// the byte level), the snapshot format must be bumped - see TestMultistoreSnapshot_Checksum test.
+// Snapshot implements snapshots.Snapshotter. The snapshot output for a given format must be
+// identical across nodes such that chunks from different sources fit together, and thus the format
+// must be stable and deterministic across versions and environments. If the output for a given
+// format changes (at the byte level), the snapshot format must be bumped - see
+// TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	if format != types.SnapshotFormat {
-		return nil, fmt.Errorf("unknown snapshot format %v", format)
+	if format != snapshots.CurrentFormat {
+		return nil, snapshots.ErrUnknownFormat
 	}
 	if height == 0 {
 		return nil, errors.New("cannot snapshot height 0")
@@ -538,7 +540,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 	go func() {
 		// Set up a stream pipeline to serialize snapshot nodes:
 		// ExportNode -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
-		chunkWriter := newChunkWriter(ch, snapshotChunkSize)
+		chunkWriter := snapshots.NewChunkWriter(ch, snapshotChunkSize)
 		defer chunkWriter.Close()
 		bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
 		defer func() {
@@ -616,10 +618,10 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 	return ch, nil
 }
 
-// Restore implements Snapshotter.
+// Restore implements snapshots.Snapshotter.
 func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
-	if format != types.SnapshotFormat {
-		return fmt.Errorf("unknown snapshot format %v", format)
+	if format != snapshots.CurrentFormat {
+		return snapshots.ErrUnknownFormat
 	}
 	if height == 0 {
 		return errors.New("cannot restore snapshot at height 0")
@@ -630,7 +632,7 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 
 	// Set up a restore stream pipeline
 	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> ExportNode
-	chunkReader := newChunkReader(chunks)
+	chunkReader := snapshots.NewChunkReader(chunks)
 	defer chunkReader.Close()
 	zReader, err := zlib.NewReader(chunkReader)
 	if err != nil {

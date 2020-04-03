@@ -252,7 +252,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	return nil
 }
 
-func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) (*types.CapabilityOwners) {
+func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) *types.CapabilityOwners {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 

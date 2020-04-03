@@ -56,9 +56,9 @@ func (rtr *Router) HasRoute(module string) bool {
 }
 
 // GetRoute returns a IBCModule for a given module.
-func (rtr *Router) GetRoute(module string) IBCModule {
+func (rtr *Router) GetRoute(module string) (IBCModule, bool) {
 	if !rtr.HasRoute(module) {
-		panic(fmt.Sprintf("route does not exist for module %s", module))
+		return nil, false
 	}
-	return rtr.routes[module]
+	return rtr.routes[module], true
 }

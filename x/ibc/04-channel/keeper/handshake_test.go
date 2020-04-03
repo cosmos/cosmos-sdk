@@ -63,13 +63,12 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 				suite.Require().NotNil(cap)
-				// TODO: Fix GetCapability then uncomment
-				// chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
-				// 	suite.chainA.GetContext(),
-				// 	ibctypes.ChannelCapabilityPath(testPort1, testChannel1),
-				// )
-				// suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
-				// suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
+				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
+					suite.chainA.GetContext(),
+					ibctypes.ChannelCapabilityPath(testPort1, testChannel1),
+				)
+				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
+				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -156,13 +155,12 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 				suite.Require().NotNil(cap)
-				// TODO: Fix GetCapability then uncomment
-				// chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
-				// 	suite.chainA.GetContext(),
-				// 	ibctypes.ChannelCapabilityPath(testPort1, testChannel1),
-				// )
-				// suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
-				// suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
+				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
+					suite.chainA.GetContext(),
+					ibctypes.ChannelCapabilityPath(testPort2, testChannel2),
+				)
+				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
+				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
 			} else {
 				_, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},

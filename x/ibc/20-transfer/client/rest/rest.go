@@ -25,5 +25,4 @@ type TransferTxReq struct {
 	DestHeight uint64         `json:"dest_height" yaml:"dest_height"`
 	Amount     sdk.Coins      `json:"amount" yaml:"amount"`
 	Receiver   sdk.AccAddress `json:"receiver" yaml:"receiver"`
-	Source     bool           `json:"source" yaml:"source"`
 }

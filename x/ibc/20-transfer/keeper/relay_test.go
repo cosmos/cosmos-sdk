@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		isSourceChain bool
 		expPass       bool
 	}{
-		{"successful transfer from source chain", testCoins,
+		{"successful transfer from source chain", testCoins2,
 			func() {
 				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
 				suite.chainA.CreateClient(suite.chainB)
@@ -28,16 +28,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, true, true},
-		{"successful transfer from source chain with denom prefix", testCoins2,
-			func() {
-				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
-				suite.Require().NoError(err)
-				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
-				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
-			}, true, true},
-		{"successful transfer from external chain", testCoins,
+		{"successful transfer from external chain", prefixCoins,
 			func() {
 				suite.chainA.App.SupplyKeeper.SetSupply(suite.chainA.GetContext(), supply.NewSupply(prefixCoins))
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, prefixCoins)
@@ -82,7 +73,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			tc.malleate()
 
 			err := suite.chainA.App.TransferKeeper.SendTransfer(
-				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2, tc.isSourceChain,
+				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2,
 			)
 
 			if tc.expPass {
@@ -95,7 +86,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
-	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2, true)
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2)
 
 	testCases := []struct {
 		msg      string
@@ -112,19 +103,16 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			}, false},
 		{"mint failed",
 			func() {
-				data.Source = true
 				data.Amount = prefixCoins2
 				data.Amount[0].Amount = sdk.ZeroInt()
 			}, false},
 		// - receiving chain
 		{"incorrect dest prefix on coin denom",
 			func() {
-				data.Source = false
 				data.Amount = prefixCoins2
 			}, false},
 		{"success receive from external chain",
 			func() {
-				data.Source = false
 				data.Amount = prefixCoins
 				escrow := types.GetEscrowAddress(testPort2, testChannel2)
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, testCoins)
@@ -152,7 +140,8 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestTimeoutTransfer() {
-	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2, true)
+	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2)
+	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
 
 	testCases := []struct {
 		msg      string
@@ -167,20 +156,17 @@ func (suite *KeeperTestSuite) TestTimeoutTransfer() {
 			}, true},
 		{"successful timeout from external chain",
 			func() {
-				data.Source = false
+				data.Amount = testCoins2
 			}, true},
 		{"no source prefix on coin denom",
 			func() {
-				data.Source = true
 				data.Amount = prefixCoins2
 			}, false},
 		{"unescrow failed",
 			func() {
-				data.Source = true
 			}, false},
 		{"mint failed",
 			func() {
-				data.Source = false
 				data.Amount[0].Denom = prefixCoins[0].Denom
 				data.Amount[0].Amount = sdk.ZeroInt()
 			}, false},

@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

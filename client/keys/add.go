@@ -5,9 +5,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	algo2 "github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"io"
 	"sort"
+
+	algo2 "github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	bip39 "github.com/cosmos/go-bip39"
 

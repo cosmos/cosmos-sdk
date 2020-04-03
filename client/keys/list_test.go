@@ -1,8 +1,9 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	algo2 "github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"io"
 	"testing"
+
+	algo2 "github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/crypto/bcrypt"

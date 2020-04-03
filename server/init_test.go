@@ -1,8 +1,9 @@
 package server_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	"github.com/stretchr/testify/require"
 

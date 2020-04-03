@@ -2,8 +2,9 @@ package keyring
 
 import (
 	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"

@@ -100,7 +100,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		var capOwners types.CapabilityOwners
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
 
-		for _, owner := range capOwners.Owners {
+		for _, owner := range (&capOwners).Owners {
 			// Set the forward mapping between the module and capability tuple and the
 			// capability name in the in-memory store.
 			k.capStore.SetCapabilityName(owner.Module, owner.Name, cap)
@@ -219,7 +219,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) 
 		prefixStore.Delete(indexKey)
 	} else {
 		// update capability owner set
-		prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(&capOwners))
+		prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
 	}
 
 	return nil
@@ -248,23 +248,26 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	}
 
 	// update capability owner set
-	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(&capOwners))
+	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
 	return nil
 }
 
-func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) (capOwners types.CapabilityOwners) {
+func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) (*types.CapabilityOwners) {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
 	bz := prefixStore.Get(indexKey)
+
+	var owners *types.CapabilityOwners
 	if len(bz) == 0 {
-		owners := types.NewCapabilityOwners()
-		capOwners = *owners
+		owners = types.NewCapabilityOwners()
 	} else {
+		var capOwners types.CapabilityOwners
 		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
+		owners = &capOwners
 	}
 
-	return capOwners
+	return owners
 }
 
 func logger(ctx sdk.Context) log.Logger {

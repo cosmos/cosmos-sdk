@@ -4,19 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/algo"
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestDefaults(t *testing.T) {
-	require.Equal(t, algo.PubKeyType("multi"), algo.MultiType)
-	require.Equal(t, algo.PubKeyType("secp256k1"), algo.Secp256k1Type)
-	require.Equal(t, algo.PubKeyType("ed25519"), algo.Ed25519Type)
-	require.Equal(t, algo.PubKeyType("sr25519"), algo.Sr25519Type)
-}
 
 func TestNewSigningAlgoByString(t *testing.T) {
 	tests := []struct {
@@ -30,7 +23,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"supported algorithm",
 			"secp256k1",
 			true,
-			algo.Secp256k1,
+			privkey.Secp256k1,
 			nil,
 		},
 		{
@@ -46,7 +39,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			algorithm, err := NewSigningAlgoFromString(tt.algoStr)
 			if tt.isSupported {
-				require.Equal(t, algo.Secp256k1, algorithm)
+				require.Equal(t, privkey.Secp256k1, algorithm)
 			} else {
 				require.EqualError(t, err, tt.expectedErr.Error())
 			}
@@ -56,24 +49,24 @@ func TestNewSigningAlgoByString(t *testing.T) {
 
 func TestAltSigningAlgoList_Contains(t *testing.T) {
 	list := SigningAlgoList{
-		algo.Secp256k1,
+		privkey.Secp256k1,
 	}
 
-	assert.True(t, list.Contains(algo.Secp256k1))
+	assert.True(t, list.Contains(privkey.Secp256k1))
 	assert.False(t, list.Contains(notSupportedAlgo{}))
 }
 
 type notSupportedAlgo struct {
 }
 
-func (n notSupportedAlgo) Name() algo.PubKeyType {
+func (n notSupportedAlgo) Name() privkey.PubKeyType {
 	return "notSupported"
 }
 
-func (n notSupportedAlgo) DeriveKey() algo.DeriveKeyFn {
-	return algo.Secp256k1DeriveKey
+func (n notSupportedAlgo) DeriveKey() privkey.DeriveKeyFn {
+	return privkey.Secp256k1DeriveKey
 }
 
-func (n notSupportedAlgo) PrivKeyGen() algo.PrivKeyGenFn {
-	return algo.Secp256k1PrivKeyGen
+func (n notSupportedAlgo) PrivKeyGen() privkey.GenerateFn {
+	return privkey.Secp256k1PrivKeyGen
 }

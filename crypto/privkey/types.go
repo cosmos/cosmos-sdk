@@ -1,4 +1,4 @@
-package algo
+package privkey
 
 // PubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
 type PubKeyType string

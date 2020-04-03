@@ -1,7 +1,7 @@
 package server_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/algo"
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,7 +19,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	info, err := keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), algo.Secp256k1)
+	info, err := keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), privkey.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -41,7 +41,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), algo.Secp256k1)
+	info, err = keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), privkey.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }

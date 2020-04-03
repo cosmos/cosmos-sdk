@@ -20,7 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	salgo "github.com/cosmos/cosmos-sdk/crypto/algo"
+	salgo "github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

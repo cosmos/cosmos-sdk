@@ -1,4 +1,4 @@
-package algo
+package privkey
 
 import (
 	"github.com/cosmos/go-bip39"
@@ -14,7 +14,7 @@ var (
 )
 
 type DeriveKeyFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
-type PrivKeyGenFn func(bz []byte) crypto.PrivKey
+type GenerateFn func(bz []byte) crypto.PrivKey
 
 type secp256k1Algo struct {
 }
@@ -27,7 +27,7 @@ func (s secp256k1Algo) DeriveKey() DeriveKeyFn {
 	return Secp256k1DeriveKey
 }
 
-func (s secp256k1Algo) PrivKeyGen() PrivKeyGenFn {
+func (s secp256k1Algo) PrivKeyGen() GenerateFn {
 	return Secp256k1PrivKeyGen
 }
 

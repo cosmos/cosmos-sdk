@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/algo"
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -58,10 +58,10 @@ func Test_runShowCmd(t *testing.T) {
 	})
 
 	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, algo.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, privkey.Secp256k1)
 	require.NoError(t, err)
 
-	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path, algo.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path, privkey.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	algo2 "github.com/cosmos/cosmos-sdk/crypto/algo"
+	algo2 "github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"io"
 	"testing"
 

@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/algo"
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ func Test_runListCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	path := "" //sdk.GetConfig().GetFullFundraiserPath()
-	_, err = kb.NewAccount("something", tests.TestMnemonic, "", path, algo.Secp256k1)
+	_, err = kb.NewAccount("something", tests.TestMnemonic, "", path, privkey.Secp256k1)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

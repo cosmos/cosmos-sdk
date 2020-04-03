@@ -6,6 +6,6 @@ proto_dirs=$(find . -path ./third_party -prune -o -name '*.proto' -print0 | xarg
 for dir in $proto_dirs; do
   protoc \
   -I. \
-  --gocosmos_out=plugins=interfacetype,paths=source_relative:. \
+  --gocosmos_out=plugins=interfacetype+grpc,paths=source_relative:. \
   $(find "${dir}" -name '*.proto')
 done

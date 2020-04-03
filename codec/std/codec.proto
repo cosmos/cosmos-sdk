@@ -15,6 +15,8 @@ import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
+import "types/types.proto";
+import "client/tx/rest/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/std";
 
@@ -146,56 +148,46 @@ message SignDoc {
   repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }
 
-service AppService {
-  rpc GetTx(GetTxRequest) returns (Transaction) {
-
+service TxService {
+  rpc QueryTx(cosmos_sdk.client.v1.QueryTxRequest) returns (TxResponse) {
+//    option (google.api.http) = {
+//      get: "/txs/{tx_hash}"
+//    };
   }
-  rpc GetTxs(GetTxsRequest) returns (GetTxsResponse) {
 
+  rpc QueryTxs(cosmos_sdk.client.v1.QueryTxsRequest) returns (QueryTxsResponse) {
+//    option (google.api.http) = {
+//      get: "/txs"
+//      body: "*"
+//    };
   }
 
-  rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
-
+  rpc BroadcastTx(BroadcastTxRequest) returns (TxResponse) {
+//    option (google.api.http) = {
+//      post: "/txs"
+//      body: "*"
+//    };
   }
+
+  rpc GenerateTx(GenerateTxRequest) returns (Transaction);
 }
 
-message GetTxRequest {
-  bytes hash = 1;
+message TxResponse {
+  cosmos_sdk.v1.TxResponseBase base = 1;
+  Transaction tx = 2;
 }
 
-message GetTxsRequest {
-    string message_action = 1;
-    string message_sender = 2;
-    uint64 min_height = 3;
-    uint64 max_height = 4;
-    uint64 page = 5;
-    uint64 limit = 6;
-}
-
-message GetTxsResponse {
-  GetTxsResponseBase base = 1;
-  repeated Transaction txs = 2;
-}
-
-message GetTxsResponseBase {
-  uint64 total_count = 1;
-  uint64 count = 2;
-  uint64 page_number = 3;
-  uint64 page_total = 4;
-  uint64 limit = 5;
+message QueryTxsResponse {
+  cosmos_sdk.client.v1.QueryTxsResponseBase base = 1;
+  repeated TxResponse txs = 2;
 }
 
 message BroadcastTxRequest {
   Transaction tx = 1;
-  BroadcastTxMode mode = 2;
+  cosmos_sdk.client.v1.BroadcastTxMode mode = 2;
 }
 
-enum BroadcastTxMode {
-  BLOCK = 0;
-  SYNC = 1;
-  ASYNC= 2;
-}
-
-message BroadcastTxResponse {
-
+message GenerateTxRequest {
+  cosmos_sdk.client.v1.GenerateTxRequestBase base = 1;
+  repeated Message msgs = 2;
 }

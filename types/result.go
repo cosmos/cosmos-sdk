@@ -36,19 +36,9 @@ func (r Result) GetEvents() Events {
 // ABCIMessageLogs represents a slice of ABCIMessageLog.
 type ABCIMessageLogs []ABCIMessageLog
 
-// ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
-type ABCIMessageLog struct {
-	MsgIndex uint16 `json:"msg_index"`
-	Log      string `json:"log"`
-
-	// Events contains a slice of Event objects that were emitted during some
-	// execution.
-	Events StringEvents `json:"events"`
-}
-
 func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
 	return ABCIMessageLog{
-		MsgIndex: i,
+		MsgIndex: uint32(i),
 		Log:      log,
 		Events:   StringifyEvents(events.ToABCIEvents()),
 	}
@@ -69,18 +59,8 @@ func (logs ABCIMessageLogs) String() (str string) {
 // TxResponse defines a structure containing relevant tx data and metadata. The
 // tags are stringified and the log is JSON decoded.
 type TxResponse struct {
-	Height    int64           `json:"height"`
-	TxHash    string          `json:"txhash"`
-	Codespace string          `json:"codespace,omitempty"`
-	Code      uint32          `json:"code,omitempty"`
-	Data      string          `json:"data,omitempty"`
-	RawLog    string          `json:"raw_log,omitempty"`
-	Logs      ABCIMessageLogs `json:"logs,omitempty"`
-	Info      string          `json:"info,omitempty"`
-	GasWanted int64           `json:"gas_wanted,omitempty"`
-	GasUsed   int64           `json:"gas_used,omitempty"`
-	Tx        Tx              `json:"tx,omitempty"`
-	Timestamp string          `json:"timestamp,omitempty"`
+	TxResponseBase
+	Tx Tx `json:"tx,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
@@ -92,18 +72,20 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 	parsedLogs, _ := ParseABCILogs(res.TxResult.Log)
 
 	return TxResponse{
-		TxHash:    res.Hash.String(),
-		Height:    res.Height,
-		Codespace: res.TxResult.Codespace,
-		Code:      res.TxResult.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
-		RawLog:    res.TxResult.Log,
-		Logs:      parsedLogs,
-		Info:      res.TxResult.Info,
-		GasWanted: res.TxResult.GasWanted,
-		GasUsed:   res.TxResult.GasUsed,
-		Tx:        tx,
-		Timestamp: timestamp,
+		TxResponseBase: TxResponseBase{
+			TxHash:    res.Hash.String(),
+			Height:    res.Height,
+			Codespace: res.TxResult.Codespace,
+			Code:      res.TxResult.Code,
+			Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
+			RawLog:    res.TxResult.Log,
+			Logs:      parsedLogs,
+			Info:      res.TxResult.Info,
+			GasWanted: res.TxResult.GasWanted,
+			GasUsed:   res.TxResult.GasUsed,
+			Timestamp: timestamp,
+		},
+		Tx: tx,
 	}
 }
 
@@ -134,16 +116,18 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	parsedLogs, _ := ParseABCILogs(res.CheckTx.Log)
 
 	return TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.CheckTx.Codespace,
-		Code:      res.CheckTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
-		RawLog:    res.CheckTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.CheckTx.Info,
-		GasWanted: res.CheckTx.GasWanted,
-		GasUsed:   res.CheckTx.GasUsed,
+		TxResponseBase: TxResponseBase{
+			Height:    res.Height,
+			TxHash:    txHash,
+			Codespace: res.CheckTx.Codespace,
+			Code:      res.CheckTx.Code,
+			Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
+			RawLog:    res.CheckTx.Log,
+			Logs:      parsedLogs,
+			Info:      res.CheckTx.Info,
+			GasWanted: res.CheckTx.GasWanted,
+			GasUsed:   res.CheckTx.GasUsed,
+		},
 	}
 }
 
@@ -160,16 +144,18 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
 
 	return TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.DeliverTx.Codespace,
-		Code:      res.DeliverTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
-		RawLog:    res.DeliverTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.DeliverTx.Info,
-		GasWanted: res.DeliverTx.GasWanted,
-		GasUsed:   res.DeliverTx.GasUsed,
+		TxResponseBase: TxResponseBase{
+			Height:    res.Height,
+			TxHash:    txHash,
+			Codespace: res.DeliverTx.Codespace,
+			Code:      res.DeliverTx.Code,
+			Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
+			RawLog:    res.DeliverTx.Log,
+			Logs:      parsedLogs,
+			Info:      res.DeliverTx.Info,
+			GasWanted: res.DeliverTx.GasWanted,
+			GasUsed:   res.DeliverTx.GasUsed,
+		},
 	}
 }
 
@@ -182,11 +168,13 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 	parsedLogs, _ := ParseABCILogs(res.Log)
 
 	return TxResponse{
-		Code:   res.Code,
-		Data:   res.Data.String(),
-		RawLog: res.Log,
-		Logs:   parsedLogs,
-		TxHash: res.Hash.String(),
+		TxResponseBase:TxResponseBase{
+			Code:   res.Code,
+			Data:   res.Data.String(),
+			RawLog: res.Log,
+			Logs:   parsedLogs,
+			TxHash: res.Hash.String(),
+		},
 	}
 }
 

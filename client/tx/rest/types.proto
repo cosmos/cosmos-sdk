@@ -1,0 +1,47 @@
+syntax = "proto3";
+package cosmos_sdk.client.v1;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "types/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/client/tx/rest";
+
+message QueryTxRequest {
+    string tx_hash = 1;
+}
+
+message QueryTxsRequest {
+    string message_action = 1;
+    string message_sender = 2;
+    int64 min_height = 3;
+    int64 max_height = 4;
+    uint64 page = 5;
+    uint64 limit = 6;
+}
+
+message QueryTxsResponseBase {
+    uint64 total_count = 1;
+    uint64 count = 2;
+    uint64 page_number = 3;
+    uint64 page_total = 4;
+    uint64 limit = 5;
+}
+
+enum BroadcastTxMode {
+    BLOCK = 0;
+    SYNC = 1;
+    ASYNC = 2;
+}
+
+message GenerateTxRequestBase {
+    bytes from = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    string memo = 2;
+    string chain_id = 3;
+    uint64 account_number = 4;
+    uint64 sequence = 5;
+    repeated cosmos_sdk.v1.Coin fees = 6 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+    repeated cosmos_sdk.v1.DecCoin gas_prices = 7 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+    string gas = 8;
+    string gas_adjustment = 9;
+    bool simulate = 10;
+}

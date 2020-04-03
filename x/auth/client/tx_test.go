@@ -22,19 +22,20 @@ var (
 )
 
 func TestParseQueryResponse(t *testing.T) {
-	cdc := makeCodec()
-	simRes := sdk.SimulationResponse{
+	simRes := &sdk.SimulationResponse{
 		GasInfo: sdk.GasInfo{GasUsed: 10, GasWanted: 20},
 		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 	}
 
-	bz := cdc.MustMarshalBinaryBare(simRes)
-	res, err := parseQueryResponse(cdc, bz)
+	bz, err := codec.ProtoMarshalJSON(simRes)
+	require.NoError(t, err)
+
+	res, err := parseQueryResponse(bz)
 	require.NoError(t, err)
 	require.Equal(t, 10, int(res.GasInfo.GasUsed))
 	require.NotNil(t, res.Result)
 
-	res, err = parseQueryResponse(cdc, []byte("fuzzy"))
+	res, err = parseQueryResponse([]byte("fuzzy"))
 	require.Error(t, err)
 }
 
@@ -45,12 +46,13 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := sdk.SimulationResponse{
+			simRes := &sdk.SimulationResponse{
 				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
 
-			return cdc.MustMarshalBinaryBare(simRes), 0, nil
+			bz, _ := codec.ProtoMarshalJSON(simRes)
+			return bz, 0, nil
 		}
 	}
 

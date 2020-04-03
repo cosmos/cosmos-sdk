@@ -232,11 +232,10 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	// Now try to sign data with a secret-less key
 	// Import a public key
 	armor, err := kb.ExportPubKeyArmor(n2)
-	require.Nil(t, err)
-	err = kb.Delete(n2)
-
-	err = kb.ImportPubKey(n3, armor)
 	require.NoError(t, err)
+	require.NoError(t, kb.Delete(n2))
+
+	require.NoError(t, kb.ImportPubKey(n3, armor))
 	i3, err := kb.Key(n3)
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
@@ -812,14 +811,14 @@ func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	_, seed, err := kr.NewMnemonic("test", English, "", AltSecp256k1)
 	require.NoError(t, err)
 
-	err = kr.Delete("test")
-	require.NoError(t, err)
+	require.NoError(t, kr.Delete("test"))
 
-	_, err = kr.NewAccount("test1", seed, "", "", AltSecp256k1)
+	path := hd.CreateHDPath(118, 0, 0).String()
+	_, err = kr.NewAccount("test1", seed, "", path, AltSecp256k1)
 	require.NoError(t, err)
 
 	// Creating another account with different uid but same seed should fail due to have same pub address
-	_, err = kr.NewAccount("test2", seed, "", "", AltSecp256k1)
+	_, err = kr.NewAccount("test2", seed, "", path, AltSecp256k1)
 	require.Error(t, err)
 }
 

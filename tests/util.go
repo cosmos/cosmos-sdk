@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmclient "github.com/tendermint/tendermint/rpc/client"
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 
@@ -29,7 +29,7 @@ func WaitForNextHeightTM(port string) {
 func WaitForNextNBlocksTM(n int64, port string) {
 	// get the latest block and wait for n more
 	url := fmt.Sprintf("http://localhost:%v", port)
-	cl, err := tmclient.NewHTTP(url, "/websocket")
+	cl, err := tmhttp.New(url, "/websocket")
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Tendermint HTTP client: %s", err))
 	}
@@ -56,7 +56,7 @@ func WaitForHeightTM(height int64, port string) {
 }
 
 func waitForHeightTM(height int64, url string) {
-	cl, err := tmclient.NewHTTP(url, "/websocket")
+	cl, err := tmhttp.New(url, "/websocket")
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Tendermint HTTP client: %s", err))
 	}

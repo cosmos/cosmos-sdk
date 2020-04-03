@@ -6,9 +6,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 
-// CapabilityKey defines an implementation of a Capability. The index provided to
-// a CapabilityKey must be globally unique.
-message CapabilityKey {
+// Capability defines an implementation of an object capability. The index provided to
+// a Capability must be globally unique.
+message Capability {
   option (gogoproto.goproto_stringer) = false;
 
   uint64 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];

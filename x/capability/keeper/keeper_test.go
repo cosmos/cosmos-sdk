@@ -41,7 +41,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	sk := suite.keeper.ScopeToModule(bank.ModuleName)
 
-	caps := make([]types.Capability, 5)
+	caps := make([]*types.Capability, 5)
 
 	for i := range caps {
 		cap, err := sk.NewCapability(suite.ctx, fmt.Sprintf("transfer-%d", i))
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap1)
 
-	forgedCap := types.NewCapabilityKey(0) // index should be the same index as the first capability
+	forgedCap := types.NewCapability(0) // index should be the same index as the first capability
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
 
 	cap2, err := sk2.NewCapability(suite.ctx, "bond")
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	sk2.ReleaseCapability(suite.ctx, cap2)
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap2, "bond"))
 
-	badCap := types.NewCapabilityKey(100)
+	badCap := types.NewCapability(100)
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
 }

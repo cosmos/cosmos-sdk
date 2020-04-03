@@ -95,7 +95,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		index := types.IndexFromKey(iterator.Key())
-		cap := types.NewCapabilityKey(index)
+		cap := types.NewCapability(index)
 
 		var capOwners types.CapabilityOwners
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
@@ -123,7 +123,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 //
 // Note, namespacing is completely local, which is safe since records are prefixed
 // with the module name and no two ScopedKeeper can have the same module name.
-func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capability, error) {
+func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capability, error) {
 	store := ctx.KVStore(sk.storeKey)
 
 	if cap := sk.capStore.GetCapability(sk.module, name); cap != nil {
@@ -133,7 +133,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capabi
 
 	// create new capability with the current global index
 	index := types.IndexFromKey(store.Get(types.KeyIndex))
-	cap := types.NewCapabilityKey(index)
+	cap := types.NewCapability(index)
 
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {
@@ -163,7 +163,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (types.Capabi
 //
 // Note, the capability's forward mapping is indexed by a string which should
 // contain its unique memory reference.
-func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capability, name string) bool {
+func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap *types.Capability, name string) bool {
 	return sk.capStore.GetCapabilityName(sk.module, cap) == name
 }
 
@@ -172,7 +172,7 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap types.Capabil
 // to add the owner to the persistent set of capability owners for the capability
 // index. If the owner already exists, it will return an error. Otherwise, it will
 // also set a forward and reverse index for the capability and capability name.
-func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, name string) error {
+func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, name string) error {
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {
 		return err
@@ -193,7 +193,7 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap types.Capability, na
 // ReleaseCapability allows a scoped module to release a capability which it had
 // previously claimed or created. After releasing the capability, if no more
 // owners exist, the capability will be globally removed.
-func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) error {
+func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability) error {
 	name := sk.capStore.GetCapabilityName(sk.module, cap)
 	if len(name) == 0 {
 		return sdkerrors.Wrap(types.ErrCapabilityNotOwned, sk.module)
@@ -228,7 +228,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) 
 // GetCapability allows a module to fetch a capability which it previously claimed
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
-func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (types.Capability, bool) {
+func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capability, bool) {
 	cap := sk.capStore.GetCapability(sk.module, name)
 	if cap == nil {
 		return nil, false
@@ -237,7 +237,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (types.Capabi
 	return cap, true
 }
 
-func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name string) error {
+func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap *types.Capability, name string) error {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
@@ -252,7 +252,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	return nil
 }
 
-func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) *types.CapabilityOwners {
+func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap *types.Capability) *types.CapabilityOwners {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 

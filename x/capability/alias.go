@@ -17,7 +17,7 @@ const (
 // nolint
 var (
 	NewKeeper                   = keeper.NewKeeper
-	NewCapabilityKey            = types.NewCapabilityKey
+	NewCapability           		= types.NewCapability
 	RevCapabilityKey            = types.RevCapabilityKey
 	FwdCapabilityKey            = types.FwdCapabilityKey
 	KeyIndex                    = types.KeyIndex
@@ -38,7 +38,6 @@ type (
 	Keeper           = keeper.Keeper
 	ScopedKeeper     = keeper.ScopedKeeper
 	Capability       = types.Capability
-	CapabilityKey    = types.CapabilityKey
 	CapabilityOwners = types.CapabilityOwners
 	CapabilityStore  = types.CapabilityStore
 )

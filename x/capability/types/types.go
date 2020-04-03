@@ -9,26 +9,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ Capability = (*CapabilityKey)(nil)
-
-// Capability defines the interface a capability must implement. The given
-// capability must provide a GUID.
-type Capability interface {
-	GetIndex() uint64
-	String() string
-}
-
-// NewCapabilityKey returns a reference to a new CapabilityKey to be used as an
+// NewCapability returns a reference to a new Capability to be used as an
 // actual capability.
-func NewCapabilityKey(index uint64) Capability {
-	return &CapabilityKey{Index: index}
+func NewCapability(index uint64) *Capability {
+	return &Capability{Index: index}
 }
 
-// String returns the string representation of a CapabilityKey. The string contains
-// the CapabilityKey's memory reference as the string is to be used in a composite
+// String returns the string representation of a Capability. The string contains
+// the Capability's memory reference as the string is to be used in a composite
 // key and to authenticate capabilities.
-func (ck *CapabilityKey) String() string {
-	return fmt.Sprintf("CapabilityKey{%p, %d}", ck, ck.Index)
+func (ck *Capability) String() string {
+	return fmt.Sprintf("Capability{%p, %d}", ck, ck.Index)
 }
 
 func NewOwner(module, name string) Owner {

@@ -97,7 +97,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		index := types.IndexFromKey(iterator.Key())
 		cap := types.NewCapabilityKey(index)
 
-		var capOwners *types.CapabilityOwners
+		var capOwners types.CapabilityOwners
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
 
 		for _, owner := range capOwners.Owners {
@@ -219,7 +219,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap types.Capability) 
 		prefixStore.Delete(indexKey)
 	} else {
 		// update capability owner set
-		prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
+		prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(&capOwners))
 	}
 
 	return nil
@@ -248,17 +248,18 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name stri
 	}
 
 	// update capability owner set
-	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
+	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(&capOwners))
 	return nil
 }
 
-func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) (capOwners *types.CapabilityOwners) {
+func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap types.Capability) (capOwners types.CapabilityOwners) {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
 	bz := prefixStore.Get(indexKey)
 	if len(bz) == 0 {
-		capOwners = types.NewCapabilityOwners()
+		owners := types.NewCapabilityOwners()
+		capOwners = *owners
 	} else {
 		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
 	}

@@ -18,6 +18,7 @@ message CapabilityKey {
 // capability and the module name.
 message Owner {
   option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)  = false;
 
   string module = 1 [(gogoproto.moretags) = "yaml:\"module\""];
   string name   = 2 [(gogoproto.moretags) = "yaml:\"name\""];
@@ -26,5 +27,7 @@ message Owner {
 // CapabilityOwners defines a set of owners of a single Capability. The set of
 // owners must be unique.
 message CapabilityOwners {
-  repeated Owner owners = 1;
+  repeated Owner owners = 1 [
+    (gogoproto.nullable) = false
+  ];
 }

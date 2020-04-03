@@ -21,8 +21,8 @@ func RegisterCapabilityTypeCodec(o interface{}, name string) {
 }
 
 var (
-// The amino codec is not sealed as to
-// allow other modules to register their concrete Capability types.
+	// The amino codec is not sealed as to
+	// allow other modules to register their concrete Capability types.
 	amino = codec.New()
 
 	// ModuleCdc references the global x/capability module codec. Note, the codec should

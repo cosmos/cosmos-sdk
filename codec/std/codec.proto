@@ -145,3 +145,57 @@ message SignDoc {
       [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
   repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }
+
+service AppService {
+  rpc GetTx(GetTxRequest) returns (Transaction) {
+
+  }
+  rpc GetTxs(GetTxsRequest) returns (GetTxsResponse) {
+
+  }
+
+  rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
+
+  }
+}
+
+message GetTxRequest {
+  bytes hash = 1;
+}
+
+message GetTxsRequest {
+    string message_action = 1;
+    string message_sender = 2;
+    uint64 min_height = 3;
+    uint64 max_height = 4;
+    uint64 page = 5;
+    uint64 limit = 6;
+}
+
+message GetTxsResponse {
+  GetTxsResponseBase base = 1;
+  repeated Transaction txs = 2;
+}
+
+message GetTxsResponseBase {
+  uint64 total_count = 1;
+  uint64 count = 2;
+  uint64 page_number = 3;
+  uint64 page_total = 4;
+  uint64 limit = 5;
+}
+
+message BroadcastTxRequest {
+  Transaction tx = 1;
+  BroadcastTxMode mode = 2;
+}
+
+enum BroadcastTxMode {
+  BLOCK = 0;
+  SYNC = 1;
+  ASYNC= 2;
+}
+
+message BroadcastTxResponse {
+
+}

@@ -183,15 +183,6 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	i2, _, err := kb.NewMnemonic(n2, English, types.FullFundraiserPath, algo)
 	require.Nil(t, err)
 
-	// Import a public key
-	armor, err := kb.ExportPubKeyArmor(n2)
-	require.Nil(t, err)
-	err = kb.ImportPubKey(n3, armor)
-	require.NoError(t, err)
-	i3, err := kb.Key(n3)
-	require.NoError(t, err)
-	require.Equal(t, i3.GetName(), n3)
-
 	// let's try to sign some messages
 	d1 := []byte("my first message")
 	d2 := []byte("some other important info!")
@@ -239,6 +230,17 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	}
 
 	// Now try to sign data with a secret-less key
+	// Import a public key
+	armor, err := kb.ExportPubKeyArmor(n2)
+	require.Nil(t, err)
+	err = kb.Delete(n2)
+
+	err = kb.ImportPubKey(n3, armor)
+	require.NoError(t, err)
+	i3, err := kb.Key(n3)
+	require.NoError(t, err)
+	require.Equal(t, i3.GetName(), n3)
+
 	_, _, err = kb.Sign(n3, d3)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
@@ -260,6 +262,8 @@ func TestExportImportKeyRing(t *testing.T) {
 	johnAddr := info.GetPubKey().Address()
 
 	armor, err := kb.ExportPrivKeyArmor("john", "apassphrase")
+	require.NoError(t, err)
+	err = kb.Delete("john")
 	require.NoError(t, err)
 
 	err = kb.ImportPrivKey("john2", armor, "apassphrase")
@@ -297,19 +301,19 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	// Export the public key only
 	armor, err := kb.ExportPubKeyArmor("john")
 	require.NoError(t, err)
+	err = kb.Delete("john")
+	require.NoError(t, err)
+
 	// Import it under a different name
 	err = kb.ImportPubKey("john-pubkey-only", armor)
 	require.NoError(t, err)
+
 	// Ensure consistency
 	john2, err := kb.Key("john-pubkey-only")
 	require.NoError(t, err)
+
 	// Compare the public keys
 	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
-	// Ensure the original key hasn't changed
-	john, err = kb.Key("john")
-	require.NoError(t, err)
-	require.Equal(t, john.GetPubKey().Address(), addr)
-	require.Equal(t, john.GetName(), "john")
 
 	// Ensure keys cannot be overwritten
 	err = kb.ImportPubKey("john-pubkey-only", armor)
@@ -319,6 +323,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
+
 	kb, err := New("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
@@ -339,6 +344,8 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 	exported, err := kb.ExportPubKeyArmor(n1)
 	require.Nil(t, err, "%+v", err)
+	err = kb.Delete(n1)
+	require.NoError(t, err)
 
 	// import succeeds
 	err = kb.ImportPubKey(n2, exported)
@@ -392,6 +399,8 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	keystr, err := kb.ExportPrivKeyArmor("john", "somepassword")
 	require.NoError(t, err)
 	require.NotEmpty(t, keystr)
+	err = kb.Delete("john")
+	require.NoError(t, err)
 
 	// try import the key - wrong password
 	err = kb.ImportPrivKey("john2", keystr, "bad pass")
@@ -571,15 +580,6 @@ func TestInMemorySignVerify(t *testing.T) {
 	i2, _, err := cstore.NewMnemonic(n2, English, types.FullFundraiserPath, algo)
 	require.Nil(t, err)
 
-	// Import a public key
-	armor, err := cstore.ExportPubKeyArmor(n2)
-	require.Nil(t, err)
-	err = cstore.ImportPubKey(n3, armor)
-	require.NoError(t, err)
-	i3, err := cstore.Key(n3)
-	require.NoError(t, err)
-	require.Equal(t, i3.GetName(), n3)
-
 	// let's try to sign some messages
 	d1 := []byte("my first message")
 	d2 := []byte("some other important info!")
@@ -626,6 +626,17 @@ func TestInMemorySignVerify(t *testing.T) {
 		require.Equal(t, tc.valid, valid, "%d", i)
 	}
 
+	// Import a public key
+	armor, err := cstore.ExportPubKeyArmor(n2)
+	require.Nil(t, err)
+	err = cstore.Delete(n2)
+	require.NoError(t, err)
+	err = cstore.ImportPubKey(n3, armor)
+	require.NoError(t, err)
+	i3, err := cstore.Key(n3)
+	require.NoError(t, err)
+	require.Equal(t, i3.GetName(), n3)
+
 	// Now try to sign data with a secret-less key
 	_, _, err = cstore.Sign(n3, d3)
 	require.Error(t, err)
@@ -647,6 +658,8 @@ func TestInMemoryExportImport(t *testing.T) {
 	johnAddr := info.GetPubKey().Address()
 
 	armor, err := cstore.ExportPubKeyArmor("john")
+	require.NoError(t, err)
+	err = cstore.Delete("john")
 	require.NoError(t, err)
 
 	err = cstore.ImportPubKey("john2", armor)
@@ -706,6 +719,9 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	// Export the public key only
 	armor, err := cstore.ExportPubKeyArmor("john")
 	require.NoError(t, err)
+	err = cstore.Delete("john")
+	require.NoError(t, err)
+
 	// Import it under a different name
 	err = cstore.ImportPubKey("john-pubkey-only", armor)
 	require.NoError(t, err)
@@ -714,11 +730,6 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.NoError(t, err)
 	// Compare the public keys
 	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
-	// Ensure the original key hasn't changed
-	john, err = cstore.Key("john")
-	require.NoError(t, err)
-	require.Equal(t, john.GetPubKey().Address(), addr)
-	require.Equal(t, john.GetName(), "john")
 
 	// Ensure keys cannot be overwritten
 	err = cstore.ImportPubKey("john-pubkey-only", armor)
@@ -748,6 +759,8 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 	require.NotNil(t, err)
 	exported, err := cstore.ExportPubKeyArmor(n1)
 	require.Nil(t, err, "%+v", err)
+	err = cstore.Delete(n1)
+	require.NoError(t, err)
 
 	// import succeeds
 	err = cstore.ImportPubKey(n2, exported)
@@ -760,7 +773,6 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 
 // TestInMemorySeedPhrase verifies restoring from a seed phrase
 func TestInMemorySeedPhrase(t *testing.T) {
-
 	// make the storage with reasonable defaults
 	cstore := NewInMemory()
 
@@ -787,6 +799,28 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
+func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
+	dir, clean := tests.NewTestCaseDir(t)
+	t.Cleanup(clean)
+
+	kr, err := New(t.Name(), BackendTest, dir, nil)
+	require.NoError(t, err)
+
+	// Given we create a mnemonic
+	_, seed, err := kr.NewMnemonic("test", English, "", AltSecp256k1)
+	require.NoError(t, err)
+
+	err = kr.Delete("test")
+	require.NoError(t, err)
+
+	_, err = kr.NewAccount("test1", seed, "", "", AltSecp256k1)
+	require.NoError(t, err)
+
+	// Creating another account with different uid but same seed should fail due to have same pub address
+	_, err = kr.NewAccount("test2", seed, "", "", AltSecp256k1)
+	require.Error(t, err)
 }
 
 func ExampleNew() {
@@ -1123,11 +1157,8 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	passphrase := "somePass"
 	armor, err := keyring.ExportPrivKeyArmor(uid, passphrase)
 	require.NoError(t, err)
-
-	// Should fail importing private key on existing key.
-	err = keyring.ImportPrivKey(uid, armor, passphrase)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
-
+	err = keyring.Delete(uid)
+	require.NoError(t, err)
 	newUID := otherID
 	// Should fail importing with wrong password
 	err = keyring.ImportPrivKey(newUID, armor, "wrongPass")
@@ -1135,6 +1166,10 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 
 	err = keyring.ImportPrivKey(newUID, armor, passphrase)
 	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPrivKey(newUID, armor, passphrase)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
 
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
@@ -1151,10 +1186,8 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	passphrase := "somePass"
 	armor, err := keyring.ExportPrivKeyArmorByAddress(mnemonic.GetAddress(), passphrase)
 	require.NoError(t, err)
-
-	// Should fail importing private key on existing key.
-	err = keyring.ImportPrivKey(uid, armor, passphrase)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
+	err = keyring.Delete(uid)
+	require.NoError(t, err)
 
 	newUID := otherID
 	// Should fail importing with wrong password
@@ -1163,6 +1196,11 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 
 	err = keyring.ImportPrivKey(newUID, armor, passphrase)
 	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPrivKey(newUID, armor, passphrase)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
+
 }
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
@@ -1178,14 +1216,16 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 
 	armor, err := keyring.ExportPubKeyArmor(uid)
 	require.NoError(t, err)
-
-	// Should fail importing private key on existing key.
-	err = keyring.ImportPubKey(uid, armor)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
+	err = keyring.Delete(uid)
+	require.NoError(t, err)
 
 	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
 	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPubKey(newUID, armor)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
 
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
@@ -1201,14 +1241,16 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 
 	armor, err := keyring.ExportPubKeyArmorByAddress(mnemonic.GetAddress())
 	require.NoError(t, err)
-
-	// Should fail importing private key on existing key.
-	err = keyring.ImportPubKey(uid, armor)
-	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", uid))
+	err = keyring.Delete(uid)
+	require.NoError(t, err)
 
 	newUID := otherID
 	err = keyring.ImportPubKey(newUID, armor)
 	require.NoError(t, err)
+
+	// Should fail importing private key on existing key.
+	err = keyring.ImportPubKey(newUID, armor)
+	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {

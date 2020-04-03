@@ -678,7 +678,12 @@ func (ks keystore) writeInfo(name string, info Info) error {
 	key := infoKey(name)
 	serializedInfo := marshalInfo(info)
 
-	err := ks.db.Set(keyring.Item{
+	_, err := ks.db.Get(addrHexKeyAsString(info.GetAddress()))
+	if err != keyring.ErrKeyNotFound {
+		return fmt.Errorf("public key already exist in keybase")
+	}
+
+	err = ks.db.Set(keyring.Item{
 		Key:  string(key),
 		Data: serializedInfo,
 	})

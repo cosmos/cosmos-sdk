@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package cosmos_sdk.x.capability.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+
+// CapabilityKey defines an implementation of a Capability. The index provided to
+// a CapabilityKey must be globally unique.
+message CapabilityKey {
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];
+}
+
+// Owner defines a single capability owner. An owner is defined by the name of
+// capability and the module name.
+message Owner {
+  option (gogoproto.goproto_stringer) = false;
+
+  string module = 1 [(gogoproto.moretags) = "yaml:\"module\""];
+  string name   = 2 [(gogoproto.moretags) = "yaml:\"name\""];
+}
+
+// CapabilityOwners defines a set of owners of a single Capability. The set of
+// owners must be unique.
+message CapabilityOwners {
+  repeated Owner owners = 1;
+}

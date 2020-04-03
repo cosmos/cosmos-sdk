@@ -4,10 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// ModuleCdc defines the capability module's codec. The codec is not sealed as to
-// allow other modules to register their concrete Capability types.
-var ModuleCdc = codec.New()
-
 // RegisterCodec registers all the necessary types and interfaces for the
 // capability module.
 func RegisterCodec(cdc *codec.Codec) {
@@ -20,9 +16,24 @@ func RegisterCodec(cdc *codec.Codec) {
 // RegisterCapabilityTypeCodec registers an external concrete Capability type
 // defined in another module for the internal ModuleCdc.
 func RegisterCapabilityTypeCodec(o interface{}, name string) {
-	ModuleCdc.RegisterConcrete(o, name, nil)
+	amino.RegisterConcrete(o, name, nil)
+	ModuleCdc = codec.NewHybridCodec(amino)
 }
 
+var (
+// The amino codec is not sealed as to
+// allow other modules to register their concrete Capability types.
+	amino = codec.New()
+
+	// ModuleCdc references the global x/capability module codec. Note, the codec should
+	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
+	// still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/capability and
+	// defined at the application level.
+	ModuleCdc = codec.NewHybridCodec(amino)
+)
+
 func init() {
-	RegisterCodec(ModuleCdc)
+	RegisterCodec(amino)
 }

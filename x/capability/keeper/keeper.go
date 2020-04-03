@@ -261,6 +261,27 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 
 }
 
+// LookupModules returns all the module owners for a given capability
+// as a string array, the capability is also returned along with a boolean success flag
+func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, types.Capability, bool) {
+	cap, ok := sk.GetCapability(ctx, name)
+	if !ok {
+		return nil, nil, false
+	}
+
+	capOwners, ok := sk.GetOwners(ctx, name)
+	if !ok {
+		return nil, nil, false
+	}
+
+	mods := make([]string, len(capOwners.Owners))
+	for i, co := range capOwners.Owners {
+		mods[i] = co.Module
+	}
+	return mods, cap, true
+
+}
+
 func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap types.Capability, name string) error {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())

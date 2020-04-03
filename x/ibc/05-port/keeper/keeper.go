@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Keeper defines the IBC connection keeper
@@ -62,26 +63,11 @@ func (k Keeper) Authenticate(ctx sdk.Context, key capability.Capability, portID 
 
 // LookupModuleByPort will return the IBCModule along with the capability associated with a given portID
 func (k Keeper) LookupModuleByPort(ctx sdk.Context, portID string) (string, capability.Capability, bool) {
-	capOwners, ok := k.scopedKeeper.GetOwners(ctx, types.PortPath(portID))
+	modules, cap, ok := k.scopedKeeper.LookupModules(ctx, types.PortPath(portID))
 	if !ok {
 		return "", nil, false
 	}
-	// For now, we enforce that only IBC and the module bound to port can own the capability
-	// while future implementations may allow multiple modules to bind to a port, currently we
-	// only allow one module to be bound to a port at any given time
-	if len(capOwners.Owners) != 2 {
-		panic("more than one module has bound to this port; currently not supported")
-	}
-	// the module that owns the port, for now, is the only module owner that isn't "ibc"
-	var module string
-	if capOwners.Owners[0].Module == "ibc" {
-		module = capOwners.Owners[1].Module
-	} else {
-		module = capOwners.Owners[0].Module
-	}
-	cap, found := k.scopedKeeper.GetCapability(ctx, types.PortPath(portID))
-	if !found {
-		return "", nil, false
-	}
-	return module, cap, true
+
+	return ibctypes.GetModuleOwner(modules), cap, true
+
 }

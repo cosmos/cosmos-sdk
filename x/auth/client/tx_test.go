@@ -29,12 +29,12 @@ func TestParseQueryResponse(t *testing.T) {
 	}
 
 	bz := cdc.MustMarshalBinaryBare(simRes)
-	res, err := parseQueryResponse(cdc, bz)
+	res, err := parseQueryResponse(bz)
 	require.NoError(t, err)
 	require.Equal(t, 10, int(res.GasInfo.GasUsed))
 	require.NotNil(t, res.Result)
 
-	res, err = parseQueryResponse(cdc, []byte("fuzzy"))
+	res, err = parseQueryResponse([]byte("fuzzy"))
 	require.Error(t, err)
 }
 

@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/algo"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaults(t *testing.T) {
-	require.Equal(t, pubKeyType("multi"), MultiAlgo)
-	require.Equal(t, pubKeyType("secp256k1"), Secp256k1)
-	require.Equal(t, pubKeyType("ed25519"), Ed25519)
-	require.Equal(t, pubKeyType("sr25519"), Sr25519)
+	require.Equal(t, algo.PubKeyType("multi"), algo.MultiAlgo)
+	require.Equal(t, algo.PubKeyType("secp256k1"), algo.Secp256k1)
+	require.Equal(t, algo.PubKeyType("ed25519"), algo.Ed25519)
+	require.Equal(t, algo.PubKeyType("sr25519"), algo.Sr25519)
 }
 
 func TestNewSigningAlgoByString(t *testing.T) {
@@ -28,7 +30,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"supported algorithm",
 			"secp256k1",
 			true,
-			AltSecp256k1,
+			algo.AltSecp256k1,
 			nil,
 		},
 		{
@@ -42,9 +44,9 @@ func TestNewSigningAlgoByString(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			algo, err := NewSigningAlgoFromString(tt.algoStr)
+			algorithm, err := NewSigningAlgoFromString(tt.algoStr)
 			if tt.isSupported {
-				require.Equal(t, AltSecp256k1, algo)
+				require.Equal(t, algo.AltSecp256k1, algorithm)
 			} else {
 				require.EqualError(t, err, tt.expectedErr.Error())
 			}
@@ -54,24 +56,24 @@ func TestNewSigningAlgoByString(t *testing.T) {
 
 func TestAltSigningAlgoList_Contains(t *testing.T) {
 	list := SigningAlgoList{
-		AltSecp256k1,
+		algo.AltSecp256k1,
 	}
 
-	assert.True(t, list.Contains(AltSecp256k1))
+	assert.True(t, list.Contains(algo.AltSecp256k1))
 	assert.False(t, list.Contains(notSupportedAlgo{}))
 }
 
 type notSupportedAlgo struct {
 }
 
-func (n notSupportedAlgo) Name() pubKeyType {
+func (n notSupportedAlgo) Name() algo.PubKeyType {
 	return "notSupported"
 }
 
-func (n notSupportedAlgo) DeriveKey() DeriveKeyFn {
-	return Secp256k1DeriveKey
+func (n notSupportedAlgo) DeriveKey() algo.DeriveKeyFn {
+	return algo.Secp256k1DeriveKey
 }
 
-func (n notSupportedAlgo) PrivKeyGen() PrivKeyGenFn {
-	return Secp256k1PrivKeyGen
+func (n notSupportedAlgo) PrivKeyGen() algo.PrivKeyGenFn {
+	return algo.Secp256k1PrivKeyGen
 }

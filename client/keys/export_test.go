@@ -30,7 +30,7 @@ func Test_runExportCmd(t *testing.T) {
 	})
 
 	path := sdk.GetConfig().GetFullFundraiserPath()
-	_, err = kb.NewAccount("keyname1", tests.TestMnemonic, "", path, algo.AltSecp256k1)
+	_, err = kb.NewAccount("keyname1", tests.TestMnemonic, "", path, algo.Secp256k1)
 	require.NoError(t, err)
 
 	// Now enter password

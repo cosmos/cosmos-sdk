@@ -12,15 +12,20 @@ import (
 type PubKeyType string
 
 const (
-	// MultiAlgo implies that a pubkey is a multisignature
-	MultiAlgo = PubKeyType("multi")
-	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
-	Secp256k1 = PubKeyType("secp256k1")
-	// Ed25519 represents the Ed25519 signature system.
+	// MultiType implies that a pubkey is a multisignature
+	MultiType = PubKeyType("multi")
+	// Secp256k1Type uses the Bitcoin secp256k1 ECDSA parameters.
+	Secp256k1Type = PubKeyType("secp256k1")
+	// Ed25519Type represents the Ed25519Type signature system.
 	// It is currently not supported for end-user keys (wallets/ledgers).
-	Ed25519 = PubKeyType("ed25519")
-	// Sr25519 represents the Sr25519 signature system.
-	Sr25519 = PubKeyType("sr25519")
+	Ed25519Type = PubKeyType("ed25519")
+	// Sr25519Type represents the Sr25519Type signature system.
+	Sr25519Type = PubKeyType("sr25519")
+)
+
+var (
+	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
+	Secp256k1 = secp256k1Algo{}
 )
 
 type DeriveKeyFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
@@ -30,7 +35,7 @@ type secp256k1Algo struct {
 }
 
 func (s secp256k1Algo) Name() PubKeyType {
-	return Secp256k1
+	return Secp256k1Type
 }
 
 func (s secp256k1Algo) DeriveKey() DeriveKeyFn {
@@ -40,11 +45,6 @@ func (s secp256k1Algo) DeriveKey() DeriveKeyFn {
 func (s secp256k1Algo) PrivKeyGen() PrivKeyGenFn {
 	return Secp256k1PrivKeyGen
 }
-
-var (
-	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
-	AltSecp256k1 = secp256k1Algo{}
-)
 
 // Secp256k1PrivKeyGen generates a secp256k1 private key from the given bytes
 func Secp256k1PrivKeyGen(bz []byte) crypto.PrivKey {

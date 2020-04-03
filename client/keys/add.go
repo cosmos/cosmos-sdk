@@ -80,7 +80,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().String(flagKeyAlgo, string(algo2.Secp256k1), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flagKeyAlgo, string(algo2.Secp256k1Type), "Key signing algorithm to generate keys for")
 	return cmd
 }
 
@@ -121,7 +121,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 
 	algo, err := keyring.NewSigningAlgoFromString(viper.GetString(flagKeyAlgo))
 	if err != nil {
-		algo = algo2.AltSecp256k1
+		algo = algo2.Secp256k1
 	}
 
 	if !viper.GetBool(flags.FlagDryRun) {
@@ -204,7 +204,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		}
 
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.SaveLedgerKey(name, algo2.AltSecp256k1, bech32PrefixAccAddr, coinType, account, index)
+		info, err := kb.SaveLedgerKey(name, algo2.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {
 			return err
 		}

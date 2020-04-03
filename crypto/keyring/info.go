@@ -231,7 +231,7 @@ func (i multiInfo) GetAddress() types.AccAddress {
 
 // GetPath implements Info interface
 func (i multiInfo) GetAlgo() algo.PubKeyType {
-	return algo.MultiAlgo
+	return algo.MultiType
 }
 
 // GetPath implements Info interface

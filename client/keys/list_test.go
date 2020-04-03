@@ -36,7 +36,7 @@ func Test_runListCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	path := "" //sdk.GetConfig().GetFullFundraiserPath()
-	_, err = kb.NewAccount("something", tests.TestMnemonic, "", path, algo.AltSecp256k1)
+	_, err = kb.NewAccount("something", tests.TestMnemonic, "", path, algo.Secp256k1)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

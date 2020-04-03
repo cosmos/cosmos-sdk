@@ -28,7 +28,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	require.Error(t, err)
 	decrypted, algo, err := crypto.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.NoError(t, err)
-	require.Equal(t, string(algo2.Secp256k1), algo)
+	require.Equal(t, string(algo2.Secp256k1Type), algo)
 	require.True(t, priv.Equals(decrypted))
 
 	// empty string
@@ -72,14 +72,14 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory()
 
 	// Add keys and see they return in alphabetical order
-	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, algo2.AltSecp256k1)
+	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, algo2.Secp256k1)
 	require.NoError(t, err)
 	armored := crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
-	require.Equal(t, string(algo2.Secp256k1), algo)
+	require.Equal(t, string(algo2.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
 
 	armored = crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "unknown")

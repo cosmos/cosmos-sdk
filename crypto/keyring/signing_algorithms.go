@@ -13,11 +13,11 @@ type SignatureAlgo interface {
 }
 
 func NewSigningAlgoFromString(str string) (SignatureAlgo, error) {
-	if str != string(algo.AltSecp256k1.Name()) {
+	if str != string(algo.Secp256k1.Name()) {
 		return nil, fmt.Errorf("provided algorithm `%s` is not supported", str)
 	}
 
-	return algo.AltSecp256k1, nil
+	return algo.Secp256k1, nil
 }
 
 type SigningAlgoList []SignatureAlgo

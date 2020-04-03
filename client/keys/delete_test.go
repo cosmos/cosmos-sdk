@@ -35,9 +35,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	backend := viper.GetString(flags.FlagKeyringBackend)
 	kb, err := keyring.New(sdk.KeyringServiceName(), backend, kbHome, mockIn)
 	require.NoError(t, err)
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, algo.AltSecp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, algo.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, algo.AltSecp256k1)
+	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, algo.Secp256k1)
 	require.NoError(t, err)
 
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})

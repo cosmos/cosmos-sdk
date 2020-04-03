@@ -35,8 +35,8 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/iavl v0.12.4 // indirect
-	github.com/tendermint/tendermint v0.32.2-0.20200403104707-8749730298e4
+	github.com/tendermint/iavl v0.12.4
+	github.com/tendermint/tendermint v0.32.2-0.20200403141332-630c871b7802
 	github.com/tendermint/tm-db v0.5.1
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
@@ -47,7 +47,5 @@ require (
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
-
-replace github.com/tendermint/iavl => github.com/tendermint/iavl v0.13.2
 
 go 1.14

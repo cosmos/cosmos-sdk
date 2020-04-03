@@ -115,7 +115,7 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 // assuming it fulfills the Content interface, it must be defined at the
 // application-level and extend MsgSubmitProposalBase.
 type MsgSubmitProposalBase struct {
-	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_deposit" yaml:"initial_deposit"`
+	InitialDeposit []types.Coin                                  `protobuf:"bytes,1,rep,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit" yaml:"initial_deposit"`
 	Proposer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=proposer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"proposer,omitempty"`
 }
 
@@ -194,7 +194,7 @@ var xxx_messageInfo_MsgVote proto.InternalMessageInfo
 type MsgDeposit struct {
 	ProposalID uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id" yaml:"proposal_id"`
 	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount     []types.Coin                                  `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgDeposit) Reset()      { *m = MsgDeposit{} }
@@ -272,7 +272,7 @@ var xxx_messageInfo_TextProposal proto.InternalMessageInfo
 type Deposit struct {
 	ProposalID uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
 	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount     []types.Coin                                  `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *Deposit) Reset()      { *m = Deposit{} }
@@ -311,14 +311,14 @@ var xxx_messageInfo_Deposit proto.InternalMessageInfo
 // all static fields (i.e fields excluding the dynamic Content). A full proposal
 // extends the ProposalBase with Content.
 type ProposalBase struct {
-	ProposalID       uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"id" yaml:"id"`
-	Status           ProposalStatus                           `protobuf:"varint,2,opt,name=status,proto3,enum=cosmos_sdk.x.gov.v1.ProposalStatus" json:"status,omitempty" yaml:"proposal_status"`
-	FinalTallyResult TallyResult                              `protobuf:"bytes,3,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result" yaml:"final_tally_result"`
-	SubmitTime       time.Time                                `protobuf:"bytes,4,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time" yaml:"submit_time"`
-	DepositEndTime   time.Time                                `protobuf:"bytes,5,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time" yaml:"deposit_end_time"`
-	TotalDeposit     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_deposit" yaml:"total_deposit"`
-	VotingStartTime  time.Time                                `protobuf:"bytes,7,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time" yaml:"voting_start_time"`
-	VotingEndTime    time.Time                                `protobuf:"bytes,8,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time" yaml:"voting_end_time"`
+	ProposalID       uint64         `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"id" yaml:"id"`
+	Status           ProposalStatus `protobuf:"varint,2,opt,name=status,proto3,enum=cosmos_sdk.x.gov.v1.ProposalStatus" json:"status,omitempty" yaml:"proposal_status"`
+	FinalTallyResult TallyResult    `protobuf:"bytes,3,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result" yaml:"final_tally_result"`
+	SubmitTime       time.Time      `protobuf:"bytes,4,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time" yaml:"submit_time"`
+	DepositEndTime   time.Time      `protobuf:"bytes,5,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time" yaml:"deposit_end_time"`
+	TotalDeposit     []types.Coin   `protobuf:"bytes,6,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit" yaml:"total_deposit"`
+	VotingStartTime  time.Time      `protobuf:"bytes,7,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time" yaml:"voting_start_time"`
+	VotingEndTime    time.Time      `protobuf:"bytes,8,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time" yaml:"voting_end_time"`
 }
 
 func (m *ProposalBase) Reset()         { *m = ProposalBase{} }
@@ -810,7 +810,7 @@ type ProposalBaseFace interface {
 	GetFinalTallyResult() TallyResult
 	GetSubmitTime() time.Time
 	GetDepositEndTime() time.Time
-	GetTotalDeposit() github_com_cosmos_cosmos_sdk_types.Coins
+	GetTotalDeposit() []types.Coin
 	GetVotingStartTime() time.Time
 	GetVotingEndTime() time.Time
 }
@@ -843,7 +843,7 @@ func (this *ProposalBase) GetDepositEndTime() time.Time {
 	return this.DepositEndTime
 }
 
-func (this *ProposalBase) GetTotalDeposit() github_com_cosmos_cosmos_sdk_types.Coins {
+func (this *ProposalBase) GetTotalDeposit() []types.Coin {
 	return this.TotalDeposit
 }
 
@@ -1196,46 +1196,34 @@ func (m *TallyResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.NoWithVeto.Size()
-		i -= size
-		if _, err := m.NoWithVeto.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTypes(dAtA, i, uint64(size))
+	if len(m.NoWithVeto) > 0 {
+		i -= len(m.NoWithVeto)
+		copy(dAtA[i:], m.NoWithVeto)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.NoWithVeto)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.No.Size()
-		i -= size
-		if _, err := m.No.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTypes(dAtA, i, uint64(size))
+	if len(m.No) > 0 {
+		i -= len(m.No)
+		copy(dAtA[i:], m.No)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.No)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.Abstain.Size()
-		i -= size
-		if _, err := m.Abstain.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTypes(dAtA, i, uint64(size))
+	if len(m.Abstain) > 0 {
+		i -= len(m.Abstain)
+		copy(dAtA[i:], m.Abstain)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Abstain)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.Yes.Size()
-		i -= size
-		if _, err := m.Yes.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTypes(dAtA, i, uint64(size))
+	if len(m.Yes) > 0 {
+		i -= len(m.Yes)
+		copy(dAtA[i:], m.Yes)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Yes)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1426,14 +1414,22 @@ func (m *TallyResult) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Yes.Size()
-	n += 1 + l + sovTypes(uint64(l))
-	l = m.Abstain.Size()
-	n += 1 + l + sovTypes(uint64(l))
-	l = m.No.Size()
-	n += 1 + l + sovTypes(uint64(l))
-	l = m.NoWithVeto.Size()
-	n += 1 + l + sovTypes(uint64(l))
+	l = len(m.Yes)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Abstain)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.No)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.NoWithVeto)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
 	return n
 }
 
@@ -2454,9 +2450,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Yes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Yes = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2488,9 +2482,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Abstain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Abstain = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2522,9 +2514,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.No.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.No = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -2556,9 +2546,7 @@ func (m *TallyResult) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.NoWithVeto.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.NoWithVeto = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

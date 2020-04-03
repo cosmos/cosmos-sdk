@@ -30,7 +30,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MsgSend struct {
 	FromAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"from_address,omitempty" yaml:"from_address"`
 	ToAddress   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"to_address,omitempty" yaml:"to_address"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount      []types.Coin                                  `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgSend) Reset()         { *m = MsgSend{} }
@@ -80,7 +80,7 @@ func (m *MsgSend) GetToAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
-func (m *MsgSend) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgSend) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}
@@ -90,7 +90,7 @@ func (m *MsgSend) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 // Input models transaction input
 type Input struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	Coins   []types.Coin                                  `protobuf:"bytes,2,rep,name=coins,proto3" json:"coins"`
 }
 
 func (m *Input) Reset()         { *m = Input{} }
@@ -133,7 +133,7 @@ func (m *Input) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
-func (m *Input) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *Input) GetCoins() []types.Coin {
 	if m != nil {
 		return m.Coins
 	}
@@ -143,7 +143,7 @@ func (m *Input) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 // Output models transaction outputs
 type Output struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	Coins   []types.Coin                                  `protobuf:"bytes,2,rep,name=coins,proto3" json:"coins"`
 }
 
 func (m *Output) Reset()         { *m = Output{} }
@@ -186,7 +186,7 @@ func (m *Output) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
-func (m *Output) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *Output) GetCoins() []types.Coin {
 	if m != nil {
 		return m.Coins
 	}

@@ -35,7 +35,7 @@ type MsgTransfer struct {
 	// the current height of the destination chain
 	DestinationHeight uint64 `protobuf:"varint,3,opt,name=destination_height,json=destinationHeight,proto3" json:"destination_height,omitempty" yaml:"destination_height"`
 	// the tokens to be transferred
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount []types.Coin `protobuf:"bytes,4,rep,name=amount,proto3" json:"amount"`
 	// the sender address
 	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
 	// the recipient address on the destination chain
@@ -96,7 +96,7 @@ func (m *MsgTransfer) GetDestinationHeight() uint64 {
 	return 0
 }
 
-func (m *MsgTransfer) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgTransfer) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}
@@ -121,7 +121,7 @@ func (m *MsgTransfer) GetReceiver() github_com_cosmos_cosmos_sdk_types.AccAddres
 // See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type FungibleTokenPacketData struct {
 	// the tokens to be transferred
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount []types.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount"`
 	// the sender address
 	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
 	// the recipient address on the destination chain
@@ -161,7 +161,7 @@ func (m *FungibleTokenPacketData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FungibleTokenPacketData proto.InternalMessageInfo
 
-func (m *FungibleTokenPacketData) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *FungibleTokenPacketData) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}

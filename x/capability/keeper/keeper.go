@@ -100,7 +100,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		var capOwners types.CapabilityOwners
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
 
-		for _, owner := range (&capOwners).Owners {
+		for _, owner := range capOwners.Owners {
 			// Set the forward mapping between the module and capability tuple and the
 			// capability name in the in-memory store.
 			k.capStore.SetCapabilityName(owner.Module, owner.Name, cap)

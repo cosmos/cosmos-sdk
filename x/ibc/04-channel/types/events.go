@@ -18,6 +18,7 @@ const (
 	EventTypeRecvPacket        = "recv_packet"
 	EventTypeAcknowledgePacket = "acknowledge_packet"
 	EventTypeCleanupPacket     = "cleanup_packet"
+	EventTypeTimeoutPacket     = "timeout_packet"
 
 	AttributeKeyData       = "packet_data"
 	AttributeKeyTimeout    = "packet_timeout"

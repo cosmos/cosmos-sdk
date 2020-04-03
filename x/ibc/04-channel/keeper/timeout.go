@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -100,6 +101,19 @@ func (k Keeper) TimeoutPacket(
 	if err != nil {
 		return nil, err
 	}
+
+	// emit an event marking that we have processed the timeout
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeTimeoutPacket,
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
 
 	// NOTE: the remaining code is located on the TimeoutExecuted function
 	return packet, nil
@@ -224,6 +238,19 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	// emit an event marking that we have processed the timeout
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeTimeoutPacket,
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
 
 	return packet, nil
 }

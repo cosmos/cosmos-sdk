@@ -119,12 +119,16 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 		Version:        testChannelVersion,
 	}
 
-	expChannels := []types.Channel{channel1, channel2, channel3}
+	expChannels := []types.IdentifiedChannel{
+		{Channel: channel1, PortIdentifier: testPort1, ChannelIdentifier: testChannel1},
+		{Channel: channel2, PortIdentifier: testPort2, ChannelIdentifier: testChannel2},
+		{Channel: channel3, PortIdentifier: testPort3, ChannelIdentifier: testChannel3},
+	}
 
 	ctx := suite.chainB.GetContext()
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, expChannels[0])
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort2, testChannel2, expChannels[1])
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort3, testChannel3, expChannels[2])
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel1)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort2, testChannel2, channel2)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort3, testChannel3, channel3)
 
 	channels := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 	suite.Require().Len(channels, len(expChannels))

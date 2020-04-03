@@ -13,7 +13,7 @@ const (
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
-	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress, source bool,
+	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress,
 ) MsgTransfer {
 	return MsgTransfer{
 		SourcePort:        sourcePort,
@@ -22,7 +22,6 @@ func NewMsgTransfer(
 		Amount:            amount,
 		Sender:            sender,
 		Receiver:          receiver,
-		Source:            source,
 	}
 }
 

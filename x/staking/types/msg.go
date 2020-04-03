@@ -81,7 +81,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	if msg.Pubkey == "" {
 		return ErrEmptyValidatorPubKey
 	}
-	if !msg.Value.Amount.IsPositive() {
+	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
 		return ErrBadDelegationAmount
 	}
 	if msg.Description == (Description{}) {
@@ -184,7 +184,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
-	if !msg.Amount.Amount.IsPositive() {
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
 		return ErrBadDelegationAmount
 	}
 	return nil
@@ -230,7 +230,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 	if msg.ValidatorDstAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
-	if !msg.Amount.Amount.IsPositive() {
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
 		return ErrBadSharesAmount
 	}
 	return nil
@@ -268,7 +268,7 @@ func (msg MsgUndelegate) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
-	if !msg.Amount.Amount.IsPositive() {
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
 		return ErrBadSharesAmount
 	}
 	return nil

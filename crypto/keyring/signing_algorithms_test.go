@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
-
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/cosmos/cosmos-sdk/crypto/privkey"
 )
 
 func TestNewSigningAlgoByString(t *testing.T) {
@@ -63,10 +62,10 @@ func (n notSupportedAlgo) Name() privkey.PubKeyType {
 	return "notSupported"
 }
 
-func (n notSupportedAlgo) DeriveKey() privkey.DeriveKeyFn {
-	return privkey.Secp256k1DeriveKey
+func (n notSupportedAlgo) Derive() privkey.DeriveKeyFn {
+	return privkey.Secp256k1.Derive()
 }
 
-func (n notSupportedAlgo) PrivKeyGen() privkey.GenerateFn {
-	return privkey.Secp256k1PrivKeyGen
+func (n notSupportedAlgo) Generate() privkey.GenerateFn {
+	return privkey.Secp256k1.Generate()
 }

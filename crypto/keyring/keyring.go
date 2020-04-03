@@ -477,12 +477,12 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 	}
 
 	// create master key and derive first key for keyring
-	derivedPriv, err := algo.DeriveKey()(mnemonic, bip39Passphrase, hdPath)
+	derivedPriv, err := algo.Derive()(mnemonic, bip39Passphrase, hdPath)
 	if err != nil {
 		return nil, err
 	}
 
-	privKey := algo.PrivKeyGen()(derivedPriv)
+	privKey := algo.Generate()(derivedPriv)
 
 	return ks.writeLocalKey(uid, privKey, algo.Name())
 }

@@ -8,8 +8,8 @@ import (
 
 type SignatureAlgo interface {
 	Name() privkey.PubKeyType
-	DeriveKey() privkey.DeriveKeyFn
-	PrivKeyGen() privkey.GenerateFn
+	Derive() privkey.DeriveKeyFn
+	Generate() privkey.GenerateFn
 }
 
 func NewSigningAlgoFromString(str string) (SignatureAlgo, error) {

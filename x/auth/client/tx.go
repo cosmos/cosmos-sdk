@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -142,7 +144,7 @@ func CalculateGas(
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	simRes, err := parseQueryResponse(cdc, rawRes)
+	simRes, err := parseQueryResponse(rawRes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
@@ -286,9 +288,9 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 	return uint64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (sdk.SimulationResponse, error) {
+func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	var simRes sdk.SimulationResponse
-	if err := cdc.UnmarshalBinaryBare(rawRes, &simRes); err != nil {
+	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
 		return sdk.SimulationResponse{}, err
 	}
 

@@ -89,8 +89,6 @@ func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitmenttypes.Mer
 }
 
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
-	source := true
-
 	handler := transfer.NewHandler(suite.chainA.App.TransferKeeper)
 
 	// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
@@ -101,7 +99,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Nil(err, "transfer module could not claim capability")
 
 	ctx := suite.chainA.GetContext()
-	msg := transfer.NewMsgTransfer(testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, source)
+	msg := transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2)
 	res, err := handler(ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // channel does not exist
@@ -127,16 +125,14 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().NotNil(res, "%+v", res) // successfully executed
 
 	// test when the source is false
-	source = false
-
-	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2, source)
+	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2)
 	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testPrefixedCoins2)
 
 	res, err = handler(ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(res, "%+v", res) // incorrect denom prefix
 
-	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins1, testAddr1, testAddr2, source)
+	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins1, testAddr1, testAddr2)
 	suite.chainA.App.SupplyKeeper.SetSupply(ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testPrefixedCoins1)
 

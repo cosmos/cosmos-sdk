@@ -60,7 +60,6 @@ func transferHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			req.Amount,
 			fromAddr,
 			req.Receiver,
-			req.Source,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {

@@ -28,7 +28,6 @@ func (k Keeper) SendTransfer(
 	amount sdk.Coins,
 	sender,
 	receiver sdk.AccAddress,
-	isSourceChain bool, // is the packet sender the source chain of the token?
 ) error {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
@@ -44,7 +43,7 @@ func (k Keeper) SendTransfer(
 		return channel.ErrSequenceSendNotFound
 	}
 
-	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver, isSourceChain)
+	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver)
 }
 
 // ReceiveTransfer handles transfer receiving logic.
@@ -66,7 +65,6 @@ func (k Keeper) createOutgoingPacket(
 	destHeight uint64,
 	amount sdk.Coins,
 	sender, receiver sdk.AccAddress,
-	isSourceChain bool,
 ) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
@@ -79,12 +77,16 @@ func (k Keeper) createOutgoingPacket(
 	// clear from prefixes when transferred to the escrow account (i.e when they are
 	// locked) BUT MUST have the destination port and channel ID when constructing
 	// the packet data.
-	var prefix string
+	if len(amount) != 1 {
+		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(amount))
+	}
 
-	if isSourceChain {
+	prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
+	source := strings.HasPrefix(amount[0].Denom, prefix)
+
+	if source {
 		// clear the denomination from the prefix to send the coins to the escrow account
 		coins := make(sdk.Coins, len(amount))
-		prefix = types.GetDenomPrefix(destinationPort, destinationChannel)
 		for i, coin := range amount {
 			if strings.HasPrefix(coin.Denom, prefix) {
 				coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
@@ -106,9 +108,9 @@ func (k Keeper) createOutgoingPacket(
 	} else {
 		// build the receiving denomination prefix if it's not present
 		prefix = types.GetDenomPrefix(sourcePort, sourceChannel)
-		for i, coin := range amount {
+		for _, coin := range amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
-				amount[i] = sdk.NewCoin(prefix+coin.Denom, coin.Amount)
+				return sdkerrors.Wrapf(types.ErrInvalidDenomForTransfer, "denom was: %s", coin.Denom)
 			}
 		}
 
@@ -131,7 +133,7 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender, receiver, isSourceChain,
+		amount, sender, receiver,
 	)
 
 	packet := channel.NewPacket(
@@ -150,17 +152,14 @@ func (k Keeper) createOutgoingPacket(
 func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
-	if data.Source {
-		prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
-		for _, coin := range data.Amount {
-			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdkerrors.Wrapf(
-					sdkerrors.ErrInvalidCoins,
-					"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
-				)
-			}
-		}
+	if len(data.Amount) != 1 {
+		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(data.Amount))
+	}
 
+	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
+
+	if source {
 		// mint new tokens if the source of the transfer is the same chain
 		if err := k.supplyKeeper.MintCoins(
 			ctx, types.GetModuleAccountName(), data.Amount,
@@ -175,7 +174,7 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	}
 
 	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+	prefix = types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	coins := make(sdk.Coins, len(data.Amount))
 	for i, coin := range data.Amount {
 		if !strings.HasPrefix(coin.Denom, prefix) {
@@ -195,19 +194,24 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
-	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-	coins := make(sdk.Coins, len(data.Amount))
-
-	for i, coin := range data.Amount {
-		coin := coin
-		if !strings.HasPrefix(coin.Denom, prefix) {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "%s doesn't contain the prefix '%s'", coin.Denom, prefix)
-		}
-		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+	if len(data.Amount) != 1 {
+		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(data.Amount))
 	}
 
-	if data.Source {
+	// check the denom prefix
+	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
+
+	if source {
+		coins := make(sdk.Coins, len(data.Amount))
+		for i, coin := range data.Amount {
+			coin := coin
+			if !strings.HasPrefix(coin.Denom, prefix) {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "%s doesn't contain the prefix '%s'", coin.Denom, prefix)
+			}
+			coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+		}
+
 		// unescrow tokens back to sender
 		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)

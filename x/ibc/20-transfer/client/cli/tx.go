@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -18,7 +17,6 @@ import (
 
 // IBC transfer flags
 var (
-	FlagSource   = "source"
 	FlagNode1    = "node1"
 	FlagNode2    = "node2"
 	FlagFrom1    = "from1"
@@ -33,7 +31,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "transfer [src-port] [src-channel] [dest-height] [receiver] [amount]",
 		Short: "Transfer fungible token through IBC",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -57,9 +55,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			source := viper.GetBool(FlagSource)
-
-			msg := types.NewMsgTransfer(srcPort, srcChannel, uint64(destHeight), coins, sender, receiver, source)
+			msg := types.NewMsgTransfer(srcPort, srcChannel, uint64(destHeight), coins, sender, receiver)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -67,6 +63,5 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
 	return cmd
 }

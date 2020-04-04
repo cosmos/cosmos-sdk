@@ -13,18 +13,15 @@ type FungibleTokenPacketData struct {
 	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
 	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
-	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, sender, receiver sdk.AccAddress,
-	source bool) FungibleTokenPacketData {
+	amount sdk.Coins, sender, receiver sdk.AccAddress) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
-		Source:   source,
 	}
 }
 
@@ -33,12 +30,10 @@ func (ftpd FungibleTokenPacketData) String() string {
 	return fmt.Sprintf(`FungibleTokenPacketData:
 	Amount:               %s
 	Sender:               %s
-	Receiver:             %s
-	Source:               %v`,
+	Receiver:             %s`,
 		ftpd.Amount.String(),
 		ftpd.Sender,
 		ftpd.Receiver,
-		ftpd.Source,
 	)
 }
 

@@ -15,12 +15,11 @@ type MsgTransfer struct {
 	Amount        sdk.Coins      `json:"amount" yaml:"amount"`                 // the tokens to be transferred
 	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`                 // the sender address
 	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
-	Source        bool           `json:"source" yaml:"source"`                 // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
-	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress, source bool,
+	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress,
 ) MsgTransfer {
 	return MsgTransfer{
 		SourcePort:    sourcePort,
@@ -29,7 +28,6 @@ func NewMsgTransfer(
 		Amount:        amount,
 		Sender:        sender,
 		Receiver:      receiver,
-		Source:        source,
 	}
 }
 

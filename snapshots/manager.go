@@ -166,7 +166,7 @@ func (m *Manager) Restore(snapshot Snapshot) error {
 		}
 		m.endLocked()
 		return err
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(10 * time.Millisecond):
 	}
 
 	m.chRestore = chChunks

@@ -205,6 +205,7 @@ func TestCreateHDPath(t *testing.T) {
 		{"44'/114'/1'/1/0", args{114, 1, 1}, BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			tt := tt
 			require.Equal(t, tt.want, *CreateHDPath(tt.args.coinType, tt.args.account, tt.args.index))

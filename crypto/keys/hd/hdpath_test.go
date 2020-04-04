@@ -188,3 +188,26 @@ func ExampleSomeBIP32TestVecs() {
 	//
 	// c4c11d8c03625515905d7e89d25dfc66126fbc629ecca6db489a1a72fc4bda78
 }
+
+func TestCreateHDPath(t *testing.T) {
+	type args struct {
+		coinType uint32
+		account  uint32
+		index    uint32
+	}
+	tests := []struct {
+		name string
+		args args
+		want BIP44Params
+	}{
+		{"44'/0'/0'/0/0", args{0, 0, 0}, BIP44Params{Purpose: 44}},
+		{"44'/114'/0'/0/0", args{114, 0, 0}, BIP44Params{Purpose: 44, CoinType: 114, Account: 0, AddressIndex: 0}},
+		{"44'/114'/1'/1/0", args{114, 1, 1}, BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			require.Equal(t, tt.want, *CreateHDPath(tt.args.coinType, tt.args.account, tt.args.index))
+		})
+	}
+}

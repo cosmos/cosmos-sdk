@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

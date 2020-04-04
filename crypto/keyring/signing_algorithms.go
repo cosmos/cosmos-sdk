@@ -3,7 +3,7 @@ package keyring
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 type SignatureAlgo interface {

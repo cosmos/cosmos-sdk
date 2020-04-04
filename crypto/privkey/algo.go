@@ -16,6 +16,11 @@ var (
 type DeriveKeyFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
 type GenerateFn func(bz []byte) crypto.PrivKey
 
+type HDWallet interface {
+	Derive(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
+	Generate(bz []byte) crypto.PrivKey
+}
+
 type secp256k1Algo struct {
 }
 

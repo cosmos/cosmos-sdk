@@ -3,21 +3,21 @@ package keyring
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 type SignatureAlgo interface {
-	Name() privkey.PubKeyType
-	Derive() privkey.DeriveKeyFn
-	Generate() privkey.GenerateFn
+	Name() hd.PubKeyType
+	Derive() hd.DeriveFn
+	Generate() hd.GenerateFn
 }
 
 func NewSigningAlgoFromString(str string) (SignatureAlgo, error) {
-	if str != string(privkey.Secp256k1.Name()) {
+	if str != string(hd.Secp256k1.Name()) {
 		return nil, fmt.Errorf("provided algorithm `%s` is not supported", str)
 	}
 
-	return privkey.Secp256k1, nil
+	return hd.Secp256k1, nil
 }
 
 type SigningAlgoList []SignatureAlgo

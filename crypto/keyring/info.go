@@ -3,8 +3,6 @@ package keyring
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
@@ -25,7 +23,7 @@ type Info interface {
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
 	// Algo
-	GetAlgo() privkey.PubKeyType
+	GetAlgo() hd.PubKeyType
 }
 
 var (
@@ -38,13 +36,13 @@ var (
 // localInfo is the public information about a locally stored key
 // Note: Algo must be last field in struct for backwards amino compatibility
 type localInfo struct {
-	Name         string             `json:"name"`
-	PubKey       crypto.PubKey      `json:"pubkey"`
-	PrivKeyArmor string             `json:"privkey.armor"`
-	Algo         privkey.PubKeyType `json:"algo"`
+	Name         string        `json:"name"`
+	PubKey       crypto.PubKey `json:"pubkey"`
+	PrivKeyArmor string        `json:"privkey.armor"`
+	Algo         hd.PubKeyType `json:"algo"`
 }
 
-func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo privkey.PubKeyType) Info {
+func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo hd.PubKeyType) Info {
 	return &localInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -74,7 +72,7 @@ func (i localInfo) GetAddress() types.AccAddress {
 }
 
 // GetType implements Info interface
-func (i localInfo) GetAlgo() privkey.PubKeyType {
+func (i localInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
@@ -86,13 +84,13 @@ func (i localInfo) GetPath() (*hd.BIP44Params, error) {
 // ledgerInfo is the public information about a Ledger key
 // Note: Algo must be last field in struct for backwards amino compatibility
 type ledgerInfo struct {
-	Name   string             `json:"name"`
-	PubKey crypto.PubKey      `json:"pubkey"`
-	Path   hd.BIP44Params     `json:"path"`
-	Algo   privkey.PubKeyType `json:"algo"`
+	Name   string         `json:"name"`
+	PubKey crypto.PubKey  `json:"pubkey"`
+	Path   hd.BIP44Params `json:"path"`
+	Algo   hd.PubKeyType  `json:"algo"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo privkey.PubKeyType) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -122,7 +120,7 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
-func (i ledgerInfo) GetAlgo() privkey.PubKeyType {
+func (i ledgerInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
@@ -135,12 +133,12 @@ func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 // offlineInfo is the public information about an offline key
 // Note: Algo must be last field in struct for backwards amino compatibility
 type offlineInfo struct {
-	Name   string             `json:"name"`
-	PubKey crypto.PubKey      `json:"pubkey"`
-	Algo   privkey.PubKeyType `json:"algo"`
+	Name   string        `json:"name"`
+	PubKey crypto.PubKey `json:"pubkey"`
+	Algo   hd.PubKeyType `json:"algo"`
 }
 
-func newOfflineInfo(name string, pub crypto.PubKey, algo privkey.PubKeyType) Info {
+func newOfflineInfo(name string, pub crypto.PubKey, algo hd.PubKeyType) Info {
 	return &offlineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -164,7 +162,7 @@ func (i offlineInfo) GetPubKey() crypto.PubKey {
 }
 
 // GetAlgo returns the signing algorithm for the key
-func (i offlineInfo) GetAlgo() privkey.PubKeyType {
+func (i offlineInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
@@ -230,8 +228,8 @@ func (i multiInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
-func (i multiInfo) GetAlgo() privkey.PubKeyType {
-	return privkey.MultiType
+func (i multiInfo) GetAlgo() hd.PubKeyType {
+	return hd.MultiType
 }
 
 // GetPath implements Info interface

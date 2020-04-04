@@ -7,8 +7,6 @@ import (
 	"io"
 	"testing"
 
-	algo2 "github.com/cosmos/cosmos-sdk/crypto/privkey"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -16,6 +14,8 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -29,7 +29,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	require.Error(t, err)
 	decrypted, algo, err := crypto.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.NoError(t, err)
-	require.Equal(t, string(algo2.Secp256k1Type), algo)
+	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, priv.Equals(decrypted))
 
 	// empty string
@@ -73,14 +73,14 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory()
 
 	// Add keys and see they return in alphabetical order
-	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, algo2.Secp256k1)
+	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 	armored := crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
-	require.Equal(t, string(algo2.Secp256k1Type), algo)
+	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
 
 	armored = crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "unknown")

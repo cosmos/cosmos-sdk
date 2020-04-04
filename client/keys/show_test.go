@@ -3,8 +3,6 @@ package keys
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -59,10 +57,11 @@ func Test_runShowCmd(t *testing.T) {
 	})
 
 	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, privkey.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path, privkey.Secp256k1)
+	path2 := hd.NewFundraiserParams(1, sdk.CoinType, 1).String()
+	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path2, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key

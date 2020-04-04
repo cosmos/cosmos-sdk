@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	salgo "github.com/cosmos/cosmos-sdk/crypto/privkey"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -72,7 +71,7 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo salgo.PubKeyType) (Info, error)
+	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo hd.PubKeyType) (Info, error)
 
 	// SaveMultisig stores and returns a new multsig (offline) key reference.
 	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
@@ -158,8 +157,8 @@ type keystore struct {
 func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
 	// Default options for keybase
 	options := Options{
-		SupportedAlgos:       SigningAlgoList{salgo.Secp256k1},
-		SupportedAlgosLedger: SigningAlgoList{salgo.Secp256k1},
+		SupportedAlgos:       SigningAlgoList{hd.Secp256k1},
+		SupportedAlgosLedger: SigningAlgoList{hd.Secp256k1},
 	}
 
 	for _, optionFn := range opts {
@@ -252,7 +251,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
-	_, err = ks.writeLocalKey(uid, privKey, salgo.PubKeyType(algo))
+	_, err = ks.writeLocalKey(uid, privKey, hd.PubKeyType(algo))
 	if err != nil {
 		return err
 	}
@@ -275,7 +274,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	_, err = ks.writeOfflineKey(uid, pubKey, salgo.PubKeyType(algo))
+	_, err = ks.writeOfflineKey(uid, pubKey, hd.PubKeyType(algo))
 	if err != nil {
 		return err
 	}
@@ -341,7 +340,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
 }
 
-func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo salgo.PubKeyType) (Info, error) {
+func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
 	err := ks.writeInfo(name, info)
 	if err != nil {
@@ -355,7 +354,7 @@ func (ks keystore) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error
 	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo salgo.PubKeyType) (Info, error) {
+func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
 	return ks.writeOfflineKey(uid, pubkey, algo)
 }
 
@@ -662,7 +661,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo salgo.PubKeyType) (Info, error) {
+func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
@@ -704,7 +703,7 @@ func (ks keystore) writeInfo(name string, info Info) error {
 	return nil
 }
 
-func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo salgo.PubKeyType) (Info, error) {
+func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
 	err := ks.writeInfo(name, info)
 	if err != nil {

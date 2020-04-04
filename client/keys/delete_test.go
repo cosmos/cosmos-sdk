@@ -3,10 +3,10 @@ package keys
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -36,9 +36,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	backend := viper.GetString(flags.FlagKeyringBackend)
 	kb, err := keyring.New(sdk.KeyringServiceName(), backend, kbHome, mockIn)
 	require.NoError(t, err)
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, privkey.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, privkey.Secp256k1)
+	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})

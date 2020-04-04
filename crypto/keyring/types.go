@@ -3,7 +3,7 @@ package keyring
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 // Language is a language to create the BIP 39 mnemonic in.
@@ -66,7 +66,7 @@ func (kt KeyType) String() string {
 
 type (
 	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
-	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo privkey.PubKeyType) ([]byte, error)
+	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo hd.PubKeyType) ([]byte, error)
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz []byte, algo privkey.PubKeyType) (crypto.PrivKey, error)
+	PrivKeyGenFunc func(bz []byte, algo hd.PubKeyType) (crypto.PrivKey, error)
 )

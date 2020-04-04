@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 func TestNewSigningAlgoByString(t *testing.T) {
@@ -22,7 +22,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"supported algorithm",
 			"secp256k1",
 			true,
-			privkey.Secp256k1,
+			hd.Secp256k1,
 			nil,
 		},
 		{
@@ -38,7 +38,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			algorithm, err := NewSigningAlgoFromString(tt.algoStr)
 			if tt.isSupported {
-				require.Equal(t, privkey.Secp256k1, algorithm)
+				require.Equal(t, hd.Secp256k1, algorithm)
 			} else {
 				require.EqualError(t, err, tt.expectedErr.Error())
 			}
@@ -48,24 +48,24 @@ func TestNewSigningAlgoByString(t *testing.T) {
 
 func TestAltSigningAlgoList_Contains(t *testing.T) {
 	list := SigningAlgoList{
-		privkey.Secp256k1,
+		hd.Secp256k1,
 	}
 
-	assert.True(t, list.Contains(privkey.Secp256k1))
+	assert.True(t, list.Contains(hd.Secp256k1))
 	assert.False(t, list.Contains(notSupportedAlgo{}))
 }
 
 type notSupportedAlgo struct {
 }
 
-func (n notSupportedAlgo) Name() privkey.PubKeyType {
+func (n notSupportedAlgo) Name() hd.PubKeyType {
 	return "notSupported"
 }
 
-func (n notSupportedAlgo) Derive() privkey.DeriveKeyFn {
-	return privkey.Secp256k1.Derive()
+func (n notSupportedAlgo) Derive() hd.DeriveFn {
+	return hd.Secp256k1.Derive()
 }
 
-func (n notSupportedAlgo) Generate() privkey.GenerateFn {
-	return privkey.Secp256k1.Generate()
+func (n notSupportedAlgo) Generate() hd.GenerateFn {
+	return hd.Secp256k1.Generate()
 }

@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/privkey"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -18,7 +16,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
 	copy(tmpKey[:], bz)
 
-	lInfo := newLedgerInfo("some_name", tmpKey, *hd.NewFundraiserParams(5, sdk.CoinType, 1), privkey.Secp256k1Type)
+	lInfo := newLedgerInfo("some_name", tmpKey, *hd.NewFundraiserParams(5, sdk.CoinType, 1), hd.Secp256k1Type)
 	assert.Equal(t, TypeLedger, lInfo.GetType())
 
 	path, err := lInfo.GetPath()

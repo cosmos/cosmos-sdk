@@ -23,7 +23,7 @@ func Test_runImportCmd(t *testing.T) {
 	t.Cleanup(cleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("keyname1") // nolint:errcheck

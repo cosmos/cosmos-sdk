@@ -1,4 +1,4 @@
-package privkey
+package hd
 
 import (
 	"testing"

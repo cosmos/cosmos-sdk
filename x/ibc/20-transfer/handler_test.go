@@ -93,6 +93,13 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	handler := transfer.NewHandler(suite.chainA.App.TransferKeeper)
 
+	// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
+	capName := ibctypes.ChannelCapabilityPath(testPort1, testChannel1)
+	cap, err := suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), capName)
+	suite.Require().Nil(err, "could not create capability")
+	err = suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), cap, capName)
+	suite.Require().Nil(err, "transfer module could not claim capability")
+
 	ctx := suite.chainA.GetContext()
 	msg := transfer.NewMsgTransfer(testPort1, testChannel1, 10, testCoins, testAddr1, testAddr2, source)
 	res, err := handler(ctx, msg)

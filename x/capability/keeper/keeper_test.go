@@ -164,16 +164,51 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
+		mods, cap, mok := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
+
+		suite.Require().True(mok, "could not retrieve modules")
+		suite.Require().NotNil(cap, "capability is nil")
+		suite.Require().NotNil(mods, "modules is nil")
 
 		suite.Require().Equal(len(expectedOrder), len(owners.Owners), "length of owners is unexpected")
 		for i, o := range owners.Owners {
 			// Require owner is in expected position
 			suite.Require().Equal(expectedOrder[i], o.Module, "module is unexpected")
+			suite.Require().Equal(expectedOrder[i], mods[i], "module in lookup is unexpected")
 		}
 	}
+
+	// foo module releases capability
+	err = sk3.ReleaseCapability(suite.ctx, cap)
+	suite.Require().Nil(err, "could not release capability")
+
+	// new expected order and scoped capabilities
+	expectedOrder = []string{bank.ModuleName, staking.ModuleName}
+	sks = []keeper.ScopedKeeper{sk1, sk2}
+
+	// Ensure all scoped keepers can get owners
+	for _, sk := range sks {
+		owners, ok := sk.GetOwners(suite.ctx, "transfer")
+		mods, cap, mok := sk.LookupModules(suite.ctx, "transfer")
+
+		suite.Require().True(ok, "could not retrieve owners")
+		suite.Require().NotNil(owners, "owners is nil")
+
+		suite.Require().True(mok, "could not retrieve modules")
+		suite.Require().NotNil(cap, "capability is nil")
+		suite.Require().NotNil(mods, "modules is nil")
+
+		suite.Require().Equal(len(expectedOrder), len(owners.Owners), "length of owners is unexpected")
+		for i, o := range owners.Owners {
+			// Require owner is in expected position
+			suite.Require().Equal(expectedOrder[i], o.Module, "module is unexpected")
+			suite.Require().Equal(expectedOrder[i], mods[i], "module in lookup is unexpected")
+		}
+	}
+
 }
 
 func (suite *KeeperTestSuite) TestReleaseCapability() {

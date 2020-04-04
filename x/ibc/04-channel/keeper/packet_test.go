@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -15,6 +16,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet exported.PacketI
 
+	var channelCap capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), 100)
@@ -75,15 +77,28 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 5)
 		}, false},
+		{"channel capability not found", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), 100)
+			suite.chainB.CreateClient(suite.chainA)
+			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 1)
+			channelCap = capability.NewCapabilityKey(3)
+		}, false},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
+
+			var err error
+			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), ibctypes.ChannelCapabilityPath(testPort1, testChannel1))
+			suite.Require().Nil(err, "could not create capability")
+
 			tc.malleate()
 
-			err := suite.chainB.App.IBCKeeper.ChannelKeeper.SendPacket(suite.chainB.GetContext(), packet)
+			err = suite.chainB.App.IBCKeeper.ChannelKeeper.SendPacket(suite.chainB.GetContext(), channelCap, packet)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

@@ -253,10 +253,9 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 	bz := prefixStore.Get(indexKey)
 	if len(bz) == 0 {
 		return nil, false
-	} else {
-		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
 	}
 
+	sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
 	return capOwners, true
 
 }

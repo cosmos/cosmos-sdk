@@ -10,7 +10,6 @@ func GetModuleOwner(modules []string) string {
 
 	if modules[0] == "ibc" {
 		return modules[1]
-	} else {
-		return modules[0]
 	}
+	return modules[0]
 }

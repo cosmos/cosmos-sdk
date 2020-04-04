@@ -12,16 +12,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&CapabilityOwners{}, "cosmos-sdk/CapabilityOwners", nil)
 }
 
-// RegisterCapabilityTypeCodec registers an external concrete Capability type
-// defined in another module for the internal ModuleCdc.
-func RegisterCapabilityTypeCodec(o interface{}, name string) {
-	amino.RegisterConcrete(o, name, nil)
-	ModuleCdc = codec.NewHybridCodec(amino)
-}
-
 var (
-	// The amino codec is not sealed as to
-	// allow other modules to register their concrete Capability types.
 	amino = codec.New()
 
 	// ModuleCdc references the global x/capability module codec. Note, the codec should
@@ -35,4 +26,5 @@ var (
 
 func init() {
 	RegisterCodec(amino)
+	amino.Seal()
 }

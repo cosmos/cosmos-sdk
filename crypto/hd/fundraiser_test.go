@@ -1,4 +1,4 @@
-package hd
+package hd_test
 
 import (
 	"encoding/hex"
@@ -13,6 +13,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 type addrData struct {
@@ -25,7 +27,7 @@ type addrData struct {
 }
 
 func TestFullFundraiserPath(t *testing.T) {
-	require.Equal(t, "44'/118'/0'/0/0", NewFundraiserParams(0, 118, 0).String())
+	require.Equal(t, "44'/118'/0'/0/0", hd.NewFundraiserParams(0, 118, 0).String())
 }
 
 func initFundraiserTestVectors(t *testing.T) []addrData {
@@ -33,14 +35,14 @@ func initFundraiserTestVectors(t *testing.T) []addrData {
 	// var hdPath string = "m/44'/118'/0'/0/0"
 	var hdToAddrTable []addrData
 
-	b, err := ioutil.ReadFile("test.json")
+	b, err := ioutil.ReadFile("testdata/test.json")
 	if err != nil {
-		t.Fatalf("could not read fundraiser test vector file (test.json): %s", err)
+		t.Fatalf("could not read fundraiser test vector file (testdata/test.json): %s", err)
 	}
 
 	err = json.Unmarshal(b, &hdToAddrTable)
 	if err != nil {
-		t.Fatalf("could not decode test vectors (test.json): %s", err)
+		t.Fatalf("could not decode test vectors (testdata/test.json): %s", err)
 	}
 	return hdToAddrTable
 }
@@ -60,8 +62,8 @@ func TestFundraiserCompatibility(t *testing.T) {
 		t.Log("================================")
 		t.Logf("ROUND: %d MNEMONIC: %s", i, d.Mnemonic)
 
-		master, ch := ComputeMastersFromSeed(seed)
-		priv, err := DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
+		master, ch := hd.ComputeMastersFromSeed(seed)
+		priv, err := hd.DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
 		require.NoError(t, err)
 		pub := secp256k1.PrivKeySecp256k1(priv).PubKey()
 

@@ -58,7 +58,7 @@ func (s secp256k1Algo) Derive() DeriveFn {
 	}
 }
 
-// Generate generates a secp256k1 private key from the given bytes
+// Generate generates a secp256k1 private key from the given bytes.
 func (s secp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) crypto.PrivKey {
 		var bzArr [32]byte

@@ -9,8 +9,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmtypes "github.com/tendermint/tendermint/types"
 	tmproto "github.com/tendermint/tendermint/proto/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type mockValidator struct {

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	
+
 	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

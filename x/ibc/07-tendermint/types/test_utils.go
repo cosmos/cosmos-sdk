@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmtypes "github.com/tendermint/tendermint/types"
 	tmproto "github.com/tendermint/tendermint/proto/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 )
 

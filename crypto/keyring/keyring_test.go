@@ -1,7 +1,6 @@
 package keyring
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -129,42 +128,6 @@ func TestKeyManagementKeyRing(t *testing.T) {
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2))
-}
-
-// TestSignVerify does some detailed checks on how we sign and validate
-// signatures
-func TestSignVerifyKeyRingWithLedger(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	kb, err := New("keybasename", "test", dir, nil)
-	require.NoError(t, err)
-
-	i1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
-	if err != nil {
-		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
-		return
-	}
-	require.Equal(t, "key", i1.GetName())
-
-	d1 := []byte("my first message")
-	s1, pub1, err := kb.Sign("key", d1)
-	require.NoError(t, err)
-
-	s2, pub2, err := SignWithLedger(i1, d1)
-	require.NoError(t, err)
-
-	require.Equal(t, i1.GetPubKey(), pub1)
-	require.Equal(t, i1.GetPubKey(), pub2)
-	require.True(t, pub1.VerifyBytes(d1, s1))
-	require.True(t, i1.GetPubKey().VerifyBytes(d1, s1))
-	require.True(t, bytes.Equal(s1, s2))
-
-	localInfo, _, err := kb.NewMnemonic("test", English, types.FullFundraiserPath, hd.Secp256k1)
-	require.NoError(t, err)
-	_, _, err = SignWithLedger(localInfo, d1)
-	require.Error(t, err)
-	require.Equal(t, "not a ledger object", err.Error())
 }
 
 func TestSignVerifyKeyRing(t *testing.T) {
@@ -444,41 +407,6 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 		"", hd.CreateHDPath(118, 0, 0).String(), hd.Secp256k1)
 	require.Error(t, err)
 	require.Equal(t, "Invalid mnemonic", err.Error())
-}
-
-func TestInMemoryCreateLedger(t *testing.T) {
-	kb := NewInMemory()
-
-	ledger, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
-
-	if err != nil {
-		require.Error(t, err)
-		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-		require.Nil(t, ledger)
-		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
-		return
-	}
-
-	// The mock is available, check that the address is correct
-	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
-
-	// Check that restoring the key gets the same results
-	restoredKey, err := kb.Key("some_account")
-	require.NoError(t, err)
-	require.NotNil(t, restoredKey)
-	require.Equal(t, "some_account", restoredKey.GetName())
-	require.Equal(t, TypeLedger, restoredKey.GetType())
-	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
-
-	path, err := restoredKey.GetPath()
-	require.NoError(t, err)
-	require.Equal(t, "44'/118'/3'/0/1", path.String())
 }
 
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
@@ -934,46 +862,6 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	list, err := keyring.List()
 	require.NoError(t, err)
 	require.Len(t, list, 1)
-}
-
-func TestAltKeyring_SaveLedgerKey(t *testing.T) {
-	dir, clean := tests.NewTestCaseDir(t)
-	t.Cleanup(clean)
-
-	keyring, err := New(t.Name(), BackendTest, dir, nil)
-	require.NoError(t, err)
-
-	// Test unsupported Algo
-	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 118, 0, 0)
-	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
-
-	ledger, err := keyring.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
-	if err != nil {
-		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
-		return
-	}
-	// The mock is available, check that the address is correct
-	require.Equal(t, "some_account", ledger.GetName())
-	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
-
-	// Check that restoring the key gets the same results
-	restoredKey, err := keyring.Key("some_account")
-	require.NoError(t, err)
-	require.NotNil(t, restoredKey)
-	require.Equal(t, "some_account", restoredKey.GetName())
-	require.Equal(t, TypeLedger, restoredKey.GetType())
-	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
-
-	path, err := restoredKey.GetPath()
-	require.NoError(t, err)
-	require.Equal(t, "44'/118'/3'/0/1", path.String())
 }
 
 func TestAltKeyring_Get(t *testing.T) {

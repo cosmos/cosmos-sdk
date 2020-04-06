@@ -679,9 +679,12 @@ func (ks keystore) writeInfo(name string, info Info) error {
 	key := infoKey(name)
 	serializedInfo := marshalInfo(info)
 
-	_, err := ks.db.Get(addrHexKeyAsString(info.GetAddress()))
-	if err != keyring.ErrKeyNotFound {
+	exists, err := ks.existsInDb(key, info.GetAddress())
+	if exists {
 		return fmt.Errorf("public key already exist in keybase")
+	}
+	if err != nil {
+		return err
 	}
 
 	err = ks.db.Set(keyring.Item{
@@ -701,6 +704,24 @@ func (ks keystore) writeInfo(name string, info Info) error {
 	}
 
 	return nil
+}
+
+func (ks keystore) existsInDb(key []byte, address sdk.Address) (bool, error) {
+	_, err := ks.db.Get(addrHexKeyAsString(address))
+	if err == nil {
+		return true, nil
+	} else if err != keyring.ErrKeyNotFound {
+		return false, err
+	}
+
+	_, err = ks.db.Get(string(key))
+	if err == nil {
+		return true, nil
+	} else if err != keyring.ErrKeyNotFound {
+		return false, err
+	}
+
+	return false, nil
 }
 
 func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -92,13 +93,13 @@ func (ev Evidence) ValidateBasic() error {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.GetHeight(), ev.Header2.GetHeight())
 	}
 	// Ensure that Commit Hashes are different
-	if ev.Header1.SignedHeader.Commit.BlockID == ev.Header2.SignedHeader.Commit.BlockID {
+	if ev.Header1.SignedHeader.Commit.BlockID.Equal(ev.Header2.SignedHeader.Commit.BlockID) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit.ToTmTypes(), ev.Header1.ValidatorSet.ToTmTypes()); err != nil {
+	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit, ev.Header1.ValidatorSet.ToTmTypes()); err != nil {
 		return err
 	}
-	return ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit.ToTmTypes(), ev.Header2.ValidatorSet.ToTmTypes())
+	return ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit, ev.Header2.ValidatorSet.ToTmTypes())
 }
 
 // ValidCommit checks if the given commit is a valid commit from the passed-in validatorset
@@ -106,7 +107,7 @@ func (ev Evidence) ValidateBasic() error {
 // CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
 // This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
 // thus we should return an error here and reject the evidence rather than panicing.
-func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
+func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmtypes.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid commit: %v", r)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 )
@@ -41,42 +42,41 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 	}
 
 	blockID := MakeBlockID(tmHeader.Hash(), 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
+	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
 
-	commitSigs := make([]*CommitSig, len(commit.Signatures))
+	commitSigs := make([]tmproto.CommitSig, len(commit.Signatures))
 
 	for i := range commit.Signatures {
-		cs := CommitSig{
-			BlockIDFlag:      []byte{byte(commit.Signatures[i].BlockIDFlag)},
+		commitSigs[i] = tmproto.CommitSig{
+			BlockIdFlag:      commit.Signatures[i].BlockIDFlag,
 			ValidatorAddress: commit.Signatures[i].ValidatorAddress,
 			Timestamp:        commit.Signatures[i].Timestamp,
 			Signature:        commit.Signatures[i].Signature,
 		}
-		commitSigs[i] = &cs
 	}
 
 	abciBlockID := tmtypes.TM2PB.BlockID(blockID)
 	abciHeader := tmtypes.TM2PB.Header(tmHeader)
 
-	signedHeader := SignedHeader{
+	signedHeader := tmproto.SignedHeader{
 		Header: &abciHeader,
-		Commit: Commit{
+		Commit: &tmproto.Commit{
 			Height: commit.Height,
 			Round:  int32(commit.Round),
-			BlockID: &BlockID{
+			BlockID: tmproto.BlockID{
 				Hash: abciBlockID.Hash,
-				PartsHeader: &PartsHeader{
+				PartsHeader: tmproto.PartsHeader{
 					Total: abciBlockID.PartsHeader.Total,
 					Hash:  abciBlockID.PartsHeader.Hash,
 				},
 			},
 			Signatures: commitSigs,
-			hash:       commit.Hash(),
-			bitArray:   commit.BitArray().Bytes(),
+			Hash:       commit.Hash(),
+			BitArray:   commit.BitArray(),
 		},
 	}
 

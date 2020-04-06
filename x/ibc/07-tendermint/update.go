@@ -88,13 +88,13 @@ func checkValidity(
 	maxClockDrift := 10 * time.Second
 	err := lite.Verify(
 		clientState.GetChainID(),
-		clientState.LastHeader.SignedHeader.ToTmTypes(),
-		clientState.LastHeader.ValidatorSet.ToTmTypes(),
-		header.SignedHeader.ToTmTypes(),
-		header.ValidatorSet.ToTmTypes(),
+		clientState.LastHeader.SignedHeader,
+		clientState.LastHeader.ValidatorSet,
+		header.SignedHeader,
+		header.ValidatorSet,
 		clientState.TrustingPeriod,
 		currentTimestamp,
-		maxClockDrift
+		maxClockDrift,
 		lite.DefaultTrustLevel)
 	if err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())

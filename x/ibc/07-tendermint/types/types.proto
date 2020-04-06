@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/abci/types/types.proto";
+import "third_party/proto/tendermint/proto/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "x/ibc/23-commitment/types/types.proto";
@@ -145,7 +146,7 @@ message Evidence {
 message Header {
   option (gogoproto.equal) = true;
 
-  SignedHeader signed_header = 1 [
+  .tendermint.proto.types.SignedHeader signed_header = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"signed_header\""
   ];
@@ -165,68 +166,4 @@ message ValidatorSet {
     (gogoproto.customname) = "totalVotingPower",
     (gogoproto.moretags)   = "yaml:\"total_voting_power\""
   ];
-}
-
-// TODO: move to tendermint
-message SignedHeader {
-  option (gogoproto.equal) = true;
-
-  .tendermint.abci.types.Header header = 1;
-  Commit                        commit = 2 [(gogoproto.nullable) = false];
-}
-
-// Commit contains the evidence that a block was committed by a set of validators.
-// NOTE: Commit is empty for height 1, but never nil.
-message Commit {
-  option (gogoproto.equal) = true;
-
-  // NOTE: The signatures are in order of address to preserve the bonded
-  // ValidatorSet order.
-  // Any peer with a block can gossip signatures by index with a peer without
-  // recalculating the active ValidatorSet.
-  int64              height     = 1;
-  int32              round      = 2;
-  BlockID            block_id   = 3 [(gogoproto.customname) = "BlockID"];
-  repeated CommitSig signatures = 4;
-  bytes              hash       = 5 [
-    (gogoproto.customname) = "hash",
-    (gogoproto.casttype)   = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
-  ];
-  bytes bit_array = 6 [(gogoproto.customname) = "bitArray"];
-}
-
-message BlockID {
-  option (gogoproto.equal) = true;
-
-  bytes hash = 1 [
-    (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
-  ];
-  PartsHeader parts_header = 2 [
-    (gogoproto.moretags) = "yaml:\"parts_header\""
-  ];
-}
-
-message PartsHeader {
-  option (gogoproto.equal) = true;
-
-  int32 total = 1;
-  bytes hash  = 2 [
-    (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"
-  ];
-}
-
-message CommitSig {
-  option (gogoproto.equal) = true;
-
-  bytes block_id_flag = 1 [
-    (gogoproto.customname) = "BlockIDFlag"
-  ];
-  bytes validator_address = 2 [
-    (gogoproto.casttype) = "github.com/tendermint/tendermint/types.Address"
-  ];
-  google.protobuf.Timestamp timestamp = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime)  = true
-  ];
-  bytes signature = 4;
 }

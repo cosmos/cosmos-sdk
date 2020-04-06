@@ -868,7 +868,9 @@ func init() {
 	proto.RegisterType((*Packet)(nil), "cosmos_sdk.x.ibc.channel.v1.Packet")
 }
 
-func init() { proto.RegisterFile("x/ibc/04-channel/types/types.proto", fileDescriptor_a69005b45bd92d03) }
+func init() {
+	proto.RegisterFile("x/ibc/04-channel/types/types.proto", fileDescriptor_a69005b45bd92d03)
+}
 
 var fileDescriptor_a69005b45bd92d03 = []byte{
 	// 1033 bytes of a gzipped FileDescriptorProto

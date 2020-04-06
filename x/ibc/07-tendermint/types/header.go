@@ -42,7 +42,7 @@ func (h Header) GetTime() time.Time {
 // ValidateBasic calls the SignedHeader ValidateBasic function
 // and checks that validatorsets are not nil
 func (h Header) ValidateBasic(chainID string) error {
-	if err := h.SignedHeader.ToTmTypes().ValidateBasic(chainID); err != nil {
+	if err := h.SignedHeader.Header.ValidateBasic(chainID); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
 	}
 	if h.ValidatorSet == nil {

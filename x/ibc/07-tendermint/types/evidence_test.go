@@ -156,11 +156,11 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
 				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.SignedHeader.Header.Height, 1, tmtypes.PrecommitType, altValSet)
-				commit, err := tmtypes.MakeCommit(ev.Header2.SignedHeader.Commit.BlockID.ToTmTypes(), ev.Header2.SignedHeader.Header.Height, ev.Header2.SignedHeader.Commit.ToTmTypes().Round, wrongVoteSet, altSigners, suite.now)
+				commit, err := tmtypes.MakeCommit(ev.Header2.SignedHeader.Commit.BlockID, ev.Header2.SignedHeader.Header.Height, ev.Header2.SignedHeader.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				if err != nil {
 					return err
 				}
-				ev.Header2.SignedHeader.Commit = ibctmtypes.CommitFromTmTypes(commit)
+				ev.Header2.SignedHeader.Commit = commit
 				return nil
 			},
 			false,
@@ -175,7 +175,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				blockID := ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
-				ev.Header2.SignedHeader.Commit.BlockID = ibctmtypes.BlockIDFromTmTypes(blockID)
+				ev.Header2.SignedHeader.Commit.BlockID = blockID
 				return nil
 			},
 			false,

@@ -160,7 +160,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keybase, inBuf *buf
 				})
 			}
 
-			pk := multisig.NewPubKey(multisigThreshold, pks)
+			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
 			if _, err := kb.CreateMulti(name, pk); err != nil {
 				return err
 			}

@@ -60,7 +60,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
-	multisigKey1 := multisig.NewPubKey(2, pkSet1)
+	multisigKey1 := multisig.NewPubKeyMultisigThreshold(2, pkSet1)
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {

@@ -2,7 +2,6 @@ package input
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -33,31 +32,6 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 		return pass, fmt.Errorf("password must be at least %d characters", MinPassLength)
 	}
 
-	return pass, nil
-}
-
-// GetCheckPassword will prompt for a password twice to verify they
-// match (for creating a new password).
-// It enforces the password length. Only parses password once if
-// input is piped in.
-func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error) {
-	// simple read on no-tty
-	if !inputIsTty() {
-		return GetPassword(prompt, buf)
-	}
-
-	// TODO: own function???
-	pass, err := GetPassword(prompt, buf)
-	if err != nil {
-		return "", err
-	}
-	pass2, err := GetPassword(prompt2, buf)
-	if err != nil {
-		return "", err
-	}
-	if pass != pass2 {
-		return "", errors.New("passphrases don't match")
-	}
 	return pass, nil
 }
 

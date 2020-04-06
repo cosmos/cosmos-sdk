@@ -38,7 +38,10 @@ func (suite *TendermintTestSuite) SetupTest() {
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()
-	val := tmtypes.NewValidator(suite.privVal.GetPubKey(), 10)
+	pk, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+
+	val := tmtypes.NewValidator(pk, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 }

@@ -54,7 +54,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
-	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
+	pk, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+
+	validator := tmtypes.NewValidator(pk, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
@@ -67,7 +70,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	var validators staking.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
-		pk := privVal.GetPubKey()
+		pk, err := privVal.GetPubKey()
+		suite.Require().NoError(err)
 		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())

@@ -100,10 +100,7 @@ func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccA
 		bz := iter.Value()
 
 		var feeGrant types.FeeAllowanceGrant
-		err := feeGrant.Unmarshal(bz)
-		if err != nil {
-			return err
-		}
+		k.cdc.MustUnmarshalBinaryBare(bz, &feeGrant)
 
 		stop = cb(feeGrant)
 	}
@@ -123,10 +120,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 		var feeGrant types.FeeAllowanceGrant
-		err := feeGrant.Unmarshal(bz)
-		if err != nil {
-			return err
-		}
+		k.cdc.MustUnmarshalBinaryBare(bz, &feeGrant)
 
 		stop = cb(feeGrant)
 	}

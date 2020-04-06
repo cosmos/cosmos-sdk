@@ -235,9 +235,12 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 
 	tx := txf.txGenerator.NewTx()
 	tx.SetFee(auth.NewStdFee(txf.gas, fees))
-	tx.SetMsgs(msgs...)
 	tx.SetMemo(txf.memo)
 	tx.SetSignatures()
+
+	if err := tx.SetMsgs(msgs...); err != nil {
+		return nil, err
+	}
 
 	return tx, nil
 }

@@ -3,6 +3,7 @@ package input
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -38,12 +39,12 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 // GetConfirmation will request user give the confirmation from stdin.
 // "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
 // If the input is not recognized, it returns false and a nil error.
-func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
+func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) {
 	if inputIsTty() {
 		fmt.Printf("%s [y/N]: ", prompt)
 	}
 
-	response, err := readLineFromBuf(buf)
+	response, err := readLineFromBuf(r)
 	if err != nil {
 		return false, err
 	}

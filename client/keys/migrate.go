@@ -95,7 +95,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		cmd.PrintErrf("Migrating key: '%s (%s)' ...\n", key.GetName(), keyType)
 
 		// allow user to skip migrating specific keys
-		ok, err := input.GetConfirmation("Skip key migration?", buf)
+		ok, err := input.GetConfirmation("Skip key migration?", buf, cmd.ErrOrStderr())
 		if err != nil {
 			return err
 		}

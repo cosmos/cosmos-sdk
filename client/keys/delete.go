@@ -55,7 +55,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 
 		// confirm deletion, unless -y is passed
 		if !viper.GetBool(flagYes) {
-			if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf); err != nil {
+			if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf, cmd.ErrOrStderr()); err != nil {
 				return err
 			} else if !yes {
 				continue

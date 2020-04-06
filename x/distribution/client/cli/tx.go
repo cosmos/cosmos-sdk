@@ -64,6 +64,25 @@ func newSplitAndApply(
 	msgs []sdk.Msg,
 	chunkSize int,
 ) error {
+	if chunkSize == 0 {
+		return newGenerateOrBroadcast(cliCtx, txBldr, msgs...)
+	}
+
+	// split messages into slices of length chunkSize
+	totalMessages := len(msgs)
+	for i := 0; i < len(msgs); i += chunkSize {
+
+		sliceEnd := i + chunkSize
+		if sliceEnd > totalMessages {
+			sliceEnd = totalMessages
+		}
+
+		msgChunk := msgs[i:sliceEnd]
+		if err := newGenerateOrBroadcast(cliCtx, txBldr, msgChunk...); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -96,12 +115,12 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			msg := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
+			msgs := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
 			if viper.GetBool(flagCommission) {
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msgs)
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msgs...)
 		},
 	}
 	cmd.Flags().Bool(flagCommission, false, "also withdraw validator's commission")

@@ -110,6 +110,15 @@ type Exporter interface {
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
 }
 
+// Option overrides keyring configuration options.
+type Option func(options *Options)
+
+//Options define the options of the Keyring
+type Options struct {
+	SupportedAlgos       SigningAlgoList
+	SupportedAlgosLedger SigningAlgoList
+}
+
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
@@ -131,11 +140,11 @@ func New(
 	case BackendMemory:
 		return NewInMemory(opts...), err
 	case BackendTest:
-		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, nil, true))
+		db, err = keyring.Open(newTestBackendKeyringConfig(appName, rootDir))
 	case BackendFile:
 		db, err = keyring.Open(newFileBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendOS:
-		db, err = keyring.Open(lkbToKeyringConfig(appName, rootDir, userInput, false))
+		db, err = keyring.Open(newOSBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendKWallet:
 		db, err = keyring.Open(newKWalletBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendPass:
@@ -507,15 +516,6 @@ func (ks keystore) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-// Option overrides keyring configuration options.
-type Option func(options *Options)
-
-//Options define the options of the Keyring
-type Options struct {
-	SupportedAlgos       SigningAlgoList
-	SupportedAlgosLedger SigningAlgoList
-}
-
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
@@ -543,22 +543,22 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err
 	return sig, priv.PubKey(), nil
 }
 
-func lkbToKeyringConfig(appName, dir string, buf io.Reader, test bool) keyring.Config {
-	if test {
-		return keyring.Config{
-			AllowedBackends: []keyring.BackendType{keyring.FileBackend},
-			ServiceName:     appName,
-			FileDir:         filepath.Join(dir, keyringTestDirName),
-			FilePasswordFunc: func(_ string) (string, error) {
-				return "test", nil
-			},
-		}
-	}
-
+func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {
 	return keyring.Config{
 		ServiceName:      appName,
 		FileDir:          dir,
 		FilePasswordFunc: newRealPrompt(dir, buf),
+	}
+}
+
+func newTestBackendKeyringConfig(appName, dir string) keyring.Config {
+	return keyring.Config{
+		AllowedBackends: []keyring.BackendType{keyring.FileBackend},
+		ServiceName:     appName,
+		FileDir:         filepath.Join(dir, keyringTestDirName),
+		FilePasswordFunc: func(_ string) (string, error) {
+			return "test", nil
+		},
 	}
 }
 
@@ -571,7 +571,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 	}
 }
 
-func newPassBackendKeyringConfig(appName, dir string, _ io.Reader) keyring.Config {
+func newPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
 	prefix := fmt.Sprintf(passKeyringPrefix, appName)
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.PassBackend},

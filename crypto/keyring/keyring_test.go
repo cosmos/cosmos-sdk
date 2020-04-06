@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -1280,6 +1281,18 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	// now this new keyring does not fail when signing with provided algo
 	_, _, err = keyring2.NewMnemonic("test", English, types.FullFundraiserPath, notSupportedAlgo{})
 	require.NoError(t, err)
+}
+
+func TestBackendConfigConstructors(t *testing.T) {
+	backend := newKWalletBackendKeyringConfig("test", "", nil)
+	require.Equal(t, []keyring.BackendType{keyring.KWalletBackend}, backend.AllowedBackends)
+	require.Equal(t, "kdewallet", backend.ServiceName)
+	require.Equal(t, "test", backend.KWalletAppID)
+
+	backend = newPassBackendKeyringConfig("test", "directory", nil)
+	require.Equal(t, []keyring.BackendType{keyring.PassBackend}, backend.AllowedBackends)
+	require.Equal(t, "test", backend.ServiceName)
+	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {

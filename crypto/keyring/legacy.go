@@ -222,7 +222,7 @@ func (m keyringMigrator) Import(uid string, armor string) error {
 		return err
 	}
 
-	return m.kr.writeInfo(uid, info)
+	return m.kr.writeInfo(info)
 }
 
 // KeybaseOption overrides options for the db.

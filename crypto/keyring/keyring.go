@@ -342,7 +342,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
-	err := ks.writeInfo(name, info)
+	err := ks.writeInfo(info)
 	if err != nil {
 		return nil, err
 	}
@@ -666,7 +666,7 @@ func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.Pub
 	pub := priv.PubKey()
 
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
-	err := ks.writeInfo(name, info)
+	err := ks.writeInfo(info)
 	if err != nil {
 		return nil, err
 	}
@@ -674,12 +674,12 @@ func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.Pub
 	return info, nil
 }
 
-func (ks keystore) writeInfo(name string, info Info) error {
+func (ks keystore) writeInfo(info Info) error {
 	// write the info by key
-	key := infoKey(name)
+	key := infoKey(info.GetName())
 	serializedInfo := marshalInfo(info)
 
-	exists, err := ks.existsInDb(key, info.GetAddress())
+	exists, err := ks.existsInDb(info)
 	if exists {
 		return fmt.Errorf("public key already exist in keybase")
 	}
@@ -706,8 +706,10 @@ func (ks keystore) writeInfo(name string, info Info) error {
 	return nil
 }
 
-func (ks keystore) existsInDb(key []byte, address sdk.Address) (bool, error) {
-	_, err := ks.db.Get(addrHexKeyAsString(address))
+func (ks keystore) existsInDb(info Info) (bool, error) {
+	key := infoKey(info.GetName())
+
+	_, err := ks.db.Get(addrHexKeyAsString(info.GetAddress()))
 	if err == nil {
 		return true, nil
 	} else if err != keyring.ErrKeyNotFound {
@@ -726,7 +728,7 @@ func (ks keystore) existsInDb(key []byte, address sdk.Address) (bool, error) {
 
 func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
-	err := ks.writeInfo(name, info)
+	err := ks.writeInfo(info)
 	if err != nil {
 		return nil, err
 	}
@@ -736,7 +738,7 @@ func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.Pub
 
 func (ks keystore) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, error) {
 	info := NewMultiInfo(name, pub)
-	err := ks.writeInfo(name, info)
+	err := ks.writeInfo(info)
 	if err != nil {
 		return nil, err
 	}

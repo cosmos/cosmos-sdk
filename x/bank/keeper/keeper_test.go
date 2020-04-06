@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	
+
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 	tmtime "github.com/tendermint/tendermint/types/time"

@@ -85,7 +85,7 @@ func checkValidity(
 	}
 
 	// Verify next header with the last header's validatorset as trusted validatorset
-	maxClockDrift := time.Hour
+	maxClockDrift := 10*time.Second
 	err := lite.Verify(clientState.GetChainID(), &clientState.LastHeader.SignedHeader, clientState.LastHeader.ValidatorSet,
 		&header.SignedHeader, header.ValidatorSet, clientState.TrustingPeriod, currentTimestamp, maxClockDrift, lite.DefaultTrustLevel)
 	if err != nil {

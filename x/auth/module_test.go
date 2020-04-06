@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -16,7 +18,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.InitChain(
-		types.RequestInitChain{
+		abci.RequestInitChain{
 			AppStateBytes: []byte("{}"),
 			ChainId:       "test-chain-id",
 		},

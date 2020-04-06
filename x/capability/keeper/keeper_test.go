@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -27,9 +28,10 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
+	cdc := codec.NewHybridCodec(app.Codec())
 
 	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(app.Codec(), app.GetKey(capability.StoreKey))
+	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey))
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.keeper = keeper
@@ -39,7 +41,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	sk := suite.keeper.ScopeToModule(bank.ModuleName)
 
-	caps := make([]types.Capability, 5)
+	caps := make([]*types.Capability, 5)
 
 	for i := range caps {
 		cap, err := sk.NewCapability(suite.ctx, fmt.Sprintf("transfer-%d", i))
@@ -99,7 +101,7 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap1)
 
-	forgedCap := types.NewCapabilityKey(0) // index should be the same index as the first capability
+	forgedCap := types.NewCapability(0) // index should be the same index as the first capability
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
 
 	cap2, err := sk2.NewCapability(suite.ctx, "bond")
@@ -117,7 +119,7 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	sk2.ReleaseCapability(suite.ctx, cap2)
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, cap2, "bond"))
 
-	badCap := types.NewCapabilityKey(100)
+	badCap := types.NewCapability(100)
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
 }

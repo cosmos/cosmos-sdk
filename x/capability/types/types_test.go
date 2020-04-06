@@ -12,9 +12,9 @@ import (
 
 func TestCapabilityKey(t *testing.T) {
 	idx := uint64(3162)
-	cap := types.NewCapabilityKey(idx)
+	cap := types.NewCapability(idx)
 	require.Equal(t, idx, cap.GetIndex())
-	require.Equal(t, fmt.Sprintf("CapabilityKey{%p, %d}", cap, idx), cap.String())
+	require.Equal(t, fmt.Sprintf("Capability{%p, %d}", cap, idx), cap.String())
 }
 
 func TestOwner(t *testing.T) {

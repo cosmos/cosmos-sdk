@@ -180,7 +180,7 @@ func NewSimApp(
 	app.BankKeeper = bank.NewBaseKeeper(
 		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
 	)
-	app.CapabilityKeeper = capability.NewKeeper(app.cdc, keys[capability.StoreKey])
+	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey])
 	app.SupplyKeeper = supply.NewKeeper(
 		appCodec, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
 	)

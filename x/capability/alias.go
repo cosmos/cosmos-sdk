@@ -16,21 +16,20 @@ const (
 
 // nolint
 var (
-	NewKeeper                   = keeper.NewKeeper
-	NewCapabilityKey            = types.NewCapabilityKey
-	RevCapabilityKey            = types.RevCapabilityKey
-	FwdCapabilityKey            = types.FwdCapabilityKey
-	KeyIndex                    = types.KeyIndex
-	KeyPrefixIndexCapability    = types.KeyPrefixIndexCapability
-	ErrCapabilityTaken          = types.ErrCapabilityTaken
-	ErrOwnerClaimed             = types.ErrOwnerClaimed
-	ErrCapabilityNotOwned       = types.ErrCapabilityNotOwned
-	RegisterCodec               = types.RegisterCodec
-	RegisterCapabilityTypeCodec = types.RegisterCapabilityTypeCodec
-	ModuleCdc                   = types.ModuleCdc
-	NewOwner                    = types.NewOwner
-	NewCapabilityOwners         = types.NewCapabilityOwners
-	NewCapabilityStore          = types.NewCapabilityStore
+	NewKeeper                = keeper.NewKeeper
+	NewCapability            = types.NewCapability
+	RevCapabilityKey         = types.RevCapabilityKey
+	FwdCapabilityKey         = types.FwdCapabilityKey
+	KeyIndex                 = types.KeyIndex
+	KeyPrefixIndexCapability = types.KeyPrefixIndexCapability
+	ErrCapabilityTaken       = types.ErrCapabilityTaken
+	ErrOwnerClaimed          = types.ErrOwnerClaimed
+	ErrCapabilityNotOwned    = types.ErrCapabilityNotOwned
+	RegisterCodec            = types.RegisterCodec
+	ModuleCdc                = types.ModuleCdc
+	NewOwner                 = types.NewOwner
+	NewCapabilityOwners      = types.NewCapabilityOwners
+	NewCapabilityStore       = types.NewCapabilityStore
 )
 
 // nolint
@@ -38,7 +37,6 @@ type (
 	Keeper           = keeper.Keeper
 	ScopedKeeper     = keeper.ScopedKeeper
 	Capability       = types.Capability
-	CapabilityKey    = types.CapabilityKey
 	CapabilityOwners = types.CapabilityOwners
 	CapabilityStore  = types.CapabilityStore
 )

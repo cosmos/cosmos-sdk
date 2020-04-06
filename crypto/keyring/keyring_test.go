@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/go-amino"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -451,7 +450,7 @@ func TestInMemoryLanguage(t *testing.T) {
 func TestInMemoryCreateMultisig(t *testing.T) {
 	kb, err := NewKeyring("keybasename", "memory", "", nil)
 	require.NoError(t, err)
-	multi := multisig.PubKeyMultisigThreshold{
+	multi := multisig.PubKey{
 		K:       1,
 		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
 	}
@@ -888,7 +887,7 @@ func ExampleNew() {
 	customKeyGenFunc := func(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
 		var bzArr [32]byte
 		copy(bzArr[:], bz)
-		return secp256k1.PrivKeySecp256k1(bzArr), nil
+		return secp256k1.PrivKey(bzArr), nil
 	}
 	cstore := NewInMemory(WithKeygenFunc(customKeyGenFunc))
 

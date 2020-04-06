@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -93,7 +93,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(10, 0)})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
 	require.Equal(t, int64(0), slashAmount.Int64())
@@ -101,7 +101,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
 	require.Equal(t, int64(5), slashAmount.Int64())
@@ -150,7 +150,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(10, 0)})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
@@ -160,7 +160,7 @@ func TestSlashRedelegation(t *testing.T) {
 	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)

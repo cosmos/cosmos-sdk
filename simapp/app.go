@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -180,7 +181,7 @@ func NewSimApp(
 	app.BankKeeper = bank.NewBaseKeeper(
 		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
 	)
-	app.CapabilityKeeper = capability.NewKeeper(app.cdc, keys[capability.StoreKey])
+	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey])
 	app.SupplyKeeper = supply.NewKeeper(
 		appCodec, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
 	)
@@ -320,7 +321,7 @@ func NewSimApp(
 	// Initialize and seal the capability keeper so all persistent capabilities
 	// are loaded in-memory and prevent any further modules from creating scoped
 	// sub-keepers.
-	ctx := app.BaseApp.NewContext(true, abci.Header{})
+	ctx := app.BaseApp.NewContext(true, tmproto.Header{})
 	app.CapabilityKeeper.InitializeAndSeal(ctx)
 
 	return app

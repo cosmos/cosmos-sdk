@@ -6,10 +6,11 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	bip39 "github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
-	bip39 "github.com/cosmos/go-bip39"
 )
 
 type (
@@ -65,7 +66,7 @@ func StdPrivKeyGen(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
 func SecpPrivKeyGen(bz []byte) tmcrypto.PrivKey {
 	var bzArr [32]byte
 	copy(bzArr[:], bz)
-	return secp256k1.PrivKeySecp256k1(bzArr)
+	return secp256k1.PrivKey(bzArr)
 }
 
 // CreateAccount creates an account Info object.

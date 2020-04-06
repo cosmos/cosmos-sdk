@@ -7,8 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -109,7 +110,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 	}
 
 	for i, tc := range testCases {
-		ctx := suite.app.BaseApp.NewContext(false, abci.Header{Height: suite.app.LastBlockHeight() + 1})
+		ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
 		res, err := suite.handler(ctx, tc.msg)
 		if tc.expectErr {

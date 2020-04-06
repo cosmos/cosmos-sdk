@@ -11,6 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -272,7 +273,7 @@ func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 	}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(abci.Header{})
+	app.setCheckState(tmproto.Header{})
 	app.Seal()
 
 	return nil
@@ -317,7 +318,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
 // provided header, and minimum gas prices set. It is set on InitChain and reset
 // on Commit.
-func (app *BaseApp) setCheckState(header abci.Header) {
+func (app *BaseApp) setCheckState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
@@ -329,7 +330,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
 // and provided header. It is set on InitChain and BeginBlock and set to nil on
 // Commit.
-func (app *BaseApp) setDeliverState(header abci.Header) {
+func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,

@@ -46,9 +46,10 @@ func (suite *TendermintTestSuite) SetupTest() {
 	// Header time is intended to be time for any new header used for updates
 	suite.headerTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()
-	val := tmtypes.NewValidator(suite.privVal.GetPubKey(), 10)
-	suite.tmValSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	suite.valSet = ibctmtypes.ValSetFromTmTypes(suite.tmValSet)
+	pk, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+	val := tmtypes.NewValidator(pk, 10)
+	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	// Suite header is intended to be header passed in for initial ClientState
 	// Thus it should have same height and time as ClientState
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.clientTime, suite.tmValSet, []tmtypes.PrivValidator{suite.privVal})

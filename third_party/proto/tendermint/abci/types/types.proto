@@ -7,6 +7,7 @@ option  go_package = "github.com/tendermint/tendermint/abci/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
 import "third_party/proto/tendermint/libs/kv/types.proto";
+import "third_party/proto/tendermint/proto/types/types.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
@@ -76,15 +77,15 @@ message RequestQuery {
 }
 
 message RequestBeginBlock {
-  bytes             hash                 = 1;
-  Header            header               = 2 [(gogoproto.nullable) = false];
-  LastCommitInfo    last_commit_info     = 3 [(gogoproto.nullable) = false];
-  repeated Evidence byzantine_validators = 4 [(gogoproto.nullable) = false];
+  bytes                         hash                 = 1;
+  tendermint.proto.types.Header header               = 2 [(gogoproto.nullable) = false];
+  LastCommitInfo                last_commit_info     = 3 [(gogoproto.nullable) = false];
+  repeated Evidence             byzantine_validators = 4 [(gogoproto.nullable) = false];
 }
 
 enum CheckTxType {
-  New     = 0;
-  Recheck = 1;
+  NEW     = 0 [(gogoproto.enumvalue_customname) = "CheckTxType_NEW"];
+  RECHECK = 1 [(gogoproto.enumvalue_customname) = "CheckTxType_RECHECK"];
 }
 
 message RequestCheckTx {
@@ -254,47 +255,6 @@ message Event {
 
 //----------------------------------------
 // Blockchain Types
-
-message Header {
-  // basic block info
-  Version                   version  = 1 [(gogoproto.nullable) = false];
-  string                    chain_id = 2 [(gogoproto.customname) = "ChainID"];
-  int64                     height   = 3;
-  google.protobuf.Timestamp time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-
-  // prev block info
-  BlockID last_block_id = 5 [(gogoproto.nullable) = false];
-
-  // hashes of block data
-  bytes last_commit_hash = 6;  // commit from validators from the last block
-  bytes data_hash        = 7;  // transactions
-
-  // hashes from the app output from the prev block
-  bytes validators_hash      = 8;   // validators for the current block
-  bytes next_validators_hash = 9;   // validators for the next block
-  bytes consensus_hash       = 10;  // consensus params for current block
-  bytes app_hash             = 11;  // state after txs from the previous block
-  bytes last_results_hash    = 12;  // root hash of all results from the txs from the previous block
-
-  // consensus info
-  bytes evidence_hash    = 13;  // evidence included in the block
-  bytes proposer_address = 14;  // original proposer of the block
-}
-
-message Version {
-  uint64 Block = 1;
-  uint64 App   = 2;
-}
-
-message BlockID {
-  bytes         hash         = 1;
-  PartSetHeader parts_header = 2 [(gogoproto.nullable) = false];
-}
-
-message PartSetHeader {
-  int32 total = 1;
-  bytes hash  = 2;
-}
 
 // Validator
 message Validator {

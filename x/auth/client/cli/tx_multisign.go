@@ -79,7 +79,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
+		multisigPub := multisigInfo.GetPubKey().(multisig.PubKey)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI(inBuf)

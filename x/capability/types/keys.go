@@ -35,7 +35,7 @@ func RevCapabilityKey(module, name string) []byte {
 
 // FwdCapabilityKey returns a forward lookup key for a given module and capability
 // reference.
-func FwdCapabilityKey(module string, cap Capability) []byte {
+func FwdCapabilityKey(module string, cap *Capability) []byte {
 	return []byte(fmt.Sprintf("%s/fwd/%p", module, cap))
 }
 

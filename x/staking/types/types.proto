@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos_sdk.x.staking.v1;
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "third_party/proto/tendermint/abci/types/types.proto";
+import "third_party/proto/tendermint/proto/types/types.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "types/types.proto";
@@ -114,7 +114,7 @@ message MsgUndelegate {
 message HistoricalInfo {
   option (gogoproto.equal) = true;
 
-  tendermint.abci.types.Header header = 1 [(gogoproto.nullable) = false];
+  tendermint.proto.types.Header header = 1 [(gogoproto.nullable) = false];
   repeated Validator           valset = 2 [(gogoproto.nullable) = false];
 }
 

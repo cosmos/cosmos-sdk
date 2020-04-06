@@ -19,7 +19,7 @@ import (
 
 var (
 	// simulation signature values used to estimate gas consumption
-	simSecp256k1Pubkey secp256k1.PubKeySecp256k1
+	simSecp256k1Pubkey secp256k1.PubKey
 	simSecp256k1Sig    [64]byte
 
 	_ SigVerifiableTx = (*types.StdTx)(nil) // assert StdTx implements SigVerifiableTx
@@ -301,15 +301,15 @@ func DefaultSigVerificationGasConsumer(
 ) error {
 
 	switch pubkey := pubkey.(type) {
-	case ed25519.PubKeyEd25519:
+	case ed25519.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 
-	case secp256k1.PubKeySecp256k1:
+	case secp256k1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 		return nil
 
-	case multisig.PubKeyMultisigThreshold:
+	case multisig.PubKey:
 		var multisignature multisig.Multisignature
 		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
@@ -323,7 +323,7 @@ func DefaultSigVerificationGasConsumer(
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
 func ConsumeMultisignatureVerificationGas(
-	meter sdk.GasMeter, sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold, params types.Params,
+	meter sdk.GasMeter, sig multisig.Multisignature, pubkey multisig.PubKey, params types.Params,
 ) {
 
 	size := sig.BitArray.Size()

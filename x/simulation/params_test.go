@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -40,7 +40,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	require.Equal(t, key, pContent.AppParamsKey())
 	require.Equal(t, weight, pContent.DefaultWeight())
 
-	ctx := sdk.NewContext(nil, abci.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	require.Equal(t, content, pContent.ContentSimulatorFn()(nil, ctx, nil))
 }
 

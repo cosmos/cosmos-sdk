@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -14,7 +14,7 @@ import (
 
 func TestCalculateRewardsBasic(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	sh := staking.NewHandler(app.StakingKeeper)
 
@@ -76,7 +76,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
@@ -146,7 +146,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	sh := staking.NewHandler(app.StakingKeeper)
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(100000000))
@@ -227,7 +227,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	sh := staking.NewHandler(app.StakingKeeper)
 
@@ -302,7 +302,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	balancePower := int64(1000)
 	balanceTokens := sdk.TokensFromConsensusPower(balancePower)
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
@@ -381,7 +381,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
@@ -456,7 +456,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	sh := staking.NewHandler(app.StakingKeeper)
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
@@ -542,7 +542,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	sh := staking.NewHandler(app.StakingKeeper)
 

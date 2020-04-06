@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -38,7 +40,7 @@ type IntegrationTestSuite struct {
 
 func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.AccountKeeper.SetParams(ctx, auth.DefaultParams())
 	app.BankKeeper.SetSendEnabled(ctx, true)
@@ -155,7 +157,7 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 func (suite *IntegrationTestSuite) TestValidateBalance() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -380,7 +382,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 func (suite *IntegrationTestSuite) TestSpendableCoins() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -411,7 +413,7 @@ func (suite *IntegrationTestSuite) TestSpendableCoins() {
 func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -441,7 +443,7 @@ func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
@@ -474,7 +476,7 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -508,7 +510,7 @@ func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -547,7 +549,7 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -607,7 +609,7 @@ func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
 func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))

@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +39,7 @@ func TestDecodeStore(t *testing.T) {
 	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
-	histInfo := types.NewHistoricalInfo(abci.Header{ChainID: "gaia", Height: 10, Time: bondTime}, types.Validators{val})
+	histInfo := types.NewHistoricalInfo(tmproto.Header{ChainID: "gaia", Height: 10, Time: bondTime}, types.Validators{val})
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(sdk.OneInt())},

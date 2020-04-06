@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
@@ -22,7 +22,7 @@ var (
 // to avoid messing with the hooks.
 func createTestInput() (*codec.Codec, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	appCodec := codecstd.NewAppCodec(codec.New())
 

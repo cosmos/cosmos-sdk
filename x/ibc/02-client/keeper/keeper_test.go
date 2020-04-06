@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -52,13 +52,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
-	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
-	suite.tmValSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	suite.valSet = ibctmtypes.ValSetFromTmTypes(suite.tmValSet)
-	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.tmValSet, []tmtypes.PrivValidator{suite.privVal})
+	pk, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+
+	validator := tmtypes.NewValidator(pk, 1)
+	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:       testClientHeight,
 		Timestamp:    suite.now,
@@ -69,7 +71,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	var validators staking.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
-		pk := privVal.GetPubKey()
+		pk, err := privVal.GetPubKey()
+		suite.Require().NoError(err)
 		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())

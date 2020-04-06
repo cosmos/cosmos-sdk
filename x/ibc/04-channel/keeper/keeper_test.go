@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -205,7 +206,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func commitNBlocks(chain *TestChain, n int) {
 	for i := 0; i < n; i++ {
 		chain.App.Commit()
-		chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1}})
+		chain.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: chain.App.LastBlockHeight() + 1}})
 	}
 }
 
@@ -235,7 +236,12 @@ type TestChain struct {
 
 func NewTestChain(clientID string) *TestChain {
 	privVal := tmtypes.NewMockPV()
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	pk, err := privVal.GetPubKey()
+	if err != nil {
+		panic(err)
+	}
+
+	validator := tmtypes.NewValidator(pk, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
 	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
@@ -253,7 +259,7 @@ func NewTestChain(clientID string) *TestChain {
 
 // Creates simple context for testing purposes
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: int64(chain.Header.GetHeight())})
+	return chain.App.BaseApp.NewContext(false, tmproto.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: int64(chain.Header.GetHeight())})
 }
 
 // createClient will create a client for clientChain on targetChain
@@ -262,7 +268,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.GetTime()}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.GetTime()}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -273,7 +279,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
-		Header: abci.Header{
+		Header: tmproto.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -323,7 +329,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.GetTime()}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.GetTime()}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -334,7 +340,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validator.Tokens = sdk.NewInt(1000000)
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
-		Header: abci.Header{
+		Header: tmproto.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,

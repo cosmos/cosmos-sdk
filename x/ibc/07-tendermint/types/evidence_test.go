@@ -30,22 +30,27 @@ func (suite *TendermintTestSuite) TestEvidence() {
 
 func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altPrivVal := tmtypes.NewMockPV()
-	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), height)
+	pk, err := altPrivVal.GetPubKey()
+	suite.Require().NoError(err)
+	altVal := tmtypes.NewValidator(pk, 4)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.tmValSet.Validators, altVal))
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	signers := []tmtypes.PrivValidator{suite.privVal}
+	pk2, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+
 	// Create signer array and ensure it is in same order as bothValSet
 	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(altPrivVal.GetPubKey().Address(), suite.privVal.GetPubKey().Address()) == -1 {
+	if bytes.Compare(pk.Address(), pk2.Address()) == -1 {
 		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
 	} else {
 		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
 	}
 
+	signers := []tmtypes.PrivValidator{suite.privVal}
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
 	testCases := []struct {

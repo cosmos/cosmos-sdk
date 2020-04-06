@@ -26,14 +26,15 @@ slash_amount = k * (power_1 + power_2 + ... + power_n) // where power_i is the v
 
 Now, if someone splits a validator of 10% into two validators of 5% each which both fault, then they both fault in the same time frame, they both will get slashed at the sum 10% amount.
 
-<<<<DEV INSERT HERE>>>>
+However in practice, we likely don't want a linear relation between amount of stake at fault, and the percentage of stake to slash. In particular, solely 5% of stake double signing effectively did nothing to threaten security, whereas 30% of stake being at fault clearly merits a slashing factor. A linear relation would require a factor of 6 gap between these two, whereas the difference in risk posed to the network is much larger. We propose using S-curves (formally [logistic functions](https://en.wikipedia.org/wiki/Logistic_function) to solve this). S-Curves capture the desired criterion quite well. They allow the slashing factor to be minimal for small values, and then grow very rapidly near some threshold point where the risk posed becomes notable.
 
 #### Parameterization
 
-<<<<DEV INSERT HERE>>>>
-
-There can also be minimum and maximums put in place in order to bound the size of the slash percent.
-
+This requires parameterizing a logistic function. It is very well understood how to parameterize this. It has four parameters:
+1) A minimum slashing factor
+2) A maximum slashing factor
+3) The inflection point of the S-curve (essentially where do you want to center the S)
+4) The rate of growth of the S-curve (How elongated is the S)
 
 #### Correlation across non-sybil validators
 

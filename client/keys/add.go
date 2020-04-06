@@ -134,6 +134,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 			if !response {
 				return errors.New("aborted")
 			}
+
+			err2 = kb.Delete(name)
+			if err2 != nil {
+				return err2
+			}
 		}
 
 		multisigKeys := viper.GetStringSlice(flagMultisig)

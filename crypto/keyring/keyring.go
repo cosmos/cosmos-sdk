@@ -707,22 +707,19 @@ func (ks keystore) writeInfo(info Info) error {
 }
 
 func (ks keystore) existsInDb(info Info) (bool, error) {
-	key := infoKey(info.GetName())
-
-	_, err := ks.db.Get(addrHexKeyAsString(info.GetAddress()))
-	if err == nil {
-		return true, nil
+	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
+		return true, nil // address lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
-		return false, err
+		return false, err // received unexpected error - returns error
 	}
 
-	_, err = ks.db.Get(string(key))
-	if err == nil {
-		return true, nil
+	if _, err := ks.db.Get(string(infoKey(info.GetName()))); err == nil {
+		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
-		return false, err
+		return false, err // received unexpected error - returns
 	}
 
+	// both lookups failed, info does not exist
 	return false, nil
 }
 

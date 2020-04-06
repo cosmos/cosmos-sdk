@@ -35,9 +35,9 @@ const (
 )
 
 const (
-	keyringDirNameFmt     = "keyring-%s"
-	testKeyringDirNameFmt = "keyring-test-%s"
-	passKeyringPrefix     = keyringDirNameFmt
+	keyringFileDirName = "keyring-file"
+	keyringTestDirName = "keyring-test"
+	passKeyringPrefix  = "keyring-%s"
 )
 
 var (
@@ -548,7 +548,7 @@ func lkbToKeyringConfig(appName, dir string, buf io.Reader, test bool) keyring.C
 		return keyring.Config{
 			AllowedBackends: []keyring.BackendType{keyring.FileBackend},
 			ServiceName:     appName,
-			FileDir:         filepath.Join(dir, fmt.Sprintf(testKeyringDirNameFmt, appName)),
+			FileDir:         filepath.Join(dir, keyringTestDirName),
 			FilePasswordFunc: func(_ string) (string, error) {
 				return "test", nil
 			},
@@ -581,7 +581,7 @@ func newPassBackendKeyringConfig(appName, dir string, _ io.Reader) keyring.Confi
 }
 
 func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
-	fileDir := filepath.Join(dir, fmt.Sprintf(keyringDirNameFmt, name))
+	fileDir := filepath.Join(dir, keyringFileDirName)
 	return keyring.Config{
 		AllowedBackends:  []keyring.BackendType{keyring.FileBackend},
 		ServiceName:      name,

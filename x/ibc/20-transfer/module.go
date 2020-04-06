@@ -137,7 +137,7 @@ func (am AppModule) OnChanOpenInit(
 	connectionHops []string,
 	portID string,
 	channelID string,
-	chanCap capability.Capability,
+	chanCap *capability.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
@@ -166,7 +166,7 @@ func (am AppModule) OnChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	chanCap capability.Capability,
+	chanCap *capability.Capability,
 	counterparty channeltypes.Counterparty,
 	version,
 	counterpartyVersion string,

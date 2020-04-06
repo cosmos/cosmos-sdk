@@ -14,7 +14,12 @@ const (
 	AttributeCounterpartyPortID    = "counterparty_port_id"
 	AttributeCounterpartyChannelID = "counterparty_channel_id"
 
-	EventTypeSendPacket    = "send_packet"
+	EventTypeSendPacket        = "send_packet"
+	EventTypeRecvPacket        = "recv_packet"
+	EventTypeAcknowledgePacket = "acknowledge_packet"
+	EventTypeCleanupPacket     = "cleanup_packet"
+	EventTypeTimeoutPacket     = "timeout_packet"
+
 	AttributeKeyData       = "packet_data"
 	AttributeKeyTimeout    = "packet_timeout"
 	AttributeKeySequence   = "packet_sequence"

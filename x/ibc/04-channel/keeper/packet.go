@@ -21,7 +21,7 @@ import (
 // chain.
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
-	channelCap capability.Capability,
+	channelCap *capability.Capability,
 	packet exported.PacketI,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
@@ -112,7 +112,7 @@ func (k Keeper) SendPacket(
 		),
 	})
 
-	k.Logger(ctx).Info(fmt.Sprintf("packet sent %v", packet)) // TODO: use packet.String()
+	k.Logger(ctx).Info(fmt.Sprintf("packet sent: %v", packet))
 	return nil
 }
 
@@ -228,8 +228,23 @@ func (k Keeper) PacketExecuted(
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
-	// log that a packet has been received & acknowledged
-	k.Logger(ctx).Info(fmt.Sprintf("packet received %v", packet)) // TODO: use packet.String()
+	// log that a packet has been received & executed
+	k.Logger(ctx).Info(fmt.Sprintf("packet received & executed: %v", packet))
+
+	// emit an event that the relayer can query for
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRecvPacket,
+			sdk.NewAttribute(types.AttributeKeyData, string(acknowledgement)),
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
+
 	return nil
 }
 
@@ -300,6 +315,22 @@ func (k Keeper) AcknowledgePacket(
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
 	}
+
+	// log that a packet has been acknowledged
+	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
+
+	// emit an event marking that we have processed the acknowledgement
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeAcknowledgePacket,
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
 
 	return packet, nil
 }
@@ -399,5 +430,22 @@ func (k Keeper) CleanupPacket(
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	// log that a packet has been acknowledged
+	k.Logger(ctx).Info(fmt.Sprintf("packet cleaned-up: %v", packet))
+
+	// emit an event marking that we have cleaned up the packet
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCleanupPacket,
+			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+		),
+	})
+
 	return packet, nil
 }

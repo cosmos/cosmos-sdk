@@ -36,10 +36,10 @@ func (k Keeper) ChanOpenInit(
 	connectionHops []string,
 	portID,
 	channelID string,
-	portCap capability.Capability,
+	portCap *capability.Capability,
 	counterparty types.Counterparty,
 	version string,
-) (capability.Capability, error) {
+) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 
 	_, found := k.GetChannel(ctx, portID, channelID)
@@ -84,13 +84,13 @@ func (k Keeper) ChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	portCap capability.Capability,
+	portCap *capability.Capability,
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
 	proofInit commitmentexported.Proof,
 	proofHeight uint64,
-) (capability.Capability, error) {
+) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
@@ -162,7 +162,7 @@ func (k Keeper) ChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap capability.Capability,
+	chanCap *capability.Capability,
 	counterpartyVersion string,
 	proofTry commitmentexported.Proof,
 	proofHeight uint64,
@@ -229,7 +229,7 @@ func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap capability.Capability,
+	chanCap *capability.Capability,
 	proofAck commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
@@ -298,7 +298,7 @@ func (k Keeper) ChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap capability.Capability,
+	chanCap *capability.Capability,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
@@ -337,7 +337,7 @@ func (k Keeper) ChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	chanCap capability.Capability,
+	chanCap *capability.Capability,
 	proofInit commitmentexported.Proof,
 	proofHeight uint64,
 ) error {

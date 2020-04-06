@@ -14,7 +14,7 @@ import (
 func (suite *KeeperTestSuite) TestChanOpenInit() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 
-	var portCap capability.Capability
+	var portCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.createConnection(
@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
 				connectionexported.INIT,
 			)
-			portCap = capability.NewCapabilityKey(3)
+			portCap = capability.NewCapability(3)
 		}, false},
 	}
 
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
-	var portCap capability.Capability
+	var portCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.INIT, exported.ORDERED, testConnectionIDA)
-			portCap = capability.NewCapabilityKey(3)
+			portCap = capability.NewCapability(3)
 		}, false},
 	}
 
@@ -176,7 +176,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	channelKey := ibctypes.KeyChannel(testPort2, testChannel2)
 
-	var channelCap capability.Capability
+	var channelCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
 				exported.ORDERED, testConnectionIDA,
 			)
-			channelCap = capability.NewCapabilityKey(3)
+			channelCap = capability.NewCapability(3)
 		}, false},
 	}
 
@@ -299,7 +299,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	channelKey := ibctypes.KeyChannel(testPort2, testChannel2)
 
-	var channelCap capability.Capability
+	var channelCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)
@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
 				exported.TRYOPEN, exported.ORDERED, testConnectionIDA)
-			channelCap = capability.NewCapabilityKey(3)
+			channelCap = capability.NewCapability(3)
 		}, false},
 	}
 
@@ -416,7 +416,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 }
 
 func (suite *KeeperTestSuite) TestChanCloseInit() {
-	var channelCap capability.Capability
+	var channelCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainB.CreateClient(suite.chainA)
@@ -462,7 +462,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 				testPort1, testChannel1, testPort2, testChannel2, exported.OPEN,
 				exported.ORDERED, testConnectionIDA,
 			)
-			channelCap = capability.NewCapabilityKey(3)
+			channelCap = capability.NewCapability(3)
 		}, false},
 	}
 
@@ -491,7 +491,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
-	var channelCap capability.Capability
+	var channelCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			suite.chainA.CreateClient(suite.chainB)

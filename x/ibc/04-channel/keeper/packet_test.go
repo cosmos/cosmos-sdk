@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet exported.PacketI
 
-	var channelCap capability.Capability
+	var channelCap *capability.Capability
 	testCases := []testCase{
 		{"success", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), 100)
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 1)
-			channelCap = capability.NewCapabilityKey(3)
+			channelCap = capability.NewCapability(3)
 		}, false},
 	}
 

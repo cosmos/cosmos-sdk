@@ -17,7 +17,7 @@ type IBCModule interface {
 		connectionHops []string,
 		portID string,
 		channelID string,
-		channelCap capability.Capability,
+		channelCap *capability.Capability,
 		counterParty channeltypes.Counterparty,
 		version string,
 	) error
@@ -28,7 +28,7 @@ type IBCModule interface {
 		connectionHops []string,
 		portID,
 		channelID string,
-		channelCap capability.Capability,
+		channelCap *capability.Capability,
 		counterparty channeltypes.Counterparty,
 		version,
 		counterpartyVersion string,

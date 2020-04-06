@@ -102,6 +102,8 @@ func (k Keeper) TimeoutPacket(
 		return nil, err
 	}
 
+	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out: %v", packet))
+
 	// emit an event marking that we have processed the timeout
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -238,6 +240,8 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out on close: %v", packet))
 
 	// emit an event marking that we have processed the timeout
 	ctx.EventManager().EmitEvents(sdk.Events{

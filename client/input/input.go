@@ -64,7 +64,7 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 // GetString simply returns the trimmed string output of a given reader.
 func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	if inputIsTty() && prompt != "" {
-		PrintPrefixed(prompt)
+		fmt.Fprintf(os.Stderr, "> %s\n", prompt)
 	}
 
 	out, err := readLineFromBuf(buf)
@@ -90,10 +90,4 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(pass), nil
-}
-
-// PrintPrefixed prints a string with > prefixed for use in prompts.
-func PrintPrefixed(msg string) {
-	msg = fmt.Sprintf("> %s\n", msg)
-	fmt.Fprint(os.Stderr, msg)
 }

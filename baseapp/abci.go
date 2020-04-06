@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		app.storeConsensusParams(req.ConsensusParams)
 	}
 
-	initHeader := abci.Header{ChainID: req.ChainId, Time: req.Time}
+	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
@@ -169,10 +170,10 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	var mode runTxMode
 
 	switch {
-	case req.Type == abci.CheckTxType_New:
+	case req.Type == abci.CheckTxType_NEW:
 		mode = runTxModeCheck
 
-	case req.Type == abci.CheckTxType_Recheck:
+	case req.Type == abci.CheckTxType_RECHECK:
 		mode = runTxModeReCheck
 
 	default:

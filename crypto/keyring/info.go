@@ -191,7 +191,7 @@ type multiInfo struct {
 
 // NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
-	multiPK := pub.(multisig.PubKeyMultisigThreshold)
+	multiPK := pub.(multisig.PubKey)
 
 	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
 	for i, pk := range multiPK.PubKeys {

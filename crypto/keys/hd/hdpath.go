@@ -215,8 +215,8 @@ func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, h
 		data = pubkeyBytes
 
 		/* By using btcec, we can remove the dependency on tendermint/crypto/secp256k1
-		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
-		public := pubkey.(secp256k1.PubKeySecp256k1)
+		pubkey := secp256k1.PrivKey(privKeyBytes).PubKey()
+		public := pubkey.(secp256k1.PubKey)
 		data = public[:]
 		*/
 	}

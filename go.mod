@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk
 require (
 	github.com/99designs/keyring v1.1.4
 	github.com/bgentry/speakeasy v0.1.0
-	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
+	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gibson042/canonicaljson-go v1.0.3
@@ -31,12 +31,11 @@ require (
 	github.com/tendermint/iavl v0.13.2
 	github.com/tendermint/tendermint v0.33.2
 	github.com/tendermint/tm-db v0.5.1
-	google.golang.org/protobuf v1.20.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
-replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
+replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200406133840-a08695844dda
 
 go 1.14

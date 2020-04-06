@@ -15,7 +15,7 @@ import (
 
 func TestNewQuerier(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
 	querier := keeper.NewQuerier(app.SlashingKeeper)
@@ -32,7 +32,7 @@ func TestNewQuerier(t *testing.T) {
 func TestQueryParams(t *testing.T) {
 	cdc := codec.New()
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
 	querier := keeper.NewQuerier(app.SlashingKeeper)

@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 )
 
 type mockValidator struct {
@@ -114,7 +115,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header abci.Header) abci.RequestBeginBlock {
+	event func(route, op, evResult string), header tmproto.Header) abci.RequestBeginBlock {
 
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{

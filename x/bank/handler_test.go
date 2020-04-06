@@ -14,7 +14,7 @@ import (
 func TestInvalidMsg(t *testing.T) {
 	h := NewHandler(nil)
 
-	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), sdk.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 

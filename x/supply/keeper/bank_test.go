@@ -45,7 +45,7 @@ func getCoinsByName(ctx sdk.Context, sk keep.Keeper, ak types.AccountKeeper, bk 
 
 func TestSendCoins(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
@@ -106,7 +106,7 @@ func TestSendCoins(t *testing.T) {
 
 func TestMintCoins(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
@@ -154,7 +154,7 @@ func TestMintCoins(t *testing.T) {
 
 func TestBurnCoins(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()

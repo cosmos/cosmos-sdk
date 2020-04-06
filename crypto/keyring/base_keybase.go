@@ -65,7 +65,7 @@ func StdPrivKeyGen(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
 func SecpPrivKeyGen(bz []byte) tmcrypto.PrivKey {
 	var bzArr [32]byte
 	copy(bzArr[:], bz)
-	return secp256k1.PrivKeySecp256k1(bzArr)
+	return secp256k1.PrivKey(bzArr)
 }
 
 // CreateAccount creates an account Info object.

@@ -16,15 +16,15 @@ import (
 
 func TestImportExportQueues(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 2, valTokens)
 
 	SortAddresses(addrs)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx = app.BaseApp.NewContext(false, abci.Header{})
+	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// Create two proposals, put the second into the voting period
 	proposal := TestProposal
@@ -72,12 +72,12 @@ func TestImportExportQueues(t *testing.T) {
 	)
 
 	app2.Commit()
-	app2.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app2.LastBlockHeight() + 1}})
+	app2.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app2.LastBlockHeight() + 1}})
 
-	header = abci.Header{Height: app2.LastBlockHeight() + 1}
+	header = tmproto.Header{Height: app2.LastBlockHeight() + 1}
 	app2.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	ctx2 := app2.BaseApp.NewContext(false, abci.Header{})
+	ctx2 := app2.BaseApp.NewContext(false, tmproto.Header{})
 
 	// Jump the time forward past the DepositPeriod and VotingPeriod
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(app2.GovKeeper.GetDepositParams(ctx2).MaxDepositPeriod).Add(app2.GovKeeper.GetVotingParams(ctx2).VotingPeriod))
@@ -106,12 +106,12 @@ func TestImportExportQueues(t *testing.T) {
 
 func TestEqualProposals(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 2, valTokens)
 
 	SortAddresses(addrs)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// Submit two proposals

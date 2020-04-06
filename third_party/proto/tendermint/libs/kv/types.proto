@@ -16,14 +16,7 @@ option (gogoproto.testgen_all)  = true;
 //----------------------------------------
 // Abstract types
 
-// Define these here for compatibility but use tmlibs/kv.Pair.
 message Pair {
   bytes key   = 1;
   bytes value = 2;
-}
-
-// Define these here for compatibility but use tmlibs/kv.KI64Pair.
-message KI64Pair {
-  bytes key   = 1;
-  int64 value = 2;
 }

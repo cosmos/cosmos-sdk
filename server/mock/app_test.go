@@ -57,7 +57,7 @@ func TestDeliverTx(t *testing.T) {
 	tx := NewTx(key, value)
 	txBytes := tx.GetSignBytes()
 
-	header := abci.Header{
+	header := tmproto.Header{
 		AppHash: []byte("apphash"),
 		Height:  1,
 	}

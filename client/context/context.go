@@ -10,6 +10,8 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
+	
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -69,7 +71,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	if !offline {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
+			rpc, err = tmhttp.New(nodeURI, "/websocket")
 			if err != nil {
 				fmt.Printf("failted to get client: %v\n", err)
 				os.Exit(1)
@@ -169,7 +171,7 @@ func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
-	client, err := rpcclient.NewHTTP(nodeURI, "/websocket")
+	client, err := tmhttp.New(nodeURI, "/websocket")
 	if err != nil {
 		panic(err)
 	}

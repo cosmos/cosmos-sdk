@@ -76,7 +76,7 @@ func newTestInput(t *testing.T) testInput {
 	require.Nil(t, err)
 
 	keeper := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tKeyParams)
-	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}
 }

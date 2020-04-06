@@ -37,7 +37,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ss := types.NewSubspace(cdc, key, tkey, "testsubspace")
 
 	suite.cdc = cdc
-	suite.ctx = sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 

@@ -633,10 +633,10 @@ func TestCountSubkeys(t *testing.T) {
 		return ret
 	}
 	singleKey := secp256k1.GenPrivKey().PubKey()
-	singleLevelMultiKey := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
-	multiLevelSubKey1 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
-	multiLevelSubKey2 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
-	multiLevelMultiKey := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{
+	singleLevelMultiKey := multisig.NewPubKey(4, genPubKeys(5))
+	multiLevelSubKey1 := multisig.NewPubKey(4, genPubKeys(5))
+	multiLevelSubKey2 := multisig.NewPubKey(4, genPubKeys(5))
+	multiLevelMultiKey := multisig.NewPubKey(2, []crypto.PubKey{
 		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
 	type args struct {
 		pub crypto.PubKey
@@ -702,10 +702,10 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	// setup an ante handler that only accepts PubKeyEd25519
+	// setup an ante handler that only accepts PubKey
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
 		switch pubkey := pubkey.(type) {
-		case ed25519.PubKeyEd25519:
+		case ed25519.PubKey:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:

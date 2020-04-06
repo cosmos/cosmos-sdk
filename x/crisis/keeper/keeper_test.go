@@ -12,7 +12,7 @@ import (
 func TestLogger(t *testing.T) {
 	app := createTestApp()
 
-	ctx := app.NewContext(true, abci.Header{})
+	ctx := app.NewContext(true, tmproto.Header{})
 	require.Equal(t, ctx.Logger(), app.CrisisKeeper.Logger(ctx))
 }
 
@@ -28,7 +28,7 @@ func TestInvariants(t *testing.T) {
 
 func TestAssertInvariants(t *testing.T) {
 	app := createTestApp()
-	ctx := app.NewContext(true, abci.Header{})
+	ctx := app.NewContext(true, tmproto.Header{})
 
 	app.CrisisKeeper.RegisterRoute("testModule", "testRoute1", func(sdk.Context) (string, bool) { return "", false })
 	require.NotPanics(t, func() { app.CrisisKeeper.AssertInvariants(ctx) })

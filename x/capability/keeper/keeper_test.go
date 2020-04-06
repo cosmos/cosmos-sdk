@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// create new keeper so we can define custom scoping before init and seal
 	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey))
 
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 	suite.keeper = keeper
 	suite.app = app
 }

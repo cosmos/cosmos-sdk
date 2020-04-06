@@ -131,7 +131,7 @@ func NewTestChain(clientID string) *TestChain {
 
 // Creates simple context for testing purposes
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
+	return chain.App.BaseApp.NewContext(false, tmproto.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
 }
 
 // createClient will create a client for clientChain on targetChain
@@ -140,7 +140,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -151,7 +151,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
-		Header: abci.Header{
+		Header: tmproto.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
@@ -202,7 +202,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: client.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -213,7 +213,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validator.Tokens = sdk.NewInt(1000000)
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
-		Header: abci.Header{
+		Header: tmproto.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,

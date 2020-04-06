@@ -18,7 +18,7 @@ func TestSupply(t *testing.T) {
 	initTokens := sdk.TokensFromConsensusPower(initialPower)
 
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	app.SupplyKeeper.SetSupply(ctx, types.NewSupply(totalSupply))

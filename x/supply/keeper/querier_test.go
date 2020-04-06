@@ -15,7 +15,7 @@ import (
 
 func TestNewQuerier(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
 	keeper := app.SupplyKeeper
 	cdc := app.Codec()
@@ -63,7 +63,7 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQuerySupply(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
 	keeper := app.SupplyKeeper
 	cdc := app.Codec()

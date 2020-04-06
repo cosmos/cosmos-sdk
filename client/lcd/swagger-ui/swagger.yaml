@@ -3026,7 +3026,7 @@ definitions:
             properties:
               type:
                 type: string
-                example: "tendermint/PubKeySecp256k1"
+                example: "tendermint/PubKey"
               value:
                 type: string
                 example: "Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH"

@@ -136,8 +136,8 @@ func TestAppImportExport(t *testing.T) {
 	err = app.Codec().UnmarshalJSON(appState, &genesisState)
 	require.NoError(t, err)
 
-	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
-	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
+	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.Codec(), genesisState)
 
 	fmt.Printf("comparing stores...\n")

@@ -132,7 +132,7 @@ func NewStdSignDocBase(num, seq uint64, cid, memo string, fee StdFee) StdSignDoc
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
 func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKeyMultisigThreshold)
+	v, ok := pub.(multisig.PubKey)
 	if !ok {
 		return 1
 	}

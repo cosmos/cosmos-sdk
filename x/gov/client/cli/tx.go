@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"strings"
 

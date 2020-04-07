@@ -13,6 +13,7 @@ type GenesisState struct {
 	Delegations          Delegations           `json:"delegations" yaml:"delegations"`
 	UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations" yaml:"unbonding_delegations"`
 	Redelegations        []Redelegation        `json:"redelegations" yaml:"redelegations"`
+	HistoricalInfos      []HistoricalInfo      `json:"historical_infos" yaml:"historical_infos"`
 	Exported             bool                  `json:"exported" yaml:"exported"`
 }
 

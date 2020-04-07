@@ -60,7 +60,12 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 
 	homedir := viper.GetString(flags.FlagHome)
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	keyring, err := newKeyringFromFlags(viper.GetString(flags.FlagKeyringBackend), homedir, input, genOnly)
+	backend := viper.GetString(flags.FlagKeyringBackend)
+	if len(backend) == 0 {
+		backend = keyring.BackendMemory
+	}
+
+	keyring, err := newKeyringFromFlags(backend, homedir, input, genOnly)
 	if err != nil {
 		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
 	}

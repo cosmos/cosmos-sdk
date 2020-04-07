@@ -26,7 +26,6 @@ func TestCLIContext_WithOffline(t *testing.T) {
 
 	viper.Set(flags.FlagOffline, false)
 	viper.Set(flags.FlagNode, "tcp://localhost:26657")
-	viper.Set(flags.FlagKeyringBackend, keyring.BackendMemory)
 
 	ctx = context.NewCLIContext()
 	require.False(t, ctx.Offline)

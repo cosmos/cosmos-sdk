@@ -99,7 +99,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	return cmd
+	return flags.GetCommands(cmd)[0]
 }
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.

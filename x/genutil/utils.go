@@ -52,7 +52,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
-		return nodeID, valPubKey, err
+		return "", nil, err
 	}
 
 	nodeID = string(nodeKey.ID())
@@ -60,12 +60,12 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
-		return nodeID, valPubKey, nil
+		return "", nil, err
 	}
 
 	pvStateFile := config.PrivValidatorStateFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
-		return nodeID, valPubKey, nil
+		return "", nil, err
 	}
 
 	valPubKey = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()

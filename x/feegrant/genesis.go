@@ -1,6 +1,8 @@
 package feegrant
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // GenesisState contains a set of fee allowances, persisted from the store
 type GenesisState []FeeAllowanceGrant
@@ -8,7 +10,7 @@ type GenesisState []FeeAllowanceGrant
 // ValidateBasic ensures all grants in the genesis state are valid
 func (g GenesisState) ValidateBasic() error {
 	for _, f := range g {
-		err := f.ValidateBasic()
+		err := f.GetFeeGrant().ValidateBasic()
 		if err != nil {
 			return err
 		}

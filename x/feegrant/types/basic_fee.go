@@ -5,21 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
-// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
-type BasicFeeAllowance struct {
-	// SpendLimit is the maximum amount of tokens to be spent
-	SpendLimit sdk.Coins
-
-	// Expiration specifies an optional time or height when this allowance expires.
-	// If Expiration.IsZero() then it never expires
-	Expiration ExpiresAt
-}
-
-var _ exported.FeeAllowance = (*BasicFeeAllowance)(nil)
+var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp/height of the current block
 // to determine whether or not to process this. This is checked in
@@ -48,7 +36,7 @@ func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeig
 // PrepareForExport will adjust the expiration based on export time. In particular,
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
-func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
+func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
 	return &BasicFeeAllowance{
 		SpendLimit: a.SpendLimit,
 		Expiration: a.Expiration.PrepareForExport(dumpTime, dumpHeight),

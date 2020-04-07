@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -30,12 +29,12 @@ type GrantedFeeTx interface {
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement GrantedFeeTx interface to use DeductGrantedFeeDecorator
 type DeductGrantedFeeDecorator struct {
-	ak exported.AccountKeeper
+	ak types.AccountKeeper
 	k  keeper.Keeper
-	sk exported.SupplyKeeper
+	sk types.SupplyKeeper
 }
 
-func NewDeductGrantedFeeDecorator(ak exported.AccountKeeper, sk exported.SupplyKeeper, k keeper.Keeper) DeductGrantedFeeDecorator {
+func NewDeductGrantedFeeDecorator(ak types.AccountKeeper, sk types.SupplyKeeper, k keeper.Keeper) DeductGrantedFeeDecorator {
 	return DeductGrantedFeeDecorator{
 		ak: ak,
 		k:  k,

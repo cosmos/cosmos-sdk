@@ -6,13 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// ExpiresAt is a point in time where something expires.
-// It may be *either* block time or block height
-type ExpiresAt struct {
-	Time   time.Time `json:"time" yaml:"time"`
-	Height int64     `json:"height" yaml:"height"`
-}
-
 // ExpiresAtTime creates an expiration at the given time
 func ExpiresAtTime(t time.Time) ExpiresAt {
 	return ExpiresAt{Time: t}
@@ -100,13 +93,6 @@ func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) Expire
 		e.Height -= dumpHeight
 	}
 	return e
-}
-
-// Duration is a repeating unit of either clock time or number of blocks.
-// This is designed to be added to an ExpiresAt struct.
-type Duration struct {
-	Clock time.Duration `json:"clock" yaml:"clock"`
-	Block int64         `json:"block" yaml:"block"`
 }
 
 // ClockDuration creates an Duration by clock time

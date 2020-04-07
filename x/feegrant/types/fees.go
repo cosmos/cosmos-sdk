@@ -1,4 +1,4 @@
-package exported
+package types
 
 import (
 	"time"
@@ -8,7 +8,7 @@ import (
 
 // FeeAllowance implementations are tied to a given fee delegator and delegatee,
 // and are used to enforce fee grant limits.
-type FeeAllowance interface {
+type FeeAllowanceI interface {
 	// Accept can use fee payment requested as well as timestamp/height of the current block
 	// to determine whether or not to process this. This is checked in
 	// Keeper.UseGrantedFees and the return values should match how it is handled there.
@@ -24,7 +24,7 @@ type FeeAllowance interface {
 	// If we export fee allowances the timing info will be quite off (eg. go from height 100000 to 0)
 	// This callback allows the fee-allowance to change it's state and return a copy that is adjusted
 	// given the time and height of the actual dump (may safely return self if no changes needed)
-	PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowance
+	PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI
 
 	// ValidateBasic should evaluate this FeeAllowance for internal consistency.
 	// Don't allow negative amounts, or negative periods for example.

@@ -3,20 +3,18 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
-// of fees from the account of Granter.
-// If there was already an existing grant, this overwrites it.
-type MsgGrantFeeAllowance struct {
-	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
-	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`
-	Allowance exported.FeeAllowance `json:"allowance" yaml:"allowance"`
+func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance *FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
+	return MsgGrantFeeAllowance{
+		Granter:   granter,
+		Grantee:   grantee,
+		Allowance: feeAllowance,
+	}, nil
 }
 
-func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance exported.FeeAllowance) MsgGrantFeeAllowance {
-	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
+func (msg MsgGrantFeeAllowance) GetFeeGrant() FeeAllowanceI {
+	return msg.Allowance.GetFeeAllowanceI()
 }
 
 func (msg MsgGrantFeeAllowance) Route() string {
@@ -35,7 +33,7 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 
-	return msg.Allowance.ValidateBasic()
+	return nil
 }
 
 func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
@@ -44,12 +42,6 @@ func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
 
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Granter}
-}
-
-// MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
-type MsgRevokeFeeAllowance struct {
-	Granter sdk.AccAddress `json:"granter" yaml:"granter"`
-	Grantee sdk.AccAddress `json:"grantee" yaml:"granter"`
 }
 
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {

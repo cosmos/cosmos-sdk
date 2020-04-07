@@ -31,7 +31,6 @@ var (
 	BlockDuration                = types.BlockDuration
 	FeeAllowanceKey              = types.FeeAllowanceKey
 	FeeAllowancePrefixByGrantee  = types.FeeAllowancePrefixByGrantee
-	NewMsgGrantFeeAllowance      = types.NewMsgGrantFeeAllowance
 	NewMsgRevokeFeeAllowance     = types.NewMsgRevokeFeeAllowance
 	NewFeeGrantTx                = types.NewFeeGrantTx
 	CountSubKeys                 = types.CountSubKeys
@@ -54,6 +53,7 @@ type (
 	BasicFeeAllowance         = types.BasicFeeAllowance
 	ExpiresAt                 = types.ExpiresAt
 	Duration                  = types.Duration
+	FeeAllowance              = types.FeeAllowance
 	FeeAllowanceGrant         = types.FeeAllowanceGrant
 	MsgGrantFeeAllowance      = types.MsgGrantFeeAllowance
 	MsgRevokeFeeAllowance     = types.MsgRevokeFeeAllowance
@@ -61,5 +61,6 @@ type (
 	FeeGrantTx                = types.FeeGrantTx
 	GrantedFee                = types.GrantedFee
 	DelegatedSignDoc          = types.DelegatedSignDoc
+	SupplyKeeper              = types.SupplyKeeper
 	Keeper                    = keeper.Keeper
 )

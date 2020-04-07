@@ -190,7 +190,7 @@ func NewSimApp(
 	app.CrisisKeeper = crisis.NewKeeper(
 		app.subspaces[crisis.ModuleName], invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName,
 	)
-	app.FeeGrantKeeper = feegrant.NewKeeper(app.cdc, keys[feegrant.StoreKey])
+	app.FeeGrantKeeper = feegrant.NewKeeper(appCodec, keys[feegrant.StoreKey])
 	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], appCodec, homePath)
 
 	// create evidence keeper with router

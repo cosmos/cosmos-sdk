@@ -8,19 +8,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc      *codec.Codec
+	cdc      codec.Marshaler
 	storeKey sdk.StoreKey
 }
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) Keeper {
 	return Keeper{cdc: cdc, storeKey: storeKey}
 }
 
@@ -33,8 +32,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
-	bz := k.cdc.MustMarshalBinaryBare(grant)
-
+	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	store.Set(key, bz)
 
 	ctx.EventManager().EmitEvent(
@@ -65,7 +63,7 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // GetFeeAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) exported.FeeAllowance {
+func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) *types.FeeAllowance {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
 	if !found {
 		return nil
@@ -83,10 +81,10 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 		return types.FeeAllowanceGrant{}, false
 	}
 
-	var grant types.FeeAllowanceGrant
-	k.cdc.MustUnmarshalBinaryBare(bz, &grant)
+	var feegrant types.FeeAllowanceGrant
+	k.cdc.MustUnmarshalBinaryBare(bz, &feegrant)
 
-	return grant, true
+	return feegrant, true
 }
 
 // IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
@@ -100,14 +98,11 @@ func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccA
 	stop := false
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
-		var grant types.FeeAllowanceGrant
 
-		err := k.cdc.UnmarshalBinaryBare(bz, &grant)
-		if err != nil {
-			return err
-		}
+		var feeGrant types.FeeAllowanceGrant
+		k.cdc.MustUnmarshalBinaryBare(bz, &feeGrant)
 
-		stop = cb(grant)
+		stop = cb(feeGrant)
 	}
 
 	return nil
@@ -124,14 +119,10 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 	stop := false
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
-		var grant types.FeeAllowanceGrant
+		var feeGrant types.FeeAllowanceGrant
+		k.cdc.MustUnmarshalBinaryBare(bz, &feeGrant)
 
-		err := k.cdc.UnmarshalBinaryBare(bz, &grant)
-		if err != nil {
-			return err
-		}
-
-		stop = cb(grant)
+		stop = cb(feeGrant)
 	}
 
 	return nil
@@ -140,11 +131,11 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) error {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
-	if !found || grant.Allowance == nil {
+	if !found || grant.GetFeeGrant() == nil {
 		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
-	remove, err := grant.Allowance.Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
+	remove, err := grant.GetFeeGrant().Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
 	if err == nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

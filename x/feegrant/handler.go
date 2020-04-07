@@ -23,8 +23,9 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) (*sdk.Result, error) {
-	grant := FeeAllowanceGrant(msg)
-	k.GrantFeeAllowance(ctx, grant)
+	feegrant := FeeAllowanceGrant(msg)
+
+	k.GrantFeeAllowance(ctx, feegrant)
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 

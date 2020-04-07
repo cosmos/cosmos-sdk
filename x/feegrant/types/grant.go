@@ -3,19 +3,11 @@ package types
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
-// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
-type FeeAllowanceGrant struct {
-	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
-	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`
-	Allowance exported.FeeAllowance `json:"allowance" yaml:"allowance"`
-}
-
-// ValidateBasic ensures that
+// ValidateBasic performs basic validation on
+// FeeAllowanceGrant
 func (a FeeAllowanceGrant) ValidateBasic() error {
 	if a.Granter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
@@ -27,12 +19,19 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	return a.Allowance.ValidateBasic()
+	return a.GetFeeGrant().ValidateBasic()
 }
 
-// PrepareForExport will make all needed changes to the allowance to prepare to be
+func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
+	return a.Allowance.GetFeeAllowanceI()
+}
+
+// PrepareForExport will m	ake all needed changes to the allowance to prepare to be
 // re-imported at height 0, and return a copy of this grant.
 func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
-	a.Allowance = a.Allowance.PrepareForExport(dumpTime, dumpHeight)
+	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
+	if err != nil {
+		return FeeAllowanceGrant{}
+	}
 	return a
 }

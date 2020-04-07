@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"runtime/debug"
@@ -58,9 +57,6 @@ type BaseApp struct { // nolint: maligned
 	router      sdk.Router           // handle any kind of message
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
-
-	// set upon LoadVersion or LoadLatestVersion.
-	baseKey *sdk.KVStoreKey // Main KVStore in cms
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -209,12 +205,13 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
-func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
+func (app *BaseApp) LoadLatestVersion() error {
 	err := app.storeLoader(app.cms)
 	if err != nil {
 		return err
 	}
-	return app.initFromMainStore(baseKey)
+
+	return app.initFromMainStore()
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
@@ -224,12 +221,13 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
-func (app *BaseApp) LoadVersion(version int64, baseKey *sdk.KVStoreKey) error {
+func (app *BaseApp) LoadVersion(version int64) error {
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return err
 	}
-	return app.initFromMainStore(baseKey)
+
+	return app.initFromMainStore()
 }
 
 // LastCommitID returns the last CommitID of the multistore.
@@ -243,17 +241,10 @@ func (app *BaseApp) LastBlockHeight() int64 {
 }
 
 // initializes the remaining logic from app.cms
-func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
-	mainStore := app.cms.GetKVStore(baseKey)
-	if mainStore == nil {
-		return errors.New("baseapp expects MultiStore with 'main' KVStore")
+func (app *BaseApp) initFromMainStore() error {
+	if app.sealed {
+		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
-
-	// memoize baseKey
-	if app.baseKey != nil {
-		panic("app.baseKey expected to be nil; duplicate init?")
-	}
-	app.baseKey = baseKey
 
 	// Load the consensus params from the main store. If the consensus params are
 	// nil, it will be saved later during InitChain.
@@ -337,20 +328,20 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	}
 }
 
-// setConsensusParams memoizes the consensus params.
-func (app *BaseApp) setConsensusParams(consensusParams *abci.ConsensusParams) {
-	app.consensusParams = consensusParams
-}
+// // setConsensusParams memoizes the consensus params.
+// func (app *BaseApp) setConsensusParams(consensusParams *abci.ConsensusParams) {
+// 	app.consensusParams = consensusParams
+// }
 
-// setConsensusParams stores the consensus params to the main store.
-func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) {
-	consensusParamsBz, err := proto.Marshal(consensusParams)
-	if err != nil {
-		panic(err)
-	}
-	mainStore := app.cms.GetKVStore(app.baseKey)
-	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
-}
+// // setConsensusParams stores the consensus params to the main store.
+// func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) {
+// 	consensusParamsBz, err := proto.Marshal(consensusParams)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	mainStore := app.cms.GetKVStore(app.baseKey)
+// 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
+// }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative

@@ -218,13 +218,13 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
-// there is no need to execute IncrementSequenceDecorator on CheckTx or RecheckTX
-// since it is merely updating the nonce. As a result, this has the side effect
-// that subsequent and sequential txs orginating from the same account cannot be
-// handled correctly in a reliable way. To send sequential txs orginating from the
-// same account, it is recommended to instead use multiple messages in a tx.
+// there is no need to execute IncrementSequenceDecorator on RecheckTX since
+// CheckTx would already bump the sequence number.
 //
-// CONTRACT: The tx must implement the SigVerifiableTx interface.
+// NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
+// sequential txs orginating from the same account cannot be handled correctly in
+// a reliable way unless sequence numbers are managed and tracked manually by a
+// client. It is recommended to instead use multiple messages in a tx.
 type IncrementSequenceDecorator struct {
 	ak keeper.AccountKeeper
 }

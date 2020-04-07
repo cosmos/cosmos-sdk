@@ -128,6 +128,12 @@ func newVoteHandlerFn(cliCtx context.CLIContext, txg tx.Generator) http.HandlerF
 		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Deprecated
+//
+// TODO: Remove once client-side Protobuf migration has been completed.
+// ---------------------------------------------------------------------------
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, phs []ProposalRESTHandler) {
 	propSubRtr := r.PathPrefix("/gov/proposals").Subrouter()
 	for _, ph := range phs {

@@ -36,11 +36,6 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps paramtypes.Subspace,
 ) Keeper {
-
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(ParamKeyTable())
-	}
-
 	// ensure bonded and not bonded module accounts are set
 	if addr := sk.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
@@ -48,11 +43,6 @@ func NewKeeper(
 
 	if addr := sk.GetModuleAddress(types.NotBondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
-	}
-
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(ParamKeyTable())
 	}
 
 	return Keeper{

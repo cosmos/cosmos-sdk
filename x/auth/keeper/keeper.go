@@ -30,12 +30,6 @@ type AccountKeeper struct {
 func NewAccountKeeper(
 	cdc types.Codec, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() exported.Account,
 ) AccountKeeper {
-
-	// set KeyTable if it has not already been set
-	if !paramstore.HasKeyTable() {
-		paramstore = paramstore.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return AccountKeeper{
 		key:           key,
 		proto:         proto,

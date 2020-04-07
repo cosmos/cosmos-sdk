@@ -107,8 +107,8 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-
 			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -146,7 +146,6 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-
 			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
@@ -164,7 +163,6 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
 			return newSplitAndApply(tx.GenerateOrBroadcastTx, cliCtx, txf, msgs, chunkSize)
-
 		},
 	}
 	return flags.PostCommands(cmd)[0]
@@ -189,7 +187,6 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-
 			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
@@ -235,7 +232,6 @@ Where proposal.json contains:
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-
 			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
 
 			depositorAddr := cliCtx.GetFromAddress()

@@ -67,7 +67,6 @@ func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Gen
 func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -96,9 +95,7 @@ func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-
 		var req withdrawRewardsReq
-
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -131,9 +128,7 @@ func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Ma
 func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-
 		var req setWithdrawalAddrReq
-
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -161,9 +156,7 @@ func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.M
 func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-
 		var req withdrawRewardsReq
-
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -192,7 +185,6 @@ func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-
 		var req fundCommunityPoolReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return

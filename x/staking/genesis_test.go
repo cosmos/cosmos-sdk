@@ -64,7 +64,15 @@ func TestInitGenesis(t *testing.T) {
 	validators[1].Tokens = valTokens
 	validators[1].DelegatorShares = valTokens.ToDec()
 
+	header1 := abci.Header{ChainID: "gaia", Height: 10}
+	header2 := abci.Header{ChainID: "gaia", Height: 11}
+	header3 := abci.Header{ChainID: "gaia", Height: 12}
+	hist1 := types.HistoricalInfo{Header: header1, Valset: validators}
+	hist2 := types.HistoricalInfo{Header: header2, Valset: validators}
+	hist3 := types.HistoricalInfo{Header: header3, Valset: validators}
+
 	genesisState := types.NewGenesisState(params, validators, delegations)
+	genesisState.HistoricalInfos = []types.HistoricalInfo{hist1, hist2, hist3}
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper, genesisState)
 
 	actualGenesis := staking.ExportGenesis(ctx, app.StakingKeeper)

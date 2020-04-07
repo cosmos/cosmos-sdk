@@ -99,6 +99,8 @@ types (eg. keys) to the `auth` module internal amino codec.
 * (rest) [\#5906](https://github.com/cosmos/cosmos-sdk/pull/5906) Fix an issue that make some REST calls panic when sending
 invalid or incomplete requests.
 * (x/genutil) [\#5938](https://github.com/cosmos/cosmos-sdk/pull/5938) Fix `InitializeNodeValidatorFiles` error handling.
+* (x/staking) [\#5949](https://github.com/cosmos/cosmos-sdk/pull/5949) Add `HistoricalInfo` to staking `GenesisState` for import and export
+* (x/auth) [\#5950](https://github.com/cosmos/cosmos-sdk/pull/5950) Fix `IncrementSequenceDecorator` to use is `IsReCheckTx` instead of `IsCheckTx` to allow account sequence incrementing.
 
 ### State Machine Breaking
 

@@ -121,6 +121,10 @@ func InitGenesis(
 		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
+	for _, hi := range data.HistoricalInfos {
+		keeper.SetHistoricalInfo(ctx, hi.Header.GetHeight(), hi)
+	}
+
 	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
@@ -144,10 +148,6 @@ func InitGenesis(
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
-	params := keeper.GetParams(ctx)
-	lastTotalPower := keeper.GetLastTotalPower(ctx)
-	validators := keeper.GetAllValidators(ctx)
-	delegations := keeper.GetAllDelegations(ctx)
 	var unbondingDelegations []types.UnbondingDelegation
 	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
 		unbondingDelegations = append(unbondingDelegations, ubd)
@@ -165,13 +165,14 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	})
 
 	return types.GenesisState{
-		Params:               params,
-		LastTotalPower:       lastTotalPower,
+		Params:               keeper.GetParams(ctx),
+		LastTotalPower:       keeper.GetLastTotalPower(ctx),
 		LastValidatorPowers:  lastValidatorPowers,
-		Validators:           validators,
-		Delegations:          delegations,
+		Validators:           keeper.GetAllValidators(ctx),
+		Delegations:          keeper.GetAllDelegations(ctx),
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
+		HistoricalInfos:      keeper.GetAllHistoricalInfo(ctx),
 		Exported:             true,
 	}
 }

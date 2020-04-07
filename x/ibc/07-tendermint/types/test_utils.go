@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmbits "github.com/tendermint/tendermint/proto/libs/bits"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
@@ -61,7 +62,8 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 
 	abciBlockID := tmtypes.TM2PB.BlockID(blockID)
 	abciHeader := tmtypes.TM2PB.Header(tmHeader)
-
+	bitArray := commit.BitArray()
+	
 	signedHeader := tmproto.SignedHeader{
 		Header: &abciHeader,
 		Commit: &tmproto.Commit{
@@ -69,14 +71,17 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 			Round:  int32(commit.Round),
 			BlockID: tmproto.BlockID{
 				Hash: abciBlockID.Hash,
-				PartsHeader: tmproto.PartsHeader{
+				PartsHeader: tmproto.PartSetHeader{
 					Total: abciBlockID.PartsHeader.Total,
 					Hash:  abciBlockID.PartsHeader.Hash,
 				},
 			},
 			Signatures: commitSigs,
 			Hash:       commit.Hash(),
-			BitArray:   commit.BitArray(),
+			BitArray: &tmbits.BitArray{
+				Bits:  int64(bitArray.Bits),
+				Elems: bitArray.Elems,
+			},
 		},
 	}
 

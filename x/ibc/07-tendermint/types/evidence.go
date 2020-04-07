@@ -75,13 +75,13 @@ func (ev Evidence) ValidateBasic() error {
 	}
 
 	// ValidateBasic on both validators
-	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header1.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header2.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
@@ -114,13 +114,15 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmtypes.Validat
 		}
 	}()
 
+	tmCommit := ProtoCommitToTmTypes(commit)
+
 	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, commit, valSet)
+	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, valSet)
 
 	blockID, ok := voteSet.TwoThirdsMajority()
 
 	// Check that ValidatorSet did indeed commit to blockID in Commit
-	if !ok || !blockID.Equals(commit.BlockID) {
+	if !ok || !blockID.Equals(tmCommit.BlockID) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "validator set did not commit to header 1")
 	}
 

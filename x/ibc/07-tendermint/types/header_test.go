@@ -9,12 +9,11 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	testCases := []struct {
 		name    string
 		header  ibctmtypes.Header
-		chainID string
 		expPass bool
 	}{
-		{"valid header", suite.header, chainID, true},
-		{"signed header basic validation failed", suite.header, "chainID", false},
-		{"validator set nil", ibctmtypes.Header{suite.header.SignedHeader, nil}, chainID, false},
+		{"valid header", suite.header, true},
+		{"signed header basic validation failed", suite.header, false},
+		{"validator set nil", ibctmtypes.Header{suite.header.SignedHeader, nil}, false},
 	}
 
 	suite.Require().Equal(clientexported.Tendermint, suite.header.ClientType())
@@ -22,9 +21,9 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.expPass {
-			suite.Require().NoError(tc.header.ValidateBasic(tc.chainID), "valid test case %d failed: %s", i, tc.name)
+			suite.Require().NoError(tc.header.ValidateBasic(), "valid test case %d failed: %s", i, tc.name)
 		} else {
-			suite.Require().Error(tc.header.ValidateBasic(tc.chainID), "invalid test case %d passed: %s", i, tc.name)
+			suite.Require().Error(tc.header.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
 		}
 	}
 }

@@ -83,6 +83,11 @@ to now accept a `codec.JSONMarshaler` for modular serialization of genesis state
   - `NewKeyring()` now accepts a new backend: `MemoryBackend`.
   - `New()` has been renamed to`NewLegacy()`, which now returns a `LegacyKeybase` type that only allows migration of keys from the legacy keybase to a new keyring.
 * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Rename `NewKeyBaseFromDir()` -> `NewLegacyKeyBaseFromDir()`.
+* (crypto/keyring) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) `Keybase` -> `Keyring` interfaces migration. `LegacyKeybase` interface is added in order
+to guarantee limited backward compatibility with the old Keybase interface for the sole purpose of migrating keys across the new keyring backends. Plus, the package
+and the new keyring no longer depends on the sdk.Config singleton.
+* (crypto/keys) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) `crypto/keys/hd` moved to `crypto/hd`.
+* (client/input) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) Removal of unnecessary `GetCheckPassword`, `PrintPrefixed` functions.
 
 ### Features
 

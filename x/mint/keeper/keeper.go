@@ -32,6 +32,11 @@ func NewKeeper(
 		panic("the mint module account has not been set")
 	}
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		cdc:              cdc,
 		storeKey:         key,

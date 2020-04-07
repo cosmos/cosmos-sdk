@@ -47,8 +47,9 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []t
 		compareValue := true
 		for _, prefix := range prefixesToSkip {
 			// Skip value comparison if we matched a prefix
-			if bytes.Equal(kvA.Key[:len(prefix)], prefix) {
+			if bytes.HasPrefix(kvA.Key, prefix) {
 				compareValue = false
+				break
 			}
 		}
 		if compareValue && !bytes.Equal(kvA.Value, kvB.Value) {

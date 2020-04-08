@@ -3,8 +3,9 @@ package staking
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogo/protobuf/grpc"
 	"math/rand"
+
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"

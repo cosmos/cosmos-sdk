@@ -21,7 +21,7 @@ type AccountRetriever interface {
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
 type Factory struct {
-	keybase            keyring.Keybase
+	keybase            keyring.Keyring
 	txGenerator        Generator
 	accountRetriever   AccountRetriever
 	accountNumber      uint64
@@ -36,7 +36,7 @@ type Factory struct {
 }
 
 func NewFactoryFromCLI(input io.Reader) Factory {
-	kb, err := keyring.NewKeyring(
+	kb, err := keyring.New(
 		sdk.KeyringServiceName(),
 		viper.GetString(flags.FlagKeyringBackend),
 		viper.GetString(flags.FlagHome),
@@ -68,7 +68,7 @@ func (f Factory) AccountNumber() uint64              { return f.accountNumber }
 func (f Factory) Sequence() uint64                   { return f.sequence }
 func (f Factory) Gas() uint64                        { return f.gas }
 func (f Factory) GasAdjustment() float64             { return f.gasAdjustment }
-func (f Factory) Keybase() keyring.Keybase           { return f.keybase }
+func (f Factory) Keybase() keyring.Keyring           { return f.keybase }
 func (f Factory) ChainID() string                    { return f.chainID }
 func (f Factory) Memo() string                       { return f.memo }
 func (f Factory) Fees() sdk.Coins                    { return f.fees }
@@ -126,7 +126,7 @@ func (f Factory) WithGasPrices(gasPrices string) Factory {
 }
 
 // WithKeybase returns a copy of the Factory with updated Keybase.
-func (f Factory) WithKeybase(keybase keyring.Keybase) Factory {
+func (f Factory) WithKeybase(keybase keyring.Keyring) Factory {
 	f.keybase = keybase
 	return f
 }

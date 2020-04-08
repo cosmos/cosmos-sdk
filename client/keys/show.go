@@ -57,7 +57,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keyring.Info
 
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -142,15 +142,15 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func fetchKey(kb keyring.Keybase, keyref string) (keyring.Info, error) {
-	info, err := kb.Get(keyref)
+func fetchKey(kb keyring.Keyring, keyref string) (keyring.Info, error) {
+	info, err := kb.Key(keyref)
 	if err != nil {
 		accAddr, err := sdk.AccAddressFromBech32(keyref)
 		if err != nil {
 			return info, err
 		}
 
-		info, err = kb.GetByAddress(accAddr)
+		info, err = kb.KeyByAddress(accAddr)
 		if err != nil {
 			return info, errors.New("key not found")
 		}

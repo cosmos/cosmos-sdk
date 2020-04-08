@@ -63,6 +63,6 @@ func (s secp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) crypto.PrivKey {
 		var bzArr [32]byte
 		copy(bzArr[:], bz)
-		return secp256k1.PrivKeySecp256k1(bzArr)
+		return secp256k1.PrivKey(bzArr[:])
 	}
 }

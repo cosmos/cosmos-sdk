@@ -3,8 +3,9 @@ package mint
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogo/protobuf/grpc"
 	"math/rand"
+
+	"github.com/gogo/protobuf/grpc"
 
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 

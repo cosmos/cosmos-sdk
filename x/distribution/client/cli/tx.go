@@ -116,14 +116,14 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			}
 
 			msgs := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
+			if viper.GetBool(flagCommission) {
+				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
+			}
+
 			for _, msg := range msgs {
 				if err := msg.ValidateBasic(); err != nil {
 					return err
 				}
-			}
-
-			if viper.GetBool(flagCommission) {
-				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msgs...)

@@ -26,12 +26,10 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      *codec.Codec
 
-	clientKeeper     types.ClientKeeper
-	connectionKeeper types.ConnectionKeeper
-	channelKeeper    types.ChannelKeeper
-	bankKeeper       types.BankKeeper
-	supplyKeeper     types.SupplyKeeper
-	scopedKeeper     capability.ScopedKeeper
+	channelKeeper types.ChannelKeeper
+	bankKeeper    types.BankKeeper
+	supplyKeeper  types.SupplyKeeper
+	scopedKeeper  capability.ScopedKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance

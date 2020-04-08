@@ -81,6 +81,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -144,6 +145,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			tc.malleate()
@@ -196,6 +198,7 @@ func (suite *KeeperTestSuite) TestTimeoutTransfer() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			tc.malleate()

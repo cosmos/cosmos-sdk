@@ -45,6 +45,8 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -134,6 +136,8 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -165,7 +169,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				_, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), exported.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, portCap, counterparty, testChannelVersion, testChannelVersion,
-					invalidProof{}, uint64(proofHeight),
+					invalidProof{}, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -266,6 +270,8 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -385,6 +391,8 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -467,6 +475,8 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -580,6 +590,8 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -602,7 +614,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			} else {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 					suite.chainB.GetContext(), testPort2, testChannel2, channelCap,
-					invalidProof{}, uint64(proofHeight),
+					invalidProof{}, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -29,19 +28,14 @@ import (
 
 // define constants used for testing
 const (
-	testChainID    = "test-chain-id"
-	testClientIDA  = "testclientida"
-	testClientIDB  = "testclientidb"
-	testClientType = clientexported.Tendermint
+	testClientIDA = "testclientida"
+	testClientIDB = "testclientidb"
 
 	testConnection = "testconnection"
 	testPort1      = "bank"
 	testPort2      = "testportid"
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
-
-	testChannelOrder   = channelexported.UNORDERED
-	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -71,21 +65,6 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.chainB = NewTestChain(testClientIDB)
 
 	suite.cdc = suite.chainA.App.Codec()
-}
-
-func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitmenttypes.MerkleProof, height int64) {
-	res := suite.chainA.App.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  key,
-		Prove: true,
-	})
-
-	height = res.Height
-	proof = commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
-
-	return
 }
 
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
@@ -226,6 +205,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// )
 }
 
+// nolint: unused
 func (chain *TestChain) updateClient(client *TestChain) {
 	// Create target ctx
 	ctxTarget := chain.GetContext()
@@ -304,6 +284,7 @@ func (chain *TestChain) createConnection(
 	return connection
 }
 
+// nolint: unused
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
 	state channelexported.State, order exported.Order, connectionID string,

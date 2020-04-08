@@ -53,7 +53,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
-	p1, p2 := "1234", "really-secure!@#$"
+	p1, p2 := nums, "really-secure!@#$"
 
 	// Check empty state
 	l, err := kb.List()
@@ -144,7 +144,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	}
 	require.Equal(t, "key", i1.GetName())
 
-	p1 := "1234"
+	p1 := nums
 	d1 := []byte("my first message")
 	s1, pub1, err := kb.Sign("key", p1, d1)
 	require.NoError(t, err)
@@ -173,7 +173,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
-	p1, p2, p3 := "1234", "foobar", "foobar"
+	p1, p2, p3 := nums, foobar, foobar
 
 	// create two users and get their info
 	i1, _, err := kb.CreateMnemonic(n1, English, p1, algo)

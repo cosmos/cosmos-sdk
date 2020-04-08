@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -22,13 +24,14 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("keyname1", "", false) // nolint:errcheck
+		kb.Delete("keyname1") // nolint:errcheck
 	})
 
-	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", "", keyring.Secp256k1)
+	path := sdk.GetConfig().GetFullFundraiserPath()
+	_, err = kb.NewAccount("keyname1", tests.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Now enter password

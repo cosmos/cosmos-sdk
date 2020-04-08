@@ -5,9 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenerateCoinKey(t *testing.T) {
@@ -16,7 +18,7 @@ func TestGenerateCoinKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test creation
-	info, err := keyring.NewInMemory().CreateAccount("xxx", mnemonic, "", "012345678", keyring.CreateHDPath(0, 0).String(), keyring.Secp256k1)
+	info, err := keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -26,19 +28,19 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
-	kb, err := keyring.NewKeyring(t.Name(), "test", dir, nil)
+	kb, err := keyring.New(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", "012345678", false)
 	require.NoError(t, err)
 
 	// Test key was actually saved
-	info, err := kb.Get("keyname")
+	info, err := kb.Key("keyname")
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	info, err = keyring.NewInMemory().CreateAccount("xxx", mnemonic, "", "012345678", keyring.CreateHDPath(0, 0).String(), keyring.Secp256k1)
+	info, err = keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
 }
@@ -48,7 +50,7 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
-	kb, err := keyring.NewKeyring(t.Name(), "test", dir, nil)
+	kb, err := keyring.New(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	keyname := "justakey"

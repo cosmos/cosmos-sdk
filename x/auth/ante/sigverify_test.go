@@ -212,3 +212,40 @@ func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ..
 
 	return after - before, err
 }
+
+func TestIncrementSequenceDecorator(t *testing.T) {
+	app, ctx := createTestApp(true)
+
+	priv, _, addr := types.KeyTestPubAddr()
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	require.NoError(t, acc.SetAccountNumber(uint64(50)))
+	app.AccountKeeper.SetAccount(ctx, acc)
+
+	msgs := []sdk.Msg{types.NewTestMsg(addr)}
+	privKeys := []crypto.PrivKey{priv}
+	accNums := []uint64{app.AccountKeeper.GetAccount(ctx, addr).GetAccountNumber()}
+	accSeqs := []uint64{app.AccountKeeper.GetAccount(ctx, addr).GetSequence()}
+	fee := types.NewTestStdFee()
+	tx := types.NewTestTx(ctx, msgs, privKeys, accNums, accSeqs, fee)
+
+	isd := ante.NewIncrementSequenceDecorator(app.AccountKeeper)
+	antehandler := sdk.ChainAnteDecorators(isd)
+
+	testCases := []struct {
+		ctx         sdk.Context
+		simulate    bool
+		expectedSeq uint64
+	}{
+		{ctx.WithIsReCheckTx(true), false, 0},
+		{ctx.WithIsCheckTx(true).WithIsReCheckTx(false), false, 1},
+		{ctx.WithIsReCheckTx(true), false, 1},
+		{ctx.WithIsReCheckTx(true), false, 1},
+		{ctx.WithIsReCheckTx(true), true, 2},
+	}
+
+	for i, tc := range testCases {
+		_, err := antehandler(tc.ctx, tx, tc.simulate)
+		require.NoError(t, err, "unexpected error; tc #%d, %v", i, tc)
+		require.Equal(t, tc.expectedSeq, app.AccountKeeper.GetAccount(ctx, addr).GetSequence())
+	}
+}

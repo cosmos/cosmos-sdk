@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 	require.Equal(t, "myMultisig", tmp.GetName())
 	require.Equal(t, keyring.TypeMulti, tmp.GetType())
 	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
-	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", tmp.GetAddress().String())
+	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", sdk.MustBech32ifyAddressBytes("cosmos", tmp.GetAddress()))
 }
 
 func Test_showKeysCmd(t *testing.T) {
@@ -48,16 +49,19 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		kb.Delete("runShowCmd_Key1", "", false)
-		kb.Delete("runShowCmd_Key2", "", false)
+		kb.Delete("runShowCmd_Key1")
+		kb.Delete("runShowCmd_Key2")
 	})
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keyring.Secp256k1)
+
+	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
+	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keyring.Secp256k1)
+	path2 := hd.NewFundraiserParams(1, sdk.CoinType, 1).String()
+	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path2, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key
@@ -69,7 +73,7 @@ func Test_runShowCmd(t *testing.T) {
 	// try fetch by name
 	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
 	// try fetch by addr
-	info, err := kb.Get(fakeKeyName1)
+	info, err := kb.Key(fakeKeyName1)
 	require.NoError(t, err)
 	require.NoError(t, runShowCmd(cmd, []string{info.GetAddress().String()}))
 

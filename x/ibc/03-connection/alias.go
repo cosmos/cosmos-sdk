@@ -56,6 +56,7 @@ var (
 	AttributeValueCategory         = types.AttributeValueCategory
 )
 
+// nolint: golint
 type (
 	Keeper                       = keeper.Keeper
 	ConnectionEnd                = types.ConnectionEnd

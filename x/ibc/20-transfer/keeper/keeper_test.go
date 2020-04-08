@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -28,19 +27,14 @@ import (
 
 // define constants used for testing
 const (
-	testChainID    = "test-chain-id"
-	testClientIDA  = "testclientIDA"
-	testClientIDB  = "testClientIDb"
-	testClientType = clientexported.Tendermint
+	testClientIDA = "testclientIDA"
+	testClientIDB = "testClientIDb"
 
 	testConnection = "testconnectionatob"
 	testPort1      = "bank"
 	testPort2      = "testportid"
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
-
-	testChannelOrder   = channelexported.UNORDERED
-	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3

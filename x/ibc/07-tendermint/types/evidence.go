@@ -96,10 +96,10 @@ func (ev Evidence) ValidateBasic() error {
 	if ev.Header1.SignedHeader.Commit.BlockID.Equal(ev.Header2.SignedHeader.Commit.BlockID) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit, ev.Header1.ValidatorSet.ToTmTypes()); err != nil {
+	if err := ValidCommit(ev.ChainID, ev.Header1.SignedHeader.Commit, ev.Header1.ValidatorSet); err != nil {
 		return err
 	}
-	return ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit, ev.Header2.ValidatorSet.ToTmTypes())
+	return ValidCommit(ev.ChainID, ev.Header2.SignedHeader.Commit, ev.Header2.ValidatorSet)
 }
 
 // ValidCommit checks if the given commit is a valid commit from the passed-in validatorset
@@ -107,7 +107,7 @@ func (ev Evidence) ValidateBasic() error {
 // CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
 // This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
 // thus we should return an error here and reject the evidence rather than panicing.
-func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmtypes.ValidatorSet) (err error) {
+func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid commit: %v", r)
@@ -115,9 +115,10 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmtypes.Validat
 	}()
 
 	tmCommit := ProtoCommitToTmTypes(commit)
+	tmValSet := ProtoValidatorSettToTmTypes(valSet)
 
 	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, valSet)
+	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValSet)
 
 	blockID, ok := voteSet.TwoThirdsMajority()
 

@@ -4,7 +4,6 @@ package cosmos_sdk.x.ibc.tendermint.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "third_party/proto/tendermint/abci/types/types.proto";
 import "third_party/proto/tendermint/proto/types/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -108,8 +107,8 @@ message ConsensusState {
     (gogoproto.nullable) = false
   ];
   // height at which the consensus state was stored.
-  uint64       height        = 3;
-  ValidatorSet validator_set = 4 [
+  uint64                               height        = 3;
+  .tendermint.proto.types.ValidatorSet validator_set = 4 [
     (gogoproto.moretags) = "yaml:\"validator_set\""
   ];
 }
@@ -151,19 +150,7 @@ message Header {
     (gogoproto.moretags) = "yaml:\"signed_header\""
   ];
 
-  ValidatorSet validator_set = 2 [
+  .tendermint.proto.types.ValidatorSet validator_set = 2 [
     (gogoproto.moretags) = "yaml:\"validator_set\""
-  ];
-}
-
-// TODO: move to tendermint
-message ValidatorSet {
-  option (gogoproto.equal) = true;
-
-  repeated .tendermint.abci.types.Validator validators         = 1;
-  .tendermint.abci.types.Validator          proposer           = 2;
-  int64                                     total_voting_power = 3 [
-    (gogoproto.customname) = "totalVotingPower",
-    (gogoproto.moretags)   = "yaml:\"total_voting_power\""
   ];
 }

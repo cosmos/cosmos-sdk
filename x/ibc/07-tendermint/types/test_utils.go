@@ -63,7 +63,7 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 	abciBlockID := tmtypes.TM2PB.BlockID(blockID)
 	abciHeader := tmtypes.TM2PB.Header(tmHeader)
 	bitArray := commit.BitArray()
-	
+
 	signedHeader := tmproto.SignedHeader{
 		Header: &abciHeader,
 		Commit: &tmproto.Commit{
@@ -85,9 +85,8 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		},
 	}
 
-	valset := ValSetFromTmTypes(valSet)
 	return Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: valset,
+		ValidatorSet: valSet,
 	}
 }

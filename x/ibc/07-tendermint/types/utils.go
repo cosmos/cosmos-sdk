@@ -14,37 +14,37 @@ func abciValidatorToTmTypes(val *abci.Validator) *tmtypes.Validator {
 	}
 }
 
-// ToTmTypes casts a proto ValidatorSet to tendendermint type.
-func (valset ValidatorSet) ToTmTypes() *tmtypes.ValidatorSet {
-	vals := make([]*tmtypes.Validator, len(valset.Validators))
-	for i := range valset.Validators {
-		vals[i] = abciValidatorToTmTypes(valset.Validators[i])
-	}
+// // ToTmTypes casts a proto ValidatorSet to tendendermint type.
+// func (valset ValidatorSet) ToTmTypes() *tmtypes.ValidatorSet {
+// 	vals := make([]*tmtypes.Validator, len(valset.Validators))
+// 	for i := range valset.Validators {
+// 		vals[i] = abciValidatorToTmTypes(valset.Validators[i])
+// 	}
 
-	vs := tmtypes.ValidatorSet{
-		Validators: vals,
-		Proposer:   abciValidatorToTmTypes(valset.Proposer),
-	}
-	_ = vs.TotalVotingPower()
-	return &vs
-}
+// 	vs := tmtypes.ValidatorSet{
+// 		Validators: vals,
+// 		Proposer:   abciValidatorToTmTypes(valset.Proposer),
+// 	}
+// 	_ = vs.TotalVotingPower()
+// 	return &vs
+// }
 
-// ValSetFromTmTypes casts a proto ValidatorSet to tendendermint type.
-func ValSetFromTmTypes(valset *tmtypes.ValidatorSet) *ValidatorSet {
-	vals := make([]*abci.Validator, len(valset.Validators))
+// // ValSetFromTmTypes casts a proto ValidatorSet to tendendermint type.
+// func ValSetFromTmTypes(valset *tmtypes.ValidatorSet) *ValidatorSet {
+// 	vals := make([]*abci.Validator, len(valset.Validators))
 
-	for i := range valset.Validators {
-		val := tmtypes.TM2PB.Validator(valset.Validators[i])
-		vals[i] = &val
-	}
+// 	for i := range valset.Validators {
+// 		val := tmtypes.TM2PB.Validator(valset.Validators[i])
+// 		vals[i] = &val
+// 	}
 
-	proposer := tmtypes.TM2PB.Validator(valset.Proposer)
-	return &ValidatorSet{
-		Validators:       vals,
-		Proposer:         &proposer,
-		totalVotingPower: valset.TotalVotingPower(),
-	}
-}
+// 	proposer := tmtypes.TM2PB.Validator(valset.Proposer)
+// 	return &ValidatorSet{
+// 		Validators:       vals,
+// 		Proposer:         &proposer,
+// 		totalVotingPower: valset.TotalVotingPower(),
+// 	}
+// }
 
 func ProtoCommitToTmTypes(commit *tmproto.Commit) *tmtypes.Commit {
 	commitSigs := make([]tmtypes.CommitSig, len(commit.Signatures))

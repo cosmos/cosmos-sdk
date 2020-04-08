@@ -49,7 +49,7 @@ func (h Header) ValidateBasic() error {
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
-	if !bytes.Equal(h.SignedHeader.Header.ValidatorsHash, h.ValidatorSet.ToTmTypes().Hash()) {
+	if !bytes.Equal(h.SignedHeader.Header.ValidatorsHash, h.ValidatorSet.Hash) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
 	}
 	return nil

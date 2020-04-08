@@ -161,6 +161,9 @@ func NewSimApp(
 	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
 	app.subspaces[evidence.ModuleName] = app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 
+	// set the BaseApp's parameter store
+	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(BaseAppParamsKeyTable()))
+
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
 		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
@@ -364,6 +367,20 @@ func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
 // SimulationManager implements the SimulationApp interface
 func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+func BaseAppParamsKeyTable() params.KeyTable {
+	return params.NewKeyTable(
+		params.NewParamSetPair(
+			baseapp.ParamStoreKeyBlockParams, abci.BlockParams{}, baseapp.ValidateBlockParams,
+		),
+		params.NewParamSetPair(
+			baseapp.ParamStoreKeyEvidenceParams, abci.EvidenceParams{}, baseapp.ValidateEvidenceParams,
+		),
+		params.NewParamSetPair(
+			baseapp.ParamStoreKeyValidatorParams, abci.ValidatorParams{}, baseapp.ValidateValidatorParams,
+		),
+	)
 }
 
 // GetMaccPerms returns a copy of the module account permissions

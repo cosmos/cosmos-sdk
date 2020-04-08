@@ -9,6 +9,12 @@ import (
 
 // InitGenesis sets distribution information for genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper) {
+	// transfer module binds to the transfer port on InitChain
+	// and claims the returned capability
+	err := keeper.BindPort(ctx, types.PortID)
+	if err != nil {
+		panic(fmt.Sprintf("could not claim port capability: %v", err))
+	}
 	// check if the module account exists
 	moduleAcc := keeper.GetTransferAccount(ctx)
 	if moduleAcc == nil {

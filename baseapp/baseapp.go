@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -22,9 +21,6 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
-
-	// MainStoreKey is the string representation of the main store
-	MainStoreKey = "main"
 )
 
 var (
@@ -79,9 +75,9 @@ type BaseApp struct { // nolint: maligned
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
 
-	// consensus params
-	// TODO: Move this in the future to baseapp param store on main store.
-	consensusParams *abci.ConsensusParams
+	// paramStore is used to query for ABCI consensus parameters from an
+	// application parameter store.
+	paramStore ParamStore
 
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. This is mainly used for DoS and spam prevention.
@@ -246,22 +242,6 @@ func (app *BaseApp) initFromMainStore() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-	// Load the consensus params from the main store. If the consensus params are
-	// nil, it will be saved later during InitChain.
-	//
-	// TODO: assert that InitChain hasn't yet been called.
-	consensusParamsBz := mainStore.Get(mainConsensusParamsKey)
-	if consensusParamsBz != nil {
-		var consensusParams = &abci.ConsensusParams{}
-
-		err := proto.Unmarshal(consensusParamsBz, consensusParams)
-		if err != nil {
-			panic(err)
-		}
-
-		app.setConsensusParams(consensusParams)
-	}
-
 	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(abci.Header{})
 	app.Seal()
@@ -328,30 +308,39 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	}
 }
 
-// // setConsensusParams memoizes the consensus params.
-// func (app *BaseApp) setConsensusParams(consensusParams *abci.ConsensusParams) {
-// 	app.consensusParams = consensusParams
-// }
+func (app *BaseApp) GetConsensusParams() *abci.ConsensusParams {
+	var bp abci.BlockParams
+	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyBlockParams, &bp)
 
-// // setConsensusParams stores the consensus params to the main store.
-// func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) {
-// 	consensusParamsBz, err := proto.Marshal(consensusParams)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	mainStore := app.cms.GetKVStore(app.baseKey)
-// 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
-// }
+	var ep abci.EvidenceParams
+	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyEvidenceParams, &ep)
+
+	var vp abci.ValidatorParams
+	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyValidatorParams, &vp)
+
+	return &abci.ConsensusParams{
+		Block:     &bp,
+		Evidence:  &ep,
+		Validator: &vp,
+	}
+}
+
+func (app *BaseApp) storeConsensusParams(cp *abci.ConsensusParams) {
+	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyBlockParams, cp.Block)
+	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
+	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyValidatorParams, cp.Validator)
+}
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
 func (app *BaseApp) getMaximumBlockGas() uint64 {
-	if app.consensusParams == nil || app.consensusParams.Block == nil {
+	cp := app.GetConsensusParams()
+	if cp == nil || cp.Block == nil {
 		return 0
 	}
 
-	maxGas := app.consensusParams.Block.MaxGas
+	maxGas := cp.Block.MaxGas
 	switch {
 	case maxGas < -1:
 		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
@@ -408,7 +397,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 	ctx := app.getState(mode).ctx.
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos).
-		WithConsensusParams(app.consensusParams)
+		WithConsensusParams(app.GetConsensusParams())
 
 	if mode == runTxModeReCheck {
 		ctx = ctx.WithIsReCheckTx(true)

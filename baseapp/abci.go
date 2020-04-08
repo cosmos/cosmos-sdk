@@ -17,17 +17,18 @@ import (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	// stash the consensus params in the cms main store and memoize
-	if req.ConsensusParams != nil {
-		app.setConsensusParams(req.ConsensusParams)
-		app.storeConsensusParams(req.ConsensusParams)
-	}
-
 	initHeader := abci.Header{ChainID: req.ChainId, Time: req.Time}
 
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
+
+	// Store the consensus params in the BaseApp's paramstore. Note, this must be
+	// done after the deliver state and context have been set as it's persisted
+	// to state.
+	if req.ConsensusParams != nil {
+		app.storeConsensusParams(req.ConsensusParams)
+	}
 
 	if app.initChainer == nil {
 		return

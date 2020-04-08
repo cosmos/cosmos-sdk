@@ -120,7 +120,7 @@ type SimApp struct {
 	CrisisKeeper     crisis.Keeper
 	UpgradeKeeper    upgrade.Keeper
 	ParamsKeeper     params.Keeper
-	IBCKeeper        ibc.Keeper
+	IBCKeeper        *ibc.Keeper
 	EvidenceKeeper   evidence.Keeper
 	TransferKeeper   transfer.Keeper
 
@@ -212,16 +212,6 @@ func NewSimApp(
 	)
 	app.UpgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], appCodec, homePath)
 
-	// create evidence keeper with router
-	evidenceKeeper := evidence.NewKeeper(
-		appCodec, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], &app.StakingKeeper, app.SlashingKeeper,
-	)
-	evidenceRouter := evidence.NewRouter().
-		AddRoute(ibcclient.RouterKey, ibcclient.HandlerClientMisbehaviour(app.IBCKeeper.ClientKeeper))
-
-	evidenceKeeper.SetRouter(evidenceRouter)
-	app.EvidenceKeeper = *evidenceKeeper
-
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
@@ -257,6 +247,16 @@ func NewSimApp(
 	ibcRouter := port.NewRouter()
 	ibcRouter.AddRoute(transfer.ModuleName, transferModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
+
+	// create evidence keeper with router
+	evidenceKeeper := evidence.NewKeeper(
+		appCodec, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], &app.StakingKeeper, app.SlashingKeeper,
+	)
+	evidenceRouter := evidence.NewRouter().
+		AddRoute(ibcclient.RouterKey, ibcclient.HandlerClientMisbehaviour(app.IBCKeeper.ClientKeeper))
+
+	evidenceKeeper.SetRouter(evidenceRouter)
+	app.EvidenceKeeper = *evidenceKeeper
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -323,7 +323,7 @@ func NewSimApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
 		ante.NewAnteHandler(
-			app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper,
+			app.AccountKeeper, app.SupplyKeeper, *app.IBCKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 		),
 	)

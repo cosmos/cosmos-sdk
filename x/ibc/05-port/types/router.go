@@ -52,7 +52,8 @@ func (rtr *Router) AddRoute(module string, cbs IBCModule) *Router {
 
 // HasRoute returns true if the Router has a module registered or false otherwise.
 func (rtr *Router) HasRoute(module string) bool {
-	return rtr.routes[module] != nil
+	_, ok := rtr.routes[module]
+	return ok
 }
 
 // GetRoute returns a IBCModule for a given module.

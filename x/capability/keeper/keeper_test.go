@@ -22,7 +22,6 @@ type KeeperTestSuite struct {
 
 	ctx    sdk.Context
 	keeper *keeper.Keeper
-	app    *simapp.SimApp
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -35,19 +34,20 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.keeper = keeper
-	suite.app = app
 }
 
 func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	sk := suite.keeper.ScopeToModule(bank.ModuleName)
 
 	caps := make([]*types.Capability, 5)
+	// Get Latest Index before creating new ones to sychronize indices correctly
+	prevIndex := suite.keeper.GetLatestIndex(suite.ctx)
 
 	for i := range caps {
 		cap, err := sk.NewCapability(suite.ctx, fmt.Sprintf("transfer-%d", i))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(cap)
-		suite.Require().Equal(uint64(i), cap.GetIndex())
+		suite.Require().Equal(uint64(i)+prevIndex, cap.GetIndex())
 
 		caps[i] = cap
 	}
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 		got, ok := sk.GetCapability(suite.ctx, fmt.Sprintf("transfer-%d", i))
 		suite.Require().True(ok)
 		suite.Require().Equal(cap, got)
-		suite.Require().Equal(uint64(i), got.GetIndex())
+		suite.Require().Equal(uint64(i)+prevIndex, got.GetIndex())
 	}
 
 	suite.Require().Panics(func() {

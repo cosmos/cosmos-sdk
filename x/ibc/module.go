@@ -76,11 +76,11 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // AppModule implements an application module for the ibc module.
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper *Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(k Keeper) AppModule {
+func NewAppModule(k *Keeper) AppModule {
 	return AppModule{
 		keeper: k,
 	}
@@ -103,7 +103,7 @@ func (AppModule) Route() string {
 
 // NewHandler returns an sdk.Handler for the ibc module.
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return NewHandler(*am.keeper)
 }
 
 // QuerierRoute returns the ibc module's querier route name.
@@ -113,7 +113,7 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the ibc module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+	return NewQuerier(*am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the ibc module. It returns

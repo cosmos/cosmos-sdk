@@ -22,13 +22,13 @@ type Keeper struct {
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
-) Keeper {
+) *Keeper {
 	clientKeeper := client.NewKeeper(cdc, key, stakingKeeper)
 	connectionKeeper := connection.NewKeeper(cdc, key, clientKeeper)
 	portKeeper := port.NewKeeper(scopedKeeper)
 	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
-	return Keeper{
+	return &Keeper{
 		ClientKeeper:     clientKeeper,
 		ConnectionKeeper: connectionKeeper,
 		ChannelKeeper:    channelKeeper,
@@ -37,7 +37,7 @@ func NewKeeper(
 }
 
 // Set the Router in IBC Keeper and seal it
-func (k Keeper) SetRouter(rtr *port.Router) {
+func (k *Keeper) SetRouter(rtr *port.Router) {
 	k.Router = rtr
 	k.Router.Seal()
 }

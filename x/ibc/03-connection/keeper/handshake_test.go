@@ -28,6 +28,8 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 	counterparty := connection.NewCounterparty(testClientIDA, testConnectionIDB, suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 
 	for i, tc := range testCases {
+		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -107,6 +109,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -121,7 +124,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), testConnectionIDB, counterparty, testClientIDA,
 				connection.GetCompatibleVersions(), proofInit, proofConsensus,
-				uint64(proofHeight+1), consensusHeight,
+				proofHeight+1, consensusHeight,
 			)
 
 			if tc.expPass {
@@ -197,6 +200,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -205,12 +209,12 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			connectionKey := ibctypes.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := queryProof(suite.chainB, connectionKey)
 
-			consensusKey := ibctypes.KeyConsensusState(testClientIDA, uint64(consensusHeight))
+			consensusKey := ibctypes.KeyConsensusState(testClientIDA, consensusHeight)
 			proofConsensus, _ := queryProof(suite.chainB, consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), testConnectionIDA, tc.version, proofTry, proofConsensus,
-				uint64(proofHeight+1), consensusHeight,
+				proofHeight+1, consensusHeight,
 			)
 
 			if tc.expPass {
@@ -251,6 +255,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -261,12 +266,12 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 			if tc.expPass {
 				err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-					suite.chainB.GetContext(), testConnectionIDB, proofAck, uint64(proofHeight+1),
+					suite.chainB.GetContext(), testConnectionIDB, proofAck, proofHeight+1,
 				)
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			} else {
 				err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(
-					suite.chainB.GetContext(), testConnectionIDB, proofAck, uint64(proofHeight+1),
+					suite.chainB.GetContext(), testConnectionIDB, proofAck, proofHeight+1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

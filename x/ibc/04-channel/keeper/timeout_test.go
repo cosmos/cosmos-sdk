@@ -80,6 +80,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
 			tc.malleate()
@@ -222,9 +223,7 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 
 }
 
-type mockTimeoutPacket struct {
-	timeoutHeight uint64
-}
+type mockTimeoutPacket struct{}
 
 func newMockTimeoutPacket() mockTimeoutPacket {
 	return mockTimeoutPacket{}

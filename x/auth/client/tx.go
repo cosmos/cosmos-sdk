@@ -97,7 +97,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf)
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 		if err != nil || !ok {
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err
@@ -184,7 +184,7 @@ func SignStdTx(
 
 	var signedStdTx authtypes.StdTx
 
-	info, err := txBldr.Keybase().Get(name)
+	info, err := txBldr.Keybase().Key(name)
 	if err != nil {
 		return signedStdTx, err
 	}

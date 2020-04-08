@@ -25,21 +25,17 @@ func ExportKeyCommand() *cobra.Command {
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 	if err != nil {
 		return err
 	}
 
-	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
-	if err != nil {
-		return err
-	}
 	encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
 	if err != nil {
 		return err
 	}
 
-	armored, err := kb.ExportPrivKey(args[0], decryptPassword, encryptPassword)
+	armored, err := kb.ExportPrivKeyArmor(args[0], encryptPassword)
 	if err != nil {
 		return err
 	}

@@ -19,9 +19,9 @@
 // generated keys are discarded when the process terminates or the type instance is garbage
 // collected.
 //
-// NewKeyring
+// New
 //
-// The NewKeyring constructor returns an implementation backed by a keyring library
+// The New constructor returns an implementation backed by a keyring library
 // (https://github.com/99designs/keyring), whose aim is to provide a common abstraction and uniform
 // interface between secret stores available for Windows, macOS, and most GNU/Linux distributions
 // as well as operating system-agnostic encrypted file-based backends.

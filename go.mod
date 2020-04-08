@@ -30,10 +30,9 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.2
-	github.com/tendermint/tm-db v0.5.0
+	github.com/tendermint/tm-db v0.5.1
 	google.golang.org/genproto v0.0.0-20200324203455-a04cca1dde73
 	google.golang.org/grpc v1.28.0
-	github.com/tendermint/tm-db v0.5.1
 	google.golang.org/protobuf v1.20.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )

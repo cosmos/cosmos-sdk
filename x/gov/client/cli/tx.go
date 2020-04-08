@@ -3,7 +3,6 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"

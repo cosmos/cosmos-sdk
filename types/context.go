@@ -226,10 +226,17 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, cms.Write
 }
 
-func UnwrapSDKContext(ctx context.Context) Context {
-	return ctx.Value(sdkContextKey).(Context)
-}
-
+// WrapSDKContext attaches a Context to that Context's context.Context member
+// and returns that context. It is useful for passing a Context through methods
+// that take a generic context.Context parameter such as generated gRPC
+// methods
 func WrapSDKContext(ctx Context) context.Context {
 	return context.WithValue(ctx.ctx, sdkContextKey, ctx)
+}
+
+// UnwrapSDKContext retrieves a Context from a context.Context instance
+// attached with WrapSDKContext. It panics if a Context was not properly
+// attached
+func UnwrapSDKContext(ctx context.Context) Context {
+	return ctx.Value(sdkContextKey).(Context)
 }

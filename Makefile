@@ -274,9 +274,13 @@ proto-update-deps:
 	@mkdir -p $(TM_PROTO)/types
 	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
 	@sed -i '' '8 s|proto/libs/bits/types.proto|third_party/proto/tendermint/proto/libs/bits/types.proto|g' $(TM_PROTO)/types/types.proto
+	@sed -i '' '9 s|proto/crypto/types.proto|third_party/proto/tendermint/proto/crypto/types.proto|g' $(TM_PROTO)/types/types.proto
 	
 	@mkdir -p $(TM_PROTO)/libs/bits
 	@curl -sSL $(TM_URL)/proto/libs/bits/types.proto > $(TM_PROTO)/libs/bits/types.proto
+
+	@mkdir -p $(TM_PROTO)/crypto
+	@curl -sSL $(TM_URL)/proto/crypto/types.proto > $(TM_PROTO)/crypto/types.proto
 
 	@mkdir -p $(TM_KV_TYPES)
 	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto

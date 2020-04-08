@@ -208,7 +208,8 @@ message ResponseEndBlock {
 
 message ResponseCommit {
   // reserve 1
-  bytes data = 2;
+  bytes data          = 2;
+  int64 retain_height = 3;
 }
 
 //----------------------------------------

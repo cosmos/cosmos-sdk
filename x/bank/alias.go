@@ -39,6 +39,7 @@ var (
 	DefaultGenesisState         = types.DefaultGenesisState
 	ValidateGenesis             = types.ValidateGenesis
 	SanitizeGenesisBalances     = types.SanitizeGenesisBalances
+	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
 	NewMsgSend                  = types.NewMsgSend
 	NewMsgMultiSend             = types.NewMsgMultiSend
 	NewInput                    = types.NewInput
@@ -51,7 +52,6 @@ var (
 	ParamStoreKeySendEnabled    = types.ParamStoreKeySendEnabled
 	BalancesPrefix              = types.BalancesPrefix
 	AddressFromBalancesStore    = types.AddressFromBalancesStore
-	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
 )
 
 type (

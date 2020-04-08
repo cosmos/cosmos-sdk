@@ -1,20 +1,8 @@
-// Package hd provides basic functionality Hierarchical Deterministic Wallets.
-//
-// The user must understand the overall concept of the BIP 32 and the BIP 44 specs:
-//  https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
-//  https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
-//
-// In combination with the bip39 package in go-crypto this package provides the functionality for deriving keys using a
-// BIP 44 HD path, or, more general, by passing a BIP 32 path.
-//
-// In particular, this package (together with bip39) provides all necessary functionality to derive keys from
-// mnemonics generated during the cosmos fundraiser.
 package hd
 
 import (
 	"crypto/hmac"
 	"crypto/sha512"
-
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -254,4 +242,9 @@ func i64(key []byte, data []byte) (il [32]byte, ir [32]byte) {
 	copy(ir[:], I[32:])
 
 	return
+}
+
+// CreateHDPath returns BIP 44 object from account and index parameters.
+func CreateHDPath(coinType, account, index uint32) *BIP44Params {
+	return NewFundraiserParams(account, coinType, index)
 }

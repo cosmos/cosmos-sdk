@@ -63,6 +63,7 @@ var (
 	AttributeValueCategory       = types.AttributeValueCategory
 )
 
+// nolint: golint
 type (
 	Keeper                 = keeper.Keeper
 	Channel                = types.Channel

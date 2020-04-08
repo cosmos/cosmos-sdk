@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -29,8 +28,6 @@ import (
 
 // define constants used for testing
 const (
-	testClientType = clientexported.Tendermint
-
 	testClientIDA     = "testclientida"
 	testConnectionIDA = "connectionidatob"
 
@@ -47,8 +44,6 @@ const (
 
 	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
-
-	testHeight = 1
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -136,19 +131,6 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	channels := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 	suite.Require().Len(channels, len(expChannels))
 	suite.Require().Equal(expChannels, channels)
-}
-
-func (suite *KeeperTestSuite) TestSetChannelCapability() {
-	ctx := suite.chainB.GetContext()
-	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannelCapability(ctx, testPort1, testChannel1)
-	suite.False(found)
-
-	channelCap := "test-channel-capability"
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannelCapability(ctx, testPort1, testChannel1, channelCap)
-
-	storedChannelCap, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannelCapability(ctx, testPort1, testChannel1)
-	suite.True(found)
-	suite.Equal(channelCap, storedChannelCap)
 }
 
 func (suite *KeeperTestSuite) TestSetSequence() {

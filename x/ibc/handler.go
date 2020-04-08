@@ -7,6 +7,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 )
 
 // NewHandler defines the IBC handler
@@ -37,22 +38,162 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		// IBC channel msgs
 		case channel.MsgChannelOpenInit:
-			return channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, msg)
+			// Lookup module by port capability
+			module, portCap, ok := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
+			if !ok {
+				return nil, sdkerrors.Wrap(port.ErrInvalidPort, "could not retrieve module from portID")
+			}
+			res, cap, err := channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, portCap, msg)
+			if err != nil {
+				return nil, err
+			}
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+			err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version)
+			if err != nil {
+				return nil, err
+			}
+
+			return res, nil
 
 		case channel.MsgChannelOpenTry:
-			return channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, msg)
+			// Lookup module by port capability
+			module, portCap, ok := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
+			if !ok {
+				return nil, sdkerrors.Wrap(port.ErrInvalidPort, "could not retrieve module from portID")
+			}
+			res, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
+			if err != nil {
+				return nil, err
+			}
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+			err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			return res, nil
 
 		case channel.MsgChannelOpenAck:
-			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, msg)
+			// Lookup module by channel capability
+			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+			err := cbs.OnChanOpenAck(ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion)
+			if err != nil {
+				return nil, err
+			}
+			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 
 		case channel.MsgChannelOpenConfirm:
-			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, msg)
+			// Lookup module by channel capability
+			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+
+			err := cbs.OnChanOpenConfirm(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, err
+			}
+			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 
 		case channel.MsgChannelCloseInit:
-			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, msg)
+			// Lookup module by channel capability
+			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+
+			err := cbs.OnChanCloseInit(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, err
+			}
+			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, cap, msg)
 
 		case channel.MsgChannelCloseConfirm:
-			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, msg)
+			// Lookup module by channel capability
+			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+
+			err := cbs.OnChanCloseConfirm(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, err
+			}
+			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, cap, msg)
+
+		// IBC packet msgs get routed to the appropriate module callback
+		case channel.MsgPacket:
+			// Lookup module by channel capability
+			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+			return cbs.OnRecvPacket(ctx, msg.Packet)
+
+		case channel.MsgAcknowledgement:
+			// Lookup module by channel capability
+			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+			return cbs.OnAcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement)
+
+		case channel.MsgTimeout:
+			// Lookup module by channel capability
+			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			if !ok {
+				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			}
+
+			// Retrieve callbacks from router
+			cbs, ok := k.Router.GetRoute(module)
+			if !ok {
+				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
+			}
+			return cbs.OnTimeoutPacket(ctx, msg.Packet)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)

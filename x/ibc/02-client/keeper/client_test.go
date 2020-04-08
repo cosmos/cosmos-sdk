@@ -18,11 +18,6 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestCreateClient() {
-	type params struct {
-		clientID   string
-		clientType exported.ClientType
-	}
-
 	suite.keeper.SetClientType(suite.ctx, testClientID2, exported.Tendermint)
 
 	cases := []struct {
@@ -38,7 +33,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 	for i, tc := range cases {
 		tc := tc
-
+		i := i
 		if tc.expPanic {
 			suite.Require().Panics(func() {
 				clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, suite.header)
@@ -133,6 +128,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest()
 
@@ -147,7 +143,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				suite.Require().NoError(err, err)
 
 				expConsensusState := ibctmtypes.ConsensusState{
-					Height:       uint64(updateHeader.Height),
+					Height:       updateHeader.GetHeight(),
 					Timestamp:    updateHeader.Time,
 					Root:         commitmenttypes.NewMerkleRoot(updateHeader.AppHash),
 					ValidatorSet: updateHeader.ValidatorSet,
@@ -156,7 +152,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
-				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, uint64(updateHeader.GetHeight()))
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, updateHeader.GetHeight())
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
@@ -302,6 +298,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 

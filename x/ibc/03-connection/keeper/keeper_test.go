@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -26,9 +25,7 @@ import (
 )
 
 const (
-	clientType = clientexported.Tendermint
-	storeKey   = ibctypes.StoreKey
-	chainID    = "gaia"
+	storeKey = ibctypes.StoreKey
 
 	testClientIDA     = "testclientida" // chainid for chainA also chainB's clientID for A's liteclient
 	testConnectionIDA = "connectionidatob"

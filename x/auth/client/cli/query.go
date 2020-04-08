@@ -99,7 +99,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	return cmd
+	return flags.GetCommands(cmd)[0]
 }
 
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
@@ -177,6 +177,9 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 
 	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
+
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 
 	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
 	cmd.Flags().Uint32(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")

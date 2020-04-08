@@ -376,13 +376,6 @@ var (
 	cpchanid = "testcpchannel"
 )
 
-// TestMsgPacketRoute tests Route for MsgPacket
-func TestMsgPacketRoute(t *testing.T) {
-	msg := NewMsgPacket(packet, proof, 1, addr1)
-
-	require.Equal(t, cpportid, msg.Route())
-}
-
 // TestMsgPacketType tests Type for MsgPacket
 func TestMsgPacketType(t *testing.T) {
 	msg := NewMsgPacket(packet, proof, 1, addr1)

@@ -3,9 +3,10 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"strings"
+
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/spf13/cobra"
 

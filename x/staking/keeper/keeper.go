@@ -37,6 +37,7 @@ func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, sk types.SupplyKeeper, ps paramtypes.Subspace,
 ) Keeper {
 
+	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(ParamKeyTable())
 	}

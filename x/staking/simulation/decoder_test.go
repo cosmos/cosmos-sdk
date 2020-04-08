@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
@@ -38,6 +39,7 @@ func TestDecodeStore(t *testing.T) {
 	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
+	histInfo := types.NewHistoricalInfo(abci.Header{ChainID: "gaia", Height: 10, Time: bondTime}, types.Validators{val})
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(sdk.OneInt())},
@@ -46,6 +48,7 @@ func TestDecodeStore(t *testing.T) {
 		tmkv.Pair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(del)},
 		tmkv.Pair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(ubd)},
 		tmkv.Pair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(red)},
+		tmkv.Pair{Key: types.GetHistoricalInfoKey(10), Value: cdc.MustMarshalBinaryBare(histInfo)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
@@ -59,6 +62,7 @@ func TestDecodeStore(t *testing.T) {
 		{"Delegation", fmt.Sprintf("%v\n%v", del, del)},
 		{"UnbondingDelegation", fmt.Sprintf("%v\n%v", ubd, ubd)},
 		{"Redelegation", fmt.Sprintf("%v\n%v", red, red)},
+		{"HistoricalInfo", fmt.Sprintf("%v\n%v", histInfo, histInfo)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

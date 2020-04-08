@@ -114,3 +114,32 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.False(t, found, "GetHistoricalInfo did not prune first prune height")
 	require.Equal(t, types.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }
+
+func TestGetAllHistoricalInfo(t *testing.T) {
+	_, app, ctx := createTestInput()
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	valSet := []types.Validator{
+		types.NewValidator(addrVals[0], PKs[0], types.Description{}),
+		types.NewValidator(addrVals[1], PKs[1], types.Description{}),
+	}
+
+	header1 := abci.Header{ChainID: "HelloChain", Height: 10}
+	header2 := abci.Header{ChainID: "HelloChain", Height: 11}
+	header3 := abci.Header{ChainID: "HelloChain", Height: 12}
+
+	hist1 := types.HistoricalInfo{Header: header1, Valset: valSet}
+	hist2 := types.HistoricalInfo{Header: header2, Valset: valSet}
+	hist3 := types.HistoricalInfo{Header: header3, Valset: valSet}
+
+	expHistInfos := []types.HistoricalInfo{hist1, hist2, hist3}
+
+	for i, hi := range expHistInfos {
+		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), hi)
+	}
+
+	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
+	require.Equal(t, expHistInfos, infos)
+}

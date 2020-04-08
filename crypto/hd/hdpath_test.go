@@ -1,10 +1,11 @@
-package hd
+package hd_test
 
 import (
 	"encoding/hex"
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 
 	bip39 "github.com/cosmos/go-bip39"
@@ -21,9 +22,9 @@ func mnemonicToSeed(mnemonic string) []byte {
 
 // nolint:govet
 func ExampleStringifyPathParams() {
-	path := NewParams(44, 0, 0, false, 0)
+	path := hd.NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
-	path = NewParams(44, 33, 7, true, 9)
+	path = hd.NewParams(44, 33, 7, true, 9)
 	fmt.Println(path.String())
 	// Output:
 	// 44'/0'/0'/0/0
@@ -31,40 +32,40 @@ func ExampleStringifyPathParams() {
 }
 
 func TestStringifyFundraiserPathParams(t *testing.T) {
-	path := NewFundraiserParams(4, types.CoinType, 22)
+	path := hd.NewFundraiserParams(4, types.CoinType, 22)
 	require.Equal(t, "44'/118'/4'/0/22", path.String())
 
-	path = NewFundraiserParams(4, types.CoinType, 57)
+	path = hd.NewFundraiserParams(4, types.CoinType, 57)
 	require.Equal(t, "44'/118'/4'/0/57", path.String())
 
-	path = NewFundraiserParams(4, 12345, 57)
+	path = hd.NewFundraiserParams(4, 12345, 57)
 	require.Equal(t, "44'/12345'/4'/0/57", path.String())
 }
 
 func TestPathToArray(t *testing.T) {
-	path := NewParams(44, 118, 1, false, 4)
+	path := hd.NewParams(44, 118, 1, false, 4)
 	require.Equal(t, "[44 118 1 0 4]", fmt.Sprintf("%v", path.DerivationPath()))
 
-	path = NewParams(44, 118, 2, true, 15)
+	path = hd.NewParams(44, 118, 2, true, 15)
 	require.Equal(t, "[44 118 2 1 15]", fmt.Sprintf("%v", path.DerivationPath()))
 }
 
 func TestParamsFromPath(t *testing.T) {
 	goodCases := []struct {
-		params *BIP44Params
+		params *hd.BIP44Params
 		path   string
 	}{
-		{&BIP44Params{44, 0, 0, false, 0}, "44'/0'/0'/0/0"},
-		{&BIP44Params{44, 1, 0, false, 0}, "44'/1'/0'/0/0"},
-		{&BIP44Params{44, 0, 1, false, 0}, "44'/0'/1'/0/0"},
-		{&BIP44Params{44, 0, 0, true, 0}, "44'/0'/0'/1/0"},
-		{&BIP44Params{44, 0, 0, false, 1}, "44'/0'/0'/0/1"},
-		{&BIP44Params{44, 1, 1, true, 1}, "44'/1'/1'/1/1"},
-		{&BIP44Params{44, 118, 52, true, 41}, "44'/118'/52'/1/41"},
+		{&hd.BIP44Params{44, 0, 0, false, 0}, "44'/0'/0'/0/0"},
+		{&hd.BIP44Params{44, 1, 0, false, 0}, "44'/1'/0'/0/0"},
+		{&hd.BIP44Params{44, 0, 1, false, 0}, "44'/0'/1'/0/0"},
+		{&hd.BIP44Params{44, 0, 0, true, 0}, "44'/0'/0'/1/0"},
+		{&hd.BIP44Params{44, 0, 0, false, 1}, "44'/0'/0'/0/1"},
+		{&hd.BIP44Params{44, 1, 1, true, 1}, "44'/1'/1'/1/1"},
+		{&hd.BIP44Params{44, 118, 52, true, 41}, "44'/118'/52'/1/41"},
 	}
 
 	for i, c := range goodCases {
-		params, err := NewParamsFromPath(c.path)
+		params, err := hd.NewParamsFromPath(c.path)
 		errStr := fmt.Sprintf("%d %v", i, c)
 		assert.NoError(t, err, errStr)
 		assert.EqualValues(t, c.params, params, errStr)
@@ -93,7 +94,7 @@ func TestParamsFromPath(t *testing.T) {
 	}
 
 	for i, c := range badCases {
-		params, err := NewParamsFromPath(c.path)
+		params, err := hd.NewParamsFromPath(c.path)
 		errStr := fmt.Sprintf("%d %v", i, c)
 		assert.Nil(t, params, errStr)
 		assert.Error(t, err, errStr)
@@ -106,38 +107,38 @@ func ExampleSomeBIP32TestVecs() {
 
 	seed := mnemonicToSeed("barrel original fuel morning among eternal " +
 		"filter ball stove pluck matrix mechanic")
-	master, ch := ComputeMastersFromSeed(seed)
+	master, ch := hd.ComputeMastersFromSeed(seed)
 	fmt.Println("keys from fundraiser test-vector (cosmos, bitcoin, ether)")
 	fmt.Println()
 	// cosmos
-	priv, err := DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
+	priv, err := hd.DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// bitcoin
-	priv, err = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// ether
-	priv, err = DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// INVALID
-	priv, err = DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
-	priv, err = DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
@@ -151,14 +152,14 @@ func ExampleSomeBIP32TestVecs() {
 	seed = mnemonicToSeed(
 		"advice process birth april short trust crater change bacon monkey medal garment " +
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
-	master, ch = ComputeMastersFromSeed(seed)
-	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
+	master, ch = hd.ComputeMastersFromSeed(seed)
+	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
-	master, ch = ComputeMastersFromSeed(seed)
-	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
+	master, ch = hd.ComputeMastersFromSeed(seed)
+	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	fmt.Println()
@@ -167,8 +168,8 @@ func ExampleSomeBIP32TestVecs() {
 
 	// bip32 path: m/0/7
 	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
-	master, ch = ComputeMastersFromSeed(seed)
-	priv, _ = DerivePrivateKeyForPath(master, ch, "0/7")
+	master, ch = hd.ComputeMastersFromSeed(seed)
+	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "0/7")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	// Output: keys from fundraiser test-vector (cosmos, bitcoin, ether)
@@ -187,4 +188,28 @@ func ExampleSomeBIP32TestVecs() {
 	// BIP 32 example
 	//
 	// c4c11d8c03625515905d7e89d25dfc66126fbc629ecca6db489a1a72fc4bda78
+}
+
+func TestCreateHDPath(t *testing.T) {
+	type args struct {
+		coinType uint32
+		account  uint32
+		index    uint32
+	}
+	tests := []struct {
+		name string
+		args args
+		want hd.BIP44Params
+	}{
+		{"44'/0'/0'/0/0", args{0, 0, 0}, hd.BIP44Params{Purpose: 44}},
+		{"44'/114'/0'/0/0", args{114, 0, 0}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 0, AddressIndex: 0}},
+		{"44'/114'/1'/1/0", args{114, 1, 1}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			require.Equal(t, tt.want, *hd.CreateHDPath(tt.args.coinType, tt.args.account, tt.args.index))
+		})
+	}
 }

@@ -1,8 +1,9 @@
 package types
 
 import (
-	"google.golang.org/grpc"
 	"regexp"
+
+	"google.golang.org/grpc"
 )
 
 var (

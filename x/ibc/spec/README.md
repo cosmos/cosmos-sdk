@@ -36,34 +36,37 @@ transaction routing through `Handlers`.
 The following list is a mapping from each Interchain Standard to their implementation
 in the SDK's `x/ibc` module:
 
-- [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics): Implemented in [`x/ibc/02-client`](https://github.com/cosmos/x/ibc/02-client)
-- [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/03-connection`](https://github.com/cosmos/x/ibc/03-connection)
-- [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/x/ibc/04-channel)
-- [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/05-port`](https://github.com/cosmos/x/ibc/05-port)
-- [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client):  To be implemented in [`x/ibc/06-solo`](https://github.com/cosmos/x/ibc/06-solo)
-- [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/07-tendermint`](https://github.com/cosmos/x/ibc/07-tendermint)
-- [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  To be implemented in [`x/ibc/09-loopback`](https://github.com/cosmos/x/ibc/09-loopback)
-- [ICS 018- Relayer Algorithms](https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms): Implemented in it's own [relayer repository](https://github.com/cosmos/relayer)
-- [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer): Implemented in [`x/ibc/20-transfer`](https://github.com/cosmos/x/ibc/20-transfer)
-- [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments): Implemented in [`x/ibc/23-commitment`](https://github.com/cosmos/x/ibc/23-commitment)
-- [ICS 024 - Host Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements): Implemented in [`x/ibc/24-host`](https://github.com/cosmos/x/ibc/24-host)
-- [ICS 025 - Handler Interface](https://github.com/cosmos/ics/tree/master/spec/ics-025-handler-interface): Handler interfaces are implemented at the top level in `x/ibc/handler.go`,
+* [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics): Implemented in [`x/ibc/02-client`](https://github.com/cosmos/x/ibc/02-client)
+* [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/03-connection`](https://github.com/cosmos/x/ibc/03-connection)
+* [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/x/ibc/04-channel)
+* [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/05-port`](https://github.com/cosmos/x/ibc/05-port)
+* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client):  To be implemented in [`x/ibc/06-solo`](https://github.com/cosmos/x/ibc/06-solo)
+* [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/07-tendermint`](https://github.com/cosmos/x/ibc/07-tendermint)
+* [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  To be implemented in [`x/ibc/09-loopback`](https://github.com/cosmos/x/ibc/09-loopback)
+* [ICS 018- Relayer Algorithms](https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms): Implemented in it's own [relayer repository](https://github.com/cosmos/relayer)
+* [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer): Implemented in [`x/ibc/20-transfer`](https://github.com/cosmos/x/ibc/20-transfer)
+* [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments): Implemented in [`x/ibc/23-commitment`](https://github.com/cosmos/x/ibc/23-commitment)
+* [ICS 024 - Host Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements): Implemented in [`x/ibc/24-host`](https://github.com/cosmos/x/ibc/24-host)
+* [ICS 025 - Handler Interface](https://github.com/cosmos/ics/tree/master/spec/ics-025-handler-interface): Handler interfaces are implemented at the top level in `x/ibc/handler.go`,
 which call each ICS submodule's handlers (i.e `x/ibc/{XX-ICS}/handler.go`).
-- [ICS 026 - Routing Module](https://github.com/cosmos/ics/blob/master/spec/ics-026-routing-module): Replaced by [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md).
+* [ICS 026 - Routing Module](https://github.com/cosmos/ics/blob/master/spec/ics-026-routing-module): Replaced by [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md).
 
 ### Architecture Decision Records (ADR)
 
 The following ADR provide the design and architecture decision of IBC-related components.
 
-- [ADR 10 - Modular AnteHandler](../../../docs/architecture/adr-010-modular-antehandler.md): Introduces a decorator pattern for the [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler), making it modular.  
-- [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md): replaces the ICS26 routing module with [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler) logic within IBC. This is implemented using the `AnteDecorators` defined in [ADR10]((../../../docs/architecture/adr-010-modular-antehandler.md))
-- [ADR 17 - Historical Header Module](../../../docs/architecture/adr-017-historical-header-module.md): Introduces the ability to introspect past
+* [ADR 10 - Modular AnteHandler](../../../docs/architecture/adr-010-modular-antehandler.md): Introduces a decorator pattern for the [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler), making it modular.  
+* [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md): replaces the ICS26 routing module with [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler) logic within IBC. This is implemented using the `AnteDecorators` defined in [ADR10]((../../../docs/architecture/adr-010-modular-antehandler.md))
+* [ADR 17 - Historical Header Module](../../../docs/architecture/adr-017-historical-header-module.md): Introduces the ability to introspect past
 consensus states in order to verify their membership in the counterparty clients.
-- [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.
+* [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.
+* [ADR 020 - Protocol Buffer Transaction Encoding](./../../docs/architecture/adr-020-protobuf-transaction-encoding.md): Client side migration to Protobuf.
+* [ADR 021 - Protocol Buffer Query Encoding](./../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
 
 ### SDK Modules
 
-- [`x/evidence`](https://github.com/cosmos/x/evidence): The evidence module provides the interfaces and client logic to handle light client misbehaviour. Check [ADR 09 - Evidence Module](../../../docs/architecture/adr-009-evidence-module.md) for more details.
+* [`x/capability`](https://github.com/cosmos/tree/master/x/capability): The capability module provides object-capability keys support through scoped keepers in order to authenticate usage of ports or channels. Check [ADR 3 - Dynamic Capability Store](../../../docs/architecture/adr-003-dynamic-capability-store.md) for more details.
+* [`x/evidence`](https://github.com/cosmos/tree/master/x/evidence): The evidence module provides the interfaces and client logic to handle light client misbehaviour. Check [ADR 09 - Evidence Module](../../../docs/architecture/adr-009-evidence-module.md) for more details.
 
 ## IBC module architecture
 

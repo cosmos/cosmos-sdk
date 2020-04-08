@@ -107,11 +107,11 @@ func (AppModule) Route() string { return RouterKey }
 func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string { return "" }
+func (AppModule) QuerierRoute() string { return QuerierRoute }
 
 // NewQuerierHandler returns the bank module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return nil
+	return keeper.NewQuerier(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the bank module. It returns

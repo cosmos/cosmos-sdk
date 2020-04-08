@@ -19,5 +19,5 @@ func (q Querier) QueryBalance(ctx context.Context, params *types.QueryBalancePar
 
 func (q Querier) QueryAllBalances(ctx context.Context, params *types.QueryAllBalancesParams) (*types.QueryAllBalancesResponse, error) {
 	balances := q.GetAllBalances(sdk.UnwrapSDKContext(ctx), params.Address)
-	return &types.QueryAllBalancesResponse{balances}, nil
+	return &types.QueryAllBalancesResponse{Balances: balances}, nil
 }

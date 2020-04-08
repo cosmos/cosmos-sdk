@@ -51,14 +51,14 @@ func NewBalancesCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(cliCtx.QueryConn())
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params := &types.QueryAllBalancesParams{addr}
+				params := &types.QueryAllBalancesParams{Address: addr}
 				result, err := queryClient.QueryAllBalances(gocontext.Background(), params)
 				if err != nil {
 					return err
 				}
 				return cliCtx.Println(result.Balances)
 			} else {
-				params := &types.QueryBalanceParams{addr, denom}
+				params := &types.QueryBalanceParams{Address: addr, Denom: denom}
 				result, err := queryClient.QueryBalance(gocontext.Background(), params)
 				if err != nil {
 					return err

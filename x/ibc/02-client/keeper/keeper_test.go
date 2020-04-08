@@ -39,8 +39,8 @@ type KeeperTestSuite struct {
 	keeper         *keeper.Keeper
 	consensusState ibctmtypes.ConsensusState
 	header         ibctmtypes.Header
-	tmValSet       *tmtypes.ValidatorSet
-	valSet         *ibctmtypes.ValidatorSet
+	valSet         *tmtypes.ValidatorSet
+	protoValSet    *tmproto.ValidatorSet
 	privVal        tmtypes.PrivValidator
 	now            time.Time
 }
@@ -60,12 +60,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	validator := tmtypes.NewValidator(pk, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	suite.protoValSet, err = suite.valSet.ToProto()
+	suite.Require().NoError(err)
+
 	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
 		Height:       testClientHeight,
 		Timestamp:    suite.now,
 		Root:         commitmenttypes.NewMerkleRoot([]byte("hash")),
-		ValidatorSet: suite.valSet,
+		ValidatorSet: suite.protoValSet,
 	}
 
 	var validators staking.Validators
@@ -111,7 +114,11 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 
 	tmConsState, ok := retrievedConsState.(ibctmtypes.ConsensusState)
 	// recalculate cached totalVotingPower field for equality check
-	tmConsState.ValidatorSet.ToTmTypes().TotalVotingPower()
+	var tmValSet *tmtypes.ValidatorSet
+	err := tmValSet.FromProto(*tmConsState.ValidatorSet)
+	suite.Require().NoError(err)
+
+	tmConsState.ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
@@ -168,10 +175,10 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		Height:       testClientHeight + 5,
 		Timestamp:    suite.now,
 		Root:         commitmenttypes.NewMerkleRoot([]byte("next")),
-		ValidatorSet: suite.valSet,
+		ValidatorSet: suite.protoValSet,
 	}
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.GetTime().Add(time.Minute), suite.tmValSet, []tmtypes.PrivValidator{suite.privVal})
+	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, suite.header.GetTime().Add(time.Minute), suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
 	clientState.LastHeader = header
@@ -180,14 +187,21 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
 	// recalculate cached totalVotingPower for equality check
-	latest.(ibctmtypes.ConsensusState).ValidatorSet.ToTmTypes().TotalVotingPower()
+	var tmValSet *tmtypes.ValidatorSet
+	err := tmValSet.FromProto(*latest.(ibctmtypes.ConsensusState).ValidatorSet)
+	suite.Require().NoError(err)
+
+	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
 	suite.Require().True(ok)
 	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
 
 	// Should return existing consensusState at latestClientHeight
 	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, testClientHeight+3)
 	// recalculate cached totalVotingPower for equality check
-	lte.(ibctmtypes.ConsensusState).ValidatorSet.ToTmTypes().TotalVotingPower()
+	err = tmValSet.FromProto(*latest.(ibctmtypes.ConsensusState).ValidatorSet)
+	suite.Require().NoError(err)
+
+	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", testClientHeight+3)
 }

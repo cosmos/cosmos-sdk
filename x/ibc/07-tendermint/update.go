@@ -5,6 +5,7 @@ import (
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -54,6 +55,11 @@ func CheckValidityAndUpdateState(
 func checkValidity(
 	clientState types.ClientState, header types.Header, currentTimestamp time.Time,
 ) error {
+	var (
+		tmLastSignedHeader, tmSignedHeader *tmtypes.SignedHeader
+		tmLastValidatorSet, tmValidatorSet *tmtypes.ValidatorSet
+	)
+
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
 		return errors.New("trusting period since last client timestamp already passed")
@@ -84,14 +90,30 @@ func checkValidity(
 		)
 	}
 
+	if err := tmLastSignedHeader.FromProto(clientState.LastHeader.SignedHeader); err != nil {
+		return err
+	}
+
+	if err := tmLastValidatorSet.FromProto(*clientState.LastHeader.ValidatorSet); err != nil {
+		return err
+	}
+
+	if err := tmSignedHeader.FromProto(header.SignedHeader); err != nil {
+		return err
+	}
+
+	if err := tmValidatorSet.FromProto(*header.ValidatorSet); err != nil {
+		return err
+	}
+
 	// Verify next header with the last header's validatorset as trusted validatorset
 	maxClockDrift := 10 * time.Second
 	err := lite.Verify(
 		clientState.GetChainID(),
-		clientState.LastHeader.SignedHeader,
-		clientState.LastHeader.ValidatorSet,
-		header.SignedHeader,
-		header.ValidatorSet,
+		tmLastSignedHeader,
+		tmLastValidatorSet,
+		tmSignedHeader,
+		tmValidatorSet,
 		clientState.TrustingPeriod,
 		currentTimestamp,
 		maxClockDrift,

@@ -329,11 +329,16 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	}
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, int64(client.Header.GetHeight()), histInfo)
 
+	protoValset, err := client.Vals.ToProto()
+	if err != nil {
+		panic(err)
+	}
+
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       client.Header.GetHeight(),
 		Timestamp:    client.Header.GetTime(),
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: ibctmtypes.ValSetFromTmTypes(client.Vals),
+		ValidatorSet: protoValset,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(

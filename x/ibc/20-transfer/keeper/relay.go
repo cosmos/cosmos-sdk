@@ -68,7 +68,7 @@ func (k Keeper) createOutgoingPacket(
 ) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
-		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 	// NOTE:
 	// - Coins transferred from the destination chain should have their denomination

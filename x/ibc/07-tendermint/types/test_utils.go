@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbits "github.com/tendermint/tendermint/proto/libs/bits"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 )
 
-// Copied unimported test functions from tmtypes to use them here
+// MakeBlockID copied unimported test functions from tmtypes to use them here
 func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
@@ -49,44 +48,18 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		panic(err)
 	}
 
-	commitSigs := make([]tmproto.CommitSig, len(commit.Signatures))
-
-	for i := range commit.Signatures {
-		commitSigs[i] = tmproto.CommitSig{
-			BlockIdFlag:      commit.Signatures[i].BlockIDFlag,
-			ValidatorAddress: commit.Signatures[i].ValidatorAddress,
-			Timestamp:        commit.Signatures[i].Timestamp,
-			Signature:        commit.Signatures[i].Signature,
-		}
+	signedHeader := tmproto.SignedHeader{
+		Header: tmHeader.ToProto(),
+		Commit: commit.ToProto(),
 	}
 
-	abciBlockID := tmtypes.TM2PB.BlockID(blockID)
-	abciHeader := tmtypes.TM2PB.Header(tmHeader)
-	bitArray := commit.BitArray()
-
-	signedHeader := tmproto.SignedHeader{
-		Header: &abciHeader,
-		Commit: &tmproto.Commit{
-			Height: commit.Height,
-			Round:  int32(commit.Round),
-			BlockID: tmproto.BlockID{
-				Hash: abciBlockID.Hash,
-				PartsHeader: tmproto.PartSetHeader{
-					Total: abciBlockID.PartsHeader.Total,
-					Hash:  abciBlockID.PartsHeader.Hash,
-				},
-			},
-			Signatures: commitSigs,
-			Hash:       commit.Hash(),
-			BitArray: &tmbits.BitArray{
-				Bits:  int64(bitArray.Bits),
-				Elems: bitArray.Elems,
-			},
-		},
+	protoValSet, err := valSet.ToProto()
+	if err != nil {
+		panic(err)
 	}
 
 	return Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: valSet,
+		ValidatorSet: protoValSet,
 	}
 }

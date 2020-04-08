@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,12 +24,12 @@ const (
 type TendermintTestSuite struct {
 	suite.Suite
 
-	cdc      *codec.Codec
-	privVal  tmtypes.PrivValidator
-	tmValSet *tmtypes.ValidatorSet
-	valSet   *ibctmtypes.ValidatorSet
-	header   ibctmtypes.Header
-	now      time.Time
+	cdc         *codec.Codec
+	privVal     tmtypes.PrivValidator
+	valSet      *tmtypes.ValidatorSet
+	protoValSet *tmproto.ValidatorSet
+	header      ibctmtypes.Header
+	now         time.Time
 }
 
 func (suite *TendermintTestSuite) SetupTest() {
@@ -44,7 +45,10 @@ func (suite *TendermintTestSuite) SetupTest() {
 
 	val := tmtypes.NewValidator(pk, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet.ToTmTypes(), []tmtypes.PrivValidator{suite.privVal})
+	suite.protoValSet, err = suite.valSet.ToProto()
+	suite.Require().NoError(err)
+
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, suite.now, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 }
 
 func TestTendermintTestSuite(t *testing.T) {

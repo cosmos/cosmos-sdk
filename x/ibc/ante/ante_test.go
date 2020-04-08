@@ -273,7 +273,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.GetTime()}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.GetTime()}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -291,11 +291,16 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	}
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, int64(client.Header.GetHeight()), histInfo)
 
+	protoValset, err := client.Vals.ToProto()
+	if err != nil {
+		panic(err)
+	}
+
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       client.Header.GetHeight() - 1,
 		Timestamp:    client.Header.GetTime(),
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: ibctmtypes.ValSetFromTmTypes(client.Vals),
+		ValidatorSet: protoValset,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(

@@ -8,6 +8,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var _ clientexported.Header = (*Header)(nil)
@@ -41,15 +42,27 @@ func (h Header) GetTime() time.Time {
 
 // ValidateBasic calls the SignedHeader ValidateBasic function
 // and checks that validatorsets are not nil
-func (h Header) ValidateBasic() error {
-	tmHeader := ProtoHeaderToTmTypes(h.SignedHeader.Header)
-	if err := tmHeader.ValidateBasic(); err != nil {
+func (h Header) ValidateBasic(chainID string) error {
+	var (
+		tmSignedHeader *tmtypes.SignedHeader
+		tmValSet       *tmtypes.ValidatorSet
+	)
+
+	if err := tmSignedHeader.FromProto(h.GetSignedHeader()); err != nil {
+		return err
+	}
+
+	if err := tmValSet.FromProto(*h.ValidatorSet); err != nil {
+		return err
+	}
+
+	if err := tmSignedHeader.ValidateBasic(chainID); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
 	}
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
-	if !bytes.Equal(h.SignedHeader.Header.ValidatorsHash, h.ValidatorSet.Hash) {
+	if !bytes.Equal(tmSignedHeader.Header.ValidatorsHash, tmValSet.Hash()) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
 	}
 	return nil

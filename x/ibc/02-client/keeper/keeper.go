@@ -112,7 +112,7 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 	return k.GetClientConsensusState(ctx, clientID, clientState.GetLatestHeight())
 }
 
-// GetClientConsensusStatelTE will get the latest ConsensusState of a particular client at the latest height
+// GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
 // less than or equal to the given height
 func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight uint64) (exported.ConsensusState, bool) {
 	for i := maxHeight; i > 0; i-- {
@@ -133,12 +133,19 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	}
 
 	valSet := stakingtypes.Validators(histInfo.Valset)
+	tmVals := tmtypes.NewValidatorSet(valSet.ToTmValidators())
+
+	protoValset, err := tmVals.ToProto()
+	if err != nil {
+		// TODO: should this return false instead?
+		panic(err)
+	}
 
 	consensusState := ibctmtypes.ConsensusState{
 		Height:       height,
 		Timestamp:    histInfo.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
-		ValidatorSet: ibctmtypes.ValSetFromTmTypes(tmtypes.NewValidatorSet(valSet.ToTmValidators())),
+		ValidatorSet: protoValset,
 	}
 	return consensusState, true
 }

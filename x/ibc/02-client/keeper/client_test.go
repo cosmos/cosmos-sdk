@@ -64,11 +64,11 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createValidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
 		return ibctmtypes.CreateTestHeader(testClientID, suite.header.SignedHeader.Header.Height+1, suite.header.GetTime().Add(time.Minute),
-			suite.tmValSet, []tmtypes.PrivValidator{suite.privVal})
+			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	createInvalidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
 		return ibctmtypes.CreateTestHeader(testClientID, suite.header.SignedHeader.Header.Height-3, suite.header.GetTime().Add(time.Minute),
-			suite.tmValSet, []tmtypes.PrivValidator{suite.privVal})
+			suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var updateHeader ibctmtypes.Header
 
@@ -157,7 +157,11 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				tmConsState, ok := consensusState.(ibctmtypes.ConsensusState)
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
 				// recalculate cached totalVotingPower field for equality check
-				tmConsState.ValidatorSet.ToTmTypes().TotalVotingPower()
+				var tmValSet *tmtypes.ValidatorSet
+				err := tmValSet.FromProto(*tmConsState.ValidatorSet)
+				suite.Require().NoError(err)
+
+				tmConsState.ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
 
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
@@ -176,7 +180,9 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altVal := tmtypes.NewValidator(pk, 4)
 
 	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.tmValSet.Validators, altVal))
+	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	protoBothValSet, err := bothValSet.ToProto()
+	suite.Require().NoError(err)
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
@@ -208,7 +214,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				suite.consensusState.ValidatorSet = ibctmtypes.ValSetFromTmTypes(bothValSet)
+				suite.consensusState.ValidatorSet = protoBothValSet
 				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 				if err != nil {
 					return err
@@ -228,7 +234,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				suite.consensusState.ValidatorSet = ibctmtypes.ValSetFromTmTypes(bothValSet)
+				suite.consensusState.ValidatorSet = protoBothValSet
 				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
 				if err != nil {
 					return err

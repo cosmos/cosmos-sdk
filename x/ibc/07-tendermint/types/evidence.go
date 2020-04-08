@@ -75,13 +75,13 @@ func (ev Evidence) ValidateBasic() error {
 	}
 
 	// ValidateBasic on both validators
-	if err := ev.Header1.ValidateBasic(); err != nil {
+	if err := ev.Header1.ValidateBasic(ev.Header1.SignedHeader.GetHeader().GetChainID()); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := ev.Header2.ValidateBasic(); err != nil {
+	if err := ev.Header2.ValidateBasic(ev.Header2.SignedHeader.GetHeader().GetChainID()); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
@@ -108,14 +108,24 @@ func (ev Evidence) ValidateBasic() error {
 // This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
 // thus we should return an error here and reject the evidence rather than panicing.
 func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
+	var (
+		tmCommit *tmtypes.Commit
+		tmValSet *tmtypes.ValidatorSet
+	)
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid commit: %v", r)
 		}
 	}()
 
-	tmCommit := ProtoCommitToTmTypes(commit)
-	tmValSet := ProtoValidatorSettToTmTypes(valSet)
+	if err := tmCommit.FromProto(*commit); err != nil {
+		return err
+	}
+
+	if err := tmValSet.FromProto(*valSet); err != nil {
+		return err
+	}
 
 	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
 	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValSet)

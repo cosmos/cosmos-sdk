@@ -114,9 +114,19 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64,
 		return ibctmtypes.Header{}, 0, err
 	}
 
+	tmValset := tmtypes.NewValidatorSet(validators.Validators)
+	tmValset.TotalVotingPower() // update voting power
+
+	// migrate to protobuf
+	protoCommit := commit.SignedHeader.ToProto()
+	protoValSet, err := tmValset.ToProto()
+	if err != nil {
+		return ibctmtypes.Header{}, 0, err
+	}
+
 	header := ibctmtypes.Header{
-		SignedHeader: ibctmtypes.SignedHeaderFromTmTypes(commit.SignedHeader),
-		ValidatorSet: ibctmtypes.ValSetFromTmTypes(tmtypes.NewValidatorSet(validators.Validators)),
+		SignedHeader: *protoCommit,
+		ValidatorSet: protoValSet,
 	}
 
 	return header, height, nil
@@ -147,11 +157,19 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 		return ibctmtypes.ConsensusState{}, 0, err
 	}
 
+	tmValset := tmtypes.NewValidatorSet(validators.Validators)
+	tmValset.TotalVotingPower() // update voting power
+
+	protoValSet, err := tmValset.ToProto()
+	if err != nil {
+		return ibctmtypes.ConsensusState{}, 0, err
+	}
+
 	state := ibctmtypes.ConsensusState{
 		Timestamp:    commit.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
 		Height:       uint64(height),
-		ValidatorSet: ibctmtypes.ValSetFromTmTypes(tmtypes.NewValidatorSet(validators.Validators)),
+		ValidatorSet: protoValSet,
 	}
 
 	return state, height, nil

@@ -125,9 +125,9 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 		types.NewValidator(addrVals[1], PKs[1], types.Description{}),
 	}
 
-	header1 := abci.Header{ChainID: "HelloChain", Height: 10}
-	header2 := abci.Header{ChainID: "HelloChain", Height: 11}
-	header3 := abci.Header{ChainID: "HelloChain", Height: 12}
+	header1 := tmproto.Header{ChainID: "HelloChain", Height: 10}
+	header2 := tmproto.Header{ChainID: "HelloChain", Height: 11}
+	header3 := tmproto.Header{ChainID: "HelloChain", Height: 12}
 
 	hist1 := types.HistoricalInfo{Header: header1, Valset: valSet}
 	hist2 := types.HistoricalInfo{Header: header2, Valset: valSet}

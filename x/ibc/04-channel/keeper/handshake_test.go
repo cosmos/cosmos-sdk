@@ -4,10 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/capability"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -38,7 +35,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 		{"capability is incorrect", func() {
 			suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connectionexported.INIT,
+				ibctypes.INIT,
 			)
 			portCap = capability.NewCapability(3)
 		}, false},
@@ -52,7 +49,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 			var err error
 			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
-				suite.chainA.GetContext(), porttypes.PortPath(testPort1),
+				suite.chainA.GetContext(), ibctypes.PortPath(testPort1),
 			)
 			suite.Require().NoError(err, "could not create capability")
 
@@ -126,11 +123,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			suite.chainB.createConnection(
-				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.INIT, exported.ORDERED, testConnectionIDA)
+				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.INIT, ibctypes.ORDERED, testConnectionIDA)
 			portCap = capability.NewCapability(3)
 		}, false},
 	}
@@ -142,7 +139,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.SetupTest() // reset
 
 			var err error
-			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), porttypes.PortPath(testPort2))
+			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), ibctypes.PortPath(testPort2))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
@@ -251,19 +248,19 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			_ = suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.INIT,
-				exported.ORDERED, testConnectionIDB,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.INIT,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.TRYOPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.TRYOPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 			channelCap = capability.NewCapability(3)
 		}, false},
@@ -374,18 +371,18 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA,
-				connectionexported.TRYOPEN,
+				ibctypes.TRYOPEN,
 			)
 			suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-				exported.TRYOPEN, exported.ORDERED, testConnectionIDA)
+				ibctypes.TRYOPEN, ibctypes.ORDERED, testConnectionIDA)
 			channelCap = capability.NewCapability(3)
 		}, false},
 	}
@@ -464,11 +461,11 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.OPEN,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 			channelCap = capability.NewCapability(3)
 		}, false},
@@ -572,19 +569,19 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			suite.chainB.CreateClient(suite.chainA)
 			_ = suite.chainB.createConnection(
 				testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			suite.chainA.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA,
-				connectionexported.OPEN,
+				ibctypes.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, exported.OPEN,
-				exported.ORDERED, testConnectionIDB,
+				testPort2, testChannel2, testPort1, testChannel1, ibctypes.OPEN,
+				ibctypes.ORDERED, testConnectionIDB,
 			)
 			suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, exported.CLOSED,
-				exported.ORDERED, testConnectionIDA,
+				testPort1, testChannel1, testPort2, testChannel2, ibctypes.CLOSED,
+				ibctypes.ORDERED, testConnectionIDA,
 			)
 		}, false},
 	}

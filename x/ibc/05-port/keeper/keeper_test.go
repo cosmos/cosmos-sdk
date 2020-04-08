@@ -29,7 +29,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
 
-	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	suite.keeper = &app.IBCKeeper.PortKeeper
 }

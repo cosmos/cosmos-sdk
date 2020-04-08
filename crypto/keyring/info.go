@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,7 +23,7 @@ type Info interface {
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
 	// Algo
-	GetAlgo() SigningAlgo
+	GetAlgo() hd.PubKeyType
 }
 
 var (
@@ -39,10 +39,10 @@ type localInfo struct {
 	Name         string        `json:"name"`
 	PubKey       crypto.PubKey `json:"pubkey"`
 	PrivKeyArmor string        `json:"privkey.armor"`
-	Algo         SigningAlgo   `json:"algo"`
+	Algo         hd.PubKeyType `json:"algo"`
 }
 
-func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo SigningAlgo) Info {
+func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo hd.PubKeyType) Info {
 	return &localInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -72,7 +72,7 @@ func (i localInfo) GetAddress() types.AccAddress {
 }
 
 // GetType implements Info interface
-func (i localInfo) GetAlgo() SigningAlgo {
+func (i localInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
@@ -87,10 +87,10 @@ type ledgerInfo struct {
 	Name   string         `json:"name"`
 	PubKey crypto.PubKey  `json:"pubkey"`
 	Path   hd.BIP44Params `json:"path"`
-	Algo   SigningAlgo    `json:"algo"`
+	Algo   hd.PubKeyType  `json:"algo"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo SigningAlgo) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -120,7 +120,7 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
-func (i ledgerInfo) GetAlgo() SigningAlgo {
+func (i ledgerInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
@@ -135,10 +135,10 @@ func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 type offlineInfo struct {
 	Name   string        `json:"name"`
 	PubKey crypto.PubKey `json:"pubkey"`
-	Algo   SigningAlgo   `json:"algo"`
+	Algo   hd.PubKeyType `json:"algo"`
 }
 
-func newOfflineInfo(name string, pub crypto.PubKey, algo SigningAlgo) Info {
+func newOfflineInfo(name string, pub crypto.PubKey, algo hd.PubKeyType) Info {
 	return &offlineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -162,7 +162,7 @@ func (i offlineInfo) GetPubKey() crypto.PubKey {
 }
 
 // GetAlgo returns the signing algorithm for the key
-func (i offlineInfo) GetAlgo() SigningAlgo {
+func (i offlineInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
@@ -228,8 +228,8 @@ func (i multiInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
-func (i multiInfo) GetAlgo() SigningAlgo {
-	return MultiAlgo
+func (i multiInfo) GetAlgo() hd.PubKeyType {
+	return hd.MultiType
 }
 
 // GetPath implements Info interface

@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
+// GenesisState is currently only used to ensure that the InitGenesis gets run
+// by the module manager
 type GenesisState struct {
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 }

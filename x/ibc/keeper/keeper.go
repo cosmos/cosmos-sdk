@@ -38,6 +38,9 @@ func NewKeeper(
 
 // Set the Router in IBC Keeper and seal it
 func (k *Keeper) SetRouter(rtr *port.Router) {
+	if k.Router != nil && k.Router.Sealed() {
+		panic("cannot reset a sealed router")
+	}
 	k.Router = rtr
 	k.Router.Seal()
 }

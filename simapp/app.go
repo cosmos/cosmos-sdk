@@ -120,7 +120,7 @@ type SimApp struct {
 	CrisisKeeper     crisis.Keeper
 	UpgradeKeeper    upgrade.Keeper
 	ParamsKeeper     params.Keeper
-	IBCKeeper        *ibc.Keeper
+	IBCKeeper        *ibc.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	EvidenceKeeper   evidence.Keeper
 	TransferKeeper   transfer.Keeper
 

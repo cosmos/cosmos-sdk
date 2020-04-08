@@ -23,8 +23,13 @@ type MsgSubmitProposalI interface {
 	sdk.Msg
 
 	GetContent() Content
+	SetContent(Content) error
+
 	GetInitialDeposit() sdk.Coins
+	SetInitialDeposit(sdk.Coins)
+
 	GetProposer() sdk.AccAddress
+	SetProposer(sdk.AccAddress)
 }
 
 // NewMsgSubmitProposalBase creates a new MsgSubmitProposalBase.
@@ -33,6 +38,18 @@ func NewMsgSubmitProposalBase(initialDeposit sdk.Coins, proposer sdk.AccAddress)
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
 	}
+}
+
+func (msg MsgSubmitProposalBase) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
+
+func (msg MsgSubmitProposalBase) GetProposer() sdk.AccAddress { return msg.Proposer }
+
+func (msg MsgSubmitProposalBase) SetInitialDeposit(coins sdk.Coins) {
+	msg.InitialDeposit = coins
+}
+
+func (msg MsgSubmitProposalBase) SetProposer(address sdk.AccAddress) {
+	msg.Proposer = address
 }
 
 // Route implements Msg

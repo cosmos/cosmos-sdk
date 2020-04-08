@@ -79,6 +79,13 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 }
 
 // nolint
-func (msg MsgSubmitProposal) GetContent() gov.Content      { return msg.Content.GetContent() }
-func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
-func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }
+func (msg MsgSubmitProposal) GetContent() gov.Content { return msg.Content.GetContent() }
+func (msg MsgSubmitProposal) SetContent(content gov.Content) error {
+	stdContent := &Content{}
+	err := stdContent.SetContent(content)
+	if err != nil {
+		return err
+	}
+	msg.Content = stdContent
+	return nil
+}

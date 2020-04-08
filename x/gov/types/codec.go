@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Codec defines the interface required to serialize custom x/gov types.
@@ -11,8 +10,6 @@ type Codec interface {
 
 	MarshalProposal(Proposal) ([]byte, error)
 	UnmarshalProposal([]byte) (Proposal, error)
-
-	NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error)
 }
 
 // RegisterCodec registers all the necessary types and interfaces for the

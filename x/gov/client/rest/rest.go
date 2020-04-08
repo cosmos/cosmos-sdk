@@ -30,9 +30,9 @@ type ProposalRESTHandler struct {
 	Handler  func(http.ResponseWriter, *http.Request)
 }
 
-func RegisterHandlers(cliCtx context.CLIContext, m types.Codec, txg tx.Generator, r *mux.Router, phs []ProposalRESTHandler) {
+func RegisterHandlers(cliCtx context.CLIContext, m types.Codec, msgSubmitProposalImpl types.MsgSubmitProposalI, txg tx.Generator, r *mux.Router, phs []ProposalRESTHandler) {
 	registerQueryRoutes(cliCtx, r)
-	registerTxHandlers(cliCtx, m, txg, r, phs)
+	registerTxHandlers(cliCtx, m, msgSubmitProposalImpl, txg, r, phs)
 }
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

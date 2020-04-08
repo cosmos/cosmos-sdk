@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -179,22 +178,6 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 		Content:      proposal.Content.GetContent(),
 		ProposalBase: proposal.ProposalBase,
 	}, nil
-}
-
-func (c *Codec) NewMsgSubmitProposal(content types.Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (types.MsgSubmitProposalI, error) {
-	stdContent := &Content{}
-	err := stdContent.SetContent(content)
-	if err != nil {
-		return nil, err
-	}
-	msg := MsgSubmitProposal{
-		MsgSubmitProposalBase: gov.MsgSubmitProposalBase{
-			InitialDeposit: initialDeposit,
-			Proposer:       proposer,
-		},
-		Content: stdContent,
-	}
-	return msg, nil
 }
 
 // ----------------------------------------------------------------------------

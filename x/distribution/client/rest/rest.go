@@ -16,14 +16,14 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
 
-func RegisterHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r, queryRoute)
-	registerTxHandlers(cliCtx, m, txg, r, queryRoute)
+func RegisterHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+	registerQueryRoutes(cliCtx, r)
+	registerTxHandlers(cliCtx, m, txg, r)
 }
 
 // RegisterRoutes register distribution REST routes.
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r, queryRoute)
+	registerQueryRoutes(cliCtx, r)
 	registerTxRoutes(cliCtx, r, queryRoute)
 }
 

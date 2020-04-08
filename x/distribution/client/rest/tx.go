@@ -32,11 +32,11 @@ type (
 	}
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router, queryRoute string) {
+func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
 	// Withdraw all delegator rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
-		newWithdrawDelegatorRewardsHandlerFn(cliCtx, m, txg, queryRoute),
+		newWithdrawDelegatorRewardsHandlerFn(cliCtx, m, txg),
 	).Methods("POST")
 
 	// Withdraw delegation rewards
@@ -64,7 +64,7 @@ func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Gen
 	).Methods("POST")
 }
 
-func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, queryRoute string) http.HandlerFunc {
+func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
@@ -83,7 +83,7 @@ func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 			return
 		}
 
-		msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
+		msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, types.QuerierRoute, delAddr)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

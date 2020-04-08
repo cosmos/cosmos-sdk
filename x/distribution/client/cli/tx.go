@@ -36,7 +36,7 @@ const (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
-func NewTxCmd(storeKey string, m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
@@ -47,7 +47,7 @@ func NewTxCmd(storeKey string, m codec.Marshaler, txg tx.Generator, ar tx.Accoun
 
 	distTxCmd.AddCommand(flags.PostCommands(
 		NewWithdrawRewardsCmd(m, txg, ar),
-		NewWithdrawAllRewardsCmd(m, txg, ar, storeKey),
+		NewWithdrawAllRewardsCmd(m, txg, ar),
 		NewSetWithdrawAddrCmd(m, txg, ar),
 		NewFundCommunityPoolCmd(m, txg, ar),
 	)...)
@@ -116,6 +116,12 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			}
 
 			msgs := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
+			for _, msg := range msgs {
+				if err := msg.ValidateBasic(); err != nil {
+					return err
+				}
+			}
+
 			if viper.GetBool(flagCommission) {
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
@@ -127,7 +133,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewWithdrawAllRewardsCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, queryRoute string) *cobra.Command {
+func NewWithdrawAllRewardsCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
@@ -156,7 +162,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return fmt.Errorf("cannot generate tx in offline mode")
 			}
 
-			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
+			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, types.QuerierRoute, delAddr)
 			if err != nil {
 				return err
 			}
@@ -196,6 +202,10 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 			}
 
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
@@ -257,11 +267,6 @@ Where proposal.json contains:
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ---------------------------------------------------------------------------
 // GetTxCmd returns the transaction commands for this module
-// ---------------------------------------------------------------------------
-// Deprecated
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ---------------------------------------------------------------------------
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,

@@ -41,6 +41,9 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	t.Cleanup(kbCleanUp)
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(flags.FlagUseLedger, true)
+	viper.Set(flagAccount, "0")
+	viper.Set(flagIndex, "0")
+	viper.Set(flagCoinType, "330")
 
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
@@ -50,14 +53,14 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1", "", false)
+		kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
-	key1, err := kb.Get("keyname1")
+	key1, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 
@@ -90,17 +93,18 @@ func Test_runAddCmdLedger(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	mockIn.Reset("test1234\ntest1234\n")
+	viper.Set(flagCoinType, sdk.CoinType)
 	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1", "", false)
+		kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
-	key1, err := kb.Get("keyname1")
+	key1, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 

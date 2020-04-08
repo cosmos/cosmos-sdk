@@ -13,6 +13,13 @@ const (
 	// ModuleName defines the IBC transfer name
 	ModuleName = "transfer"
 
+	// Version defines the current version the IBC tranfer
+	// module supports
+	Version = "ics20-1"
+
+	// PortID that transfer module binds to
+	PortID = "bank"
+
 	// StoreKey is the store key string for IBC transfer
 	StoreKey = ModuleName
 

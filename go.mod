@@ -15,7 +15,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mattn/go-isatty v0.0.12
 	github.com/otiai10/copy v1.1.1
-	github.com/pelletier/go-toml v1.6.0
+	github.com/pelletier/go-toml v1.7.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.1.1-0.20200213154359-02baa11ea7c2
@@ -28,7 +28,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/iavl v0.13.2
+	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.2
 	github.com/tendermint/tm-db v0.5.1
 	gopkg.in/yaml.v2 v2.2.8
@@ -36,6 +36,6 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
-replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200406133840-a08695844dda
+replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200408093555-383617386b38
 
 go 1.14

@@ -150,7 +150,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error 
 // never be received (even if the timeoutHeight has not yet been reached).
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
-	packet types.Packet,
+	packet types.Packet, // nolint: interfacer
 	proof,
 	proofClosed commitmentexported.Proof,
 	proofHeight,

@@ -53,6 +53,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	// Check that we can verify B's consensus state on chain A
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -108,6 +109,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 	// Check that B can verify connection is stored after some updates
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -182,6 +184,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	// Check that chainB can verify channel is stored in chain A
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -239,6 +242,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 	// Check that ChainB can verify the PacketCommitment
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -293,6 +297,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -342,6 +347,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -389,6 +395,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 
 	for i, tc := range cases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

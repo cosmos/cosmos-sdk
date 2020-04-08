@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -29,16 +28,9 @@ import (
 
 // define constants used for testing
 const (
-	testChainID    = "test-chain-id"
 	testClientIDA  = "testclientida"
 	testClientIDB  = "testclientidb"
-	testClientType = clientexported.Tendermint
-
 	testConnection = "testconnection"
-
-	testChannelVersion = "1.0"
-
-	height = 10
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3

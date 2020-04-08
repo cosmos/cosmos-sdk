@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -19,13 +20,14 @@ type Keeper struct {
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
+	scopedKeeper     capability.ScopedKeeper
 }
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
-	portKeeper types.PortKeeper,
+	portKeeper types.PortKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
@@ -33,6 +35,7 @@ func NewKeeper(
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
 		portKeeper:       portKeeper,
+		scopedKeeper:     scopedKeeper,
 	}
 }
 
@@ -59,23 +62,6 @@ func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel ty
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(channel)
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
-}
-
-// GetChannelCapability gets a channel's capability key from the store
-func (k Keeper) GetChannelCapability(ctx sdk.Context, portID, channelID string) (string, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(ibctypes.KeyChannelCapabilityPath(portID, channelID))
-	if bz == nil {
-		return "", false
-	}
-
-	return string(bz), true
-}
-
-// SetChannelCapability sets a channel's capability key to the store
-func (k Keeper) SetChannelCapability(ctx sdk.Context, portID, channelID string, key string) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(ibctypes.KeyChannelCapabilityPath(portID, channelID), []byte(key))
 }
 
 // GetNextSequenceSend gets a channel's next send sequence from the store
@@ -174,4 +160,14 @@ func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.IdentifiedChan
 		return false
 	})
 	return channels
+}
+
+// LookupModuleByChannel will return the IBCModule along with the capability associated with a given channel defined by its portID and channelID
+func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capability.Capability, bool) {
+	modules, cap, ok := k.scopedKeeper.LookupModules(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	if !ok {
+		return "", nil, false
+	}
+
+	return ibctypes.GetModuleOwner(modules), cap, true
 }

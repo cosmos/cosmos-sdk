@@ -362,7 +362,7 @@ func NewMsgPacket(
 
 // Route implements sdk.Msg
 func (msg MsgPacket) Route() string {
-	return msg.Packet.DestinationPort
+	return ibctypes.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -423,7 +423,7 @@ func NewMsgTimeout(
 
 // Route implements sdk.Msg
 func (msg MsgTimeout) Route() string {
-	return msg.Packet.SourcePort
+	return ibctypes.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -475,7 +475,7 @@ func NewMsgAcknowledgement(
 
 // Route implements sdk.Msg
 func (msg MsgAcknowledgement) Route() string {
-	return msg.Packet.SourcePort
+	return ibctypes.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg

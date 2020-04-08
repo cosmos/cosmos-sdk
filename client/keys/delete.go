@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bufio"
-	"errors"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -43,49 +42,36 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), buf)
 	if err != nil {
 		return err
 	}
 
 	for _, name := range args {
-		info, err := kb.Get(name)
+		info, err := kb.Key(name)
 		if err != nil {
 			return err
 		}
 
-		if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
-			// confirm deletion, unless -y is passed
-			if !viper.GetBool(flagYes) {
-				if err := confirmDeletion(buf); err != nil {
-					return err
-				}
-			}
-
-			if err := kb.Delete(name, "", true); err != nil {
+		// confirm deletion, unless -y is passed
+		if !viper.GetBool(flagYes) {
+			if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf, cmd.ErrOrStderr()); err != nil {
 				return err
+			} else if !yes {
+				continue
 			}
-			cmd.PrintErrln("Public key reference deleted")
-			return nil
 		}
 
-		// old password and skip flag arguments are ignored
-		if err := kb.Delete(name, "", true); err != nil {
+		if err := kb.Delete(name); err != nil {
 			return err
+		}
+
+		if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
+			cmd.PrintErrln("Public key reference deleted")
+			continue
 		}
 		cmd.PrintErrln("Key deleted forever (uh oh!)")
 	}
 
-	return nil
-}
-
-func confirmDeletion(buf *bufio.Reader) error {
-	answer, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf)
-	if err != nil {
-		return err
-	}
-	if !answer {
-		return errors.New("aborted")
-	}
 	return nil
 }

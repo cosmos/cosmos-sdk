@@ -12,6 +12,8 @@ import (
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+	capName := ibctypes.ChannelCapabilityPath(testPort1, testChannel1)
+
 	testCases := []struct {
 		msg           string
 		amount        sdk.Coins
@@ -62,16 +64,34 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, false, false},
+		{"channel capability not found", testCoins,
+			func() {
+				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
+				suite.chainA.CreateClient(suite.chainB)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
+				// Release channel capability
+				cap, _ := suite.chainA.App.ScopedTransferKeeper.GetCapability(suite.chainA.GetContext(), capName)
+				suite.chainA.App.ScopedTransferKeeper.ReleaseCapability(suite.chainA.GetContext(), cap)
+			}, true, false},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
+			// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
+			cap, err := suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), capName)
+			suite.Require().Nil(err, "could not create capability")
+			err = suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), cap, capName)
+			suite.Require().Nil(err, "transfer module could not claim capability")
+
 			tc.malleate()
 
-			err := suite.chainA.App.TransferKeeper.SendTransfer(
+			err = suite.chainA.App.TransferKeeper.SendTransfer(
 				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2,
 			)
 
@@ -123,6 +143,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			tc.malleate()
@@ -175,6 +196,7 @@ func (suite *KeeperTestSuite) TestTimeoutTransfer() {
 
 	for i, tc := range testCases {
 		tc := tc
+		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			tc.malleate()

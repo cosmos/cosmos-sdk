@@ -12,7 +12,6 @@ const (
 	DefaultParamspace                  = keeper.DefaultParamspace
 	ModuleName                         = types.ModuleName
 	StoreKey                           = types.StoreKey
-	TStoreKey                          = types.TStoreKey
 	QuerierRoute                       = types.QuerierRoute
 	RouterKey                          = types.RouterKey
 	DefaultUnbondingTime               = types.DefaultUnbondingTime

@@ -48,7 +48,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	now2 := suite.now.Add(time.Duration(time.Hour * 1))
+	now2 := suite.now.Add(time.Hour)
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()

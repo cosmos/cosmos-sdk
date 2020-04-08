@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -19,6 +20,7 @@ import (
 // chain.
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
+	channelCap *capability.Capability,
 	packet exported.PacketI,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
@@ -37,17 +39,9 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	// TODO: blocked by #5542
-	// capKey, found := k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	// if !found {
-	// 	return types.ErrChannelCapabilityNotFound
-	// }
-
-	// portCapabilityKey := sdk.NewKVStoreKey(capKey)
-
-	// if !k.portKeeper.Authenticate(portCapabilityKey, packet.GetSourcePort()) {
-	// 	return sdkerrors.Wrap(port.ErrInvalidPort, packet.GetSourcePort())
-	// }
+	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, ibctypes.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return sdkerrors.Wrapf(

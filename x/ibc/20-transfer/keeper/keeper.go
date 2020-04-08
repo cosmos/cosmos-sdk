@@ -27,8 +27,6 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      *codec.Codec
 
-	clientKeeper     types.ClientKeeper
-	connectionKeeper types.ConnectionKeeper
 	channelKeeper    types.ChannelKeeper
 	portKeeper       types.PortKeeper
 	bankKeeper       types.BankKeeper

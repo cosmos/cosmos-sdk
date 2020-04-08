@@ -1,15 +1,16 @@
 package baseapp
 
 import (
-	gocontext "context"
 	"fmt"
+	"strings"
+
+	gocontext "context"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -92,6 +93,9 @@ func (q *QueryServerTestHelper) Invoke(ctx gocontext.Context, method string, arg
 		return err
 	}
 	resBz, err := querier(q.ctx, path[2:], abci.RequestQuery{Data: reqBz})
+	if err != nil {
+		return err
+	}
 	return protoCodec.Unmarshal(resBz, reply)
 }
 

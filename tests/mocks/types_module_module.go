@@ -492,16 +492,16 @@ func (mr *MockAppModuleMockRecorder) NewQuerierHandler() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).NewQuerierHandler))
 }
 
-// RegisterQueryServer mocks base method
-func (m *MockAppModule) RegisterQueryServer(arg0 grpc.Server) {
+// RegisterQueryService mocks base method
+func (m *MockAppModule) RegisterQueryService(arg0 grpc.Server) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterQueryServer", arg0)
+	m.ctrl.Call(m, "RegisterQueryService", arg0)
 }
 
-// RegisterQueryServer indicates an expected call of RegisterQueryServer
-func (mr *MockAppModuleMockRecorder) RegisterQueryServer(arg0 interface{}) *gomock.Call {
+// RegisterQueryService indicates an expected call of RegisterQueryService
+func (mr *MockAppModuleMockRecorder) RegisterQueryService(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterQueryServer", reflect.TypeOf((*MockAppModule)(nil).RegisterQueryServer), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterQueryService", reflect.TypeOf((*MockAppModule)(nil).RegisterQueryService), arg0)
 }
 
 // BeginBlock mocks base method

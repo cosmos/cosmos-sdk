@@ -71,16 +71,16 @@ func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{
 		}
 }
 
-type QueryServerTestHelper struct {
+type QueryServiceTestHelper struct {
 	*QueryRouter
 	ctx sdk.Context
 }
 
-func NewQueryServerTestHelper(ctx sdk.Context) *QueryServerTestHelper {
-	return &QueryServerTestHelper{QueryRouter: NewQueryRouter(), ctx: ctx}
+func NewQueryServerTestHelper(ctx sdk.Context) *QueryServiceTestHelper {
+	return &QueryServiceTestHelper{QueryRouter: NewQueryRouter(), ctx: ctx}
 }
 
-func (q *QueryServerTestHelper) Invoke(ctx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+func (q *QueryServiceTestHelper) Invoke(ctx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	path := strings.Split(method, "/")
 	if len(path) != 3 {
 		return fmt.Errorf("unexpected method name %s", method)
@@ -100,9 +100,9 @@ func (q *QueryServerTestHelper) Invoke(ctx gocontext.Context, method string, arg
 	return protoCodec.Unmarshal(resBz, reply)
 }
 
-func (q *QueryServerTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("not supported")
 }
 
-var _ gogogrpc.Server = &QueryServerTestHelper{}
-var _ gogogrpc.ClientConn = &QueryServerTestHelper{}
+var _ gogogrpc.Server = &QueryServiceTestHelper{}
+var _ gogogrpc.ClientConn = &QueryServiceTestHelper{}

@@ -60,7 +60,7 @@ A hypothetical example for the `gov` module would look something like:
 
 import "google/protobuf/any.proto";
 
-service Query {
+service QueryService {
   rpc GetProposal(GetProposalParams) returns (AnyProposal) { }
 }
 
@@ -73,11 +73,11 @@ message AnyProposal {
 ### Custom Query Implementation
 
 In order to implement the query service, we can reuse the existing [gogo protobuf](https://github.com/gogo/protobuf)
-grpc plugin, which for a service named `Query` generates an interface named
-`QueryServer` as below:
+grpc plugin, which for a service named `QueryService` generates an interface named
+`QueryServiceServer` as below:
 
 ```go
-type QueryServer interface {
+type QueryServiceServer interface {
 	QueryBalance(context.Context, *QueryBalanceParams) (*types.Coin, error)
 	QueryAllBalances(context.Context, *QueryAllBalancesParams) (*QueryAllBalancesResponse, error)
 }
@@ -109,13 +109,13 @@ func (q Querier) QueryBalance(ctx context.Context, params *types.QueryBalancePar
 ### Custom Query Registration and Routing
 
 Query server implementations as above would be registered with `AppModule`s using
-a new method `RegisterQueryServer(grpc.Server)` which could be implemented simply
+a new method `RegisterQueryService(grpc.Server)` which could be implemented simply
 as below:
 
 ```go
 // x/bank/module.go
-func (am AppModule) RegisterQueryServer(server grpc.Server) {
-	types.RegisterQueryServer(server, keeper.Querier{am.keeper})
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryService(server, keeper.Querier{am.keeper})
 }
 ```
 
@@ -164,7 +164,7 @@ annotations to their `rpc` methods as in this example below.
 ```proto
 // x/bank/types/types.proto
 
-service Query {
+service QueryService {
   rpc QueryBalance(QueryBalanceParams) returns (cosmos_sdk.v1.Coin) {
     option (google.api.http) = {
       get: "/x/bank/v1/balance/{address}/{denom}"
@@ -196,11 +196,11 @@ file.
 ### Client Usage
 
 The gogo protobuf grpc plugin generates client interfaces in addition to server
-interfaces. For the `Query` service defined above we would get a `QueryClient`
+interfaces. For the `QueryService` service defined above we would get a `QueryServiceClient`
 interface like:
 
 ```go
-type QueryClient interface {
+type QueryServiceClient interface {
 	QueryBalance(ctx context.Context, in *QueryBalanceParams, opts ...grpc.CallOption) (*types.Coin, error)
 	QueryAllBalances(ctx context.Context, in *QueryAllBalancesParams, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
 }
@@ -218,7 +218,7 @@ Clients (such as CLI methods) will then be able to call query methods like this:
 
 ```go
 cliCtx := context.NewCLIContext()
-queryClient := types.NewQueryClient(cliCtx.QueryConn())
+queryClient := types.NewQueryServiceClient(cliCtx.QueryConn())
 params := &types.QueryBalanceParams{addr, denom}
 result, err := queryClient.QueryBalance(gocontext.Background(), params)
 ```
@@ -226,11 +226,11 @@ result, err := queryClient.QueryBalance(gocontext.Background(), params)
 ### Testing
 
 Tests would be able to create a query client directly from keeper and `sdk.Context`
-references using a `QueryServerTestHelper` as below:
+references using a `QueryServiceTestHelper` as below:
 
 ```go
-queryHelper := baseapp.NewQueryServerTestHelper(ctx)
-types.RegisterQueryServer(queryHelper, keeper.Querier{app.BankKeeper})
+queryHelper := baseapp.NewQueryServiceTestHelper(ctx)
+types.RegisterQueryService(queryHelper, keeper.Querier{app.BankKeeper})
 queryClient := types.NewQueryClient(queryHelper)
 ```
 

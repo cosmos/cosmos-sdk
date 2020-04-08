@@ -45,8 +45,8 @@ var (
 	NewOutput                   = types.NewOutput
 	ValidateInputsOutputs       = types.ValidateInputsOutputs
 	ParamKeyTable               = types.ParamKeyTable
-	NewQueryBalanceParams       = types.NewQueryBalanceParams
-	NewQueryAllBalancesParams   = types.NewQueryAllBalancesParams
+	NewQueryBalanceParams       = types.NewQueryBalanceRequest
+	NewQueryAllBalancesParams   = types.NewQueryAllBalancesRequest
 	ModuleCdc                   = types.ModuleCdc
 	ParamStoreKeySendEnabled    = types.ParamStoreKeySendEnabled
 	BalancesPrefix              = types.BalancesPrefix
@@ -66,7 +66,7 @@ type (
 	MsgMultiSend            = types.MsgMultiSend
 	Input                   = types.Input
 	Output                  = types.Output
-	QueryBalanceParams      = types.QueryBalanceParams
-	QueryAllBalancesParams  = types.QueryAllBalancesParams
+	QueryBalanceRequest     = types.QueryBalanceRequest
+	QueryAllBalancesRequest = types.QueryAllBalancesRequest
 	GenesisBalancesIterator = types.GenesisBalancesIterator
 )

@@ -142,11 +142,11 @@ type AppModule interface {
 	// routes
 	Route() string
 	NewHandler() sdk.Handler
-	// TODO: deprecate in favor of RegisterQueryServer
+	// TODO: deprecate in favor of RegisterQueryService
 	QuerierRoute() string
-	// TODO: deprecate in favor of RegisterQueryServer
+	// TODO: deprecate in favor of RegisterQueryService
 	NewQuerierHandler() sdk.Querier
-	RegisterQueryServer(grpc.Server)
+	RegisterQueryService(grpc.Server)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -182,7 +182,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
-func (gam GenesisOnlyAppModule) RegisterQueryServer(grpc.Server) {}
+func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -259,7 +259,7 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
-		module.RegisterQueryServer(queryRouter)
+		module.RegisterQueryService(queryRouter)
 	}
 }
 

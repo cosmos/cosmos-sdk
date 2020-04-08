@@ -11,14 +11,14 @@ type Querier struct {
 	Keeper
 }
 
-var _ types.QueryServer = Querier{}
+var _ types.QueryServiceServer = Querier{}
 
-func (q Querier) QueryBalance(ctx context.Context, params *types.QueryBalanceParams) (*sdk.Coin, error) {
-	balance := q.GetBalance(sdk.UnwrapSDKContext(ctx), params.Address, params.Denom)
-	return &balance, nil
+func (q Querier) QueryBalance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+	balance := q.GetBalance(sdk.UnwrapSDKContext(ctx), req.Address, req.Denom)
+	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
 
-func (q Querier) QueryAllBalances(ctx context.Context, params *types.QueryAllBalancesParams) (*types.QueryAllBalancesResponse, error) {
-	balances := q.GetAllBalances(sdk.UnwrapSDKContext(ctx), params.Address)
+func (q Querier) QueryAllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
+	balances := q.GetAllBalances(sdk.UnwrapSDKContext(ctx), req.Address)
 	return &types.QueryAllBalancesResponse{Balances: balances}, nil
 }

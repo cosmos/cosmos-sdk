@@ -60,13 +60,17 @@ message MsgMultiSend {
 // Query
 //
 
-service Query {
-  rpc QueryBalance(QueryBalanceParams) returns (cosmos_sdk.v1.Coin) {
+// Query provides defines the gRPC querier service
+service QueryService {
+  // QueryBalance queries the balance of a single coin for a single account
+  rpc QueryBalance (QueryBalanceRequest) returns (QueryBalanceResponse) {
     option (google.api.http) = {
       get: "/cosmos_sdk/x/bank/v1/balance/{address}/{denom}"
     };
   }
-  rpc QueryAllBalances(QueryAllBalancesParams) returns (QueryAllBalancesResponse) {
+
+  // QueryBalance queries the balance of all coins for a single account
+  rpc QueryAllBalances (QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
     option (google.api.http) = {
       get: "/cosmos_sdk/x/bank/v1/balances/{address}"
     };
@@ -74,20 +78,26 @@ service Query {
 }
 
 // QueryBalanceParams defines the params for querying an account balance.
-message QueryBalanceParams {
+message QueryBalanceRequest {
   bytes address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   string denom = 2;
 }
 
+// QueryBalanceResponse is the response for the QueryBalance rpc method
+message QueryBalanceResponse {
+  cosmos_sdk.v1.Coin balance = 1;
+}
+
 // QueryAllBalancesParams defines the params for querying all account balances
-message QueryAllBalancesParams {
+message QueryAllBalancesRequest {
   bytes address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
 }
 
+// QueryAllBalancesResponse is the response to the QueryAllBalances rpc method
 message QueryAllBalancesResponse {
   repeated cosmos_sdk.v1.Coin balances = 1 [
     (gogoproto.nullable)     = false,

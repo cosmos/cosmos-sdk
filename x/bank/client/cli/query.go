@@ -48,17 +48,17 @@ func NewBalancesCmd() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(cliCtx.QueryConn())
+			queryClient := types.NewQueryServiceClient(cliCtx.QueryConn())
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params := &types.QueryAllBalancesParams{Address: addr}
+				params := types.NewQueryAllBalancesRequest(addr)
 				result, err := queryClient.QueryAllBalances(gocontext.Background(), params)
 				if err != nil {
 					return err
 				}
 				return cliCtx.Println(result.Balances)
 			} else {
-				params := &types.QueryBalanceParams{Address: addr, Denom: denom}
+				params := types.NewQueryBalanceRequest(addr, denom)
 				result, err := queryClient.QueryBalance(gocontext.Background(), params)
 				if err != nil {
 					return err
@@ -123,10 +123,10 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params = types.NewQueryAllBalancesParams(addr)
+				params = types.NewQueryAllBalancesRequest(addr)
 				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllBalances)
 			} else {
-				params = types.NewQueryBalanceParams(addr, denom)
+				params = types.NewQueryBalanceRequest(addr, denom)
 				route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 			}
 

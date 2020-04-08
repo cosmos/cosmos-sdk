@@ -130,7 +130,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(grpc.Server) {
+func (am AppModule) RegisterQueryService(grpc.Server) {
 }
 
 // InitGenesis performs genesis initialization for the distribution module. It returns

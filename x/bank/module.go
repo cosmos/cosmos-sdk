@@ -78,8 +78,8 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
-func (am AppModule) RegisterQueryServer(server grpc.Server) {
-	types.RegisterQueryServer(server, keeper.Querier{Keeper: am.keeper})
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServiceServer(server, keeper.Querier{Keeper: am.keeper})
 }
 
 // NewAppModule creates a new AppModule object

@@ -103,7 +103,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(grpc.Server) {
+func (am AppModule) RegisterQueryService(grpc.Server) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

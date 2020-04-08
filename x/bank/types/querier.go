@@ -10,12 +10,12 @@ const (
 	QueryAllBalances = "all_balances"
 )
 
-// NewQueryBalanceParams creates a new instance of QueryBalanceParams.
-func NewQueryBalanceParams(addr sdk.AccAddress, denom string) QueryBalanceParams {
-	return QueryBalanceParams{Address: addr, Denom: denom}
+// NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
+func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
+	return &QueryBalanceRequest{Address: addr, Denom: denom}
 }
 
-// NewQueryAllBalancesParams creates a new instance of QueryAllBalancesParams.
-func NewQueryAllBalancesParams(addr sdk.AccAddress) QueryAllBalancesParams {
-	return QueryAllBalancesParams{Address: addr}
+// NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
+func NewQueryAllBalancesRequest(addr sdk.AccAddress) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr}
 }

@@ -126,7 +126,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(server grpc.Server) {
+func (am AppModule) RegisterQueryService(server grpc.Server) {
 }
 
 // InitGenesis performs genesis initialization for the slashing module. It returns

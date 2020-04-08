@@ -17,7 +17,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	types.RegisterQueryServer(queryHelper, keeper.Querier{app.BankKeeper})
 	queryClient := types.NewQueryClient(queryHelper)
 
-	req := types.NewQueryBalanceParams(addr, fooDenom)
+	req := types.NewQueryBalanceRequest(addr, fooDenom)
 	balance, err := queryClient.QueryBalance(gocontext.Background(), &req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(balance)
@@ -47,7 +47,7 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	//suite.Require().NotNil(err)
 	//suite.Require().Nil(res)
 
-	req := types.NewQueryAllBalancesParams(addr)
+	req := types.NewQueryAllBalancesRequest(addr)
 	res, err := queryClient.QueryAllBalances(gocontext.Background(), &req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)

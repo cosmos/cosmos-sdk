@@ -108,7 +108,7 @@ func (AppModule) QuerierRoute() string { return "" }
 // NewQuerierHandler returns no sdk.Querier.
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
-func (am AppModule) RegisterQueryServer(grpc.Server) {
+func (am AppModule) RegisterQueryService(grpc.Server) {
 }
 
 // InitGenesis performs genesis initialization for the crisis module. It returns

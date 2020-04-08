@@ -136,7 +136,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-func (am AppModule) RegisterQueryServer(grpc.Server) {}
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the evidence module's invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}

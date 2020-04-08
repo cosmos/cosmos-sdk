@@ -18,7 +18,7 @@ const (
 	Version = "ics20-1"
 
 	// PortID that transfer module binds to
-	PortID = "bank"
+	PortID = "transfer"
 
 	// StoreKey is the store key string for IBC transfer
 	StoreKey = ModuleName

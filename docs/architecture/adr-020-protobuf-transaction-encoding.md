@@ -132,9 +132,55 @@ We then update `CLIContext` to have a new field: `Marshaler`.
 
 Then, each module's client handler will at the minimum accept a `Marshaler` instead
 of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
-that account fields can be retrieved for signing. If the module needs to work with
-any interface types, it will use the `Codec` interface defined by the module which
-also extends `Marshaler`.
+that account fields can be retrieved for signing.
+
+#### Interface `oneof` Handling
+
+If the module needs to work with any `sdk.Msg`s that use interface types, that
+`sdk.Msg` should be implemented as an interface with getters and setters on the
+module level and the module level `Codec` should contain a no-arg constructor
+function for that interface that app's implement.
+
+For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
+should also be an interface and have a no-arg constructor function on the module `Codec`:
+```go
+// x/gov/types/msgs.go
+type MsgSubmitProposalI interface {
+	sdk.Msg
+
+	GetContent() Content
+	SetContent(Content) error
+
+	GetInitialDeposit() sdk.Coins
+	SetInitialDeposit(sdk.Coins)
+
+	GetProposer() sdk.AccAddress
+	SetProposer(sdk.AccAddress)
+}
+
+// x/gov/types/codec.go
+type Codec interface {
+    ...
+	NewMsgSubmitProposalI() MsgSubmitProposalI
+}
+```
+
+Note that the implementation of `MsgSubmitProposalI` can be simplified by
+using an embedded base struct which implements most of that interface - in this
+case `MsgSubmitProposalBase`.
+
+Modules should also provide a convenience constructor function that takes a `Codec`
+instance as its first argument and then all of the required parameters as arguments.
+Ex:
+```go
+// x/gov/types/msgs/go
+func NewMsgSubmitProposalI(cdc Codec, content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error) {
+	...
+}
+```
+
+CLI and REST tx methods can then be passed a `Codec` instance and construct
+the message instance using this helper function.
 
 ## Future Improvements
 

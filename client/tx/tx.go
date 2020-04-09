@@ -127,7 +127,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", out)
 
 		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf)
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 		if err != nil || !ok {
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err
@@ -332,7 +332,7 @@ func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 		return nil, err
 	}
 
-	sigBytes, pubkey, err := txf.keybase.Sign(name, passphrase, signBytes)
+	sigBytes, pubkey, err := txf.keybase.Sign(name, signBytes)
 	if err != nil {
 		return nil, err
 	}

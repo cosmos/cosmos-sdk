@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestCommands(t *testing.T) {
@@ -21,5 +22,6 @@ func TestCommands(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	viper.Set(flags.FlagKeyringBackend, keyring.BackendTest)
+	viper.Set(flagCoinType, sdk.CoinType)
 	os.Exit(m.Run())
 }

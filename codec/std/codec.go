@@ -9,8 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -181,7 +180,7 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 	}, nil
 }
 
-func (c *Codec) NewMsgSubmitProposalI() types.MsgSubmitProposalI {
+func (c *Codec) NewMsgSubmitProposalI() gov.MsgSubmitProposalI {
 	return &MsgSubmitProposal{}
 }
 

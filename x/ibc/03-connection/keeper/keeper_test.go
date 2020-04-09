@@ -316,3 +316,7 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
 		time.Now(), chain.Vals, chain.Signers)
 }
+
+func prefixedClientKey(clientID string, key []byte) []byte {
+	return append([]byte("clients/"+clientID+"/"), key...)
+}

@@ -114,7 +114,8 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(counterpartyClientIdentifier, consensusHeight))
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
 	}

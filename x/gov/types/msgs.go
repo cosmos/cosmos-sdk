@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,22 +33,22 @@ type MsgSubmitProposalI interface {
 }
 
 // NewMsgSubmitProposalBase creates a new MsgSubmitProposalBase.
-func NewMsgSubmitProposalBase(initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposalBase {
-	return MsgSubmitProposalBase{
+func NewMsgSubmitProposalBase(initialDeposit sdk.Coins, proposer sdk.AccAddress) *MsgSubmitProposalBase {
+	return &MsgSubmitProposalBase{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
 	}
 }
 
-func (msg MsgSubmitProposalBase) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
+func (msg *MsgSubmitProposalBase) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
 
-func (msg MsgSubmitProposalBase) GetProposer() sdk.AccAddress { return msg.Proposer }
+func (msg *MsgSubmitProposalBase) GetProposer() sdk.AccAddress { return msg.Proposer }
 
-func (msg MsgSubmitProposalBase) SetInitialDeposit(coins sdk.Coins) {
+func (msg *MsgSubmitProposalBase) SetInitialDeposit(coins sdk.Coins) {
 	msg.InitialDeposit = coins
 }
 
-func (msg MsgSubmitProposalBase) SetProposer(address sdk.AccAddress) {
+func (msg *MsgSubmitProposalBase) SetProposer(address sdk.AccAddress) {
 	msg.Proposer = address
 }
 
@@ -197,7 +196,7 @@ func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sd
 	return MsgSubmitProposal{content, initialDeposit, proposer}
 }
 
-func NewMsgSubmitProposalI(cdc gov.Codec, content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error) {
+func NewMsgSubmitProposalI(cdc Codec, content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error) {
 	msg := cdc.NewMsgSubmitProposalI()
 	err := msg.SetContent(content)
 	if err != nil {

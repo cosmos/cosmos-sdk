@@ -182,7 +182,7 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 }
 
 func (c *Codec) NewMsgSubmitProposalI() types.MsgSubmitProposalI {
-	return MsgSubmitProposal{}
+	return &MsgSubmitProposal{}
 }
 
 // ----------------------------------------------------------------------------

@@ -10,7 +10,7 @@ import (
 
 var (
 	_ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
-	_ gov.MsgSubmitProposalI        = MsgSubmitProposal{}
+	_ gov.MsgSubmitProposalI        = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
@@ -46,19 +46,6 @@ func (msg MsgSubmitEvidence) ValidateBasic() error {
 func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence { return msg.Evidence.GetEvidence() }
 func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress      { return msg.Submitter }
 
-// NewMsgSubmitProposal returns a new MsgSubmitProposal.
-func NewMsgSubmitProposal(c gov.Content, d sdk.Coins, p sdk.AccAddress) (MsgSubmitProposal, error) {
-	content := &Content{}
-	if err := content.SetContent(c); err != nil {
-		return MsgSubmitProposal{}, err
-	}
-
-	return MsgSubmitProposal{
-		Content:               content,
-		MsgSubmitProposalBase: gov.NewMsgSubmitProposalBase(d, p),
-	}, nil
-}
-
 // ValidateBasic performs basic (non-state-dependant) validation on a
 // MsgSubmitProposal.
 func (msg MsgSubmitProposal) ValidateBasic() error {
@@ -79,8 +66,8 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 }
 
 // nolint
-func (msg MsgSubmitProposal) GetContent() gov.Content { return msg.Content.GetContent() }
-func (msg MsgSubmitProposal) SetContent(content gov.Content) error {
+func (msg *MsgSubmitProposal) GetContent() gov.Content { return msg.Content.GetContent() }
+func (msg *MsgSubmitProposal) SetContent(content gov.Content) error {
 	stdContent := &Content{}
 	err := stdContent.SetContent(content)
 	if err != nil {

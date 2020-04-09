@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 func TestNewMsgSubmitEvidence(t *testing.T) {
@@ -28,12 +29,13 @@ func TestNewMsgSubmitEvidence(t *testing.T) {
 	require.NoError(t, msg.ValidateBasic())
 }
 
-func TestNewNewMsgSubmitProposal(t *testing.T) {
+func TestNewMsgSubmitProposalI(t *testing.T) {
 	p := sdk.AccAddress("foo")
 	d := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 	c := gov.TextProposal{Title: "title", Description: "description"}
 
-	msg, err := std.NewMsgSubmitProposal(c, d, p)
+	cdc := &std.Codec{}
+	msg, err := gov.NewMsgSubmitProposalI(cdc, c, d, p)
 	require.NoError(t, err)
 	require.Equal(t, msg.GetContent(), &c)
 	require.Equal(t, msg.GetProposer(), p)

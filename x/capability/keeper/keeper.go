@@ -114,6 +114,12 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	k.sealed = true
 }
 
+// GetLatestIndex returns the latest index of the CapabilityKeeper
+func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	return types.IndexFromKey(store.Get(types.KeyIndex))
+}
+
 // NewCapability attempts to create a new capability with a given name. If the
 // capability already exists in the in-memory store, an error will be returned.
 // Otherwise, a new capability is created with the current global unique index.

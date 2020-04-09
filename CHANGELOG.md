@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.37.9] - 2020-04-09
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.10](https://github.com/tendermint/tendermint/releases/tag/v0.32.10).
+
 ## [v0.37.8] - 2020-03-11
 
 ### Bug Fixes
@@ -2634,7 +2640,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.8...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.9...HEAD
+[v0.37.9]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.9
 [v0.37.8]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.8
 [v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6

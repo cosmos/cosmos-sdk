@@ -206,6 +206,12 @@ functionality that requires an online connection.
 * (client) [\#5895](https://github.com/cosmos/cosmos-sdk/issues/5895) show config options in the config command's help screen.
 * (types/rest) [\#5900](https://github.com/cosmos/cosmos-sdk/pull/5900) Add Check*Error function family to spare developers from replicating tons of boilerplate code.
 
+## [v0.38.3] - 2020-04-09
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.33.3](https://github.com/tendermint/tendermint/releases/tag/v0.33.3).
+
 ## [v0.38.2] - 2020-03-25
 
 ### Bug Fixes

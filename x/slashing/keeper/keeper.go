@@ -23,11 +23,16 @@ type Keeper struct {
 
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc codec.Marshaler, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramspace.HasKeyTable() {
+		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
-		paramspace: paramspace.WithKeyTable(types.ParamKeyTable()),
+		paramspace: paramspace,
 	}
 }
 

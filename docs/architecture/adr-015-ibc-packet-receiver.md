@@ -192,22 +192,7 @@ func NewAnteHandler(
 }
 ```
 
-The implementation of this ADR will also change the `Data` field of the `Packet` type from `[]byte` (i.e. arbitrary data) to `PacketDataI`. We want to make application modules be able to register custom packet data type which is automatically unmarshaled at `TxDecoder` time and can be simply type switched inside the application handler. Also, by having `GetCommitment()` method instead of manually generate the commitment inside the IBC keeper, the applications can define their own commitment method, including bare bytes, hashing, etc.
-
-This also removes the `Timeout` field from the `Packet` struct. This is because the `PacketDataI` interface now contains this information. You can see details about this in [ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#definitions). 
-
-The `PacketDataI` is the application specific interface that provides information for the execution of the application packet. In the case of ICS20 this would be `denom`, `amount` and `address`
-
-```go
-// PacketDataI defines the standard interface for IBC packet data
-type PacketDataI interface {
-	GetCommitment() []byte // Commitment form that will be stored in the state.
-	GetTimeoutHeight() uint64
-
-	ValidateBasic() error
-	Type() string
-}
-```
+The implementation of this ADR will also create a `Data` field of the `Packet` of type `[]byte`, which can be deserialised by the receiving module into its own private type. It is up to the application modules to do this according to their own interpretation, not by the IBC keeper.  This is crucial for dynamic IBC.
 
 Example application-side usage:
 
@@ -234,15 +219,17 @@ func NewHandler(k Keeper) Handler {
     case MsgTransfer:
       return handleMsgTransfer(ctx, k, msg)
     case ibc.MsgPacket:
-      switch data := msg.Packet.Data.(type) {
-      case PacketDataTransfer: // i.e fulfills the PacketDataI interface
-        return handlePacketDataTransfer(ctx, k, msg.Packet, data)
+      var data PacketDataTransfer
+      if err := types.ModuleCodec.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
+        return err
       }
-    case ibc.MsgTimeoutPacket: 
-      switch packet := msg.Packet.Data.(type) {
-      case PacketDataTransfer: // i.e fulfills the PacketDataI interface
-        return handleTimeoutPacketDataTransfer(ctx, k, msg.Packet)
+      return handlePacketDataTransfer(ctx, k, msg, data)
+    case ibc.MsgTimeoutPacket:
+      var data PacketDataTransfer
+      if err := types.ModuleCodec.UnmarshalBinaryBare(msg.GetData(), &data); err != nil {
+        return err
       }
+      return handleTimeoutPacketDataTransfer(ctx, k, packet)
     // interface { PortID() string; ChannelID() string; Channel() ibc.Channel }
     // MsgChanInit, MsgChanTry implements ibc.MsgChannelOpen
     case ibc.MsgChannelOpen: 

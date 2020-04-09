@@ -53,6 +53,10 @@ func NewSendTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *
 			}
 
 			msg := types.NewMsgSend(cliCtx.GetFromAddress(), toAddr, coins)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}

@@ -40,13 +40,17 @@ func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.Accou
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			senderAddr := cliCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]
 
 			msg := types.NewMsgVerifyInvariant(senderAddr, moduleName, route)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}

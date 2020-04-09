@@ -426,6 +426,8 @@ github.com/tendermint/iavl v0.13.3 h1:expgBDY1MX+6/3sqrIxGChbTNf9N9aTJ67SH4bPchC
 github.com/tendermint/iavl v0.13.3/go.mod h1:2lE7GiWdSvc7kvT78ncIKmkOjCnp6JEnSb2O7B9htLw=
 github.com/tendermint/tendermint v0.33.2 h1:NzvRMTuXJxqSsFed2J7uHmMU5N1CVzSpfi3nCc882KY=
 github.com/tendermint/tendermint v0.33.2/go.mod h1:25DqB7YvV1tN3tHsjWoc2vFtlwICfrub9XO6UBO+4xk=
+github.com/tendermint/tendermint v0.33.3 h1:6lMqjEoCGejCzAghbvfQgmw87snGSqEhDTo/jw+W8CI=
+github.com/tendermint/tendermint v0.33.3/go.mod h1:25DqB7YvV1tN3tHsjWoc2vFtlwICfrub9XO6UBO+4xk=
 github.com/tendermint/tm-db v0.4.1/go.mod h1:JsJ6qzYkCGiGwm5GHl/H5GLI9XLb6qZX7PRe425dHAY=
 github.com/tendermint/tm-db v0.5.1 h1:H9HDq8UEA7Eeg13kdYckkgwwkQLBnJGgX4PgLJRhieY=
 github.com/tendermint/tm-db v0.5.1/go.mod h1:g92zWjHpCYlEvQXvy9M168Su8V1IBEeawpXVVBaK4f4=

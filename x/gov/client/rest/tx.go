@@ -2,10 +2,9 @@ package rest
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"net/http"
-	"reflect"
 
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -17,19 +16,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, msgSubmitProposalImpl types.MsgSubmitProposalI, txg tx.Generator, r *mux.Router, phs []ProposalRESTHandler) {
+func registerTxHandlers(cliCtx context.CLIContext, m gov.Codec, txg tx.Generator, r *mux.Router, phs []ProposalRESTHandler) {
 	propSubRtr := r.PathPrefix("/gov/proposals").Subrouter()
 	for _, ph := range phs {
 		propSubRtr.HandleFunc(fmt.Sprintf("/%s", ph.SubRoute), ph.Handler).Methods("POST")
 	}
 
 	cliCtx = cliCtx.WithMarshaler(m)
-	r.HandleFunc("/gov/proposals", newPostProposalHandlerFn(cliCtx, msgSubmitProposalImpl, txg)).Methods("POST")
+	r.HandleFunc("/gov/proposals", newPostProposalHandlerFn(cliCtx, m, txg)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), newDepositHandlerFn(cliCtx, txg)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), newVoteHandlerFn(cliCtx, txg)).Methods("POST")
 }
 
-func newPostProposalHandlerFn(cliCtx context.CLIContext, msgSubmitProposalImpl types.MsgSubmitProposalI, txg tx.Generator) http.HandlerFunc {
+func newPostProposalHandlerFn(cliCtx context.CLIContext, m gov.Codec, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PostProposalReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -44,13 +43,7 @@ func newPostProposalHandlerFn(cliCtx context.CLIContext, msgSubmitProposalImpl t
 		proposalType := gcutils.NormalizeProposalType(req.ProposalType)
 		content := types.ContentFromProposalType(req.Title, req.Description, proposalType)
 
-		msg := reflect.New(reflect.TypeOf(msgSubmitProposalImpl)).Interface().(types.MsgSubmitProposalI)
-		err := msg.SetContent(content)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-		msg.SetInitialDeposit(req.InitialDeposit)
-		msg.SetProposer(cliCtx.GetFromAddress())
+		msg, err := gov.NewMsgSubmitProposalI(m, content, req.InitialDeposit, req.Proposer)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

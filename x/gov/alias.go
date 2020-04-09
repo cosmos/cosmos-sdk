@@ -84,6 +84,7 @@ var (
 	SplitKeyVote                  = types.SplitKeyVote
 	NewMsgSubmitProposalBase      = types.NewMsgSubmitProposalBase
 	NewMsgSubmitProposal          = types.NewMsgSubmitProposal
+	NewMsgSubmitProposalI         = types.NewMsgSubmitProposalI
 	NewMsgDeposit                 = types.NewMsgDeposit
 	NewMsgVote                    = types.NewMsgVote
 	ParamKeyTable                 = types.ParamKeyTable

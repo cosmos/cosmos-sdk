@@ -3,9 +3,10 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"github.com/spf13/cobra"
 
@@ -56,7 +57,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(cdc codec.Marshaler, msgSubmitProposalImpl types.MsgSubmitProposalI, txg tx.Generator, ar tx.AccountRetriever, pcmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(cdc gov.Codec, txg tx.Generator, ar tx.AccountRetriever, pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -65,7 +66,7 @@ func NewTxCmd(cdc codec.Marshaler, msgSubmitProposalImpl types.MsgSubmitProposal
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(cdc, msgSubmitProposalImpl, txg, ar)
+	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar)
 	for _, pcmd := range pcmds {
 		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
 	}
@@ -80,7 +81,7 @@ func NewTxCmd(cdc codec.Marshaler, msgSubmitProposalImpl types.MsgSubmitProposal
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(cdc codec.Marshaler, msgSubmitProposalImpl types.MsgSubmitProposalI, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewCmdSubmitProposal(cdc gov.Codec, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -124,13 +125,10 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := reflect.New(reflect.TypeOf(msgSubmitProposalImpl)).Interface().(types.MsgSubmitProposalI)
-			err = msg.SetContent(content)
+			msg, err := gov.NewMsgSubmitProposalI(cdc, content, amount, cliCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
-			msg.SetInitialDeposit(amount)
-			msg.SetProposer(cliCtx.GetFromAddress())
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}

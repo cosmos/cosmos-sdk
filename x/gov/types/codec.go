@@ -10,6 +10,8 @@ type Codec interface {
 
 	MarshalProposal(Proposal) ([]byte, error)
 	UnmarshalProposal([]byte) (Proposal, error)
+
+	NewMsgSubmitProposalI() MsgSubmitProposalI
 }
 
 // RegisterCodec registers all the necessary types and interfaces for the

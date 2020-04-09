@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -194,6 +195,17 @@ type MsgSubmitProposal struct {
 // TODO: Remove once client-side Protobuf migration has been completed.
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposal {
 	return MsgSubmitProposal{content, initialDeposit, proposer}
+}
+
+func NewMsgSubmitProposalI(cdc gov.Codec, content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error) {
+	msg := cdc.NewMsgSubmitProposalI()
+	err := msg.SetContent(content)
+	if err != nil {
+		return nil, err
+	}
+	msg.SetInitialDeposit(initialDeposit)
+	msg.SetProposer(proposer)
+	return msg, nil
 }
 
 // ValidateBasic implements Msg

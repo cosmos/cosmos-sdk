@@ -24,11 +24,11 @@ func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
 	}
 }
 
-func handleSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p SoftwareUpgradeProposal) error {
+func handleSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p *SoftwareUpgradeProposal) error {
 	return k.ScheduleUpgrade(ctx, p.Plan)
 }
 
-func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p CancelSoftwareUpgradeProposal) error {
+func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p *CancelSoftwareUpgradeProposal) error {
 	k.ClearUpgradePlan(ctx)
 	return nil
 }

@@ -134,7 +134,7 @@ func (k Keeper) ChanOpenTry(
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
 		exported.INIT, channel.Ordering, expectedCounterparty,
-		counterpartyHops, channel.Version,
+		counterpartyHops, counterpartyVersion,
 	)
 
 	if err := k.connectionKeeper.VerifyChannelState(
@@ -205,7 +205,7 @@ func (k Keeper) ChanOpenAck(
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
 		exported.TRYOPEN, channel.Ordering, counterparty,
-		counterpartyHops, channel.Version,
+		counterpartyHops, counterpartyVersion,
 	)
 
 	if err := k.connectionKeeper.VerifyChannelState(

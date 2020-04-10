@@ -48,7 +48,7 @@ func NewClientStateResponse(
 	return StateResponse{
 		ClientState: clientState,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ClientStatePath(clientID), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(ibctypes.ClientStatePath(), "/")...)),
 		ProofHeight: uint64(height),
 	}
 }
@@ -69,7 +69,7 @@ func NewConsensusStateResponse(
 	return ConsensusStateResponse{
 		ConsensusState: cs,
 		Proof:          commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:      commitmenttypes.NewMerklePath(strings.Split(ibctypes.ConsensusStatePath(clientID, uint64(height)), "/")),
+		ProofPath:      commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(ibctypes.ClientStatePath(), "/")...)),
 		ProofHeight:    uint64(height),
 	}
 }

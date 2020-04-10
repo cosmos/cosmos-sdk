@@ -32,7 +32,7 @@ func TestNewMsgSubmitEvidence(t *testing.T) {
 func TestNewMsgSubmitProposalI(t *testing.T) {
 	p := sdk.AccAddress("foo")
 	d := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-	c := gov.TextProposal{Title: "title", Description: "description"}
+	c := gov.NewTextProposal("title", "description")
 
 	cdc := &std.Codec{}
 	msg, err := gov.NewMsgSubmitProposalI(cdc, c, d, p)

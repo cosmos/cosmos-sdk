@@ -82,7 +82,6 @@ var (
 	SplitInactiveProposalQueueKey = types.SplitInactiveProposalQueueKey
 	SplitKeyDeposit               = types.SplitKeyDeposit
 	SplitKeyVote                  = types.SplitKeyVote
-	NewMsgSubmitProposalBase      = types.NewMsgSubmitProposalBase
 	NewMsgSubmitProposal          = types.NewMsgSubmitProposal
 	NewMsgSubmitProposalI         = types.NewMsgSubmitProposalI
 	NewMsgDeposit                 = types.NewMsgDeposit

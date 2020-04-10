@@ -45,14 +45,6 @@ func NewMsgSubmitProposalI(cdc Codec, content Content, initialDeposit sdk.Coins,
 	return msg, nil
 }
 
-// NewMsgSubmitProposalBase creates a new MsgSubmitProposalBase.
-func NewMsgSubmitProposalBase(initialDeposit sdk.Coins, proposer sdk.AccAddress) *MsgSubmitProposalBase {
-	return &MsgSubmitProposalBase{
-		InitialDeposit: initialDeposit,
-		Proposer:       proposer,
-	}
-}
-
 func (msg *MsgSubmitProposalBase) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
 
 func (msg *MsgSubmitProposalBase) GetProposer() sdk.AccAddress { return msg.Proposer }

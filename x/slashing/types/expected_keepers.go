@@ -26,6 +26,7 @@ type BankKeeper interface {
 
 // ParamSubspace defines the expected Subspace interfacace
 type ParamSubspace interface {
+	HasKeyTable() bool
 	WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace
 	Get(ctx sdk.Context, key []byte, ptr interface{})
 	GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)

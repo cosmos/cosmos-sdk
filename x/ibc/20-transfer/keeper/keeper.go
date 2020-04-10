@@ -92,12 +92,6 @@ func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
 	return k.ClaimCapability(ctx, cap, porttypes.PortPath(portID))
 }
 
-// TimeoutExecuted defines a wrapper function for the channel Keeper's function
-// in order to expose it to the ICS20 transfer handler.
-func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet channelexported.PacketI) error {
-	return k.channelKeeper.TimeoutExecuted(ctx, packet)
-}
-
 // ClaimCapability allows the transfer module that can claim a capability that IBC module
 // passes to it
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capability.Capability, name string) error {

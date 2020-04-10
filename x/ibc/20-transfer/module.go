@@ -219,7 +219,8 @@ func (am AppModule) OnChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	return nil
+	// Disallow user-initiated channel closing for transfer channels
+	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
 }
 
 func (am AppModule) OnChanCloseConfirm(
@@ -238,15 +239,71 @@ func (am AppModule) OnRecvPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
-	return handlePacketDataTransfer(ctx, am.keeper, packet, data)
+	acknowledgement := FungibleTokenPacketAcknowledgement{
+		Success: true,
+		Error:   "",
+	}
+	if err := am.keeper.OnRecvPacket(ctx, packet, data); err != nil {
+		acknowledgement = FungibleTokenPacketAcknowledgement{
+			Success: false,
+			Error:   err.Error(),
+		}
+		// NOTE (cwgoes): How do we want to handle this case? Maybe we should be more lenient,
+		// it's safe to leave the channel open I think.
+
+		// TODO: handle packet receipt that due to an error (specify)
+		// the receiving chain couldn't process the transfer
+
+		// source chain sent invalid packet, shutdown our channel end
+		if err := am.keeper.ChanCloseInit(ctx, packet.DestinationPort, packet.DestinationChannel); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := am.keeper.PacketExecuted(ctx, packet, acknowledgement.GetBytes()); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+		),
+	)
+
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
 }
 
 func (am AppModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
-	acknowledment []byte,
+	acknowledgement []byte,
 ) (*sdk.Result, error) {
-	return nil, nil
+	var ack FungibleTokenPacketAcknowledgement
+	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+	}
+	var data FungibleTokenPacketData
+	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+	}
+
+	if err := am.keeper.OnAcknowledgementPacket(ctx, packet, data, ack); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+		),
+	)
+
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
 }
 
 func (am AppModule) OnTimeoutPacket(
@@ -257,5 +314,19 @@ func (am AppModule) OnTimeoutPacket(
 	if err := types.ModuleCdc.UnmarshalBinaryBare(packet.GetData(), &data); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
-	return handleTimeoutDataTransfer(ctx, am.keeper, packet, data)
+	// refund tokens
+	if err := am.keeper.OnTimeoutPacket(ctx, packet, data); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+		),
+	)
+
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
 }

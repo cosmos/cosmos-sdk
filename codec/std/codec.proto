@@ -88,7 +88,7 @@ message Proposal {
 // governance proposal.
 message Content {
   option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/gov/types.Content";
+  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/gov/types.Content";
 
   // sum defines a set of all acceptable concrete governance proposal Content types.
   oneof sum {

@@ -172,12 +172,18 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 		},
 	}
 
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+
+	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
+
 	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
 	cmd.Flags().Uint32(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Uint32(flags.FlagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.MarkFlagRequired(flagEvents)
 
-	return flags.GetCommands(cmd)[0]
+	return cmd
 }
 
 // QueryTxCmd implements the default command for a tx query.
@@ -202,5 +208,10 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	return flags.GetCommands(cmd)[0]
+	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
+	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
+
+	return cmd
 }

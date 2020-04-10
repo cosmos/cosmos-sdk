@@ -10,8 +10,7 @@ import (
 
 // PrepareMainCmd is meant for client side libs that want some more flags
 //
-// This adds --encoding (hex, btc, base64) and --output (text, json) to
-// the command.  These only really make sense in interactive commands.
+// This adds FlagKeyringBackend with the default value.
 func PrepareMainCmd(cmd *cobra.Command, envPrefix, defaultHome string) cli.Executor {
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))

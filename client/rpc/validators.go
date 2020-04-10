@@ -63,6 +63,8 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().Int(flags.FlagPage, 0, "Query a specific page of paginated results")
 	viper.BindPFlag(flags.FlagPage, cmd.Flags().Lookup(flags.FlagPage))
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 
 	return cmd
 }

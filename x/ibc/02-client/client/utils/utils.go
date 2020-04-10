@@ -44,7 +44,7 @@ func QueryClientState(
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyClientState(clientID),
+		Data:  prefixClientKey(clientID, ibctypes.KeyClientState()),
 		Prove: prove,
 	}
 
@@ -72,7 +72,7 @@ func QueryConsensusState(
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyConsensusState(clientID, height),
+		Data:  prefixClientKey(clientID, ibctypes.KeyConsensusState(height)),
 		Prove: prove,
 	}
 
@@ -154,4 +154,8 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 	}
 
 	return state, height, nil
+}
+
+func prefixClientKey(clientID string, key []byte) []byte {
+	return append([]byte(fmt.Sprintf("clients/%s/", clientID)), key...)
 }

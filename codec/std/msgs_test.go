@@ -29,16 +29,23 @@ func TestNewMsgSubmitEvidence(t *testing.T) {
 	require.NoError(t, msg.ValidateBasic())
 }
 
+type invalidProposal struct {
+	*gov.TextProposal
+}
+
 func TestNewMsgSubmitProposalI(t *testing.T) {
 	p := sdk.AccAddress("foo")
 	d := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 	c := gov.NewTextProposal("title", "description")
-
 	cdc := &std.Codec{}
+
 	msg, err := gov.NewMsgSubmitProposalI(cdc, c, d, p)
 	require.NoError(t, err)
 	require.Equal(t, msg.GetContent(), c)
 	require.Equal(t, msg.GetProposer(), p)
 	require.Equal(t, msg.GetInitialDeposit(), d)
 	require.NoError(t, msg.ValidateBasic())
+
+	msg, err = gov.NewMsgSubmitProposalI(cdc, invalidProposal{}, d, p)
+	require.Error(t, err)
 }

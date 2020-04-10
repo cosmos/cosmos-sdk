@@ -46,6 +46,6 @@ func TestNewMsgSubmitProposalI(t *testing.T) {
 	require.Equal(t, msg.GetInitialDeposit(), d)
 	require.NoError(t, msg.ValidateBasic())
 
-	msg, err = gov.NewMsgSubmitProposalI(cdc, invalidProposal{}, d, p)
+	_, err = gov.NewMsgSubmitProposalI(cdc, invalidProposal{}, d, p)
 	require.Error(t, err)
 }

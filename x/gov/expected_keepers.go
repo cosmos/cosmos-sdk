@@ -16,6 +16,7 @@ type SupplyKeeper interface {
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 }
 
@@ -25,7 +26,7 @@ type StakingKeeper interface {
 	IterateBondedValidatorsByPower(sdk.Context,
 		func(index int64, validator stakingexported.ValidatorI) (stop bool))
 
-	TotalBondedTokens(sdk.Context) sdk.Int // total bonded tokens within the validator set
+	TotalBondedTokens(sdk.Context) sdk.Dec // total bonded tokens within the validator set
 
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingexported.DelegationI) (stop bool))

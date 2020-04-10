@@ -18,7 +18,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	// governance process. State is not persisted.
 	cacheCtx, _ := ctx.CacheContext()
 	handler := keeper.router.GetRoute(content.ProposalRoute())
-	if err := handler(cacheCtx, content); err != nil {
+	if err := handler(cacheCtx, &Proposal{Content: content}); err != nil {
 		return Proposal{}, ErrInvalidProposalContent(keeper.codespace, err.Result().Log)
 	}
 
@@ -30,7 +30,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content Content) (Proposal,
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal := NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	proposal := NewProposal(ctx, sdk.OneDec(), content, proposalID, submitTime, submitTime.Add(depositPeriod))
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)

@@ -8,8 +8,8 @@ import (
 )
 
 func NewParamChangeProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
-		switch c := content.(type) {
+	return func(ctx sdk.Context, proposal *govtypes.Proposal) sdk.Error {
+		switch c := proposal.Content.(type) {
 		case ParameterChangeProposal:
 			return handleParameterChangeProposal(ctx, k, c)
 

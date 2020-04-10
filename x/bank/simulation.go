@@ -53,7 +53,7 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
+	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount.RoundInt())
 	if goErr != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
@@ -148,7 +148,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
+	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount.RoundInt())
 	if goErr != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}

@@ -15,6 +15,6 @@ type (
 		Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
 		Amount      sdk.Coins      `json:"amount" yaml:"amount"`
 		Proposer    sdk.AccAddress `json:"proposer" yaml:"proposer"`
-		Deposit     sdk.Coins      `json:"deposit" yaml:"deposit"`
+		Deposit     sdk.DecCoins   `json:"deposit" yaml:"deposit"`
 	}
 )

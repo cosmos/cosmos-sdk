@@ -6,9 +6,8 @@ import (
 
 // staking constants
 const (
-
 	// default bond denomination
-	DefaultBondDenom = "stake"
+	DefaultBondDenom = "okt"
 
 	// Delay, in blocks, between when validator updates are returned to the
 	// consensus-engine and when they are applied. For example, if
@@ -23,7 +22,7 @@ const (
 )
 
 // PowerReduction is the amount of staking tokens required for 1 unit of consensus-engine power
-var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil))
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
 func TokensToConsensusPower(tokens Int) int64 {

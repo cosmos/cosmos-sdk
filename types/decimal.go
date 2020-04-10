@@ -17,7 +17,7 @@ type Dec struct {
 
 // number of decimal places
 const (
-	Precision = 18
+	Precision = 8
 
 	// bytes required to represent the above precision
 	// Ceiling[Log2[999 999 999 999 999 999]]
@@ -99,13 +99,13 @@ func NewDecFromBigIntWithPrec(i *big.Int, prec int64) Dec {
 
 // create a new Dec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromInt(i Int) Dec {
-	return NewDecFromIntWithPrec(i, 0)
+func newDecFromInt(i Int) Dec {
+	return newDecFromIntWithPrec(i, 0)
 }
 
 // create a new Dec from big integer with decimal place at prec
 // CONTRACT: prec <= Precision
-func NewDecFromIntWithPrec(i Int, prec int64) Dec {
+func newDecFromIntWithPrec(i Int, prec int64) Dec {
 	return Dec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
 	}

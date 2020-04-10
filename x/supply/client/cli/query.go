@@ -94,7 +94,7 @@ func querySupplyOf(cliCtx context.CLIContext, cdc *codec.Codec, denom string) er
 		return err
 	}
 
-	var supply sdk.Int
+	var supply sdk.Dec
 	err = cdc.UnmarshalJSON(res, &supply)
 	if err != nil {
 		return err

@@ -22,6 +22,7 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -58,7 +59,16 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if err != nil {
 			return err
 		}
-		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+		// okchain
+		output := os.Stdout
+		if !config.LogStdout {
+			output, err = os.OpenFile(config.LogFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+			if err != nil {
+				return err
+			}
+		}
+
+		logger := log.NewTMLogger(log.NewSyncWriter(output))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
 			return err
@@ -92,7 +102,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.TxIndex.IndexAllTags = true
-		conf.Consensus.TimeoutCommit = 5 * time.Second
+		conf.Consensus.TimeoutCommit = 1 * time.Second
 		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.
 	}
@@ -104,13 +114,13 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		}
 	}
 
-	appConfigFilePath := filepath.Join(rootDir, "config/app.toml")
+	appConfigFilePath := filepath.Join(rootDir, "config/okchaind.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
 		appConf, _ := config.ParseConfig()
 		config.WriteConfigFile(appConfigFilePath, appConf)
 	}
 
-	viper.SetConfigName("app")
+	viper.SetConfigName("okchaind")
 	err = viper.MergeInConfig()
 
 	return
@@ -120,9 +130,13 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 func AddCommands(
 	ctx *Context, cdc *codec.Codec,
 	rootCmd *cobra.Command,
-	appCreator AppCreator, appExport AppExporter) {
+	appCreator AppCreator, appExport AppExporter,
+	registerRouters func(rs *lcd.RestServer)) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
+
+	rootCmd.PersistentFlags().String("log_file", ctx.Config.LogFile, "Log file")
+	rootCmd.PersistentFlags().Bool("log_stdout", ctx.Config.LogStdout, "Print log to stdout, rather than a file")
 
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
@@ -137,7 +151,8 @@ func AddCommands(
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, appCreator),
+		StartCmd(ctx, cdc, appCreator, registerRouters),
+		StopCmd(ctx),
 		UnsafeResetAllCmd(ctx),
 		flags.LineBreak,
 		tendermintCmd,

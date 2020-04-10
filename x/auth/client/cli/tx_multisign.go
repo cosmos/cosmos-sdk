@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// GetSignCommand returns the sign command
+// GetMultiSignCommand returns the sign command
 func GetMultiSignCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multisign [file] [name] [[signature]...]",

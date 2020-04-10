@@ -84,8 +84,8 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 }
 
 func NewCommunityPoolSpendProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
-		switch c := content.(type) {
+	return func(ctx sdk.Context, content *govtypes.Proposal) sdk.Error {
+		switch c := content.Content.(type) {
 		case types.CommunityPoolSpendProposal:
 			return keeper.HandleCommunityPoolSpendProposal(ctx, k, c)
 

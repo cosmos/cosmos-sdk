@@ -30,7 +30,7 @@ type (
 		Title       string           `json:"title" yaml:"title"`
 		Description string           `json:"description" yaml:"description"`
 		Changes     ParamChangesJSON `json:"changes" yaml:"changes"`
-		Deposit     sdk.Coins        `json:"deposit" yaml:"deposit"`
+		Deposit     sdk.DecCoins        `json:"deposit" yaml:"deposit"`
 	}
 
 	// ParamChangeProposalReq defines a parameter change proposal request body.
@@ -41,7 +41,7 @@ type (
 		Description string           `json:"description" yaml:"description"`
 		Changes     ParamChangesJSON `json:"changes" yaml:"changes"`
 		Proposer    sdk.AccAddress   `json:"proposer" yaml:"proposer"`
-		Deposit     sdk.Coins        `json:"deposit" yaml:"deposit"`
+		Deposit     sdk.DecCoins        `json:"deposit" yaml:"deposit"`
 	}
 )
 

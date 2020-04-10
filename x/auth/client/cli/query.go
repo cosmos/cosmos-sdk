@@ -28,7 +28,7 @@ const (
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetQueryCmd returns the transaction commands for this module
 func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -56,7 +56,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				return err
+				return sdk.ErrInvalidAddress(fmt.Sprintf("invalid address：%s", args[0]))
 			}
 
 			if err := accGetter.EnsureExists(key); err != nil {

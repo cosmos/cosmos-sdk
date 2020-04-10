@@ -161,7 +161,7 @@ func OneInt() Int { return Int{big.NewInt(1)} }
 
 // ToDec converts Int to Dec
 func (i Int) ToDec() Dec {
-	return NewDecFromInt(i)
+	return newDecFromInt(i)
 }
 
 // Int64 converts Int to int64

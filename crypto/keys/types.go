@@ -23,7 +23,7 @@ type Keybase interface {
 
 	// CreateMnemonic creates a new mnemonic, and derives a hierarchical deterministic
 	// key from that.
-	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
+	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo, mnemonic string) (info Info, seed string, err error)
 
 	// CreateAccount creates an account based using the BIP44 path (44'/118'/{account}'/0/{index}
 	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)

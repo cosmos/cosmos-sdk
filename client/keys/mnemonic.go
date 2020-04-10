@@ -14,7 +14,7 @@ import (
 const (
 	flagUserEntropy = "unsafe-entropy"
 
-	mnemonicEntropySize = 256
+	mnemonicEntropySize = 128
 )
 
 func mnemonicKeyCommand() *cobra.Command {

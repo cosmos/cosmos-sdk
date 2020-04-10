@@ -30,6 +30,16 @@ halt-height = {{ .BaseConfig.HaltHeight }}
 #
 # Note: Commitment of state will be attempted on the corresponding block.
 halt-time = {{ .BaseConfig.HaltTime }}
+##### backend configuration options #####
+[backend]
+enable_backend = "{{ .BackendConfig.EnableBackend }}"
+enable_mkt_compute = "{{ .BackendConfig.EnableMktCompute }}"
+log_sql = "{{ .BackendConfig.LogSQL }}"
+clean_ups_kept_days = "{{ .BackendConfig.CleanUpsKeptDays }}"
+clean_ups_time = "{{ .BackendConfig.CleanUpsTime }}"
+[backend.orm_engine]
+engine_type = "{{ .BackendConfig.OrmEngine.EngineType }}"
+connect_str = "{{ .BackendConfig.OrmEngine.ConnectStr }}"
 `
 
 var configTemplate *template.Template

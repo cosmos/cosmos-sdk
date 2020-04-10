@@ -35,7 +35,9 @@ type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pub
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
+func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper,
+	sigGasConsumer SignatureVerificationGasConsumer, validateMsgHandler ValidateMsgHandler,
+	isSystemFreeHandler IsSystemFreeHandler) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -65,7 +67,8 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			}
 		}
 
-		newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
+		//newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
+		newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 
 		// AnteHandlers must have their own defer/recover in order for the BaseApp
 		// to know how much gas was used! This is because the GasMeter is created in
@@ -117,8 +120,9 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 		}
 
 		// deduct the fees
-		if !stdTx.Fee.Amount.IsZero() {
-			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], stdTx.Fee.Amount)
+		msgs := stdTx.GetMsgs()
+		if isSystemFreeHandler != nil && !isSystemFreeHandler(ctx, msgs) {
+			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], sdk.GetSystemFee().ToCoins())
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -144,14 +148,38 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasCon
 			signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
 			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params, sigGasConsumer)
 			if !res.IsOK() {
+				ctx.Logger().Info("signData:" + string(signBytes))
 				return newCtx, res, true
 			}
 
 			ak.SetAccount(newCtx, signerAccs[i])
 		}
 
-		// TODO: tx tags (?)
-		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
+		// *ABORT* the tx in case of failing to validate it in checkTx mode
+		if newCtx.IsCheckTx() && !simulate {
+			if validateMsgHandler != nil {
+				res := validateMsgHandler(newCtx, msgs)
+				if !res.IsOK() {
+					return newCtx, res, true
+				}
+			}
+		}
+
+		//stat actual system fee
+		actualSysFee := sdk.GetSystemFee()
+		if isSystemFreeHandler != nil && isSystemFreeHandler(ctx, msgs) {
+			actualSysFee = sdk.ZeroFee()
+		}
+
+		//fire systemFee event
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyFee, actualSysFee.String()),
+			),
+		)
+		// TODO: tx tags (?), abandoned
+		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas, Events: ctx.EventManager().Events()}, false
 	}
 }
 
@@ -227,7 +255,9 @@ func processSig(
 	}
 
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
-		return nil, sdk.ErrUnauthorized("signature verification failed; verify correct account sequence and chain-id").Result()
+		return nil, sdk.ErrUnauthorized("signature verification failed; " +
+			"verify correct account sequence, chain-id and message format. " +
+			"Expected message format: " + string(signBytes)).Result()
 	}
 
 	if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {

@@ -101,10 +101,10 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
 	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
+	//distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
 
 	// get the percentage slash penalty fraction
-	fraction := k.SlashFractionDoubleSign(ctx)
+	//fraction := k.SlashFractionDoubleSign(ctx)
 
 	// Slash validator
 	// `power` is the int64 power of the validator as provided to/by
@@ -119,7 +119,8 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
 		),
 	)
-	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
+	//don't slashing tokens, just jail the validator
+	//k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
 	// begin unbonding validator if not already unbonding (tombstone)
@@ -131,6 +132,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 			),
 		)
 		k.sk.Jail(ctx, consAddr)
+		k.sk.AppendAbandonedValidatorAddrs(ctx, consAddr)
 	}
 
 	// Set tombstoned to be true
@@ -214,7 +216,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+			// distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
@@ -225,8 +227,10 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
 				),
 			)
-			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
+			//don't slashing tokens, just jail the validator
+			//k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.sk.Jail(ctx, consAddr)
+			k.sk.AppendAbandonedValidatorAddrs(ctx, consAddr)
 
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 

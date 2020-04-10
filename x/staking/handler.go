@@ -153,7 +153,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
-	_, err = k.Delegate(ctx, msg.DelegatorAddress, msg.Value.Amount, sdk.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, msg.DelegatorAddress, msg.Value.Amount.RoundInt(), sdk.Unbonded, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -240,7 +240,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	}
 
 	// NOTE: source funds are always unbonded
-	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Amount.Amount, sdk.Unbonded, validator, true)
+	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Amount.Amount.RoundInt(), sdk.Unbonded, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -263,7 +263,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 
 func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) sdk.Result {
 	shares, err := k.ValidateUnbondAmount(
-		ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.Amount.Amount,
+		ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.Amount.Amount.RoundInt(),
 	)
 	if err != nil {
 		return err.Result()
@@ -298,7 +298,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
 	shares, err := k.ValidateUnbondAmount(
-		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.Amount.Amount,
+		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.Amount.Amount.RoundInt(),
 	)
 	if err != nil {
 		return err.Result()

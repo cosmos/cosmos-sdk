@@ -1,10 +1,8 @@
 package keys
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/cobra"
 )
 
 // Commands registers a sub-tree of commands to interact with
@@ -48,7 +46,5 @@ The pass backend requires GnuPG: https://gnupg.org/
 		ParseKeyStringCommand(),
 		MigrateCommand(),
 	)
-	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 	return cmd
 }

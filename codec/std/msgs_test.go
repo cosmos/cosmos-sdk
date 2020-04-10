@@ -37,7 +37,7 @@ func TestNewMsgSubmitProposalI(t *testing.T) {
 	cdc := &std.Codec{}
 	msg, err := gov.NewMsgSubmitProposalI(cdc, c, d, p)
 	require.NoError(t, err)
-	require.Equal(t, msg.GetContent(), &c)
+	require.Equal(t, msg.GetContent(), c)
 	require.Equal(t, msg.GetProposer(), p)
 	require.Equal(t, msg.GetInitialDeposit(), d)
 	require.NoError(t, msg.ValidateBasic())

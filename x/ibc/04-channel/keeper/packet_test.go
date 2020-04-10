@@ -242,7 +242,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	var packet types.Packet
 	packetKey := ibctypes.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
 
-	ack := transfertypes.AckDataTransfer{}.GetBytes()
+	ack := transfertypes.FungibleTokenPacketAcknowledgement{
+		Success: true,
+	}.GetBytes()
 
 	testCases := []testCase{
 		{"success", func() {

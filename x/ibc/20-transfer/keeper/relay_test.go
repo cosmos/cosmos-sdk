@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestReceiveTransfer() {
+func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2)
 
 	testCases := []struct {
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
-			err := suite.chainA.App.TransferKeeper.ReceiveTransfer(suite.chainA.GetContext(), packet, data)
+			err := suite.chainA.App.TransferKeeper.OnRecvPacket(suite.chainA.GetContext(), packet, data)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) TestTimeoutTransfer() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
-			err := suite.chainA.App.TransferKeeper.TimeoutTransfer(suite.chainA.GetContext(), packet, data)
+			err := suite.chainA.App.TransferKeeper.OnTimeoutPacket(suite.chainA.GetContext(), packet, data)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)

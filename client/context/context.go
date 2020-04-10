@@ -88,6 +88,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		}
 	}
 
+	trustNode := viper.GetBool(flags.FlagTrustNode)
 	ctx := CLIContext{
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
@@ -99,7 +100,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
 		HomeDir:       homedir,
-		TrustNode:     viper.GetBool(flags.FlagTrustNode),
+		TrustNode:     trustNode,
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
@@ -113,7 +114,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 
 	// create a verifier for the specific chain ID and RPC client
 	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && viper.IsSet(flags.FlagTrustNode) {
+	if err != nil && !trustNode {
 		fmt.Printf("failed to create verifier: %s\n", err)
 		os.Exit(1)
 	}

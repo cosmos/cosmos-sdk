@@ -41,7 +41,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		StartingProposalID: 1,
 		DepositParams: DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, minDepositTokens)},
+			MinDeposit:       sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, minDepositTokens)},
 			MaxDepositPeriod: DefaultPeriod,
 		},
 		VotingParams: VotingParams{
@@ -104,7 +104,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, supplyKeeper SupplyKeeper, data Gene
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	var totalDeposits sdk.Coins
+	var totalDeposits sdk.DecCoins
 	for _, deposit := range data.Deposits {
 		k.setDeposit(ctx, deposit.ProposalID, deposit.Depositor, deposit)
 		totalDeposits = totalDeposits.Add(deposit.Amount)

@@ -27,7 +27,7 @@ type ValidatorI interface {
 	GetBondedTokens() sdk.Int                                   // validator bonded tokens
 	GetConsensusPower() int64                                   // validation power in tendermint
 	GetCommission() sdk.Dec                                     // validator commission rate
-	GetMinSelfDelegation() sdk.Int                              // validator minimum self delegation
+	GetMinSelfDelegation() sdk.Dec                              // validator minimum self delegation
 	GetDelegatorShares() sdk.Dec                                // total outstanding delegator shares
 	TokensFromShares(sdk.Dec) sdk.Dec                           // token worth of provided delegator shares
 	TokensFromSharesTruncated(sdk.Dec) sdk.Dec                  // token worth of provided delegator shares, truncated

@@ -30,13 +30,14 @@ const (
 // genesis state. It deletes the governance base accounts and creates the new module accounts.
 // The remaining accounts are updated to the new GenesisAccount type from 0.36
 func Migrate(
-	oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPool sdk.DecCoins,
+	oldGenState v034accounts.GenesisState, fees sdk.Coins, communityPool sdk.DecCoins, lockCoins sdk.Coins,
 	deposits []v034gov.DepositWithMetadata, vals v034staking.Validators, ubds []v034staking.UnbondingDelegation,
-	valOutRewards []v034distr.ValidatorOutstandingRewardsRecord, bondDenom, distrModuleName, govModuleName string,
+	valOutRewards []v034distr.ValidatorOutstandingRewardsRecord, bondDenom, distrModuleName, govModuleName, tokenModuleName string,
 ) GenesisState {
 
 	depositedCoinsAccAddr := sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
 	burnedDepositCoinsAccAddr := sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
+	dexListDepositedCoinsAccAddr := sdk.AccAddress(crypto.AddressHash([]byte("govDexListDepositedCoins")))
 
 	bondedAmt := sdk.ZeroInt()
 	notBondedAmt := sdk.ZeroInt()
@@ -45,9 +46,10 @@ func Migrate(
 	// coins from rejected proposals add six new module accounts:
 	// distribution, gov, mint, fee collector, bonded and not bonded pool
 	var (
-		newGenState   GenesisState
-		govCoins      sdk.Coins
-		extraAccounts = 6
+		newGenState      GenesisState
+		govCoins         sdk.Coins
+		dexListDeposited = sdk.Coins{}
+		extraAccounts    = 7
 	)
 
 	for _, acc := range oldGenState {
@@ -59,6 +61,11 @@ func Migrate(
 
 		case acc.Address.Equals(burnedDepositCoinsAccAddr):
 			// remove gov burned deposits base account
+			extraAccounts -= 1
+
+		case acc.Address.Equals(dexListDepositedCoinsAccAddr):
+			// remove gov dexList deposits base account
+			dexListDeposited = acc.Coins
 			extraAccounts -= 1
 
 		default:
@@ -125,6 +132,7 @@ func Migrate(
 	notBondedAddr := sdk.AccAddress(crypto.AddressHash([]byte(notBondedPoolName)))
 	distrAddr := sdk.AccAddress(crypto.AddressHash([]byte(distrModuleName)))
 	mintAddr := sdk.AccAddress(crypto.AddressHash([]byte(mintModuleName)))
+	tokenAddr := sdk.AccAddress(crypto.AddressHash([]byte(tokenModuleName)))
 
 	// create module genesis accounts
 	feeCollectorModuleAcc := NewGenesisAccount(
@@ -157,12 +165,17 @@ func Migrate(
 		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
 		0, 0, mintModuleName, []string{minter},
 	)
+	tokenModuleAcc := NewGenesisAccount(
+		tokenAddr, dexListDeposited.Add(lockCoins), 0,
+		sdk.Coins{}, sdk.Coins{}, sdk.Coins{},
+		0, 0, tokenModuleName, []string{minter, burner},
+	)
 
 	newGenState = append(
 		newGenState,
 		[]GenesisAccount{
 			feeCollectorModuleAcc, govModuleAcc, distrModuleAcc,
-			bondedModuleAcc, notBondedModuleAcc, mintModuleAcc,
+			bondedModuleAcc, notBondedModuleAcc, mintModuleAcc, tokenModuleAcc,
 		}...,
 	)
 

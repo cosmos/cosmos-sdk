@@ -66,7 +66,9 @@ func setupTestInput() testInput {
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	ms.LoadLatestVersion()
+	if err := ms.LoadLatestVersion(); err != nil {
+		panic(err)
+	}
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, types.DefaultParamspace)
 	ak := NewAccountKeeper(cdc, authCapKey, ps, types.ProtoBaseAccount)

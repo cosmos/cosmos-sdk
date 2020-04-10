@@ -28,7 +28,7 @@ type Content interface {
 
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
-type Handler func(ctx sdk.Context, content Content) sdk.Error
+type Handler func(ctx sdk.Context, proposal *Proposal) sdk.Error
 
 // ValidateAbstract validates a proposal's abstract contents returning an error
 // if invalid.

@@ -77,7 +77,7 @@ func NewApp() *App {
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer, nil, nil))
 
 	// Not sealing for custom extension
 
@@ -296,7 +296,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		// generate a random coin for each denomination
 		for j := 0; j < len(denoms); j++ {
 			coins[j] = sdk.Coin{Denom: denoms[j],
-				Amount: RandFromBigInterval(r, randCoinIntervals),
+				Amount: RandFromBigInterval(r, randCoinIntervals).ToDec(),
 			}
 		}
 

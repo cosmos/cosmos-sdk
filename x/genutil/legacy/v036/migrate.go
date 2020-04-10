@@ -2,6 +2,7 @@ package v036
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
@@ -46,9 +47,9 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		delete(appState, v034genAccounts.ModuleName) // delete old key in case the name changed
 		appState[v036genAccounts.ModuleName] = v036Codec.MustMarshalJSON(
 			v036genAccounts.Migrate(
-				genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool, govGenState.Deposits,
+				genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool, sdk.Coins{}, govGenState.Deposits,
 				stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
-				stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,
+				stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName, "",
 			),
 		)
 	}

@@ -16,10 +16,10 @@ const (
 // Assert CommunityPoolSpendProposal implements govtypes.Content at compile-time
 var _ govtypes.Content = CommunityPoolSpendProposal{}
 
-func init() {
-	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
-	govtypes.RegisterProposalTypeCodec(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
-}
+//func init() {
+//	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
+//	govtypes.RegisterProposalTypeCodec(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
+//}
 
 // CommunityPoolSpendProposal spends from the community pool
 type CommunityPoolSpendProposal struct {

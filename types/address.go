@@ -32,14 +32,14 @@ const (
 	// AddrLen defines a valid address length
 	AddrLen = 20
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32MainPrefix = "cosmos"
+	Bech32MainPrefix = "okchain"
 
 	// Atom in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-	CoinType = 118
+	CoinType = 996
 
 	// BIP44Prefix is the parts of the BIP44 HD path that are fixed by
 	// what we used during the fundraiser.
-	FullFundraiserPath = "44'/118'/0'/0/0"
+	FullFundraiserPath = "44'/996'/0'/0/0"
 
 	// PrefixAccount is the prefix for account keys
 	PrefixAccount = "acc"

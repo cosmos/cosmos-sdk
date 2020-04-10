@@ -33,7 +33,7 @@ func InitialMinter(inflation sdk.Dec) Minter {
 // which uses an inflation rate of 13%.
 func DefaultInitialMinter() Minter {
 	return InitialMinter(
-		sdk.NewDecWithPrec(13, 2),
+		sdk.NewDecWithPrec(1, 2),
 	)
 }
 
@@ -47,30 +47,30 @@ func ValidateMinter(minter Minter) error {
 }
 
 // NextInflationRate returns the new inflation rate for the next hour.
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
-	// The target annual inflation rate is recalculated for each previsions cycle. The
-	// inflation is also subject to a rate change (positive or negative) depending on
-	// the distance from the desired ratio (67%). The maximum rate change possible is
-	// defined to be 13% per year, however the annual inflation is capped as between
-	// 7% and 20%.
-
-	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneDec().
-		Sub(bondedRatio.Quo(params.GoalBonded)).
-		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
-
-	// adjust the new annual inflation for this next cycle
-	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
-	if inflation.GT(params.InflationMax) {
-		inflation = params.InflationMax
-	}
-	if inflation.LT(params.InflationMin) {
-		inflation = params.InflationMin
-	}
-
-	return inflation
-}
+//func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
+//	// The target annual inflation rate is recalculated for each previsions cycle. The
+//	// inflation is also subject to a rate change (positive or negative) depending on
+//	// the distance from the desired ratio (67%). The maximum rate change possible is
+//	// defined to be 13% per year, however the annual inflation is capped as between
+//	// 7% and 20%.
+//
+//	// (1 - bondedRatio/GoalBonded) * InflationRate
+//	inflationRateChangePerYear := sdk.OneDec().
+//		Sub(bondedRatio.Quo(params.GoalBonded)).
+//		Mul(params.InflationRate)
+//	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+//
+//	// adjust the new annual inflation for this next cycle
+//	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
+//	if inflation.GT(params.InflationMax) {
+//		inflation = params.InflationMax
+//	}
+//	if inflation.LT(params.InflationMin) {
+//		inflation = params.InflationMin
+//	}
+//
+//	return inflation
+//}
 
 // NextAnnualProvisions returns the annual provisions based on current total
 // supply and inflation rate.

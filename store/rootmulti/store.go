@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -112,7 +113,7 @@ func (rs *Store) LoadVersion(ver int64) error {
 		// Special logic for version 0 where there is no need to get commit
 		// information.
 		for key, storeParams := range rs.storesParams {
-			store, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
+			store, err := rs.loadCommitStoreFromParams(key, types.CommitID{Version: tmtypes.GetStartBlockHeight()}, storeParams)
 			if err != nil {
 				return fmt.Errorf("failed to load Store: %v", err)
 			}
@@ -121,6 +122,7 @@ func (rs *Store) LoadVersion(ver int64) error {
 		}
 
 		rs.lastCommitID = types.CommitID{}
+		rs.lastCommitID.Version = tmtypes.GetStartBlockHeight()
 		return nil
 	}
 
@@ -395,7 +397,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		return iavl.LoadStore(db, id, rs.pruningOpts, rs.lazyLoading)
+		return iavl.LoadStore(db, id, rs.pruningOpts, rs.lazyLoading, tmtypes.GetStartBlockHeight())
 
 	case types.StoreTypeDB:
 		return commitDBStoreAdapter{dbadapter.Store{db}}, nil

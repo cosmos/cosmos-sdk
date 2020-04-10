@@ -7,7 +7,7 @@ import (
 
 // StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
-	StakingTokenSupply(ctx sdk.Context) sdk.Int
+	StakingTokenSupply(ctx sdk.Context) sdk.Dec
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 

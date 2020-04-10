@@ -70,7 +70,7 @@ func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAcc
 	_, hasNeg := oldCoins.SafeSub(amt)
 	if hasNeg {
 		return sdk.ErrInsufficientCoins(
-			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
+			fmt.Sprintf("insufficient account funds; %s is less than %s", oldCoins, amt),
 		)
 	}
 
@@ -184,7 +184,7 @@ func (keeper BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.In
 	}
 
 	for _, in := range inputs {
-		_, err :=  keeper.SubtractCoins(ctx, in.Address, in.Coins)
+		_, err := keeper.SubtractCoins(ctx, in.Address, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -258,13 +258,12 @@ func (keeper BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress,
 		oldCoins = acc.GetCoins()
 		spendableCoins = acc.SpendableCoins(ctx.BlockHeader().Time)
 	}
-
 	// For non-vesting accounts, spendable coins will simply be the original coins.
 	// So the check here is sufficient instead of subtracting from oldCoins.
 	_, hasNeg := spendableCoins.SafeSub(amt)
 	if hasNeg {
 		return amt, sdk.ErrInsufficientCoins(
-			fmt.Sprintf("insufficient account funds; %s < %s", spendableCoins, amt),
+			fmt.Sprintf("insufficient account funds; %s is less than %s", spendableCoins, amt),
 		)
 	}
 
@@ -286,7 +285,7 @@ func (keeper BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 	if newCoins.IsAnyNegative() {
 		return amt, sdk.ErrInsufficientCoins(
-			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
+			fmt.Sprintf("insufficient account funds; %s is less than %s", oldCoins, amt),
 		)
 	}
 

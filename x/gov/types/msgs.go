@@ -18,11 +18,11 @@ var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
 	Content        Content        `json:"content" yaml:"content"`
-	InitialDeposit sdk.Coins      `json:"initial_deposit" yaml:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
+	InitialDeposit sdk.DecCoins   `json:"initial_deposit" yaml:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
 	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               //  Address of the proposer
 }
 
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposal {
+func NewMsgSubmitProposal(content Content, initialDeposit sdk.DecCoins, proposer sdk.AccAddress) MsgSubmitProposal {
 	return MsgSubmitProposal{content, initialDeposit, proposer}
 }
 
@@ -50,6 +50,12 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if msg.InitialDeposit.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
+
+	if len(msg.InitialDeposit) != 1 || msg.InitialDeposit[0].Denom != sdk.DefaultBondDenom || !msg.InitialDeposit.IsValid() {
+		return sdk.ErrInvalidCoins(fmt.Sprintf("must deposit %s but got %s", sdk.DefaultBondDenom,
+			msg.InitialDeposit.String()))
+	}
+
 	if !IsValidProposalType(msg.Content.ProposalType()) {
 		return ErrInvalidProposalType(DefaultCodespace, msg.Content.ProposalType())
 	}
@@ -79,10 +85,10 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 type MsgDeposit struct {
 	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
 	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     // Address of the depositor
-	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           // Coins to add to the proposal's deposit
+	Amount     sdk.DecCoins   `json:"amount" yaml:"amount"`           // Coins to add to the proposal's deposit
 }
 
-func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
+func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.DecCoins) MsgDeposit {
 	return MsgDeposit{proposalID, depositor, amount}
 }
 

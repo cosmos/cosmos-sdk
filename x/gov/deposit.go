@@ -27,7 +27,7 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
 // Activates voting period when appropriate
-func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (sdk.Error, bool) {
+func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.DecCoins) (sdk.Error, bool) {
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {

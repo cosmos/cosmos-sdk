@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -87,10 +89,10 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
-		c.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")
+		c.Flags().Uint64(FlagSequence, 0, "The sequence number of the signing account (offline mode only)")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
-		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10uatom")
-		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee (e.g. 10uatom)")
+		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 1"+types.DefaultBondDenom)
+		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee (e.g. 1"+types.DefaultBondDenom+")")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")

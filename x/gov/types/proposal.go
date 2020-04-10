@@ -18,21 +18,21 @@ type Proposal struct {
 	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
 	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
 
-	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time    `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time    `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.DecCoins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
 
 	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
-func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
+func NewProposal(ctx sdk.Context, totalVoting sdk.Dec, content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
 	return Proposal{
 		Content:          content,
 		ProposalID:       id,
 		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.NewCoins(),
+		FinalTallyResult: EmptyTallyResult(totalVoting),
+		TotalDeposit:     sdk.DecCoins{},
 		SubmitTime:       submitTime,
 		DepositEndTime:   depositEndTime,
 	}
@@ -69,6 +69,16 @@ func (p Proposals) String() string {
 	}
 	return strings.TrimSpace(out)
 }
+
+//func (p Proposals) MarshalYAML() (interface{}, error) {
+//	out := "ID - (Status) [Type] Title\n"
+//	for _, prop := range p {
+//		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
+//			prop.ProposalID, prop.Status,
+//			prop.ProposalType(), prop.GetTitle())
+//	}
+//	return strings.TrimSpace(out), nil
+//}
 
 type (
 	// ProposalQueue
@@ -183,6 +193,28 @@ func (status ProposalStatus) String() string {
 	}
 }
 
+func (status ProposalStatus) MarshalYAML() (interface{}, error) {
+	switch status {
+	case StatusDepositPeriod:
+		return "DepositPeriod", nil
+
+	case StatusVotingPeriod:
+		return "VotingPeriod", nil
+
+	case StatusPassed:
+		return "Passed", nil
+
+	case StatusRejected:
+		return "Rejected", nil
+
+	case StatusFailed:
+		return "Failed", nil
+
+	default:
+		return "", nil
+	}
+}
+
 // Format implements the fmt.Formatter interface.
 // nolint: errcheck
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
@@ -197,13 +229,17 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 
 // Tally Results
 type TallyResult struct {
-	Yes        sdk.Int `json:"yes" yaml:"yes"`
-	Abstain    sdk.Int `json:"abstain" yaml:"abstain"`
-	No         sdk.Int `json:"no" yaml:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto" yaml:"no_with_veto"`
+	// total power of accounts whose votes are voted to the current validator set
+	TotalPower sdk.Dec `json:"total_power"`
+	// total power of accounts who has voted for a proposal
+	TotalVotedPower sdk.Dec `json:"total_voted_power"`
+	Yes             sdk.Dec `json:"yes"`
+	Abstain         sdk.Dec `json:"abstain"`
+	No              sdk.Dec `json:"no"`
+	NoWithVeto      sdk.Dec `json:"no_with_veto"`
 }
 
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Dec) TallyResult {
 	return TallyResult{
 		Yes:        yes,
 		Abstain:    abstain,
@@ -214,20 +250,22 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 
 func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 	return TallyResult{
-		Yes:        results[OptionYes].TruncateInt(),
-		Abstain:    results[OptionAbstain].TruncateInt(),
-		No:         results[OptionNo].TruncateInt(),
-		NoWithVeto: results[OptionNoWithVeto].TruncateInt(),
+		Yes:        results[OptionYes],
+		Abstain:    results[OptionAbstain],
+		No:         results[OptionNo],
+		NoWithVeto: results[OptionNoWithVeto],
 	}
 }
 
 // EmptyTallyResult returns an empty TallyResult.
-func EmptyTallyResult() TallyResult {
+func EmptyTallyResult(totalVoting sdk.Dec) TallyResult {
 	return TallyResult{
-		Yes:        sdk.ZeroInt(),
-		Abstain:    sdk.ZeroInt(),
-		No:         sdk.ZeroInt(),
-		NoWithVeto: sdk.ZeroInt(),
+		TotalPower:      totalVoting,
+		TotalVotedPower: sdk.ZeroDec(),
+		Yes:             sdk.ZeroDec(),
+		Abstain:         sdk.ZeroDec(),
+		No:              sdk.ZeroDec(),
+		NoWithVeto:      sdk.ZeroDec(),
 	}
 }
 
@@ -241,10 +279,12 @@ func (tr TallyResult) Equals(comp TallyResult) bool {
 
 func (tr TallyResult) String() string {
 	return fmt.Sprintf(`Tally Result:
+  TotalPower %s
+  TotalVotedPower %s
   Yes:        %s
   Abstain:    %s
   No:         %s
-  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
+  NoWithVeto: %s`, tr.TotalPower, tr.TotalVotedPower, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
 }
 
 // Proposal types
@@ -353,14 +393,14 @@ func IsValidProposalType(ty string) bool {
 // proposals (ie. TextProposal and SoftwareUpgradeProposal). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
-func ProposalHandler(_ sdk.Context, c Content) sdk.Error {
-	switch c.ProposalType() {
+func ProposalHandler(_ sdk.Context, p *Proposal) sdk.Error {
+	switch p.ProposalType() {
 	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
 		// both proposal types do not change state so this performs a no-op
 		return nil
 
 	default:
-		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
+		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", p.ProposalType())
 		return sdk.ErrUnknownRequest(errMsg)
 	}
 }

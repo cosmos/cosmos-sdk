@@ -37,28 +37,3 @@ func GetDenomUnit(denom string) (Dec, bool) {
 
 	return unit, true
 }
-
-// ConvertCoin attempts to convert a coin to a given denomination. If the given
-// denomination is invalid or if neither denomination is registered, an error
-// is returned.
-func ConvertCoin(coin Coin, denom string) (Coin, error) {
-	if err := validateDenom(denom); err != nil {
-		return Coin{}, err
-	}
-
-	srcUnit, ok := GetDenomUnit(coin.Denom)
-	if !ok {
-		return Coin{}, fmt.Errorf("source denom not registered: %s", coin.Denom)
-	}
-
-	dstUnit, ok := GetDenomUnit(denom)
-	if !ok {
-		return Coin{}, fmt.Errorf("destination denom not registered: %s", denom)
-	}
-
-	if srcUnit.Equal(dstUnit) {
-		return NewCoin(denom, coin.Amount), nil
-	}
-
-	return NewCoin(denom, coin.Amount.ToDec().Mul(srcUnit.Quo(dstUnit)).TruncateInt()), nil
-}

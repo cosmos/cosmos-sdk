@@ -113,7 +113,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			amount, err := sdk.ParseCoins(proposal.Deposit)
+			amount, err := sdk.ParseDecCoins(proposal.Deposit)
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 			from := cliCtx.GetFromAddress()
 
 			// Get amount of coins
-			amount, err := sdk.ParseCoins(args[1])
+			amount, err := sdk.ParseDecCoins(args[1])
 			if err != nil {
 				return err
 			}

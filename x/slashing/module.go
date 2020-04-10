@@ -46,7 +46,7 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
 	if err := ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %s", types.ModuleName, err)
 	}
 
 	return ValidateGenesis(data)

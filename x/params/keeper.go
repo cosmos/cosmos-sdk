@@ -18,6 +18,7 @@ type Keeper struct {
 	tkey      sdk.StoreKey
 	codespace sdk.CodespaceType
 	spaces    map[string]*Subspace
+	paramSets map[string]ParamSet
 }
 
 // NewKeeper constructs a params keeper
@@ -28,6 +29,7 @@ func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKe
 		tkey:      tkey,
 		codespace: codespace,
 		spaces:    make(map[string]*Subspace),
+		paramSets:    make(map[string]ParamSet),
 	}
 
 	return k

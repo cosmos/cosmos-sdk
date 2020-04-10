@@ -51,17 +51,13 @@ type ValidatorSet interface {
 
 	Validator(sdk.Context, sdk.ValAddress) stakingexported.ValidatorI            // get a particular validator by operator address
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingexported.ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) sdk.Int                                       // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) sdk.Int                                      // total staking token supply
+	TotalBondedTokens(sdk.Context) sdk.Dec                                       // total bonded tokens within the validator set
+	StakingTokenSupply(sdk.Context) sdk.Dec                                      // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec)
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
-
-	// Delegation allows for getting a particular delegation for a given validator
-	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingexported.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint16

@@ -43,7 +43,8 @@ func makeTestCodec() *codec.Codec {
 }
 
 // nolint: deadcode unused
-func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64) (sdk.Context, auth.AccountKeeper, Keeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64) (*codec.Codec, sdk.Context,
+	auth.AccountKeeper, Keeper) {
 
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
@@ -91,7 +92,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
 	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 
-	return ctx, ak, keeper
+	return cdc, ctx, ak, keeper
 }
 
 // nolint: unparam deadcode unused

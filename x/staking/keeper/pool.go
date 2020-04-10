@@ -55,13 +55,13 @@ func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded
-func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
+func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Dec {
 	bondedPool := k.GetBondedPool(ctx)
 	return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx))
 }
 
 // StakingTokenSupply staking tokens from the total supply
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
+func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Dec {
 	return k.supplyKeeper.GetSupply(ctx).GetTotal().AmountOf(k.BondDenom(ctx))
 }
 
@@ -71,7 +71,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 
 	stakeSupply := k.StakingTokenSupply(ctx)
 	if stakeSupply.IsPositive() {
-		return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx)).ToDec().QuoInt(stakeSupply)
+		return bondedPool.GetCoins().AmountOf(k.BondDenom(ctx)).Quo(stakeSupply)
 	}
 	return sdk.ZeroDec()
 }

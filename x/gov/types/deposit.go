@@ -10,11 +10,11 @@ import (
 type Deposit struct {
 	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` //  proposalID of the proposal
 	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     //  Address of the depositor
-	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           //  Deposit amount
+	Amount     sdk.DecCoins      `json:"amount" yaml:"amount"`           //  Deposit amount
 }
 
 // NewDeposit creates a new Deposit instance
-func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
+func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.DecCoins) Deposit {
 	return Deposit{proposalID, depositor, amount}
 }
 

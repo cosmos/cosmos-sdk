@@ -44,7 +44,7 @@ func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := types.ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %s", types.ModuleName, err)
 	}
 
 	return types.ValidateGenesis(data)
@@ -52,7 +52,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr, types.StoreKey)
+	rest.RegisterRoutes(ctx, rtr)
 }
 
 // get the root tx command of this module
@@ -62,7 +62,8 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
+	//return cli.GetQueryCmd(cdc)
+	return nil
 }
 
 //___________________________

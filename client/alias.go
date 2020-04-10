@@ -52,6 +52,7 @@ const (
 	FlagRPCWriteTimeout    = flags.FlagRPCWriteTimeout
 	FlagOutputDocument     = flags.FlagOutputDocument
 	FlagSkipConfirmation   = flags.FlagSkipConfirmation
+	FlagKeyPass            = keys.FlagKeyPass
 	DefaultKeyPass         = keys.DefaultKeyPass
 	FlagAddress            = keys.FlagAddress
 	FlagPublicKey          = keys.FlagPublicKey

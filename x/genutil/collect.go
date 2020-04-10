@@ -145,10 +145,10 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 				"account %v not in genesis.json: %+v", valAddr, addrMap)
 		}
 
-		if delAcc.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
+		if delAcc.GetCoins().AmountOf(sdk.DefaultBondDenom).LT(msg.MinSelfDelegation.ToDec()) {
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"insufficient fund for delegation %v: %v < %v",
-				delAcc.GetAddress(), delAcc.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
+				delAcc.GetAddress(), delAcc.GetCoins().AmountOf(sdk.DefaultBondDenom), msg.MinSelfDelegation,
 			)
 		}
 

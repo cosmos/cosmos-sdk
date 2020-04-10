@@ -52,7 +52,8 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (*codec.Codec, sdk.Context, bank.Keeper, staking.Keeper,
+	params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
@@ -123,7 +124,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 		InitGenesis(ctx, keeper, sk, GenesisState{defaults, nil, nil})
 	})
 
-	return ctx, bk, sk, paramstore, keeper
+	return cdc, ctx, bk, sk, paramstore, keeper
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {

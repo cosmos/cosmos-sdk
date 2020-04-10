@@ -295,3 +295,7 @@ func sortNoLongerBonded(last validatorsByAddr) [][]byte {
 	})
 	return noLongerBonded
 }
+
+// append validator addresses to kick out
+func (k Keeper) AppendAbandonedValidatorAddrs(ctx sdk.Context, ConsAddr sdk.ConsAddress) {
+}

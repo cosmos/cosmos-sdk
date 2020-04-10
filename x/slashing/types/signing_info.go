@@ -7,6 +7,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type ValStatus byte
+
+const (
+	Created    ValStatus = 0x00
+	Destroying ValStatus = 0x01
+	Destroyed  ValStatus = 0x02
+
+	ValStatusCreated    = "Created"
+	ValStatusDestroying = "Destroying"
+	ValStatusDestroyed  = "Destroied"
+)
+
 // Signing info for a validator
 type ValidatorSigningInfo struct {
 	Address             sdk.ConsAddress `json:"address" yaml:"address"`                             // validator consensus address
@@ -15,12 +27,13 @@ type ValidatorSigningInfo struct {
 	JailedUntil         time.Time       `json:"jailed_until" yaml:"jailed_until"`                   // timestamp validator cannot be unjailed until
 	Tombstoned          bool            `json:"tombstoned" yaml:"tombstoned"`                       // whether or not a validator has been tombstoned (killed out of validator set)
 	MissedBlocksCounter int64           `json:"missed_blocks_counter" yaml:"missed_blocks_counter"` // missed blocks counter (to avoid scanning the array every time)
+	ValidatorStatus     ValStatus       `json:"validator_status" yaml:"validator_status"`
 }
 
 // Construct a new `ValidatorSigningInfo` struct
 func NewValidatorSigningInfo(
 	condAddr sdk.ConsAddress, startHeight, indexOffset int64,
-	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,
+	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64, validatorStatus ValStatus,
 ) ValidatorSigningInfo {
 
 	return ValidatorSigningInfo{
@@ -30,6 +43,7 @@ func NewValidatorSigningInfo(
 		JailedUntil:         jailedUntil,
 		Tombstoned:          tombstoned,
 		MissedBlocksCounter: missedBlocksCounter,
+		ValidatorStatus:     validatorStatus,
 	}
 }
 

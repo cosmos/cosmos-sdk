@@ -22,7 +22,7 @@ var (
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
-	Fee        StdFee         `json:"fee" yaml:"fee"`
+	Fee        StdFee         `json:"-" yaml:"fee"`
 	Signatures []StdSignature `json:"signatures" yaml:"signatures"`
 	Memo       string         `json:"memo" yaml:"memo"`
 }
@@ -147,7 +147,7 @@ func (fee StdFee) Bytes() []byte {
 // originally part of the submitted transaction because the fee is computed
 // as fee = ceil(gasWanted * gasPrices).
 func (fee StdFee) GasPrices() sdk.DecCoins {
-	return sdk.NewDecCoins(fee.Amount).QuoDec(sdk.NewDec(int64(fee.Gas)))
+	return fee.Amount.QuoDec(sdk.NewDec(int64(fee.Gas)))
 }
 
 //__________________________________________________________
@@ -160,7 +160,7 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 type StdSignDoc struct {
 	AccountNumber uint64            `json:"account_number" yaml:"account_number"`
 	ChainID       string            `json:"chain_id" yaml:"chain_id"`
-	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
+	Fee           json.RawMessage   `json:"-" yaml:"fee"`
 	Memo          string            `json:"memo" yaml:"memo"`
 	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
 	Sequence      uint64            `json:"sequence" yaml:"sequence"`

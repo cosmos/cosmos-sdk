@@ -190,20 +190,16 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	coinType := uint32(viper.GetInt(flagCoinType))
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
+	hdPath := viper.GetString(flagHDPath)
 
-	useBIP44 := !viper.IsSet(flagHDPath)
-	var hdPath string
-
-	if useBIP44 {
+	if len(hdPath) == 0 {
 		hdPath = hd.CreateHDPath(coinType, account, index).String()
-	} else {
-		hdPath = viper.GetString(flagHDPath)
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if viper.GetBool(flags.FlagUseLedger) {
 
-		if !useBIP44 {
+		if len(hdPath) != 0 {
 			return errors.New("cannot set custom bip32 path with ledger")
 		}
 

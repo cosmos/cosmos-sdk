@@ -51,7 +51,7 @@ func (tp *testParams) ParamSetPairs() types.ParamSetPairs {
 	}
 }
 
-func testProposal(changes ...proposal.ParamChange) proposal.ParameterChangeProposal {
+func testProposal(changes ...proposal.ParamChange) *proposal.ParameterChangeProposal {
 	return proposal.NewParameterChangeProposal(
 		"Test",
 		"description",

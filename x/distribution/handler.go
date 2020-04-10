@@ -103,6 +103,8 @@ func handleMsgFundCommunityPool(ctx sdk.Context, msg types.MsgFundCommunityPool,
 func NewCommunityPoolSpendProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
+		case types.CommunityPoolSpendProposal:
+			return keeper.HandleCommunityPoolSpendProposal(ctx, k, &c)
 		case *types.CommunityPoolSpendProposal:
 			return keeper.HandleCommunityPoolSpendProposal(ctx, k, c)
 

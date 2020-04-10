@@ -14,6 +14,8 @@ import (
 func NewParamChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
+		case proposal.ParameterChangeProposal:
+			return handleParameterChangeProposal(ctx, k, &c)
 		case *proposal.ParameterChangeProposal:
 			return handleParameterChangeProposal(ctx, k, c)
 

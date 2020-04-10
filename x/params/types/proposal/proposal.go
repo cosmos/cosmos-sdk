@@ -22,8 +22,8 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal")
 }
 
-func NewParameterChangeProposal(title, description string, changes []ParamChange) ParameterChangeProposal {
-	return ParameterChangeProposal{title, description, changes}
+func NewParameterChangeProposal(title, description string, changes []ParamChange) *ParameterChangeProposal {
+	return &ParameterChangeProposal{title, description, changes}
 }
 
 // GetTitle returns the title of a parameter change proposal.

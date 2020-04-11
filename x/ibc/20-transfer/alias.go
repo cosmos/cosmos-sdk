@@ -12,12 +12,14 @@ import (
 )
 
 const (
-	DefaultPacketTimeout = keeper.DefaultPacketTimeout
-	AttributeKeyReceiver = types.AttributeKeyReceiver
-	ModuleName           = types.ModuleName
-	StoreKey             = types.StoreKey
-	RouterKey            = types.RouterKey
-	QuerierRoute         = types.QuerierRoute
+	DefaultPacketTimeout   = keeper.DefaultPacketTimeout
+	AttributeKeyReceiver   = types.AttributeKeyReceiver
+	AttributeKeyAckSuccess = types.AttributeKeyAckSuccess
+	AttributeKeyAckError   = types.AttributeKeyAckError
+	ModuleName             = types.ModuleName
+	StoreKey               = types.StoreKey
+	RouterKey              = types.RouterKey
+	QuerierRoute           = types.QuerierRoute
 )
 
 var (

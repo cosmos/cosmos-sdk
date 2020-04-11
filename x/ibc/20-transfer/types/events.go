@@ -8,7 +8,9 @@ import (
 
 // IBC transfer events
 const (
-	AttributeKeyReceiver = "receiver"
+	AttributeKeyReceiver   = "receiver"
+	AttributeKeyAckSuccess = "success"
+	AttributeKeyAckError   = "error"
 )
 
 // IBC transfer events vars

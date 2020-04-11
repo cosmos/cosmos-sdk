@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			if tc.success {
 				suite.Require().Equal(sdk.ZeroInt(), deltaAmount, "successful ack changed balance")
 			} else {
-				suite.Require().Equal(prefixCoins[0].Amount.Int64(), deltaAmount.Int64(), "failed ack did not trigger refund")
+				suite.Require().Equal(prefixCoins[0].Amount, deltaAmount, "failed ack did not trigger refund")
 			}
 		})
 	}

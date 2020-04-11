@@ -15,11 +15,17 @@ type Evidence interface {
 	Hash() tmbytes.HexBytes
 	ValidateBasic() error
 
-	// The consensus address of the malicious validator at time of infraction
-	GetConsensusAddress() sdk.ConsAddress
-
 	// Height at which the infraction occurred
 	GetHeight() int64
+}
+
+// ValidatorEvidence extends Evidence interface to define contract
+// for evidence against malicious validators
+type ValidatorEvidence interface {
+	Evidence
+
+	// The consensus address of the malicious validator at time of infraction
+	GetConsensusAddress() sdk.ConsAddress
 
 	// The total power of the malicious validator at time of infraction
 	GetValidatorPower() int64

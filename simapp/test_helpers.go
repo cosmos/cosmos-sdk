@@ -35,7 +35,10 @@ var defaultConsensusParams = &abci.ConsensusParams{
 		MaxAgeDuration:  1814400,
 	},
 	Validator: &abci.ValidatorParams{
-		PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
+		PubKeyTypes: []string{
+			tmtypes.ABCIPubKeyTypeEd25519,
+			tmtypes.ABCIPubKeyTypeSecp256k1,
+		},
 	},
 }
 

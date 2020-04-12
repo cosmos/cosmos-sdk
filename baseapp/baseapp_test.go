@@ -1493,16 +1493,16 @@ func TestGetMaximumBlockGas(t *testing.T) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	app.storeConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
 
 	app.storeConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
 
 	app.storeConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
-	require.Equal(t, uint64(5000000), app.getMaximumBlockGas())
+	require.Equal(t, uint64(5000000), app.getMaximumBlockGas(ctx))
 
 	app.storeConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
-	require.Panics(t, func() { app.getMaximumBlockGas() })
+	require.Panics(t, func() { app.getMaximumBlockGas(ctx) })
 }
 
 // NOTE: represents a new custom router for testing purposes of WithRouter()

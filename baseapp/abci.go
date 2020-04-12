@@ -27,7 +27,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		app.storeConsensusParams(req.ConsensusParams)
+		app.storeConsensusParams(app.deliverState.ctx, req.ConsensusParams)
 	}
 
 	if app.initChainer == nil {

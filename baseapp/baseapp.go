@@ -204,7 +204,7 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 func (app *BaseApp) LoadLatestVersion() error {
 	err := app.storeLoader(app.cms)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load latest version: %w", err)
 	}
 
 	return app.initFromMainStore()
@@ -220,7 +220,7 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 func (app *BaseApp) LoadVersion(version int64) error {
 	err := app.cms.LoadVersion(version)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load version %d: %w", version, err)
 	}
 
 	return app.initFromMainStore()
@@ -309,6 +309,10 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 }
 
 func (app *BaseApp) GetConsensusParams() *abci.ConsensusParams {
+	if app.paramStore == nil {
+		return nil
+	}
+
 	var bp abci.BlockParams
 	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyBlockParams, &bp)
 
@@ -325,10 +329,14 @@ func (app *BaseApp) GetConsensusParams() *abci.ConsensusParams {
 	}
 }
 
-func (app *BaseApp) storeConsensusParams(cp *abci.ConsensusParams) {
-	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyBlockParams, cp.Block)
-	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
-	app.paramStore.Set(app.deliverState.ctx, ParamStoreKeyValidatorParams, cp.Validator)
+func (app *BaseApp) storeConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
+	if app.paramStore == nil {
+		panic("cannot store consensus params with no params store set")
+	}
+
+	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
+	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
+	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
 }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics

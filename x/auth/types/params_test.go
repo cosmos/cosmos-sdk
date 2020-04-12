@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestParamsEqual(t *testing.T) {

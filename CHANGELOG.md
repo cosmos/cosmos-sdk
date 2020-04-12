@@ -70,35 +70,49 @@ and provided directly the IAVL store.
 * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
 * (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
-* (crypto/keyring) [\#5735](https://github.com/cosmos/cosmos-sdk/pull/5735) Keyring's `Update()` function is now no-op.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
 * (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
 * (baseapp) [\#5837](https://github.com/cosmos/cosmos-sdk/issues/5837) Transaction simulation now returns a `SimulationResponse` which contains the `GasInfo` and
 `Result` from the execution.
-* (crypto/keyring) [\#5866](https://github.com/cosmos/cosmos-sdk/pull/5866) Move `Keyring` and `Keybase` implementations and their associated types from `crypto/keys/` to `crypto/keyring/`.
-* (crypto) [\#5880](https://github.com/cosmos/cosmos-sdk/pull/5880) Merge `crypto/keys/mintkey` into `crypto`.
-* (crypto/keyring) [\#5858](https://github.com/cosmos/cosmos-sdk/pull/5858) Make Keyring store keys by name and address's hexbytes representation.
-* (crypto/keyring) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Deprecate old keybase implementation:
-  - Remove `Update` from the `Keybase` interface.
-  - `NewKeyring()` now accepts a new backend: `MemoryBackend`.
-  - `New()` has been renamed to`NewLegacy()`, which now returns a `LegacyKeybase` type that only allows migration of keys from the legacy keybase to a new keyring.
+* (client/input) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) Removal of unnecessary `GetCheckPassword`, `PrintPrefixed` functions.
 * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Rename `NewKeyBaseFromDir()` -> `NewLegacyKeyBaseFromDir()`.
+* (crypto) [\#5880](https://github.com/cosmos/cosmos-sdk/pull/5880) Merge `crypto/keys/mintkey` into `crypto`.
+* (crypto/hd) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) `crypto/keys/hd` moved to `crypto/hd`.
+* (crypto/keyring):
+  * [\#5866](https://github.com/cosmos/cosmos-sdk/pull/5866) Rename `crypto/keys/` to `crypto/keyring/`.
+  * [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) `Keybase` -> `Keyring` interfaces migration. `LegacyKeybase` interface is added in order
+to guarantee limited backward compatibility with the old Keybase interface for the sole purpose of migrating keys across the new keyring backends. `NewLegacy`
+constructor is provided [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) to allow for smooth migration of keys from the legacy LevelDB based implementation
+to new keyring backends. Plus, the package and the new keyring no longer depends on the sdk.Config singleton. Please consult the package documentation for more
+information on how to implement the new `Keyring` interface.
+  * [\#5858](https://github.com/cosmos/cosmos-sdk/pull/5858) Make Keyring store keys by name and address's hexbytes representation.
 
 ### Features
 
 * (x/ibc) [\#5588](https://github.com/cosmos/cosmos-sdk/pull/5588) Add [ICS 024 - Host State Machine Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements) subpackage to `x/ibc` module.
+* (x/ibc) [\#5277](https://github.com/cosmos/cosmos-sdk/pull/5277) `x/ibc` changes from IBC alpha. For more details check the the  [`x/ibc/spec`](https://github.com/cosmos/tree/master/x/ibc/spec) directory:
+  * [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics) subpackage
+  * [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics) subpackage
+  * [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics) subpackage
+  * [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation) subpackage
+  * [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client) subpackage
+  * [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer) module
+  * [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments) subpackage
+  * (ibc/ante) Implement IBC `AnteHandler` as per [ADR 15 - IBC Packet Receiver](https://github.com/cosmos/tree/master/docs/architecture/adr-015-ibc-packet-receiver.md).
+* (x/capability) [\#5828](https://github.com/cosmos/cosmos-sdk/pull/5828) Capability module integration as outlined in [ADR 3 - Dynamic Capability Store](https://github.com/cosmos/tree/master/docs/architecture/adr-003-dynamic-capability-store.md).
 
 ### Bug Fixes
 
 * (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.
 * (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
-* (crypto/keyring) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) Keybase/Keyring `Sign()` methods no longer decode amino signatures
-when method receivers are offline/multisig keys.
+* (crypto/keyring) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `Keyring.Sign()` methods no longer decode amino signatures when method receivers
+are offline/multisig keys.
 * (x/auth) [\#5892](https://github.com/cosmos/cosmos-sdk/pull/5892) Add `RegisterKeyTypeCodec` to register new
 types (eg. keys) to the `auth` module internal amino codec.
 * (rest) [\#5906](https://github.com/cosmos/cosmos-sdk/pull/5906) Fix an issue that make some REST calls panic when sending
 invalid or incomplete requests.
 * (x/genutil) [\#5938](https://github.com/cosmos/cosmos-sdk/pull/5938) Fix `InitializeNodeValidatorFiles` error handling.
+* (x/staking) [\#5949](https://github.com/cosmos/cosmos-sdk/pull/5949) Skip staking `HistoricalInfoKey` in simulations as headers are not exported.
 * (x/auth) [\#5950](https://github.com/cosmos/cosmos-sdk/pull/5950) Fix `IncrementSequenceDecorator` to use is `IsReCheckTx` instead of `IsCheckTx` to allow account sequence incrementing.
 
 ### State Machine Breaking
@@ -191,6 +205,12 @@ functionality that requires an online connection.
 * (client) [\#5856](https://github.com/cosmos/cosmos-sdk/pull/5856) Added the possibility to set `--offline` flag with config command.
 * (client) [\#5895](https://github.com/cosmos/cosmos-sdk/issues/5895) show config options in the config command's help screen.
 * (types/rest) [\#5900](https://github.com/cosmos/cosmos-sdk/pull/5900) Add Check*Error function family to spare developers from replicating tons of boilerplate code.
+
+## [v0.38.3] - 2020-04-09
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.33.3](https://github.com/tendermint/tendermint/releases/tag/v0.33.3).
 
 ## [v0.38.2] - 2020-03-25
 
@@ -458,6 +478,12 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug.
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+
+## [v0.37.9] - 2020-04-09
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.10](https://github.com/tendermint/tendermint/releases/tag/v0.32.10).
 
 ## [v0.37.8] - 2020-03-11
 
@@ -3082,6 +3108,7 @@ BUG FIXES:
 [v0.38.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.2
 [v0.38.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.1
 [v0.38.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.0
+[v0.37.9]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.9
 [v0.37.8]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.8
 [v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6

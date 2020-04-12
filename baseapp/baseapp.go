@@ -307,19 +307,21 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	}
 }
 
-func (app *BaseApp) GetConsensusParams() *abci.ConsensusParams {
+// GetConsensusParams returns the current consensus parameters from the BaseApp's
+// ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	if app.paramStore == nil {
 		return nil
 	}
 
 	var bp abci.BlockParams
-	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyBlockParams, &bp)
+	app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
 
 	var ep abci.EvidenceParams
-	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyEvidenceParams, &ep)
+	app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
 
 	var vp abci.ValidatorParams
-	app.paramStore.Get(app.deliverState.ctx, ParamStoreKeyValidatorParams, &vp)
+	app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
 
 	return &abci.ConsensusParams{
 		Block:     &bp,
@@ -341,8 +343,8 @@ func (app *BaseApp) storeConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
-func (app *BaseApp) getMaximumBlockGas() uint64 {
-	cp := app.GetConsensusParams()
+func (app *BaseApp) getMaximumBlockGas(ctx sdk.Context) uint64 {
+	cp := app.GetConsensusParams(ctx)
 	if cp == nil || cp.Block == nil {
 		return 0
 	}
@@ -403,8 +405,9 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
 	ctx := app.getState(mode).ctx.
 		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos).
-		WithConsensusParams(app.GetConsensusParams())
+		WithVoteInfos(app.voteInfos)
+
+	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
 	if mode == runTxModeReCheck {
 		ctx = ctx.WithIsReCheckTx(true)

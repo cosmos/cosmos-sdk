@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -23,6 +24,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
+
+var defaultConsensusParams = &abci.ConsensusParams{
+	Block: &abci.BlockParams{
+		MaxBytes: 200000,
+		MaxGas:   2000000,
+	},
+	Evidence: &abci.EvidenceParams{
+		MaxAgeNumBlocks: 302400,
+		MaxAgeDuration:  1814400,
+	},
+	Validator: &abci.ValidatorParams{
+		PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
+	},
+}
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
@@ -39,8 +54,9 @@ func Setup(isCheckTx bool) *SimApp {
 		// Initialize the chain
 		app.InitChain(
 			abci.RequestInitChain{
-				Validators:    []abci.ValidatorUpdate{},
-				AppStateBytes: stateBytes,
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: defaultConsensusParams,
+				AppStateBytes:   stateBytes,
 			},
 		)
 	}
@@ -70,8 +86,9 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 
 	app.InitChain(
 		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: defaultConsensusParams,
+			AppStateBytes:   stateBytes,
 		},
 	)
 

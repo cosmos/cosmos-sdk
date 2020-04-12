@@ -179,7 +179,7 @@ func NewSimApp(
 	app.subspaces[evidence.ModuleName] = app.ParamsKeeper.Subspace(evidence.DefaultParamspace)
 
 	// set the BaseApp's parameter store
-	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(BaseAppParamsKeyTable()))
+	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(ConsensusParamsKeyTable()))
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey])
@@ -429,7 +429,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
-func BaseAppParamsKeyTable() params.KeyTable {
+func ConsensusParamsKeyTable() params.KeyTable {
 	return params.NewKeyTable(
 		params.NewParamSetPair(
 			baseapp.ParamStoreKeyBlockParams, abci.BlockParams{}, baseapp.ValidateBlockParams,

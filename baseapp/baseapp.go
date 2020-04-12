@@ -207,7 +207,7 @@ func (app *BaseApp) LoadLatestVersion() error {
 		return fmt.Errorf("failed to load latest version: %w", err)
 	}
 
-	return app.initFromMainStore()
+	return app.init()
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
@@ -223,7 +223,7 @@ func (app *BaseApp) LoadVersion(version int64) error {
 		return fmt.Errorf("failed to load version %d: %w", version, err)
 	}
 
-	return app.initFromMainStore()
+	return app.init()
 }
 
 // LastCommitID returns the last CommitID of the multistore.
@@ -236,8 +236,7 @@ func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
 
-// initializes the remaining logic from app.cms
-func (app *BaseApp) initFromMainStore() error {
+func (app *BaseApp) init() error {
 	if app.sealed {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}

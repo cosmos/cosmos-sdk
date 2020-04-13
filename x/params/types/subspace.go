@@ -112,13 +112,13 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 // sets the value to the provided pointer. If the value does not exist, it will
 // perform a no-op.
 func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
-	s.checkType(key, ptr)
-
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	if bz == nil {
 		return
 	}
+
+	s.checkType(key, ptr)
 
 	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)

@@ -4,7 +4,7 @@
 
 - 2020 March 06: Initial Draft
 - 2020 March 12: API Updates
-- 2020 April 10: Added details to interface `oneof` handling
+- 2020 April 13: Added details on interface `oneof` handling
 
 ## Status
 
@@ -139,17 +139,19 @@ that account fields can be retrieved for signing.
 
 If the module needs to work with any `sdk.Msg`s that use interface types, that
 `sdk.Msg` should be implemented as an interface with getters and setters on the
-module level and the module level `Codec` should contain a no-arg constructor
-function for that interface that app's implement.
+module level and a no-arg constructor function should be passed around to
+required CLI and REST client commands
 
 For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
-should also be an interface and have a no-arg constructor function on the module `Codec`:
+should also be an interface and implement setter methods:
 ```go
 // x/gov/types/msgs.go
 type MsgSubmitProposalI interface {
 	sdk.Msg
 
 	GetContent() Content
+    // SetContent returns an error if the underlying oneof does not support
+    // the concrete Content passed in
 	SetContent(Content) error
 
 	GetInitialDeposit() sdk.Coins
@@ -158,30 +160,14 @@ type MsgSubmitProposalI interface {
 	GetProposer() sdk.AccAddress
 	SetProposer(sdk.AccAddress)
 }
-
-// x/gov/types/codec.go
-type Codec interface {
-    ...
-	NewMsgSubmitProposalI() MsgSubmitProposalI
-}
 ```
 
 Note that the implementation of `MsgSubmitProposalI` can be simplified by
 using an embedded base struct which implements most of that interface - in this
 case `MsgSubmitProposalBase`.
 
-Modules should also provide a convenience constructor function that takes a `Codec`
-instance as its first argument and then all of the required parameters as arguments.
-Ex:
-```go
-// x/gov/types/msgs/go
-func NewMsgSubmitProposalI(cdc Codec, content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error) {
-	...
-}
-```
-
-CLI and REST tx methods can then be passed a `Codec` instance and construct
-the message instance using this helper function.
+A parameter `ctr func() MsgSubmitProposalI` would then be passed to CLI client
+methods in order to construct a concrete instance.
 
 ## Future Improvements
 

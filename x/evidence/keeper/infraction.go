@@ -46,7 +46,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 	ageBlocks := ctx.BlockHeader().Height - infractionHeight
 
 	// Reject evidence if the double-sign is too old. Evidence is considered stale
-	// if the differenc in time and number of blocks is greater than the allowed
+	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
 	cp := ctx.ConsensusParams()
 	if cp != nil && cp.Evidence != nil {

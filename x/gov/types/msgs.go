@@ -32,17 +32,12 @@ type MsgSubmitProposalI interface {
 	SetProposer(sdk.AccAddress)
 }
 
-// NewMsgSubmitProposalI constructs a MsgSubmitProposalI instance based on the Codec instance passed in, populated with
-// the provided content, initialDeposit and proposer arguments
-func NewMsgSubmitProposalI(cdc Codec, content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (MsgSubmitProposalI, error) {
-	msg := cdc.NewMsgSubmitProposalI()
-	err := msg.SetContent(content)
-	if err != nil {
-		return nil, err
+// NewMsgSubmitProposalBase creates a new MsgSubmitProposalBase.
+func NewMsgSubmitProposalBase(initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposalBase {
+	return MsgSubmitProposalBase{
+		InitialDeposit: initialDeposit,
+		Proposer:       proposer,
 	}
-	msg.SetInitialDeposit(initialDeposit)
-	msg.SetProposer(proposer)
-	return msg, nil
 }
 
 func (msg *MsgSubmitProposalBase) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }

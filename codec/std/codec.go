@@ -180,10 +180,6 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 	}, nil
 }
 
-func (c *Codec) NewMsgSubmitProposalI() gov.MsgSubmitProposalI {
-	return &MsgSubmitProposal{}
-}
-
 // ----------------------------------------------------------------------------
 // necessary types and interfaces registered. This codec is provided to all the
 // modules the application depends on.

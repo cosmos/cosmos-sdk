@@ -127,8 +127,7 @@ func SimulateSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		stdCdc := &std.Codec{}
-		msg, err := types.NewMsgSubmitProposalI(stdCdc, content, deposit, simAccount.Address)
+		msg, err := std.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}

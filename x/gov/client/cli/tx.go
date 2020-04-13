@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -57,7 +55,7 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(cdc gov.Codec, txg tx.Generator, ar tx.AccountRetriever, pcmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, msgSubmitProposalCtr func() types.MsgSubmitProposalI, pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -66,7 +64,7 @@ func NewTxCmd(cdc gov.Codec, txg tx.Generator, ar tx.AccountRetriever, pcmds []*
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar)
+	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar, msgSubmitProposalCtr)
 	for _, pcmd := range pcmds {
 		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
 	}
@@ -81,7 +79,7 @@ func NewTxCmd(cdc gov.Codec, txg tx.Generator, ar tx.AccountRetriever, pcmds []*
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(cdc gov.Codec, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewCmdSubmitProposal(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, msgSubmitProposalCtr func() types.MsgSubmitProposalI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -125,10 +123,14 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg, err := gov.NewMsgSubmitProposalI(cdc, content, amount, cliCtx.GetFromAddress())
+			msg := msgSubmitProposalCtr()
+			err = msg.SetContent(content)
 			if err != nil {
 				return err
 			}
+			msg.SetInitialDeposit(amount)
+			msg.SetProposer(cliCtx.FromAddress)
+
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}

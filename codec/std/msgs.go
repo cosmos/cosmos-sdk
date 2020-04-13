@@ -46,6 +46,19 @@ func (msg MsgSubmitEvidence) ValidateBasic() error {
 func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence { return msg.Evidence.GetEvidence() }
 func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress      { return msg.Submitter }
 
+// NewMsgSubmitProposal returns a new MsgSubmitProposal.
+func NewMsgSubmitProposal(c gov.Content, d sdk.Coins, p sdk.AccAddress) (gov.MsgSubmitProposalI, error) {
+	content := &Content{}
+	if err := content.SetContent(c); err != nil {
+		return nil, err
+	}
+
+	return &MsgSubmitProposal{
+		Content:               content,
+		MsgSubmitProposalBase: gov.NewMsgSubmitProposalBase(d, p),
+	}, nil
+}
+
 // ValidateBasic performs basic (non-state-dependant) validation on a
 // MsgSubmitProposal.
 func (msg MsgSubmitProposal) ValidateBasic() error {

@@ -49,7 +49,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 	require.Equal(t, msg.GetInitialDeposit(), d)
 	require.NoError(t, msg.ValidateBasic())
 
-	msg, err = std.NewMsgSubmitProposal(invalidProposal{}, d, p)
+	_, err = std.NewMsgSubmitProposal(invalidProposal{}, d, p)
 	require.Error(t, err)
 
 	//

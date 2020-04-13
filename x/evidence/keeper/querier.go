@@ -21,9 +21,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 		)
 
 		switch path[0] {
-		case types.QueryParameters:
-			res, err = queryParams(ctx, k)
-
 		case types.QueryEvidence:
 			res, err = queryEvidence(ctx, req, k)
 
@@ -36,17 +33,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 		return res, err
 	}
-}
-
-func queryParams(ctx sdk.Context, k Keeper) ([]byte, error) {
-	params := k.GetParams(ctx)
-
-	res, err := codec.MarshalJSONIndent(k.cdc, params)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return res, nil
 }
 
 func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {

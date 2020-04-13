@@ -65,12 +65,14 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return nil, err
 	}
 
-	if ctx.ConsensusParams() != nil {
+	cp := ctx.ConsensusParams()
+	if cp != nil && cp.Validator != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(pk)
-		if !tmstrings.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+
+		if !tmstrings.StringInSlice(tmPubKey.Type, cp.Validator.PubKeyTypes) {
 			return nil, sdkerrors.Wrapf(
 				ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
+				"got: %s, expected: %s", tmPubKey.Type, cp.Validator.PubKeyTypes,
 			)
 		}
 	}

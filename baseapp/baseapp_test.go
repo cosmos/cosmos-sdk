@@ -42,6 +42,15 @@ func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
 	ps.db.Set(key, bz)
 }
 
+func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
+	ok, err := ps.db.Has(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return ok
+}
+
 func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 	bz, err := ps.db.Get(key)
 	if err != nil {

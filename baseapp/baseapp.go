@@ -314,20 +314,27 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 		return nil
 	}
 
-	var bp abci.BlockParams
-	app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
+	cp := new(abci.ConsensusParams)
 
-	var ep abci.EvidenceParams
-	app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
-
-	var vp abci.ValidatorParams
-	app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
-
-	return &abci.ConsensusParams{
-		Block:     &bp,
-		Evidence:  &ep,
-		Validator: &vp,
+	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
+		var bp abci.BlockParams
+		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
+		cp.Block = &bp
 	}
+
+	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
+		var ep abci.EvidenceParams
+		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
+		cp.Evidence = &ep
+	}
+
+	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
+		var vp abci.ValidatorParams
+		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
+		cp.Validator = &vp
+	}
+
+	return cp
 }
 
 func (app *BaseApp) storeConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {

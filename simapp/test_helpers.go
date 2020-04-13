@@ -25,7 +25,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-var defaultConsensusParams = &abci.ConsensusParams{
+// DefaultConsensusParams defines the default Tendermint consensus params used in
+// SimApp testing.
+var DefaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
@@ -45,7 +47,7 @@ var defaultConsensusParams = &abci.ConsensusParams{
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
@@ -58,7 +60,7 @@ func Setup(isCheckTx bool) *SimApp {
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: defaultConsensusParams,
+				ConsensusParams: DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -90,7 +92,7 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: defaultConsensusParams,
+			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)

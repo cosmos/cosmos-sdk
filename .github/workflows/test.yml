@@ -20,8 +20,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: test & coverage report creation
         run: |
-          export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
-          go test -race -coverprofile=coverage.txt -covermode=atomic
           go test -mod=readonly -timeout 8m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
       - name: filter out DONTCOVER
         run: |

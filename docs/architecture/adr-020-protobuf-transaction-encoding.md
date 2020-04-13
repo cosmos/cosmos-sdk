@@ -144,6 +144,7 @@ required CLI and REST client commands
 
 For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
 should also be an interface and implement setter methods:
+
 ```go
 // x/gov/types/msgs.go
 type MsgSubmitProposalI interface {

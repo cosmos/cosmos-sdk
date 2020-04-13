@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	clientx "github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	yaml "gopkg.in/yaml.v2"
@@ -16,6 +18,9 @@ import (
 
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
+
+var _ clientx.ClientFee = &StdFee{}
+var _ clientx.ClientSignature = &StdSignature{}
 
 // NewStdFee returns a new instance of StdFee
 func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
@@ -33,6 +38,14 @@ func (fee StdFee) GetGas() uint64 {
 // GetAmount returns the fee's amount.
 func (fee StdFee) GetAmount() sdk.Coins {
 	return fee.Amount
+}
+
+func (fee *StdFee) SetGas(gas uint64) {
+	fee.Gas = gas
+}
+
+func (fee *StdFee) SetAmount(amount sdk.Coins) {
+	fee.Amount = amount
 }
 
 // Bytes returns the encoded bytes of a StdFee.
@@ -81,6 +94,14 @@ func (ss StdSignature) GetPubKey() (pk crypto.PubKey) {
 
 	amino.MustUnmarshalBinaryBare(ss.PubKey, &pk)
 	return pk
+}
+
+func (ss StdSignature) SetPubKey(crypto.PubKey) error {
+	panic("implement me")
+}
+
+func (ss StdSignature) SetSignature([]byte) {
+	panic("implement me")
 }
 
 // MarshalYAML returns the YAML representation of the signature.

@@ -9,7 +9,7 @@ import (
 )
 
 type TxCmdContext struct {
-	Marshaler        codec.Marshaler
+	Marshaler        codec.JSONMarshaler
 	AccountRetriever AccountRetriever
 	TxGenerator      Generator
 }
@@ -17,4 +17,5 @@ type TxCmdContext struct {
 func NewCLIContextFromTxCmd(ctx TxCmdContext, cmd *cobra.Command) context.CLIContext {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(ctx.Marshaler)
+	return cliCtx
 }

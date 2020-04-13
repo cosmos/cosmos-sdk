@@ -186,10 +186,6 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 	return []abci.ValidatorUpdate{}
 }
 
-func (gam GenesisOnlyAppModule) NewTxCmd(TxCmdContext) *cobra.Command {
-	return nil
-}
-
 //____________________________________________________________________________
 
 // Manager defines a module manager that provides the high level utility for managing and executing

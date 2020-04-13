@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +32,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, types.ErrorInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, tx.ErrorInvalidGasAdjustment.Error())
 			return
 		}
 

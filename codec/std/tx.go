@@ -17,6 +17,14 @@ var (
 // transactions.
 type TxGenerator struct{}
 
+func (g TxGenerator) NewFee() clientx.ClientFee {
+	return &auth.StdFee{}
+}
+
+func (g TxGenerator) NewSignature() clientx.ClientSignature {
+	return &auth.StdSignature{}
+}
+
 // NewTx returns a reference to an empty Transaction type.
 func (TxGenerator) NewTx() clientx.ClientTx {
 	return &Transaction{}
@@ -121,7 +129,7 @@ func (tx Transaction) GetSignatures() []sdk.Signature {
 
 // SetSignatures sets the transaction's signatures. It will overwrite any
 // existing signatures set.
-func (tx *Transaction) SetSignatures(sdkSigs ...sdk.Signature) {
+func (tx *Transaction) SetSignatures(sdkSigs ...clientx.ClientSignature) error {
 	sigs := make([]auth.StdSignature, len(sdkSigs))
 	for i, sig := range sdkSigs {
 		if sig != nil {
@@ -130,6 +138,7 @@ func (tx *Transaction) SetSignatures(sdkSigs ...sdk.Signature) {
 	}
 
 	tx.Signatures = sigs
+	return nil
 }
 
 // GetFee returns the transaction's fee.
@@ -138,8 +147,9 @@ func (tx Transaction) GetFee() sdk.Fee {
 }
 
 // SetFee sets the transaction's fee. It will overwrite any existing fee set.
-func (tx *Transaction) SetFee(fee sdk.Fee) {
+func (tx *Transaction) SetFee(fee clientx.ClientFee) error {
 	tx.Fee = auth.NewStdFee(fee.GetGas(), fee.GetAmount())
+	return nil
 }
 
 // GetMemo returns the transaction's memo.

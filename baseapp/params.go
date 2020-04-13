@@ -71,7 +71,7 @@ func ValidateValidatorParams(i interface{}) error {
 	}
 
 	if len(v.PubKeyTypes) == 0 {
-		return fmt.Errorf("validator allowed pubkey types must not be empty: %v", v.PubKeyTypes)
+		return errors.New("validator allowed pubkey types must not be empty")
 	}
 
 	return nil

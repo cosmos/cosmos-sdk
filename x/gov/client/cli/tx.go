@@ -59,7 +59,7 @@ func NewTxCmd(
 	cdc codec.Marshaler,
 	txg tx.Generator,
 	ar tx.AccountRetriever,
-	ctr func() types.MsgSubmitProposalI,
+	newMsgFn func() types.MsgSubmitProposalI,
 	pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -69,7 +69,7 @@ func NewTxCmd(
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar, ctr)
+	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar, newMsgFn)
 	for _, pcmd := range pcmds {
 		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
 	}
@@ -88,7 +88,7 @@ func NewCmdSubmitProposal(
 	cdc codec.Marshaler,
 	txg tx.Generator,
 	ar tx.AccountRetriever,
-	ctr func() types.MsgSubmitProposalI) *cobra.Command {
+	newMsgFn func() types.MsgSubmitProposalI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -132,7 +132,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := ctr()
+			msg := newMsgFn()
 			err = msg.SetContent(content)
 			if err != nil {
 				return err

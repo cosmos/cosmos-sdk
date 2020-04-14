@@ -1,8 +1,8 @@
 package baseapp
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 

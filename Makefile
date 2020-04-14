@@ -24,6 +24,15 @@ build: go.sum
 	@go build -mod=readonly ./...
 .PHONY: build
 
+build-sim: go.sum
+ifeq ($(OS),Windows_NT)
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
+else
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
+endif
+
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
@@ -152,6 +161,9 @@ test-sim-benchmark-invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
+test-cli: build-sim
+	@go test -mod=readonly -p 4 `go list ./cli_test/...` -tags=cli_test -v
+
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-custom-genesis-fast \
@@ -160,7 +172,8 @@ test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
-test-sim-benchmark-invariants
+test-sim-benchmark-invariants \
+test-cli
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

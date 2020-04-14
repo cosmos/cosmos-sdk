@@ -1,0 +1,17 @@
+syntax = "proto3";
+package tendermint.proto.evidence;
+
+option go_package = "github.com/tendermint/tendermint/proto/evidence";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/proto/types/evidence.proto";
+
+message List {
+  repeated tendermint.proto.types.Evidence evidence = 1 [(gogoproto.nullable) = false];
+}
+
+message Info {
+  bool                            committed = 1;
+  int64                           priority  = 2;
+  tendermint.proto.types.Evidence evidence  = 3 [(gogoproto.nullable) = false];
+}

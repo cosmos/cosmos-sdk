@@ -1,0 +1,36 @@
+syntax = "proto3";
+package tendermint.proto.types;
+
+option go_package = "github.com/tendermint/tendermint/proto/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/proto/types/types.proto";
+import "google/protobuf/timestamp.proto";
+
+// DuplicateVoteEvidence contains evidence a validator signed two conflicting
+// votes.
+message DuplicateVoteEvidence {
+  Vote vote_a = 1;
+  Vote vote_b = 2;
+}
+
+// MockEvidence is used for testing pruposes
+message MockEvidence {
+  int64                     evidence_height = 1;
+  google.protobuf.Timestamp evidence_time   = 2
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  bytes evidence_address = 3;
+}
+
+message Evidence {
+  oneof sum {
+    DuplicateVoteEvidence duplicate_vote_evidence = 1;
+    MockEvidence          mock_evidence           = 2;
+  }
+}
+
+// EvidenceData contains any evidence of malicious wrong-doing by validators
+message EvidenceData {
+  repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
+  bytes             hash     = 2;
+}

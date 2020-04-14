@@ -274,13 +274,27 @@ proto-update-deps:
 	@mkdir -p $(TM_PROTO)/types
 	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
 	@sed -i '' '8 s|proto/libs/bits/types.proto|third_party/proto/tendermint/proto/libs/bits/types.proto|g' $(TM_PROTO)/types/types.proto
-	@sed -i '' '9 s|proto/crypto/types.proto|third_party/proto/tendermint/proto/crypto/types.proto|g' $(TM_PROTO)/types/types.proto
+	@sed -i '' '9 s|proto/crypto/keys/types.proto|third_party/proto/tendermint/proto/crypto/keys/types.proto|g' $(TM_PROTO)/types/types.proto
+
+	@curl -sSL $(TM_URL)/proto/types/evidence.proto > $(TM_PROTO)/types/evidence.proto
+	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/evidence.proto
+
+	@mkdir -p $(TM_PROTO)/evidence
+	@curl -sSL $(TM_URL)/proto/evidence/msgs.proto > $(TM_PROTO)/evidence/msgs.proto
+	@sed -i '' '7 s|proto/types/evidence.proto|third_party/proto/tendermint/proto/types/evidence.proto|g' $(TM_PROTO)/evidence/msgs.proto
+
+	@curl -sSL $(TM_URL)/proto/types/block.proto > $(TM_PROTO)/types/block.proto
+	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/block.proto
+	@sed -i '' '8 s|proto/types/evidence.proto|third_party/proto/tendermint/proto/types/evidence.proto|g' $(TM_PROTO)/types/block.proto
+	
+	@curl -sSL $(TM_URL)/proto/types/validator.proto > $(TM_PROTO)/types/validator.proto
+	@sed -i '' '7 s|proto/crypto/keys/types.proto|third_party/proto/tendermint/proto/crypto/keys/types.proto|g' $(TM_PROTO)/types/validator.proto
 	
 	@mkdir -p $(TM_PROTO)/libs/bits
 	@curl -sSL $(TM_URL)/proto/libs/bits/types.proto > $(TM_PROTO)/libs/bits/types.proto
 
-	@mkdir -p $(TM_PROTO)/crypto
-	@curl -sSL $(TM_URL)/proto/crypto/types.proto > $(TM_PROTO)/crypto/types.proto
+	@mkdir -p $(TM_PROTO)/crypto/keys
+	@curl -sSL $(TM_URL)/proto/crypto/keys/types.proto > $(TM_PROTO)/crypto/keys/types.proto
 
 	@mkdir -p $(TM_KV_TYPES)
 	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto

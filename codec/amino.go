@@ -7,6 +7,7 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	protokeys "github.com/tendermint/tendermint/proto/crypto/keys"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -34,6 +35,8 @@ func New() *Codec {
 // codec.
 func RegisterCrypto(cdc *Codec) {
 	cryptoamino.RegisterAmino(cdc)
+	cryptoamino.RegisterKeyType(protokeys.PrivateKey{}, "tendermint/proto/PrivateKey")
+	cryptoamino.RegisterKeyType(protokeys.PublicKey{}, "tendermint/proto/PublicKey")
 }
 
 // RegisterEvidences registers Tendermint evidence types with the provided Amino

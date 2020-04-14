@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/proto/types/types.proto";
+import "third_party/proto/tendermint/proto/types/validator.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "x/ibc/23-commitment/types/types.proto";

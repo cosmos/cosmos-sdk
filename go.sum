@@ -429,8 +429,8 @@ github.com/tendermint/go-amino v0.15.1 h1:D2uk35eT4iTsvJd9jWIetzthE5C0/k2QmMFkCN
 github.com/tendermint/go-amino v0.15.1/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/tendermint/iavl v0.13.3 h1:expgBDY1MX+6/3sqrIxGChbTNf9N9aTJ67SH4bPchCs=
 github.com/tendermint/iavl v0.13.3/go.mod h1:2lE7GiWdSvc7kvT78ncIKmkOjCnp6JEnSb2O7B9htLw=
-github.com/tendermint/tendermint v0.32.2-0.20200408093555-383617386b38 h1:NejqD4MaLg/vafOdXAkc5Vj/gcV/vlKRWhs7k24bg8U=
-github.com/tendermint/tendermint v0.32.2-0.20200408093555-383617386b38/go.mod h1:U1Pecp05wJceV5GvzXNU6KHXrCfZ1B/uLvaeisIzvHU=
+github.com/tendermint/tendermint v0.32.2-0.20200414211120-70efbe193404 h1:eD9kRB8qgHkucz1gcWHN3m+O9Udz/UgZBfJWKVQ4y2Y=
+github.com/tendermint/tendermint v0.32.2-0.20200414211120-70efbe193404/go.mod h1:U1Pecp05wJceV5GvzXNU6KHXrCfZ1B/uLvaeisIzvHU=
 github.com/tendermint/tm-db v0.5.1 h1:H9HDq8UEA7Eeg13kdYckkgwwkQLBnJGgX4PgLJRhieY=
 github.com/tendermint/tm-db v0.5.1/go.mod h1:g92zWjHpCYlEvQXvy9M168Su8V1IBEeawpXVVBaK4f4=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=

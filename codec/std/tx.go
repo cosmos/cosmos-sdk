@@ -22,11 +22,11 @@ var (
 type TxGenerator struct{}
 
 func (g TxGenerator) NewFee() clientx.ClientFee {
-	return &auth.StdFee{}
+	return &StdFee{}
 }
 
 func (g TxGenerator) NewSignature() clientx.ClientSignature {
-	return &auth.StdSignature{}
+	return &StdSignature{}
 }
 
 // NewTx returns a reference to an empty Transaction type.

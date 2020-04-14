@@ -55,7 +55,12 @@ var ProposalFlags = []string{
 // it contains a slice of "proposal" child commands. These commands are respective
 // to proposal type handlers that are implemented in other modules but are mounted
 // under the governance CLI (eg. parameter change proposals).
-func NewTxCmd(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, msgSubmitProposalCtr func() types.MsgSubmitProposalI, pcmds []*cobra.Command) *cobra.Command {
+func NewTxCmd(
+	cdc codec.Marshaler,
+	txg tx.Generator,
+	ar tx.AccountRetriever,
+	ctr func() types.MsgSubmitProposalI,
+	pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Governance transactions subcommands",
@@ -64,7 +69,7 @@ func NewTxCmd(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, msg
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar, msgSubmitProposalCtr)
+	cmdSubmitProp := NewCmdSubmitProposal(cdc, txg, ar, ctr)
 	for _, pcmd := range pcmds {
 		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
 	}
@@ -79,7 +84,11 @@ func NewTxCmd(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, msg
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
-func NewCmdSubmitProposal(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever, msgSubmitProposalCtr func() types.MsgSubmitProposalI) *cobra.Command {
+func NewCmdSubmitProposal(
+	cdc codec.Marshaler,
+	txg tx.Generator,
+	ar tx.AccountRetriever,
+	ctr func() types.MsgSubmitProposalI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -123,7 +132,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := msgSubmitProposalCtr()
+			msg := ctr()
 			err = msg.SetContent(content)
 			if err != nil {
 				return err
@@ -166,7 +175,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(cdc)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			// validate that the proposal id is a uint
@@ -214,7 +223,7 @@ $ %s tx gov vote 1 yes --from mykey
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(cdc)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			// Get voting address

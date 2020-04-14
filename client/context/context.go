@@ -112,6 +112,10 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
 
+	if offline {
+		return ctx
+	}
+
 	// create a verifier for the specific chain ID and RPC client
 	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
 	if err != nil && !trustNode {

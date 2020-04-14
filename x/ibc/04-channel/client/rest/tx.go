@@ -21,7 +21,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-confirm", RestPortID, RestChannelID), channelOpenConfirmHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-init", RestPortID, RestChannelID), channelCloseInitHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-confirm", RestPortID, RestChannelID), channelCloseConfirmHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/packets/receive"), recvPacketHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/packets/receive", recvPacketHandlerFn(cliCtx)).Methods("POST")
 }
 
 // channelOpenInitHandlerFn implements a channel open init handler

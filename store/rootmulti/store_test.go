@@ -674,6 +674,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *Store {
 	store2.Set([]byte("B"), []byte{102})
 	store.Commit()
 
+	store1.Set([]byte{}, []byte{})
 	store2.Set([]byte("C"), []byte{103})
 	store2.Delete([]byte("X"))
 	trans1.Set([]byte("x2"), []byte{92})

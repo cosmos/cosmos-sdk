@@ -681,14 +681,23 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 			if item.IAVL.Height > math.MaxInt8 {
 				return fmt.Errorf("node height %v cannot exceed %v", item.IAVL.Height, math.MaxInt8)
 			}
-			err := importer.Add(&tmiavl.ExportNode{
+			node := &tmiavl.ExportNode{
 				Key:     item.IAVL.Key,
 				Value:   item.IAVL.Value,
 				Height:  int8(item.IAVL.Height),
 				Version: item.IAVL.Version,
-			})
+			}
+			// Protobuf does not differentiate between []byte{} as nil, but fortunately IAVL does
+			// not allow nil keys nor nil values for leaf nodes, so we can always set them to empty.
+			if node.Key == nil {
+				node.Key = []byte{}
+			}
+			if node.Height == 0 && node.Value == nil {
+				node.Value = []byte{}
+			}
+			err := importer.Add(node)
 			if err != nil {
-				return fmt.Errorf("node import failed: %w", err)
+				return fmt.Errorf("IAVL node import failed: %w", err)
 			}
 
 		default:

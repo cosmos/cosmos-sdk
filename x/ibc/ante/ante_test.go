@@ -16,7 +16,6 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -332,7 +331,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state channelexported.State, order exported.Order, connectionID string,
+	state channelexported.State, order channelexported.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,

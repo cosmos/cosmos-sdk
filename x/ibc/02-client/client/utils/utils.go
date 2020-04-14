@@ -44,7 +44,7 @@ func QueryClientState(
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyClientState(clientID),
+		Data:  prefixClientKey(clientID, ibctypes.KeyClientState()),
 		Prove: prove,
 	}
 
@@ -72,7 +72,7 @@ func QueryConsensusState(
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyConsensusState(clientID, height),
+		Data:  prefixClientKey(clientID, ibctypes.KeyConsensusState(height)),
 		Prove: prove,
 	}
 
@@ -118,14 +118,14 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64,
 	tmValset.TotalVotingPower() // update voting power
 
 	// migrate to protobuf
-	protoCommit := commit.SignedHeader.ToProto()
+	protoSignedHeader := commit.SignedHeader.ToProto()
 	protoValSet, err := tmValset.ToProto()
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
 
 	header := ibctmtypes.Header{
-		SignedHeader: *protoCommit,
+		SignedHeader: protoSignedHeader,
 		ValidatorSet: protoValSet,
 	}
 
@@ -173,4 +173,8 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusSta
 	}
 
 	return state, height, nil
+}
+
+func prefixClientKey(clientID string, key []byte) []byte {
+	return append([]byte(fmt.Sprintf("clients/%s/", clientID)), key...)
 }

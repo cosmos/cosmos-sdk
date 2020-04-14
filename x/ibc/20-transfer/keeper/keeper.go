@@ -27,6 +27,7 @@ type Keeper struct {
 	cdc      *codec.Codec
 
 	channelKeeper types.ChannelKeeper
+	portKeeper    types.PortKeeper
 	bankKeeper    types.BankKeeper
 	supplyKeeper  types.SupplyKeeper
 	scopedKeeper  capability.ScopedKeeper
@@ -35,7 +36,7 @@ type Keeper struct {
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey,
-	channelKeeper types.ChannelKeeper,
+	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper,
 	scopedKeeper capability.ScopedKeeper,
 ) Keeper {
@@ -49,6 +50,7 @@ func NewKeeper(
 		storeKey:      key,
 		cdc:           cdc,
 		channelKeeper: channelKeeper,
+		portKeeper:    portKeeper,
 		bankKeeper:    bankKeeper,
 		supplyKeeper:  supplyKeeper,
 		scopedKeeper:  scopedKeeper,
@@ -80,6 +82,13 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 		return sdkerrors.Wrapf(channel.ErrChannelCapabilityNotFound, "could not retrieve channel capability at: %s", capName)
 	}
 	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID, chanCap)
+}
+
+// BindPort defines a wrapper function for the ort Keeper's function in
+// order to expose it to module's InitGenesis function
+func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
+	cap := k.portKeeper.BindPort(ctx, portID)
+	return k.ClaimCapability(ctx, cap, ibctypes.PortPath(portID))
 }
 
 // TimeoutExecuted defines a wrapper function for the channel Keeper's function

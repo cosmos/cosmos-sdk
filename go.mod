@@ -9,7 +9,7 @@ require (
 	github.com/gibson042/canonicaljson-go v1.0.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.3
-	github.com/golang/protobuf v1.4.0-rc.4
+	github.com/golang/protobuf v1.4.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
@@ -31,7 +31,6 @@ require (
 	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.3
 	github.com/tendermint/tm-db v0.5.1
-	google.golang.org/protobuf v1.20.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )
 

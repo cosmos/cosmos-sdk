@@ -9,7 +9,7 @@ require (
 	github.com/gibson042/canonicaljson-go v1.0.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.3
-	github.com/golang/protobuf v1.4.0-rc.4
+	github.com/golang/protobuf v1.4.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
@@ -23,13 +23,13 @@ require (
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.6.2
+	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.5.1
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.3
-	github.com/tendermint/tendermint v0.33.2
+	github.com/tendermint/tendermint v0.33.3
 	github.com/tendermint/tm-db v0.5.1
 	gopkg.in/yaml.v2 v2.2.8
 )

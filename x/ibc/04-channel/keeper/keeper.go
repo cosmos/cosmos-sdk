@@ -139,7 +139,7 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 // and stop.
 func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.IdentifiedChannel) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ibctypes.GetChannelPortsKeysPrefix(ibctypes.KeyChannelPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(ibctypes.KeyChannelPrefix))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

@@ -45,10 +45,14 @@ $ <appcli> tx slashing unjail --from mykey
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			valAddr := cliCtx.GetFromAddress()
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}

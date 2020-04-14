@@ -52,6 +52,7 @@ that parse log messages.
 older clients.
 * (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
 * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Remove `keys update` command.
+* (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.
 
 ### API Breaking Changes
 
@@ -114,6 +115,7 @@ invalid or incomplete requests.
 * (x/genutil) [\#5938](https://github.com/cosmos/cosmos-sdk/pull/5938) Fix `InitializeNodeValidatorFiles` error handling.
 * (x/staking) [\#5949](https://github.com/cosmos/cosmos-sdk/pull/5949) Skip staking `HistoricalInfoKey` in simulations as headers are not exported.
 * (x/auth) [\#5950](https://github.com/cosmos/cosmos-sdk/pull/5950) Fix `IncrementSequenceDecorator` to use is `IsReCheckTx` instead of `IsCheckTx` to allow account sequence incrementing.
+* (client) [\#5964](https://github.com/cosmos/cosmos-sdk/issues/5964) `--trust-node` is now false by default - for real. Users must ensure it is set to true if they don't want to enable the verifier.
 
 ### State Machine Breaking
 
@@ -205,6 +207,12 @@ functionality that requires an online connection.
 * (client) [\#5856](https://github.com/cosmos/cosmos-sdk/pull/5856) Added the possibility to set `--offline` flag with config command.
 * (client) [\#5895](https://github.com/cosmos/cosmos-sdk/issues/5895) show config options in the config command's help screen.
 * (types/rest) [\#5900](https://github.com/cosmos/cosmos-sdk/pull/5900) Add Check*Error function family to spare developers from replicating tons of boilerplate code.
+
+## [v0.38.3] - 2020-04-09
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.33.3](https://github.com/tendermint/tendermint/releases/tag/v0.33.3).
 
 ## [v0.38.2] - 2020-03-25
 
@@ -472,6 +480,12 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug.
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+
+## [v0.37.9] - 2020-04-09
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.10](https://github.com/tendermint/tendermint/releases/tag/v0.32.10).
 
 ## [v0.37.8] - 2020-03-11
 
@@ -3096,6 +3110,7 @@ BUG FIXES:
 [v0.38.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.2
 [v0.38.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.1
 [v0.38.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.38.0
+[v0.37.9]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.9
 [v0.37.8]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.8
 [v0.37.7]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.7
 [v0.37.6]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.6

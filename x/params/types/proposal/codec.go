@@ -16,7 +16,7 @@ func NewCodec(amino *codec.Codec) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
 }
 
-// module codec
+// ModuleCdc is the module codec.
 var ModuleCdc *Codec
 
 func init() {

@@ -34,17 +34,6 @@ const (
 	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
 )
 
-var (
-	errPruningWithGranularOptions = fmt.Errorf(
-		"'--%s' flag is not compatible with granular options  '--%s' or '--%s'",
-		flagPruning, flagPruningKeepEvery, flagPruningSnapshotEvery,
-	)
-	errPruningGranularOptions = fmt.Errorf(
-		"'--%s' and '--%s' must be set together",
-		flagPruningSnapshotEvery, flagPruningKeepEvery,
-	)
-)
-
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
 func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {

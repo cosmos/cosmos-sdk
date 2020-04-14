@@ -237,7 +237,7 @@ func TestReadRESTReq(t *testing.T) {
 
 	// test OK
 	rest.ReadRESTReq(w, req, codec.New(), &br)
-	res := w.Result()
+	res := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, rest.BaseReq{ChainID: "alessio", Memo: "text"}, br)
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -249,7 +249,7 @@ func TestReadRESTReq(t *testing.T) {
 	w = httptest.NewRecorder()
 	rest.ReadRESTReq(w, req, codec.New(), &br)
 	require.Equal(t, br, br)
-	res = w.Result()
+	res = w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
@@ -258,7 +258,7 @@ func TestWriteSimulationResponse(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
 	rest.WriteSimulationResponse(w, codec.New(), 10)
-	res := w.Result()
+	res := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	bs, err := ioutil.ReadAll(res.Body)
@@ -272,12 +272,12 @@ func TestParseUint64OrReturnBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 	_, ok := rest.ParseUint64OrReturnBadRequest(w, "100")
 	require.True(t, ok)
-	require.Equal(t, http.StatusOK, w.Result().StatusCode)
+	require.Equal(t, http.StatusOK, w.Result().StatusCode) //nolint:bodyclose
 
 	w = httptest.NewRecorder()
 	_, ok = rest.ParseUint64OrReturnBadRequest(w, "-100")
 	require.False(t, ok)
-	require.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
+	require.Equal(t, http.StatusBadRequest, w.Result().StatusCode) //nolint:bodyclose
 }
 
 func TestParseFloat64OrReturnBadRequest(t *testing.T) {
@@ -285,18 +285,18 @@ func TestParseFloat64OrReturnBadRequest(t *testing.T) {
 	w := httptest.NewRecorder()
 	_, ok := rest.ParseFloat64OrReturnBadRequest(w, "100", 0)
 	require.True(t, ok)
-	require.Equal(t, http.StatusOK, w.Result().StatusCode)
+	require.Equal(t, http.StatusOK, w.Result().StatusCode) //nolint:bodyclose
 
 	w = httptest.NewRecorder()
 	_, ok = rest.ParseFloat64OrReturnBadRequest(w, "bad request", 0)
 	require.False(t, ok)
-	require.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
+	require.Equal(t, http.StatusBadRequest, w.Result().StatusCode) //nolint:bodyclose
 
 	w = httptest.NewRecorder()
 	ret, ok := rest.ParseFloat64OrReturnBadRequest(w, "", 9.0)
 	require.Equal(t, float64(9), ret)
 	require.True(t, ok)
-	require.Equal(t, http.StatusOK, w.Result().StatusCode)
+	require.Equal(t, http.StatusOK, w.Result().StatusCode) //nolint:bodyclose
 }
 
 func TestParseQueryParamBool(t *testing.T) {
@@ -318,7 +318,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 
 	rest.PostProcessResponseBare(w, ctx, bs)
 
-	res := w.Result()
+	res := w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	got, err := ioutil.ReadAll(res.Body)
@@ -337,7 +337,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 
 	rest.PostProcessResponseBare(w, ctx, data)
 
-	res = w.Result()
+	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	got, err = ioutil.ReadAll(res.Body)
@@ -359,7 +359,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 
 	rest.PostProcessResponseBare(w, ctx, data)
 
-	res = w.Result()
+	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	got, err = ioutil.ReadAll(res.Body)
@@ -375,7 +375,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 
 	rest.PostProcessResponseBare(w, ctx, data2)
 
-	res = w.Result()
+	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
 	got, err = ioutil.ReadAll(res.Body)
@@ -406,7 +406,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 	rest.PostProcessResponse(w, ctx, obj)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 
-	resp := w.Result()
+	resp := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { resp.Body.Close() })
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -426,7 +426,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 	rest.PostProcessResponse(w, ctx, marshalled)
 
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
-	resp = w.Result()
+	resp = w.Result() //nolint:bodyclose
 
 	t.Cleanup(func() { resp.Body.Close() })
 	body, err = ioutil.ReadAll(resp.Body)

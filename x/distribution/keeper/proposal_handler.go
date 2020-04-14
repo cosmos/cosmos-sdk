@@ -9,7 +9,7 @@ import (
 )
 
 // HandleCommunityPoolSpendProposal is a handler for executing a passed community spend proposal
-func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p types.CommunityPoolSpendProposal) error {
+func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p *types.CommunityPoolSpendProposal) error {
 	if k.blacklistedAddrs[p.Recipient.String()] {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is blacklisted from receiving external funds", p.Recipient)
 	}

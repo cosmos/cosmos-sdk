@@ -52,11 +52,8 @@ that parse log messages.
 older clients.
 * (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
 * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Remove `keys update` command.
-<<<<<<< HEAD
 * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove CLI and REST handlers for querying `x/evidence` parameters.
-=======
 * (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.
->>>>>>> master
 
 ### API Breaking Changes
 

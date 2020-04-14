@@ -74,7 +74,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccount
 func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
 	chanCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel()))
 	if !ok {
-		sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
+		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}
 	return k.channelKeeper.PacketExecuted(ctx, chanCap, packet, acknowledgement)
 }

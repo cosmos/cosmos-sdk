@@ -73,7 +73,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.LastHeader.SignedHeader.Header.GetHeight())
+	return cs.LastHeader.GetHeight()
 }
 
 // GetLatestTimestamp returns latest block time.

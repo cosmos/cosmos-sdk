@@ -21,10 +21,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var ErrorInvalidGasAdjustment = errors2.Register(types.ModuleName, 3, "invalid gas adjustment")
+var ErrorInvalidGasAdjustment = errors2.Register("auth", 3, "invalid gas adjustment")
 
 type (
 	// Generator defines an interface a client can utilize to generate an

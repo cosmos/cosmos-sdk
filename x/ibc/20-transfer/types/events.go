@@ -8,9 +8,16 @@ import (
 
 // IBC transfer events
 const (
-	AttributeKeyReceiver   = "receiver"
-	AttributeKeyAckSuccess = "success"
-	AttributeKeyAckError   = "error"
+	EventTypeTimeout      = "timeout"
+	EventTypePacket       = "fungible_token_packet"
+	EventTypeChannelClose = "channel_closed"
+
+	AttributeKeyReceiver       = "receiver"
+	AttributeKeyValue          = "value"
+	AttributeKeyRefundReceiver = "refund_receiver"
+	AttributeKeyRefundValue    = "refund_value"
+	AttributeKeyAckSuccess     = "success"
+	AttributeKeyAckError       = "error"
 )
 
 // IBC transfer events vars

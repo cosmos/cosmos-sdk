@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 

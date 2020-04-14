@@ -681,12 +681,15 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 			if item.IAVL.Height > math.MaxInt8 {
 				return fmt.Errorf("node height %v cannot exceed %v", item.IAVL.Height, math.MaxInt8)
 			}
-			importer.Add(&tmiavl.ExportNode{
+			err := importer.Add(&tmiavl.ExportNode{
 				Key:     item.IAVL.Key,
 				Value:   item.IAVL.Value,
 				Height:  int8(item.IAVL.Height),
 				Version: item.IAVL.Version,
 			})
+			if err != nil {
+				return fmt.Errorf("node import failed: %w", err)
+			}
 
 		default:
 			return fmt.Errorf("unknown snapshot item %T", item)

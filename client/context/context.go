@@ -24,7 +24,7 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	Marshaler     codec.JSONMarshaler
+	Marshaler     codec.Marshaler
 	Input         io.Reader
 	Keyring       keyring.Keyring
 	Output        io.Writer
@@ -153,8 +153,8 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 	return ctx
 }
 
-// WithMarshaler returns a copy of the CLIContext with an updated JSONMarshaler.
-func (ctx CLIContext) WithMarshaler(m codec.JSONMarshaler) CLIContext {
+// WithMarshaler returns a copy of the CLIContext with an updated Marshaler.
+func (ctx CLIContext) WithMarshaler(m codec.Marshaler) CLIContext {
 	ctx.Marshaler = m
 	return ctx
 }

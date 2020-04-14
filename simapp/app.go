@@ -428,7 +428,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
-func ConsensusParamsKeyTable() params.KeyTable {
+func consensusParamsKeyTable() params.KeyTable {
 	return params.NewKeyTable(
 		params.NewParamSetPair(
 			baseapp.ParamStoreKeyBlockParams, abci.BlockParams{}, baseapp.ValidateBlockParams,

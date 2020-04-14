@@ -61,28 +61,28 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 func TestRequireName(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestRequireFutureTime(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestCantSetBothTimeAndHeight(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
@@ -90,7 +90,7 @@ func TestCantSetBothTimeAndHeight(t *testing.T) {
 func TestDoTimeUpgrade(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	t.Log("Verify can schedule an upgrade")
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.Nil(t, err)
 
 	VerifyDoUpgrade(t)
@@ -99,7 +99,7 @@ func TestDoTimeUpgrade(t *testing.T) {
 func TestDoHeightUpgrade(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	t.Log("Verify can schedule an upgrade")
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	require.Nil(t, err)
 
 	VerifyDoUpgrade(t)
@@ -108,9 +108,9 @@ func TestDoHeightUpgrade(t *testing.T) {
 func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	t.Log("Can overwrite plan")
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}})
 	require.Nil(t, err)
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err = s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	require.Nil(t, err)
 
 	VerifyDoUpgrade(t)
@@ -164,7 +164,7 @@ func TestHaltIfTooNew(t *testing.T) {
 	require.Equal(t, 0, called)
 
 	t.Log("Verify we panic if we have a registered handler ahead of time")
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}})
 	require.NoError(t, err)
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
@@ -193,10 +193,10 @@ func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 func TestCanClear(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	t.Log("Verify upgrade is scheduled")
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.Nil(t, err)
 
-	err = s.handler(s.ctx, upgrade.CancelSoftwareUpgradeProposal{Title: "cancel"})
+	err = s.handler(s.ctx, &upgrade.CancelSoftwareUpgradeProposal{Title: "cancel"})
 	require.Nil(t, err)
 
 	VerifyCleared(t, s.ctx)
@@ -204,11 +204,11 @@ func TestCanClear(t *testing.T) {
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.Nil(t, err)
 	VerifyDoUpgrade(t)
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
+	err = s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
@@ -279,7 +279,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	newCtx := s.ctx
 
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
@@ -291,7 +291,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	})
 
 	t.Log("Verify a second proposal also is being cleared")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
+	err = s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
 	require.NoError(t, err)
 
 	newCtx = newCtx.WithBlockHeight(skipTwo)
@@ -316,7 +316,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	newCtx := s.ctx
 
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
 	require.Nil(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
@@ -329,7 +329,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	})
 
 	t.Log("Verify the second proposal is not skipped")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
+	err = s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
 	require.Nil(t, err)
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(skipTwo)
@@ -351,7 +351,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	newCtx := s.ctx
 
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
 	require.Nil(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
@@ -364,7 +364,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	})
 
 	// A new proposal with height in skipUpgradeHeights
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
+	err = s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
 	require.Nil(t, err)
 	// Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(skipTwo)
@@ -373,7 +373,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	})
 
 	t.Log("Verify a new proposal is not skipped")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop3", Plan: upgrade.Plan{Name: "test3", Height: skipThree}})
+	err = s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop3", Plan: upgrade.Plan{Name: "test3", Height: skipThree}})
 	require.Nil(t, err)
 	newCtx = newCtx.WithBlockHeight(skipThree)
 	VerifyDoUpgradeWithCtx(t, newCtx, "test3")
@@ -388,7 +388,7 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, &upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	require.Nil(t, err)
 	t.Log("Verify if upgrade happens without skip upgrade")
 	require.Panics(t, func() {

@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,7 +42,7 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
 
 	mockIn.Reset("password\npassword\n")
-	info, _, err := kr.NewMnemonic("foo", English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := kr.NewMnemonic("foo", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, "foo", info.GetName())
 }
@@ -62,17 +61,17 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.Nil(t, err)
 	require.Empty(t, l)
 
-	_, _, err = kb.NewMnemonic(n1, English, types.FullFundraiserPath, notSupportedAlgo{})
+	_, _, err = kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, notSupportedAlgo{})
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
 	_, err = kb.Key(n1)
 	require.Error(t, err)
-	i, _, err := kb.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	i, _, err := kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 
 	require.NoError(t, err)
 	require.Equal(t, n1, i.GetName())
-	_, _, err = kb.NewMnemonic(n2, English, types.FullFundraiserPath, algo)
+	_, _, err = kb.NewMnemonic(n2, English, sdk.FullFundraiserPath, algo)
 	require.NoError(t, err)
 
 	// we can get these keys
@@ -141,10 +140,10 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
 
 	// create two users and get their info
-	i1, _, err := kb.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	i1, _, err := kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err)
 
-	i2, _, err := kb.NewMnemonic(n2, English, types.FullFundraiserPath, algo)
+	i2, _, err := kb.NewMnemonic(n2, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err)
 
 	// let's try to sign some messages
@@ -215,7 +214,7 @@ func TestExportImportKeyRing(t *testing.T) {
 	kb, err := New("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
-	info, _, err := kb.NewMnemonic("john", English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := kb.NewMnemonic("john", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, info.GetName(), "john")
 
@@ -251,7 +250,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	algo := hd.Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
-	info, _, err := kb.NewMnemonic("john", English, types.FullFundraiserPath, algo)
+	info, _, err := kb.NewMnemonic("john", English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")
@@ -294,7 +293,7 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	n1, n2 := "old-name", "new name"
 
 	// make sure key works with initial password
-	_, _, err = kb.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	_, _, err = kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err, "%+v", err)
 
 	_, err = kb.ExportPubKeyArmor(n1 + ".notreal")
@@ -329,7 +328,7 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	n1, n2 := "lost-key", "found-again"
 
 	// make sure key works with initial password
-	info, mnemonic, err := kb.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	info, mnemonic, err := kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err, "%+v", err)
 	require.Equal(t, n1, info.GetName())
 	require.NotEmpty(t, mnemonic)
@@ -356,7 +355,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	kb, err := New("keybasename", "test", dir, nil)
 	require.NoError(t, err)
 
-	_, _, err = kb.NewMnemonic("john", English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic("john", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	keystr, err := kb.ExportPrivKeyArmor("john", "somepassword")
@@ -383,7 +382,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 func TestInMemoryLanguage(t *testing.T) {
 	kb := NewInMemory()
-	_, _, err := kb.NewMnemonic("something", Japanese, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err := kb.NewMnemonic("something", Japanese, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.Error(t, err)
 	require.Equal(t, "unsupported language: only english is supported", err.Error())
 }
@@ -422,17 +421,17 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.Nil(t, err)
 	require.Empty(t, l)
 
-	_, _, err = cstore.NewMnemonic(n1, English, types.FullFundraiserPath, notSupportedAlgo{})
+	_, _, err = cstore.NewMnemonic(n1, English, sdk.FullFundraiserPath, notSupportedAlgo{})
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
 	_, err = cstore.Key(n1)
 	require.Error(t, err)
-	i, _, err := cstore.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	i, _, err := cstore.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 
 	require.NoError(t, err)
 	require.Equal(t, n1, i.GetName())
-	_, _, err = cstore.NewMnemonic(n2, English, types.FullFundraiserPath, algo)
+	_, _, err = cstore.NewMnemonic(n2, English, sdk.FullFundraiserPath, algo)
 	require.NoError(t, err)
 
 	// we can get these keys
@@ -502,10 +501,10 @@ func TestInMemorySignVerify(t *testing.T) {
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
 
 	// create two users and get their info
-	i1, _, err := cstore.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	i1, _, err := cstore.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err)
 
-	i2, _, err := cstore.NewMnemonic(n2, English, types.FullFundraiserPath, algo)
+	i2, _, err := cstore.NewMnemonic(n2, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err)
 
 	// let's try to sign some messages
@@ -576,7 +575,7 @@ func TestInMemoryExportImport(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := NewInMemory()
 
-	info, _, err := cstore.NewMnemonic("john", English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := cstore.NewMnemonic("john", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, info.GetName(), "john")
 
@@ -606,7 +605,7 @@ func TestInMemoryExportImport(t *testing.T) {
 func TestInMemoryExportImportPrivKey(t *testing.T) {
 	kb := NewInMemory()
 
-	info, _, err := kb.NewMnemonic("john", English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := kb.NewMnemonic("john", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, info.GetName(), "john")
 	priv1, err := kb.Key("john")
@@ -634,7 +633,7 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	cstore := NewInMemory()
 
 	// CreateMnemonic a private-public key pair and ensure consistency
-	info, _, err := cstore.NewMnemonic("john", English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := cstore.NewMnemonic("john", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")
@@ -673,7 +672,7 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 	n1, n2 := "old-name", "new name"
 
 	// make sure key works with initial password
-	_, _, err := cstore.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	_, _, err := cstore.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err, "%+v", err)
 
 	// exporting requires the proper name and passphrase
@@ -708,7 +707,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	n1, n2 := "lost-key", "found-again"
 
 	// make sure key works with initial password
-	info, mnemonic, err := cstore.NewMnemonic(n1, English, types.FullFundraiserPath, algo)
+	info, mnemonic, err := cstore.NewMnemonic(n1, English, sdk.FullFundraiserPath, algo)
 	require.Nil(t, err, "%+v", err)
 	require.Equal(t, n1, info.GetName())
 	require.NotEmpty(t, mnemonic)
@@ -758,7 +757,7 @@ func ExampleNew() {
 	sec := hd.Secp256k1
 
 	// Add keys and see they return in alphabetical order
-	bob, _, err := cstore.NewMnemonic("Bob", English, types.FullFundraiserPath, sec)
+	bob, _, err := cstore.NewMnemonic("Bob", English, sdk.FullFundraiserPath, sec)
 	if err != nil {
 		// this should never happen
 		fmt.Println(err)
@@ -766,8 +765,8 @@ func ExampleNew() {
 		// return info here just like in List
 		fmt.Println(bob.GetName())
 	}
-	_, _, _ = cstore.NewMnemonic("Alice", English, types.FullFundraiserPath, sec)
-	_, _, _ = cstore.NewMnemonic("Carl", English, types.FullFundraiserPath, sec)
+	_, _, _ = cstore.NewMnemonic("Alice", English, sdk.FullFundraiserPath, sec)
+	_, _, _ = cstore.NewMnemonic("Carl", English, sdk.FullFundraiserPath, sec)
 	info, _ := cstore.List()
 	for _, i := range info {
 		fmt.Println(i.GetName())
@@ -813,16 +812,16 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Empty(t, list)
 
 	// Fails on creating unsupported pubKeyType
-	_, _, err = keyring.NewMnemonic("failing", English, types.FullFundraiserPath, notSupportedAlgo{})
+	_, _, err = keyring.NewMnemonic("failing", English, sdk.FullFundraiserPath, notSupportedAlgo{})
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	// Create 3 keys
 	uid1, uid2, uid3 := "Zkey", "Bkey", "Rkey"
-	_, _, err = keyring.NewMnemonic(uid1, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid1, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = keyring.NewMnemonic(uid2, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid2, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = keyring.NewMnemonic(uid3, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid3, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	list, err = keyring.List()
@@ -872,7 +871,7 @@ func TestAltKeyring_Get(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := someKey
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	key, err := keyring.Key(uid)
@@ -888,7 +887,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := someKey
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	key, err := keyring.KeyByAddress(mnemonic.GetAddress())
@@ -904,7 +903,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := someKey
-	_, _, err = keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -927,7 +926,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := someKey
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -975,9 +974,9 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	keyring, err := New(t.Name(), BackendTest, dir, nil)
 	require.NoError(t, err)
 
-	mnemonic1, _, err := keyring.NewMnemonic("key1", English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic1, _, err := keyring.NewMnemonic("key1", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
-	mnemonic2, _, err := keyring.NewMnemonic("key2", English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic2, _, err := keyring.NewMnemonic("key2", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	key := "multi"
@@ -1001,7 +1000,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := "jack"
-	_, _, err = keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	msg := []byte("some message")
@@ -1020,7 +1019,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := "jack"
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	msg := []byte("some message")
@@ -1039,7 +1038,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := theID
-	_, _, err = keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	passphrase := "somePass"
@@ -1068,7 +1067,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := theID
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	passphrase := "somePass"
@@ -1098,7 +1097,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := theID
-	_, _, err = keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	armor, err := keyring.ExportPubKeyArmor(uid)
@@ -1123,7 +1122,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	uid := theID
-	mnemonic, _, err := keyring.NewMnemonic(uid, English, types.FullFundraiserPath, hd.Secp256k1)
+	mnemonic, _, err := keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	armor, err := keyring.ExportPubKeyArmorByAddress(mnemonic.GetAddress())
@@ -1148,11 +1147,11 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	require.NoError(t, err)
 
 	// should fail when using unsupported signing algorythm.
-	_, _, err = keyring.NewMnemonic("test", English, types.FullFundraiserPath, notSupportedAlgo{})
+	_, _, err = keyring.NewMnemonic("test", English, sdk.FullFundraiserPath, notSupportedAlgo{})
 	require.EqualError(t, err, "unsupported signing algo")
 
 	// but works with default signing algo.
-	_, _, err = keyring.NewMnemonic("test", English, types.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = keyring.NewMnemonic("test", English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// but we can create a new keybase with our provided algos.
@@ -1167,7 +1166,7 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	require.NoError(t, err)
 
 	// now this new keyring does not fail when signing with provided algo
-	_, _, err = keyring2.NewMnemonic("test", English, types.FullFundraiserPath, notSupportedAlgo{})
+	_, _, err = keyring2.NewMnemonic("test", English, sdk.FullFundraiserPath, notSupportedAlgo{})
 	require.NoError(t, err)
 }
 

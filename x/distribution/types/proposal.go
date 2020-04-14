@@ -14,32 +14,32 @@ const (
 )
 
 // Assert CommunityPoolSpendProposal implements govtypes.Content at compile-time
-var _ govtypes.Content = CommunityPoolSpendProposal{}
+var _ govtypes.Content = &CommunityPoolSpendProposal{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
-	govtypes.RegisterProposalTypeCodec(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
+	govtypes.RegisterProposalTypeCodec(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
 }
 
 // NewCommunityPoolSpendProposal creates a new community pool spned proposal.
-func NewCommunityPoolSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) CommunityPoolSpendProposal {
-	return CommunityPoolSpendProposal{title, description, recipient, amount}
+func NewCommunityPoolSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) *CommunityPoolSpendProposal {
+	return &CommunityPoolSpendProposal{title, description, recipient, amount}
 }
 
 // GetTitle returns the title of a community pool spend proposal.
-func (csp CommunityPoolSpendProposal) GetTitle() string { return csp.Title }
+func (csp *CommunityPoolSpendProposal) GetTitle() string { return csp.Title }
 
 // GetDescription returns the description of a community pool spend proposal.
-func (csp CommunityPoolSpendProposal) GetDescription() string { return csp.Description }
+func (csp *CommunityPoolSpendProposal) GetDescription() string { return csp.Description }
 
 // GetDescription returns the routing key of a community pool spend proposal.
-func (csp CommunityPoolSpendProposal) ProposalRoute() string { return RouterKey }
+func (csp *CommunityPoolSpendProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a community pool spend proposal.
-func (csp CommunityPoolSpendProposal) ProposalType() string { return ProposalTypeCommunityPoolSpend }
+func (csp *CommunityPoolSpendProposal) ProposalType() string { return ProposalTypeCommunityPoolSpend }
 
 // ValidateBasic runs basic stateless validity checks
-func (csp CommunityPoolSpendProposal) ValidateBasic() error {
+func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(csp)
 	if err != nil {
 		return err

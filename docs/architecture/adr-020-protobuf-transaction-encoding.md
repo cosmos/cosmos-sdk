@@ -4,6 +4,7 @@
 
 - 2020 March 06: Initial Draft
 - 2020 March 12: API Updates
+- 2020 April 13: Added details on interface `oneof` handling
 
 ## Status
 
@@ -132,9 +133,42 @@ We then update `CLIContext` to have a new field: `Marshaler`.
 
 Then, each module's client handler will at the minimum accept a `Marshaler` instead
 of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
-that account fields can be retrieved for signing. If the module needs to work with
-any interface types, it will use the `Codec` interface defined by the module which
-also extends `Marshaler`.
+that account fields can be retrieved for signing.
+
+#### Interface `oneof` Handling
+
+If the module needs to work with any `sdk.Msg`s that use interface types, that
+`sdk.Msg` should be implemented as an interface with getters and setters on the
+module level and a no-arg constructor function should be passed around to
+required CLI and REST client commands.
+
+For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
+should also be an interface and implement setter methods:
+
+```go
+// x/gov/types/msgs.go
+type MsgSubmitProposalI interface {
+	sdk.Msg
+
+	GetContent() Content
+    // SetContent returns an error if the underlying oneof does not support
+    // the concrete Content passed in
+	SetContent(Content) error
+
+	GetInitialDeposit() sdk.Coins
+	SetInitialDeposit(sdk.Coins)
+
+	GetProposer() sdk.AccAddress
+	SetProposer(sdk.AccAddress)
+}
+```
+
+Note that the implementation of `MsgSubmitProposalI` can be simplified by
+using an embedded base struct which implements most of that interface - in this
+case `MsgSubmitProposalBase`.
+
+A parameter `ctr func() MsgSubmitProposalI` would then be passed to CLI client
+methods in order to construct a concrete instance.
 
 ## Future Improvements
 

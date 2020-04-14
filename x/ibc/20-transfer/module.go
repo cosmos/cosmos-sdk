@@ -294,9 +294,17 @@ func (am AppModule) OnAcknowledgementPacket(
 			sdk.NewAttribute(AttributeKeyReceiver, data.Receiver.String()),
 			sdk.NewAttribute(AttributeKeyValue, data.Amount.String()),
 			sdk.NewAttribute(AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success)),
-			sdk.NewAttribute(AttributeKeyAckError, ack.Error),
 		),
 	)
+
+	if !ack.Success {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				EventTypePacket,
+				sdk.NewAttribute(AttributeKeyAckError, ack.Error),
+			),
+		)
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

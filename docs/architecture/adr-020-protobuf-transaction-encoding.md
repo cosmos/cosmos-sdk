@@ -140,7 +140,7 @@ that account fields can be retrieved for signing.
 If the module needs to work with any `sdk.Msg`s that use interface types, that
 `sdk.Msg` should be implemented as an interface with getters and setters on the
 module level and a no-arg constructor function should be passed around to
-required CLI and REST client commands
+required CLI and REST client commands.
 
 For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
 should also be an interface and implement setter methods:

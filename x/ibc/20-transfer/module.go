@@ -249,16 +249,6 @@ func (am AppModule) OnRecvPacket(
 			Success: false,
 			Error:   err.Error(),
 		}
-		// NOTE (cwgoes): How do we want to handle this case? Maybe we should be more lenient,
-		// it's safe to leave the channel open I think.
-
-		// TODO: handle packet receipt that due to an error (specify)
-		// the receiving chain couldn't process the transfer
-
-		// source chain sent invalid packet, shutdown our channel end
-		if err := am.keeper.ChanCloseInit(ctx, packet.DestinationPort, packet.DestinationChannel); err != nil {
-			return nil, err
-		}
 	}
 
 	if err := am.keeper.PacketExecuted(ctx, packet, acknowledgement.GetBytes()); err != nil {

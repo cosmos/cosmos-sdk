@@ -4,6 +4,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types"
 	"os"
 	"runtime/pprof"
 
@@ -81,7 +82,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
 	cmd.Flags().String(
-		FlagMinGasPrices, "",
+		FlagMinGasPrices, "0.00000001"+types.DefaultBondDenom,
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")

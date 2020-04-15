@@ -53,6 +53,71 @@ func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler 
 	}
 }
 
+func newPostPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req PlanRequest
+
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+
+		var t time.Time
+		if req.UpgradeTime != "" {
+			t, err = time.Parse(time.RFC3339, req.UpgradeTime)
+			if rest.CheckBadRequestError(w, err) {
+				return
+			}
+		}
+
+		plan := types.Plan{Name: req.UpgradeName, Time: t, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
+		content := types.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
+		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
+			return
+		}
+
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+	}
+}
+
+func newCancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req CancelRequest
+
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+
+		content := types.NewCancelSoftwareUpgradeProposal(req.Title, req.Description)
+		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
+			return
+		}
+
+		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+	}
+}
+
 func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest

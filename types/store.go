@@ -99,6 +99,7 @@ func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
 	for _, name := range names {
 		keys[name] = NewKVStoreKey(name)
 	}
+
 	return keys
 }
 
@@ -115,6 +116,7 @@ func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 	for _, name := range names {
 		keys[name] = NewTransientStoreKey(name)
 	}
+
 	return keys
 }
 

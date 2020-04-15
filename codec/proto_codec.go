@@ -95,14 +95,7 @@ func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) { // nolint: st
 		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
 	}
 
-	buf := new(bytes.Buffer)
-
-	marshaler := &jsonpb.Marshaler{}
-	if err := marshaler.Marshal(buf, m); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+	return ProtoMarshalJSON(m)
 }
 
 func (pc *ProtoCodec) MustMarshalJSON(o interface{}) []byte {

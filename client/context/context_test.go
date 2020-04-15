@@ -1,13 +1,16 @@
-package context
+package context_test
 
 import (
+	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
@@ -15,18 +18,9 @@ func TestCLIContext_WithOffline(t *testing.T) {
 	viper.Set(flags.FlagOffline, true)
 	viper.Set(flags.FlagNode, "tcp://localhost:26657")
 
-	ctx := NewCLIContext()
+	ctx := context.NewCLIContext()
 	require.True(t, ctx.Offline)
 	require.Nil(t, ctx.Client)
-
-	viper.Reset()
-
-	viper.Set(flags.FlagOffline, false)
-	viper.Set(flags.FlagNode, "tcp://localhost:26657")
-
-	ctx = NewCLIContext()
-	require.False(t, ctx.Offline)
-	require.NotNil(t, ctx.Client)
 }
 
 func TestCLIContext_WithGenOnly(t *testing.T) {
@@ -59,10 +53,26 @@ func TestCLIContext_WithGenOnly(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := NewCLIContextWithFrom(tt.from)
+			ctx := context.NewCLIContextWithFrom(tt.from)
 
 			require.Equal(t, tt.expectedFromAddr, ctx.FromAddress)
 			require.Equal(t, tt.expectedFromName, ctx.FromName)
 		})
 	}
+}
+
+func TestCLIContext_WithKeyring(t *testing.T) {
+	viper.Set(flags.FlagGenerateOnly, true)
+	ctx := context.NewCLIContextWithFrom("cosmos1q7380u26f7ntke3facjmynajs4umlr329vr4ja")
+	require.NotNil(t, ctx.Keyring)
+	kr := ctx.Keyring
+	ctx = ctx.WithKeyring(nil)
+	require.Nil(t, ctx.Keyring)
+	ctx = ctx.WithKeyring(kr)
+	require.Equal(t, kr, ctx.Keyring)
+}
+
+func TestMain(m *testing.M) {
+	viper.Set(flags.FlagKeyringBackend, keyring.BackendMemory)
+	os.Exit(m.Run())
 }

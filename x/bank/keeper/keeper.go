@@ -38,11 +38,15 @@ func NewBaseKeeper(
 	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
-	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, ps, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blacklistedAddrs),
 		ak:             ak,
-		paramSpace:     ps,
+		paramSpace:     paramSpace,
 	}
 }
 

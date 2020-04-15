@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -83,38 +84,39 @@ hexadecimal into bech32 cosmos prefixed format and vice versa.
 	return cmd
 }
 
-func parseKey(_ *cobra.Command, args []string) error {
+func parseKey(cmd *cobra.Command, args []string) error {
 	addr := strings.TrimSpace(args[0])
+	outstream := cmd.OutOrStdout()
 	if len(addr) == 0 {
 		return errors.New("couldn't parse empty input")
 	}
-	if !(runFromBech32(addr) || runFromHex(addr)) {
+	if !(runFromBech32(outstream, addr) || runFromHex(outstream, addr)) {
 		return errors.New("couldn't find valid bech32 nor hex data")
 	}
 	return nil
 }
 
 // print info from bech32
-func runFromBech32(bech32str string) bool {
+func runFromBech32(w io.Writer, bech32str string) bool {
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
 	if err != nil {
 		return false
 	}
-	displayParseKeyInfo(newHexOutput(hrp, bz))
+	displayParseKeyInfo(w, newHexOutput(hrp, bz))
 	return true
 }
 
 // print info from hex
-func runFromHex(hexstr string) bool {
+func runFromHex(w io.Writer, hexstr string) bool {
 	bz, err := hex.DecodeString(hexstr)
 	if err != nil {
 		return false
 	}
-	displayParseKeyInfo(newBech32Output(bz))
+	displayParseKeyInfo(w, newBech32Output(bz))
 	return true
 }
 
-func displayParseKeyInfo(stringer fmt.Stringer) {
+func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer) {
 	var out []byte
 	var err error
 
@@ -136,5 +138,5 @@ func displayParseKeyInfo(stringer fmt.Stringer) {
 		panic(err)
 	}
 
-	fmt.Println(string(out))
+	fmt.Fprintln(w, string(out))
 }

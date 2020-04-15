@@ -103,8 +103,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 		return result.Response, nil
 	}
 
-	err = ctx.verifyProof(req.Path, result.Response)
-	if err != nil {
+	if err = ctx.verifyProof(req.Path, result.Response); err != nil {
 		return abci.ResponseQuery{}, err
 	}
 

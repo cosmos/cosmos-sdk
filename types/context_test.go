@@ -151,7 +151,7 @@ func TestContextWithCustom(t *testing.T) {
 	require.Equal(t, cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), "key", "value")
+	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck
 	require.NotEqual(t, ctx.Context(), ctx.WithContext(newContext).Context())
 }
 

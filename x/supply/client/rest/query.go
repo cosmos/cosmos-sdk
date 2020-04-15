@@ -34,8 +34,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -46,14 +45,12 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		params := types.NewQueryTotalSupplyParams(page, limit)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryTotalSupply), bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -73,14 +70,12 @@ func supplyOfHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		params := types.NewQuerySupplyOfParams(denom)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QuerySupplyOf), bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

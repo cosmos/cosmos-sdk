@@ -76,8 +76,7 @@ type NodeInfoResponse struct {
 func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -98,8 +97,7 @@ type SyncingResponse struct {
 func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

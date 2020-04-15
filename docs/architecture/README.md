@@ -46,3 +46,4 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 018: Extendable Voting Periods](./adr-018-extendable-voting-period.md)
 - [ADR 019: Protocol Buffer State Encoding](./adr-019-protobuf-state-encoding.md)
 - [ADR 020: Protocol Buffer Transaction Encoding](./adr-020-protobuf-transaction-encoding.md)
+- [ADR 021: Protocol Buffer Query Encoding](./adr-021-protobuf-query-encoding.md)

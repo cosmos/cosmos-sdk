@@ -169,12 +169,13 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 	// load each Store (note this doesn't panic on unmounted keys now)
 	var newStores = make(map[types.StoreKey]types.CommitKVStore)
+
 	for key, storeParams := range rs.storesParams {
-		// Load it
 		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
 			return errors.Wrap(err, "failed to load store")
 		}
+
 		newStores[key] = store
 
 		// If it was deleted, remove all data

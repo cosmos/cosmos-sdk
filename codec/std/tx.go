@@ -1,12 +1,13 @@
 package std
 
 import (
+	"github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/crypto"
+
 	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 var (

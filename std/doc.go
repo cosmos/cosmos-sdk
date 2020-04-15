@@ -1,5 +1,5 @@
 /*
-Package std defines all the common and standard Cosmos SDK types and definitions
+Package std defines all the common and standard inter-module Cosmos SDK types and definitions
 modules and applications can depend on. These types and definitions serve as
 convenient starting point and also to act as an example or template of how said
 types and definitions can be overridden/redefined.

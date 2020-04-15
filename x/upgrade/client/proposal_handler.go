@@ -7,3 +7,5 @@ import (
 )
 
 var ProposalHandler = govclient.NewProposalHandler(cli.GetCmdSubmitUpgradeProposal, rest.ProposalRESTHandler)
+
+//var ProposalHandler2 = govclient.NewProposalHandler2(cli.NewCmdSubmitUpgradeProposal, rest.ProposalRESTHandler)

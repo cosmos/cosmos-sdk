@@ -125,8 +125,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		delegatorAddr := vars["delegatorAddr"]
 
 		_, err := sdk.AccAddressFromBech32(delegatorAddr)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -173,15 +172,14 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		for _, action := range actions {
 			foundTxs, errQuery := queryTxs(cliCtx, action, delegatorAddr)
-			if errQuery != nil {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError, errQuery.Error())
+			if rest.CheckInternalServerError(w, errQuery) {
+				return
 			}
 			txs = append(txs, foundTxs)
 		}
 
 		res, err := cliCtx.Codec.MarshalJSON(txs)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -210,8 +208,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		if len(bechDelegatorAddr) != 0 {
 			delegatorAddr, err := sdk.AccAddressFromBech32(bechDelegatorAddr)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 			params.DelegatorAddr = delegatorAddr
@@ -219,8 +216,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		if len(bechSrcValidatorAddr) != 0 {
 			srcValidatorAddr, err := sdk.ValAddressFromBech32(bechSrcValidatorAddr)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 			params.SrcValidatorAddr = srcValidatorAddr
@@ -228,22 +224,19 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		if len(bechDstValidatorAddr) != 0 {
 			dstValidatorAddr, err := sdk.ValAddressFromBech32(bechDstValidatorAddr)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if rest.CheckBadRequestError(w, err) {
 				return
 			}
 			params.DstValidatorAddr = dstValidatorAddr
 		}
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData("custom/staking/redelegations", bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -271,8 +264,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -288,15 +280,13 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		params := types.NewQueryValidatorsParams(page, limit, status)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidators)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -333,15 +323,13 @@ func historicalInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		params := types.NewQueryHistoricalInfoParams(height)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryHistoricalInfo)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -359,8 +347,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		res, height, err := cliCtx.QueryWithData("custom/staking/pool", nil)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
@@ -378,8 +365,7 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		res, height, err := cliCtx.QueryWithData("custom/staking/parameters", nil)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 

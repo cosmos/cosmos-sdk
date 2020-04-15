@@ -7,14 +7,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clientx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,10 +24,9 @@ type CLIContext struct {
 	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
-	TxGenerator   clientx.Generator
 	Marshaler     codec.Marshaler
-	Keybase       keyring.Keybase
 	Input         io.Reader
+	Keyring       keyring.Keyring
 	Output        io.Writer
 	OutputFormat  string
 	Height        int64
@@ -61,8 +58,19 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
+	homedir := viper.GetString(flags.FlagHome)
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
+	backend := viper.GetString(flags.FlagKeyringBackend)
+	if len(backend) == 0 {
+		backend = keyring.BackendMemory
+	}
+
+	keyring, err := newKeyringFromFlags(backend, homedir, input, genOnly)
+	if err != nil {
+		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
+	}
+
+	fromAddress, fromName, err := GetFromFields(keyring, from, genOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
@@ -80,6 +88,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		}
 	}
 
+	trustNode := viper.GetBool(flags.FlagTrustNode)
 	ctx := CLIContext{
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
@@ -87,10 +96,11 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		From:          viper.GetString(flags.FlagFrom),
+		Keyring:       keyring,
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
-		HomeDir:       viper.GetString(flags.FlagHome),
-		TrustNode:     viper.GetBool(flags.FlagTrustNode),
+		HomeDir:       homedir,
+		TrustNode:     trustNode,
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
@@ -102,9 +112,13 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
 
+	if offline {
+		return ctx
+	}
+
 	// create a verifier for the specific chain ID and RPC client
 	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && viper.IsSet(flags.FlagTrustNode) {
+	if err != nil && !trustNode {
 		fmt.Printf("failed to create verifier: %s\n", err)
 		os.Exit(1)
 	}
@@ -132,15 +146,15 @@ func NewCLIContextWithInput(input io.Reader) CLIContext {
 	return NewCLIContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
-// WithInput returns a copy of the context with an updated input.
-func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
-	ctx.Input = r
+// WithKeyring returns a copy of the context with an updated keyring.
+func (ctx CLIContext) WithKeyring(k keyring.Keyring) CLIContext {
+	ctx.Keyring = k
 	return ctx
 }
 
-// WithTxGenerator returns a copy of the CLIContext with an updated TxGenerator.
-func (ctx CLIContext) WithTxGenerator(txg clientx.Generator) CLIContext {
-	ctx.TxGenerator = txg
+// WithInput returns a copy of the context with an updated input.
+func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
+	ctx.Input = r
 	return ctx
 }
 
@@ -249,9 +263,44 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 	return ctx
 }
 
+// Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
+// will be JSON encoded using ctx.Marshaler. An error is returned upon failure.
+func (ctx CLIContext) Println(toPrint interface{}) error {
+	var (
+		out []byte
+		err error
+	)
+
+	switch ctx.OutputFormat {
+	case "text":
+		out, err = yaml.Marshal(&toPrint)
+
+	case "json":
+		out, err = ctx.Marshaler.MarshalJSON(toPrint)
+
+		// To JSON indent, we re-encode the already encoded JSON given there is no
+		// error. The re-encoded JSON uses the standard library as the initial encoded
+		// JSON should have the correct output produced by ctx.Marshaler.
+		if ctx.Indent && err == nil {
+			out, err = codec.MarshalIndentFromJSON(out)
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(ctx.Output, "%s\n", out)
+	return err
+}
+
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
-// because this function will panic on marshaling errors
+// because this function will panic on marshaling errors.
+//
+// TODO: Remove once client-side Protobuf migration has been completed.
+// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
 func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 	var (
 		out []byte
@@ -281,7 +330,7 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
@@ -295,24 +344,25 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keyring.NewKeyring(sdk.KeyringServiceName(),
-		viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
-	if err != nil {
-		return nil, "", err
-	}
-
 	var info keyring.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		info, err = keybase.GetByAddress(addr)
+		info, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", err
 		}
 	} else {
-		info, err = keybase.Get(from)
+		info, err = kr.Key(from)
 		if err != nil {
 			return nil, "", err
 		}
 	}
 
 	return info.GetAddress(), info.GetName(), nil
+}
+
+func newKeyringFromFlags(backend, homedir string, input io.Reader, genOnly bool) (keyring.Keyring, error) {
+	if genOnly {
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, homedir, input)
+	}
+	return keyring.New(sdk.KeyringServiceName(), backend, homedir, input)
 }

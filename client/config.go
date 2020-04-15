@@ -1,12 +1,14 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
+	"text/template"
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
@@ -27,12 +29,20 @@ var configDefaults = map[string]string{
 	"broadcast-mode":  "sync",
 }
 
+var configBoolDefaults = map[string]bool{
+	"trace":      false,
+	"trust-node": false,
+	"indent":     false,
+	"offline":    false,
+}
+
 // ConfigCmd returns a CLI command to interactively create an application CLI
 // config file.
 func ConfigCmd(defaultCLIHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
-		Short: "Create or query an application CLI configuration file",
+		Short: "Get and set client options",
+		Long:  configCommandLongDescription(),
 		RunE:  runConfigCmd,
 		Args:  cobra.RangeArgs(0, 2),
 	}
@@ -56,7 +66,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// load configuration
-	tree, err := loadConfigFile(cfgFile)
+	tree, err := loadConfigFile(cmd, cfgFile)
 	if err != nil {
 		return err
 	}
@@ -67,7 +77,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Print(s)
+		cmd.Print(s)
 		return nil
 	}
 
@@ -75,20 +85,17 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	// get config value for a given key
 	if getAction {
-		switch key {
-		case "trace", "trust-node", "indent":
-			fmt.Println(tree.GetDefault(key, false).(bool))
-
-		default:
-			if defaultValue, ok := configDefaults[key]; ok {
-				fmt.Println(tree.GetDefault(key, defaultValue).(string))
-				return nil
-			}
-
-			return errUnknownConfigKey(key)
+		if defaultValue, ok := configBoolDefaults[key]; ok {
+			cmd.Println(tree.GetDefault(key, defaultValue).(bool))
+			return nil
 		}
 
-		return nil
+		if defaultValue, ok := configDefaults[key]; ok {
+			cmd.Println(tree.GetDefault(key, defaultValue).(string))
+			return nil
+		}
+
+		return errUnknownConfigKey(key)
 	}
 
 	if len(args) != 2 {
@@ -98,19 +105,16 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	value := args[1]
 
 	// set config value for a given key
-	switch key {
-	case "chain-id", "output", "node", "broadcast-mode", "keyring-backend":
-		tree.Set(key, value)
-
-	case "trace", "trust-node", "indent":
+	if _, ok := configBoolDefaults[key]; ok {
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err
 		}
 
 		tree.Set(key, boolVal)
-
-	default:
+	} else if _, ok := configDefaults[key]; ok {
+		tree.Set(key, value)
+	} else {
 		return errUnknownConfigKey(key)
 	}
 
@@ -119,7 +123,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "configuration saved to %s\n", cfgFile)
+	cmd.PrintErrf("configuration saved to %s\n", cfgFile)
+
 	return nil
 }
 
@@ -132,9 +137,9 @@ func ensureConfFile(rootDir string) (string, error) {
 	return path.Join(cfgPath, "config.toml"), nil
 }
 
-func loadConfigFile(cfgFile string) (*toml.Tree, error) {
+func loadConfigFile(cmd *cobra.Command, cfgFile string) (*toml.Tree, error) {
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "%s does not exist\n", cfgFile)
+		cmd.PrintErrf("%s does not exist\n", cfgFile)
 		return toml.Load(``)
 	}
 
@@ -164,4 +169,23 @@ func saveConfigFile(cfgFile string, tree io.WriterTo) error {
 
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
+}
+
+func configCommandLongDescription() string {
+	longDescTemplate := template.Must(template.New("configCommandLongDescription").
+		Parse(`{{ range $key, $value := . }}  {{ $key }} = {{ $value }}
+{{ end }}`))
+	defaultsTextBuffer := bytes.NewBufferString("")
+	must(longDescTemplate.Execute(defaultsTextBuffer, configDefaults))
+	must(longDescTemplate.Execute(defaultsTextBuffer, configBoolDefaults))
+	return fmt.Sprintf(`Display or change client application configuration values.
+
+Defaults:
+%s`, defaultsTextBuffer)
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

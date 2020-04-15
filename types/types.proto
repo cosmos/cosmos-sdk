@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos_sdk.v1;
 
 import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/tendermint/abci/types/types.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -44,4 +45,36 @@ message ValAddresses {
   option (gogoproto.stringer) = true;
 
   repeated bytes addresses = 1 [(gogoproto.casttype) = "ValAddress"];
+}
+
+// GasInfo defines tx execution gas context.
+message GasInfo {
+  // GasWanted is the maximum units of work we allow this tx to perform.
+  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
+
+  // GasUsed is the amount of gas actually consumed.
+  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
+}
+
+// Result is the union of ResponseFormat and ResponseCheckTx.
+message Result {
+  option (gogoproto.goproto_getters) = false;
+
+  // Data is any data returned from message or handler execution. It MUST be length
+  // prefixed in order to separate data from multiple message executions.
+  bytes data = 1;
+
+  // Log contains the log information from message or handler execution.
+  string log = 2;
+
+  // Events contains a slice of Event objects that were emitted during message or
+  // handler execution.
+  repeated tendermint.abci.types.Event events = 3 [(gogoproto.nullable) = false];
+}
+
+// SimulationResponse defines the response generated when a transaction is
+// successfully simulated.
+message SimulationResponse {
+  GasInfo gas_info = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  Result  result   = 2;
 }

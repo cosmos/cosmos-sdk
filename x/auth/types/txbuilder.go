@@ -17,7 +17,7 @@ import (
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
 	txEncoder          sdk.TxEncoder
-	keybase            keyring.Keybase
+	keybase            keyring.Keyring
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
@@ -53,7 +53,7 @@ func NewTxBuilder(
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
-	kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
+	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), input)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func (bldr TxBuilder) Gas() uint64 { return bldr.gas }
 func (bldr TxBuilder) GasAdjustment() float64 { return bldr.gasAdjustment }
 
 // Keybase returns the keybase
-func (bldr TxBuilder) Keybase() keyring.Keybase { return bldr.keybase }
+func (bldr TxBuilder) Keybase() keyring.Keyring { return bldr.keybase }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -149,7 +149,7 @@ func (bldr TxBuilder) WithGasPrices(gasPrices string) TxBuilder {
 }
 
 // WithKeybase returns a copy of the context with updated keybase.
-func (bldr TxBuilder) WithKeybase(keybase keyring.Keybase) TxBuilder {
+func (bldr TxBuilder) WithKeybase(keybase keyring.Keyring) TxBuilder {
 	bldr.keybase = keybase
 	return bldr
 }
@@ -272,17 +272,17 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 }
 
 // MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
-func MakeSignature(keybase keyring.Keybase, name, passphrase string,
+func MakeSignature(keybase keyring.Keyring, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 
 	if keybase == nil {
-		keybase, err = keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
+		keybase, err = keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
 		if err != nil {
 			return
 		}
 	}
 
-	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
+	sigBytes, pubkey, err := keybase.Sign(name, msg.Bytes())
 	if err != nil {
 		return
 	}

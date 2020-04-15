@@ -90,7 +90,8 @@ func NewCmdSubmitUpgradeProposal(
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(m codec.Marshaler,
+func NewCmdSubmitCancelUpgradeProposal(
+	m codec.Marshaler,
 	txg tx.Generator,
 	ar tx.AccountRetriever,
 	newMsgFn func() gov.MsgSubmitProposalI) *cobra.Command {

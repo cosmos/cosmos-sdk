@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/gorilla/mux"
 
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -12,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -53,7 +55,7 @@ func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler 
 	}
 }
 
-func newPostPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
@@ -81,16 +83,23 @@ func newPostPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 		plan := types.Plan{Name: req.UpgradeName, Time: t, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
 		content := types.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
-		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+
+		msg := newMsgFn()
+		err = msg.SetContent(content)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+		msg.SetInitialDeposit(req.Deposit)
+		msg.SetProposer(fromAddr)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
 	}
 }
 
-func newCancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func newCancelPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 
@@ -109,12 +118,19 @@ func newCancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		content := types.NewCancelSoftwareUpgradeProposal(req.Title, req.Description)
-		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+
+		msg := newMsgFn()
+		err = msg.SetContent(content)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+		msg.SetInitialDeposit(req.Deposit)
+		msg.SetProposer(fromAddr)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
 	}
 }
 

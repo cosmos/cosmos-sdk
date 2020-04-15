@@ -1,7 +1,6 @@
 syntax = "proto3";
 package cosmos_sdk.crypto.keys.v1;
 
-// import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys";
@@ -9,34 +8,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys";
 option (gogoproto.goproto_getters_all)     = false;
 option (gogoproto.goproto_stringer_all)    = false;
 option (gogoproto.goproto_enum_prefix_all) = false;
-
-// PubKey defines the application-level PubKey type.
-message PubKey {
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.equal)            = false;
-  // option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PubKey";
-
-  // sum defines a set of all acceptable concrete PubKey implementations.
-  oneof sum {
-    bytes                   ed25519   = 1;
-    bytes                   secp256k1 = 2;
-    bytes                   sr25519   = 3;
-    PubKeyMultisigThreshold multisig  = 4;
-  }
-}
-
-// PrivKey defines the application-level PrivKey type.
-message PrivKey {
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.equal)            = false;
-  // option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PrivKey";
-  // sum defines a set of all acceptable concrete PrivKey implementations.
-  oneof sum {
-    bytes ed25519   = 1;
-    bytes secp256k1 = 2;
-    bytes sr25519   = 3;
-  }
-}
 
 // Curve defines the key curve types that are available for key generation.
 enum Curve {
@@ -66,12 +37,4 @@ message Multisignature {
   option (gogoproto.goproto_stringer) = true;
   CompactBitArray bitarray            = 1 [(gogoproto.customname) = "BitArray"];
   repeated bytes  sigs                = 2;
-}
-
-// PubKeyMultisigThreshold implements a K of N threshold multisig.
-message PubKeyMultisigThreshold {
-  option (gogoproto.goproto_stringer) = true;
-  uint32 threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
-  repeated PubKey pubkeys = 2
-      [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }

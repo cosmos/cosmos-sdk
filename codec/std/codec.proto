@@ -18,6 +18,49 @@ import "x/upgrade/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/codec/std";
 
+// PubKey defines the application-level PubKey type.
+message PubKey {
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)            = false;
+
+  // TODO: uncomment once tendermint has made the key types slices instead of arrays
+  // option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PubKey";
+
+  // sum defines a set of all acceptable concrete PubKey implementations.
+  oneof sum {
+    bytes                   ed25519   = 1;
+    bytes                   secp256k1 = 2;
+    bytes                   sr25519   = 3;
+    PubKeyMultisigThreshold multisig  = 4;
+  }
+}
+
+// PubKeyMultisigThreshold implements a K of N threshold multisig.
+message PubKeyMultisigThreshold {
+  option (gogoproto.goproto_stringer) = true;
+  uint32          threshold           = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
+  repeated PubKey pubkeys             = 2
+      [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
+}
+
+// PrivKey defines the application-level PrivKey type.
+message PrivKey {
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)            = false;
+
+  // TODO: uncomment once tendermint has made the key types slices instead of arrays
+  // option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PrivKey";
+
+  // sum defines a set of all acceptable concrete PrivKey implementations.
+  oneof sum {
+    bytes ed25519   = 1;
+    bytes secp256k1 = 2;
+    bytes sr25519   = 3;
+  }
+}
+
 // Account defines the application-level Account type.
 message Account {
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/auth/exported.Account";

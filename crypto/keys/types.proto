@@ -17,10 +17,13 @@ message PubKey {
 
   // sum defines a set of all acceptable concrete PubKey implementations.
   oneof sum {
-    PubKeyEd25519           ed25519   = 1;
-    PubKeySecp256k1         secp256k1 = 2;
-    PubKeySr25519           sr25519   = 3;
-    PubKeyMultisigThreshold multisig  = 4;
+    bytes ed25519 = 1
+        [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/ed25519.PubKeyEd25519"];
+    bytes secp256k1 = 2 [(gogoproto.casttype) =
+                             "github.com/tendermint/tendermint/crypto/secp256k1.PubKeySecp256k1"];
+    bytes sr25519   = 3
+        [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/sr25519.PubKeySr25519"];
+    PubKeyMultisigThreshold multisig = 4;
   }
 }
 
@@ -31,9 +34,12 @@ message PrivKey {
   option (cosmos_proto.interface_type) = "*github.com/tendermint/tendermint/crypto.PrivKey";
   // sum defines a set of all acceptable concrete PrivKey implementations.
   oneof sum {
-    PrivKeyEd25519   ed25519   = 1;
-    PrivKeySecp256k1 secp256k1 = 2;
-    PrivKeySr25519   sr25519   = 3;
+    bytes ed25519 = 1
+        [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/ed25519.PrivKeyEd25519"];
+    bytes secp256k1 = 2 [(gogoproto.casttype) =
+                             "github.com/tendermint/tendermint/crypto/secp256k1.PrivKeySecp256k1"];
+    bytes sr25519   = 3
+        [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/sr25519.PrivKeySr25519"];
   }
 }
 
@@ -49,28 +55,14 @@ enum Curve {
   SR25519 = 3;
 }
 
-// PubKeyEd25519 implements crypto.PubKey for the Ed25519 signature scheme.
-message PubKeyEd25519 {
-  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
-}
-
-// PrivKeyEd25519 implements crypto.PrivKey for the Ed25519 signature scheme.
-message PrivKeyEd25519 {
-  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
-}
 // CompactBitArray is an implementation of a space efficient bit array.
 // This is used to ensure that the encoded data takes up a minimal amount of
 // space after amino encoding.
 // This is not thread safe, and is not intended for concurrent usage.
 message CompactBitArray {
-  bytes extra_bits = 1 [
-    (gogoproto.customname) = "ExtraBitsStored",
-    (gogoproto.moretags)   = "yaml:\"extra_bits\""
-  ];
-  bytes bits = 2 [
-    (gogoproto.customname) = "Elems",
-    (gogoproto.moretags)   = "yaml:\"bits\""
-  ];
+  bytes extra_bits = 1
+      [(gogoproto.customname) = "ExtraBitsStored", (gogoproto.moretags) = "yaml:\"extra_bits\""];
+  bytes bits = 2 [(gogoproto.customname) = "Elems", (gogoproto.moretags) = "yaml:\"bits\""];
 }
 
 // Multisignature is used to represent the signature object used in the multisigs.
@@ -84,37 +76,7 @@ message Multisignature {
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 message PubKeyMultisigThreshold {
   option (gogoproto.goproto_stringer) = true;
-  uint32 threshold                    = 1 [
-    (gogoproto.customname) = "K",
-    (gogoproto.moretags)   = "yaml:\"threshold\""
-  ];
-  repeated PubKey pubkeys = 2 [
-    (gogoproto.customname) = "PubKeys",
-    (gogoproto.moretags)   = "yaml:\"pubkeys\""
-  ];
-}
-
-// PubKeySecp256k1 implements crypto.PubKey for the Secp256k1 signature scheme.
-//
-// It is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-// if the y-coordinate is the lexicographically largest of the two associated with
-// the x-coordinate. Otherwise the first byte is a 0x03.
-// This prefix is followed with the x-coordinate.
-message PubKeySecp256k1 {
-  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
-}
-
-// PrivKeySecp256k1 implements crypto.PrivKey for the Secp256k1 signature scheme.
-message PrivKeySecp256k1 {
-  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
-}
-
-// PubKeySr25519 implements crypto.PubKey for the Sr25519 signature scheme.
-message PubKeySr25519 {
-  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
-}
-
-// PrivKeySr25519 implements crypto.PrivKey for the Sr25519 signature scheme.
-message PrivKeySr25519 {
-  bytes bytes = 1 [(gogoproto.customname) = "bytes"];
+  uint32 threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
+  repeated PubKey pubkeys = 2
+      [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }

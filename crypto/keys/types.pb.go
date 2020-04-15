@@ -9,6 +9,9 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/regen-network/cosmos-proto"
 	github_com_tendermint_tendermint_crypto "github.com/tendermint/tendermint/crypto"
+	github_com_tendermint_tendermint_crypto_ed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	github_com_tendermint_tendermint_crypto_secp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+	github_com_tendermint_tendermint_crypto_sr25519 "github.com/tendermint/tendermint/crypto/sr25519"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -113,13 +116,13 @@ type isPubKey_Sum interface {
 }
 
 type PubKey_Ed25519 struct {
-	Ed25519 *PubKeyEd25519 `protobuf:"bytes,1,opt,name=ed25519,proto3,oneof" json:"ed25519,omitempty"`
+	Ed25519 github_com_tendermint_tendermint_crypto_ed25519.PubKeyEd25519 `protobuf:"bytes,1,opt,name=ed25519,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/ed25519.PubKeyEd25519" json:"ed25519,omitempty"`
 }
 type PubKey_Secp256K1 struct {
-	Secp256K1 *PubKeySecp256K1 `protobuf:"bytes,2,opt,name=secp256k1,proto3,oneof" json:"secp256k1,omitempty"`
+	Secp256K1 github_com_tendermint_tendermint_crypto_secp256k1.PubKeySecp256k1 `protobuf:"bytes,2,opt,name=secp256k1,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/secp256k1.PubKeySecp256k1" json:"secp256k1,omitempty"`
 }
 type PubKey_Sr25519 struct {
-	Sr25519 *PubKeySr25519 `protobuf:"bytes,3,opt,name=sr25519,proto3,oneof" json:"sr25519,omitempty"`
+	Sr25519 github_com_tendermint_tendermint_crypto_sr25519.PubKeySr25519 `protobuf:"bytes,3,opt,name=sr25519,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/sr25519.PubKeySr25519" json:"sr25519,omitempty"`
 }
 type PubKey_Multisig struct {
 	Multisig *PubKeyMultisigThreshold `protobuf:"bytes,4,opt,name=multisig,proto3,oneof" json:"multisig,omitempty"`
@@ -137,21 +140,21 @@ func (m *PubKey) GetSum() isPubKey_Sum {
 	return nil
 }
 
-func (m *PubKey) GetEd25519() *PubKeyEd25519 {
+func (m *PubKey) GetEd25519() github_com_tendermint_tendermint_crypto_ed25519.PubKeyEd25519 {
 	if x, ok := m.GetSum().(*PubKey_Ed25519); ok {
 		return x.Ed25519
 	}
 	return nil
 }
 
-func (m *PubKey) GetSecp256K1() *PubKeySecp256K1 {
+func (m *PubKey) GetSecp256K1() github_com_tendermint_tendermint_crypto_secp256k1.PubKeySecp256k1 {
 	if x, ok := m.GetSum().(*PubKey_Secp256K1); ok {
 		return x.Secp256K1
 	}
 	return nil
 }
 
-func (m *PubKey) GetSr25519() *PubKeySr25519 {
+func (m *PubKey) GetSr25519() github_com_tendermint_tendermint_crypto_sr25519.PubKeySr25519 {
 	if x, ok := m.GetSum().(*PubKey_Sr25519); ok {
 		return x.Sr25519
 	}
@@ -226,13 +229,13 @@ type isPrivKey_Sum interface {
 }
 
 type PrivKey_Ed25519 struct {
-	Ed25519 *PrivKeyEd25519 `protobuf:"bytes,1,opt,name=ed25519,proto3,oneof" json:"ed25519,omitempty"`
+	Ed25519 github_com_tendermint_tendermint_crypto_ed25519.PrivKeyEd25519 `protobuf:"bytes,1,opt,name=ed25519,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/ed25519.PrivKeyEd25519" json:"ed25519,omitempty"`
 }
 type PrivKey_Secp256K1 struct {
-	Secp256K1 *PrivKeySecp256K1 `protobuf:"bytes,2,opt,name=secp256k1,proto3,oneof" json:"secp256k1,omitempty"`
+	Secp256K1 github_com_tendermint_tendermint_crypto_secp256k1.PrivKeySecp256k1 `protobuf:"bytes,2,opt,name=secp256k1,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/secp256k1.PrivKeySecp256k1" json:"secp256k1,omitempty"`
 }
 type PrivKey_Sr25519 struct {
-	Sr25519 *PrivKeySr25519 `protobuf:"bytes,3,opt,name=sr25519,proto3,oneof" json:"sr25519,omitempty"`
+	Sr25519 github_com_tendermint_tendermint_crypto_sr25519.PrivKeySr25519 `protobuf:"bytes,3,opt,name=sr25519,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/sr25519.PrivKeySr25519" json:"sr25519,omitempty"`
 }
 
 func (*PrivKey_Ed25519) isPrivKey_Sum()   {}
@@ -246,21 +249,21 @@ func (m *PrivKey) GetSum() isPrivKey_Sum {
 	return nil
 }
 
-func (m *PrivKey) GetEd25519() *PrivKeyEd25519 {
+func (m *PrivKey) GetEd25519() github_com_tendermint_tendermint_crypto_ed25519.PrivKeyEd25519 {
 	if x, ok := m.GetSum().(*PrivKey_Ed25519); ok {
 		return x.Ed25519
 	}
 	return nil
 }
 
-func (m *PrivKey) GetSecp256K1() *PrivKeySecp256K1 {
+func (m *PrivKey) GetSecp256K1() github_com_tendermint_tendermint_crypto_secp256k1.PrivKeySecp256k1 {
 	if x, ok := m.GetSum().(*PrivKey_Secp256K1); ok {
 		return x.Secp256K1
 	}
 	return nil
 }
 
-func (m *PrivKey) GetSr25519() *PrivKeySr25519 {
+func (m *PrivKey) GetSr25519() github_com_tendermint_tendermint_crypto_sr25519.PrivKeySr25519 {
 	if x, ok := m.GetSum().(*PrivKey_Sr25519); ok {
 		return x.Sr25519
 	}
@@ -276,80 +279,6 @@ func (*PrivKey) XXX_OneofWrappers() []interface{} {
 	}
 }
 
-// PubKeyEd25519 implements crypto.PubKey for the Ed25519 signature scheme.
-type PubKeyEd25519 struct {
-	bytes []byte `protobuf:"bytes,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
-}
-
-func (m *PubKeyEd25519) Reset()      { *m = PubKeyEd25519{} }
-func (*PubKeyEd25519) ProtoMessage() {}
-func (*PubKeyEd25519) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{2}
-}
-func (m *PubKeyEd25519) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *PubKeyEd25519) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PubKeyEd25519.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *PubKeyEd25519) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PubKeyEd25519.Merge(m, src)
-}
-func (m *PubKeyEd25519) XXX_Size() int {
-	return m.Size()
-}
-func (m *PubKeyEd25519) XXX_DiscardUnknown() {
-	xxx_messageInfo_PubKeyEd25519.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PubKeyEd25519 proto.InternalMessageInfo
-
-// PrivKeyEd25519 implements crypto.PrivKey for the Ed25519 signature scheme.
-type PrivKeyEd25519 struct {
-	bytes []byte `protobuf:"bytes,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
-}
-
-func (m *PrivKeyEd25519) Reset()      { *m = PrivKeyEd25519{} }
-func (*PrivKeyEd25519) ProtoMessage() {}
-func (*PrivKeyEd25519) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{3}
-}
-func (m *PrivKeyEd25519) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *PrivKeyEd25519) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PrivKeyEd25519.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *PrivKeyEd25519) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PrivKeyEd25519.Merge(m, src)
-}
-func (m *PrivKeyEd25519) XXX_Size() int {
-	return m.Size()
-}
-func (m *PrivKeyEd25519) XXX_DiscardUnknown() {
-	xxx_messageInfo_PrivKeyEd25519.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PrivKeyEd25519 proto.InternalMessageInfo
-
 // CompactBitArray is an implementation of a space efficient bit array.
 // This is used to ensure that the encoded data takes up a minimal amount of
 // space after amino encoding.
@@ -362,7 +291,7 @@ type CompactBitArray struct {
 func (m *CompactBitArray) Reset()      { *m = CompactBitArray{} }
 func (*CompactBitArray) ProtoMessage() {}
 func (*CompactBitArray) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{4}
+	return fileDescriptor_f52e55e29197ca1e, []int{2}
 }
 func (m *CompactBitArray) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -402,7 +331,7 @@ func (m *Multisignature) Reset()         { *m = Multisignature{} }
 func (m *Multisignature) String() string { return proto.CompactTextString(m) }
 func (*Multisignature) ProtoMessage()    {}
 func (*Multisignature) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{5}
+	return fileDescriptor_f52e55e29197ca1e, []int{3}
 }
 func (m *Multisignature) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -441,7 +370,7 @@ func (m *PubKeyMultisigThreshold) Reset()         { *m = PubKeyMultisigThreshold
 func (m *PubKeyMultisigThreshold) String() string { return proto.CompactTextString(m) }
 func (*PubKeyMultisigThreshold) ProtoMessage()    {}
 func (*PubKeyMultisigThreshold) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{6}
+	return fileDescriptor_f52e55e29197ca1e, []int{4}
 }
 func (m *PubKeyMultisigThreshold) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -470,224 +399,64 @@ func (m *PubKeyMultisigThreshold) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PubKeyMultisigThreshold proto.InternalMessageInfo
 
-// PubKeySecp256k1 implements crypto.PubKey for the Secp256k1 signature scheme.
-//
-// It is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-// if the y-coordinate is the lexicographically largest of the two associated with
-// the x-coordinate. Otherwise the first byte is a 0x03.
-// This prefix is followed with the x-coordinate.
-type PubKeySecp256K1 struct {
-	bytes []byte `protobuf:"bytes,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
-}
-
-func (m *PubKeySecp256K1) Reset()      { *m = PubKeySecp256K1{} }
-func (*PubKeySecp256K1) ProtoMessage() {}
-func (*PubKeySecp256K1) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{7}
-}
-func (m *PubKeySecp256K1) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *PubKeySecp256K1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PubKeySecp256K1.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *PubKeySecp256K1) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PubKeySecp256K1.Merge(m, src)
-}
-func (m *PubKeySecp256K1) XXX_Size() int {
-	return m.Size()
-}
-func (m *PubKeySecp256K1) XXX_DiscardUnknown() {
-	xxx_messageInfo_PubKeySecp256K1.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PubKeySecp256K1 proto.InternalMessageInfo
-
-// PrivKeySecp256k1 implements crypto.PrivKey for the Secp256k1 signature scheme.
-type PrivKeySecp256K1 struct {
-	bytes []byte `protobuf:"bytes,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
-}
-
-func (m *PrivKeySecp256K1) Reset()      { *m = PrivKeySecp256K1{} }
-func (*PrivKeySecp256K1) ProtoMessage() {}
-func (*PrivKeySecp256K1) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{8}
-}
-func (m *PrivKeySecp256K1) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *PrivKeySecp256K1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PrivKeySecp256K1.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *PrivKeySecp256K1) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PrivKeySecp256K1.Merge(m, src)
-}
-func (m *PrivKeySecp256K1) XXX_Size() int {
-	return m.Size()
-}
-func (m *PrivKeySecp256K1) XXX_DiscardUnknown() {
-	xxx_messageInfo_PrivKeySecp256K1.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PrivKeySecp256K1 proto.InternalMessageInfo
-
-// PubKeySr25519 implements crypto.PubKey for the Sr25519 signature scheme.
-type PubKeySr25519 struct {
-	bytes []byte `protobuf:"bytes,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
-}
-
-func (m *PubKeySr25519) Reset()      { *m = PubKeySr25519{} }
-func (*PubKeySr25519) ProtoMessage() {}
-func (*PubKeySr25519) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{9}
-}
-func (m *PubKeySr25519) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *PubKeySr25519) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PubKeySr25519.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *PubKeySr25519) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PubKeySr25519.Merge(m, src)
-}
-func (m *PubKeySr25519) XXX_Size() int {
-	return m.Size()
-}
-func (m *PubKeySr25519) XXX_DiscardUnknown() {
-	xxx_messageInfo_PubKeySr25519.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PubKeySr25519 proto.InternalMessageInfo
-
-// PrivKeySr25519 implements crypto.PrivKey for the Sr25519 signature scheme.
-type PrivKeySr25519 struct {
-	bytes []byte `protobuf:"bytes,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
-}
-
-func (m *PrivKeySr25519) Reset()      { *m = PrivKeySr25519{} }
-func (*PrivKeySr25519) ProtoMessage() {}
-func (*PrivKeySr25519) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f52e55e29197ca1e, []int{10}
-}
-func (m *PrivKeySr25519) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *PrivKeySr25519) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_PrivKeySr25519.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *PrivKeySr25519) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PrivKeySr25519.Merge(m, src)
-}
-func (m *PrivKeySr25519) XXX_Size() int {
-	return m.Size()
-}
-func (m *PrivKeySr25519) XXX_DiscardUnknown() {
-	xxx_messageInfo_PrivKeySr25519.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PrivKeySr25519 proto.InternalMessageInfo
-
 func init() {
 	proto.RegisterEnum("cosmos_sdk.crypto.keys.v1.Curve", Curve_name, Curve_value)
 	proto.RegisterType((*PubKey)(nil), "cosmos_sdk.crypto.keys.v1.PubKey")
 	proto.RegisterType((*PrivKey)(nil), "cosmos_sdk.crypto.keys.v1.PrivKey")
-	proto.RegisterType((*PubKeyEd25519)(nil), "cosmos_sdk.crypto.keys.v1.PubKeyEd25519")
-	proto.RegisterType((*PrivKeyEd25519)(nil), "cosmos_sdk.crypto.keys.v1.PrivKeyEd25519")
 	proto.RegisterType((*CompactBitArray)(nil), "cosmos_sdk.crypto.keys.v1.CompactBitArray")
 	proto.RegisterType((*Multisignature)(nil), "cosmos_sdk.crypto.keys.v1.Multisignature")
 	proto.RegisterType((*PubKeyMultisigThreshold)(nil), "cosmos_sdk.crypto.keys.v1.PubKeyMultisigThreshold")
-	proto.RegisterType((*PubKeySecp256K1)(nil), "cosmos_sdk.crypto.keys.v1.PubKeySecp256k1")
-	proto.RegisterType((*PrivKeySecp256K1)(nil), "cosmos_sdk.crypto.keys.v1.PrivKeySecp256k1")
-	proto.RegisterType((*PubKeySr25519)(nil), "cosmos_sdk.crypto.keys.v1.PubKeySr25519")
-	proto.RegisterType((*PrivKeySr25519)(nil), "cosmos_sdk.crypto.keys.v1.PrivKeySr25519")
 }
 
 func init() { proto.RegisterFile("crypto/keys/types.proto", fileDescriptor_f52e55e29197ca1e) }
 
 var fileDescriptor_f52e55e29197ca1e = []byte{
-	// 721 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xbf, 0x53, 0xdb, 0x48,
-	0x18, 0x95, 0x6c, 0x83, 0xf1, 0x1a, 0xb0, 0x6f, 0x1b, 0x0c, 0x33, 0x27, 0xdd, 0xa9, 0xb8, 0xf1,
-	0x41, 0xb0, 0xb1, 0x19, 0x93, 0x89, 0x93, 0x06, 0x19, 0x25, 0x10, 0x4f, 0x18, 0x8f, 0x4c, 0x1a,
-	0x1a, 0xc6, 0x3f, 0x76, 0x6c, 0x8d, 0x2d, 0xa4, 0xd9, 0x5d, 0x31, 0x51, 0x97, 0x32, 0x65, 0xca,
-	0x94, 0xb4, 0xe9, 0xf9, 0x23, 0x98, 0x54, 0x94, 0x54, 0x9a, 0x20, 0x9a, 0xd4, 0x14, 0xa9, 0x33,
-	0xd2, 0x4a, 0xb6, 0x31, 0x01, 0x39, 0x95, 0x77, 0xb5, 0xef, 0xbd, 0x7d, 0xfb, 0xf6, 0xfb, 0xbc,
-	0x60, 0xa5, 0x83, 0x6d, 0x93, 0x1a, 0xc5, 0x01, 0xb2, 0x49, 0x91, 0xda, 0x26, 0x22, 0x05, 0x13,
-	0x1b, 0xd4, 0x80, 0xab, 0x1d, 0x83, 0xe8, 0x06, 0x39, 0x21, 0xdd, 0x41, 0x81, 0x61, 0x0a, 0x1e,
-	0xa6, 0x70, 0x56, 0x5a, 0xdb, 0xa0, 0x7d, 0x0d, 0x77, 0x4f, 0xcc, 0x16, 0xa6, 0x76, 0xd1, 0x47,
-	0x17, 0x19, 0x78, 0x73, 0x72, 0xc2, 0x74, 0xd6, 0xfe, 0x7b, 0x08, 0xee, 0x19, 0x3d, 0x63, 0x3c,
-	0x62, 0x38, 0xe9, 0x67, 0x0c, 0xcc, 0x37, 0xac, 0x76, 0x1d, 0xd9, 0x70, 0x0f, 0x24, 0x51, 0xb7,
-	0x5c, 0xa9, 0x94, 0x5e, 0xe4, 0xf8, 0x7f, 0xf8, 0x7c, 0xba, 0x9c, 0x2f, 0x3c, 0x6a, 0xa6, 0xc0,
-	0x38, 0x0a, 0xc3, 0xef, 0x73, 0x6a, 0x48, 0x85, 0x6f, 0x41, 0x8a, 0xa0, 0x8e, 0x59, 0xae, 0xec,
-	0x0c, 0x4a, 0xb9, 0x98, 0xaf, 0xb3, 0x1e, 0xa9, 0xd3, 0x0c, 0x19, 0xfb, 0x9c, 0x3a, 0xa6, 0x7b,
-	0x8e, 0x08, 0x66, 0x8e, 0xe2, 0x33, 0x3a, 0x6a, 0xe2, 0x91, 0xa3, 0x80, 0x0a, 0x1b, 0x60, 0x41,
-	0xb7, 0x86, 0x54, 0x23, 0x5a, 0x2f, 0x97, 0xf0, 0x65, 0xca, 0x91, 0x32, 0xef, 0x02, 0xc2, 0x51,
-	0x1f, 0x23, 0xd2, 0x37, 0x86, 0xdd, 0x7d, 0x4e, 0x1d, 0xa9, 0x54, 0x5f, 0x7e, 0x39, 0x17, 0xf9,
-	0x1f, 0xe7, 0x22, 0xf7, 0xed, 0x62, 0xb3, 0xb8, 0xde, 0xd3, 0x68, 0xdf, 0x6a, 0x17, 0x3a, 0x86,
-	0x5e, 0xa4, 0xe8, 0xb4, 0x8b, 0xb0, 0xae, 0x9d, 0xd2, 0xc9, 0x61, 0xb0, 0x03, 0x53, 0x96, 0xe7,
-	0x40, 0x9c, 0x58, 0xba, 0xf4, 0x35, 0x06, 0x92, 0x0d, 0xac, 0x9d, 0x79, 0xc9, 0x2b, 0xd3, 0xc9,
-	0xff, 0xff, 0x94, 0x41, 0x46, 0xfa, 0x4d, 0xf4, 0xf5, 0x87, 0xd1, 0x6f, 0x44, 0x0b, 0x3d, 0x92,
-	0xbd, 0x32, 0x9d, 0xfd, 0x0c, 0x9e, 0x1e, 0x86, 0x5f, 0x7d, 0x35, 0x11, 0xd5, 0xd6, 0xec, 0x51,
-	0x31, 0xbd, 0x30, 0xab, 0x2d, 0xb0, 0x74, 0xaf, 0xde, 0xa0, 0x08, 0xe6, 0xda, 0x36, 0x45, 0xc4,
-	0x8f, 0x6b, 0x51, 0x4e, 0xb9, 0x8e, 0xc8, 0x3e, 0xa8, 0xec, 0x47, 0x2a, 0x81, 0xe5, 0xfb, 0x39,
-	0x45, 0x53, 0x3e, 0xf1, 0x20, 0x53, 0x33, 0x74, 0xb3, 0xd5, 0xa1, 0xb2, 0x46, 0x77, 0x31, 0x6e,
-	0xd9, 0xf0, 0x0d, 0x00, 0xe8, 0x03, 0xc5, 0xad, 0x93, 0xb6, 0x46, 0x43, 0x66, 0xde, 0x75, 0xc4,
-	0x8c, 0xe2, 0x7d, 0x95, 0x35, 0x4a, 0x9a, 0xd4, 0xc0, 0xa8, 0x7b, 0xe7, 0x88, 0x7f, 0xd9, 0x2d,
-	0x7d, 0x58, 0x95, 0xc6, 0x70, 0x49, 0x4d, 0xa1, 0x10, 0x05, 0x9f, 0x81, 0x84, 0x2f, 0x11, 0xf3,
-	0x25, 0x72, 0xde, 0xe6, 0xca, 0x10, 0xe9, 0xe4, 0xce, 0x11, 0xd3, 0x8c, 0xc8, 0x28, 0x3e, 0x4a,
-	0xfa, 0xc8, 0x83, 0xe5, 0xb0, 0x02, 0x4f, 0x5b, 0xd4, 0xc2, 0x08, 0x1e, 0x81, 0x85, 0xb6, 0x46,
-	0x5b, 0x9e, 0xab, 0xa0, 0x46, 0x9e, 0xea, 0xaa, 0xa9, 0x73, 0xc8, 0x8b, 0xae, 0x23, 0x2e, 0x84,
-	0x33, 0x75, 0xa4, 0x04, 0x21, 0x48, 0x10, 0xad, 0xe7, 0xd9, 0x8a, 0xe7, 0x17, 0x55, 0x7f, 0x5c,
-	0x4d, 0x78, 0x37, 0x26, 0x5d, 0xf0, 0x60, 0xe5, 0x91, 0x56, 0x80, 0xcf, 0x41, 0x8a, 0x86, 0x13,
-	0xdf, 0xcc, 0x92, 0xbc, 0xea, 0x3a, 0x22, 0x5f, 0xbf, 0x73, 0xc4, 0x2c, 0x3b, 0xcd, 0x68, 0x5d,
-	0x52, 0xc7, 0x58, 0x78, 0x0c, 0x92, 0xa6, 0xd5, 0xf6, 0x4c, 0xfa, 0x3b, 0xa6, 0xcb, 0xff, 0x46,
-	0x36, 0xa2, 0xfc, 0xb7, 0xeb, 0x88, 0x49, 0x36, 0xf6, 0xd2, 0x5a, 0x66, 0xfa, 0x81, 0x8c, 0xa4,
-	0x86, 0x82, 0x81, 0xed, 0x32, 0xc8, 0x4c, 0xfd, 0xa3, 0x44, 0x5f, 0xfc, 0x36, 0xc8, 0x4e, 0xb7,
-	0x42, 0x34, 0x69, 0x54, 0x92, 0x41, 0xcd, 0xff, 0x49, 0x49, 0xce, 0x4a, 0x59, 0xdf, 0x05, 0x73,
-	0x35, 0x0b, 0x9f, 0x21, 0x98, 0x01, 0xe9, 0xf7, 0x87, 0xcd, 0x86, 0x52, 0x3b, 0x78, 0x7d, 0xa0,
-	0xec, 0x65, 0x39, 0x98, 0x06, 0x49, 0x65, 0xcf, 0x57, 0xc9, 0xf2, 0x70, 0x09, 0xa4, 0x9a, 0x4a,
-	0xad, 0x51, 0xae, 0xec, 0xd4, 0x4b, 0xd9, 0x98, 0xb7, 0xd6, 0x54, 0xd9, 0x5a, 0x5c, 0x3e, 0xbc,
-	0xbc, 0x11, 0xb8, 0xab, 0x1b, 0x81, 0xbb, 0xbe, 0x11, 0xb8, 0x4b, 0x57, 0xe0, 0xaf, 0x5c, 0x81,
-	0xff, 0xee, 0x0a, 0xfc, 0xe7, 0x5b, 0x81, 0xbb, 0xba, 0x15, 0xb8, 0xeb, 0x5b, 0x81, 0x3b, 0xce,
-	0x4f, 0x34, 0x26, 0xbb, 0x91, 0xf0, 0x69, 0x21, 0xdd, 0x41, 0x71, 0xe2, 0xad, 0x6a, 0xcf, 0xfb,
-	0xcf, 0xc6, 0xf6, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa8, 0x71, 0xc9, 0x6e, 0xc1, 0x06, 0x00,
-	0x00,
+	// 709 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0x4d, 0x4f, 0xdb, 0x4a,
+	0x14, 0xb5, 0x49, 0x20, 0x64, 0xc2, 0x47, 0xde, 0x6c, 0x08, 0x48, 0xcf, 0xc3, 0xf3, 0xe2, 0x29,
+	0xa2, 0x25, 0x69, 0x52, 0x85, 0xaa, 0xe9, 0x87, 0x14, 0x07, 0x53, 0x10, 0x2a, 0x8a, 0x1c, 0xba,
+	0x41, 0x2a, 0x28, 0x1f, 0xd3, 0xc4, 0x4a, 0x8c, 0xad, 0x99, 0x31, 0xaa, 0x77, 0x5d, 0x76, 0xd9,
+	0x65, 0x97, 0xfc, 0x08, 0xfe, 0x41, 0x37, 0xa8, 0x2b, 0x96, 0xac, 0xac, 0x62, 0x36, 0x5d, 0xb3,
+	0xe8, 0x22, 0xab, 0xca, 0x1e, 0x3b, 0x89, 0xa0, 0xb4, 0xd0, 0xdd, 0xdc, 0xcc, 0xb9, 0xe7, 0xde,
+	0x73, 0xcf, 0xcd, 0x18, 0x2c, 0xb4, 0x88, 0x63, 0x31, 0x33, 0xdf, 0xc3, 0x0e, 0xcd, 0x33, 0xc7,
+	0xc2, 0x34, 0x67, 0x11, 0x93, 0x99, 0x70, 0xb1, 0x65, 0x52, 0xc3, 0xa4, 0x07, 0xb4, 0xdd, 0xcb,
+	0x71, 0x4c, 0xce, 0xc7, 0xe4, 0x8e, 0x0a, 0x4b, 0x0f, 0x58, 0x57, 0x27, 0xed, 0x03, 0xab, 0x41,
+	0x98, 0x93, 0x0f, 0xd0, 0x79, 0x0e, 0x5e, 0x1d, 0x0f, 0x38, 0xcf, 0xd2, 0xff, 0x37, 0xc1, 0x1d,
+	0xb3, 0x63, 0x8e, 0x4e, 0x1c, 0x27, 0x7f, 0x89, 0x81, 0xa9, 0x9a, 0xdd, 0xdc, 0xc6, 0x0e, 0x7c,
+	0x0b, 0x12, 0xb8, 0x5d, 0x2c, 0x95, 0x0a, 0x4f, 0x33, 0xe2, 0xb2, 0x98, 0x9d, 0x51, 0x2a, 0x03,
+	0x17, 0xbd, 0xe8, 0xe8, 0xac, 0x6b, 0x37, 0x73, 0x2d, 0xd3, 0xc8, 0x33, 0x7c, 0xd8, 0xc6, 0xc4,
+	0xd0, 0x0f, 0xd9, 0xf8, 0x31, 0x54, 0x12, 0xa6, 0xe6, 0x38, 0x99, 0xca, 0xa3, 0x4d, 0x41, 0x8b,
+	0x38, 0x21, 0x06, 0x49, 0x8a, 0x5b, 0x56, 0xb1, 0xb4, 0xd6, 0x2b, 0x64, 0x26, 0x82, 0x02, 0xea,
+	0xc0, 0x45, 0x95, 0xbb, 0x16, 0x18, 0x26, 0x87, 0x25, 0xea, 0x51, 0xbc, 0x29, 0x68, 0x23, 0x66,
+	0x5f, 0x05, 0x25, 0x5c, 0x45, 0xec, 0xfe, 0x2a, 0xc2, 0xd4, 0xa8, 0x04, 0x19, 0xaa, 0x08, 0x2f,
+	0x60, 0x0d, 0x4c, 0x1b, 0x76, 0x9f, 0xe9, 0x54, 0xef, 0x64, 0xe2, 0xcb, 0x62, 0x36, 0x55, 0x2c,
+	0xe6, 0x6e, 0xb5, 0x2c, 0xa4, 0x79, 0x1d, 0x26, 0xec, 0x76, 0x09, 0xa6, 0x5d, 0xb3, 0xdf, 0xde,
+	0x14, 0xb4, 0x21, 0x4b, 0xf9, 0xd9, 0xe7, 0x63, 0x24, 0x7e, 0x3f, 0x46, 0xc2, 0xd7, 0x93, 0xd5,
+	0xfc, 0xca, 0x1d, 0x1b, 0x0d, 0x99, 0x95, 0x49, 0x10, 0xa3, 0xb6, 0x21, 0xff, 0x98, 0x00, 0x89,
+	0x1a, 0xd1, 0x8f, 0x7c, 0x1b, 0xf7, 0xaf, 0xdb, 0xa8, 0x0c, 0x5c, 0xf4, 0xf2, 0xde, 0x36, 0x72,
+	0xb6, 0x5f, 0xf8, 0xf8, 0xee, 0xa6, 0x8f, 0x1b, 0x03, 0x17, 0x29, 0x7f, 0xe1, 0x23, 0xaf, 0x71,
+	0x8b, 0x91, 0xfb, 0xd7, 0x8d, 0xbc, 0x97, 0x8e, 0xa1, 0x91, 0x61, 0x8d, 0x1b, 0x4e, 0x96, 0x9f,
+	0x8f, 0xcd, 0xfd, 0xd1, 0xdd, 0xe7, 0xce, 0xf9, 0xa2, 0xc1, 0x7f, 0x14, 0xc1, 0x7c, 0xd5, 0x34,
+	0xac, 0x46, 0x8b, 0x29, 0x3a, 0xab, 0x10, 0xd2, 0x70, 0xe0, 0x2b, 0x00, 0xf0, 0x7b, 0x46, 0x1a,
+	0x07, 0x4d, 0x9d, 0xd1, 0xd0, 0x83, 0xac, 0xe7, 0xa2, 0x79, 0xd5, 0xff, 0x55, 0xd1, 0x19, 0xad,
+	0x33, 0x93, 0xe0, 0xf6, 0x95, 0x8b, 0xfe, 0x71, 0x1a, 0x46, 0xbf, 0x2c, 0x8f, 0xe0, 0xb2, 0x96,
+	0xc4, 0x11, 0x0a, 0x3e, 0x04, 0xf1, 0x80, 0x82, 0x0f, 0x39, 0xe3, 0xb9, 0x68, 0x52, 0xed, 0x63,
+	0x83, 0x5e, 0xb9, 0x28, 0xc5, 0x13, 0x79, 0x4a, 0x80, 0x92, 0x3f, 0x88, 0x60, 0x2e, 0xda, 0xb4,
+	0xc3, 0x06, 0xb3, 0x09, 0x86, 0xbb, 0x60, 0xba, 0xa9, 0xb3, 0x86, 0xdf, 0x55, 0xd0, 0x47, 0xaa,
+	0xb8, 0xf2, 0x9b, 0x65, 0xbd, 0xa6, 0x43, 0x99, 0xf1, 0x5c, 0x34, 0x1d, 0x45, 0xda, 0x90, 0x09,
+	0x42, 0x10, 0xa7, 0x7a, 0xc7, 0x6f, 0x2b, 0x96, 0x9d, 0xd1, 0x82, 0x73, 0x39, 0xee, 0x0f, 0x53,
+	0x3e, 0x11, 0xc1, 0xc2, 0x2d, 0x2b, 0x0f, 0x9f, 0x80, 0x24, 0x8b, 0x82, 0xa0, 0x99, 0x59, 0x65,
+	0xd1, 0x73, 0x91, 0xb8, 0x7d, 0xe5, 0xa2, 0x34, 0x57, 0x33, 0xbc, 0x97, 0xb5, 0x11, 0x16, 0xee,
+	0x81, 0x84, 0x65, 0x37, 0xfd, 0x26, 0x83, 0x8a, 0xa9, 0xe2, 0x7f, 0x7f, 0xfc, 0xc3, 0x29, 0xff,
+	0x7a, 0x2e, 0x4a, 0xf0, 0xb3, 0x3f, 0xad, 0x39, 0xce, 0x1f, 0xd2, 0xc8, 0x5a, 0x44, 0xc8, 0xdb,
+	0x5e, 0xa9, 0x80, 0xc9, 0xaa, 0x4d, 0x8e, 0x30, 0x9c, 0x07, 0xa9, 0x37, 0x3b, 0xf5, 0x9a, 0x5a,
+	0xdd, 0xda, 0xd8, 0x52, 0xd7, 0xd3, 0x02, 0x4c, 0x81, 0x84, 0xba, 0x1e, 0xac, 0x4b, 0x5a, 0x84,
+	0xb3, 0x20, 0x59, 0x57, 0xab, 0xb5, 0x62, 0x69, 0x6d, 0xbb, 0x90, 0x9e, 0xf0, 0xef, 0xea, 0x1a,
+	0xbf, 0x8b, 0x29, 0x3b, 0xa7, 0x17, 0x92, 0x70, 0x76, 0x21, 0x09, 0xe7, 0x17, 0x92, 0x70, 0xea,
+	0x49, 0xe2, 0x99, 0x27, 0x89, 0xdf, 0x3c, 0x49, 0xfc, 0x74, 0x29, 0x09, 0x67, 0x97, 0x92, 0x70,
+	0x7e, 0x29, 0x09, 0x7b, 0xd9, 0xb1, 0x2d, 0xe3, 0x1a, 0xa2, 0x17, 0x9c, 0xb6, 0x7b, 0xf9, 0xb1,
+	0x4f, 0x42, 0x73, 0x2a, 0x78, 0x9d, 0x1f, 0xff, 0x0c, 0x00, 0x00, 0xff, 0xff, 0x8c, 0xd1, 0x6a,
+	0x54, 0x28, 0x06, 0x00, 0x00,
 }
 
 func (this *PubKey) GetPubKey() github_com_tendermint_tendermint_crypto.PubKey {
@@ -712,13 +481,13 @@ func (this *PubKey) SetPubKey(value github_com_tendermint_tendermint_crypto.PubK
 		return nil
 	}
 	switch vt := value.(type) {
-	case *PubKeyEd25519:
+	case github_com_tendermint_tendermint_crypto_ed25519.PubKeyEd25519:
 		this.Sum = &PubKey_Ed25519{vt}
 		return nil
-	case *PubKeySecp256K1:
+	case github_com_tendermint_tendermint_crypto_secp256k1.PubKeySecp256k1:
 		this.Sum = &PubKey_Secp256K1{vt}
 		return nil
-	case *PubKeySr25519:
+	case github_com_tendermint_tendermint_crypto_sr25519.PubKeySr25519:
 		this.Sum = &PubKey_Sr25519{vt}
 		return nil
 	case *PubKeyMultisigThreshold:
@@ -747,13 +516,13 @@ func (this *PrivKey) SetPrivKey(value github_com_tendermint_tendermint_crypto.Pr
 		return nil
 	}
 	switch vt := value.(type) {
-	case *PrivKeyEd25519:
+	case github_com_tendermint_tendermint_crypto_ed25519.PrivKeyEd25519:
 		this.Sum = &PrivKey_Ed25519{vt}
 		return nil
-	case *PrivKeySecp256K1:
+	case github_com_tendermint_tendermint_crypto_secp256k1.PrivKeySecp256k1:
 		this.Sum = &PrivKey_Secp256K1{vt}
 		return nil
-	case *PrivKeySr25519:
+	case github_com_tendermint_tendermint_crypto_sr25519.PrivKeySr25519:
 		this.Sum = &PrivKey_Sr25519{vt}
 		return nil
 	}
@@ -800,14 +569,9 @@ func (m *PubKey_Ed25519) MarshalTo(dAtA []byte) (int, error) {
 func (m *PubKey_Ed25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Ed25519 != nil {
-		{
-			size, err := m.Ed25519.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
+		i -= len(m.Ed25519)
+		copy(dAtA[i:], m.Ed25519)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Ed25519)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -821,14 +585,9 @@ func (m *PubKey_Secp256K1) MarshalTo(dAtA []byte) (int, error) {
 func (m *PubKey_Secp256K1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Secp256K1 != nil {
-		{
-			size, err := m.Secp256K1.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
+		i -= len(m.Secp256K1)
+		copy(dAtA[i:], m.Secp256K1)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Secp256K1)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -842,14 +601,9 @@ func (m *PubKey_Sr25519) MarshalTo(dAtA []byte) (int, error) {
 func (m *PubKey_Sr25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Sr25519 != nil {
-		{
-			size, err := m.Sr25519.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
+		i -= len(m.Sr25519)
+		copy(dAtA[i:], m.Sr25519)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Sr25519)))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -916,14 +670,9 @@ func (m *PrivKey_Ed25519) MarshalTo(dAtA []byte) (int, error) {
 func (m *PrivKey_Ed25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Ed25519 != nil {
-		{
-			size, err := m.Ed25519.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
+		i -= len(m.Ed25519)
+		copy(dAtA[i:], m.Ed25519)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Ed25519)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -937,14 +686,9 @@ func (m *PrivKey_Secp256K1) MarshalTo(dAtA []byte) (int, error) {
 func (m *PrivKey_Secp256K1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Secp256K1 != nil {
-		{
-			size, err := m.Secp256K1.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
+		i -= len(m.Secp256K1)
+		copy(dAtA[i:], m.Secp256K1)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Secp256K1)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -958,79 +702,14 @@ func (m *PrivKey_Sr25519) MarshalTo(dAtA []byte) (int, error) {
 func (m *PrivKey_Sr25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Sr25519 != nil {
-		{
-			size, err := m.Sr25519.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
+		i -= len(m.Sr25519)
+		copy(dAtA[i:], m.Sr25519)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Sr25519)))
 		i--
 		dAtA[i] = 0x1a
 	}
 	return len(dAtA) - i, nil
 }
-func (m *PubKeyEd25519) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PubKeyEd25519) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PubKeyEd25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.bytes) > 0 {
-		i -= len(m.bytes)
-		copy(dAtA[i:], m.bytes)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.bytes)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *PrivKeyEd25519) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PrivKeyEd25519) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PrivKeyEd25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.bytes) > 0 {
-		i -= len(m.bytes)
-		copy(dAtA[i:], m.bytes)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.bytes)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *CompactBitArray) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1154,126 +833,6 @@ func (m *PubKeyMultisigThreshold) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *PubKeySecp256K1) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PubKeySecp256K1) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PubKeySecp256K1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.bytes) > 0 {
-		i -= len(m.bytes)
-		copy(dAtA[i:], m.bytes)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.bytes)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *PrivKeySecp256K1) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PrivKeySecp256K1) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PrivKeySecp256K1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.bytes) > 0 {
-		i -= len(m.bytes)
-		copy(dAtA[i:], m.bytes)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.bytes)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *PubKeySr25519) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PubKeySr25519) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PubKeySr25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.bytes) > 0 {
-		i -= len(m.bytes)
-		copy(dAtA[i:], m.bytes)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.bytes)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *PrivKeySr25519) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PrivKeySr25519) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PrivKeySr25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.bytes) > 0 {
-		i -= len(m.bytes)
-		copy(dAtA[i:], m.bytes)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.bytes)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -1304,7 +863,7 @@ func (m *PubKey_Ed25519) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ed25519 != nil {
-		l = m.Ed25519.Size()
+		l = len(m.Ed25519)
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
@@ -1316,7 +875,7 @@ func (m *PubKey_Secp256K1) Size() (n int) {
 	var l int
 	_ = l
 	if m.Secp256K1 != nil {
-		l = m.Secp256K1.Size()
+		l = len(m.Secp256K1)
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
@@ -1328,7 +887,7 @@ func (m *PubKey_Sr25519) Size() (n int) {
 	var l int
 	_ = l
 	if m.Sr25519 != nil {
-		l = m.Sr25519.Size()
+		l = len(m.Sr25519)
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
@@ -1364,7 +923,7 @@ func (m *PrivKey_Ed25519) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ed25519 != nil {
-		l = m.Ed25519.Size()
+		l = len(m.Ed25519)
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
@@ -1376,7 +935,7 @@ func (m *PrivKey_Secp256K1) Size() (n int) {
 	var l int
 	_ = l
 	if m.Secp256K1 != nil {
-		l = m.Secp256K1.Size()
+		l = len(m.Secp256K1)
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
@@ -1388,37 +947,11 @@ func (m *PrivKey_Sr25519) Size() (n int) {
 	var l int
 	_ = l
 	if m.Sr25519 != nil {
-		l = m.Sr25519.Size()
+		l = len(m.Sr25519)
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
 }
-func (m *PubKeyEd25519) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.bytes)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *PrivKeyEd25519) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.bytes)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
 func (m *CompactBitArray) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1473,58 +1006,6 @@ func (m *PubKeyMultisigThreshold) Size() (n int) {
 	return n
 }
 
-func (m *PubKeySecp256K1) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.bytes)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *PrivKeySecp256K1) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.bytes)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *PubKeySr25519) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.bytes)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *PrivKeySr25519) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.bytes)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
 func sovTypes(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -1564,7 +1045,7 @@ func (m *PubKey) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Ed25519", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1574,32 +1055,30 @@ func (m *PubKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &PubKeyEd25519{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PubKey_Ed25519{v}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Secp256K1", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1609,32 +1088,30 @@ func (m *PubKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &PubKeySecp256K1{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PubKey_Secp256K1{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sr25519", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1644,25 +1121,23 @@ func (m *PubKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &PubKeySr25519{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PubKey_Sr25519{v}
 			iNdEx = postIndex
 		case 4:
@@ -1757,7 +1232,7 @@ func (m *PrivKey) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Ed25519", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1767,32 +1242,30 @@ func (m *PrivKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &PrivKeyEd25519{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PrivKey_Ed25519{v}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Secp256K1", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1802,32 +1275,30 @@ func (m *PrivKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &PrivKeySecp256K1{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PrivKey_Secp256K1{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sr25519", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1837,200 +1308,24 @@ func (m *PrivKey) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &PrivKeySr25519{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			v := make([]byte, postIndex-iNdEx)
+			copy(v, dAtA[iNdEx:postIndex])
 			m.Sum = &PrivKey_Sr25519{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PubKeyEd25519) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PubKeyEd25519: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PubKeyEd25519: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field bytes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.bytes = append(m.bytes[:0], dAtA[iNdEx:postIndex]...)
-			if m.bytes == nil {
-				m.bytes = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PrivKeyEd25519) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PrivKeyEd25519: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PrivKeyEd25519: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field bytes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.bytes = append(m.bytes[:0], dAtA[iNdEx:postIndex]...)
-			if m.bytes == nil {
-				m.bytes = []byte{}
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2378,354 +1673,6 @@ func (m *PubKeyMultisigThreshold) Unmarshal(dAtA []byte) error {
 			m.PubKeys = append(m.PubKeys, &PubKey{})
 			if err := m.PubKeys[len(m.PubKeys)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PubKeySecp256K1) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PubKeySecp256k1: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PubKeySecp256k1: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field bytes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.bytes = append(m.bytes[:0], dAtA[iNdEx:postIndex]...)
-			if m.bytes == nil {
-				m.bytes = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PrivKeySecp256K1) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PrivKeySecp256k1: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PrivKeySecp256k1: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field bytes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.bytes = append(m.bytes[:0], dAtA[iNdEx:postIndex]...)
-			if m.bytes == nil {
-				m.bytes = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PubKeySr25519) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PubKeySr25519: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PubKeySr25519: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field bytes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.bytes = append(m.bytes[:0], dAtA[iNdEx:postIndex]...)
-			if m.bytes == nil {
-				m.bytes = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PrivKeySr25519) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PrivKeySr25519: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PrivKeySr25519: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field bytes", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.bytes = append(m.bytes[:0], dAtA[iNdEx:postIndex]...)
-			if m.bytes == nil {
-				m.bytes = []byte{}
 			}
 			iNdEx = postIndex
 		default:

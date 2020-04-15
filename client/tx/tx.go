@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -22,8 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
-
-var ErrorInvalidGasAdjustment = errors2.Register("auth", 3, "invalid gas adjustment")
 
 type (
 	// Generator defines an interface a client can utilize to generate an
@@ -194,7 +192,7 @@ func WriteGeneratedTxResponse(
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, ErrorInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, sdkerrors.ErrorInvalidGasAdjustment.Error())
 			return
 		}
 

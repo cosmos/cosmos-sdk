@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -178,7 +179,7 @@ func NewSimApp(
 	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
 
 	// set the BaseApp's parameter store
-	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(consensusParamsKeyTable()))
+	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(std.ConsensusParamsKeyTable()))
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey])
@@ -426,20 +427,6 @@ func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
 // SimulationManager implements the SimulationApp interface
 func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
-}
-
-func consensusParamsKeyTable() params.KeyTable {
-	return params.NewKeyTable(
-		params.NewParamSetPair(
-			baseapp.ParamStoreKeyBlockParams, abci.BlockParams{}, baseapp.ValidateBlockParams,
-		),
-		params.NewParamSetPair(
-			baseapp.ParamStoreKeyEvidenceParams, abci.EvidenceParams{}, baseapp.ValidateEvidenceParams,
-		),
-		params.NewParamSetPair(
-			baseapp.ParamStoreKeyValidatorParams, abci.ValidatorParams{}, baseapp.ValidateValidatorParams,
-		),
-	)
 }
 
 // GetMaccPerms returns a copy of the module account permissions

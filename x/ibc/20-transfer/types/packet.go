@@ -63,7 +63,8 @@ func (ftpd FungibleTokenPacketData) GetBytes() []byte {
 // error msg is empty string on success
 // See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 type FungibleTokenPacketAcknowledgement struct {
-	Error error `json:"error" yaml:"error"`
+	Success bool   `json:"success" yaml:"success"`
+	Error   string `json:"error" yaml:"error"`
 }
 
 // GetBytes is a helper for serialising

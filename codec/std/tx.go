@@ -224,6 +224,7 @@ func NewStdSignDocBase(num, seq uint64, cid, memo string, fee StdFee) StdSignDoc
 		Fee:           fee,
 	}
 }
+
 func (m StdFee) GetGas() uint64 {
 	return m.Gas
 }

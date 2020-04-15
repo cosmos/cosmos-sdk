@@ -18,9 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func newRegisterTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/upgrade/plan", postPlanHandler(cliCtx)).Methods("POST")
-	r.HandleFunc("/upgrade/cancel", cancelPlanHandler(cliCtx)).Methods("POST")
+func newRegisterTxRoutes(
+	cliCtx context.CLIContext,
+	txg tx.Generator,
+	newMsgFn func() gov.MsgSubmitProposalI,
+	r *mux.Router) {
+	r.HandleFunc("/upgrade/plan", newPostPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
+	r.HandleFunc("/upgrade/cancel", newCancelPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
 }
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {

@@ -1,4 +1,4 @@
-name: Test & Coverage
+name: Code Coverage
 on:
   pull_request:
   push:
@@ -13,7 +13,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
-  test-coverage_upload:
+  test-coverage-upload:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v2-beta

@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -67,7 +68,7 @@ var xxx_messageInfo_ModuleAccount proto.InternalMessageInfo
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
 type Supply struct {
-	Total []types1.Coin `protobuf:"bytes,1,rep,name=total,proto3" json:"total"`
+	Total github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total"`
 }
 
 func (m *Supply) Reset()      { *m = Supply{} }

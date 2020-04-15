@@ -71,8 +71,8 @@ var xxx_messageInfo_BaseAccount proto.InternalMessageInfo
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
-	Amount []types.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount"`
-	Gas    uint64       `protobuf:"varint,2,opt,name=gas,proto3" json:"gas,omitempty"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Gas    uint64                                   `protobuf:"varint,2,opt,name=gas,proto3" json:"gas,omitempty"`
 }
 
 func (m *StdFee) Reset()         { *m = StdFee{} }

@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	cdc := codec.NewHybridCodec(app.Codec())
 
 	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey))
+	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey))
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.keeper = keeper

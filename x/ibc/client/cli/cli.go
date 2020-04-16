@@ -5,16 +5,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/client/cli"
+	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewTxCmd returns a root CLI command handler for all x/ibc transaction commands.
+func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	ibcTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "IBC transaction subcommands",
@@ -24,9 +25,9 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ibcTxCmd.AddCommand(flags.PostCommands(
-		tmclient.GetTxCmd(cdc, storeKey),
-		connection.GetTxCmd(cdc, storeKey),
-		channel.GetTxCmd(cdc, storeKey),
+		tmclient.GetTxCmd(m, txg, ar),
+		connection.GetTxCmd(m, txg, ar),
+		channel.GetTxCmd(m, txg, ar),
 	)...)
 	return ibcTxCmd
 }

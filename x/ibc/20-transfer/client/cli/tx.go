@@ -8,10 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
@@ -26,16 +25,18 @@ var (
 	FlagTimeout  = "timeout"
 )
 
-// GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
-func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
+// NewTransferTxCmd returns the command to create a NewMsgTransfer transaction
+func NewTransferTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "transfer [src-port] [src-channel] [dest-height] [receiver] [amount]",
 		Short: "Transfer fungible token through IBC",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m).WithBroadcastMode(flags.BroadcastBlock)
 
 			sender := cliCtx.GetFromAddress()
 			srcPort := args[0]
@@ -60,7 +61,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	return cmd

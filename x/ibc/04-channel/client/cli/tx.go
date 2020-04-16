@@ -9,10 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -24,16 +22,18 @@ const (
 	FlagIBCVersion = "ibc-version"
 )
 
-// GetMsgChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
-func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewChannelOpenInitTxCmd returns the command to create a MsgChannelOpenInit transaction
+func NewChannelOpenInitTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-init [port-id] [channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops]",
 		Short: "Creates and sends a ChannelOpenInit message",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			portID := args[0]
 			channelID := args[1]
@@ -51,7 +51,7 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 
@@ -61,16 +61,18 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 	return cmd
 }
 
-// GetMsgChannelOpenTryCmd returns the command to create a MsgChannelOpenTry transaction
-func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewChannelOpenTryTxCmd returns the command to create a MsgChannelOpenTry transaction
+func NewChannelOpenTryTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-try [port-id] [channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenTry message",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			portID := args[0]
 			channelID := args[1]
@@ -99,7 +101,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
@@ -108,16 +110,18 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetMsgChannelOpenAckCmd returns the command to create a MsgChannelOpenAck transaction
-func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewChannelOpenAckTxCmd returns the command to create a MsgChannelOpenAck transaction
+func NewChannelOpenAckTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-ack [port-id] [channel-id] [/path/to/proof_try.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenAck message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			portID := args[0]
 			channelID := args[1]
@@ -140,23 +144,25 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
 	return cmd
 }
 
-// GetMsgChannelOpenConfirmCmd returns the command to create a MsgChannelOpenConfirm transaction
-func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewChannelOpenConfirmTxCmd returns the command to create a MsgChannelOpenConfirm transaction
+func NewChannelOpenConfirmTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	return &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof_ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			portID := args[0]
 			channelID := args[1]
@@ -178,21 +184,23 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 }
 
-// GetMsgChannelCloseInitCmd returns the command to create a MsgChannelCloseInit transaction
-func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewChannelCloseInitTxCmd returns the command to create a MsgChannelCloseInit transaction
+func NewChannelCloseInitTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	return &cobra.Command{
 		Use:   "close-init [port-id] [channel-id]",
 		Short: "Creates and sends a ChannelCloseInit message",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			portID := args[0]
 			channelID := args[1]
@@ -202,21 +210,23 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 }
 
-// GetMsgChannelCloseConfirmCmd returns the command to create a MsgChannelCloseConfirm transaction
-func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+// NewChannelCloseConfirmTxCmd returns the command to create a MsgChannelCloseConfirm transaction
+func NewChannelCloseConfirmTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	return &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			portID := args[0]
 			channelID := args[1]
@@ -238,7 +248,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 }

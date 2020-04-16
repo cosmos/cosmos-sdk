@@ -10,11 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
@@ -28,9 +26,9 @@ const (
 	FlagChainID2 = "chain-id2"
 )
 
-// GetCmdConnectionOpenInit defines the command to initialize a connection on
+// NewConnectionOpenInitCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
-func GetCmdConnectionOpenInit(storeKey string, cdc *codec.Codec) *cobra.Command {
+func NewConnectionOpenInitCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   strings.TrimSpace(`open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]`),
 		Short: "initialize connection on chain A",
@@ -46,8 +44,11 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			connectionID := args[0]
 			clientID := args[1]
@@ -68,15 +69,15 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	return cmd
 }
 
-// GetCmdConnectionOpenTry defines the command to relay a try open a connection on
+// NewConnectionOpenTryCmd defines the command to relay a try open a connection on
 // chain B
-func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
+func NewConnectionOpenTryCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
@@ -94,9 +95,11 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 		Args: cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
 			cliCtx := context.NewCLIContextWithInput(inBuf).
-				WithCodec(cdc).
+				WithMarshaler(m).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
 			connectionID := args[0]
@@ -133,15 +136,15 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	return cmd
 }
 
-// GetCmdConnectionOpenAck defines the command to relay the acceptance of a
+// NewConnectionOpenAckCmd defines the command to relay the acceptance of a
 // connection open attempt from chain B to chain A
-func GetCmdConnectionOpenAck(storeKey string, cdc *codec.Codec) *cobra.Command {
+func NewConnectionOpenAckCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-ack [connection-id] [path/to/proof_try.json] [version]",
 		Short: "relay the acceptance of a connection open attempt from chain B to chain A",
@@ -155,8 +158,10 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			connectionID := args[0]
 
@@ -182,15 +187,15 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	return cmd
 }
 
-// GetCmdConnectionOpenConfirm defines the command to initialize a connection on
+// NewConnectionOpenConfirmCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
-func GetCmdConnectionOpenConfirm(storeKey string, cdc *codec.Codec) *cobra.Command {
+func NewConnectionOpenConfirmCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-confirm [connection-id] [path/to/proof_ack.json]",
 		Short: "confirm to chain B that connection is open on chain A",
@@ -204,9 +209,11 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
 			cliCtx := context.NewCLIContextWithInput(inBuf).
-				WithCodec(cdc).
+				WithMarshaler(m).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
 			connectionID := args[0]
@@ -229,7 +236,7 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 				return err
 			}
 
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
 	return cmd

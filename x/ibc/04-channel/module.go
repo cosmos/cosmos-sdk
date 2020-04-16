@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/rest"
@@ -23,8 +24,8 @@ func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute stri
 }
 
 // GetTxCmd returns the root tx command for the IBC connections.
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	return cli.GetTxCmd(fmt.Sprintf("%s/%s", storeKey, SubModuleName), cdc)
+func GetTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+	return cli.NewTxCmd(m, txg, ar)
 }
 
 // GetQueryCmd returns no root query command for the IBC connections.

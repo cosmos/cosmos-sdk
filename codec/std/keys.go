@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 )
@@ -34,6 +35,23 @@ func PubKeyToProto(k crypto.PubKey) (PublicKey, error) {
 				Secp256K1: k[:],
 			},
 		}
+	case multisig.PubKeyMultisigThreshold:
+		pk := make([]*PublicKey, len(k.PubKeys))
+		for i := 0; i < len(k.PubKeys); i++ {
+			pkp, err := PubKeyToProto(k.PubKeys[i])
+			if err != nil {
+				return PublicKey{}, err
+			}
+			pk[i] = &pkp
+		}
+		kp = PublicKey{
+			Sum: &PublicKey_Multisig{
+				Multisig: &PubKeyMultisigThreshold{
+					K:       uint32(k.K),
+					PubKeys: pk,
+				},
+			},
+		}
 	default:
 		return kp, errors.New("toproto: key type is not supported")
 	}
@@ -55,6 +73,21 @@ func PubKeyFromProto(k PublicKey) (crypto.PubKey, error) {
 		var pk secp256k1.PubKeySecp256k1
 		copy(pk[:], k.Secp256K1)
 		return pk, nil
+	case *PublicKey_Multisig:
+		pk := make([]crypto.PubKey, len(k.Multisig.PubKeys))
+		for i := 0; i < len(k.Multisig.PubKeys); i++ {
+			pkp, err := PubKeyFromProto(*k.Multisig.PubKeys[i])
+			if err != nil {
+				return nil, err
+			}
+			pk[i] = pkp
+		}
+
+		return multisig.PubKeyMultisigThreshold{
+			K:       uint(k.Multisig.K),
+			PubKeys: pk,
+		}, nil
+		return nil, nil
 	default:
 		return nil, errors.New("fromproto: key type not supported")
 	}

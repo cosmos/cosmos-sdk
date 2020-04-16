@@ -45,6 +45,8 @@ message PubKeyMultisigThreshold {
 message CompactBitArray {
   option (gogoproto.marshaler)   = false;
   option (gogoproto.unmarshaler) = false;
+  option (gogoproto.sizer)       = false;
+  option (gogoproto.stringer)    = false;
 
   bytes extra_bits = 1
       [(gogoproto.customname) = "ExtraBitsStored", (gogoproto.moretags) = "yaml:\"extra_bits\""];

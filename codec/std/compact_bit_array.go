@@ -1,9 +1,7 @@
 package std
 
 import (
-	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -183,40 +181,40 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-// CompactMarshal is a space efficient encoding for CompactBitArray.
-// It is not amino compatible.
-func (bA *CompactBitArray) Marshal() []byte {
-	size := bA.Size()
-	if size <= 0 {
-		return []byte("null")
-	}
-	bz := make([]byte, 0, size/8)
-	// length prefix number of bits, not number of bytes. This difference
-	// takes 3-4 bits in encoding, as opposed to instead encoding the number of
-	// bytes (saving 3-4 bits) and including the offset as a full byte.
-	bz = appendUvarint(bz, uint64(size))
-	bz = append(bz, bA.Elems...)
-	return bz
-}
+// // CompactMarshal is a space efficient encoding for CompactBitArray.
+// // It is not amino compatible.
+// func (bA *CompactBitArray) Marshal() []byte {
+// 	size := bA.Size()
+// 	if size <= 0 {
+// 		return []byte("null")
+// 	}
+// 	bz := make([]byte, 0, size/8)
+// 	// length prefix number of bits, not number of bytes. This difference
+// 	// takes 3-4 bits in encoding, as opposed to instead encoding the number of
+// 	// bytes (saving 3-4 bits) and including the offset as a full byte.
+// 	bz = appendUvarint(bz, uint64(size))
+// 	bz = append(bz, bA.Elems...)
+// 	return bz
+// }
 
-// CompactUnmarshal is a space efficient decoding for CompactBitArray.
-// It is not amino compatible.
-func (bA *CompactBitArray) Unmarshal(bz []byte) error {
-	if len(bz) < 2 {
-		return errors.New("compact bit array: invalid compact unmarshal size")
-	} else if bytes.Equal(bz, []byte("null")) {
-		return nil
-	}
-	size, n := binary.Uvarint(bz)
-	bz = bz[n:]
-	if len(bz) != int(size+7)/8 {
-		return errors.New("compact bit array: invalid compact unmarshal size")
-	}
+// // CompactUnmarshal is a space efficient decoding for CompactBitArray.
+// // It is not amino compatible.
+// func (bA *CompactBitArray) Unmarshal(bz []byte) error {
+// 	if len(bz) < 2 {
+// 		return errors.New("compact bit array: invalid compact unmarshal size")
+// 	} else if bytes.Equal(bz, []byte("null")) {
+// 		return nil
+// 	}
+// 	size, n := binary.Uvarint(bz)
+// 	bz = bz[n:]
+// 	if len(bz) != int(size+7)/8 {
+// 		return errors.New("compact bit array: invalid compact unmarshal size")
+// 	}
 
-	bA = NewCompactBitArray(int(size % 8))
-	bA.Elems = bz
-	return nil
-}
+// 	bA = NewCompactBitArray(int(size % 8))
+// 	bA.Elems = bz
+// 	return nil
+// }
 
 func appendUvarint(b []byte, x uint64) []byte {
 	var a [binary.MaxVarintLen64]byte

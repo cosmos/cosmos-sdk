@@ -43,10 +43,8 @@ message PubKeyMultisigThreshold {
 // space after proto encoding.
 // This is not thread safe, and is not intended for concurrent usage.
 message CompactBitArray {
-  option (gogoproto.marshaler)   = false;
-  option (gogoproto.unmarshaler) = false;
-  option (gogoproto.sizer)       = false;
-  option (gogoproto.stringer)    = false;
+  option (gogoproto.sizer)            = false;
+  option (gogoproto.goproto_stringer) = false;
 
   bytes extra_bits = 1
       [(gogoproto.customname) = "ExtraBitsStored", (gogoproto.moretags) = "yaml:\"extra_bits\""];

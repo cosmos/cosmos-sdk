@@ -87,7 +87,6 @@ func PubKeyFromProto(k PublicKey) (crypto.PubKey, error) {
 			K:       uint(k.Multisig.K),
 			PubKeys: pk,
 		}, nil
-		return nil, nil
 	default:
 		return nil, errors.New("fromproto: key type not supported")
 	}

@@ -20,7 +20,7 @@ const (
 )
 
 // NewQueryCmd returns a root CLI command handler for all x/bank query commands.
-func NewQueryCmd() *cobra.Command {
+func NewQueryCmd(cdc codec.Marshaler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the bank module",
@@ -29,19 +29,19 @@ func NewQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(NewBalancesCmd())
+	cmd.AddCommand(NewBalancesCmd(cdc))
 
 	return cmd
 }
 
 // NewBalancesCmd returns a CLI command handler for querying account balance(s).
-func NewBalancesCmd() *cobra.Command {
+func NewBalancesCmd(cdc codec.Marshaler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
 		Short: "Query for account balance(s) by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext()
+			cliCtx := context.NewCLIContext().WithMarshaler(cdc)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {

@@ -17,7 +17,6 @@ func PubKeyToProto(k crypto.PubKey) (PublicKey, error) {
 	var kp PublicKey
 	switch k := k.(type) {
 	case sr25519.PubKeySr25519:
-
 		kp = PublicKey{
 			Sum: &PublicKey_Sr25519{
 				Sr25519: k[:],
@@ -53,7 +52,7 @@ func PubKeyToProto(k crypto.PubKey) (PublicKey, error) {
 			},
 		}
 	default:
-		return kp, errors.New("toproto: key type is not supported")
+		return kp, fmt.Errorf("toproto: key type %T is not supported", k)
 	}
 	return kp, nil
 }
@@ -75,7 +74,7 @@ func PubKeyFromProto(k PublicKey) (crypto.PubKey, error) {
 		return pk, nil
 	case *PublicKey_Multisig:
 		pk := make([]crypto.PubKey, len(k.Multisig.PubKeys))
-		for i := 0; i < len(k.Multisig.PubKeys); i++ {
+		for i := range k.Multisig.PubKeys {
 			pkp, err := PubKeyFromProto(*k.Multisig.PubKeys[i])
 			if err != nil {
 				return nil, err
@@ -88,7 +87,7 @@ func PubKeyFromProto(k PublicKey) (crypto.PubKey, error) {
 			PubKeys: pk,
 		}, nil
 	default:
-		return nil, errors.New("fromproto: key type not supported")
+		return nil, fmt.Errorf("fromproto: key type %T is not supported", k)
 	}
 }
 
@@ -115,7 +114,7 @@ func PrivKeyToProto(k crypto.PrivKey) (PrivateKey, error) {
 			},
 		}
 	default:
-		return kp, errors.New("toproto: key type is not supported")
+		return kp, fmt.Errorf("toproto: key type %T is not supported", k)
 	}
 	return kp, nil
 }
@@ -136,6 +135,6 @@ func PrivKeyFromProto(k PrivateKey) (crypto.PrivKey, error) {
 		copy(pk[:], k.Secp256K1)
 		return pk, nil
 	default:
-		return nil, errors.New("fromproto: key type not supported")
+		return nil, fmt.Errorf("fromproto: key type %T is not supported", k)
 	}
 }

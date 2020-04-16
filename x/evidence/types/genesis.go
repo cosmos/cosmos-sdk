@@ -1,9 +1,6 @@
 package types
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
@@ -11,13 +8,11 @@ import (
 
 // GenesisState defines the evidence module's genesis state.
 type GenesisState struct {
-	Params   Params              `json:"params" yaml:"params"`
 	Evidence []exported.Evidence `json:"evidence" yaml:"evidence"`
 }
 
-func NewGenesisState(p Params, e []exported.Evidence) GenesisState {
+func NewGenesisState(e []exported.Evidence) GenesisState {
 	return GenesisState{
-		Params:   p,
 		Evidence: e,
 	}
 }
@@ -25,7 +20,6 @@ func NewGenesisState(p Params, e []exported.Evidence) GenesisState {
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Params:   DefaultParams(),
 		Evidence: []exported.Evidence{},
 	}
 }
@@ -37,11 +31,6 @@ func (gs GenesisState) Validate() error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}
-	}
-
-	maxEvidence := gs.Params.MaxEvidenceAge
-	if maxEvidence < 1*time.Minute {
-		return fmt.Errorf("max evidence age must be at least 1 minute, is %s", maxEvidence.String())
 	}
 
 	return nil

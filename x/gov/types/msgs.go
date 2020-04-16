@@ -23,8 +23,13 @@ type MsgSubmitProposalI interface {
 	sdk.Msg
 
 	GetContent() Content
+	SetContent(Content) error
+
 	GetInitialDeposit() sdk.Coins
+	SetInitialDeposit(sdk.Coins)
+
 	GetProposer() sdk.AccAddress
+	SetProposer(sdk.AccAddress)
 }
 
 // NewMsgSubmitProposalBase creates a new MsgSubmitProposalBase.
@@ -33,6 +38,18 @@ func NewMsgSubmitProposalBase(initialDeposit sdk.Coins, proposer sdk.AccAddress)
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
 	}
+}
+
+func (msg *MsgSubmitProposalBase) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
+
+func (msg *MsgSubmitProposalBase) GetProposer() sdk.AccAddress { return msg.Proposer }
+
+func (msg *MsgSubmitProposalBase) SetInitialDeposit(coins sdk.Coins) {
+	msg.InitialDeposit = coins
+}
+
+func (msg *MsgSubmitProposalBase) SetProposer(address sdk.AccAddress) {
+	msg.Proposer = address
 }
 
 // Route implements Msg
@@ -172,6 +189,8 @@ type MsgSubmitProposal struct {
 	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               //  Address of the proposer
 }
 
+var _ MsgSubmitProposalI = &MsgSubmitProposal{}
+
 // NewMsgSubmitProposal returns a (deprecated) MsgSubmitProposal message.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
@@ -213,3 +232,16 @@ func (msg MsgSubmitProposal) Type() string                 { return TypeMsgSubmi
 func (msg MsgSubmitProposal) GetContent() Content          { return msg.Content }
 func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
 func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }
+
+func (msg *MsgSubmitProposal) SetContent(content Content) error {
+	msg.Content = content
+	return nil
+}
+
+func (msg *MsgSubmitProposal) SetInitialDeposit(deposit sdk.Coins) {
+	msg.InitialDeposit = deposit
+}
+
+func (msg *MsgSubmitProposal) SetProposer(proposer sdk.AccAddress) {
+	msg.Proposer = proposer
+}

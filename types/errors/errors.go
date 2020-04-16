@@ -88,11 +88,17 @@ var (
 	// ErrWrongPassword defines an error when the key password is invalid.
 	ErrWrongPassword = Register(RootCodespace, 23, "invalid account password")
 
-	// ErrJSONMarshal defines an ABCI typed protobuf marshalling error
-	ErrProtoMarshal = Register(RootCodespace, 25, "failed to marshal proto bytes")
+	// ErrorInvalidSigner defines an error when the tx intended signer does not match the given signer.
+	ErrorInvalidSigner = Register(RootCodespace, 24, "tx intended signer does not match the given signer")
+
+	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
+	ErrorInvalidGasAdjustment = Register(RootCodespace, 25, "invalid gas adjustment")
+
+	// ErrProtoarshal defines an ABCI typed protobuf marshalling error
+	ErrProtoMarshal = Register(RootCodespace, 26, "failed to marshal proto bytes")
 
 	// ErrProtoUnmarshal defines an ABCI typed protobuf unmarshalling error
-	ErrProtoUnmarshal = Register(RootCodespace, 26, "failed to unmarshal proto bytes")
+	ErrProtoUnmarshal = Register(RootCodespace, 27, "failed to unmarshal proto bytes")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info

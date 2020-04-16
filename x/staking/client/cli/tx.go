@@ -66,7 +66,7 @@ func NewCreateValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRet
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			txf, msg, err := NewBuildCreateValidatorMsg(cliCtx, txf)
 			if err != nil {
@@ -101,7 +101,7 @@ func NewEditValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetri
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.NewDescription(
@@ -137,6 +137,9 @@ func NewEditValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetri
 			}
 
 			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
@@ -165,7 +168,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -179,6 +182,10 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 			}
 
 			msg := types.NewMsgDelegate(delAddr, valAddr, amount)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
@@ -209,7 +216,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -227,6 +234,10 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 			}
 
 			msg := types.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, amount)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
@@ -253,7 +264,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -267,6 +278,10 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 			}
 
 			msg := types.NewMsgUndelegate(delAddr, valAddr, amount)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}
@@ -315,6 +330,9 @@ func NewBuildCreateValidatorMsg(cliCtx context.CLIContext, txf tx.Factory) (tx.F
 	msg := types.NewMsgCreateValidator(
 		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
 	)
+	if err := msg.ValidateBasic(); err != nil {
+		return txf, nil, err
+	}
 
 	if viper.GetBool(flags.FlagGenerateOnly) {
 		ip := viper.GetString(FlagIP)

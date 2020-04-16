@@ -26,7 +26,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 
 	// Capabilities key to access the main KVStore.
-	capKeyMainStore := sdk.NewKVStoreKey(bam.MainStoreKey)
+	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
@@ -40,7 +40,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
 
 	// Load latest version.
-	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
+	if err := baseApp.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
 

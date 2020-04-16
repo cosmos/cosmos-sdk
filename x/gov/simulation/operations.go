@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/std"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -125,7 +127,10 @@ func SimulateSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		msg := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+		msg, err := std.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName), nil, err
+		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())

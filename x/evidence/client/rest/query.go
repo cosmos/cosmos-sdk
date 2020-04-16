@@ -22,11 +22,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 		"/evidence",
 		queryAllEvidenceHandler(cliCtx),
 	).Methods(MethodGet)
-
-	r.HandleFunc(
-		"/evidence/params",
-		queryParamsHandler(cliCtx),
-	).Methods(MethodGet)
 }
 
 func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -83,24 +78,6 @@ func queryAllEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllEvidence)
 		res, height, err := cliCtx.QueryWithData(route, bz)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, res)
-	}
-}
-
-func queryParamsHandler(cliCtx context.CLIContext) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-		if !ok {
-			return
-		}
-
-		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
-		res, height, err := cliCtx.QueryWithData(route, nil)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

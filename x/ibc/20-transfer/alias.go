@@ -12,12 +12,20 @@ import (
 )
 
 const (
-	DefaultPacketTimeout = keeper.DefaultPacketTimeout
-	AttributeKeyReceiver = types.AttributeKeyReceiver
-	ModuleName           = types.ModuleName
-	StoreKey             = types.StoreKey
-	RouterKey            = types.RouterKey
-	QuerierRoute         = types.QuerierRoute
+	DefaultPacketTimeout       = keeper.DefaultPacketTimeout
+	EventTypeTimeout           = types.EventTypeTimeout
+	EventTypePacket            = types.EventTypePacket
+	EventTypeChannelClose      = types.EventTypeChannelClose
+	AttributeKeyReceiver       = types.AttributeKeyReceiver
+	AttributeKeyValue          = types.AttributeKeyValue
+	AttributeKeyRefundReceiver = types.AttributeKeyRefundReceiver
+	AttributeKeyRefundValue    = types.AttributeKeyRefundValue
+	AttributeKeyAckSuccess     = types.AttributeKeyAckSuccess
+	AttributeKeyAckError       = types.AttributeKeyAckError
+	ModuleName                 = types.ModuleName
+	StoreKey                   = types.StoreKey
+	RouterKey                  = types.RouterKey
+	QuerierRoute               = types.QuerierRoute
 )
 
 var (
@@ -35,13 +43,13 @@ var (
 )
 
 type (
-	Keeper                  = keeper.Keeper
-	BankKeeper              = types.BankKeeper
-	ChannelKeeper           = types.ChannelKeeper
-	ClientKeeper            = types.ClientKeeper
-	ConnectionKeeper        = types.ConnectionKeeper
-	SupplyKeeper            = types.SupplyKeeper
-	FungibleTokenPacketData = types.FungibleTokenPacketData
-	MsgTransfer             = types.MsgTransfer
-	AckDataTransfer         = types.AckDataTransfer
+	Keeper                             = keeper.Keeper
+	BankKeeper                         = types.BankKeeper
+	ChannelKeeper                      = types.ChannelKeeper
+	ClientKeeper                       = types.ClientKeeper
+	ConnectionKeeper                   = types.ConnectionKeeper
+	SupplyKeeper                       = types.SupplyKeeper
+	FungibleTokenPacketData            = types.FungibleTokenPacketData
+	FungibleTokenPacketAcknowledgement = types.FungibleTokenPacketAcknowledgement
+	MsgTransfer                        = types.MsgTransfer
 )

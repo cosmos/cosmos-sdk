@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -527,6 +528,13 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		}
 
 		return transient.NewStore(), nil
+
+	case types.StoreTypeMemory:
+		if _, ok := key.(*types.MemoryStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s", key.String())
+		}
+
+		return mem.NewStore(), nil
 
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))

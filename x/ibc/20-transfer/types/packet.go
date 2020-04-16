@@ -38,6 +38,6 @@ func (ftpd FungibleTokenPacketData) GetBytes() []byte {
 }
 
 // GetBytes is a helper for serialising
-func (AckDataTransfer) GetBytes() []byte {
-	return []byte("fungible token transfer ack")
+func (ack FungibleTokenPacketAcknowledgement) GetBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
 }

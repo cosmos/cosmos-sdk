@@ -44,7 +44,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Valid() {
 	}
 
 	suite.NotPanics(func() {
-		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(types.DefaultParams(), testEvidence))
+		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(testEvidence))
 	})
 
 	for _, e := range testEvidence {
@@ -66,7 +66,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Invalid() {
 	}
 
 	suite.Panics(func() {
-		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(types.DefaultParams(), testEvidence))
+		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(testEvidence))
 	})
 
 	suite.Empty(suite.keeper.GetAllEvidence(suite.ctx))

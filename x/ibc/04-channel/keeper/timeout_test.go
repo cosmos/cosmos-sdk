@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/capability"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -105,21 +107,34 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 	var packet types.Packet
 
+	var chanCap *capability.Capability
 	testCases := []testCase{
 		{"success ORDERED", func() {
 			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100)
 			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnectionIDA)
 		}, true},
 		{"channel not found", func() {}, false},
+		{"incorrect capability", func() {
+			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3)
+			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
+			chanCap = capability.NewCapability(1)
+		}, false},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
+
+			var err error
+			chanCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
+				suite.chainA.GetContext(), ibctypes.ChannelCapabilityPath(testPort1, testChannel1),
+			)
+			suite.Require().NoError(err, "could not create capability")
+
 			tc.malleate()
 
-			err := suite.chainA.App.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.chainA.GetContext(), packet)
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.TimeoutExecuted(suite.chainA.GetContext(), chanCap, packet)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

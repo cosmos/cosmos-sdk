@@ -59,11 +59,15 @@ func (ftpd FungibleTokenPacketData) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ftpd))
 }
 
-// AckDataTransfer is a no-op packet
+// FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg
+// error msg is empty string on success
 // See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-type AckDataTransfer struct{}
+type FungibleTokenPacketAcknowledgement struct {
+	Success bool   `json:"success" yaml:"success"`
+	Error   string `json:"error" yaml:"error"`
+}
 
 // GetBytes is a helper for serialising
-func (AckDataTransfer) GetBytes() []byte {
-	return []byte("fungible token transfer ack")
+func (ack FungibleTokenPacketAcknowledgement) GetBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
 }

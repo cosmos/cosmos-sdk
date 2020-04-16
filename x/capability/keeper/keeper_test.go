@@ -253,7 +253,7 @@ func (suite KeeperTestSuite) TestRevertCapability() {
 	cap, err := sk.NewCapability(cacheCtx, capName)
 	suite.Require().NoError(err, "could not create capability")
 
-	// Check that capabality written in cached context
+	// Check that capability written in cached context
 	gotCache, ok := sk.GetCapability(cacheCtx, capName)
 	suite.Require().True(ok, "could not retrieve capability from cached context")
 	suite.Require().Equal(cap, gotCache, "did not get correct capability from cached context")
@@ -268,7 +268,7 @@ func (suite KeeperTestSuite) TestRevertCapability() {
 
 	got, ok = sk.GetCapability(suite.ctx, capName)
 	suite.Require().True(ok, "could not retrieve capability from context")
-	suite.Require().Equal(cap, gotCache, "did not get correct capability from context")
+	suite.Require().Equal(cap, got, "did not get correct capability from context")
 }
 
 func TestKeeperTestSuite(t *testing.T) {

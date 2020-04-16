@@ -119,7 +119,12 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 		suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(cctx, cpportid, cpchanid, uint64(i))
 		_, err := handler(cctx, suite.newTx(msg), false)
 		if err == nil {
-			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, packet, packet.Data)
+			// retrieve channelCapability from scopedIBCKeeper and pass into PacketExecuted
+			chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, ibctypes.ChannelCapabilityPath(
+				packet.GetDestPort(), packet.GetDestChannel()),
+			)
+			suite.Require().True(ok, "could not retrieve capability")
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(cctx, chanCap, packet, packet.Data)
 		}
 		if i == 1 {
 			suite.NoError(err, "%d", i) // successfully executed
@@ -339,6 +344,7 @@ func (chain *TestChain) createChannel(
 	)
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
+	chain.App.ScopedIBCKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
 	return channel
 }
 

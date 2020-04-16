@@ -14,7 +14,9 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper = keeper.NewKeeper
+	NewKeeper       = keeper.NewKeeper
+	NewParamSetPair = types.NewParamSetPair
+	NewKeyTable     = types.NewKeyTable
 )
 
 type (

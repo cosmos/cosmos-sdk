@@ -22,7 +22,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 		}
 	}
 
-	if data.Supply.Empty() {
+	if genState.Supply.Empty() {
 		var totalSupply sdk.Coins
 
 		keeper.IterateAllBalances(ctx,
@@ -32,10 +32,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 			},
 		)
 
-		data.Supply = totalSupply
+		genState.Supply = totalSupply
 	}
 
-	keeper.SetSupply(ctx, NewSupply(data.Supply))
+	keeper.SetSupply(ctx, NewSupply(genState.Supply))
 }
 
 // ExportGenesis returns the bank module's genesis state.

@@ -5,12 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func queryTotalSupply(cliCtx context.CLIContext, m codec.Marshaler) error {
+func queryTotalSupply(cliCtx context.CLIContext, cdc *codec.Codec) error {
 	params := types.NewQueryTotalSupplyParams(1, 0) // no pagination
-	bz, err := m.MarshalJSON(params)
+	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return err
 	}
@@ -21,7 +22,7 @@ func queryTotalSupply(cliCtx context.CLIContext, m codec.Marshaler) error {
 	}
 
 	var totalSupply sdk.Coins
-	err = m.UnmarshalJSON(res, &totalSupply)
+	err = cdc.UnmarshalJSON(res, &totalSupply)
 	if err != nil {
 		return err
 	}
@@ -29,9 +30,9 @@ func queryTotalSupply(cliCtx context.CLIContext, m codec.Marshaler) error {
 	return cliCtx.PrintOutput(totalSupply)
 }
 
-func querySupplyOf(cliCtx context.CLIContext, m codec.Marshaler, denom string) error {
+func querySupplyOf(cliCtx context.CLIContext, cdc *codec.Codec, denom string) error {
 	params := types.NewQuerySupplyOfParams(denom)
-	bz, err := m.MarshalJSON(params)
+	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func querySupplyOf(cliCtx context.CLIContext, m codec.Marshaler, denom string) e
 	}
 
 	var supply sdk.Int
-	err = m.UnmarshalJSON(res, &supply)
+	err = cdc.UnmarshalJSON(res, &supply)
 	if err != nil {
 		return err
 	}

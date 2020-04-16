@@ -3,6 +3,9 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"time"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -141,4 +144,24 @@ func (w WeightedProposalContent) DefaultWeight() int {
 
 func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
 	return w.contentSimulatorFn
+}
+
+//-----------------------------------------------------------------------------
+// Param change proposals
+
+// RandomParams returns random simulation consensus parameters
+func RandomConsensusParams(r *rand.Rand) *abci.ConsensusParams {
+	return &abci.ConsensusParams{
+		Block: &abci.BlockParams{
+			MaxBytes: int64(simulation.RandIntBetween(r, 10000, 50000)),
+			MaxGas:   int64(simulation.RandIntBetween(r, 10000, 50000)),
+		},
+		Evidence: &abci.EvidenceParams{
+			MaxAgeNumBlocks: int64(simulation.RandIntBetween(r, 10000, 50000)),
+			MaxAgeDuration:  time.Duration(simulation.RandIntBetween(r, 10000, 50000)),
+		},
+		Validator: &abci.ValidatorParams{
+			PubKeyTypes: nil,
+		},
+	}
 }

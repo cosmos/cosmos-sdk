@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"github.com/tendermint/tendermint/types"
 	"io"
 	"math/rand"
 	"os"
@@ -19,7 +20,7 @@ import (
 
 // initialize the chain for the simulation
 func initChain(
-	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
+	r *rand.Rand, params Params, consensusParams *abci.ConsensusParams, accounts []simulation.Account, app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn, config simulation.Config,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 
@@ -28,6 +29,7 @@ func initChain(
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 		ChainId:       chainID,
+		ConsensusParams: consensusParams,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
@@ -52,13 +54,15 @@ func SimulateFromSeed(
 	params := RandomParams(r)
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
+	consParams := RandomConsensusParams(r)
+
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := simulation.RandomAccounts(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config)
+	validators, genesisTimestamp, accs, chainID := initChain(r, params, consParams, accs, app, appStateFn, config)
 	if len(accs) == 0 {
 		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
@@ -108,7 +112,7 @@ func SimulateFromSeed(
 
 	// These are operations which have been queued by previous operations
 	operationQueue := NewOperationQueue()
-	timeOperationQueue := []simulation.FutureOperation{}
+	var timeOperationQueue []simulation.FutureOperation
 
 	logWriter := NewLogWriter(testingMode)
 

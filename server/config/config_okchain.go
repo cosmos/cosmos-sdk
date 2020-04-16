@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -9,10 +10,17 @@ const (
 	BackendOrmEngineTypeMysql  = "mysql"
 )
 
-var (
-	DefaultBackendNodeHome     = os.ExpandEnv("$HOME/.okchaind")
-	DefaultBackendNodeDataHome = DefaultBackendNodeHome + "/data"
-)
+var defaultNodeHome = os.ExpandEnv("$HOME/.okchaind")
+
+// SetNodeHome sets the root directory for all data.
+func SetNodeHome(home string) {
+	defaultNodeHome = home
+}
+
+// GetNodeHome returns the root directory for all data.
+func GetNodeHome() string {
+	return defaultNodeHome
+}
 
 type BackendConfig struct {
 	EnableBackend    bool `json:"enable_backend" mapstructure:"enable_backend"`
@@ -52,7 +60,7 @@ func DefaultBackendConfig() *BackendConfig {
 	c.CleanUpsKeptDays["kline_m5"] = 120
 
 	c.OrmEngine.EngineType = BackendOrmEngineTypeSqlite
-	c.OrmEngine.ConnectStr = DefaultBackendNodeDataHome + string(os.PathSeparator) + c.OrmEngine.EngineType + string(os.PathSeparator) + "backend.sqlite3"
+	c.OrmEngine.ConnectStr = filepath.Join(GetNodeHome(), "data", c.OrmEngine.EngineType, "backend.sqlite3") 
 
 	return &c
 }

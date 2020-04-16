@@ -67,8 +67,7 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper,
 			}
 		}
 
-		//newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
-		newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+		newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
 
 		// AnteHandlers must have their own defer/recover in order for the BaseApp
 		// to know how much gas was used! This is because the GasMeter is created in
@@ -119,10 +118,15 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper,
 			return newCtx, res, true
 		}
 
+		isFree := false
+		if isSystemFreeHandler != nil {
+			isFree = isSystemFreeHandler(ctx, stdTx.GetMsgs())
+		}
+
+
 		// deduct the fees
-		msgs := stdTx.GetMsgs()
-		if isSystemFreeHandler != nil && !isSystemFreeHandler(ctx, msgs) {
-			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], sdk.GetSystemFee().ToCoins())
+		if !stdTx.Fee.Amount.IsZero() && !isFree {
+			res = DeductFees(supplyKeeper, newCtx, signerAccs[0], stdTx.Fee.Amount)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -156,19 +160,17 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper,
 		}
 
 		// *ABORT* the tx in case of failing to validate it in checkTx mode
-		if newCtx.IsCheckTx() && !simulate {
-			if validateMsgHandler != nil {
-				res := validateMsgHandler(newCtx, msgs)
-				if !res.IsOK() {
-					return newCtx, res, true
-				}
+		if newCtx.IsCheckTx() && !simulate && validateMsgHandler != nil {
+			res := validateMsgHandler(newCtx, stdTx.GetMsgs())
+			if !res.IsOK() {
+				return newCtx, res, true
 			}
 		}
 
 		//stat actual system fee
-		actualSysFee := sdk.GetSystemFee()
-		if isSystemFreeHandler != nil && isSystemFreeHandler(ctx, msgs) {
-			actualSysFee = sdk.ZeroFee()
+		actualSysFee := stdTx.Fee.Amount
+		if isFree {
+			actualSysFee = sdk.ZeroFee().ToCoins()
 		}
 
 		//fire systemFee event
@@ -178,7 +180,7 @@ func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper,
 				sdk.NewAttribute(sdk.AttributeKeyFee, actualSysFee.String()),
 			),
 		)
-		// TODO: tx tags (?), abandoned
+		// TODO: tx tags (?)
 		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas, Events: ctx.EventManager().Events()}, false
 	}
 }
@@ -412,7 +414,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 		glDec := sdk.NewDec(int64(stdFee.Gas))
 		for i, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)
-			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			requiredFees[i] = sdk.NewDecCoinFromDec(gp.Denom, fee)
 		}
 
 		if !stdFee.Amount.IsAnyGTE(requiredFees) {

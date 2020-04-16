@@ -188,11 +188,11 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 		glDec := sdk.NewDec(int64(bldr.gas))
 
 		// Derive the fees based on the provided gas prices, where
-		// fee = ceil(gasPrice * gasLimit).
+		// fee = gasPrice * gasLimit.
 		fees = make(sdk.Coins, len(bldr.gasPrices))
 		for i, gp := range bldr.gasPrices {
 			fee := gp.Amount.Mul(glDec)
-			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			fees[i] = sdk.NewDecCoinFromDec(gp.Denom, fee)
 		}
 	}
 

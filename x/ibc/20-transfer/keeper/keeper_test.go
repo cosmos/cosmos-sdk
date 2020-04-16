@@ -41,8 +41,8 @@ const (
 
 // define variables used for testing
 var (
-	testAddr1 = sdk.AccAddress([]byte("testaddr1"))
-	testAddr2 = sdk.AccAddress([]byte("testaddr2"))
+	testAddr1, _ = sdk.AccAddressFromBech32("cosmos1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl")
+	testAddr2, _ = sdk.AccAddressFromBech32("cosmos1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrujl")
 
 	testCoins, _ = sdk.ParseCoins("100atom")
 	prefixCoins  = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))

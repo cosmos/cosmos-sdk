@@ -3,6 +3,8 @@ package capability
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/grpc"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,6 +94,8 @@ func (am AppModule) NewHandler() sdk.Handler { return nil }
 
 // NewQuerierHandler returns the capability module's Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
+
+func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the capability module's invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}

@@ -1,7 +1,6 @@
 package std
 
 import (
-	"encoding/binary"
 	"fmt"
 	"regexp"
 	"strings"
@@ -216,8 +215,8 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 // 	return nil
 // }
 
-func appendUvarint(b []byte, x uint64) []byte {
-	var a [binary.MaxVarintLen64]byte
-	n := binary.PutUvarint(a[:], x)
-	return append(b, a[:n]...)
-}
+// func appendUvarint(b []byte, x uint64) []byte {
+// 	var a [binary.MaxVarintLen64]byte
+// 	n := binary.PutUvarint(a[:], x)
+// 	return append(b, a[:n]...)
+// }

@@ -66,8 +66,9 @@ func TestImportExportQueues(t *testing.T) {
 
 	app2.InitChain(
 		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: simapp.DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
 		},
 	)
 

@@ -61,7 +61,7 @@ func TestRegisterQueryService(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "hello", res.Message)
 
-	res, err = client.Echo(context.Background(), nil)
+	_, err = client.Echo(context.Background(), nil)
 	require.NotNil(t, err)
 
 }

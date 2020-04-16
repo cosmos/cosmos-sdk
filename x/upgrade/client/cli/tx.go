@@ -31,10 +31,11 @@ const (
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal(
-	m codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
-	newMsgFn func() gov.MsgSubmitProposalI) *cobra.Command {
+	m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever,
+	newMsgFn func() gov.MsgSubmitProposalI,
+) *cobra.Command {
+
+    cmd := &cobra.Command{
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),

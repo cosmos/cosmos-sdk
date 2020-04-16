@@ -148,7 +148,7 @@ func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capability, error) {
 	store := ctx.KVStore(sk.storeKey)
 
-	if _, ok := sk.GetCapability(ctx, name); !ok {
+	if _, ok := sk.GetCapability(ctx, name); ok {
 		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
 
 	}
@@ -273,7 +273,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 	key := types.RevCapabilityKey(sk.module, name)
 	indexBytes := memStore.Get(key)
 	index := sdk.BigEndianToUint64(indexBytes)
-	if indexBytes == nil {
+	if len(indexBytes) == 0 {
 		// If a tx failed and NewCapability got reverted, it is possible
 		// to still have the capability in the go map since changes to
 		// go map do not automatically get reverted on tx failure,

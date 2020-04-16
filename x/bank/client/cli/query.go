@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -28,7 +30,10 @@ func NewQueryCmd(m codec.Marshaler) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(NewBalancesCmd(m))
+	cmd.AddCommand(
+		NewBalancesCmd(m),
+		NewQueryTotalSupplyCmd(m),
+	)
 
 	return cmd
 }
@@ -97,6 +102,39 @@ func NewBalancesCmd(m codec.Marshaler) *cobra.Command {
 	return flags.GetCommands(cmd)[0]
 }
 
+// NewQueryTotalSupplyCmd returns a CLI command handler for querying total supply.
+func NewQueryTotalSupplyCmd(m codec.Marshaler) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total [denom]",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "Query the total supply of coins of the chain",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query total supply of coins that are held by accounts in the
+			chain.
+
+Example:
+$ %s query %s total
+
+To query for the total supply of a specific coin denomination use:
+$ %s query %s total stake
+`,
+				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithMarshaler(m)
+
+			if len(args) == 0 {
+				return queryTotalSupply(cliCtx, m)
+			}
+
+			return querySupplyOf(cliCtx, m, args[0])
+		},
+	}
+
+	return flags.GetCommands(cmd)[0]
+}
+
 // ---------------------------------------------------------------------------
 // Deprecated
 //
@@ -116,7 +154,10 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(GetBalancesCmd(cdc))
+	cmd.AddCommand(
+		GetBalancesCmd(cdc),
+		GetCmdQueryTotalSupply(cdc),
+	)
 
 	return cmd
 }
@@ -185,6 +226,40 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagDenom, "", "The specific balance denomination to query for")
+
+	return flags.GetCommands(cmd)[0]
+}
+
+// TODO: Remove once client-side Protobuf migration has been completed.
+// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+func GetCmdQueryTotalSupply(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total [denom]",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "Query the total supply of coins of the chain",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query total supply of coins that are held by accounts in the
+			chain.
+
+Example:
+$ %s query %s total
+
+To query for the total supply of a specific coin denomination use:
+$ %s query %s total stake
+`,
+				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			if len(args) == 0 {
+				return queryTotalSupply(cliCtx, cdc)
+			}
+
+			return querySupplyOf(cliCtx, cdc, args[0])
+		},
+	}
 
 	return flags.GetCommands(cmd)[0]
 }

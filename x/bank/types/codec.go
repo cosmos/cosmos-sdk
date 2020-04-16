@@ -2,10 +2,28 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
-// Register concrete types on codec codec
+// Codec defines the interface needed to serialize x/bank state. It must
+// be aware of all concrete supply types.
+type Codec interface {
+	codec.Marshaler
+
+	MarshalSupply(supply exported.SupplyI) ([]byte, error)
+	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
+
+	MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error)
+	UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error)
+}
+
+// RegisterCodec registers the necessary x/bank interfaces and concrete types
+// on the provided Amino codec. These types are used for Amino JSON serialization.
 func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
+	cdc.RegisterInterface((*exported.SupplyI)(nil), nil)
+	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
+	cdc.RegisterConcrete(&Supply{}, "cosmos-sdk/Supply", nil)
 	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
 	cdc.RegisterConcrete(MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
 }
@@ -24,5 +42,6 @@ var (
 
 func init() {
 	RegisterCodec(amino)
+	codec.RegisterCrypto(amino)
 	amino.Seal()
 }

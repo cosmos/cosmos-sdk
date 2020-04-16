@@ -9,11 +9,11 @@ import (
 // TestFungibleTokenPacketDataValidateBasic tests ValidateBasic for FungibleTokenPacketData
 func TestFungibleTokenPacketDataValidateBasic(t *testing.T) {
 	testPacketDataTransfer := []FungibleTokenPacketData{
-		NewFungibleTokenPacketData(coins, addr1, addr2),             // valid msg
-		NewFungibleTokenPacketData(invalidDenomCoins, addr1, addr2), // invalid amount
-		NewFungibleTokenPacketData(negativeCoins, addr1, addr2),     // amount contains negative coin
-		NewFungibleTokenPacketData(coins, emptyAddr, addr2),         // missing sender address
-		NewFungibleTokenPacketData(coins, addr1, emptyAddr),         // missing recipient address
+		NewFungibleTokenPacketData(coins, addr1.String(), addr2),              // valid msg
+		NewFungibleTokenPacketData(invalidDenomCoins, addr1.String(), addr2),  // invalid amount
+		NewFungibleTokenPacketData(negativeCoins, addr1.String(), addr2),      // amount contains negative coin
+		NewFungibleTokenPacketData(coins, emptyAddr.String(), addr2),          // missing sender address
+		NewFungibleTokenPacketData(coins, addr1.String(), emptyAddr.String()), // missing recipient address
 	}
 
 	testCases := []struct {

@@ -60,6 +60,7 @@ func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler 
 	}
 }
 
+// nolint
 func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
@@ -104,6 +105,7 @@ func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn fu
 	}
 }
 
+// nolint
 func newCancelPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest

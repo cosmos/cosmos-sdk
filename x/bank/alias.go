@@ -11,6 +11,7 @@ const (
 	QueryBalance       = types.QueryBalance
 	QueryAllBalances   = types.QueryAllBalances
 	ModuleName         = types.ModuleName
+	QuerierRoute       = types.QuerierRoute
 	RouterKey          = types.RouterKey
 	StoreKey           = types.StoreKey
 	DefaultParamspace  = types.DefaultParamspace

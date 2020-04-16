@@ -118,6 +118,8 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 		return
 	}
 
+	s.checkType(key, ptr)
+
 	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}

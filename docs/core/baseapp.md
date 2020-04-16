@@ -28,7 +28,7 @@ developers will create a custom type for their application, like so:
 ```go
 type App struct {
   // reference to a BaseApp
-  *bam.BaseApp
+  *baseapp.BaseApp
 
   // list of application store keys
 
@@ -45,7 +45,7 @@ management logic.
 
 ## Type Definition
 
-The `BaseApp` type holds many important parameters for any Cosmos SDK based application. 
+The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L54-L108
 
@@ -71,8 +71,7 @@ appropriate module for it to be processed. These `queries` are not ABCI messages
 are relayed to the application from the underlying consensus engine via the ABCI message [`Query`](#query).
 - [`TxDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
 raw transaction bytes relayed by the underlying Tendermint engine.
-- `BaseKey`: This key is used to access the main store in the `CommitMultiStore`. The main store is
-used to persist data related to the core of the application, like consensus parameters.
+- [`ParamStore`](#paramstore): The parameter store used to get and set application consensus parameters.
 - [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,
 and other pre-message execution checks when a transaction is received. It's executed during
 [`CheckTx/RecheckTx`](#checktx) and [`DeliverTx`](#delivertx).
@@ -122,7 +121,7 @@ the node's `min-gas-prices`.
 
 Naturally, developers can add additional `options` based on their application's needs.
 
-## State Updates 
+## State Updates
 
 The `BaseApp` maintains two primary volatile states and a root or main state. The main state
 is the canonical state of the application and the volatile states, `checkState` and `deliverState`,
@@ -179,6 +178,14 @@ newly committed state and `deliverState` is set to `nil` to be reset on `BeginBl
 
 ![Commit](./baseapp_state-commit.png)
 
+## ParamStore
+
+During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
+related to block execution such as maximum gas and size in addition to evidence parameters. If these
+parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
+is actually managed by an `x/params` module `Subspace`. This allows the parameters to be tweaked via
+on-chain governance.
+
 ## Routing
 
 When messages and queries are received by the application, they must be routed to the appropriate module in order to be processed. Routing is done via `baseapp`, which holds a `router` for messages, and a `query router` for queries.
@@ -199,7 +206,7 @@ Just like the `router`, the `query router` is initilalized with all the query ro
 
 ## Main ABCI Messages
 
-The [Application-Blockchain Interface](https://tendermint.com/docs/spec/abci/) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like Tendermint. 
+The [Application-Blockchain Interface](https://tendermint.com/docs/spec/abci/) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like Tendermint.
 
 The consensus engine handles two main tasks:
 
@@ -376,14 +383,14 @@ Finally, `Commit` returns the hash of the commitment of `app.cms` back to the un
 
 The [`Info` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#info) is a simple query from the underlying consensus engine, notably used to sync the latter with the application during a handshake that happens on startup. When called, the `Info(res abci.ResponseInfo)` function from `baseapp` will return the application's name, version and the hash of the last commit of `app.cms`. 
 
-### Query 
+### Query
 
 The [`Query` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#query) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It is the main entrypoint to build interfaces with the application. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://tendermint.com/docs/app-dev/abci-spec.html#query). 
 
 Each `query` comes with a `path`, which contains multiple `string`s. By convention, the first element of the `path` (`path[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom`). The `baseapp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
-- Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers. 
+- Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.
 - P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `baseapp`'s [constructor](#constructor).
 - Custom queries, which encompass most queries, are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's `querier`.
 

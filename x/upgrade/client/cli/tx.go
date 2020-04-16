@@ -35,7 +35,6 @@ func NewCmdSubmitUpgradeProposal(
 	newMsgFn func() gov.MsgSubmitProposalI,
 ) *cobra.Command {
 
-    cmd := &cobra.Command{
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),

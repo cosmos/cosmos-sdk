@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,6 +18,7 @@ import (
 )
 
 var (
+	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -55,21 +57,38 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 // AppModule implements an application module for the distribution module.
 type AppModule struct {
 	AppModuleBasic
+
+	keeper Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule() AppModule {
+func NewAppModule(k Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
+		keeper:         k,
 	}
 }
 
-//____________________________________________________________________________
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// AppModuleSimulation functions
+func (am AppModule) NewHandler() sdk.Handler { return nil }
+
+// InitGenesis performs a no-op.
+func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}
+
+func (AppModule) Route() string { return "" }
 
 // GenerateGenesisState performs a no-op.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
+
+// QuerierRoute returns the x/param module's querier route name.
+func (AppModule) QuerierRoute() string { return QuerierRoute }
+
+// NewQuerierHandler returns the x/params querier handler.
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	return NewQuerier(am.keeper)
 }
 
 // ProposalContents returns all the params content functions used to
@@ -89,4 +108,17 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {}
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
+}
+
+// ExportGenesis performs a no-op.
+func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONMarshaler) json.RawMessage {
+	return nil
+}
+
+// BeginBlock performs a no-op.
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+
+// EndBlock performs a no-op.
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

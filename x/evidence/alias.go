@@ -12,15 +12,12 @@ const (
 	StoreKey                 = types.StoreKey
 	RouterKey                = types.RouterKey
 	QuerierRoute             = types.QuerierRoute
-	DefaultParamspace        = types.DefaultParamspace
 	QueryEvidence            = types.QueryEvidence
 	QueryAllEvidence         = types.QueryAllEvidence
-	QueryParameters          = types.QueryParameters
 	TypeMsgSubmitEvidence    = types.TypeMsgSubmitEvidence
 	EventTypeSubmitEvidence  = types.EventTypeSubmitEvidence
 	AttributeValueCategory   = types.AttributeValueCategory
 	AttributeKeyEvidenceHash = types.AttributeKeyEvidenceHash
-	DefaultMaxEvidenceAge    = types.DefaultMaxEvidenceAge
 )
 
 var (
@@ -36,9 +33,7 @@ var (
 	NewGenesisState              = types.NewGenesisState
 	DefaultGenesisState          = types.DefaultGenesisState
 	ConvertDuplicateVoteEvidence = types.ConvertDuplicateVoteEvidence
-	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
 	DoubleSignJailEndTime        = types.DoubleSignJailEndTime
-	ParamKeyTable                = types.ParamKeyTable
 	ErrNoEvidenceHandlerExists   = types.ErrNoEvidenceHandlerExists
 	ErrInvalidEvidence           = types.ErrInvalidEvidence
 	ErrNoEvidenceExists          = types.ErrNoEvidenceExists

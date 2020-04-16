@@ -193,6 +193,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
 
+	var channelCap *capability.Capability
 	testCases := []testCase{
 		{"success: UNORDERED", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), 100)
@@ -218,15 +219,26 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.ORDERED, testConnectionIDA)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 5)
 		}, false},
+		{"capability not found", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), 100)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, exported.OPEN, exported.UNORDERED, testConnectionIDA)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
+			channelCap = capability.NewCapability(3)
+		}, false},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
 			suite.SetupTest() // reset
+
+			var err error
+			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), ibctypes.ChannelCapabilityPath(testPort2, testChannel2))
+			suite.Require().NoError(err, "could not create capability")
+
 			tc.malleate()
 
-			err := suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(suite.chainA.GetContext(), packet, mockSuccessPacket{}.GetBytes())
+			err = suite.chainA.App.IBCKeeper.ChannelKeeper.PacketExecuted(suite.chainA.GetContext(), channelCap, packet, mockSuccessPacket{}.GetBytes())
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -242,7 +254,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	var packet types.Packet
 	packetKey := ibctypes.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
 
-	ack := transfertypes.AckDataTransfer{}.GetBytes()
+	ack := transfertypes.FungibleTokenPacketAcknowledgement{
+		Success: true,
+	}.GetBytes()
 
 	testCases := []testCase{
 		{"success", func() {

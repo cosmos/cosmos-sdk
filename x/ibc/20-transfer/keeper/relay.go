@@ -46,16 +46,6 @@ func (k Keeper) SendTransfer(
 	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver)
 }
 
-// ReceiveTransfer handles transfer receiving logic.
-func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
-	return k.onRecvPacket(ctx, packet, data)
-}
-
-// TimeoutTransfer handles transfer timeout logic.
-func (k Keeper) TimeoutTransfer(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
-	return k.onTimeoutPacket(ctx, packet, data)
-}
-
 // See spec for this function: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func (k Keeper) createOutgoingPacket(
 	ctx sdk.Context,
@@ -149,7 +139,7 @@ func (k Keeper) createOutgoingPacket(
 	return k.channelKeeper.SendPacket(ctx, channelCap, packet)
 }
 
-func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	if len(data.Amount) != 1 {
@@ -191,7 +181,18 @@ func (k Keeper) onRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 }
 
-func (k Keeper) onTimeoutPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
+	if !ack.Success {
+		return k.refundPacketAmount(ctx, packet, data)
+	}
+	return nil
+}
+
+func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+	return k.refundPacketAmount(ctx, packet, data)
+}
+
+func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	if len(data.Amount) != 1 {

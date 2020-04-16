@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
@@ -39,9 +38,6 @@ func TestQueryRouter(t *testing.T) {
 type echoer struct{}
 
 func (e echoer) Echo(_ context.Context, req *testdata.EchoRequest) (*testdata.EchoResponse, error) {
-	if req == nil {
-		return nil, fmt.Errorf("empty request")
-	}
 	return &testdata.EchoResponse{Message: req.Message}, nil
 }
 
@@ -61,7 +57,7 @@ func TestRegisterQueryService(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "hello", res.Message)
 
-	_, err = client.Echo(context.Background(), nil)
-	require.NotNil(t, err)
-
+	require.Panics(t, func() {
+		_, _ = client.Echo(context.Background(), nil)
+	})
 }

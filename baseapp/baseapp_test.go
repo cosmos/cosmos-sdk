@@ -1500,7 +1500,7 @@ func TestP2PQuery(t *testing.T) {
 func TestGetMaximumBlockGas(t *testing.T) {
 	app := setupBaseApp(t)
 	app.InitChain(abci.RequestInitChain{})
-	ctx := app.NewContext(true, abci.Header{})
+	ctx := app.NewContext(true, tmproto.Header{})
 
 	app.storeConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
 	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))

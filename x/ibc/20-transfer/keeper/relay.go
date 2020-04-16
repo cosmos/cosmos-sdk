@@ -139,7 +139,7 @@ func (k Keeper) createOutgoingPacket(
 	return k.channelKeeper.SendPacket(ctx, channelCap, packet)
 }
 
-func (k Keeper) onRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	if len(data.Amount) != 1 {

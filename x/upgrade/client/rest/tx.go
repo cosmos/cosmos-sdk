@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// nolint: unused
+// nolint
 func newRegisterTxRoutes(
 	cliCtx context.CLIContext,
 	txg tx.Generator,

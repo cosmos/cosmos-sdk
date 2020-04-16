@@ -102,8 +102,9 @@ type SimApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys  map[string]*sdk.KVStoreKey
-	tkeys map[string]*sdk.TransientStoreKey
+	keys    map[string]*sdk.KVStoreKey
+	tkeys   map[string]*sdk.TransientStoreKey
+	memKeys map[string]*sdk.MemoryStoreKey
 
 	// subspaces
 	subspaces map[string]params.Subspace
@@ -157,6 +158,7 @@ func NewSimApp(
 		evidence.StoreKey, transfer.StoreKey, capability.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capability.MemStoreKey)
 
 	app := &SimApp{
 		BaseApp:        bApp,
@@ -164,6 +166,7 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
+		memKeys:        memKeys,
 		subspaces:      make(map[string]params.Subspace),
 	}
 
@@ -182,7 +185,7 @@ func NewSimApp(
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(std.ConsensusParamsKeyTable()))
 
 	// add capability keeper and ScopeToModule for ibc module
-	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey])
+	app.CapabilityKeeper = capability.NewKeeper(appCodec, keys[capability.StoreKey], memKeys[capability.MemStoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibc.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(transfer.ModuleName)
 
@@ -278,6 +281,7 @@ func NewSimApp(
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 	)
 
@@ -312,7 +316,7 @@ func NewSimApp(
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper),
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper, app.StakingKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		params.NewAppModule(), // NOTE: only used for simulation to generate randomized param change proposals
+		params.NewAppModule(app.ParamsKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -320,6 +324,7 @@ func NewSimApp(
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
+	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -415,6 +420,13 @@ func (app *SimApp) GetKey(storeKey string) *sdk.KVStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
+}
+
+// GetMemKey returns the MemStoreKey for the provided mem key.
+//
+// NOTE: This is solely used for testing purposes.
+func (app *SimApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.

@@ -187,6 +187,14 @@ func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey)
 	}
 }
 
+// MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
+// commit multi-store.
+func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
+	for _, memKey := range keys {
+		app.MountStore(memKey, sdk.StoreTypeMemory)
+	}
+}
+
 // MountStoreWithDB mounts a store to the provided key in the BaseApp
 // multistore, using a specified DB.
 func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {

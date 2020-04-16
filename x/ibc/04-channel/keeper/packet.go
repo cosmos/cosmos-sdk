@@ -187,6 +187,7 @@ func (k Keeper) RecvPacket(
 // CONTRACT: each packet handler function should call WriteAcknowledgement at the end of the execution
 func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
+	chanCap *capability.Capability,
 	packet exported.PacketI,
 	acknowledgement []byte,
 ) error {
@@ -201,6 +202,11 @@ func (k Keeper) PacketExecuted(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
+	}
+
+	capName := ibctypes.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
+		return sdkerrors.Wrap(types.ErrInvalidChannelCapability, "channel capability failed authentication")
 	}
 
 	if acknowledgement != nil || channel.Ordering == exported.UNORDERED {

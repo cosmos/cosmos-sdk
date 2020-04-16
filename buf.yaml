@@ -18,3 +18,4 @@ breaking:
     - FILE
   ignore:
     - third_party
+    - codec/testdata

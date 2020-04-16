@@ -1,7 +1,11 @@
 package baseapp
 
 import (
+	"context"
+	"fmt"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 
 	"github.com/stretchr/testify/require"
 
@@ -30,4 +34,34 @@ func TestQueryRouter(t *testing.T) {
 	require.Panics(t, func() {
 		qr.AddRoute("testRoute", testQuerier)
 	})
+}
+
+type echoer struct{}
+
+func (e echoer) Echo(_ context.Context, req *testdata.EchoRequest) (*testdata.EchoResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("empty request")
+	}
+	return &testdata.EchoResponse{Message: req.Message}, nil
+}
+
+var _ testdata.EchoServiceServer = echoer{}
+
+func TestRegisterQueryService(t *testing.T) {
+	qr := NewQueryRouter()
+	testdata.RegisterEchoServiceServer(qr, echoer{})
+	helper := &QueryServiceTestHelper{
+		QueryRouter: qr,
+		ctx:         sdk.Context{},
+	}
+	client := testdata.NewEchoServiceClient(helper)
+
+	res, err := client.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
+	require.Nil(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "hello", res.Message)
+
+	res, err = client.Echo(context.Background(), nil)
+	require.NotNil(t, err)
+
 }

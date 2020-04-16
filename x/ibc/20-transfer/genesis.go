@@ -10,20 +10,22 @@ import (
 // GenesisState is currently only used to ensure that the InitGenesis gets run
 // by the module manager
 type GenesisState struct {
+	PortID  string
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 }
 
 func DefaultGenesis() GenesisState {
 	return GenesisState{
+		PortID:  types.PortID,
 		Version: types.Version,
 	}
 }
 
 // InitGenesis sets distribution information for genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, state GenesisState) {
 	// transfer module binds to the transfer port on InitChain
 	// and claims the returned capability
-	err := keeper.BindPort(ctx, types.PortID)
+	err := keeper.BindPort(ctx, state.PortID)
 	if err != nil {
 		panic(fmt.Sprintf("could not claim port capability: %v", err))
 	}

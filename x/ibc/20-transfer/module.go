@@ -111,9 +111,12 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // InitGenesis performs genesis initialization for the ibc transfer module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+
 	// check if the IBC transfer module account is set
-	InitGenesis(ctx, am.keeper)
+	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -143,11 +146,6 @@ func (am AppModule) OnChanOpenInit(
 	version string,
 ) error {
 	// TODO: Enforce ordering, currently relayers use ORDERED channels
-
-	if counterparty.PortID != types.PortID {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "counterparty has invalid portid. expected: %s, got %s", types.PortID, counterparty.PortID)
-	}
-
 	if version != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
 	}
@@ -173,11 +171,6 @@ func (am AppModule) OnChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	// TODO: Enforce ordering, currently relayers use ORDERED channels
-
-	if counterparty.PortID != types.PortID {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "counterparty has invalid portid. expected: %s, got %s", types.PortID, counterparty.PortID)
-	}
-
 	if version != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
 	}

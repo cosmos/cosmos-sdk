@@ -240,6 +240,37 @@ func (suite *KeeperTestSuite) TestReleaseCapability() {
 	suite.Require().Nil(got)
 }
 
+func (suite KeeperTestSuite) TestRevertCapability() {
+	sk := suite.keeper.ScopeToModule(bank.ModuleName)
+
+	ms := suite.ctx.MultiStore()
+
+	msCache := ms.CacheMultiStore()
+	cacheCtx := suite.ctx.WithMultiStore(msCache)
+
+	capName := "revert"
+	// Create capability on cached context
+	cap, err := sk.NewCapability(cacheCtx, capName)
+	suite.Require().NoError(err, "could not create capability")
+
+	// Check that capabality written in cached context
+	gotCache, ok := sk.GetCapability(cacheCtx, capName)
+	suite.Require().True(ok, "could not retrieve capability from cached context")
+	suite.Require().Equal(cap, gotCache, "did not get correct capability from cached context")
+
+	// Check that capability is NOT written to original context
+	got, ok := sk.GetCapability(suite.ctx, capName)
+	suite.Require().False(ok, "retrieved capability from original context before write")
+	suite.Require().Nil(got, "capability not nil in original store")
+
+	// Write to underlying memKVStore
+	msCache.Write()
+
+	got, ok = sk.GetCapability(suite.ctx, capName)
+	suite.Require().True(ok, "could not retrieve capability from context")
+	suite.Require().Equal(cap, gotCache, "did not get correct capability from context")
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

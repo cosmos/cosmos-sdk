@@ -47,9 +47,8 @@ message Supply {
 // Evidence defines the application-level allowed Evidence to be submitted via a
 // MsgSubmitEvidence message.
 message Evidence {
-  option (gogoproto.equal) = true;
-  option (cosmos_proto.interface_type) =
-      "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
+  option (gogoproto.equal)             = true;
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
 
   // sum defines a set of all acceptable concrete Evidence implementations.
   oneof sum {
@@ -63,9 +62,8 @@ message MsgSubmitEvidence {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base = 1
-      [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-  Evidence evidence = 2;
+  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+  Evidence                                       evidence = 2;
 }
 
 // MsgSubmitProposal defines the application-level message type for handling
@@ -74,9 +72,8 @@ message MsgSubmitProposal {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  cosmos_sdk.x.gov.v1.MsgSubmitProposalBase base = 1
-      [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-  Content content = 2;
+  cosmos_sdk.x.gov.v1.MsgSubmitProposalBase base    = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+  Content                                   content = 2;
 }
 
 // Proposal defines the application-level concrete proposal type used in governance
@@ -84,9 +81,8 @@ message MsgSubmitProposal {
 message Proposal {
   option (gogoproto.equal) = true;
 
-  cosmos_sdk.x.gov.v1.ProposalBase base = 1
-      [(gogoproto.embed) = true, (gogoproto.nullable) = false];
-  Content content = 2 [(gogoproto.nullable) = false];
+  cosmos_sdk.x.gov.v1.ProposalBase base    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  Content                          content = 2 [(gogoproto.nullable) = false];
 }
 
 // Content defines the application-level allowed Content to be included in a
@@ -122,24 +118,23 @@ message Message {
 
   // sum defines the set of all allowed valid messages defined in modules.
   oneof sum {
-    cosmos_sdk.x.bank.v1.MsgSend                                msg_send                      = 1;
-    cosmos_sdk.x.bank.v1.MsgMultiSend                           msg_multi_send                = 2;
-    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant                   msg_verify_invariant          = 3;
-    cosmos_sdk.x.distribution.v1.MsgSetWithdrawAddress          msg_set_withdraw_address      = 4;
-    cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward = 5;
-    cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission =
-        6;
-    cosmos_sdk.x.distribution.v1.MsgFundCommunityPool msg_fund_community_pool = 7;
-    MsgSubmitEvidence                                 msg_submit_evidence     = 8;
-    MsgSubmitProposal                                 msg_submit_proposal     = 9;
-    cosmos_sdk.x.gov.v1.MsgVote                       msg_vote                = 10;
-    cosmos_sdk.x.gov.v1.MsgDeposit                    msg_deposit             = 11;
-    cosmos_sdk.x.slashing.v1.MsgUnjail                msg_unjail              = 12;
-    cosmos_sdk.x.staking.v1.MsgCreateValidator        msg_create_validator    = 13;
-    cosmos_sdk.x.staking.v1.MsgEditValidator          msg_edit_validator      = 14;
-    cosmos_sdk.x.staking.v1.MsgDelegate               msg_delegate            = 15;
-    cosmos_sdk.x.staking.v1.MsgBeginRedelegate        msg_begin_redelegate    = 16;
-    cosmos_sdk.x.staking.v1.MsgUndelegate             msg_undelegate          = 17;
+    cosmos_sdk.x.bank.v1.MsgSend                                msg_send                          = 1;
+    cosmos_sdk.x.bank.v1.MsgMultiSend                           msg_multi_send                    = 2;
+    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant                   msg_verify_invariant              = 3;
+    cosmos_sdk.x.distribution.v1.MsgSetWithdrawAddress          msg_set_withdraw_address          = 4;
+    cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward     = 5;
+    cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission = 6;
+    cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool           = 7;
+    MsgSubmitEvidence                                           msg_submit_evidence               = 8;
+    MsgSubmitProposal                                           msg_submit_proposal               = 9;
+    cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                          = 10;
+    cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                       = 11;
+    cosmos_sdk.x.slashing.v1.MsgUnjail                          msg_unjail                        = 12;
+    cosmos_sdk.x.staking.v1.MsgCreateValidator                  msg_create_validator              = 13;
+    cosmos_sdk.x.staking.v1.MsgEditValidator                    msg_edit_validator                = 14;
+    cosmos_sdk.x.staking.v1.MsgDelegate                         msg_delegate                      = 15;
+    cosmos_sdk.x.staking.v1.MsgBeginRedelegate                  msg_begin_redelegate              = 16;
+    cosmos_sdk.x.staking.v1.MsgUndelegate                       msg_undelegate                    = 17;
   }
 }
 
@@ -157,9 +152,8 @@ message StdFee {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = true;
 
-  repeated cosmos_sdk.v1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  uint64 gas = 2;
+  repeated cosmos_sdk.v1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  uint64                      gas    = 2;
 }
 
 // StdSignature defines a signature structure that contains the signature of a

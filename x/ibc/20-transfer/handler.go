@@ -30,7 +30,7 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result,
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
-			sdk.NewAttribute(AttributeKeyReceiver, msg.Receiver.String()),
+			sdk.NewAttribute(AttributeKeyReceiver, msg.Receiver),
 		),
 	)
 

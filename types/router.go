@@ -38,5 +38,6 @@ type Router interface {
 type QueryRouter interface {
 	AddRoute(r string, h Querier) QueryRouter
 	Route(path string) Querier
-	RegisterService(sd *grpc.ServiceDesc, ss interface{})
+	// RegisterService registers a querier which implements the provide grpc service description
+	RegisterService(sd *grpc.ServiceDesc, querier interface{})
 }

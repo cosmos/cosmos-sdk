@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+
 	"github.com/gogo/protobuf/grpc"
 
 	"github.com/gorilla/mux"
@@ -142,10 +143,11 @@ type AppModule interface {
 	// routes
 	Route() string
 	NewHandler() sdk.Handler
-	// TODO: deprecate in favor of RegisterQueryService
+	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
-	// TODO: deprecate in favor of RegisterQueryService
+	// Deprecated: use RegisterQueryService
 	NewQuerierHandler() sdk.Querier
+	// RegisterQueryService allows a module to register a query service grpc
 	RegisterQueryService(grpc.Server)
 
 	// ABCI

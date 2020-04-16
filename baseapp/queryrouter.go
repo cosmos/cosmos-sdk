@@ -71,6 +71,10 @@ func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{
 		}
 }
 
+// QueryServiceTestHelper provides a helper for making grpc query service
+// rpc calls in unit tests. It implements both the grpc Server and ClientConn
+// interfaces needed to register a query service server and create a query
+// service client.
 type QueryServiceTestHelper struct {
 	*QueryRouter
 	ctx sdk.Context

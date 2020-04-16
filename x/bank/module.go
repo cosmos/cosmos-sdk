@@ -107,7 +107,7 @@ func (AppModule) Route() string { return RouterKey }
 func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string { return QuerierRoute }
+func (AppModule) QuerierRoute() string { return RouterKey }
 
 // NewQuerierHandler returns the bank module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {

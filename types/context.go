@@ -226,6 +226,10 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, cms.Write
 }
 
+type sdkContextKeyType string
+
+const sdkContextKey sdkContextKeyType = "sdk-context"
+
 // WrapSDKContext attaches a Context to that Context's context.Context member
 // and returns that context. It is useful for passing a Context through methods
 // that take a generic context.Context parameter such as generated gRPC

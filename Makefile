@@ -22,7 +22,6 @@ all: tools build lint test
 
 build: go.sum
 	@go build -mod=readonly ./...
-.PHONY: build
 
 build-sim: go.sum
 ifeq ($(OS),Windows_NT)
@@ -32,6 +31,10 @@ else
 	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
 	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
 endif
+
+.PHONY: \
+ build \
+ build-sim
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -169,7 +172,7 @@ test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
-test-sim-benchmark-invariants \
+test-sim-benchmark-invariants
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

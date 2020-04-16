@@ -183,7 +183,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgTimeout:
 			// Lookup module by channel capability
-			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
 			if !ok {
 				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
 			}
@@ -193,7 +193,16 @@ func NewHandler(k Keeper) sdk.Handler {
 			if !ok {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
-			return cbs.OnTimeoutPacket(ctx, msg.Packet)
+			res, err := cbs.OnTimeoutPacket(ctx, msg.Packet)
+			if err != nil {
+
+				return nil, err
+			}
+			err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet)
+			if err != nil {
+				return nil, err
+			}
+			return res, err
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)

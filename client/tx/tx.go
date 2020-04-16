@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -16,9 +17,8 @@ import (
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -27,6 +27,20 @@ type (
 	// implement ClientTx.
 	Generator interface {
 		NewTx() ClientTx
+		NewFee() ClientFee
+		NewSignature() ClientSignature
+	}
+
+	ClientFee interface {
+		sdk.Fee
+		SetGas(uint64)
+		SetAmount(sdk.Coins)
+	}
+
+	ClientSignature interface {
+		sdk.Signature
+		SetPubKey(crypto.PubKey) error
+		SetSignature([]byte)
 	}
 
 	// ClientTx defines an interface which an application-defined concrete transaction
@@ -39,9 +53,9 @@ type (
 
 		SetMsgs(...sdk.Msg) error
 		GetSignatures() []sdk.Signature
-		SetSignatures(...sdk.Signature)
+		SetSignatures(...ClientSignature) error
 		GetFee() sdk.Fee
-		SetFee(sdk.Fee)
+		SetFee(ClientFee) error
 		GetMemo() string
 		SetMemo(string)
 
@@ -176,7 +190,7 @@ func WriteGeneratedTxResponse(
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, types.ErrorInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, sdkerrors.ErrorInvalidGasAdjustment.Error())
 			return
 		}
 
@@ -233,10 +247,20 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 		}
 	}
 
+	clientFee := txf.txGenerator.NewFee()
+	clientFee.SetAmount(fees)
+	clientFee.SetGas(txf.gas)
+
 	tx := txf.txGenerator.NewTx()
-	tx.SetFee(auth.NewStdFee(txf.gas, fees))
 	tx.SetMemo(txf.memo)
-	tx.SetSignatures()
+
+	if err := tx.SetFee(clientFee); err != nil {
+		return nil, err
+	}
+
+	if err := tx.SetSignatures(); err != nil {
+		return nil, err
+	}
 
 	if err := tx.SetMsgs(msgs...); err != nil {
 		return nil, err
@@ -256,7 +280,11 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	tx.SetSignatures(auth.NewStdSignature(nil, nil))
+	sig := txf.txGenerator.NewSignature()
+
+	if err := tx.SetSignatures(sig); err != nil {
+		return nil, err
+	}
 
 	return tx.Marshal()
 }
@@ -337,7 +365,17 @@ func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 		return nil, err
 	}
 
-	tx.SetSignatures(auth.NewStdSignature(pubkey, sigBytes))
+	sig := txf.txGenerator.NewSignature()
+	sig.SetSignature(sigBytes)
+
+	if err := sig.SetPubKey(pubkey); err != nil {
+		return nil, err
+	}
+
+	if err := tx.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
 	return tx.Marshal()
 }
 

@@ -72,7 +72,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccount
 // in order to expose it to the ICS20 transfer handler.
 // Keeper retreives channel capability and passes it into channel keeper for authentication
 func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
-	chanCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel()))
+	chanCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel()))
 	if !ok {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}

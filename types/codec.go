@@ -48,7 +48,7 @@ func canonicalProtoJSON(bz []byte) ([]byte, error) {
 	return jsonc.Marshal(genericJSONNoDefaults)
 }
 
-// jsonStripDefaults removes default (0, true,"", [], {})  and null values
+// jsonStripDefaults removes default (0, false, "", [], {})  and null values
 //from maps within JSON that has been parsed into a generic interface{}
 // using json.Unmarshal. Defaults within arrays are not removed.
 // The returned interface{} value can then be marshaled back to JSON.

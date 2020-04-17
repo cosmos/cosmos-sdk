@@ -35,8 +35,8 @@ func TestCanonicalProtoJSON(t *testing.T) {
 			canonical: `{"x":{"a":1}}`,
 		},
 		"array with defaults":{
-			orig:      `[0,false,"",null,[],{}]`,
-			canonical: `[0,false,"",null,[],{}]`,
+			orig:      `[0,false,"",null,[],{},1,"abc"]`,
+			canonical: `[0,false,"",null,[],{},1,"abc"]`,
 		},
 		"unsorted":{
 			orig:      `{"z":1,"a":2,"c":3}`,

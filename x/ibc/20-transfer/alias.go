@@ -48,7 +48,6 @@ type (
 	ChannelKeeper                      = types.ChannelKeeper
 	ClientKeeper                       = types.ClientKeeper
 	ConnectionKeeper                   = types.ConnectionKeeper
-	SupplyKeeper                       = types.SupplyKeeper
 	FungibleTokenPacketData            = types.FungibleTokenPacketData
 	FungibleTokenPacketAcknowledgement = types.FungibleTokenPacketAcknowledgement
 	MsgTransfer                        = types.MsgTransfer

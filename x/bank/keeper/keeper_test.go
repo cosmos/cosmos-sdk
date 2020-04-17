@@ -46,6 +46,17 @@ func newBarCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(barDenom, amt)
 }
 
+// nolint: interfacer
+func getCoinsByName(ctx sdk.Context, bk bank.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
+	moduleAddress := bk.GetModuleAddress(moduleName)
+	macc := ak.GetAccount(ctx, moduleAddress)
+	if macc == nil {
+		return sdk.Coins(nil)
+	}
+
+	return bk.GetAllBalances(ctx, macc.GetAddress())
+}
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -104,16 +115,6 @@ func (suite *IntegrationTestSuite) TestSupply() {
 
 	total := app.BankKeeper.GetSupply(ctx).GetTotal()
 	suite.Require().Equal(totalSupply, total)
-}
-
-func getCoinsByName(ctx sdk.Context, bk bank.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
-	moduleAddress := bk.GetModuleAddress(moduleName)
-	macc := ak.GetAccount(ctx, moduleAddress)
-	if macc == nil {
-		return sdk.Coins(nil)
-	}
-
-	return bk.GetAllBalances(ctx, macc.GetAddress())
 }
 
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {

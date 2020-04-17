@@ -112,7 +112,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // InitGenesis performs genesis initialization for the ibc transfer module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState GenesisState
+	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	// check if the IBC transfer module account is set
@@ -120,8 +120,9 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	return []abci.ValidatorUpdate{}
 }
 
-func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONMarshaler) json.RawMessage {
-	return nil
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
+	gs := ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock implements the AppModule interface

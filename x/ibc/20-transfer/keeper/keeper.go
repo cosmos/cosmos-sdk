@@ -25,6 +25,7 @@ const (
 // Keeper defines the IBC transfer keeper
 type Keeper struct {
 	storeKey sdk.StoreKey
+	portID   string
 	cdc      *codec.Codec
 
 	channelKeeper types.ChannelKeeper
@@ -93,8 +94,14 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 // BindPort defines a wrapper function for the ort Keeper's function in
 // order to expose it to module's InitGenesis function
 func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
+	k.portID = portID
 	cap := k.portKeeper.BindPort(ctx, portID)
 	return k.ClaimCapability(ctx, cap, porttypes.PortPath(portID))
+}
+
+// GetPort returns the portID for the transfer module. Used in ExportGenesis
+func (k Keeper) GetPort() string {
+	return k.portID
 }
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module

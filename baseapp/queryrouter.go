@@ -97,7 +97,7 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 	}
 	querier := q.Route(path[1])
 	if querier == nil {
-		return fmt.Errorf("handler not found for %s", path[2])
+		return fmt.Errorf("handler not found for %s", path[1])
 	}
 	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {

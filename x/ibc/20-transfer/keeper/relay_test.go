@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			}, true, true},
 		{"successful transfer from external chain", prefixCoins,
 			func() {
-				suite.chainA.App.SupplyKeeper.SetSupply(suite.chainA.GetContext(), supply.NewSupply(prefixCoins))
+				suite.chainA.App.BankKeeper.SetSupply(suite.chainA.GetContext(), bank.NewSupply(prefixCoins))
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, prefixCoins)
 				suite.Require().NoError(err)
 				suite.chainA.CreateClient(suite.chainB)

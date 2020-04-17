@@ -45,7 +45,3 @@ type ConnectionKeeper interface {
 type PortKeeper interface {
 	BindPort(ctx sdk.Context, portID string) *capability.Capability
 }
-
-// SupplyKeeper expected supply keeper
-type SupplyKeeper interface {
-}

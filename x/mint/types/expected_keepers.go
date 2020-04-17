@@ -11,7 +11,8 @@ type StakingKeeper interface {
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 
-// BankKeeper defines the expected supply keeper
+// BankKeeper defines the contract needed to be fulfilled for banking and supply
+// dependencies.
 type BankKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 

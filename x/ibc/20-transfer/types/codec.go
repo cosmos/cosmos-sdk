@@ -13,7 +13,6 @@ var ModuleCdc = codec.New()
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTransfer{}, "ibc/transfer/MsgTransfer", nil)
 	cdc.RegisterConcrete(FungibleTokenPacketData{}, "ibc/transfer/PacketDataTransfer", nil)
-	cdc.RegisterConcrete(GenesisState{}, "ibc/transfer/GenesisState", nil)
 }
 
 func init() {

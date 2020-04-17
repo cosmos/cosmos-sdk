@@ -142,6 +142,7 @@ type ClientType byte
 // available client types
 const (
 	Tendermint ClientType = iota + 1 // 1
+	Localhost
 )
 
 // string representation of the client types

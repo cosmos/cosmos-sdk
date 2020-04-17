@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/types"
 	"io"
 	"math/rand"
 	"os"
@@ -27,8 +26,8 @@ func initChain(
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
 	req := abci.RequestInitChain{
-		AppStateBytes: appState,
-		ChainId:       chainID,
+		AppStateBytes:   appState,
+		ChainId:         chainID,
 		ConsensusParams: consensusParams,
 	}
 	res := app.InitChain(req)

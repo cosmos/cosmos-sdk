@@ -5,11 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (

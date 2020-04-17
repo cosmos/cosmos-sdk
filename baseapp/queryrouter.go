@@ -58,15 +58,17 @@ func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{
 			path0 := path[0]
 			for _, md := range sd.Methods {
 				// checks each GRPC service method to see if it matches the path
-				if md.MethodName == path0 {
-					res, err := md.Handler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-						return protoCodec.Unmarshal(req.Data, i)
-					}, nil)
-					if err != nil {
-						return nil, err
-					}
-					return protoCodec.Marshal(res)
+				if md.MethodName != path0 {
+					continue
 				}
+				res, err := md.Handler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
+					return protoCodec.Unmarshal(req.Data, i)
+				}, nil)
+				if err != nil {
+					return nil, err
+				}
+				return protoCodec.Marshal(res)
+			}
 			}
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}

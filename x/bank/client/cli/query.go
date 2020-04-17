@@ -51,8 +51,8 @@ func NewBalancesCmd(m codec.Marshaler) *cobra.Command {
 			queryClient := types.NewQueryServiceClient(cliCtx.QueryConn())
 			denom := viper.GetString(flagDenom)
 			if denom == "" {
-				params := types.NewQueryAllBalancesRequest(addr)
-				result, err := queryClient.QueryAllBalances(gocontext.Background(), params)
+				request := types.NewQueryAllBalancesRequest(addr)
+				result, err := queryClient.QueryAllBalances(gocontext.Background(), request)
 				if err != nil {
 					return err
 				}

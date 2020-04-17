@@ -235,6 +235,8 @@ func parseQueryStorePath(path string) (storeName string, err error) {
 	return paths[1], nil
 }
 
+// QueryConn returns a new grpc ClientConn for making grpc query calls that
+// get routed to the node's ABCI query handler
 func (ctx CLIContext) QueryConn() gogogrpc.ClientConn {
 	return cliQueryConn{ctx}
 }
@@ -247,7 +249,8 @@ var _ gogogrpc.ClientConn = cliQueryConn{}
 
 var protoCodec = encoding.GetCodec(proto.Name)
 
-func (c cliQueryConn) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+// Invoke implements the grpc ClientConn.Invoke method
+func (c cliQueryConn) Invoke(_ context.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {
 		return err
@@ -259,6 +262,7 @@ func (c cliQueryConn) Invoke(ctx context.Context, method string, args, reply int
 	return protoCodec.Unmarshal(resBz, reply)
 }
 
+// NewStream implements the grpc ClientConn.NewStream method
 func (c cliQueryConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
 }

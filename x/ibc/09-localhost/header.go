@@ -6,9 +6,8 @@ import (
 
 var _ clientexported.Header = Header{}
 
-// Header defines the Localhost consensus Header
-type Header struct {
-}
+// Header defines the Localhost consensus Header. It is defined as an empty struct.
+type Header struct{}
 
 // ClientType defines that the Header is in loop-back mode.
 func (h Header) ClientType() clientexported.ClientType {

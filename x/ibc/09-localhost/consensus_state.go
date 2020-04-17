@@ -5,22 +5,20 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
-// ConsensusState defines a Localhost consensus state
-type ConsensusState struct {
-	Root commitmentexported.Root `json:"root" yaml:"root"`
-}
+// ConsensusState defines a Localhost consensus state. It is defined as an empty struct.
+type ConsensusState struct{}
 
 // ClientType returns Localhost
 func (ConsensusState) ClientType() clientexported.ClientType {
 	return clientexported.Localhost
 }
 
-// GetRoot returns the commitment Root for the specific
+// GetRoot returns a nil root
 func (cs ConsensusState) GetRoot() commitmentexported.Root {
-	return cs.Root
+	return nil
 }
 
-// GetHeight returns the height for the specific consensus state
+// GetHeight returns the 0
 func (cs ConsensusState) GetHeight() uint64 {
 	return 0
 }

@@ -29,7 +29,12 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 			return nil, err
 		}
 	case exported.Localhost:
-		clientState = localhost.NewClientState(ctx.MultiStore().GetKVStore(k.GetStoreKey()))
+		// override msg ClientID with "localhost"
+		clientState = localhost.NewClientState(
+			k.ClientStore(ctx, exported.Localhost.String()),
+			ctx.ChainID(),
+			ctx.BlockHeight(),
+		)
 	default:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	}

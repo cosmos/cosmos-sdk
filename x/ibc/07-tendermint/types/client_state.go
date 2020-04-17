@@ -32,7 +32,7 @@ type ClientState struct {
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 	// Last Header that was stored by client
-	LastHeader Header
+	LastHeader Header `json:"last_header" yaml:"last_header"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg

@@ -18,31 +18,24 @@ const (
 
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:       commitmenttypes.MerkleProof{},
+			expPass:     false,
 		},
 	}
 
@@ -50,9 +43,9 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.cdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
+			suite.cdc, nil, height, "chainA", 0, tc.prefix, tc.proof, localhost.ConsensusState{},
 
-			// suite.cdc, height, tc.prefix, tc.proof, tc.consensusState,
+			// suite.cdc, height, tc.prefix, tc.proof, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {
@@ -68,34 +61,27 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	conn := connection.NewConnectionEnd(connectionexported.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		connection     connection.ConnectionEnd
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		connection  connection.ConnectionEnd
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			connection:  conn,
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			connection:  conn,
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:       commitmenttypes.MerkleProof{},
+			expPass:     false,
 		},
 	}
 
@@ -103,7 +89,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, tc.connection, tc.consensusState,
+			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, tc.connection, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {
@@ -119,44 +105,34 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 	ch := channel.NewChannel(channelexported.OPEN, channelexported.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		channel        channel.Channel
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		channel     channel.Channel
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			channel:     ch,
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 		{
 			name:        "latest client height < height",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			channel:     ch,
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			channel:     ch,
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:       commitmenttypes.MerkleProof{},
+			expPass:     false,
 		},
 	}
 
@@ -164,7 +140,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, tc.channel, tc.consensusState,
+			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, tc.channel, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {
@@ -177,54 +153,41 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 
 func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		commitment     []byte
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		commitment  []byte
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			commitment:  []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 		{
 			name:        "latest client height < height",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			commitment:  []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "client is frozen",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			commitment:  []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			commitment:  []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:       commitmenttypes.MerkleProof{},
+			expPass:     false,
 		},
 	}
 
@@ -232,7 +195,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {
@@ -245,54 +208,41 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		ack            []byte
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		ack         []byte
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			ack:         []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 		{
 			name:        "latest client height < height",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			ack:         []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "client is frozen",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			ack:         []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: localhost.NewClientState(suite.store),
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
 			ack:         []byte{},
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
-			expPass: false,
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:       commitmenttypes.MerkleProof{},
+			expPass:     false,
 		},
 	}
 
@@ -300,7 +250,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {
@@ -313,21 +263,17 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 	}
 
@@ -335,7 +281,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {
@@ -348,49 +294,36 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
-		name           string
-		clientState    localhost.ClientState
-		consensusState localhost.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          commitmenttypes.MerkleProof
-		expPass        bool
+		name        string
+		clientState localhost.ClientState
+		prefix      commitmenttypes.MerklePrefix
+		proof       commitmenttypes.MerkleProof
+		expPass     bool
 	}{
 		{
 			name:        "ApplyPrefix failed",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.MerklePrefix{},
+			expPass:     false,
 		},
 		{
 			name:        "latest client height < height",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "client is frozen",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			expPass:     false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: localhost.NewClientState(suite.store),
-			consensusState: localhost.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot([]byte{}),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   commitmenttypes.MerkleProof{},
-			expPass: false,
+			clientState: localhost.NewClientState(suite.store, "chainID", 10),
+			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
+			proof:       commitmenttypes.MerkleProof{},
+			expPass:     false,
 		},
 	}
 
@@ -398,7 +331,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
+			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, localhost.ConsensusState{},
 		)
 
 		if tc.expPass {

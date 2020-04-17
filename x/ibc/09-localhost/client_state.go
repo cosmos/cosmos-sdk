@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -23,30 +22,30 @@ var _ clientexported.ClientState = ClientState{}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
-	ctx   sdk.Context
-	store types.KVStore
+	store   types.KVStore
+	ID      string `json:"id" yaml:"id"`
+	ChainID string `json:"chain_id" yaml:"chain_id"`
+	Height  int64  `json:"height" yaml:"height"`
 }
 
 // NewClientState creates a new ClientState instance
-func NewClientState(store types.KVStore) ClientState {
+func NewClientState(store types.KVStore, chainID string, height int64) ClientState {
 	return ClientState{
-		store: store,
+		store:   store,
+		ID:      clientexported.Localhost.String(),
+		ChainID: chainID,
+		Height:  height,
 	}
-}
-
-// WithContext updates the client state context to provide the chain ID and latest height
-func (cs *ClientState) WithContext(ctx sdk.Context) {
-	cs.ctx = ctx
 }
 
 // GetID returns the loop-back client state identifier.
 func (cs ClientState) GetID() string {
-	return clientexported.Localhost.String()
+	return cs.ID
 }
 
 // GetChainID returns an empty string
 func (cs ClientState) GetChainID() string {
-	return cs.ctx.ChainID()
+	return cs.ChainID
 }
 
 // ClientType is localhost.
@@ -54,9 +53,9 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 	return clientexported.Localhost
 }
 
-// GetLatestHeight returns the block height from the stored context.
+// GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.ctx.BlockHeight())
+	return uint64(cs.Height)
 }
 
 // IsFrozen returns false.

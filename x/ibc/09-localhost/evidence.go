@@ -1,8 +1,6 @@
 package localhost
 
 import (
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
@@ -16,9 +14,8 @@ var (
 	_ clientexported.Misbehaviour = Evidence{}
 )
 
-// Evidence is not required for a loop-back client
-type Evidence struct {
-}
+// Evidence is not required for a loop-back client. It is defined as an empty struct.
+type Evidence struct{}
 
 // ClientType is Localhost light client
 func (ev Evidence) ClientType() clientexported.ClientType {
@@ -35,19 +32,14 @@ func (ev Evidence) Route() string {
 	return clienttypes.SubModuleName
 }
 
-// Type implements Evidence interface
+// Type implements Evidence interface. It returns the empty string.
 func (ev Evidence) Type() string {
-	return "client_misbehaviour"
+	return ""
 }
 
-// String implements Evidence interface
+// String implements Evidence interface. It returns the empty string.
 func (ev Evidence) String() string {
-	// FIXME: implement custom marshaller
-	bz, err := yaml.Marshal(ev)
-	if err != nil {
-		panic(err)
-	}
-	return string(bz)
+	return ""
 }
 
 // Hash implements Evidence interface.

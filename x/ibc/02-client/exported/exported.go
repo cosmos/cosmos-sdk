@@ -103,6 +103,9 @@ type ConsensusState interface {
 	// which is used for key-value pair verification.
 	GetRoot() commitmentexported.Root
 
+	// GetTimestamp returns the timestamp of the consensus state
+	GetTimestamp() uint64
+
 	ValidateBasic() error
 }
 

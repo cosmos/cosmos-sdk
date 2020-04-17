@@ -27,6 +27,7 @@ type CounterpartyI interface {
 type PacketI interface {
 	GetSequence() uint64
 	GetTimeoutHeight() uint64
+	GetTimeoutTimestamp() uint64
 	GetSourcePort() string
 	GetSourceChannel() string
 	GetDestPort() string

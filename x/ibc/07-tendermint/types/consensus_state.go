@@ -35,8 +35,8 @@ func (cs ConsensusState) GetHeight() uint64 {
 }
 
 // GetTimestamp returns block time at which the consensus state was stored
-func (cs ConsensusState) GetTimestamp() time.Time {
-	return cs.Timestamp
+func (cs ConsensusState) GetTimestamp() uint64 {
+	return cs.Timestamp.UnixNano()
 }
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.

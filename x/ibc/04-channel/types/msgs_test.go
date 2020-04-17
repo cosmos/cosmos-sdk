@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -354,13 +355,14 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 
 // define variables used for testing
 var (
-	timeout           = uint64(100)
+	timeoutHeight     = uint64(100)
+	timeoutTimestamp  = uint64(100)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
 	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
 
-	packet        = NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, 100)
-	unknownPacket = NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, 100)
+	packet        = NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
+	unknownPacket = NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 	invalidAck    = invalidAckData
 
 	emptyProof     = commitmenttypes.MerkleProof{Proof: nil}

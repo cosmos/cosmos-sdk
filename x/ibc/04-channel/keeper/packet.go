@@ -16,7 +16,7 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// SendPacket  is called by a module in order to send an IBC packet on a channel
+// SendPacket is called by a module in order to send an IBC packet on a channel
 // end owned by the calling module to the corresponding module on the counterparty
 // chain.
 func (k Keeper) SendPacket(
@@ -77,8 +77,13 @@ func (k Keeper) SendPacket(
 	}
 
 	// check if packet timeouted on the receiving chain
-	if clientState.GetLatestHeight() >= packet.GetTimeoutHeight() {
-		return sdkerrors.Wrap(types.ErrPacketTimeout, "timeout already passed ond the receiving chain")
+	latestHeight := clientState.GetLatestHeight()
+	if packet.GetTimeoutHeight() != 0 && latestHeight >= packet.GetTimeoutHeight() {
+		return sdkerrors.Wrap(types.ErrPacketTimeout, "timeout height already passed on the receiving chain")
+	}
+
+	if packet.GetTimeoutTimestamp() != 0 && k.connectionKeeper.GetTimeoutAtHeight(ctx, connectionEnd, latestHeight) >= packet.GetTimeoutTimestamp() {
+		return sdkerrors.Wrap(types.ErrPacketTimeout, "timeout timestamp already passed on the receiving chain")
 	}
 
 	nextSequenceSend, found := k.GetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -167,7 +172,11 @@ func (k Keeper) RecvPacket(
 	}
 
 	// check if packet timeouted by comparing it with the latest height of the chain
-	if uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+	if packet.GetTimeoutHeight() != 0 && uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+		return nil, types.ErrPacketTimeout
+	}
+
+	if packet.GetTimeoutTimestamp() != 0 && ctx.BlockTime().UnixNano() >= packet.GetTimeoutTimestamp() {
 		return nil, types.ErrPacketTimeout
 	}
 

@@ -147,6 +147,13 @@ func (am AppModule) OnChanOpenInit(
 	version string,
 ) error {
 	// TODO: Enforce ordering, currently relayers use ORDERED channels
+
+	// Require portID is the portID transfer module is bound to
+	boundPort := am.keeper.GetPort(ctx)
+	if boundPort != portID {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
+	}
+
 	if version != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
 	}
@@ -172,6 +179,13 @@ func (am AppModule) OnChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	// TODO: Enforce ordering, currently relayers use ORDERED channels
+
+	// Require portID is the portID transfer module is bound to
+	boundPort := am.keeper.GetPort(ctx)
+	if boundPort != portID {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
+	}
+
 	if version != types.Version {
 		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid version: %s, expected %s", version, "ics20-1")
 	}

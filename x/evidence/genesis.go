@@ -20,14 +20,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 
 		k.SetEvidence(ctx, e)
 	}
-
-	k.SetParams(ctx, gs.Params)
 }
 
 // ExportGenesis returns the evidence module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	return GenesisState{
-		Params:   k.GetParams(ctx),
 		Evidence: k.GetAllEvidence(ctx),
 	}
 }

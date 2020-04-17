@@ -7,12 +7,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func TestTransaction(t *testing.T) {
-	f := auth.NewStdFee(100, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)))
+	f := std.NewStdFee(100, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)))
 	m := "hello world"
 	acc1 := sdk.AccAddress("from")
 	acc2 := sdk.AccAddress("to")

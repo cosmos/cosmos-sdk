@@ -42,38 +42,7 @@ $ %s query %s --page=2 --limit=50
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of evidence to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of evidence to query for")
 
-	cmd.AddCommand(flags.GetCommands(QueryParamsCmd(cdc))...)
-
 	return flags.GetCommands(cmd)[0]
-}
-
-// QueryParamsCmd returns the command handler for evidence parameter querying.
-func QueryParamsCmd(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "params",
-		Short: "Query the current evidence parameters",
-		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(`Query the current evidence parameters:
-
-$ <appcli> query evidence params
-`),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
-			res, _, err := cliCtx.QueryWithData(route, nil)
-			if err != nil {
-				return err
-			}
-
-			var params types.Params
-			if err := cdc.UnmarshalJSON(res, &params); err != nil {
-				return fmt.Errorf("failed to unmarshal params: %w", err)
-			}
-
-			return cliCtx.PrintOutput(params)
-		},
-	}
 }
 
 // QueryEvidenceCmd returns the command handler for evidence querying. Evidence

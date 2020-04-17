@@ -51,12 +51,6 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &redB)
 		return fmt.Sprintf("%v\n%v", redA, redB)
 
-	case bytes.Equal(kvA.Key[:1], types.HistoricalInfoKey):
-		var histInfoA, histInfoB types.HistoricalInfo
-		cdc.MustUnmarshalBinaryBare(kvA.Value, &histInfoA)
-		cdc.MustUnmarshalBinaryBare(kvB.Value, &histInfoB)
-		return fmt.Sprintf("%v\n%v", histInfoA, histInfoB)
-
 	default:
 		panic(fmt.Sprintf("invalid staking key prefix %X", kvA.Key[:1]))
 	}

@@ -82,8 +82,8 @@ var (
 	SplitInactiveProposalQueueKey = types.SplitInactiveProposalQueueKey
 	SplitKeyDeposit               = types.SplitKeyDeposit
 	SplitKeyVote                  = types.SplitKeyVote
-	NewMsgSubmitProposalBase      = types.NewMsgSubmitProposalBase
 	NewMsgSubmitProposal          = types.NewMsgSubmitProposal
+	NewMsgSubmitProposalBase      = types.NewMsgSubmitProposalBase
 	NewMsgDeposit                 = types.NewMsgDeposit
 	NewMsgVote                    = types.NewMsgVote
 	ParamKeyTable                 = types.ParamKeyTable

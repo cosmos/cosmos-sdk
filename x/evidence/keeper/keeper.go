@@ -11,7 +11,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper defines the evidence module's keeper. The keeper is responsible for
@@ -20,26 +19,19 @@ import (
 type Keeper struct {
 	cdc            types.Codec
 	storeKey       sdk.StoreKey
-	paramSpace     paramtypes.Subspace
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
 }
 
 func NewKeeper(
-	cdc types.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace,
-	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
+	cdc types.Codec, storeKey sdk.StoreKey, stakingKeeper types.StakingKeeper,
+	slashingKeeper types.SlashingKeeper,
 ) *Keeper {
-
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
 
 	return &Keeper{
 		cdc:            cdc,
 		storeKey:       storeKey,
-		paramSpace:     paramSpace,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 	}

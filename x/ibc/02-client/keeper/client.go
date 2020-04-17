@@ -57,25 +57,26 @@ func (k Keeper) CreateClient(
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header
-func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
+func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) (exported.ClientState, error) {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	// check that the header consensus matches the client one
-	if header != nil && header.ClientType() != clientType {
-		return sdkerrors.Wrapf(types.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
+	// NOTE: not checked for localhost client
+	if header != nil && clientType != exported.Localhost && header.ClientType() != clientType {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
 	}
 
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	// addittion to spec: prevent update if the client is frozen
 	if clientState.IsFrozen() {
-		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
 	var (
@@ -100,29 +101,17 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
 	k.SetClientState(ctx, clientState)
 
+	// we don't set consensus state for localhost client
 	if consensusState != nil && header != nil {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeUpdateClient,
-			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
-
-	return nil
+	return clientState, nil
 }
 
 // CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the

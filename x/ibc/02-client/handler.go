@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -71,7 +73,8 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
 func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClient) (*sdk.Result, error) {
-	if err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader()); err != nil {
+	clientState, err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
+	if err != nil {
 		return nil, err
 	}
 
@@ -81,11 +84,13 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClie
 		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
 	}
 
+	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", msg.GetClientID(), clientState.GetLatestHeight()))
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeUpdateClient,
 			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
-			sdk.NewAttribute(AttrbuteKeyClientType, msg.GetHeader().ClientType().String()),
+			sdk.NewAttribute(AttrbuteKeyClientType, clientState.ClientType().String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

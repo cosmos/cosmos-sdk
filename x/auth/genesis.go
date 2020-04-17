@@ -10,7 +10,7 @@ import (
 //
 // CONTRACT: old coins from the FeeCollectionKeeper need to be transferred through
 // a genesis port script to the new fee collector account
-func InitGenesis(ctx sdk.Context, ak AccountKeeper, sk types.SupplyKeeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, ak AccountKeeper, bk types.BankKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
 	data.Accounts = SanitizeGenesisAccounts(data.Accounts)
 
@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, sk types.SupplyKeeper, data 
 		ak.SetAccount(ctx, acc)
 	}
 
-	sk.GetModuleAccount(ctx, FeeCollectorName)
+	bk.GetModuleAccount(ctx, FeeCollectorName)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper

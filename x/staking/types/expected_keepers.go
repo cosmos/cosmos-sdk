@@ -3,8 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	supplyexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // DistributionKeeper expected distribution keeper (noalias)
@@ -26,10 +26,7 @@ type BankKeeper interface {
 	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-}
 
-// SupplyKeeper defines the expected supply Keeper (noalias)
-type SupplyKeeper interface {
 	GetSupply(ctx sdk.Context) supplyexported.SupplyI
 
 	GetModuleAddress(name string) sdk.AccAddress

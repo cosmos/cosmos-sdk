@@ -50,6 +50,7 @@ func (qrt *QueryRouter) Route(path string) sdk.Querier {
 	return qrt.routes[path]
 }
 
+// RegisterService implements the grpc Server.RegisterService method
 func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// adds a top-level querier based on the GRPC service name
 	qrt.routes[sd.ServiceName] =

@@ -3,17 +3,13 @@ package distribution_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -40,7 +36,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	err := app.BankKeeper.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
 	require.NoError(t, err)
 
-	app.SupplyKeeper.SetModuleAccount(ctx, macc)
+	app.BankKeeper.SetModuleAccount(ctx, macc)
 
 	account := app.AccountKeeper.NewAccountWithAddress(ctx, recipient)
 	app.AccountKeeper.SetAccount(ctx, account)

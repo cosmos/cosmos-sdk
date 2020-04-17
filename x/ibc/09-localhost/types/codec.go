@@ -1,7 +1,12 @@
-package localhost
+package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+)
+
+const (
+	// SubModuleName for the localhost (loopback) client
+	SubModuleName = "localhost"
 )
 
 // SubModuleCdc defines the IBC localhost client codec.
@@ -10,10 +15,6 @@ var SubModuleCdc *codec.Codec
 // RegisterCodec registers the localhost types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
-	cdc.RegisterConcrete(ConsensusState{}, "ibc/client/localhost/ConsensusState", nil)
-	cdc.RegisterConcrete(Header{}, "ibc/client/localhost/Header", nil)
-	cdc.RegisterConcrete(Evidence{}, "ibc/client/localhost/Evidence", nil)
-
 	SetSubModuleCodec(cdc)
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhost "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
@@ -29,9 +29,9 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 			return nil, err
 		}
 	case exported.Localhost:
-		// override msg ClientID with "localhost"
-		clientState = localhost.NewClientState(
-			k.ClientStore(ctx, exported.Localhost.String()),
+		// msg client id is always "localhost"
+		clientState = localhosttypes.NewClientState(
+			k.ClientStore(ctx, msg.GetClientID()),
 			ctx.ChainID(),
 			ctx.BlockHeight(),
 		)

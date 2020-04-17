@@ -1,4 +1,4 @@
-package localhost
+package types
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -22,14 +22,14 @@ var _ clientexported.ClientState = ClientState{}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
-	store   types.KVStore
+	store   sdk.KVStore
 	ID      string `json:"id" yaml:"id"`
 	ChainID string `json:"chain_id" yaml:"chain_id"`
 	Height  int64  `json:"height" yaml:"height"`
 }
 
 // NewClientState creates a new ClientState instance
-func NewClientState(store types.KVStore, chainID string, height int64) ClientState {
+func NewClientState(store sdk.KVStore, chainID string, height int64) ClientState {
 	return ClientState{
 		store:   store,
 		ID:      clientexported.Localhost.String(),

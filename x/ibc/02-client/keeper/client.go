@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -29,9 +30,12 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
 	}
 
-	height := consensusState.GetHeight()
+	var height uint64
 	if consensusState != nil {
+		height = consensusState.GetHeight()
 		k.SetClientConsensusState(ctx, clientID, height, consensusState)
+	} else {
+		height = uint64(ctx.BlockHeight())
 	}
 
 	k.SetClientState(ctx, clientState)
@@ -60,7 +64,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	// check that the header consensus matches the client one
-	if header.ClientType() != clientType {
+	if header != nil && header.ClientType() != clientType {
 		return sdkerrors.Wrapf(types.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
 	}
 
@@ -84,6 +88,13 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
 			clientState, header, ctx.BlockTime(),
 		)
+	case exported.Localhost:
+		// override client state and update the block height
+		clientState = localhosttypes.NewClientState(
+			k.ClientStore(ctx, clientState.GetID()),
+			clientState.GetChainID(),
+			ctx.BlockHeight(),
+		)
 	default:
 		err = types.ErrInvalidClientType
 	}
@@ -93,7 +104,11 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
+
+	if consensusState != nil && header != nil {
+		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
+	}
+
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{

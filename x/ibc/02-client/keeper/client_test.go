@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 
 			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
 
-			err = suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
+			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
 			if tc.expPass {
 				suite.Require().NoError(err, err)
@@ -159,9 +159,16 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				// recalculate cached totalVotingPower field for equality check
 				tmConsState.ValidatorSet.TotalVotingPower()
 
+				tmClientState, ok := updatedClientState.(ibctmtypes.ClientState)
+				suite.Require().True(ok, "client state is not a tendermint client state")
+
+				// recalculate cached totalVotingPower field for equality check
+				tmClientState.LastHeader.ValidatorSet.TotalVotingPower()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
 				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated on case %s", tc.name)
+				suite.Require().Equal(updatedClientState, tmClientState, "client states don't match")
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}

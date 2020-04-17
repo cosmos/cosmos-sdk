@@ -30,12 +30,8 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
 	}
 
-	var height uint64
 	if consensusState != nil {
-		height = consensusState.GetHeight()
-		k.SetClientConsensusState(ctx, clientID, height, consensusState)
-	} else {
-		height = uint64(ctx.BlockHeight())
+		k.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
 	}
 
 	k.SetClientState(ctx, clientState)
@@ -107,7 +103,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	k.SetClientState(ctx, clientState)
 
 	// we don't set consensus state for localhost client
-	if consensusState != nil && header != nil {
+	if header != nil && clientType != exported.Localhost {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 	}
 

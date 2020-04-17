@@ -49,14 +49,14 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 	}
 
 	var clientState exported.ClientState
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &clientState)
+	k.cdc.MustUnmarshalBinaryBare(bz, &clientState)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
 func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
 	store := k.ClientStore(ctx, clientState.GetID())
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
+	bz := k.cdc.MustMarshalBinaryBare(clientState)
 	store.Set(ibctypes.KeyClientState(), bz)
 }
 
@@ -86,7 +86,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 	}
 
 	var consensusState exported.ConsensusState
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &consensusState)
+	k.cdc.MustUnmarshalBinaryBare(bz, &consensusState)
 	return consensusState, true
 }
 
@@ -94,7 +94,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
+	bz := k.cdc.MustMarshalBinaryBare(consensusState)
 	store.Set(ibctypes.KeyConsensusState(height), bz)
 }
 
@@ -159,7 +159,7 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bo
 			continue
 		}
 		var clientState exported.ClientState
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &clientState)
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &clientState)
 
 		if cb(clientState) {
 			break

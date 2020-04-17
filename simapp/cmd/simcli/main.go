@@ -18,7 +18,6 @@ import (
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -73,7 +72,6 @@ func main() {
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,
-		version.Cmd,
 		flags.NewCompletionCmd(rootCmd, true),
 	)
 

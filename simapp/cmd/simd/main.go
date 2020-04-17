@@ -59,8 +59,6 @@ func main() {
 	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics))
 	rootCmd.AddCommand(AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome))
 	rootCmd.AddCommand(flags.NewCompletionCmd(rootCmd, true))
-	rootCmd.AddCommand(testnetCmd(ctx, cdc, simapp.ModuleBasics, bank.GenesisBalancesIterator{}))
-	rootCmd.AddCommand(replayCmd())
 	rootCmd.AddCommand(debug.Cmd(cdc))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

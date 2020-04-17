@@ -26,8 +26,8 @@ func (k Keeper) SendTransfer(
 	sourceChannel string,
 	destHeight uint64,
 	amount sdk.Coins,
-	sender,
-	receiver sdk.AccAddress,
+	sender sdk.AccAddress,
+	receiver string,
 ) error {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
@@ -54,7 +54,8 @@ func (k Keeper) createOutgoingPacket(
 	destinationPort, destinationChannel string,
 	destHeight uint64,
 	amount sdk.Coins,
-	sender, receiver sdk.AccAddress,
+	sender sdk.AccAddress,
+	receiver string,
 ) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
@@ -123,7 +124,7 @@ func (k Keeper) createOutgoingPacket(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		amount, sender, receiver,
+		amount, sender.String(), receiver,
 	)
 
 	packet := channel.NewPacket(
@@ -149,7 +150,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
+	// decode the receiver address
+	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
+	if err != nil {
+		return err
+	}
+
 	if source {
+
 		// mint new tokens if the source of the transfer is the same chain
 		if err := k.supplyKeeper.MintCoins(
 			ctx, types.GetModuleAccountName(), data.Amount,
@@ -159,7 +167,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 
 		// send to receiver
 		return k.supplyKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.GetModuleAccountName(), data.Receiver, data.Amount,
+			ctx, types.GetModuleAccountName(), receiver, data.Amount,
 		)
 	}
 
@@ -178,7 +186,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 
 	// unescrow tokens
 	escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
-	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
+	return k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, coins)
 }
 
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
@@ -203,6 +211,12 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
+	// decode the sender address
+	sender, err := sdk.AccAddressFromBech32(data.Sender)
+	if err != nil {
+		return err
+	}
+
 	if source {
 		coins := make(sdk.Coins, len(data.Amount))
 		for i, coin := range data.Amount {
@@ -215,7 +229,7 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 
 		// unescrow tokens back to sender
 		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
-		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
+		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, coins)
 	}
 
 	// mint vouchers back to sender
@@ -225,5 +239,5 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 		return err
 	}
 
-	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
+	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), sender, data.Amount)
 }

@@ -16,7 +16,7 @@ At present, the Cosmos SDK does not have the ability to do this. Object-capabili
 and passed to Keepers as fixed arguments ([example](https://github.com/cosmos/gaia/blob/dcbddd9f04b3086c0ad07ee65de16e7adedc7da4/app/app.go#L160)). Keepers cannot create or store capability keys during transaction execution — although they could call `NewKVStoreKey` and take the memory address
 of the returned struct, storing this in the Merklised store would result in a consensus fault, since the memory address will be different on each machine (this is intentional — were this not the case, the keys would be predictable and couldn't serve as object capabilities).
 
-Keepers need a way to keep a private map of store keys which can be altered during transaction execution, along with a suitable mechanism for regenerating the unique memory addresses (capability keys) in this map whenever the application is started or restarted.
+Keepers need a way to keep a private map of store keys which can be altered during transaction execution, along with a suitable mechanism for regenerating the unique memory addresses (capability keys) in this map whenever the application is started or restarted, along with a mechanism to revert capability creation on tx failure.
 This ADR proposes such an interface & mechanism.
 
 ## Decision
@@ -32,30 +32,24 @@ new capability keys for all previously allocated capability identifiers (allocat
 past transactions and assigned to particular modes), and keep them in a memory-only store while the
 chain is running.
 
-The `CapabilityKeeper` will include an ephemeral in-memory `CapabilityStore`, which internally maintains
-two maps, one for forward mappings that map from module name, capability tuples to capability names and
-one for reverse mappings that map from module name, capability name to capabilities. The reverse
-mapping contains the actual capability objects by reference.
+The `CapabilityKeeper` will include a persistent `KVStore`, a `MemoryStore`, and an in-memory map.
+The persistent `KVStore` tracks which capability is owned by which modules. 
+The `MemoryStore` stores a forward mapping that map from module name, capability tuples to capability names and
+a reverse mapping that map from module name, capability name to the capability index.
+Since we cannot marshal the capability into a `KVStore` and unmarshal without changing the memory location of the capability,
+the reverse mapping in the KVStore will simply map to an index. This index can then be used as a key in the ephemeral
+go-map to retrieve the capability at the original memory location.
 
-In addition to the `CapabilityStore`, the `CapabilityKeeper` will use a persistent `KVStore`, which
-will track what capabilities have been created by each module. The `CapabilityKeeper` will define the
-following types & functions:
+The `CapabilityKeeper` will define the following types & functions:
 
-The `Capability` interface is similar to `StoreKey`, but has a globally unique `Index()` instead of
+The `Capability` is similar to `StoreKey`, but has a globally unique `Index()` instead of
 a name. A `String()` method is provided for debugging.
 
-```golang
-type Capability interface {
-  Index() uint64
-  String() string
-}
-```
-
-A `CapabilityKey` is simply a struct, the address of which is taken for the actual capability.
+A `Capability` is simply a struct, the address of which is taken for the actual capability.
 
 ```golang
-type CapabilityKey struct {
-  name string
+type Capability struct {
+  index uint64
 }
 ```
 
@@ -64,7 +58,8 @@ A `CapabilityKeeper` contains a persistent store key, memory store key, and mapp
 ```golang
 type CapabilityKeeper struct {
   persistentKey StoreKey
-  capStore      CapabilityStore
+  memKey        StoreKey
+  capMap        map[uint64]*Capability
   moduleNames   map[string]interface{}
   sealed        bool
 }
@@ -79,7 +74,8 @@ passed by other modules.
 ```golang
 type ScopedCapabilityKeeper struct {
   persistentKey StoreKey
-  capStore      CapabilityStore
+  memKey        StoreKey
+  capMap        map[uint64]*Capability
   moduleName    string
 }
 ```
@@ -89,20 +85,23 @@ It MUST be called before `InitialiseAndSeal`.
 
 ```golang
 func (ck CapabilityKeeper) ScopeToModule(moduleName string) ScopedCapabilityKeeper {
-  if ck.sealed {
-    panic("capability keeper is sealed")
-  }
-  if _, present := ck.moduleNames[moduleName]; present {
-    panic("cannot create multiple scoped capability keepers for the same module name")
-  }
+	if k.sealed {
+		panic("cannot scope to module via a sealed capability keeper")
+	}
 
-  ck.moduleNames[moduleName] = struct{}{}
+	if _, ok := k.scopedModules[moduleName]; ok {
+		panic(fmt.Sprintf("cannot create multiple scoped keepers for the same module name: %s", moduleName))
+	}
 
-  return ScopedCapabilityKeeper{
-    persistentKey: ck.persistentKey,
-    capStore: ck.capStore,
-    moduleName: moduleName,
-  }
+	k.scopedModules[moduleName] = struct{}{}
+
+	return ScopedKeeper{
+		cdc:      k.cdc,
+		storeKey: k.storeKey,
+		memKey:   k.memKey,
+		capMap:   k.capMap,
+		module:   moduleName,
+	}
 }
 ```
 
@@ -118,6 +117,7 @@ func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
   }
 
   persistentStore := ctx.KVStore(ck.persistentKey)
+  map := ctx.KVStore(ck.memKey)
   
   // initialise memory store for all names in persistent store
   for index, value := range persistentStore.Iter() {
@@ -125,8 +125,10 @@ func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
 
     for moduleAndCapability := range value {
       moduleName, capabilityName := moduleAndCapability.Split("/")
-      capStore.Set(moduleName + "/fwd/" + capability, capabilityName)
-      capStore.Set(moduleName + "/rev/" + capabilityName, capability)
+      memStore.Set(moduleName + "/fwd/" + capability, capabilityName)
+      memStore.Set(moduleName + "/rev/" + capabilityName, index)
+
+      ck.capMap[index] = capability
     }
   }
 
@@ -159,10 +161,13 @@ func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capab
   persistentStore.Set("index", index)
   
   // set forward mapping in memory store from capability to name
-  capStore.Set(sck.moduleName + "/fwd/" + capability, name)
+  memStore.Set(sck.moduleName + "/fwd/" + capability, name)
   
-  // set reverse mapping in memory store from name to capability
-  capStore.Set(sck.moduleName + "/rev/" + name, capability)
+  // set reverse mapping in memory store from name to index
+  memStore.Set(sck.moduleName + "/rev/" + name, index)
+
+  // set the in-memory mapping from index to capability pointer
+  capMap[index] = capability
   
   // return the newly created capability
   return capability
@@ -176,7 +181,7 @@ with which the calling module previously associated it.
 ```golang
 func (sck ScopedCapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
   // return whether forward mapping in memory store matches name
-  return capStore.Get(sck.moduleName + "/fwd/" + capability) === name
+  return memStore.Get(sck.moduleName + "/fwd/" + capability) === name
 }
 ```
 
@@ -192,10 +197,10 @@ func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capabi
   persistentStore := ctx.KVStore(sck.persistentKey)
 
   // set forward mapping in memory store from capability to name
-  capStore.Set(sck.moduleName + "/fwd/" + capability, name)
+  memStore.Set(sck.moduleName + "/fwd/" + capability, name)
 
   // set reverse mapping in memory store from name to capability
-  capStore.Set(sck.moduleName + "/rev/" + name, capability)
+  memStore.Set(sck.moduleName + "/rev/" + name, capability)
 
   // update owner set in persistent store
   owners := persistentStore.Get(capability.Index())
@@ -209,8 +214,11 @@ The module is not allowed to retrieve capabilities which it does not own.
 
 ```golang
 func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capability, error) {
-  // fetch capability from memory store
-  capability := capStore.Get(sck.moduleName + "/rev/" + name)
+  // fetch the index of capability using reverse mapping in memstore
+  index := memStore.Get(sck.moduleName + "/rev/" + name)
+
+  // fetch capability from go-map using index
+  capability := capMap[index]
 
   // return the capability
   return capability
@@ -244,6 +252,7 @@ func (sck ScopedCapabilityKeeper) ReleaseCapability(ctx Context, capability Capa
   } else {
     // no more owners, delete the capability
     persistentStore.Delete(capability.Index())
+    delete(capMap[capability.Index()])
   }
 }
 ```
@@ -318,11 +327,13 @@ Proposed.
 ### Positive
 
 - Dynamic capability support.
+- Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
 
 ### Negative
 
 - Requires an additional keeper.
 - Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
+- Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
 
 ### Neutral
 

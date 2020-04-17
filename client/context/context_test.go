@@ -21,15 +21,6 @@ func TestCLIContext_WithOffline(t *testing.T) {
 	ctx := context.NewCLIContext()
 	require.True(t, ctx.Offline)
 	require.Nil(t, ctx.Client)
-
-	viper.Reset()
-
-	viper.Set(flags.FlagOffline, false)
-	viper.Set(flags.FlagNode, "tcp://localhost:26657")
-
-	ctx = context.NewCLIContext()
-	require.False(t, ctx.Offline)
-	require.NotNil(t, ctx.Client)
 }
 
 func TestCLIContext_WithGenOnly(t *testing.T) {

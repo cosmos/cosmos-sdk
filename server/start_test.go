@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -8,8 +9,6 @@ import (
 )
 
 func TestPruningOptions(t *testing.T) {
-	startCommand := StartCmd(nil, nil)
-
 	tests := []struct {
 		name        string
 		paramInit   func()
@@ -17,68 +16,49 @@ func TestPruningOptions(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "none set, returns nil and will use default from flags",
+			name:        "default",
 			paramInit:   func() {},
 			returnsErr:  false,
 			expectedErr: nil,
 		},
 		{
+			name:        "unknown strategy",
+			paramInit:   func() { viper.Set(flagPruning, "unknown") },
+			returnsErr:  true,
+			expectedErr: fmt.Errorf("unknown pruning strategy unknown"),
+		},
+		{
 			name: "only keep-every provided",
 			paramInit: func() {
+				viper.Set(flagPruning, "custom")
 				viper.Set(flagPruningKeepEvery, 12345)
-			},
-			returnsErr:  true,
-			expectedErr: errPruningGranularOptions,
-		},
-		{
-			name: "only snapshot-every provided",
-			paramInit: func() {
-				viper.Set(flagPruningSnapshotEvery, 12345)
-			},
-			returnsErr:  true,
-			expectedErr: errPruningGranularOptions,
-		},
-		{
-			name: "pruning flag with other granular options 1",
-			paramInit: func() {
-				viper.Set(flagPruning, "set")
-				viper.Set(flagPruningSnapshotEvery, 1234)
-			},
-			returnsErr:  true,
-			expectedErr: errPruningWithGranularOptions,
-		},
-		{
-			name: "pruning flag with other granular options 2",
-			paramInit: func() {
-				viper.Set(flagPruning, "set")
-				viper.Set(flagPruningKeepEvery, 1234)
-			},
-			returnsErr:  true,
-			expectedErr: errPruningWithGranularOptions,
-		},
-		{
-			name: "pruning flag with other granular options 3",
-			paramInit: func() {
-				viper.Set(flagPruning, "set")
-				viper.Set(flagPruningKeepEvery, 1234)
-				viper.Set(flagPruningSnapshotEvery, 1234)
-			},
-			returnsErr:  true,
-			expectedErr: errPruningWithGranularOptions,
-		},
-		{
-			name: "only prunning set",
-			paramInit: func() {
-				viper.Set(flagPruning, "set")
 			},
 			returnsErr:  false,
 			expectedErr: nil,
 		},
 		{
-			name: "only granular set",
+			name: "only snapshot-every provided",
 			paramInit: func() {
+				viper.Set(flagPruning, "custom")
 				viper.Set(flagPruningSnapshotEvery, 12345)
-				viper.Set(flagPruningKeepEvery, 12345)
+			},
+			returnsErr:  true,
+			expectedErr: fmt.Errorf("invalid granular options"),
+		},
+		{
+			name: "pruning flag with other granular options 3",
+			paramInit: func() {
+				viper.Set(flagPruning, "custom")
+				viper.Set(flagPruningKeepEvery, 1234)
+				viper.Set(flagPruningSnapshotEvery, 1234)
+			},
+			returnsErr:  false,
+			expectedErr: nil,
+		},
+		{
+			name: "nothing strategy",
+			paramInit: func() {
+				viper.Set(flagPruning, "nothing")
 			},
 			returnsErr:  false,
 			expectedErr: nil,
@@ -90,9 +70,10 @@ func TestPruningOptions(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			viper.Reset()
+			viper.SetDefault(flagPruning, "syncable")
+			startCommand := StartCmd(nil, nil)
 			tt.paramInit()
-
-			err := startCommand.PreRunE(nil, nil)
+			err := startCommand.PreRunE(startCommand, nil)
 
 			if tt.returnsErr {
 				require.EqualError(t, err, tt.expectedErr.Error())

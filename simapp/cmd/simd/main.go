@@ -47,19 +47,18 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome))
-	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, bank.GenesisBalancesIterator{}, simapp.DefaultNodeHome))
-	rootCmd.AddCommand(genutilcli.MigrateGenesisCmd(ctx, cdc))
 	rootCmd.AddCommand(
+		genutilcli.InitCmd(ctx, cdc, simapp.ModuleBasics, simapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(ctx, cdc, bank.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.MigrateGenesisCmd(ctx, cdc),
 		genutilcli.GenTxCmd(
 			ctx, cdc, simapp.ModuleBasics, staking.AppModuleBasic{},
 			bank.GenesisBalancesIterator{}, simapp.DefaultNodeHome, simapp.DefaultCLIHome,
 		),
-	)
-	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics))
-	rootCmd.AddCommand(AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome))
-	rootCmd.AddCommand(flags.NewCompletionCmd(rootCmd, true))
-	rootCmd.AddCommand(debug.Cmd(cdc))
+		genutilcli.ValidateGenesisCmd(ctx, cdc, simapp.ModuleBasics),
+		AddGenesisAccountCmd(ctx, cdc, appCodec, simapp.DefaultNodeHome, simapp.DefaultCLIHome),
+		flags.NewCompletionCmd(rootCmd, true),
+		debug.Cmd(cdc))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
@@ -100,16 +99,15 @@ func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
 
+	var simApp *simapp.SimApp
 	if height != -1 {
-		simapp := simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
-		err := simapp.LoadHeight(height)
+		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
+		err := simApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, nil, err
 		}
-
-		return simapp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+	} else {
+		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1))
 	}
-
-	simApp := simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1))
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

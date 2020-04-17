@@ -136,9 +136,8 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 	return txCmd
 }
 
-// registerRoutes registers the routes from the different modules for the LCD.
+// registerRoutes registers the routes from the different modules for the REST client.
 // NOTE: details on the routes added for each module are in the module documentation
-// NOTE: If making updates here you also need to update the test helper in client/lcd/test_helper.go
 func registerRoutes(rs *lcd.RestServer) {
 	client.RegisterRoutes(rs.CliCtx, rs.Mux)
 	authrest.RegisterTxRoutes(rs.CliCtx, rs.Mux)

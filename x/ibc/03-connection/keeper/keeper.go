@@ -52,14 +52,14 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 	}
 
 	var connection types.ConnectionEnd
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &connection)
+	k.cdc.MustUnmarshalBinaryBare(bz, &connection)
 	return connection, true
 }
 
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
+	bz := k.cdc.MustMarshalBinaryBare(connection)
 	store.Set(ibctypes.KeyConnection(connectionID), bz)
 }
 
@@ -73,14 +73,14 @@ func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]st
 	}
 
 	var paths []string
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &paths)
+	k.cdc.MustUnmarshalBinaryBare(bz, &paths)
 	return paths, true
 }
 
 // SetClientConnectionPaths sets the connections paths for client
 func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths []string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(paths)
+	bz := k.cdc.MustMarshalBinaryBare(paths)
 	store.Set(ibctypes.KeyClientConnections(clientID), bz)
 }
 
@@ -94,7 +94,7 @@ func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.IdentifiedConn
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var connection types.ConnectionEnd
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &connection)
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &connection)
 		identifier := string(iterator.Key()[len(ibctypes.KeyConnectionPrefix)+1:])
 
 		conn := types.IdentifiedConnectionEnd{

@@ -115,3 +115,13 @@ func TestMsgVote(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgSubmitAnyProposal(t *testing.T) {
+	msg := MsgSubmitAnyProposal{}
+	prop := &TextProposal{Title: "test1"}
+	err := msg.SetContent(prop)
+	require.NoError(t, err)
+	prop2 := msg.GetContent()
+	require.NotNil(t, prop2)
+	require.Equal(t, prop, prop2)
+}

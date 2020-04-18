@@ -104,6 +104,8 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	supplyKeeper  types.SupplyKeeper
+
+	newMsgFn func() MsgSubmitProposalI
 }
 
 // NewAppModule creates a new AppModule object
@@ -204,4 +206,45 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper, simState.Contents,
 	)
+}
+
+var _ module.InterfaceModule = AppModule{}
+
+func (am AppModule) GetSigningProxy(msg module.ProtoMsg) (module.ProtoMsg, error) {
+	switch msg := msg.(type) {
+	case MsgSubmitProposalI:
+		res := &types.MsgSubmitAnyProposal{
+			MsgSubmitProposalBase: &MsgSubmitProposalBase{
+				InitialDeposit: msg.GetInitialDeposit(),
+				Proposer:       msg.GetProposer(),
+			},
+		}
+		err := res.SetContent(msg.GetContent())
+		if err != nil {
+			return nil, err
+		}
+		return res, nil
+	default:
+		return msg, nil
+	}
+}
+
+func (am AppModule) GetEncodingProxy(msg module.ProtoMsg) (module.ProtoMsg, error) {
+	switch msg := msg.(type) {
+	case MsgSubmitProposalI:
+		enc := am.newMsgFn()
+		err := enc.SetContent(msg.GetContent())
+		if err != nil {
+			return nil, err
+		}
+		enc.SetInitialDeposit(msg.GetInitialDeposit())
+		enc.SetProposer(msg.GetProposer())
+		proto, ok := enc.(module.ProtoMsg)
+		if !ok {
+			return nil, fmt.Errorf("can't proto encode msg")
+		}
+		return proto, nil
+	default:
+		return msg, nil
+	}
 }

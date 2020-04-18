@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	proto2 "github.com/gogo/protobuf/proto"
+	proto "github.com/gogo/protobuf/types"
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -244,4 +247,44 @@ func (msg *MsgSubmitProposal) SetInitialDeposit(deposit sdk.Coins) {
 
 func (msg *MsgSubmitProposal) SetProposer(proposer sdk.AccAddress) {
 	msg.Proposer = proposer
+}
+
+var _ MsgSubmitProposalI = &MsgSubmitAnyProposal{}
+
+func (m *MsgSubmitAnyProposal) GetContent() Content {
+	any := m.Content
+	var x proto.DynamicAny
+	if err := proto.UnmarshalAny(any, &x); err != nil {
+		return nil
+	}
+	content, ok := x.Message.(Content)
+	if !ok {
+		return nil
+	}
+	return content
+}
+
+func (m *MsgSubmitAnyProposal) SetContent(content Content) error {
+	msg, ok := content.(proto2.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal content")
+	}
+	any, err := proto.MarshalAny(msg)
+	if err != nil {
+		return err
+	}
+	m.Content = any
+	return nil
+}
+
+func (m *MsgSubmitAnyProposal) ValidateBasic() error {
+	err := m.MsgSubmitProposalBase.ValidateBasic()
+	if err != nil {
+		return err
+	}
+	content := m.GetContent()
+	if content == nil {
+		return fmt.Errorf("missing content")
+	}
+	return content.ValidateBasic()
 }

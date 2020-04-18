@@ -3,6 +3,7 @@ package cosmos_sdk.codec.std.v1;
 
 import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "types/types.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
@@ -138,11 +139,15 @@ message Message {
   }
 }
 
-// SignDoc defines a standard application-level signing document to compose
+// StdSignDoc defines a standard application-level signing document to compose
 // signatures for a Transaction.
-message SignDoc {
-  StdSignDocBase   base = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
-  repeated Message msgs = 2 [(gogoproto.nullable) = false];
+message StdSignDoc {
+  string chain_id       = 1 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
+  uint64 account_number = 2 [(gogoproto.moretags) = "yaml:\"account_number\""];
+  uint64 sequence       = 3;
+  string memo           = 4;
+  StdFee fee            = 5;
+  repeated google.protobuf.Any msgs = 6;
 }
 
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -174,12 +179,3 @@ message StdTxBase {
   string                memo       = 3;
 }
 
-// StdSignDocBase defines the base structure for which applications can extend
-// to define the concrete structure that signers sign over.
-message StdSignDocBase {
-  string chain_id       = 1 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
-  uint64 account_number = 2 [(gogoproto.moretags) = "yaml:\"account_number\""];
-  uint64 sequence       = 3;
-  string memo           = 4;
-  StdFee fee            = 5 [(gogoproto.nullable) = false];
-}

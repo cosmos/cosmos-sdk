@@ -4,20 +4,28 @@ package cosmos_sdk.x.gov.v1;
 import "types/types.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 option (gogoproto.goproto_getters_all)  = false;
 
-// MsgSubmitProposalBase defines an sdk.Msg type that supports submitting arbitrary
-// proposal Content.
-//
-// Note, this message type provides the basis for which a true MsgSubmitProposal
-// can be constructed. Since the Content submitted in the message can be arbitrary,
-// assuming it fulfills the Content interface, it must be defined at the
-// application-level and extend MsgSubmitProposalBase.
-message MsgSubmitProposalBase {
+message MsgSubmitAnyProposal {
+  option (gogoproto.equal) = true;
+
+  MsgSubmitProposalBase base = 1 [(gogoproto.embed) = true];
+  google.protobuf.Any content = 2;
+}
+
+ // MsgSubmitProposalBase defines an sdk.Msg type that supports submitting arbitrary
+ // proposal Content.
+ //
+ // Note, this message type provides the basis for which a true MsgSubmitProposal
+ // can be constructed. Since the Content submitted in the message can be arbitrary,
+ // assuming it fulfills the Content interface, it must be defined at the
+ // application-level and extend MsgSubmitProposalBase.
+ message MsgSubmitProposalBase {
   option (gogoproto.equal) = true;
 
   repeated cosmos_sdk.v1.Coin initial_deposit = 1 [

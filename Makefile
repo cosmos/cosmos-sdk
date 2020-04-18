@@ -36,15 +36,6 @@ endif
  build \
  build-sim
 
-build-sim: go.sum
-ifeq ($(OS),Windows_NT)
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
-else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
-endif
-
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB

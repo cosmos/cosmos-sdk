@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"os"
 	"path"
 
@@ -17,13 +16,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
@@ -53,7 +50,7 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "simcli",
-		Short: "Command line interface for interacting with gaiad",
+		Short: "Command line interface for interacting with simd",
 	}
 
 	// Add --chain-id to persistent flags and mark it required
@@ -73,7 +70,6 @@ func main() {
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,
-		version.Cmd,
 		flags.NewCompletionCmd(rootCmd, true),
 	)
 
@@ -137,23 +133,11 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 	// add modules' tx commands
 	simapp.ModuleBasics.AddTxCommands(txCmd, cdc)
 
-	// remove auth and bank commands as they're mounted under the root tx command
-	var cmdsToRemove []*cobra.Command
-
-	for _, cmd := range txCmd.Commands() {
-		if cmd.Use == auth.ModuleName || cmd.Use == bank.ModuleName {
-			cmdsToRemove = append(cmdsToRemove, cmd)
-		}
-	}
-
-	txCmd.RemoveCommand(cmdsToRemove...)
-
 	return txCmd
 }
 
-// registerRoutes registers the routes from the different modules for the LCD.
+// registerRoutes registers the routes from the different modules for the REST client.
 // NOTE: details on the routes added for each module are in the module documentation
-// NOTE: If making updates here you also need to update the test helper in client/lcd/test_helper.go
 func registerRoutes(rs *lcd.RestServer) {
 	client.RegisterRoutes(rs.CliCtx, rs.Mux)
 	authrest.RegisterTxRoutes(rs.CliCtx, rs.Mux)

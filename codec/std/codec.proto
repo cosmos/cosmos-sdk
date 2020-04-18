@@ -3,6 +3,7 @@ package cosmos_sdk.codec.std.v1;
 
 import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
+import "types/types.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
 import "x/bank/types/types.proto";
@@ -106,8 +107,7 @@ message Content {
 message Transaction {
   option (gogoproto.goproto_getters) = false;
 
-  cosmos_sdk.x.auth.v1.StdTxBase base = 1
-      [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
+  StdTxBase        base = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
   repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }
 
@@ -141,7 +141,45 @@ message Message {
 // SignDoc defines a standard application-level signing document to compose
 // signatures for a Transaction.
 message SignDoc {
-  cosmos_sdk.x.auth.v1.StdSignDocBase base = 1
-      [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
+  StdSignDocBase   base = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
   repeated Message msgs = 2 [(gogoproto.nullable) = false];
+}
+
+// StdFee includes the amount of coins paid in fees and the maximum
+// gas to be used by the transaction. The ratio yields an effective "gasprice",
+// which must be above some miminum to be accepted into the mempool.
+message StdFee {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = true;
+
+  repeated cosmos_sdk.v1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  uint64 gas = 2;
+}
+
+// StdSignature defines a signature structure that contains the signature of a
+// transaction and an optional public key.
+message StdSignature {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes pub_key   = 1 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
+  bytes signature = 2;
+}
+
+// StdTxBase defines a transaction base which application-level concrete transaction
+// types can extend.
+message StdTxBase {
+  StdFee                fee        = 1 [(gogoproto.nullable) = false];
+  repeated StdSignature signatures = 2 [(gogoproto.nullable) = false];
+  string                memo       = 3;
+}
+
+// StdSignDocBase defines the base structure for which applications can extend
+// to define the concrete structure that signers sign over.
+message StdSignDocBase {
+  string chain_id       = 1 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
+  uint64 account_number = 2 [(gogoproto.moretags) = "yaml:\"account_number\""];
+  uint64 sequence       = 3;
+  string memo           = 4;
+  StdFee fee            = 5 [(gogoproto.nullable) = false];
 }

@@ -40,6 +40,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
 }
 
+func (k Keeper) GetStoreKey() sdk.StoreKey {
+	return k.storeKey
+}
+
 // GetClientState gets a particular client from the store
 func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
 	store := k.clientStore(ctx, clientID)

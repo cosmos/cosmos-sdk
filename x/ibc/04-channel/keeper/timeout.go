@@ -6,10 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -122,17 +124,15 @@ func (k Keeper) TimeoutPacket(
 }
 
 // TimeoutExecuted deletes the commitment send from this chain after it verifies timeout
-func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error {
+func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability, packet exported.PacketI) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	// TODO: blocked by #5542
-	// _, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	// if !found {
-	// 	return types.ErrChannelCapabilityNotFound
-	// }
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
+		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhost "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
@@ -27,6 +28,8 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		if err != nil {
 			return nil, err
 		}
+	case exported.Localhost:
+		clientState = localhost.NewClientState(ctx.MultiStore().GetKVStore(k.GetStoreKey()))
 	default:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	}

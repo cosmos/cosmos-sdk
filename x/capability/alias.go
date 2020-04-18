@@ -29,7 +29,6 @@ var (
 	ModuleCdc                = types.ModuleCdc
 	NewOwner                 = types.NewOwner
 	NewCapabilityOwners      = types.NewCapabilityOwners
-	NewCapabilityStore       = types.NewCapabilityStore
 )
 
 // nolint
@@ -38,5 +37,4 @@ type (
 	ScopedKeeper     = keeper.ScopedKeeper
 	Capability       = types.Capability
 	CapabilityOwners = types.CapabilityOwners
-	CapabilityStore  = types.CapabilityStore
 )

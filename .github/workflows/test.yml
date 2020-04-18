@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/setup-go@v2-beta
       - uses: actions/checkout@v2
+      - name: build
+        run: |
+          make build
       - name: test & coverage report creation
         run: |
           go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'

@@ -6,7 +6,6 @@ option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 
 // MsgSubmitEvidenceBase defines an sdk.Msg type that supports submitting arbitrary
 // Evidence.
@@ -31,16 +30,5 @@ message Equivocation {
   bytes                     consensus_address = 4 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress",
     (gogoproto.moretags) = "yaml:\"consensus_address\""
-  ];
-}
-
-// Params defines the total set of parameters for the evidence module
-message Params {
-  option (gogoproto.goproto_stringer) = false;
-
-  google.protobuf.Duration max_evidence_age = 1 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"max_evidence_age\""
   ];
 }

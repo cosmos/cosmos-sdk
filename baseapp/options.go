@@ -51,6 +51,14 @@ func (app *BaseApp) SetName(name string) {
 	app.name = name
 }
 
+// SetParamStore sets a parameter store on the BaseApp.
+func (app *BaseApp) SetParamStore(ps ParamStore) {
+	if app.sealed {
+		panic("SetParamStore() on sealed BaseApp")
+	}
+	app.paramStore = ps
+}
+
 // SetAppVersion sets the application's version string.
 func (app *BaseApp) SetAppVersion(v string) {
 	if app.sealed {

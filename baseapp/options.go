@@ -115,3 +115,23 @@ func (app *BaseApp) SetFauxMerkleMode() {
 	}
 	app.fauxMerkleMode = true
 }
+
+//
+// Side channel
+//
+
+// SetBeginSideBlocker sets begin side blocker
+func (app *BaseApp) SetBeginSideBlocker(beginSideBlocker sdk.BeginSideBlocker) {
+	if app.sealed {
+		panic("SetBeginSideBlocker() on sealed BaseApp")
+	}
+	app.beginSideBlocker = beginSideBlocker
+}
+
+// SetDeliverSideTxHandler sets deliver side-tx handler
+func (app *BaseApp) SetDeliverSideTxHandler(deliverSideTxHandler sdk.DeliverSideTxHandler) {
+	if app.sealed {
+		panic("SetDeliverSideTxHandler() on sealed BaseApp")
+	}
+	app.deliverSideTxHandler = deliverSideTxHandler
+}

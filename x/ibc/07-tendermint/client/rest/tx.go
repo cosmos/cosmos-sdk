@@ -15,7 +15,7 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/clients", createClientHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/clients/tendermint", createClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/ibc/clients/{%s}/misbehaviour", submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }
@@ -29,7 +29,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Param body body rest.CreateClientReq true "Create client request body"
 // @Success 200 {object} PostCreateClient "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients [post]
+// @Router /ibc/clients/tendermint [post]
 func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq

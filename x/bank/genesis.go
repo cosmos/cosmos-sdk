@@ -11,6 +11,8 @@ import (
 func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 	keeper.SetSendEnabled(ctx, genState.SendEnabled)
 
+	var totalSupply sdk.Coins
+
 	genState.Balances = SanitizeGenesisBalances(genState.Balances)
 	for _, balance := range genState.Balances {
 		if err := keeper.ValidateBalance(ctx, balance.Address); err != nil {
@@ -20,18 +22,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 		if err := keeper.SetBalances(ctx, balance.Address, balance.Coins); err != nil {
 			panic(fmt.Errorf("error on setting balances %w", err))
 		}
+
+		totalSupply = totalSupply.Add(balance.Coins...)
 	}
 
 	if genState.Supply.Empty() {
-		var totalSupply sdk.Coins
-
-		keeper.IterateAllBalances(ctx,
-			func(_ sdk.AccAddress, balance sdk.Coin) (stop bool) {
-				totalSupply = totalSupply.Add(balance)
-				return false
-			},
-		)
-
 		genState.Supply = totalSupply
 	}
 

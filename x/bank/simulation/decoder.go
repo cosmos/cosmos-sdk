@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// DecodeStore unmarshals the KVPair's Value to the corresponding supply type
+// DecodeStore unmarshals the KVPair's values to the corresponding types.
 func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.SupplyKey):
@@ -20,6 +20,6 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
 
 	default:
-		panic(fmt.Sprintf("invalid supply key %X", kvA.Key))
+		panic(fmt.Sprintf("unknown x/bank key %X (%s)", kvA.Key, kvA.Key))
 	}
 }

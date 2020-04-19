@@ -20,6 +20,6 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
 		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
 
 	default:
-		panic(fmt.Sprintf("unknown x/bank key %X (%s)", kvA.Key, kvA.Key))
+		panic(fmt.Sprintf("unknown %s key %X (%s)", types.ModuleName, .Key, kvA.Key))
 	}
 }

@@ -1,4 +1,4 @@
-package localhost
+package types
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -23,30 +22,30 @@ var _ clientexported.ClientState = ClientState{}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
-	ctx   sdk.Context
-	store types.KVStore
+	store   sdk.KVStore
+	ID      string `json:"id" yaml:"id"`
+	ChainID string `json:"chain_id" yaml:"chain_id"`
+	Height  int64  `json:"height" yaml:"height"`
 }
 
 // NewClientState creates a new ClientState instance
-func NewClientState(store types.KVStore) ClientState {
+func NewClientState(store sdk.KVStore, chainID string, height int64) ClientState {
 	return ClientState{
-		store: store,
+		store:   store,
+		ID:      clientexported.Localhost.String(),
+		ChainID: chainID,
+		Height:  height,
 	}
-}
-
-// WithContext updates the client state context to provide the chain ID and latest height
-func (cs *ClientState) WithContext(ctx sdk.Context) {
-	cs.ctx = ctx
 }
 
 // GetID returns the loop-back client state identifier.
 func (cs ClientState) GetID() string {
-	return clientexported.Localhost.String()
+	return cs.ID
 }
 
 // GetChainID returns an empty string
 func (cs ClientState) GetChainID() string {
-	return cs.ctx.ChainID()
+	return cs.ChainID
 }
 
 // ClientType is localhost.
@@ -54,9 +53,9 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 	return clientexported.Localhost
 }
 
-// GetLatestHeight returns the block height from the stored context.
+// GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.ctx.BlockHeight())
+	return uint64(cs.Height)
 }
 
 // IsFrozen returns false.
@@ -85,13 +84,19 @@ func (cs ClientState) VerifyClientConsensusState(
 
 	data := cs.store.Get([]byte(path.String()))
 	if len(data) == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "not found")
+		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
 	}
 
 	var prevConsensusState exported.ConsensusState
-	cdc.MustUnmarshalBinaryBare(data, &prevConsensusState)
+	if err := cdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
+		return err
+	}
+
 	if consensusState != prevConsensusState {
-		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "not equal")
+		return sdkerrors.Wrapf(
+			clienttypes.ErrFailedClientConsensusStateVerification,
+			"consensus state ≠ previous stored consensus state: \n%v\n≠\n%v", consensusState, prevConsensusState,
+		)
 	}
 
 	return nil
@@ -115,13 +120,19 @@ func (cs ClientState) VerifyConnectionState(
 
 	bz := cs.store.Get([]byte(path.String()))
 	if bz == nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, "not found")
+		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
 
-	var prevConnectionState connectionexported.ConnectionI
-	cdc.MustUnmarshalBinaryBare(bz, &prevConnectionState)
-	if connectionEnd != prevConnectionState {
-		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, "not equal")
+	var prevConnection connectionexported.ConnectionI
+	if err := cdc.UnmarshalBinaryBare(bz, &prevConnection); err != nil {
+		return err
+	}
+
+	if connectionEnd != prevConnection {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrFailedConnectionStateVerification,
+			"connection end ≠ previous stored connection: \n%v\n≠\n%v", connectionEnd, prevConnection,
+		)
 	}
 
 	return nil
@@ -146,13 +157,18 @@ func (cs ClientState) VerifyChannelState(
 
 	bz := cs.store.Get([]byte(path.String()))
 	if bz == nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, "not found")
+		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
 
-	var prevChannelState channelexported.ChannelI
-	cdc.MustUnmarshalBinaryBare(bz, &prevChannelState)
-	if channel != prevChannelState {
-		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, "not equal")
+	var prevChannel channelexported.ChannelI
+	if err := cdc.UnmarshalBinaryBare(bz, &prevChannel); err != nil {
+		return err
+	}
+	if channel != prevChannel {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrFailedChannelStateVerification,
+			"channel end ≠ previous stored channel: \n%v\n≠\n%v", channel, prevChannel,
+		)
 	}
 
 	return nil
@@ -177,11 +193,14 @@ func (cs ClientState) VerifyPacketCommitment(
 
 	data := cs.store.Get([]byte(path.String()))
 	if len(data) == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, "not found")
+		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketCommitmentVerification, "not found for path %s", path)
 	}
 
 	if !bytes.Equal(data, commitmentBytes) {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, "not equal")
+		return sdkerrors.Wrapf(
+			clienttypes.ErrFailedPacketCommitmentVerification,
+			"commitment ≠ previous commitment: \n%X\n≠\n%X", commitmentBytes, data,
+		)
 	}
 
 	return nil
@@ -206,11 +225,14 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 
 	data := cs.store.Get([]byte(path.String()))
 	if len(data) == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, "not found")
+		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketAckVerification, "not found for path %s", path)
 	}
 
 	if !bytes.Equal(data, acknowledgement) {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, "not equal")
+		return sdkerrors.Wrapf(
+			clienttypes.ErrFailedPacketAckVerification,
+			"ak bytes ≠ previous ack: \n%X\n≠\n%X", acknowledgement, data,
+		)
 	}
 
 	return nil
@@ -259,12 +281,15 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	data := cs.store.Get([]byte(path.String()))
 	if len(data) == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, "not found")
+		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, "not found for path %s", path)
 	}
 
 	prevSequenceRecv := binary.BigEndian.Uint64(data)
 	if prevSequenceRecv != nextSequenceRecv {
-		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, "not equal")
+		return sdkerrors.Wrapf(
+			clienttypes.ErrFailedNextSeqRecvVerification,
+			"next sequence receive ≠ previous stored sequence (%d ≠ %d)", nextSequenceRecv, prevSequenceRecv,
+		)
 	}
 
 	return nil

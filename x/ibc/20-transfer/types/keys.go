@@ -17,7 +17,7 @@ const (
 	// module supports
 	Version = "ics20-1"
 
-	// PortID that transfer module binds to
+	// Default PortID that transfer module binds to
 	PortID = "transfer"
 
 	// StoreKey is the store key string for IBC transfer
@@ -25,6 +25,9 @@ const (
 
 	// RouterKey is the message route for IBC transfer
 	RouterKey = ModuleName
+
+	// Key to store portID in our store
+	PortKey = "portID"
 
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = ModuleName

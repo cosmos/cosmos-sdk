@@ -83,8 +83,8 @@ across apps that leverages `google.protobuf.Any` to handle interface types. `Any
 can be used to wrap any protobuf message by encoding both its type URL and value.
 We avoid using `Any` during the encoding phase because these URLs can be long
 and we want to keep encoded messages small. We are not, however, sending the
-"signing document" (encoded in JSON) over the wire or storing it on nodes,
-therefore using `Any` for signing not add any encoding overhead.
+`SignDoc` (encoded in JSON) over the wire or storing it on nodes,
+therefore using `Any` for signing does not add any encoding overhead.
 
 ```proto
 // app/codec/codec.proto

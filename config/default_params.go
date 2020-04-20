@@ -7,7 +7,6 @@ import (
 )
 
 const (
-
 	// Update the validator set every 252 blocks by default
 	DefaultBlocksPerEpoch = 252
 
@@ -25,9 +24,6 @@ const (
 )
 
 var (
-	// Default minimum number of MinSelfDelegation limit by okt
-	DefaultMinSelfDelegationLimit = sdk.NewDecWithPrec(1, 3)
-
 	// Default minimum number of Delegate&Unbond limit by okt
 	DefaultMinDelegation = sdk.NewDecWithPrec(1, 4)
 )

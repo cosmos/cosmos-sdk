@@ -48,6 +48,7 @@ func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context)
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,
 		app.GetKey(staking.StoreKey),
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(staking.ModuleName),
 	)

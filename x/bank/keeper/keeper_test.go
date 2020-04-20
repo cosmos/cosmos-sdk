@@ -28,11 +28,11 @@ const (
 )
 
 var (
-	holderAcc     = types.NewEmptyModuleAccount(holder)
-	burnerAcc     = types.NewEmptyModuleAccount(types.Burner, types.Burner)
-	minterAcc     = types.NewEmptyModuleAccount(types.Minter, types.Minter)
-	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Burner, types.Minter, types.Staking)
-	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
+	holderAcc     = auth.NewEmptyModuleAccount(holder)
+	burnerAcc     = auth.NewEmptyModuleAccount(auth.Burner, auth.Burner)
+	minterAcc     = auth.NewEmptyModuleAccount(auth.Minter, auth.Minter)
+	multiPermAcc  = auth.NewEmptyModuleAccount(multiPerm, auth.Burner, auth.Minter, auth.Staking)
+	randomPermAcc = auth.NewEmptyModuleAccount(randomPerm, "random")
 
 	initTokens = sdk.TokensFromConsensusPower(initialPower)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -48,7 +48,7 @@ func newBarCoin(amt int64) sdk.Coin {
 
 // nolint: interfacer
 func getCoinsByName(ctx sdk.Context, bk bank.Keeper, ak types.AccountKeeper, moduleName string) sdk.Coins {
-	moduleAddress := bk.GetModuleAddress(moduleName)
+	moduleAddress := ak.GetModuleAddress(moduleName)
 	macc := ak.GetAccount(ctx, moduleAddress)
 	if macc == nil {
 		return sdk.Coins(nil)
@@ -75,35 +75,6 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.ctx = ctx
 }
 
-func (suite *IntegrationTestSuite) TestSupply_ValidatePermissions() {
-	app := suite.app
-
-	// add module accounts to supply keeper
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[types.Minter] = []string{types.Minter}
-	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-
-	appCodec := codecstd.NewAppCodec(app.Codec())
-	keeper := bank.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.AccountKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool), maccPerms,
-	)
-
-	err := keeper.ValidatePermissions(multiPermAcc)
-	suite.Require().NoError(err)
-
-	err = keeper.ValidatePermissions(randomPermAcc)
-	suite.Require().NoError(err)
-
-	// unregistered permissions
-	otherAcc := types.NewEmptyModuleAccount("other", "other")
-	err = app.BankKeeper.ValidatePermissions(otherAcc)
-	suite.Require().Error(err)
-}
-
 func (suite *IntegrationTestSuite) TestSupply() {
 	app, ctx := suite.app, suite.ctx
 
@@ -125,30 +96,34 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
-	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[types.Minter] = []string{types.Minter}
-	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[auth.Burner] = []string{auth.Burner}
+	maccPerms[auth.Minter] = []string{auth.Minter}
+	maccPerms[multiPerm] = []string{auth.Burner, auth.Minter, auth.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
+	authKeeper := auth.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+		auth.ProtoBaseAccount, maccPerms,
+	)
 	keeper := bank.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.AccountKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool), maccPerms,
+		appCodec, app.GetKey(types.StoreKey), authKeeper,
+		app.GetSubspace(bank.ModuleName), make(map[string]bool),
 	)
 
-	baseAcc := app.AccountKeeper.NewAccountWithAddress(ctx, types.NewModuleAddress("baseAcc"))
+	baseAcc := authKeeper.NewAccountWithAddress(ctx, auth.NewModuleAddress("baseAcc"))
 	suite.Require().NoError(keeper.SetBalances(ctx, holderAcc.GetAddress(), initCoins))
-	keeper.SetSupply(ctx, types.NewSupply(initCoins))
 
-	keeper.SetModuleAccount(ctx, holderAcc)
-	keeper.SetModuleAccount(ctx, burnerAcc)
-	app.AccountKeeper.SetAccount(ctx, baseAcc)
+	keeper.SetSupply(ctx, types.NewSupply(initCoins))
+	authKeeper.SetModuleAccount(ctx, holderAcc)
+	authKeeper.SetModuleAccount(ctx, burnerAcc)
+	authKeeper.SetAccount(ctx, baseAcc)
 
 	suite.Require().Panics(func() {
 		keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) // nolint:errcheck
 	})
 
 	suite.Require().Panics(func() {
-		keeper.SendCoinsFromModuleToModule(ctx, types.Burner, "", initCoins) // nolint:errcheck
+		keeper.SendCoinsFromModuleToModule(ctx, auth.Burner, "", initCoins) // nolint:errcheck
 	})
 
 	suite.Require().Panics(func() {
@@ -160,20 +135,20 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	)
 
 	suite.Require().NoError(
-		keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), types.Burner, initCoins),
+		keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), auth.Burner, initCoins),
 	)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, app.AccountKeeper, holderAcc.GetName()))
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, app.AccountKeeper, types.Burner))
+	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, holderAcc.GetName()))
+	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
 
 	suite.Require().NoError(
-		keeper.SendCoinsFromModuleToAccount(ctx, types.Burner, baseAcc.GetAddress(), initCoins),
+		keeper.SendCoinsFromModuleToAccount(ctx, auth.Burner, baseAcc.GetAddress(), initCoins),
 	)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, app.AccountKeeper, types.Burner))
+	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
 	suite.Require().Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 
-	suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), types.Burner, initCoins))
+	suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), auth.Burner, initCoins))
 	suite.Require().Equal(sdk.Coins(nil), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, app.AccountKeeper, types.Burner))
+	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
 }
 
 func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
@@ -184,35 +159,39 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
-	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[types.Minter] = []string{types.Minter}
-	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[auth.Burner] = []string{auth.Burner}
+	maccPerms[auth.Minter] = []string{auth.Minter}
+	maccPerms[multiPerm] = []string{auth.Burner, auth.Minter, auth.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
+	authKeeper := auth.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+		auth.ProtoBaseAccount, maccPerms,
+	)
 	keeper := bank.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.AccountKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool), maccPerms,
+		appCodec, app.GetKey(types.StoreKey), authKeeper,
+		app.GetSubspace(bank.ModuleName), make(map[string]bool),
 	)
 
-	keeper.SetModuleAccount(ctx, burnerAcc)
-	keeper.SetModuleAccount(ctx, minterAcc)
-	keeper.SetModuleAccount(ctx, multiPermAcc)
-	keeper.SetModuleAccount(ctx, randomPermAcc)
+	authKeeper.SetModuleAccount(ctx, burnerAcc)
+	authKeeper.SetModuleAccount(ctx, minterAcc)
+	authKeeper.SetModuleAccount(ctx, multiPermAcc)
+	authKeeper.SetModuleAccount(ctx, randomPermAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")            // nolint:errcheck
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, types.Burner, initCoins) }, "invalid permission") // nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")           // nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, auth.Burner, initCoins) }, "invalid permission") // nolint:errcheck
 
-	err := keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
+	err := keeper.MintCoins(ctx, auth.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
 	suite.Require().Error(err, "insufficient coins")
 
 	suite.Require().Panics(func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
 
-	err = keeper.MintCoins(ctx, types.Minter, initCoins)
+	err = keeper.MintCoins(ctx, auth.Minter, initCoins)
 	suite.Require().NoError(err)
 
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, app.AccountKeeper, types.Minter))
+	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, auth.Minter))
 	suite.Require().Equal(initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
 
 	// test same functionality on module account with multiple permissions
@@ -221,9 +200,9 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 	err = keeper.MintCoins(ctx, multiPermAcc.GetName(), initCoins)
 	suite.Require().NoError(err)
 
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, app.AccountKeeper, multiPermAcc.GetName()))
+	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
 	suite.Require().Equal(initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, types.Burner, initCoins) }) // nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, auth.Burner, initCoins) }) // nolint:errcheck
 }
 
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
@@ -234,33 +213,37 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
-	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[types.Minter] = []string{types.Minter}
-	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[auth.Burner] = []string{auth.Burner}
+	maccPerms[auth.Minter] = []string{auth.Minter}
+	maccPerms[multiPerm] = []string{auth.Burner, auth.Minter, auth.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
+	authKeeper := auth.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+		auth.ProtoBaseAccount, maccPerms,
+	)
 	keeper := bank.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.AccountKeeper,
-		app.GetSubspace(bank.ModuleName), make(map[string]bool), maccPerms,
+		appCodec, app.GetKey(types.StoreKey), authKeeper,
+		app.GetSubspace(bank.ModuleName), make(map[string]bool),
 	)
 
 	suite.Require().NoError(keeper.SetBalances(ctx, burnerAcc.GetAddress(), initCoins))
 	keeper.SetSupply(ctx, types.NewSupply(initCoins))
-	keeper.SetModuleAccount(ctx, burnerAcc)
+	authKeeper.SetModuleAccount(ctx, burnerAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
 	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                        // nolint:errcheck
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, types.Minter, initCoins) }, "invalid permission")             // nolint:errcheck
+	suite.Require().Panics(func() { keeper.BurnCoins(ctx, auth.Minter, initCoins) }, "invalid permission")              // nolint:errcheck
 	suite.Require().Panics(func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.GetTotal()) }, "random permission") // nolint:errcheck
-	err := keeper.BurnCoins(ctx, types.Burner, initialSupply.GetTotal())
+	err := keeper.BurnCoins(ctx, auth.Burner, initialSupply.GetTotal())
 	suite.Require().Error(err, "insufficient coins")
 
-	err = keeper.BurnCoins(ctx, types.Burner, initCoins)
+	err = keeper.BurnCoins(ctx, auth.Burner, initCoins)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, app.AccountKeeper, types.Burner))
+	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, auth.Burner))
 	suite.Require().Equal(initialSupply.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 
 	// test same functionality on module account with multiple permissions
@@ -269,11 +252,11 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	keeper.SetSupply(ctx, initialSupply)
 
 	suite.Require().NoError(keeper.SetBalances(ctx, multiPermAcc.GetAddress(), initCoins))
-	keeper.SetModuleAccount(ctx, multiPermAcc)
+	authKeeper.SetModuleAccount(ctx, multiPermAcc)
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, app.AccountKeeper, multiPermAcc.GetName()))
+	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
 	suite.Require().Equal(initialSupply.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 }
 

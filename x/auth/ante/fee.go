@@ -89,7 +89,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	if addr := dfd.bankKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
+	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
 	}
 

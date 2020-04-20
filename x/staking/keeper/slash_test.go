@@ -28,7 +28,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	numVals := int64(3)
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(numVals)))
@@ -37,7 +37,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins)
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
 
 	for i := int64(0); i < numVals; i++ {
@@ -129,7 +129,7 @@ func TestSlashRedelegation(t *testing.T) {
 	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(startCoins...)))
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
@@ -416,7 +416,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(rdCoins...))
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	oldBonded := app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
 	oldNotBonded := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
@@ -583,8 +583,8 @@ func TestSlashBoth(t *testing.T) {
 	notBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedPoolBalances.Add(notBondedCoins...)))
 
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	oldBonded := app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
 	oldNotBonded := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount

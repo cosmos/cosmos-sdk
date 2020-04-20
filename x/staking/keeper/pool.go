@@ -2,18 +2,18 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool exported.ModuleAccountI) {
-	return k.bankKeeper.GetModuleAccount(ctx, types.BondedPoolName)
+func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool authexported.ModuleAccountI) {
+	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
 }
 
 // GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool exported.ModuleAccountI) {
-	return k.bankKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
+func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authexported.ModuleAccountI) {
+	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking

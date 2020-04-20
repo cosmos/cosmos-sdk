@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -11,28 +10,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/tendermint/go-amino"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const AverageBlockTime = 6 * time.Second
 
 // initialize the chain for the simulation
 func initChain(
-	r *rand.Rand, params Params, consensusParams *abci.ConsensusParams, accounts []simulation.Account, app *baseapp.BaseApp,
+	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn, config simulation.Config,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
-	consensusParams = extractEvidenceFromStakingGenesisState(appState, consensusParams)
+	consensusParams := RandomConsensusParams(r, appState)
 
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -43,21 +38,6 @@ func initChain(
 	validators := newMockValidators(r, res.Validators, params)
 
 	return validators, genesisTimestamp, accounts, chainID
-}
-
-func extractEvidenceFromStakingGenesisState(appState json.RawMessage, consensusParams *abci.ConsensusParams) *abci.ConsensusParams {
-	cdc := amino.NewCodec()
-
-	var genesisState map[string]json.RawMessage
-	cdc.UnmarshalJSON(appState, &genesisState)
-
-	stakingState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
-	consensusParams.Evidence.MaxAgeDuration = stakingState.Params.UnbondingTime
-	consensusParams.Evidence.MaxAgeNumBlocks = int64(stakingState.Params.UnbondingTime / AverageBlockTime)
-
-	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
-
-	return consensusParams
 }
 
 // SimulateFromSeed tests an application by running the provided
@@ -77,15 +57,13 @@ func SimulateFromSeed(
 	params := RandomParams(r)
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
-	consParams := RandomConsensusParams(r)
-
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := simulation.RandomAccounts(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, genesisTimestamp, accs, chainID := initChain(r, params, consParams, accs, app, appStateFn, config)
+	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config)
 	if len(accs) == 0 {
 		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}

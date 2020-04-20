@@ -1,9 +1,13 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
-	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/tendermint/go-amino"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -149,19 +153,35 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 //-----------------------------------------------------------------------------
 // Param change proposals
 
-// RandomParams returns random simulation consensus parameters
-func RandomConsensusParams(r *rand.Rand) *abci.ConsensusParams {
-	return &abci.ConsensusParams{
+// RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
+func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
+	consensusParams := &abci.ConsensusParams{
 		Block: &abci.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
 			MaxGas:   -1,
-		},
-		Evidence: &abci.EvidenceParams{
-			MaxAgeNumBlocks: int64(simulation.RandIntBetween(r, 100000, 500000)),
-			MaxAgeDuration:  time.Duration(simulation.RandIntBetween(r, 10000, 50000)),
 		},
 		Validator: &abci.ValidatorParams{
 			PubKeyTypes: []string{"secp256k1", "ed25519"},
 		},
 	}
+
+	applyStakingGenesisStateToEvidence(appState, consensusParams)
+
+	return consensusParams
+}
+
+func applyStakingGenesisStateToEvidence(appState json.RawMessage, consensusParams *abci.ConsensusParams) {
+	cdc := amino.NewCodec()
+
+	var genesisState map[string]json.RawMessage
+	cdc.UnmarshalJSON(appState, &genesisState)
+
+	stakingState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
+
+	consensusParams.Evidence = &abci.EvidenceParams{
+		MaxAgeNumBlocks: int64(stakingState.Params.UnbondingTime / AverageBlockTime),
+		MaxAgeDuration:  stakingState.Params.UnbondingTime,
+	}
+
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
 }

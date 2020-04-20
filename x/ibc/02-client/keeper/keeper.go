@@ -40,33 +40,29 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
 }
 
-func (k Keeper) GetStoreKey() sdk.StoreKey {
-	return k.storeKey
-}
-
 // GetClientState gets a particular client from the store
 func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
-	store := k.clientStore(ctx, clientID)
+	store := k.ClientStore(ctx, clientID)
 	bz := store.Get(ibctypes.KeyClientState())
 	if bz == nil {
 		return nil, false
 	}
 
 	var clientState exported.ClientState
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &clientState)
+	k.cdc.MustUnmarshalBinaryBare(bz, &clientState)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
 func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
-	store := k.clientStore(ctx, clientState.GetID())
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
+	store := k.ClientStore(ctx, clientState.GetID())
+	bz := k.cdc.MustMarshalBinaryBare(clientState)
 	store.Set(ibctypes.KeyClientState(), bz)
 }
 
 // GetClientType gets the consensus type for a specific client
 func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.ClientType, bool) {
-	store := k.clientStore(ctx, clientID)
+	store := k.ClientStore(ctx, clientID)
 	bz := store.Get(ibctypes.KeyClientType())
 	if bz == nil {
 		return 0, false
@@ -77,35 +73,35 @@ func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.Client
 
 // SetClientType sets the specific client consensus type to the provable store
 func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType exported.ClientType) {
-	store := k.clientStore(ctx, clientID)
+	store := k.ClientStore(ctx, clientID)
 	store.Set(ibctypes.KeyClientType(), []byte{byte(clientType)})
 }
 
 // GetClientConsensusState gets the stored consensus state from a client at a given height.
 func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
-	store := k.clientStore(ctx, clientID)
+	store := k.ClientStore(ctx, clientID)
 	bz := store.Get(ibctypes.KeyConsensusState(height))
 	if bz == nil {
 		return nil, false
 	}
 
 	var consensusState exported.ConsensusState
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &consensusState)
+	k.cdc.MustUnmarshalBinaryBare(bz, &consensusState)
 	return consensusState, true
 }
 
 // SetClientConsensusState sets a ConsensusState to a particular client at the given
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
-	store := k.clientStore(ctx, clientID)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
+	store := k.ClientStore(ctx, clientID)
+	bz := k.cdc.MustMarshalBinaryBare(consensusState)
 	store.Set(ibctypes.KeyConsensusState(height), bz)
 }
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular
 // client at the given height
 func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {
-	store := k.clientStore(ctx, clientID)
+	store := k.ClientStore(ctx, clientID)
 	return store.Has(ibctypes.KeyConsensusState(height))
 }
 
@@ -118,7 +114,7 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 	return k.GetClientConsensusState(ctx, clientID, clientState.GetLatestHeight())
 }
 
-// GetClientConsensusStatelTE will get the latest ConsensusState of a particular client at the latest height
+// GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
 // less than or equal to the given height
 func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight uint64) (exported.ConsensusState, bool) {
 	for i := maxHeight; i > 0; i-- {
@@ -163,7 +159,7 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bo
 			continue
 		}
 		var clientState exported.ClientState
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &clientState)
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &clientState)
 
 		if cb(clientState) {
 			break
@@ -180,9 +176,9 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
 	return states
 }
 
-// Returns isolated prefix store for each client so they can read/write in separate
+// ClientStore returns isolated prefix store for each client so they can read/write in separate
 // namespace without being able to read/write other client's data
-func (k Keeper) clientStore(ctx sdk.Context, clientID string) sdk.KVStore {
+func (k Keeper) ClientStore(ctx sdk.Context, clientID string) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
 	clientPrefix := append([]byte("clients/"+clientID), '/')

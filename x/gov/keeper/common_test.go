@@ -22,7 +22,6 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 		appCodec,
 		app.GetKey(staking.StoreKey),
 		app.BankKeeper,
-		app.SupplyKeeper,
 		app.GetSubspace(staking.ModuleName),
 	)
 

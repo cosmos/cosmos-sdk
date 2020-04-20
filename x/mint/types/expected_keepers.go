@@ -2,7 +2,7 @@ package types // noalias
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
 // StakingKeeper defines the expected staking keeper
@@ -11,8 +11,9 @@ type StakingKeeper interface {
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 
-// SupplyKeeper defines the expected supply keeper
-type SupplyKeeper interface {
+// BankKeeper defines the contract needed to be fulfilled for banking and supply
+// dependencies.
+type BankKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862

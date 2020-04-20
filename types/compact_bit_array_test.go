@@ -1,4 +1,4 @@
-package bitarray
+package types
 
 import (
 	"encoding/json"
@@ -22,7 +22,7 @@ func randCompactBitArray(bits int) (*CompactBitArray, []byte) {
 		}
 	}
 	// Set remaining bits
-	for i := uint8(0); i < 8-bA.ExtraBitsStored; i++ {
+	for i := uint32(0); i < 8-bA.ExtraBitsStored; i++ {
 		bA.SetIndex(numBytes*8+int(i), src[numBytes-1]&(uint8(1)<<(8-i)) > 0)
 	}
 	return bA, src

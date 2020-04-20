@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig/bitarray"
 )
 
 // Multisignature is used to represent the signature object used in the multisigs.
 // Sigs is a list of signatures, sorted by corresponding index.
-type Multisignature struct {
-	BitArray *bitarray.CompactBitArray
-	Sigs     [][]byte
-}
+// type Multisignature struct {
+// 	BitArray *bitarray.CompactBitArray
+// 	Sigs     [][]byte
+// }
 
 // NewMultisig returns a new Multisignature of size n.
 func NewMultisig(n int) *Multisignature {
 	// Default the signature list to have a capacity of two, since we can
 	// expect that most multisigs will require multiple signers.
-	return &Multisignature{bitarray.NewCompactBitArray(n), make([][]byte, 0, 2)}
+	return &Multisignature{types.NewCompactBitArray(n), make([][]byte, 0, 2)}
 }
 
 // GetIndex returns the index of pk in keys. Returns -1 if not found
@@ -71,7 +71,7 @@ func (mSig *Multisignature) AddSignatureFromPubKey(sig []byte, pubkey crypto.Pub
 	return nil
 }
 
-// Marshal the multisignature with amino
-func (mSig *Multisignature) Marshal() []byte {
-	return cdc.MustMarshalBinaryBare(mSig)
-}
+// // Marshal the multisignature with amino
+// func (mSig *Multisignature) Marshal() []byte {
+// 	return cdc.MustMarshalBinaryBare(mSig)
+// }

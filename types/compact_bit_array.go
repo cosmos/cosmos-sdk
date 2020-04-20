@@ -1,4 +1,4 @@
-package bitarray
+package types
 
 import (
 	"bytes"
@@ -13,10 +13,10 @@ import (
 // This is used to ensure that the encoded data takes up a minimal amount of
 // space after amino encoding.
 // This is not thread safe, and is not intended for concurrent usage.
-type CompactBitArray struct {
-	ExtraBitsStored byte   `json:"extra_bits"` // The number of extra bits in elems.
-	Elems           []byte `json:"bits"`
-}
+// type CompactBitArray struct {
+// 	ExtraBitsStored byte   `json:"extra_bits"` // The number of extra bits in elems.
+// 	Elems           []byte `json:"bits"`
+// }
 
 // NewCompactBitArray returns a new compact bit array.
 // It returns nil if the number of bits is zero.
@@ -25,7 +25,7 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 		return nil
 	}
 	return &CompactBitArray{
-		ExtraBitsStored: byte(bits % 8),
+		ExtraBitsStored: uint32(bits % 8),
 		Elems:           make([]byte, (bits+7)/8),
 	}
 }
@@ -34,7 +34,7 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 func (bA *CompactBitArray) Size() int {
 	if bA == nil {
 		return 0
-	} else if bA.ExtraBitsStored == byte(0) {
+	} else if bA.ExtraBitsStored == uint32(0) {
 		return len(bA.Elems) * 8
 	}
 	// num_bits = 8*num_full_bytes + overflow_in_last_byte
@@ -222,7 +222,7 @@ func CompactUnmarshal(bz []byte) (*CompactBitArray, error) {
 		return nil, errors.New("compact bit array: invalid compact unmarshal size")
 	}
 
-	bA := &CompactBitArray{byte(int(size % 8)), bz}
+	bA := &CompactBitArray{uint32(size % 8), bz}
 	return bA, nil
 }
 

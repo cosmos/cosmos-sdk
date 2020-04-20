@@ -154,8 +154,7 @@ func RandomConsensusParams(r *rand.Rand) *abci.ConsensusParams {
 	return &abci.ConsensusParams{
 		Block: &abci.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
-			//MaxGas:   int64(simulation.RandIntBetween(r, -1, 50000)),
-			MaxGas: -1,
+			MaxGas:   -1,
 		},
 		Evidence: &abci.EvidenceParams{
 			MaxAgeNumBlocks: int64(simulation.RandIntBetween(r, 100000, 500000)),

@@ -155,6 +155,9 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
+	cdc := amino.NewCodec()
+	stakingGenesisState := getStakingGenesisStateFromAppState(cdc, appState)
+
 	consensusParams := &abci.ConsensusParams{
 		Block: &abci.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
@@ -163,25 +166,21 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 		Validator: &abci.ValidatorParams{
 			PubKeyTypes: []string{"secp256k1", "ed25519"},
 		},
+		Evidence: &abci.EvidenceParams{
+			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),
+			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
+		},
 	}
-
-	applyStakingGenesisStateToEvidence(appState, consensusParams)
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
 
 	return consensusParams
 }
 
-func applyStakingGenesisStateToEvidence(appState json.RawMessage, consensusParams *abci.ConsensusParams) {
-	cdc := amino.NewCodec()
-
+func getStakingGenesisStateFromAppState(cdc *amino.Codec, appState json.RawMessage) stakingtypes.GenesisState {
 	var genesisState map[string]json.RawMessage
 	cdc.UnmarshalJSON(appState, &genesisState)
 
 	stakingState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
 
-	consensusParams.Evidence = &abci.EvidenceParams{
-		MaxAgeNumBlocks: int64(stakingState.Params.UnbondingTime / AverageBlockTime),
-		MaxAgeDuration:  stakingState.Params.UnbondingTime,
-	}
-
-	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
+	return stakingState
 }

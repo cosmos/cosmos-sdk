@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -21,14 +22,6 @@ type Keeper interface {
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
-
-	ValidatePermissions(macc exported.ModuleAccountI) error
-
-	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
-	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string)
-	GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI
-	SetModuleAccount(ctx sdk.Context, macc exported.ModuleAccountI)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
@@ -50,22 +43,16 @@ type BaseKeeper struct {
 	cdc        types.Codec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
-	permAddrs  map[string]types.PermissionsForAddress
 }
 
 func NewBaseKeeper(
 	cdc types.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
-	blacklistedAddrs map[string]bool, maccPerms map[string][]string,
+	blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
-	permAddrs := make(map[string]types.PermissionsForAddress)
-	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
 	return BaseKeeper{
@@ -74,7 +61,6 @@ func NewBaseKeeper(
 		cdc:            cdc,
 		storeKey:       storeKey,
 		paramSpace:     paramSpace,
-		permAddrs:      permAddrs,
 	}
 }
 
@@ -181,83 +167,13 @@ func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store.Set(types.SupplyKey, bz)
 }
 
-// ValidatePermissions validates that the module account has been granted
-// permissions within its set of allowed permissions.
-func (k BaseKeeper) ValidatePermissions(macc exported.ModuleAccountI) error {
-	permAddr := k.permAddrs[macc.GetName()]
-	for _, perm := range macc.GetPermissions() {
-		if !permAddr.HasPermission(perm) {
-			return fmt.Errorf("invalid module permission %s", perm)
-		}
-	}
-
-	return nil
-}
-
-// GetModuleAddress returns an address based on the module name
-func (k BaseKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
-	permAddr, ok := k.permAddrs[moduleName]
-	if !ok {
-		return nil
-	}
-
-	return permAddr.GetAddress()
-}
-
-// GetModuleAddressAndPermissions returns an address and permissions based on the module name
-func (k BaseKeeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string) {
-	permAddr, ok := k.permAddrs[moduleName]
-	if !ok {
-		return addr, permissions
-	}
-
-	return permAddr.GetAddress(), permAddr.GetPermissions()
-}
-
-// GetModuleAccountAndPermissions gets the module account from the auth account store and its
-// registered permissions
-func (k BaseKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string) {
-	addr, perms := k.GetModuleAddressAndPermissions(moduleName)
-	if addr == nil {
-		return nil, []string{}
-	}
-
-	acc := k.ak.GetAccount(ctx, addr)
-	if acc != nil {
-		macc, ok := acc.(exported.ModuleAccountI)
-		if !ok {
-			panic("account is not a module account")
-		}
-		return macc, perms
-	}
-
-	// create a new module account
-	macc := types.NewEmptyModuleAccount(moduleName, perms...)
-	maccI := (k.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
-	k.SetModuleAccount(ctx, maccI)
-
-	return maccI, perms
-}
-
-// GetModuleAccount gets the module account from the auth account store, if the account does not
-// exist in the AccountKeeper, then it is created.
-func (k BaseKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
-	acc, _ := k.GetModuleAccountAndPermissions(ctx, moduleName)
-	return acc
-}
-
-// SetModuleAccount sets the module account to the auth account store
-func (k BaseKeeper) SetModuleAccount(ctx sdk.Context, macc exported.ModuleAccountI) { //nolint:interfacer
-	k.ak.SetAccount(ctx, macc)
-}
-
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
 // It will panic if the module account does not exist.
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
 
-	senderAddr := k.GetModuleAddress(senderModule)
+	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
@@ -271,12 +187,12 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
 
-	senderAddr := k.GetModuleAddress(senderModule)
+	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
-	recipientAcc := k.GetModuleAccount(ctx, recipientModule)
+	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
@@ -290,7 +206,7 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
 
-	recipientAcc := k.GetModuleAccount(ctx, recipientModule)
+	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
@@ -305,12 +221,12 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
 
-	recipientAcc := k.GetModuleAccount(ctx, recipientModule)
+	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	if !recipientAcc.HasPermission(types.Staking) {
+	if !recipientAcc.HasPermission(auth.Staking) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule))
 	}
 
@@ -324,12 +240,12 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
 
-	acc := k.GetModuleAccount(ctx, senderModule)
+	acc := k.ak.GetModuleAccount(ctx, senderModule)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
 	}
 
-	if !acc.HasPermission(types.Staking) {
+	if !acc.HasPermission(auth.Staking) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule))
 	}
 
@@ -339,12 +255,12 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
-	acc := k.GetModuleAccount(ctx, moduleName)
+	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
-	if !acc.HasPermission(types.Minter) {
+	if !acc.HasPermission(auth.Minter) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
@@ -368,12 +284,12 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 // BurnCoins burns coins deletes coins from the balance of the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
-	acc := k.GetModuleAccount(ctx, moduleName)
+	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
 	}
 
-	if !acc.HasPermission(types.Burner) {
+	if !acc.HasPermission(auth.Burner) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 

@@ -87,11 +87,9 @@ and we want to keep encoded messages small. We are not, however, sending the
 therefore using `Any` for signing does not add any encoding overhead.
 
 ```proto
-// app/codec/codec.proto
-
 message SignDoc {
   StdSignDocBase base = 1;
-  repeated Message msgs = 2;
+  repeated google.protobuf.Any msgs = 2;
 }
 ```
 

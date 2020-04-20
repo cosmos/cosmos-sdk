@@ -195,10 +195,10 @@ it supports using an `oneof`:
 // myapp/types/types.proto
 message MsgSubmitProposal {
   MsgSubmitProposalBase base = 1;
-  MyAppContent content = 1;
+  Content content = 1;
 }
 
-message MyAppContent {
+message Content {
   oneof sum {
     TextProposal text = 1;
     SomeOtherProposal = 2;
@@ -229,7 +229,7 @@ convert `Msg`s used for signing (using `Any`) to those used for encoding
 (using `oneof`). Ex:
 
 ```go
-// x/gov//module.go
+// x/gov/module.go
 var _ InterfaceMsgEncoder = AppModule{}
 
 type AppModule struct {

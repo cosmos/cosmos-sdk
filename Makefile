@@ -164,7 +164,7 @@ test-sim-benchmark-invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
-test-cli:
+test-cli: build-sim
 	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=cli_test -v
 
 .PHONY: \

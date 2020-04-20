@@ -106,14 +106,14 @@ func (k Keeper) createOutgoingPacket(
 		}
 
 		// transfer the coins to the module account and burn them
-		if err := k.supplyKeeper.SendCoinsFromAccountToModule(
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(
 			ctx, sender, types.GetModuleAccountName(), amount,
 		); err != nil {
 			return err
 		}
 
 		// burn vouchers from the sender's balance if the source is from another chain
-		if err := k.supplyKeeper.BurnCoins(
+		if err := k.bankKeeper.BurnCoins(
 			ctx, types.GetModuleAccountName(), amount,
 		); err != nil {
 			// NOTE: should not happen as the module account was
@@ -159,14 +159,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	if source {
 
 		// mint new tokens if the source of the transfer is the same chain
-		if err := k.supplyKeeper.MintCoins(
+		if err := k.bankKeeper.MintCoins(
 			ctx, types.GetModuleAccountName(), data.Amount,
 		); err != nil {
 			return err
 		}
 
 		// send to receiver
-		return k.supplyKeeper.SendCoinsFromModuleToAccount(
+		return k.bankKeeper.SendCoinsFromModuleToAccount(
 			ctx, types.GetModuleAccountName(), receiver, data.Amount,
 		)
 	}
@@ -233,11 +233,11 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 	}
 
 	// mint vouchers back to sender
-	if err := k.supplyKeeper.MintCoins(
+	if err := k.bankKeeper.MintCoins(
 		ctx, types.GetModuleAccountName(), data.Amount,
 	); err != nil {
 		return err
 	}
 
-	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), sender, data.Amount)
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), sender, data.Amount)
 }

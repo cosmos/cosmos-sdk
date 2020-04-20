@@ -4,12 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
@@ -23,6 +22,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, supply.NewModuleAddress(mint.ModuleName))
+	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(mint.ModuleName))
 	require.NotNil(t, acc)
 }

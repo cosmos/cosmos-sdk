@@ -23,6 +23,9 @@ const (
 	QueryAccount                  = types.QueryAccount
 	QueryParams                   = types.QueryParams
 	MaxGasWanted                  = types.MaxGasWanted
+	Minter                        = types.Minter
+	Burner                        = types.Burner
+	Staking                       = types.Staking
 )
 
 var (
@@ -60,6 +63,9 @@ var (
 	ValidateGenAccounts               = types.ValidateGenAccounts
 	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
 	NewStdSignature                   = types.NewStdSignature
+	NewModuleAddress                  = types.NewModuleAddress
+	NewEmptyModuleAccount             = types.NewEmptyModuleAccount
+	NewModuleAccount                  = types.NewModuleAccount
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -89,4 +95,5 @@ type (
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
 	Codec                            = types.Codec
+	ModuleAccount                    = types.ModuleAccount
 )

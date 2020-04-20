@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
+	v036bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
 	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
@@ -13,7 +14,6 @@ import (
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_36"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
-	v036supply "github.com/cosmos/cosmos-sdk/x/supply/legacy/v0_36"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
@@ -90,7 +90,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 	}
 
 	// migrate supply state
-	appState[v036supply.ModuleName] = v036Codec.MustMarshalJSON(v036supply.EmptyGenesisState())
+	appState[v036bank.ModuleName] = v036Codec.MustMarshalJSON(v036bank.EmptyGenesisState())
 
 	return appState
 }

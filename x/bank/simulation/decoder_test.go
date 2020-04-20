@@ -5,13 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func makeTestCodec() (cdc *codec.Codec) {
@@ -27,7 +25,7 @@ func TestDecodeStore(t *testing.T) {
 	totalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: keeper.SupplyKey, Value: cdc.MustMarshalBinaryBare(totalSupply)},
+		tmkv.Pair{Key: types.SupplyKey, Value: cdc.MustMarshalBinaryBare(totalSupply)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

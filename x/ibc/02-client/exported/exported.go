@@ -148,12 +148,15 @@ const (
 // string representation of the client types
 const (
 	ClientTypeTendermint string = "tendermint"
+	ClientTypeLocalHost  string = "localhost"
 )
 
 func (ct ClientType) String() string {
 	switch ct {
 	case Tendermint:
 		return ClientTypeTendermint
+	case Localhost:
+		return ClientTypeLocalHost
 	default:
 		return ""
 	}
@@ -187,7 +190,8 @@ func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
 	case ClientTypeTendermint:
 		return Tendermint
-
+	case ClientTypeLocalHost:
+		return Localhost
 	default:
 		return 0
 	}

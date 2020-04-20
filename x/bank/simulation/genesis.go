@@ -43,7 +43,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { sendEnabled = GenSendEnabled(r) },
 	)
 
-	bankGenesis := types.NewGenesisState(sendEnabled, RandomGenesisBalances(simState))
+	numAccs := int64(len(simState.Accounts))
+	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
+	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
 
+	bankGenesis := types.NewGenesisState(sendEnabled, RandomGenesisBalances(simState), supply)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
 }

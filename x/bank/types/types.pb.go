@@ -246,17 +246,56 @@ func (m *MsgMultiSend) GetOutputs() []Output {
 	return nil
 }
 
+// Supply represents a struct that passively keeps track of the total supply
+// amounts in the network.
+type Supply struct {
+	Total github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total"`
+}
+
+func (m *Supply) Reset()      { *m = Supply{} }
+func (*Supply) ProtoMessage() {}
+func (*Supply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_934ff6b24d3432e2, []int{4}
+}
+func (m *Supply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Supply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Supply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Supply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Supply.Merge(m, src)
+}
+func (m *Supply) XXX_Size() int {
+	return m.Size()
+}
+func (m *Supply) XXX_DiscardUnknown() {
+	xxx_messageInfo_Supply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Supply proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSend)(nil), "cosmos_sdk.x.bank.v1.MsgSend")
 	proto.RegisterType((*Input)(nil), "cosmos_sdk.x.bank.v1.Input")
 	proto.RegisterType((*Output)(nil), "cosmos_sdk.x.bank.v1.Output")
 	proto.RegisterType((*MsgMultiSend)(nil), "cosmos_sdk.x.bank.v1.MsgMultiSend")
+	proto.RegisterType((*Supply)(nil), "cosmos_sdk.x.bank.v1.Supply")
 }
 
 func init() { proto.RegisterFile("x/bank/types/types.proto", fileDescriptor_934ff6b24d3432e2) }
 
 var fileDescriptor_934ff6b24d3432e2 = []byte{
-	// 413 bytes of a gzipped FileDescriptorProto
+	// 449 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xa8, 0xd0, 0x4f, 0x4a,
 	0xcc, 0xcb, 0xd6, 0x2f, 0xa9, 0x2c, 0x48, 0x2d, 0x86, 0x90, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9,
 	0x42, 0x22, 0xc9, 0xf9, 0xc5, 0xb9, 0xf9, 0xc5, 0xf1, 0xc5, 0x29, 0xd9, 0x7a, 0x15, 0x7a, 0x20,
@@ -279,10 +318,13 @@ var fileDescriptor_934ff6b24d3432e2 = []byte{
 	0xfb, 0x96, 0xe6, 0x94, 0x64, 0x82, 0x93, 0xaf, 0x25, 0x17, 0x5b, 0x26, 0x28, 0x12, 0x40, 0xee,
 	0x07, 0x59, 0x2a, 0xad, 0x87, 0x2d, 0xb3, 0xe8, 0x81, 0x23, 0xca, 0x89, 0x05, 0x64, 0x79, 0x10,
 	0x54, 0x83, 0x90, 0x0d, 0x17, 0x7b, 0x3e, 0x38, 0x14, 0x60, 0x0e, 0x96, 0xc1, 0xae, 0x17, 0x12,
-	0x54, 0x50, 0xcd, 0x30, 0x2d, 0x10, 0xf7, 0x38, 0x39, 0x9f, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91,
-	0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3,
-	0xb1, 0x1c, 0x43, 0x94, 0x26, 0x5e, 0x0f, 0x22, 0xe7, 0xf5, 0x24, 0x36, 0x70, 0xae, 0x34, 0x06,
-	0x04, 0x00, 0x00, 0xff, 0xff, 0x57, 0x42, 0x17, 0x1f, 0x02, 0x04, 0x00, 0x00,
+	0x54, 0x50, 0xcd, 0x30, 0x2d, 0x50, 0xf7, 0x14, 0x73, 0xb1, 0x05, 0x97, 0x16, 0x14, 0xe4, 0x54,
+	0x82, 0x3c, 0x5f, 0x92, 0x5f, 0x92, 0x98, 0x03, 0x75, 0x07, 0xb5, 0x3c, 0x0f, 0x36, 0xd3, 0x8a,
+	0xa7, 0x63, 0x81, 0x3c, 0xc3, 0x8c, 0x05, 0xf2, 0x0c, 0x20, 0x4b, 0x9d, 0x9c, 0x4f, 0x3c, 0x92,
+	0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c,
+	0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0x4a, 0x13, 0xaf, 0xc1, 0xc8, 0x05, 0x4c, 0x12, 0x1b,
+	0xb8, 0x28, 0x30, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x0e, 0x1e, 0x07, 0x77, 0x04, 0x00,
+	0x00,
 }
 
 func (this *MsgSend) Equal(that interface{}) bool {
@@ -416,6 +458,35 @@ func (this *MsgMultiSend) Equal(that interface{}) bool {
 	}
 	for i := range this.Outputs {
 		if !this.Outputs[i].Equal(&that1.Outputs[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *Supply) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Supply)
+	if !ok {
+		that2, ok := that.(Supply)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.Total) != len(that1.Total) {
+		return false
+	}
+	for i := range this.Total {
+		if !this.Total[i].Equal(&that1.Total[i]) {
 			return false
 		}
 	}
@@ -611,6 +682,43 @@ func (m *MsgMultiSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *Supply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Supply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Supply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Total) > 0 {
+		for iNdEx := len(m.Total) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Total[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTypes(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTypes(v)
 	base := offset
@@ -697,6 +805,21 @@ func (m *MsgMultiSend) Size() (n int) {
 	}
 	if len(m.Outputs) > 0 {
 		for _, e := range m.Outputs {
+			l = e.Size()
+			n += 1 + l + sovTypes(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *Supply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Total) > 0 {
+		for _, e := range m.Total {
 			l = e.Size()
 			n += 1 + l + sovTypes(uint64(l))
 		}
@@ -1201,6 +1324,93 @@ func (m *MsgMultiSend) Unmarshal(dAtA []byte) error {
 			}
 			m.Outputs = append(m.Outputs, Output{})
 			if err := m.Outputs[len(m.Outputs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Supply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Supply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Supply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Total = append(m.Total, types.Coin{})
+			if err := m.Total[len(m.Total)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

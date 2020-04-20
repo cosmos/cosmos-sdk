@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 	keeper.SetSendEnabled(ctx, genState.SendEnabled)
+
+	var totalSupply sdk.Coins
 
 	genState.Balances = SanitizeGenesisBalances(genState.Balances)
 	for _, balance := range genState.Balances {
@@ -19,7 +22,15 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, genState GenesisState) {
 		if err := keeper.SetBalances(ctx, balance.Address, balance.Coins); err != nil {
 			panic(fmt.Errorf("error on setting balances %w", err))
 		}
+
+		totalSupply = totalSupply.Add(balance.Coins...)
 	}
+
+	if genState.Supply.Empty() {
+		genState.Supply = totalSupply
+	}
+
+	keeper.SetSupply(ctx, NewSupply(genState.Supply))
 }
 
 // ExportGenesis returns the bank module's genesis state.
@@ -45,5 +56,11 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 		})
 	}
 
-	return NewGenesisState(keeper.GetSendEnabled(ctx), balances)
+	return NewGenesisState(keeper.GetSendEnabled(ctx), balances, keeper.GetSupply(ctx).GetTotal())
+}
+
+// ValidateGenesis performs basic validation of supply genesis data returning an
+// error for any failed validation criteria.
+func ValidateGenesis(data GenesisState) error {
+	return types.NewSupply(data.Supply).ValidateBasic()
 }

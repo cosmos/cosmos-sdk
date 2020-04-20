@@ -152,8 +152,10 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder performs a no-op.
-func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {

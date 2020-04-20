@@ -20,9 +20,11 @@ type Codec interface {
 // RegisterCodec registers the account interfaces and concrete types on the
 // provided Amino codec.
 func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*exported.GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*exported.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)
+	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
 }
 

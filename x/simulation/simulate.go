@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -10,12 +11,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	"github.com/tendermint/go-amino"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+const AverageBlockTime = 6 * time.Second
 
 // initialize the chain for the simulation
 func initChain(
@@ -24,6 +31,8 @@ func initChain(
 ) (mockValidators, time.Time, []simulation.Account, string) {
 
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
+
+	consensusParams = extractEvidenceFromStakingGenesisState(appState, consensusParams)
 
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -34,6 +43,21 @@ func initChain(
 	validators := newMockValidators(r, res.Validators, params)
 
 	return validators, genesisTimestamp, accounts, chainID
+}
+
+func extractEvidenceFromStakingGenesisState(appState json.RawMessage, consensusParams *abci.ConsensusParams) *abci.ConsensusParams {
+	cdc := amino.NewCodec()
+
+	var genesisState map[string]json.RawMessage
+	cdc.UnmarshalJSON(appState, &genesisState)
+
+	stakingState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
+	consensusParams.Evidence.MaxAgeDuration = stakingState.Params.UnbondingTime
+	consensusParams.Evidence.MaxAgeNumBlocks = int64(stakingState.Params.UnbondingTime / AverageBlockTime)
+
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
+
+	return consensusParams
 }
 
 // SimulateFromSeed tests an application by running the provided

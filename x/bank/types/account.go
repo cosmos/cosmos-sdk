@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/crypto"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
 var (

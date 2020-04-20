@@ -8,13 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // DefaultPacketTimeout is the default packet timeout relative to the current block height
@@ -30,7 +30,6 @@ type Keeper struct {
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
 	bankKeeper    types.BankKeeper
-	supplyKeeper  types.SupplyKeeper
 	scopedKeeper  capability.ScopedKeeper
 }
 
@@ -38,12 +37,11 @@ type Keeper struct {
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
-	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper,
-	scopedKeeper capability.ScopedKeeper,
+	bankKeeper types.BankKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {
 
 	// ensure ibc transfer module account is set
-	if addr := supplyKeeper.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
+	if addr := bankKeeper.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
 		panic("the IBC transfer module account has not been set")
 	}
 
@@ -53,7 +51,6 @@ func NewKeeper(
 		channelKeeper: channelKeeper,
 		portKeeper:    portKeeper,
 		bankKeeper:    bankKeeper,
-		supplyKeeper:  supplyKeeper,
 		scopedKeeper:  scopedKeeper,
 	}
 }
@@ -64,8 +61,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
-func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccountI {
-	return k.supplyKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
+func (k Keeper) GetTransferAccount(ctx sdk.Context) bankexported.ModuleAccountI {
+	return k.bankKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
 }
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function

@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestSupplyMarshalYAML(t *testing.T) {

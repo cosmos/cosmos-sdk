@@ -6,15 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -28,9 +27,9 @@ func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimA
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
 	require.NoError(t, err)
-	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
 
 	return app, ctx, addrDels, addrVals
 }
@@ -65,7 +64,7 @@ func TestInitGenesis(t *testing.T) {
 	validators[1].DelegatorShares = valTokens.ToDec()
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper, genesisState)
+	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
 	actualGenesis := staking.ExportGenesis(ctx, app.StakingKeeper)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
@@ -114,7 +113,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	}
 
 	genesisState := types.NewGenesisState(params, validators, delegations)
-	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper, genesisState)
+	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {

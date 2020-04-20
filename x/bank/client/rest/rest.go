@@ -25,4 +25,6 @@ func RegisterHandlers(ctx context.CLIContext, m codec.Marshaler, txg tx.Generato
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/bank/total", totalSupplyHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(cliCtx)).Methods("GET")
 }

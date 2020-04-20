@@ -107,18 +107,15 @@ type AppModule struct {
 	keeper        Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	supplyKeeper  types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper, sk types.SupplyKeeper) AppModule {
-
+func NewAppModule(keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
-		supplyKeeper:   sk,
 	}
 }
 
@@ -157,7 +154,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, am.supplyKeeper, genesisState)
+	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking

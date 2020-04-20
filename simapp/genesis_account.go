@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 var _ authexported.GenesisAccount = (*SimGenesisAccount)(nil)
@@ -37,7 +37,7 @@ func (sga SimGenesisAccount) Validate() error {
 	}
 
 	if sga.ModuleName != "" {
-		ma := supply.ModuleAccount{
+		ma := bank.ModuleAccount{
 			BaseAccount: sga.BaseAccount, Name: sga.ModuleName, Permissions: sga.ModulePermissions,
 		}
 		if err := ma.Validate(); err != nil {

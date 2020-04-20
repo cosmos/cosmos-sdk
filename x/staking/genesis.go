@@ -18,7 +18,7 @@ import (
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(
 	ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper, data types.GenesisState,
+	bankKeeper types.BankKeeper, data types.GenesisState,
 ) (res []abci.ValidatorUpdate) {
 
 	bondedTokens := sdk.ZeroInt()
@@ -105,7 +105,7 @@ func InitGenesis(
 			panic(err)
 		}
 
-		supplyKeeper.SetModuleAccount(ctx, bondedPool)
+		bankKeeper.SetModuleAccount(ctx, bondedPool)
 	}
 
 	notBondedPool := keeper.GetNotBondedPool(ctx)
@@ -118,7 +118,7 @@ func InitGenesis(
 			panic(err)
 		}
 
-		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+		bankKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
 	// don't need to run Tendermint updates if we exported

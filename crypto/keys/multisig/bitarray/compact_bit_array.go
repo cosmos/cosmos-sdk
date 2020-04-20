@@ -1,10 +1,22 @@
-package std
+package bitarray
 
 import (
+	"bytes"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 )
+
+// CompactBitArray is an implementation of a space efficient bit array.
+// This is used to ensure that the encoded data takes up a minimal amount of
+// space after amino encoding.
+// This is not thread safe, and is not intended for concurrent usage.
+type CompactBitArray struct {
+	ExtraBitsStored byte   `json:"extra_bits"` // The number of extra bits in elems.
+	Elems           []byte `json:"bits"`
+}
 
 // NewCompactBitArray returns a new compact bit array.
 // It returns nil if the number of bits is zero.
@@ -13,7 +25,7 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 		return nil
 	}
 	return &CompactBitArray{
-		ExtraBitsStored: []byte{byte(bits % 8)},
+		ExtraBitsStored: byte(bits % 8),
 		Elems:           make([]byte, (bits+7)/8),
 	}
 }
@@ -22,12 +34,12 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 func (bA *CompactBitArray) Size() int {
 	if bA == nil {
 		return 0
-	} else if bA.ExtraBitsStored[0] == byte(0) {
+	} else if bA.ExtraBitsStored == byte(0) {
 		return len(bA.Elems) * 8
 	}
 	// num_bits = 8*num_full_bytes + overflow_in_last_byte
 	// num_full_bytes = (len(bA.Elems)-1)
-	return (len(bA.Elems)-1)*8 + int(bA.ExtraBitsStored[0])
+	return (len(bA.Elems)-1)*8 + int(bA.ExtraBitsStored)
 }
 
 // GetIndex returns the bit at index i within the bit array.
@@ -156,7 +168,7 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 	if b == "null" {
 		// This is required e.g. for encoding/json when decoding
 		// into a pointer with pre-allocated BitArray.
-		bA.ExtraBitsStored = []byte{0}
+		bA.ExtraBitsStored = 0
 		bA.Elems = nil
 		return nil
 	}
@@ -180,43 +192,42 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-// // CompactMarshal is a space efficient encoding for CompactBitArray.
-// // It is not amino compatible.
-// func (bA *CompactBitArray) Marshal() []byte {
-// 	size := bA.Size()
-// 	if size <= 0 {
-// 		return []byte("null")
-// 	}
-// 	bz := make([]byte, 0, size/8)
-// 	// length prefix number of bits, not number of bytes. This difference
-// 	// takes 3-4 bits in encoding, as opposed to instead encoding the number of
-// 	// bytes (saving 3-4 bits) and including the offset as a full byte.
-// 	bz = appendUvarint(bz, uint64(size))
-// 	bz = append(bz, bA.Elems...)
-// 	return bz
-// }
+// CompactMarshal is a space efficient encoding for CompactBitArray.
+// It is not amino compatible.
+func (bA *CompactBitArray) CompactMarshal() []byte {
+	size := bA.Size()
+	if size <= 0 {
+		return []byte("null")
+	}
+	bz := make([]byte, 0, size/8)
+	// length prefix number of bits, not number of bytes. This difference
+	// takes 3-4 bits in encoding, as opposed to instead encoding the number of
+	// bytes (saving 3-4 bits) and including the offset as a full byte.
+	bz = appendUvarint(bz, uint64(size))
+	bz = append(bz, bA.Elems...)
+	return bz
+}
 
-// // CompactUnmarshal is a space efficient decoding for CompactBitArray.
-// // It is not amino compatible.
-// func (bA *CompactBitArray) Unmarshal(bz []byte) error {
-// 	if len(bz) < 2 {
-// 		return errors.New("compact bit array: invalid compact unmarshal size")
-// 	} else if bytes.Equal(bz, []byte("null")) {
-// 		return nil
-// 	}
-// 	size, n := binary.Uvarint(bz)
-// 	bz = bz[n:]
-// 	if len(bz) != int(size+7)/8 {
-// 		return errors.New("compact bit array: invalid compact unmarshal size")
-// 	}
+// CompactUnmarshal is a space efficient decoding for CompactBitArray.
+// It is not amino compatible.
+func CompactUnmarshal(bz []byte) (*CompactBitArray, error) {
+	if len(bz) < 2 {
+		return nil, errors.New("compact bit array: invalid compact unmarshal size")
+	} else if bytes.Equal(bz, []byte("null")) {
+		return NewCompactBitArray(0), nil
+	}
+	size, n := binary.Uvarint(bz)
+	bz = bz[n:]
+	if len(bz) != int(size+7)/8 {
+		return nil, errors.New("compact bit array: invalid compact unmarshal size")
+	}
 
-// 	bA = NewCompactBitArray(int(size % 8))
-// 	bA.Elems = bz
-// 	return nil
-// }
+	bA := &CompactBitArray{byte(int(size % 8)), bz}
+	return bA, nil
+}
 
-// func appendUvarint(b []byte, x uint64) []byte {
-// 	var a [binary.MaxVarintLen64]byte
-// 	n := binary.PutUvarint(a[:], x)
-// 	return append(b, a[:n]...)
-// }
+func appendUvarint(b []byte, x uint64) []byte {
+	var a [binary.MaxVarintLen64]byte
+	n := binary.PutUvarint(a[:], x)
+	return append(b, a[:n]...)
+}

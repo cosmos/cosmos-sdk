@@ -33,28 +33,7 @@ message PrivateKey {
 
 // PubKeyMultisigThreshold implements a K of N threshold multisig.
 message PubKeyMultisigThreshold {
-  uint32 threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
-  repeated PublicKey pubkeys = 2
+  uint32             threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
+  repeated PublicKey pubkeys   = 2
       [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
-}
-
-// CompactBitArray is an implementation of a space efficient bit array.
-// This is used to ensure that the encoded data takes up a minimal amount of
-// space after proto encoding.
-// This is not thread safe, and is not intended for concurrent usage.
-message CompactBitArray {
-  option (gogoproto.sizer)            = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  bytes extra_bits = 1
-      [(gogoproto.customname) = "ExtraBitsStored", (gogoproto.moretags) = "yaml:\"extra_bits\""];
-  bytes bits = 2 [(gogoproto.customname) = "Elems", (gogoproto.moretags) = "yaml:\"bits\""];
-}
-
-// Multisignature is used to represent the signature object used in the multisigs.
-// Sigs is a list of signatures, sorted by corresponding index.message PrivKeyEd25519 {
-message Multisignature {
-  option (gogoproto.goproto_stringer) = true;
-  CompactBitArray bitarray            = 1 [(gogoproto.customname) = "BitArray"];
-  repeated bytes  sigs                = 2;
 }

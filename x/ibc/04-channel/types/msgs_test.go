@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -357,6 +356,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 var (
 	timeoutHeight     = uint64(100)
 	timeoutTimestamp  = uint64(100)
+	invalidTimeout    = uint64(0)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
 	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
@@ -427,7 +427,7 @@ func TestMsgPacketGetSignBytes(t *testing.T) {
 	res := msg.GetSignBytes()
 
 	expected := fmt.Sprintf(
-		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
+		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100","timeout_timestamp":"100"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
 		string(msg.GetDataSignBytes()),
 	)
 	require.Equal(t, expected, string(res))

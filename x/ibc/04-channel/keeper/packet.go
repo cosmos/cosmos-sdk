@@ -82,7 +82,12 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(types.ErrPacketTimeout, "timeout height already passed on the receiving chain")
 	}
 
-	if packet.GetTimeoutTimestamp() != 0 && k.connectionKeeper.GetTimestampAtHeight(ctx, connectionEnd, latestHeight) >= packet.GetTimeoutTimestamp() {
+	latestTimestamp, err := k.connectionKeeper.GetTimestampAtHeight(ctx, connectionEnd, latestHeight)
+	if err != nil {
+		return err
+	}
+
+	if packet.GetTimeoutTimestamp() != 0 && latestTimestamp >= packet.GetTimeoutTimestamp() {
 		return sdkerrors.Wrap(types.ErrPacketTimeout, "timeout timestamp already passed on the receiving chain")
 	}
 
@@ -174,11 +179,12 @@ func (k Keeper) RecvPacket(
 
 	// check if packet timeouted by comparing it with the latest height of the chain
 	if packet.GetTimeoutHeight() != 0 && uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
-		return nil, types.ErrPacketTimeout
+		return nil, sdkerrors.Wrapf(types.ErrPacketTimeout, "packet timeout height (%d) has been passed by the current block height (%d)", packet.GetTimeoutHeight(), uint64(ctx.BlockHeight()))
 	}
 
-	if packet.GetTimeoutTimestamp() != 0 && ctx.BlockTime().UnixNano() >= packet.GetTimeoutTimestamp() {
-		return nil, types.ErrPacketTimeout
+	// check if packet timeouted by comparing it with the latest timestamp of the chain
+	if packet.GetTimeoutTimestamp() != 0 && uint64(ctx.BlockTime().UnixNano()) >= packet.GetTimeoutTimestamp() {
+		return nil, sdkerrors.Wrapf(types.ErrPacketTimeout, "packet timeout timestamp (%d) has been passed by the current block timestamp (%d)", packet.GetTimeoutTimestamp(), uint64(ctx.BlockTime().UnixNano()))
 	}
 
 	if err := k.connectionKeeper.VerifyPacketCommitment(

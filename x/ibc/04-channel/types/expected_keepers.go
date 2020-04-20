@@ -20,9 +20,9 @@ type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connectiontypes.ConnectionEnd, bool)
 	GetTimestampAtHeight(
 		ctx sdk.Context,
-		connection connectionexported.ConnectionI,
+		connection connectiontypes.ConnectionEnd,
 		height uint64,
-	) uint64
+	) (uint64, error)
 	VerifyChannelState(
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,

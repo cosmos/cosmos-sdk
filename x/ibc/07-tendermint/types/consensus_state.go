@@ -36,7 +36,7 @@ func (cs ConsensusState) GetHeight() uint64 {
 
 // GetTimestamp returns block time at which the consensus state was stored
 func (cs ConsensusState) GetTimestamp() uint64 {
-	return cs.Timestamp.UnixNano()
+	return uint64(cs.Timestamp.UnixNano())
 }
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.
@@ -52,6 +52,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")
+	}
+	if cs.Timestamp.UnixNano() < 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be negative Unix time")
 	}
 	return nil
 }

@@ -154,14 +154,15 @@ func RandomConsensusParams(r *rand.Rand) *abci.ConsensusParams {
 	return &abci.ConsensusParams{
 		Block: &abci.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
-			MaxGas:   int64(simulation.RandIntBetween(r, -1, 50000)),
+			//MaxGas:   int64(simulation.RandIntBetween(r, -1, 50000)),
+			MaxGas: -1,
 		},
 		Evidence: &abci.EvidenceParams{
 			MaxAgeNumBlocks: int64(simulation.RandIntBetween(r, 100000, 500000)),
 			MaxAgeDuration:  time.Duration(simulation.RandIntBetween(r, 10000, 50000)),
 		},
 		Validator: &abci.ValidatorParams{
-			PubKeyTypes: nil,
+			PubKeyTypes: []string{"secp256k1"},
 		},
 	}
 }

@@ -28,7 +28,7 @@ func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.Si
 	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 	app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
 
 	return app, ctx, addrDels, addrVals
@@ -100,8 +100,8 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -152,8 +152,8 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators := make([]types.Validator, numVals)
 	for i := 0; i < len(validators); i++ {
@@ -205,7 +205,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens)))
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validator, _ = validator.AddTokensFromDel(valTokens)
 	require.Equal(t, sdk.Unbonded, validator.Status)
@@ -414,8 +414,8 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// now 2 max resValidators
 	params := app.StakingKeeper.GetParams(ctx)
@@ -489,7 +489,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		balances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 		require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, tokens))))
 
-		app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+		app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 		validators[i] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
 	}
 
@@ -509,7 +509,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	balances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// test that the two largest validators are
 	//   a) validator 0 with 500 tokens
@@ -542,7 +542,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.TokensFromConsensusPower(1)))
 	balances = app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
@@ -558,7 +558,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, rmTokens))))
-	app.BankKeeper.SetModuleAccount(ctx, bondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
@@ -573,7 +573,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
 	balances = app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
-	app.BankKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
 	resValidators = app.StakingKeeper.GetBondedValidatorsByPower(ctx)

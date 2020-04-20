@@ -17,6 +17,7 @@ type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           codec.Marshaler
 	paramSpace    paramtypes.Subspace
+	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 
@@ -27,12 +28,13 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper,
-	sk types.StakingKeeper, feeCollectorName string, blacklistedAddrs map[string]bool,
+	cdc codec.Marshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
+	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
+	feeCollectorName string, blacklistedAddrs map[string]bool,
 ) Keeper {
 
 	// ensure distribution module account is set
-	if addr := bk.GetModuleAddress(types.ModuleName); addr == nil {
+	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
@@ -45,6 +47,7 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		paramSpace:       paramSpace,
+		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		feeCollectorName: feeCollectorName,

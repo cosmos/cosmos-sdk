@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -17,6 +17,6 @@ func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
 }
 
 // GetDistributionAccount returns the distribution ModuleAccount
-func (k Keeper) GetDistributionAccount(ctx sdk.Context) exported.ModuleAccountI {
-	return k.bankKeeper.GetModuleAccount(ctx, types.ModuleName)
+func (k Keeper) GetDistributionAccount(ctx sdk.Context) authexported.ModuleAccountI {
+	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

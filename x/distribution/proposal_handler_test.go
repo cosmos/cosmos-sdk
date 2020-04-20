@@ -36,7 +36,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	err := app.BankKeeper.SetBalances(ctx, macc.GetAddress(), balances.Add(amount...))
 	require.NoError(t, err)
 
-	app.BankKeeper.SetModuleAccount(ctx, macc)
+	app.AccountKeeper.SetModuleAccount(ctx, macc)
 
 	account := app.AccountKeeper.NewAccountWithAddress(ctx, recipient)
 	app.AccountKeeper.SetAccount(ctx, account)

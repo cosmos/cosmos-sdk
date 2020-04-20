@@ -161,7 +161,7 @@ func RandomConsensusParams(r *rand.Rand) *abci.ConsensusParams {
 			MaxAgeDuration:  time.Duration(simulation.RandIntBetween(r, 10000, 50000)),
 		},
 		Validator: &abci.ValidatorParams{
-			PubKeyTypes: []string{"secp256k1"},
+			PubKeyTypes: []string{"secp256k1", "ed25519"},
 		},
 	}
 }

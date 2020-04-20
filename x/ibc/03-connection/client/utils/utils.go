@@ -55,7 +55,7 @@ func QueryConnection(
 	}
 
 	var connection types.ConnectionEnd
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &connection); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &connection); err != nil {
 		return types.ConnectionResponse{}, err
 	}
 
@@ -81,7 +81,7 @@ func QueryClientConnections(
 	}
 
 	var paths []string
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &paths); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &paths); err != nil {
 		return types.ClientConnectionsResponse{}, err
 	}
 

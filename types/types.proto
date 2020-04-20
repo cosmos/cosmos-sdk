@@ -98,7 +98,7 @@ message StdFee {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal) = true;
 
-  repeated cosmos_sdk.v1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos_sdk.v1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "Coins"];
   uint64 gas = 2;
 }
 
@@ -183,13 +183,13 @@ message QueryTxResponse {
 }
 
 message GenerateTxRequest {
-    bytes from = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes from = 1 [(gogoproto.casttype) = "AccAddress"];
     string memo = 2;
     string chain_id = 3;
     uint64 account_number = 4;
     uint64 sequence = 5;
-    repeated cosmos_sdk.v1.Coin fees = 6 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-    repeated cosmos_sdk.v1.DecCoin gas_prices = 7 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+    repeated cosmos_sdk.v1.Coin fees = 6 [(gogoproto.castrepeated) = "Coins", (gogoproto.nullable) = false];
+    repeated cosmos_sdk.v1.DecCoin gas_prices = 7 [(gogoproto.castrepeated) = "DecCoins", (gogoproto.nullable) = false];
     string gas = 8;
     string gas_adjustment = 9;
     bool simulate = 10;

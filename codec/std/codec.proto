@@ -28,7 +28,7 @@ message Account {
     cosmos_sdk.x.auth.vesting.v1.ContinuousVestingAccount continuous_vesting_account = 2;
     cosmos_sdk.x.auth.vesting.v1.DelayedVestingAccount    delayed_vesting_account    = 3;
     cosmos_sdk.x.auth.vesting.v1.PeriodicVestingAccount   periodic_vesting_account   = 4;
-    cosmos_sdk.x.bank.v1.ModuleAccount                    module_account             = 5;
+    cosmos_sdk.x.auth.v1.ModuleAccount                    module_account             = 5;
   }
 }
 

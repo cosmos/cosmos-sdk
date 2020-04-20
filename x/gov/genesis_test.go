@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
@@ -48,12 +49,14 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal2.Status == gov.StatusVotingPeriod)
 
 	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
+	bankGenState := bank.ExportGenesis(ctx, app.BankKeeper)
 
 	// export the state and import it into a new app
 	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
 	genesisState := simapp.NewDefaultGenesisState()
 
 	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenState)
+	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenState)
 	genesisState[gov.ModuleName] = app.Codec().MustMarshalJSON(govGenState)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
@@ -66,8 +69,9 @@ func TestImportExportQueues(t *testing.T) {
 
 	app2.InitChain(
 		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: simapp.DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
 		},
 	)
 

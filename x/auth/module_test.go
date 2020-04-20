@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
@@ -22,6 +21,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, supply.NewModuleAddress(auth.FeeCollectorName))
+	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(auth.FeeCollectorName))
 	require.NotNil(t, acc)
 }

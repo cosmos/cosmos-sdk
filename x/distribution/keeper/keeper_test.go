@@ -54,7 +54,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewCoin("stake", sdk.NewInt(2)),
 	))
 	require.NoError(t, err)
-	app.SupplyKeeper.SetModuleAccount(ctx, distrAcc)
+	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// check initial balance
 	balance := app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))

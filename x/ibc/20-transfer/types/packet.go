@@ -10,14 +10,14 @@ import (
 // FungibleTokenPacketData defines a struct for the packet payload
 // See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type FungibleTokenPacketData struct {
-	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
-	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
-	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
+	Amount   sdk.Coins `json:"amount" yaml:"amount"`     // the tokens to be transferred
+	Sender   string    `json:"sender" yaml:"sender"`     // the sender address
+	Receiver string    `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
 }
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, sender, receiver sdk.AccAddress) FungibleTokenPacketData {
+	amount sdk.Coins, sender, receiver string) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
 		Amount:   amount,
 		Sender:   sender,
@@ -45,10 +45,10 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if !ftpd.Amount.IsValid() {
 		return sdkerrors.ErrInvalidCoins
 	}
-	if ftpd.Sender.Empty() {
+	if ftpd.Sender == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-	if ftpd.Receiver.Empty() {
+	if ftpd.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing receiver address")
 	}
 	return nil
@@ -59,11 +59,15 @@ func (ftpd FungibleTokenPacketData) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ftpd))
 }
 
-// AckDataTransfer is a no-op packet
+// FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg
+// error msg is empty string on success
 // See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-type AckDataTransfer struct{}
+type FungibleTokenPacketAcknowledgement struct {
+	Success bool   `json:"success" yaml:"success"`
+	Error   string `json:"error" yaml:"error"`
+}
 
 // GetBytes is a helper for serialising
-func (AckDataTransfer) GetBytes() []byte {
-	return []byte("fungible token transfer ack")
+func (ack FungibleTokenPacketAcknowledgement) GetBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
 }

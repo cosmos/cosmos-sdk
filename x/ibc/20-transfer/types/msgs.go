@@ -14,12 +14,12 @@ type MsgTransfer struct {
 	DestHeight    uint64         `json:"dest_height" yaml:"dest_height"`       // the current height of the destination chain
 	Amount        sdk.Coins      `json:"amount" yaml:"amount"`                 // the tokens to be transferred
 	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`                 // the sender address
-	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
+	Receiver      string         `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
 }
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
-	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress,
+	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender sdk.AccAddress, receiver string,
 ) MsgTransfer {
 	return MsgTransfer{
 		SourcePort:    sourcePort,
@@ -58,7 +58,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-	if msg.Receiver.Empty() {
+	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
 	return nil

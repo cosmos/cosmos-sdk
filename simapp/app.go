@@ -75,11 +75,11 @@ var (
 	maccPerms = map[string][]string{
 		auth.FeeCollectorName:           nil,
 		distr.ModuleName:                nil,
-		mint.ModuleName:                 {bank.Minter},
-		staking.BondedPoolName:          {bank.Burner, bank.Staking},
-		staking.NotBondedPoolName:       {bank.Burner, bank.Staking},
-		gov.ModuleName:                  {bank.Burner},
-		transfer.GetModuleAccountName(): {bank.Minter, bank.Burner},
+		mint.ModuleName:                 {auth.Minter},
+		staking.BondedPoolName:          {auth.Burner, auth.Staking},
+		staking.NotBondedPoolName:       {auth.Burner, auth.Staking},
+		gov.ModuleName:                  {auth.Burner},
+		transfer.GetModuleAccountName(): {auth.Minter, auth.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -188,21 +188,21 @@ func NewSimApp(
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
-		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
+		appCodec, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount, maccPerms,
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
-		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(), maccPerms,
+		appCodec, keys[bank.StoreKey], app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
 	)
 	stakingKeeper := staking.NewKeeper(
-		appCodec, keys[staking.StoreKey], app.BankKeeper, app.subspaces[staking.ModuleName],
+		appCodec, keys[staking.StoreKey], app.AccountKeeper, app.BankKeeper, app.subspaces[staking.ModuleName],
 	)
 	app.MintKeeper = mint.NewKeeper(
 		appCodec, keys[mint.StoreKey], app.subspaces[mint.ModuleName], &stakingKeeper,
-		app.BankKeeper, auth.FeeCollectorName,
+		app.AccountKeeper, app.BankKeeper, auth.FeeCollectorName,
 	)
 	app.DistrKeeper = distr.NewKeeper(
-		appCodec, keys[distr.StoreKey], app.subspaces[distr.ModuleName], app.BankKeeper, &stakingKeeper,
-		auth.FeeCollectorName, app.ModuleAccountAddrs(),
+		appCodec, keys[distr.StoreKey], app.subspaces[distr.ModuleName], app.AccountKeeper, app.BankKeeper,
+		&stakingKeeper, auth.FeeCollectorName, app.ModuleAccountAddrs(),
 	)
 	app.SlashingKeeper = slashing.NewKeeper(
 		appCodec, keys[slashing.StoreKey], &stakingKeeper, app.subspaces[slashing.ModuleName],
@@ -219,7 +219,7 @@ func NewSimApp(
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	app.GovKeeper = gov.NewKeeper(
-		appCodec, keys[gov.StoreKey], app.subspaces[gov.ModuleName], app.BankKeeper,
+		appCodec, keys[gov.StoreKey], app.subspaces[gov.ModuleName], app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
 	)
 
@@ -238,7 +238,7 @@ func NewSimApp(
 	app.TransferKeeper = transfer.NewKeeper(
 		app.cdc, keys[transfer.StoreKey],
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.BankKeeper, scopedTransferKeeper,
+		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
@@ -261,12 +261,12 @@ func NewSimApp(
 	// must be passed by reference here.
 	app.mm = module.NewManager(
 		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx),
-		auth.NewAppModule(app.AccountKeeper, app.BankKeeper),
+		auth.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(*app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),
 		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.MintKeeper, app.BankKeeper),
+		mint.NewAppModule(app.MintKeeper, app.AccountKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -302,10 +302,10 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(app.AccountKeeper, app.BankKeeper),
+		auth.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
 		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.MintKeeper, app.BankKeeper),
+		mint.NewAppModule(app.MintKeeper, app.AccountKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
@@ -376,7 +376,7 @@ func (app *SimApp) LoadHeight(height int64) error {
 func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
-		modAccAddrs[bank.NewModuleAddress(acc).String()] = true
+		modAccAddrs[auth.NewModuleAddress(acc).String()] = true
 	}
 
 	return modAccAddrs
@@ -386,7 +386,7 @@ func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 func (app *SimApp) BlacklistedAccAddrs() map[string]bool {
 	blacklistedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
-		blacklistedAddrs[bank.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
+		blacklistedAddrs[auth.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
 	}
 
 	return blacklistedAddrs

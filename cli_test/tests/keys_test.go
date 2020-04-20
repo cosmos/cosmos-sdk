@@ -1,42 +1,32 @@
-package clitest
+package tests
 
 import (
 	"fmt"
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-var (
-	cdc      = codecstd.MakeCodec(simapp.ModuleBasics)
-	appCodec = codecstd.NewAppCodec(cdc)
-)
-
-func init() {
-	authclient.Codec = appCodec
-}
 func TestCLIKeysAddMultisig(t *testing.T) {
 	t.Parallel()
-	f := InitFixtures(t)
+	f := helpers.InitFixtures(t)
 
 	// key names order does not matter
 	f.KeysAdd("msig1", "--multisig-threshold=2",
-		fmt.Sprintf("--multisig=%s,%s", keyBar, keyBaz))
+		fmt.Sprintf("--multisig=%s,%s", helpers.KeyBar, helpers.KeyBaz))
 	ke1Address1 := f.KeysShow("msig1").Address
 	f.KeysDelete("msig1")
 
 	f.KeysAdd("msig2", "--multisig-threshold=2",
-		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar))
+		fmt.Sprintf("--multisig=%s,%s", helpers.KeyBaz, helpers.KeyBar))
 	require.Equal(t, ke1Address1, f.KeysShow("msig2").Address)
 	f.KeysDelete("msig2")
 
 	f.KeysAdd("msig3", "--multisig-threshold=2",
-		fmt.Sprintf("--multisig=%s,%s", keyBar, keyBaz),
+		fmt.Sprintf("--multisig=%s,%s", helpers.KeyBar, helpers.KeyBaz),
 		"--nosort")
 	f.KeysAdd("msig4", "--multisig-threshold=2",
-		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar),
+		fmt.Sprintf("--multisig=%s,%s", helpers.KeyBaz, helpers.KeyBar),
 		"--nosort")
 	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
 

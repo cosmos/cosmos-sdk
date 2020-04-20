@@ -17,9 +17,12 @@ import (
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// DefaultPacketTimeout is the default packet timeout relative to the current block height
 const (
-	DefaultPacketTimeout = 1000 // NOTE: in blocks
+	// DefaultPacketTimeoutHeight is the default packet timeout relative to the current block height
+	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks. Timeout disabled when set to 0.
+
+	// DefaultPacketTimeoutTimestamp is the default packet timeout relative to the current block timestamp
+	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds. Timeout disabled when set to 0.
 )
 
 // Keeper defines the IBC transfer keeper

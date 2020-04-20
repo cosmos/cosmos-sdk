@@ -7,12 +7,12 @@ for dir in $proto_dirs; do
   protoc \
   -I. \
   --gocosmos_out=\
+plugins=interfacetype,paths=source_relative,\
 Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types,\
-plugins=interfacetype,paths=source_relative:. \
+Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:.\
   $(find "${dir}" -name '*.proto')
 done

@@ -26,10 +26,10 @@ addressed in a future ADR, but it should build off of these proposals.
 
 ## Decision
 
-### Transactions
+### Transaction Encoding
 
-Since the messages that an application is known and allowed to handle are specific
-to the application itself, so must the transactions be specific to the application
+Since the messages that an application knows and is allowed to handle are specific
+to the application itself, so must the transaction encoding type be specific to the application
 itself. Similar to how we described in [ADR 019](./adr-019-protobuf-state-encoding.md),
 the concrete types will be defined at the application level via Protobuf `oneof`.
 
@@ -74,6 +74,16 @@ Developers do not have to include `StdTxBase` if they wish, so it is meant to be
 used as an auxiliary type.
 
 ### Signing
+
+To provide an acceptable user experience for client-side developers, we separate
+transaction encoding and signing. While every app defines its own transaction
+types for encoding purposes, we define a single standard signing type to be used
+across apps that leverages `google.protobuf.Any` to handle interface types. `Any`
+can be used to wrap any protobuf message by encoding both its type URL and value.
+We avoid using `Any` during the encoding phase because these URLs can be long
+and we want to keep encoded messages small. We are not, however, sending the
+"signing document" (encoded in JSON) over the wire or storing it on nodes,
+therefore using `Any` for signing not add any encoding overhead.
 
 Signing of a `Transaction` must be canonical across clients and binaries. In order
 to provide canonical representation of a `Transaction` to sign over, clients must

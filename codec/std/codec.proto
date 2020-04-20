@@ -3,7 +3,6 @@ package cosmos_sdk.codec.std.v1;
 
 import "third_party/proto/cosmos-proto/cosmos.proto";
 import "third_party/proto/gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
 import "types/types.proto";
 import "x/auth/types/types.proto";
 import "x/auth/vesting/types/types.proto";
@@ -108,7 +107,7 @@ message Content {
 message Transaction {
     option (gogoproto.goproto_getters) = false;
 
-    StdTxBase base = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
+    cosmos_sdk.v1.StdTxBase base = 1 [(gogoproto.jsontag) = "", (gogoproto.embed) = true, (gogoproto.nullable) = false];
     repeated Message msgs = 2 [(gogoproto.nullable) = false];
 }
 
@@ -139,122 +138,3 @@ message Message {
     }
 }
 
-// StdSignDoc defines a standard application-level signing document to compose
-// signatures for a Transaction.
-message StdSignDoc {
-    string chain_id = 1 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
-    uint64 account_number = 2 [(gogoproto.moretags) = "yaml:\"account_number\""];
-    uint64 sequence = 3;
-    string memo = 4;
-    StdFee fee = 5;
-    repeated google.protobuf.Any msgs = 6;
-}
-
-// StdFee includes the amount of coins paid in fees and the maximum
-// gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
-message StdFee {
-    option (gogoproto.goproto_getters) = false;
-    option (gogoproto.equal) = true;
-
-    repeated cosmos_sdk.v1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-    uint64 gas = 2;
-}
-
-// StdSignature defines a signature structure that contains the signature of a
-// transaction and an optional public key.
-message StdSignature {
-    option (gogoproto.goproto_getters) = false;
-
-    bytes pub_key = 1 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
-    bytes signature = 2;
-}
-
-// StdTxBase defines a transaction base which application-level concrete transaction
-// types can extend.
-message StdTxBase {
-    StdFee fee = 1 [(gogoproto.nullable) = false];
-    repeated StdSignature signatures = 2 [(gogoproto.nullable) = false];
-    string memo = 3;
-}
-
-message AnyTransaction {
-    StdTxBase base = 1;
-    repeated google.protobuf.Any msgs = 2;
-}
-
-service TxService {
-    rpc QueryTx (QueryTxRequest) returns (QueryTxResponse);
-
-    rpc GenerateTx (GenerateTxRequest) returns (GenerateTxResponse);
-
-    // GetAppMessages converts the provided messages into the app-specific version
-    // if they differ (because of interface encoding) or returns an error
-    rpc GetAppMessages (GetAppMessagesRequest) returns (GetAppMessagesResponse)
-
-    // BuildAppTransaction converts AnyTransaction into an app-specific
-    // transaction that can be broadcast
-    rpc BuildAppTx (AnyTransaction) returns (google.protobuf.Any);
-
-    rpc BroadcastTx (BroadcastTxRequest) returns (BroadcastTxResponse);
-}
-
-message GetAppMessagesRequest {
-    repeated google.protobuf.Any msgs = 1;
-}
-
-message GetAppMessagesResponse {
-    repeated google.protobuf.Any msgs = 1;
-}
-
-message BroadcastTxRequest {
-    google.protobuf.Any app_tx = 1;
-    BroadcastTxMode mode = 2;
-}
-
-enum BroadcastTxMode {
-    BLOCK = 0;
-    SYNC = 1;
-    ASYNC = 2;
-}
-
-message BroadcastTxResponse {
-
-}
-
-message QueryTxRequest {
-    string tx_hash = 1;
-    string message_action = 2;
-    string message_sender = 3;
-    int64 min_height = 4;
-    int64 max_height = 5;
-    uint64 page = 6;
-    uint64 limit = 7;
-}
-
-message QueryTxResponse {
-    uint64 total_count = 1;
-    uint64 count = 2;
-    uint64 page_number = 3;
-    uint64 page_total = 4;
-    uint64 limit = 5;
-    repeated AnyTransaction txs = 6;
-}
-
-message GenerateTxRequest {
-    bytes from = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    string memo = 2;
-    string chain_id = 3;
-    uint64 account_number = 4;
-    uint64 sequence = 5;
-    repeated cosmos_sdk.v1.Coin fees = 6 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-    repeated cosmos_sdk.v1.DecCoin gas_prices = 7 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
-    string gas = 8;
-    string gas_adjustment = 9;
-    bool simulate = 10;
-    repeated google.protobuf.Any msgs = 11;
-}
-
-message GenerateTxResponse {
-    AnyTransaction unsigned_tx = 1;
-}

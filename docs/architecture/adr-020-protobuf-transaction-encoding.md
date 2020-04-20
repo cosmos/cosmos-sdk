@@ -5,6 +5,7 @@
 - 2020 March 06: Initial Draft
 - 2020 March 12: API Updates
 - 2020 April 13: Added details on interface `oneof` handling
+- 2020 April 20: Describe improved signing/transaction-submission UX
 
 ## Status
 
@@ -26,10 +27,10 @@ addressed in a future ADR, but it should build off of these proposals.
 
 ## Decision
 
-### Transactions
+### Transaction Encoding
 
-Since the messages that an application is known and allowed to handle are specific
-to the application itself, so must the transactions be specific to the application
+Since the messages that an application knows and is allowed to handle are specific
+to the application itself, so must the transaction encoding type be specific to the application
 itself. Similar to how we described in [ADR 019](./adr-019-protobuf-state-encoding.md),
 the concrete types will be defined at the application level via Protobuf `oneof`.
 
@@ -63,7 +64,7 @@ Example:
 // app/codec/codec.proto
 
 message Transaction {
-  cosmos_sdk.x.auth.v1.StdTxBase base = 1;
+  cosmos_sdk.codec.std.v1.StdTxBase base = 1;
   repeated Message               msgs = 2;
 }
 ```
@@ -73,19 +74,19 @@ and includes all the core field members that are common across all transaction t
 Developers do not have to include `StdTxBase` if they wish, so it is meant to be
 used as an auxiliary type.
 
-### Signing
+### Signing & Transaction Submission
 
-Signing of a `Transaction` must be canonical across clients and binaries. In order
-to provide canonical representation of a `Transaction` to sign over, clients must
-obey the following rules:
+To provide an acceptable user experience for client-side developers, we separate
+transaction encoding and signing. While every app defines its own transaction
+types for encoding purposes, we define a single standard signing `SignDoc` to be used
+across apps that leverages `google.protobuf.Any` to handle interface types. `Any`
+can be used to wrap any protobuf message by encoding both its type URL and value.
+We avoid using `Any` during the encoding phase because these URLs can be long
+and we want to keep encoded messages small. We are not, however, sending the
+"signing document" (encoded in JSON) over the wire or storing it on nodes,
+therefore using `Any` for signing not add any encoding overhead.
 
-- Encode `SignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
-  - Default must be stripped from the output!
-  - JSON keys adhere to their Proto-defined field names.
-- Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
-  - This spec should be trivial to interpret and implement in any language.
-
-```Protobuf
+```proto
 // app/codec/codec.proto
 
 message SignDoc {
@@ -93,6 +94,38 @@ message SignDoc {
   repeated Message msgs = 2;
 }
 ```
+
+Signing of a `SignDoc` must be canonical across clients and binaries. In order
+to provide canonical representation of a `SignDoc` to sign over, clients must
+obey the following rules:
+
+- Encode `SignDoc` via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
+  - Default must be stripped from the output!
+  - JSON keys adhere to their Proto-defined field names.
+- Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
+  - This spec should be trivial to interpret and implement in any language.
+
+Because signing and encoding are separated and apps will know how to encode
+a signing messages, we can provide a gRPC/REST endpoint that allows for generic
+app-independent transaction submission. This can be done via a generic
+`AnyTransaction` type:
+
+```proto
+message AnyTransaction {
+  cosmos_sdk.codec.std.v1.StdTxBase base = 1;
+  repeated google.protobuf.Any msgs = 2;
+}
+```
+
+On the backend, this will be converted to the app-specific `Transaction` type,
+with any errors returned for unsupported `Msg`s. Client developers that prefer
+to use the app-specific `Transaction` and `Message` `oneof`s can also do this
+encoding on their own. This provides additional type safety where needed. There
+is, however, no security disadvantage for using the generic RPC transaction
+endpoint because all clients regardless of whether they have access to the
+app-level proto files will know how to correctly sign transactions. This allows
+for wallets and block explorers to easily add support for new chains, even
+discovering them dynamically.
 
 ### CLI & REST
 
@@ -137,38 +170,97 @@ that account fields can be retrieved for signing.
 
 #### Interface `oneof` Handling
 
-If the module needs to work with any `sdk.Msg`s that use interface types, that
-`sdk.Msg` should be implemented as an interface with getters and setters on the
-module level and a no-arg constructor function should be passed around to
-required CLI and REST client commands.
+If a module needs to work with `sdk.Msg`s that use interface types, those interface
+types should be dealt with using `google.protobuf.Any` for signing and a `oneof`
+at the app-level for encoding.
 
-For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
-should also be an interface and implement setter methods:
+Using `google.protobuf.Any` for signing will allow client libraries to create
+reusable code for dealing with interface types that doesn't require regenerating
+protobuf client libraries for every chain. Using `oneof`s at the encoding level
+saves space in the Tendermint block store.
+
+Modules should define a generic `sdk.Msg` for interface types at the module
+level that uses `Any`. Ex:
 
 ```go
-// x/gov/types/msgs.go
-type MsgSubmitProposalI interface {
-	sdk.Msg
-
-	GetContent() Content
-    // SetContent returns an error if the underlying oneof does not support
-    // the concrete Content passed in
-	SetContent(Content) error
-
-	GetInitialDeposit() sdk.Coins
-	SetInitialDeposit(sdk.Coins)
-
-	GetProposer() sdk.AccAddress
-	SetProposer(sdk.AccAddress)
+// x/gov/types/types.proto
+message MsgSubmitAnyProposal {
+  MsgSubmitProposalBase base = 1;
+  google.protobuf.Any content = 2;
 }
 ```
 
-Note that the implementation of `MsgSubmitProposalI` can be simplified by
-using an embedded base struct which implements most of that interface - in this
-case `MsgSubmitProposalBase`.
+Apps should define an app-specific `sdk.Msg` that encodes the concrete types
+it supports using an `oneof`:
 
-A parameter `ctr func() MsgSubmitProposalI` would then be passed to CLI client
-methods in order to construct a concrete instance.
+```go
+// myapp/types/types.proto
+message MsgSubmitProposal {
+  MsgSubmitProposalBase base = 1;
+  MyAppContent content = 1;
+}
+
+message MyAppContent {
+  oneof sum {
+    TextProposal text = 1;
+    SomeOtherProposal = 2;
+  }
+}
+```
+
+**Client libraries should always sign transactions using the generic module-level
+`sdk.Msg` that uses `Any`.** Convenience gRPC/REST methods will be provided
+that allow the generic module-level `Msg` to be used for transaction
+submission, converting it to the app-level encoding `Msg` using the `oneof`.
+
+In order to smoothly allow for conversion between _signing_ and _encoding_
+`Msg`s, modules that use interface types should implement the following
+interface:
+
+```go
+type InterfaceMsgEncoder {
+  GetSigningMsg(sdk.Msg) (sdk.Msg, error)
+  GetEncodingMsg(sdk.Msg) (sdk.Msg, error)
+}
+```
+
+`GetSigningMsg` should type switch over the `sdk.Msg`s that use interfaces and
+convert `Msg`s in the encoding format (that use `oneof`)
+to the signing version (that uses `Any`). `GetEncodingMsg` should
+convert `Msg`s used for signing (using `Any`) to those used for encoding
+(using `oneof`). Ex:
+
+```go
+// x/gov//module.go
+var _ InterfaceMsgEncoder = AppModule{}
+
+type AppModule struct {
+  ...
+  newEncodingMsg fn(MsgSubmitProposalBase, Content) (MsgSubmitProposalI, error)
+}
+
+func (am AppModule) GetSigningMsg(msg sdk.Msg) (sdk.Msg, error) {
+	switch msg := msg.(type) {
+	case MsgSubmitProposalI:
+        return NewMsgSubmitAnyProposal(msg.GetBase(), msg.GetContent()), nil
+	default:
+		return msg, nil
+	}
+}
+
+func (am AppModule) GetEncodingMsg(sdk.Msg) (sdk.Msg, error) {
+	switch msg := msg.(type) {
+	case MsgSubmitProposalI:
+        return am.newEncodingMsg(msg.GetBase(), msg.GetContent())
+	default:
+		return msg, nil
+	}
+}
+```
+
+Because apps will know how to convert signing `Msg`s to encoding `Msg`s,
+signing `Msg`s can and should be used for transaction submission against a
+helper function (for CLI methods) or RPC method that does the actually encoding.
 
 ## Future Improvements
 
@@ -209,8 +301,6 @@ message Message {
 - Learning curve required to understand and implement Protobuf messages.
 - Less flexibility in cross-module type registration. We now need to define types
 at the application-level.
-- Client business logic and tx generation become a bit more complex as developers
-have to define more types and implement more interfaces.
 
 ### Neutral
 

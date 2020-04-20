@@ -310,6 +310,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
+		evidence.NewAppModule(app.EvidenceKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()

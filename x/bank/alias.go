@@ -22,9 +22,6 @@ const (
 	StoreKey     = types.StoreKey
 	RouterKey    = types.RouterKey
 	QuerierRoute = types.QuerierRoute
-	Minter       = types.Minter
-	Burner       = types.Burner
-	Staking      = types.Staking
 )
 
 var (
@@ -57,9 +54,6 @@ var (
 	AddressFromBalancesStore    = types.AddressFromBalancesStore
 	AllInvariants               = keeper.AllInvariants
 	TotalSupply                 = keeper.TotalSupply
-	NewModuleAddress            = types.NewModuleAddress
-	NewEmptyModuleAccount       = types.NewEmptyModuleAccount
-	NewModuleAccount            = types.NewModuleAccount
 	NewSupply                   = types.NewSupply
 	DefaultSupply               = types.DefaultSupply
 )
@@ -79,7 +73,6 @@ type (
 	QueryAllBalancesParams  = types.QueryAllBalancesParams
 	GenesisBalancesIterator = types.GenesisBalancesIterator
 	Keeper                  = keeper.Keeper
-	ModuleAccount           = types.ModuleAccount
 	GenesisState            = types.GenesisState
 	Supply                  = types.Supply
 	Codec                   = types.Codec

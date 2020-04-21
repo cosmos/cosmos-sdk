@@ -32,9 +32,11 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the evidence module.
 type AppModuleBasic struct {
+	cdc              Codec
 	evidenceHandlers []client.EvidenceHandler // client evidence submission handlers
 }
 
+// NewAppModuleBasic crates a AppModuleBasic without the codec.
 func NewAppModuleBasic(evidenceHandlers ...client.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
@@ -104,9 +106,9 @@ type AppModule struct {
 	keeper Keeper
 }
 
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(cdc Codec, keeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(),
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 	}
 }
@@ -189,8 +191,8 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
-func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// sdr[StoreKey] = simulation.DecodeStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

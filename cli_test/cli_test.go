@@ -296,28 +296,23 @@ func TestCLIDelegate(t *testing.T) {
 	defer proc.Stop(false)
 
 	fooAddr := f.KeyAddress(keyFoo)
+	fooVal := sdk.ValAddress(fooAddr)
+
 	barAddr := f.KeyAddress(keyBar)
-	barVal := sdk.ValAddress(barAddr)
 
-	consPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
-
+	// Send some coins to bar address to delegate
 	sendTokens := sdk.TokensFromConsensusPower(10)
 	f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
+	// Ensure the tx got success
 	require.Equal(t, sendTokens, f.QueryBalances(barAddr).AmountOf(denom))
 
-	newValTokens := sdk.TokensFromConsensusPower(2)
+	// Fetch already existed validator foo
+	validator := f.QueryStakingValidator(fooVal)
+	require.Equal(t, validator.OperatorAddress, fooVal)
 
-	// Create the validator
-	f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewCoin(denom, newValTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure that validator state is as expected
-	validator := f.QueryStakingValidator(barVal)
-	require.Equal(t, validator.OperatorAddress, barVal)
-	require.True(sdk.IntEq(t, newValTokens, validator.Tokens))
-
+	// tokens to be delegated
 	delegateTokens := sdk.TokensFromConsensusPower(5)
 
 	// Test --generate-only
@@ -335,7 +330,7 @@ func TestCLIDelegate(t *testing.T) {
 	require.Equal(t, success, true)
 
 	// Start delegate tokens form keyfoo
-	success, _, err := f.TxStakingDelegate(validator.OperatorAddress.String(), keyFoo, sdk.NewCoin(denom, delegateTokens), "-y")
+	success, _, err := f.TxStakingDelegate(validator.OperatorAddress.String(), keyBar, sdk.NewCoin(denom, delegateTokens), "-y")
 	require.Equal(t, success, true)
 	require.Equal(t, err, "")
 
@@ -343,19 +338,14 @@ func TestCLIDelegate(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Read all delegations of a validator
-	validatorDelegations := f.QueryStakingDelegationsTo(barVal)
+	validatorDelegations := f.QueryStakingDelegationsTo(fooVal)
 
 	// Check the length, since the there are only 2 delegations length should be equal to 2
 	require.Len(t, validatorDelegations, 2)
-	delegatorAddress := f.KeysShow(keyFoo).Address
+	delegatorAddress := f.KeysShow(keyBar).Address
 	var delegatedAccount staking.Delegation
 
-	for i := 0; i < len(validatorDelegations); i++ {
-		if validatorDelegations[i].DelegatorAddress.String() == delegatorAddress {
-			delegatedAccount = validatorDelegations[i]
-			break
-		}
-	}
+	delegatedAccount = findDelegateAccount(validatorDelegations, delegatorAddress)
 
 	// Ensure the delegated amount should be greater than zero
 	require.NotZero(t, delegatedAccount.Shares)
@@ -374,20 +364,30 @@ func TestCLIRedelegate(t *testing.T) {
 	proc := f.GDStart()
 	defer proc.Stop(false)
 
-	// Create the 1st validator
+	// Get the already created validator keep it as dst val
+	fooAddr := f.KeyAddress(keyFoo)
+	dstValAddr := sdk.ValAddress(fooAddr)
+
+	// Ensure that validator2 state is as expected
+	dstVal := f.QueryStakingValidator(dstValAddr)
+	require.Equal(t, dstVal.OperatorAddress, dstValAddr)
+
+	redelegateValTokens := sdk.TokensFromConsensusPower(1)
+
+	// create the src validator
 	barAddr := f.KeyAddress(keyBar)
 	srcValAddr := sdk.ValAddress(barAddr)
 
+	sendTokens := sdk.TokensFromConsensusPower(10)
+	newValTokens := sdk.TokensFromConsensusPower(2)
+
 	srcPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
 
-	sendTokens := sdk.TokensFromConsensusPower(10)
 	f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure tokens sent to the dst address(i.e., barAddr)
 	require.Equal(t, sendTokens, f.QueryBalances(barAddr).AmountOf(denom))
-
-	newValTokens := sdk.TokensFromConsensusPower(2)
 
 	f.TxStakingCreateValidator(keyBar, srcPubKey, sdk.NewCoin(denom, newValTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
@@ -397,29 +397,8 @@ func TestCLIRedelegate(t *testing.T) {
 	require.Equal(t, srcVal.OperatorAddress, srcValAddr)
 	require.True(sdk.IntEq(t, newValTokens, srcVal.Tokens))
 
-	// Create the 2nd validator
-	bazAddr := f.KeyAddress(keyBaz)
-	dstValAddr := sdk.ValAddress(bazAddr)
-
-	dstPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
-	f.TxSend(keyFoo, bazAddr, sdk.NewCoin(denom, sendTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure tokens sent to the dst address(i.e., bazAddr)
-	require.Equal(t, sendTokens, f.QueryBalances(bazAddr).AmountOf(denom))
-
-	success, _, err := f.TxStakingCreateValidator(keyBaz, dstPubKey, sdk.NewCoin(denom, newValTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure that validator2 state is as expected
-	dstVal := f.QueryStakingValidator(dstValAddr)
-	require.Equal(t, dstVal.OperatorAddress, dstValAddr)
-	require.True(sdk.IntEq(t, newValTokens, dstVal.Tokens))
-
-	redelegateValTokens := sdk.TokensFromConsensusPower(1)
-
 	// Test --dry-run
-	success, _, _ = f.TxStakingReDelegate(srcVal.OperatorAddress.String(), dstVal.OperatorAddress.String(),
+	success, _, _ := f.TxStakingReDelegate(srcVal.OperatorAddress.String(), dstVal.OperatorAddress.String(),
 		barAddr.String(), sdk.NewCoin(denom, redelegateValTokens), "--dry-run")
 	require.Equal(t, success, true)
 
@@ -434,7 +413,7 @@ func TestCLIRedelegate(t *testing.T) {
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
-	success, _, err = f.TxStakingReDelegate(srcVal.OperatorAddress.String(), dstVal.OperatorAddress.String(),
+	success, _, err := f.TxStakingReDelegate(srcVal.OperatorAddress.String(), dstVal.OperatorAddress.String(),
 		keyBar, sdk.NewCoin(denom, redelegateValTokens), "-y")
 
 	// Ensure the redelegate tx succeed
@@ -460,5 +439,6 @@ func TestCLIRedelegate(t *testing.T) {
 
 	// Ensure the amount equal subtracted delegated balance
 	require.Equal(t, delegatedAccount.Shares, newValTokens.Sub(redelegateValTokens).ToDec())
+
 	f.Cleanup()
 }

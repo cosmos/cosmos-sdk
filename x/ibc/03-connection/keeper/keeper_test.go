@@ -139,7 +139,6 @@ func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
 	}{
 		{"verification success", func() {
 			suite.chainA.CreateClient(suite.chainB)
-			//		suite.chainB.CreateClient(suite.chainA)
 		}, true},
 		{"client state not found", func() {}, false},
 	}
@@ -151,7 +150,6 @@ func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
 			tc.malleate()
 			// create and store a connection to chainB on chainA
 			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
-			suite.chainA.updateClient(suite.chainB)
 
 			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
 				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height),

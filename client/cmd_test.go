@@ -37,12 +37,12 @@ func TestValidateCmd(t *testing.T) {
 		args    []string
 		wantErr bool
 	}{
-		{"misspelled command", []string{"commission"}, true}, // nolint: misspell
+		{"misspelled command", []string{"COMMISSION"}, true},
 		{"no command provided", []string{}, false},
-		{"help flag", []string{"commission", "--help"}, false},       // nolint: misspell
-		{"shorthand help flag", []string{"commission", "-h"}, false}, // nolint: misspell
+		{"help flag", []string{"COMMISSION", "--help"}, false},
+		{"shorthand help flag", []string{"COMMISSION", "-h"}, false},
 		{"flag only, no command provided", []string{"--gas", "1000atom"}, false},
-		{"flag and misspelled command", []string{"--gas", "1000atom", "comission"}, true}, // nolint: misspell
+		{"flag and misspelled command", []string{"--gas", "1000atom", "COMMISSION"}, true},
 	}
 
 	for _, tt := range tests {

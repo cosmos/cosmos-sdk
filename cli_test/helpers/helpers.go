@@ -3,11 +3,14 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"github.com/stretchr/testify/require"
 
@@ -93,6 +96,15 @@ func (f *Fixtures) SDStart(flags ...string) *tests.Process {
 	return proc
 }
 
+// GDStart runs gaiad start with the appropriate flags and returns a process
+func (f *Fixtures) GDStart(flags ...string) *tests.Process {
+	cmd := fmt.Sprintf("%s start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.SimcliBinary, f.SimcliHome, f.RPCAddr, f.P2PAddr)
+	proc := tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
+	tests.WaitForTMStart(f.Port)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+	return proc
+}
+
 // SDTendermint returns the results of simd tendermint [query]
 func (f *Fixtures) SDTendermint(query string) string {
 	cmd := fmt.Sprintf("%s tendermint %s --home=%s", f.SimdBinary, query, f.SimdHome)
@@ -156,6 +168,53 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 	accAddr, err := sdk.AccAddressFromBech32(ko.Address)
 	require.NoError(f.T, err)
 	return accAddr
+}
+
+//___________________________________________________________________________________
+// gaiacli query account
+
+// QueryAccount is gaiacli query account
+func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.BaseAccount {
+	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var initRes map[string]json.RawMessage
+	err := json.Unmarshal([]byte(out), &initRes)
+	require.NoError(f.T, err, "out %v, err %v", out, err)
+	value := initRes["value"]
+	var acc auth.BaseAccount
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
+	err = cdc.UnmarshalJSON(value, &acc)
+	require.NoError(f.T, err, "value %v, err %v", string(value), err)
+	return acc
+}
+
+// QueryBalances executes the bank query balances command for a given address and
+// flag set.
+func (f *Fixtures) QueryBalances(address sdk.AccAddress, flags ...string) sdk.Coins {
+	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+
+	var balances sdk.Coins
+	cdc := codec.New()
+	require.NoError(f.T, cdc.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
+
+	return balances
+}
+
+//___________________________________________________________________________________
+// gaiacli query txs
+
+// QueryTxs is gaiacli query txs
+func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsResult {
+	cmd := fmt.Sprintf("%s query txs --page=%d --limit=%d --events='%s' %v", f.SimcliBinary, page, limit, queryEvents(events), f.Flags())
+	out, _ := tests.ExecuteT(f.T, cmd, "")
+	var result sdk.SearchTxsResult
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &result)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return &result
 }
 
 //___________________________________________________________________________________
@@ -229,6 +288,7 @@ func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var validator staking.Validator
 
+	cdc := codec.New()
 	err := cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return validator
@@ -240,6 +300,7 @@ func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, 
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var ubds []staking.UnbondingDelegation
 
+	cdc := codec.New()
 	err := cdc.UnmarshalJSON([]byte(out), &ubds)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return ubds
@@ -251,6 +312,7 @@ func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...st
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var delegations []staking.Delegation
 
+	cdc := codec.New()
 	err := cdc.UnmarshalJSON([]byte(out), &delegations)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return delegations
@@ -262,6 +324,7 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var pool staking.Pool
 
+	cdc := codec.New()
 	err := cdc.UnmarshalJSON([]byte(out), &pool)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return pool
@@ -273,7 +336,177 @@ func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var params staking.Params
 
+	cdc := codec.New()
 	err := cdc.UnmarshalJSON([]byte(out), &params)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return params
+}
+
+//___________________________________________________________________________________
+// gaiacli tx gov
+
+// TxGovSubmitProposal is gaiacli tx gov submit-proposal
+func (f *Fixtures) TxGovSubmitProposal(from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx gov submit-proposal %v --keyring-backend=test --from=%s --type=%s",
+		f.SimcliBinary, f.Flags(), from, typ)
+	cmd += fmt.Sprintf(" --title=%s --description=%s --deposit=%s", title, description, deposit)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxGovDeposit is gaiacli tx gov deposit
+func (f *Fixtures) TxGovDeposit(proposalID int, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx gov deposit %d %s --keyring-backend=test --from=%s %v",
+		f.SimcliBinary, proposalID, amount, from, f.Flags())
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxGovVote is gaiacli tx gov vote
+func (f *Fixtures) TxGovVote(proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx gov vote %d %s --keyring-backend=test --from=%s %v",
+		f.SimcliBinary, proposalID, option, from, f.Flags())
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxGovSubmitParamChangeProposal executes a CLI parameter change proposal
+// submission.
+func (f *Fixtures) TxGovSubmitParamChangeProposal(
+	from, proposalPath string, deposit sdk.Coin, flags ...string,
+) (bool, string, string) {
+
+	cmd := fmt.Sprintf(
+		"%s tx gov submit-proposal param-change %s --keyring-backend=test --from=%s %v",
+		f.SimcliBinary, proposalPath, from, f.Flags(),
+	)
+
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxGovSubmitCommunityPoolSpendProposal executes a CLI community pool spend proposal
+// submission.
+func (f *Fixtures) TxGovSubmitCommunityPoolSpendProposal(
+	from, proposalPath string, deposit sdk.Coin, flags ...string,
+) (bool, string, string) {
+
+	cmd := fmt.Sprintf(
+		"%s tx gov submit-proposal community-pool-spend %s --keyring-backend=test --from=%s %v",
+		f.SimcliBinary, proposalPath, from, f.Flags(),
+	)
+
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+
+//___________________________________________________________________________________
+// gaiacli query gov
+
+// QueryGovParamDeposit is gaiacli query gov param deposit
+func (f *Fixtures) QueryGovParamDeposit() gov.DepositParams {
+	cmd := fmt.Sprintf("%s query gov param deposit %s", f.SimcliBinary, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cmd, "")
+	var depositParam gov.DepositParams
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &depositParam)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return depositParam
+}
+
+// QueryGovParamVoting is gaiacli query gov param voting
+func (f *Fixtures) QueryGovParamVoting() gov.VotingParams {
+	cmd := fmt.Sprintf("%s query gov param voting %s", f.SimcliBinary, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cmd, "")
+	var votingParam gov.VotingParams
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &votingParam)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return votingParam
+}
+
+// QueryGovParamTallying is gaiacli query gov param tallying
+func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
+	cmd := fmt.Sprintf("%s query gov param tallying %s", f.SimcliBinary, f.Flags())
+	out, _ := tests.ExecuteT(f.T, cmd, "")
+	var tallyingParam gov.TallyParams
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &tallyingParam)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return tallyingParam
+}
+
+// QueryGovProposals is gaiacli query gov proposals
+func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
+	cmd := fmt.Sprintf("%s query gov proposals %v", f.SimcliBinary, f.Flags())
+	stdout, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	if strings.Contains(stderr, "no matching proposals found") {
+		return gov.Proposals{}
+	}
+	require.Empty(f.T, stderr)
+	var out gov.Proposals
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(stdout), &out)
+	require.NoError(f.T, err)
+	return out
+}
+
+// QueryGovProposal is gaiacli query gov proposal
+func (f *Fixtures) QueryGovProposal(proposalID int, flags ...string) gov.Proposal {
+	cmd := fmt.Sprintf("%s query gov proposal %d %v", f.SimcliBinary, proposalID, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var proposal gov.Proposal
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &proposal)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return proposal
+}
+
+// QueryGovVote is gaiacli query gov vote
+func (f *Fixtures) QueryGovVote(proposalID int, voter sdk.AccAddress, flags ...string) gov.Vote {
+	cmd := fmt.Sprintf("%s query gov vote %d %s %v", f.SimcliBinary, proposalID, voter, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var vote gov.Vote
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &vote)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return vote
+}
+
+// QueryGovVotes is gaiacli query gov votes
+func (f *Fixtures) QueryGovVotes(proposalID int, flags ...string) []gov.Vote {
+	cmd := fmt.Sprintf("%s query gov votes %d %v", f.SimcliBinary, proposalID, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var votes []gov.Vote
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &votes)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return votes
+}
+
+// QueryGovDeposit is gaiacli query gov deposit
+func (f *Fixtures) QueryGovDeposit(proposalID int, depositor sdk.AccAddress, flags ...string) gov.Deposit {
+	cmd := fmt.Sprintf("%s query gov deposit %d %s %v", f.SimcliBinary, proposalID, depositor, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var deposit gov.Deposit
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &deposit)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return deposit
+}
+
+// QueryGovDeposits is gaiacli query gov deposits
+func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposit {
+	cmd := fmt.Sprintf("%s query gov deposits %d %v", f.SimcliBinary, propsalID, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var deposits []gov.Deposit
+
+	cdc := codec.New()
+	err := cdc.UnmarshalJSON([]byte(out), &deposits)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return deposits
 }

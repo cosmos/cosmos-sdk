@@ -166,7 +166,7 @@ Then, each module's client handler will at the minimum accept a `Marshaler` inst
 of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
 that account fields can be retrieved for signing.
 
-#### Interface `oneof` Handling
+### Interface `oneof` Handling
 
 If a module needs to work with `sdk.Msg`s that use interface types, those interface
 types should be dealt with using `google.protobuf.Any` for signing and a `oneof`
@@ -207,8 +207,8 @@ message Content {
 ```
 
 **Client libraries should always sign transactions using the generic module-level
-`sdk.Msg` that uses `Any`.** Convenience gRPC/REST methods will be provided
-that allow the generic module-level `Msg` to be used for transaction
+`sdk.Msg` that uses `Any`.** Convenience gRPC/REST methods are described below
+that allow module-level `Msg` to be used for transaction
 submission, converting it to the app-level encoding `Msg` using the `oneof`.
 
 In order to smoothly allow for conversion between _signing_ and _encoding_
@@ -259,6 +259,61 @@ func (am AppModule) GetEncodingMsg(sdk.Msg) (sdk.Msg, error) {
 Because apps will know how to convert signing `Msg`s to encoding `Msg`s,
 signing `Msg`s can and should be used for transaction submission against a
 helper function (for CLI methods) or RPC method that does the actually encoding.
+
+### Generic gRPC/REST Transaction Service
+
+The usage of `Any` by clients as described above allows us to provide a generic
+app-independent transaction service (leveraging the generic `AnyTransaction` type
+described above) which provides similar functionalities as the existing REST
+server. This service will have a gRPC schema roughly as follows with REST
+endpoints provided by grpc-gateway:
+
+```go
+service TxService {
+    // Get a Tx by hash
+    rpc QueryTx (QueryTxRequest) returns (QueryTxResponse) {
+      option (google.api.http) = {
+        get: "/txs/{hash}"
+      };
+    }
+    
+    // Search transactions
+    rpc QueryTxs (QueryTxsRequest) returns (QueryTxResponse) {
+      option (google.api.http) = {
+        get: "/txs"
+        body: "*"
+      };
+    }
+ 
+    // Broadcast a signed tx
+    rpc BroadcastTx (BroadcastTxRequest) returns (BroadcastTxResponse) {
+      option (google.api.http) = {
+        post: "/txs"
+        body: "*"
+      };
+    }
+}
+
+message BroadcastTxRequest {
+    AnyTransaction tx = 1;
+    BroadcastTxMode mode = 2;
+}
+
+message QueryTxResponse {
+    repeated AnyTransaction txs = 1;
+    ...
+}
+
+...
+```
+
+For wallets and block explorers that want to easily target multiple chains, this
+generic transaction service will provide a developer UX comparable to what is
+currently available with amino except with protobuf.
+
+Apps can also provide an app-level gRPC/REST service that queries and broadcasts
+transactions using the app-specific `Transaction` type used for encoding. This
+can be used by client apps that are very clearly targetting a single chain.
 
 ## Future Improvements
 

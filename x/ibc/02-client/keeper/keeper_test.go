@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	tmConsState, ok := retrievedConsState.(ibctmtypes.ConsensusState)
 	// recalculate cached totalVotingPower field for equality check
 	var tmValSet *tmtypes.ValidatorSet
-	err := tmValSet.FromProto(*tmConsState.ValidatorSet)
+	err := tmValSet.FromProto(tmConsState.ValidatorSet)
 	suite.Require().NoError(err)
 
 	tmConsState.ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
@@ -188,7 +188,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
 	// recalculate cached totalVotingPower for equality check
 	var tmValSet *tmtypes.ValidatorSet
-	err := tmValSet.FromProto(*latest.(ibctmtypes.ConsensusState).ValidatorSet)
+	err := tmValSet.FromProto(latest.(ibctmtypes.ConsensusState).ValidatorSet)
 	suite.Require().NoError(err)
 
 	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
@@ -198,7 +198,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// Should return existing consensusState at latestClientHeight
 	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, testClientHeight+3)
 	// recalculate cached totalVotingPower for equality check
-	err = tmValSet.FromProto(*latest.(ibctmtypes.ConsensusState).ValidatorSet)
+	err = tmValSet.FromProto(latest.(ibctmtypes.ConsensusState).ValidatorSet)
 	suite.Require().NoError(err)
 
 	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()

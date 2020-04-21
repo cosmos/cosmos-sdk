@@ -88,15 +88,15 @@ func checkMisbehaviour(
 
 	// TODO: Evidence must be within trusting period
 	// Blocked on https://github.com/cosmos/ics/issues/379
-	if err := tmValidatorSet.FromProto(*consensusState.ValidatorSet); err != nil {
+	if err := tmValidatorSet.FromProto(consensusState.ValidatorSet); err != nil {
 		return err
 	}
 
-	if err := tmSignedHeader1.FromProto(evidence.Header1.SignedHeader); err != nil {
+	if err := tmSignedHeader1.FromProto(&evidence.Header1.SignedHeader); err != nil {
 		return err
 	}
 
-	if err := tmSignedHeader2.FromProto(evidence.Header2.SignedHeader); err != nil {
+	if err := tmSignedHeader2.FromProto(&evidence.Header2.SignedHeader); err != nil {
 		return err
 	}
 

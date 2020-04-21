@@ -45,15 +45,15 @@ func (h Header) GetTime() time.Time {
 // and checks that validatorsets are not nil
 func (h Header) ValidateBasic(chainID string) error {
 	var (
-		tmSignedHeader *tmtypes.SignedHeader
-		tmValSet       *tmtypes.ValidatorSet
+		tmSignedHeader tmtypes.SignedHeader
+		tmValSet       tmtypes.ValidatorSet
 	)
 
-	if err := tmSignedHeader.FromProto(h.GetSignedHeader()); err != nil {
+	if err := tmSignedHeader.FromProto(&h.SignedHeader); err != nil {
 		return err
 	}
 
-	if err := tmValSet.FromProto(*h.ValidatorSet); err != nil {
+	if err := tmValSet.FromProto(h.ValidatorSet); err != nil {
 		return err
 	}
 

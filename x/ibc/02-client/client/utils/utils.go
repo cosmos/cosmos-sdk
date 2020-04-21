@@ -125,7 +125,7 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64,
 	}
 
 	header := ibctmtypes.Header{
-		SignedHeader: protoSignedHeader,
+		SignedHeader: *protoSignedHeader,
 		ValidatorSet: protoValSet,
 	}
 

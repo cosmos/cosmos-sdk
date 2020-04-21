@@ -159,16 +159,13 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				suite.Require().True(ok, "consensus state is not a tendermint consensus state")
 				// recalculate cached totalVotingPower field for equality check
 				var tmValSet *tmtypes.ValidatorSet
-				err := tmValSet.FromProto(*tmConsState.ValidatorSet)
+				err := tmValSet.FromProto(tmConsState.ValidatorSet)
 				suite.Require().NoError(err)
 
 				tmConsState.ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
 
 				tmClientState, ok := updatedClientState.(ibctmtypes.ClientState)
 				suite.Require().True(ok, "client state is not a tendermint client state")
-
-				// recalculate cached totalVotingPower field for equality check
-				tmClientState.LastHeader.ValidatorSet.TotalVotingPower()
 
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
@@ -184,7 +181,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 	var localhostClient exported.ClientState = localhosttypes.NewClientState(
 		suite.keeper.ClientStore(suite.ctx, exported.ClientTypeLocalHost),
-		suite.header.ChainID,
+		suite.header.SignedHeader.Header.GetChainID(),
 		suite.ctx.BlockHeight(),
 	)
 

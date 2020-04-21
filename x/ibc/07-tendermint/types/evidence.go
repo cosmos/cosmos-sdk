@@ -109,8 +109,8 @@ func (ev Evidence) ValidateBasic() error {
 // thus we should return an error here and reject the evidence rather than panicing.
 func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	var (
-		tmCommit *tmtypes.Commit
-		tmValSet *tmtypes.ValidatorSet
+		tmCommit tmtypes.Commit
+		tmValSet tmtypes.ValidatorSet
 	)
 
 	defer func() {
@@ -119,16 +119,16 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.Validat
 		}
 	}()
 
-	if err := tmCommit.FromProto(*commit); err != nil {
+	if err := tmCommit.FromProto(commit); err != nil {
 		return err
 	}
 
-	if err := tmValSet.FromProto(*valSet); err != nil {
+	if err := tmValSet.FromProto(valSet); err != nil {
 		return err
 	}
 
 	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValSet)
+	voteSet := tmtypes.CommitToVoteSet(chainID, &tmCommit, &tmValSet)
 
 	blockID, ok := voteSet.TwoThirdsMajority()
 

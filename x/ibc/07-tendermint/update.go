@@ -90,19 +90,19 @@ func checkValidity(
 		)
 	}
 
-	if err := tmLastSignedHeader.FromProto(clientState.LastHeader.SignedHeader); err != nil {
+	if err := tmLastSignedHeader.FromProto(&clientState.LastHeader.SignedHeader); err != nil {
 		return err
 	}
 
-	if err := tmLastValidatorSet.FromProto(*clientState.LastHeader.ValidatorSet); err != nil {
+	if err := tmLastValidatorSet.FromProto(clientState.LastHeader.ValidatorSet); err != nil {
 		return err
 	}
 
-	if err := tmSignedHeader.FromProto(header.SignedHeader); err != nil {
+	if err := tmSignedHeader.FromProto(&header.SignedHeader); err != nil {
 		return err
 	}
 
-	if err := tmValidatorSet.FromProto(*header.ValidatorSet); err != nil {
+	if err := tmValidatorSet.FromProto(header.ValidatorSet); err != nil {
 		return err
 	}
 

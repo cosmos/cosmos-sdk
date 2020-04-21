@@ -138,7 +138,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
 				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.SignedHeader.Header.Height, 1, tmproto.PrecommitType, altValSet)
 				tmBlockID := tmtypes.BlockID{}
-				err := tmBlockID.FromProto(ev.Header1.SignedHeader.Commit.BlockID)
+				err := tmBlockID.FromProto(&ev.Header1.SignedHeader.Commit.BlockID)
 				if err != nil {
 					return err
 				}
@@ -163,7 +163,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
 				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.SignedHeader.Header.Height, 1, tmproto.PrecommitType, altValSet)
 				tmBlockID := tmtypes.BlockID{}
-				err := tmBlockID.FromProto(ev.Header2.SignedHeader.Commit.BlockID)
+				err := tmBlockID.FromProto(&ev.Header2.SignedHeader.Commit.BlockID)
 				if err != nil {
 					return err
 				}
@@ -186,7 +186,8 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				blockID := ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
-				ev.Header2.SignedHeader.Commit.BlockID = blockID.ToProto()
+				protoBlockID := blockID.ToProto()
+				ev.Header2.SignedHeader.Commit.BlockID = *protoBlockID
 				return nil
 			},
 			false,

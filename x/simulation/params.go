@@ -155,7 +155,11 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
 	cdc := amino.NewCodec()
-	stakingGenesisState := getStakingGenesisStateFromAppState(cdc, appState)
+
+	var genesisState map[string]json.RawMessage
+	cdc.UnmarshalJSON(appState, &genesisState)
+
+	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
 
 	consensusParams := &abci.ConsensusParams{
 		Block: &abci.BlockParams{
@@ -173,13 +177,4 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
 
 	return consensusParams
-}
-
-func getStakingGenesisStateFromAppState(cdc *amino.Codec, appState json.RawMessage) stakingtypes.GenesisState {
-	var genesisState map[string]json.RawMessage
-	cdc.UnmarshalJSON(appState, &genesisState)
-
-	stakingState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
-
-	return stakingState
 }

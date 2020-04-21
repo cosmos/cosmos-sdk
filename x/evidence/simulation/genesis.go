@@ -28,13 +28,12 @@ func GenEvidences(r *rand.Rand, accs []simtypes.Account) []exported.Evidence {
 
 	for i := 0; i < totalEv; i++ {
 		simacc, _ := simtypes.RandomAcc(r, accs)
-		eq := types.Equivocation{
+		evidence[i] = &types.Equivocation{
 			Height:           r.Int63n(200),
-			Time:             time.Unix(r.Int63(), 0),
+			Time:             time.Unix(r.Int63n(99999999999), 0).UTC(),
 			Power:            r.Int63n(1000),
 			ConsensusAddress: sdk.ConsAddress(simacc.Address),
 		}
-		evidence = append(evidence, eq)
 	}
 	return evidence
 }

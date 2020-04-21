@@ -27,7 +27,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc Codec
+}
 
 // Name returns the auth module's name.
 func (AppModuleBasic) Name() string {
@@ -80,9 +82,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper) AppModule {
+func NewAppModule(cdc Codec, accountKeeper AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		accountKeeper:  accountKeeper,
 	}
 }
@@ -156,8 +158,8 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
-func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations doesn't return any auth module operation.

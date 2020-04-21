@@ -354,5 +354,6 @@ func TestCLIRedelegate(t *testing.T) {
 
 	// Ensure the amount equal subtracted delegated balance
 	require.Equal(t, delegatedAccount.Shares, newValTokens.Sub(redelegateValTokens).ToDec())
+
 	f.Cleanup()
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"io/ioutil"
@@ -308,6 +310,90 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 }
 
 //___________________________________________________________________________________
+// gaiacli tx send/sign/broadcast
+
+// TxSend is gaiacli tx send
+func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
+		to, amount, f.Flags())
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+//___________________________________________________________________________________
+// gaiacli tx staking
+
+// TxStakingCreateValidator is gaiacli tx staking create-validator
+func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking create-validator %v --keyring-backend=test --from=%s"+
+		" --pubkey=%s", f.SimcliBinary, f.Flags(), from, consPubKey)
+	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
+	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
+	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+func (f *Fixtures) TxStakingEditValidator(from string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking edit-validator %v --keyring-backend=test "+
+		"--from=%s", f.SimcliBinary, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+func (f *Fixtures) TxStakingDelegate(validatorOperatorAddress, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking delegate %s %v %v --keyring-backend=test "+
+		"--from=%s", f.SimcliBinary, validatorOperatorAddress, amount, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+func (f *Fixtures) TxStakingReDelegate(srcOperatorAddress, dstOperatorAddress, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking redelegate %s %s %v %v --keyring-backend=test "+
+		"--from=%s", f.SimcliBinary, srcOperatorAddress, dstOperatorAddress, amount, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxStakingUnbond is gaiacli tx staking unbond
+func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
+	cmd := fmt.Sprintf("%s tx staking unbond --keyring-backend=test %s %v --from=%s %v",
+		f.SimcliBinary, validator, shares, from, f.Flags())
+	return executeWrite(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+//___________________________________________________________________________________
+// gaiacli query staking
+
+// QueryStakingValidator is gaiacli query staking validator
+func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string) staking.Validator {
+	cmd := fmt.Sprintf("%s query staking validator %s %v", f.SimcliBinary, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var validator staking.Validator
+
+	err := cdc.UnmarshalJSON([]byte(out), &validator)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return validator
+}
+
+// QueryStakingUnbondingDelegationsFrom is gaiacli query staking unbonding-delegations-from
+func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
+	cmd := fmt.Sprintf("%s query staking unbonding-delegations-from %s %v", f.SimcliBinary, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var ubds []staking.UnbondingDelegation
+
+	err := cdc.UnmarshalJSON([]byte(out), &ubds)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return ubds
+}
+
+// QueryStakingDelegationsTo is gaiacli query staking delegations-to
+func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
+	cmd := fmt.Sprintf("%s query staking delegations-to %s %v", f.SimcliBinary, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var delegations []staking.Delegation
+
+	err := cdc.UnmarshalJSON([]byte(out), &delegations)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return delegations
+}
+
+//___________________________________________________________________________________
 // executors
 
 func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
@@ -350,6 +436,38 @@ func executeWriteRetStdStreams(t *testing.T, cmdStr string, writes ...string) (b
 }
 
 //___________________________________________________________________________________
+// gaiacli query account
+
+// QueryAccount is gaiacli query account
+func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.BaseAccount {
+	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var initRes map[string]json.RawMessage
+	err := json.Unmarshal([]byte(out), &initRes)
+	require.NoError(f.T, err, "out %v, err %v", out, err)
+	value := initRes["value"]
+	var acc auth.BaseAccount
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
+	err = cdc.UnmarshalJSON(value, &acc)
+	require.NoError(f.T, err, "value %v, err %v", string(value), err)
+	return acc
+}
+
+// QueryBalances executes the bank query balances command for a given address and
+// flag set.
+func (f *Fixtures) QueryBalances(address sdk.AccAddress, flags ...string) sdk.Coins {
+	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+
+	var balances sdk.Coins
+
+	require.NoError(f.T, cdc.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
+
+	return balances
+}
+
+//___________________________________________________________________________________
 // utils
 
 func addFlags(cmd string, flags []string) string {
@@ -357,4 +475,21 @@ func addFlags(cmd string, flags []string) string {
 		cmd += " " + f
 	}
 	return strings.TrimSpace(cmd)
+}
+
+//nolint:deadcode,unused
+func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {
+
+	require.Nil(t, cdc.UnmarshalJSON([]byte(s), &stdTx))
+	return
+}
+
+func findDelegateAccount(validatorDelegations []staking.Delegation, delegatorAddress string) staking.Delegation {
+	for i := 0; i < len(validatorDelegations); i++ {
+		if validatorDelegations[i].DelegatorAddress.String() == delegatorAddress {
+			return validatorDelegations[i];
+		}
+	}
+
+	return staking.Delegation{}
 }

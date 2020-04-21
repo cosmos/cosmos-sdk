@@ -16,7 +16,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	f := helpers.InitFixtures(t)
 
 	// start gaiad server
-	proc := f.GDStart()
+	proc := f.SDStart()
 	defer proc.Stop(false)
 
 	f.QueryGovParamDeposit()

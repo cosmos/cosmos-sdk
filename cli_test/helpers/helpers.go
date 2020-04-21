@@ -96,15 +96,6 @@ func (f *Fixtures) SDStart(flags ...string) *tests.Process {
 	return proc
 }
 
-// GDStart runs gaiad start with the appropriate flags and returns a process
-func (f *Fixtures) GDStart(flags ...string) *tests.Process {
-	cmd := fmt.Sprintf("%s start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.SimcliBinary, f.SimcliHome, f.RPCAddr, f.P2PAddr)
-	proc := tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	return proc
-}
-
 // SDTendermint returns the results of simd tendermint [query]
 func (f *Fixtures) SDTendermint(query string) string {
 	cmd := fmt.Sprintf("%s tendermint %s --home=%s", f.SimdBinary, query, f.SimdHome)

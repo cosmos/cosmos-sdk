@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/types"
+
 	"github.com/tendermint/go-amino"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -167,7 +169,7 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 			MaxGas:   -1,
 		},
 		Validator: &abci.ValidatorParams{
-			PubKeyTypes: []string{"secp256k1", "ed25519"},
+			PubKeyTypes: []string{types.ABCIPubKeyTypeSecp256k1, types.ABCIPubKeyTypeEd25519},
 		},
 		Evidence: &abci.EvidenceParams{
 			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),

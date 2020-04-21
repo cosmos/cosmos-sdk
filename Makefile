@@ -195,7 +195,7 @@ test-sim-profile:
 .PHONY: test-sim-profile test-sim-benchmark
 
 test-cover:
-	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
 
 benchmark:

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -60,7 +61,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateClient() {
+func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createValidUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
 		return ibctmtypes.CreateTestHeader(testClientID, suite.header.Height+1, suite.header.Time.Add(time.Minute),
@@ -137,7 +138,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 
 			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
 
-			err = suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
+			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
 			if tc.expPass {
 				suite.Require().NoError(err, err)
@@ -159,14 +160,39 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 				// recalculate cached totalVotingPower field for equality check
 				tmConsState.ValidatorSet.TotalVotingPower()
 
+				tmClientState, ok := updatedClientState.(ibctmtypes.ClientState)
+				suite.Require().True(ok, "client state is not a tendermint client state")
+
+				// recalculate cached totalVotingPower field for equality check
+				tmClientState.LastHeader.ValidatorSet.TotalVotingPower()
+
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().Equal(updateHeader.GetHeight(), clientState.GetLatestHeight(), "client state height not updated correctly on case %s", tc.name)
 				suite.Require().Equal(expConsensusState, consensusState, "consensus state should have been updated on case %s", tc.name)
+				suite.Require().Equal(updatedClientState, tmClientState, "client states don't match")
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
+	var localhostClient exported.ClientState = localhosttypes.NewClientState(
+		suite.keeper.ClientStore(suite.ctx, exported.ClientTypeLocalHost),
+		suite.header.ChainID,
+		suite.ctx.BlockHeight(),
+	)
+
+	localhostClient, err := suite.keeper.CreateClient(suite.ctx, localhostClient, nil)
+	suite.Require().NoError(err, err)
+
+	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+
+	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
+	suite.Require().NoError(err, err)
+	suite.Require().Equal(localhostClient.GetID(), updatedClientState.GetID())
+	suite.Require().Equal(localhostClient.GetLatestHeight()+1, updatedClientState.GetLatestHeight())
 }
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {

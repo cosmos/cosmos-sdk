@@ -9,8 +9,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
@@ -24,9 +24,9 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, supply.NewModuleAddress(staking.BondedPoolName))
+	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(staking.BondedPoolName))
 	require.NotNil(t, acc)
 
-	acc = app.AccountKeeper.GetAccount(ctx, supply.NewModuleAddress(staking.NotBondedPoolName))
+	acc = app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(staking.NotBondedPoolName))
 	require.NotNil(t, acc)
 }

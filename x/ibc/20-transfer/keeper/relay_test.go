@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			}, true, true},
 		{"successful transfer from external chain", prefixCoins,
 			func() {
-				suite.chainA.App.SupplyKeeper.SetSupply(suite.chainA.GetContext(), supply.NewSupply(prefixCoins))
+				suite.chainA.App.BankKeeper.SetSupply(suite.chainA.GetContext(), bank.NewSupply(prefixCoins))
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, prefixCoins)
 				suite.Require().NoError(err)
 				suite.chainA.CreateClient(suite.chainB)
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			tc.malleate()
 
 			err = suite.chainA.App.TransferKeeper.SendTransfer(
-				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2,
+				suite.chainA.GetContext(), testPort1, testChannel1, 100, tc.amount, testAddr1, testAddr2.String(),
 			)
 
 			if tc.expPass {
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestOnRecvPacket() {
-	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1, testAddr2)
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())
 
 	testCases := []struct {
 		msg      string
@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 // TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
 // and failure acknowledment leads to refund
 func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
-	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2)
+	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1.String(), testAddr2.String())
 	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
 
 	successAck := types.FungibleTokenPacketAcknowledgement{
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 
 // TestOnTimeoutPacket test private refundPacket function since it is a simple wrapper over it
 func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
-	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1, testAddr2)
+	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1.String(), testAddr2.String())
 	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
 
 	testCases := []struct {

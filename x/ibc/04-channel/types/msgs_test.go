@@ -356,7 +356,7 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 var (
 	timeoutHeight     = uint64(100)
 	timeoutTimestamp  = uint64(100)
-	invalidTimeout    = uint64(0)
+	disabledTimeout   = uint64(0)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
 	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")

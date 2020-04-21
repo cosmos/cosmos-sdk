@@ -18,11 +18,13 @@ import (
 )
 
 const (
-	// DefaultPacketTimeoutHeight is the default packet timeout relative to the current block height
-	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks. Timeout disabled when set to 0.
+	// DefaultPacketTimeoutHeight is the default packet timeout height relative
+	// to the current block height. The timeout is disabled when set to 0.
+	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks
 
-	// DefaultPacketTimeoutTimestamp is the default packet timeout relative to the current block timestamp
-	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds. Timeout disabled when set to 0.
+	// DefaultPacketTimeoutTimestamp is the default packet timeout timestamp relative
+	// to the current block timestamp. The timeout is disabled when set to 0.
+	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds
 )
 
 // Keeper defines the IBC transfer keeper

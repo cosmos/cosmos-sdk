@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -20,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var (
@@ -76,16 +74,16 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper       Keeper
-	supplyKeeper types.SupplyKeeper
+	keeper     Keeper
+	authKeeper types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
+func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
-		supplyKeeper:   supplyKeeper,
+		authKeeper:     ak,
 	}
 }
 
@@ -119,8 +117,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	var genesisState GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	InitGenesis(ctx, am.keeper, am.supplyKeeper, genesisState)
-
+	InitGenesis(ctx, am.keeper, am.authKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

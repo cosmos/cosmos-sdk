@@ -54,7 +54,7 @@ func QueryClientState(
 	}
 
 	var clientState exported.ClientState
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &clientState); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
 
@@ -82,7 +82,7 @@ func QueryConsensusState(
 	}
 
 	var cs exported.ConsensusState
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryBare(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 

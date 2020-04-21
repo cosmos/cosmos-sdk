@@ -38,3 +38,10 @@ jobs:
         with:
           file: ./coverage.txt # optional
           fail_ci_if_error: true
+
+  test-cli:
+    executor: golang
+    steps:
+      - name: cli-test
+          run: |
+            make test-sim

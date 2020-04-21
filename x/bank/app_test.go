@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -147,7 +146,7 @@ func TestSendToModuleAcc(t *testing.T) {
 		{
 			name:           "Allowed module account can be the recipient of bank sends",
 			fromBalance:    coins,
-			msg:            types.NewMsgSend(addr1, supply.NewModuleAddress(distribution.ModuleName), coins),
+			msg:            types.NewMsgSend(addr1, auth.NewModuleAddress(distribution.ModuleName), coins),
 			expPass:        true,
 			expSimPass:     true,
 			expFromBalance: sdk.NewCoins(),

@@ -8,7 +8,7 @@ import (
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, bk types.BankKeeper, supplyKeeper types.SupplyKeeper, k Keeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k Keeper, data GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalID)
 	k.SetDepositParams(ctx, data.DepositParams)
 	k.SetVotingParams(ctx, data.VotingParams)
@@ -45,7 +45,8 @@ func InitGenesis(ctx sdk.Context, bk types.BankKeeper, supplyKeeper types.Supply
 		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), totalDeposits); err != nil {
 			panic(err)
 		}
-		supplyKeeper.SetModuleAccount(ctx, moduleAcc)
+
+		ak.SetModuleAccount(ctx, moduleAcc)
 	}
 }
 

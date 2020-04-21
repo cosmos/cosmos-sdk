@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 var (
@@ -17,5 +17,5 @@ var (
 	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 
-	distrAcc = supply.NewEmptyModuleAccount(types.ModuleName)
+	distrAcc = auth.NewEmptyModuleAccount(types.ModuleName)
 )

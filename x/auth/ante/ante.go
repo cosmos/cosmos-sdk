@@ -2,7 +2,6 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	ibcante "github.com/cosmos/cosmos-sdk/x/ibc/ante"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
@@ -12,7 +11,7 @@ import (
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewAnteHandler(
-	ak keeper.AccountKeeper, bankKeeper types.BankKeeper, ibcKeeper ibckeeper.Keeper,
+	ak AccountKeeper, bankKeeper types.BankKeeper, ibcKeeper ibckeeper.Keeper,
 	sigGasConsumer SignatureVerificationGasConsumer,
 ) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(

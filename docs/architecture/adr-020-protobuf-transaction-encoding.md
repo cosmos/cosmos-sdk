@@ -207,9 +207,10 @@ message Content {
 ```
 
 **Client libraries should always sign transactions using the generic module-level
-`sdk.Msg` that uses `Any`.** Convenience gRPC/REST methods are described below
-that allow module-level `Msg` to be used for transaction
-submission, converting it to the app-level encoding `Msg` using the `oneof`.
+`sdk.Msg` that uses `Any`.** Convenience gRPC/REST methods are described later on
+that allow the generic module-level `Msg` types to be used for transaction
+submission, converting them to the app-level encoding `Msg`s that use `oneof`
+behind the scenes.
 
 In order to smoothly allow for conversion between _signing_ and _encoding_
 `Msg`s, modules that use interface types should implement the following

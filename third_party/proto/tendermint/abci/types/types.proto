@@ -8,8 +8,8 @@ import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/crypto/merkle/merkle.proto";
 import "third_party/proto/tendermint/libs/kv/types.proto";
 import "third_party/proto/tendermint/proto/types/types.proto";
+import "third_party/proto/tendermint/proto/types/params.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 
 // This file is copied from http://github.com/tendermint/abci
 // NOTE: When using custom types, mind the warnings.
@@ -219,8 +219,8 @@ message ResponseCommit {
 // that can be adjusted by the abci app
 message ConsensusParams {
   BlockParams     block     = 1;
-  EvidenceParams  evidence  = 2;
-  ValidatorParams validator = 3;
+  tendermint.proto.types.EvidenceParams  evidence  = 2;
+  tendermint.proto.types.ValidatorParams validator = 3;
 }
 
 // BlockParams contains limits on the block size.
@@ -229,18 +229,6 @@ message BlockParams {
   int64 max_bytes = 1;
   // Note: must be greater or equal to -1
   int64 max_gas = 2;
-}
-
-message EvidenceParams {
-  // Note: must be greater than 0
-  int64                    max_age_num_blocks = 1;
-  google.protobuf.Duration max_age_duration   = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
-}
-
-// ValidatorParams contains limits on validators.
-message ValidatorParams {
-  repeated string pub_key_types = 1;
 }
 
 message LastCommitInfo {
@@ -252,6 +240,16 @@ message Event {
   string   type                               = 1;
   repeated tendermint.libs.kv.Pair attributes = 2
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "attributes,omitempty"];
+}
+
+// TxResult contains results of executing the transaction.
+//
+// One usage is indexing transaction results.
+message TxResult {
+  int64             height = 1;
+  uint32            Index  = 2;
+  bytes             tx     = 3;
+  ResponseDeliverTx result = 4 [(gogoproto.nullable) = false];
 }
 
 //----------------------------------------

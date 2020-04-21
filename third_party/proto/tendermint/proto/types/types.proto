@@ -1,31 +1,33 @@
 syntax = "proto3";
-
 package tendermint.proto.types;
-option  go_package = "github.com/tendermint/tendermint/proto/types";
+
+option go_package = "github.com/tendermint/tendermint/proto/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "third_party/proto/tendermint/proto/libs/bits/types.proto";
-import "third_party/proto/tendermint/proto/crypto/types.proto";
+import "third_party/proto/tendermint/proto/version/version.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
 enum BlockIDFlag {
   option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
-  BLOCKD_ID_FLAG_UNKNOWN                   = 0;
-  BLOCK_ID_FLAG_ABSENT = 1 [(gogoproto.enumvalue_customname) = "BlockIDFlagAbsent"];
-  BLOCK_ID_FLAG_COMMIT = 2 [(gogoproto.enumvalue_customname) = "BlockIDFlagCommit"];
-  BLOCK_ID_FLAG_NIL    = 3 [(gogoproto.enumvalue_customname) = "BlockIDFlagNil"];
+
+  BLOCKD_ID_FLAG_UNKNOWN = 0;
+  BLOCK_ID_FLAG_ABSENT   = 1 [(gogoproto.enumvalue_customname) = "BlockIDFlagAbsent"];
+  BLOCK_ID_FLAG_COMMIT   = 2 [(gogoproto.enumvalue_customname) = "BlockIDFlagCommit"];
+  BLOCK_ID_FLAG_NIL      = 3 [(gogoproto.enumvalue_customname) = "BlockIDFlagNil"];
 }
 
 // SignedMsgType is a type of signed message in the consensus.
 enum SignedMsgType {
   option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
-  SIGNED_MSG_TYPE_UNKNOWN                  = 0;
-  PREVOTE_TYPE                             = 1 [(gogoproto.enumvalue_customname) = "PrevoteType"];
-  PRECOMMIT_TYPE                           = 2 [(gogoproto.enumvalue_customname) = "PrecommitType"];
-  PROPOSAL_TYPE                            = 3 [(gogoproto.enumvalue_customname) = "ProposalType"];
+
+  SIGNED_MSG_TYPE_UNKNOWN = 0;
+  PREVOTE_TYPE            = 1 [(gogoproto.enumvalue_customname) = "PrevoteType"];
+  PRECOMMIT_TYPE          = 2 [(gogoproto.enumvalue_customname) = "PrecommitType"];
+  PROPOSAL_TYPE           = 3 [(gogoproto.enumvalue_customname) = "ProposalType"];
 }
 
 // PartsetHeader
@@ -53,10 +55,10 @@ message Header {
   option (gogoproto.populate) = true;
   option (gogoproto.equal)    = true;
   // basic block info
-  Version                   version  = 1 [(gogoproto.nullable) = false];
-  string                    chain_id = 2 [(gogoproto.customname) = "ChainID"];
-  int64                     height   = 3;
-  google.protobuf.Timestamp time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  tendermint.proto.version.Consensus version  = 1 [(gogoproto.nullable) = false];
+  string                             chain_id = 2 [(gogoproto.customname) = "ChainID"];
+  int64                              height   = 3;
+  google.protobuf.Timestamp          time     = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 
   // prev block info
   BlockID last_block_id = 5 [(gogoproto.nullable) = false, (gogoproto.customname) = "LastBlockID"];
@@ -75,14 +77,6 @@ message Header {
   // consensus info
   bytes evidence_hash    = 13;  // evidence included in the block
   bytes proposer_address = 14;  // original proposer of the block
-}
-
-message Version {
-  option (gogoproto.populate) = true;
-  option (gogoproto.equal)    = true;
-
-  uint64 block = 1;
-  uint64 app   = 2;
 }
 
 // Data contains the set of transactions included in the block
@@ -110,39 +104,11 @@ message Vote {
   bytes  signature         = 8;
 }
 
-// DuplicateVoteEvidence contains evidence a validator signed two conflicting
-// votes.
-message DuplicateVoteEvidence {
-  Vote vote_a = 1;
-  Vote vote_b = 2;
-}
-
-// MockEvidence is used for testing pruposes
-message MockEvidence {
-  int64                     evidence_height = 1;
-  google.protobuf.Timestamp evidence_time   = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes evidence_address = 3;
-}
-
-message Evidence {
-  oneof sum {
-    DuplicateVoteEvidence duplicate_vote_evidence = 1;
-    MockEvidence          mock_evidence           = 2;
-  }
-}
-
-// EvidenceData contains any evidence of malicious wrong-doing by validators
-message EvidenceData {
-  repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
-  bytes             hash     = 2;
-}
-
 // Commit contains the evidence that a block was committed by a set of validators.
 message Commit {
-  int64   height   = 1;
-  int32   round    = 2;
-  BlockID block_id = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
+  int64                               height     = 1;
+  int32                               round      = 2;
+  BlockID                             block_id   = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
   repeated CommitSig                  signatures = 4 [(gogoproto.nullable) = false];
   bytes                               hash       = 5;
   tendermint.proto.libs.bits.BitArray bit_array  = 6;
@@ -157,19 +123,12 @@ message CommitSig {
   bytes signature = 4;
 }
 
-message Block {
-  Header       header      = 1 [(gogoproto.nullable) = false];
-  Data         data        = 2 [(gogoproto.nullable) = false];
-  EvidenceData evidence    = 3 [(gogoproto.nullable) = false];
-  Commit       last_commit = 4;
-}
-
 message Proposal {
   SignedMsgType             type      = 1;
   int64                     height    = 2;
   int32                     round     = 3;
   int32                     pol_round = 4;
-  BlockID                   block_id  = 5 [(gogoproto.customname) = "BlockID"];
+  BlockID                   block_id  = 5 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
   google.protobuf.Timestamp timestamp = 6
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   bytes signature = 7;
@@ -178,17 +137,4 @@ message Proposal {
 message SignedHeader {
   Header header = 1;
   Commit commit = 2;
-}
-
-message ValidatorSet {
-  repeated Validator validators         = 1 [(gogoproto.nullable) = false];
-  Validator          proposer           = 2 [(gogoproto.nullable) = false];
-  int64              total_voting_power = 3;
-}
-
-message Validator {
-  bytes                             address           = 1;
-  tendermint.proto.crypto.PublicKey pub_key           = 2 [(gogoproto.nullable) = false];
-  int64                             VotingPower       = 3;
-  int64                             proposer_priority = 4;
 }

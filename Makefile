@@ -282,17 +282,22 @@ proto-update-deps:
 	@sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
 	@sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
 	@sed -i '' '10 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '11 s|proto/types/params.proto|third_party/proto/tendermint/proto/types/params.proto|g' $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_PROTO)/types
 	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
+	@curl -sSL $(TM_URL)/proto/types/params.proto > $(TM_PROTO)/types/params.proto
 	@sed -i '' '8 s|proto/libs/bits/types.proto|third_party/proto/tendermint/proto/libs/bits/types.proto|g' $(TM_PROTO)/types/types.proto
-	@sed -i '' '9 s|proto/crypto/types.proto|third_party/proto/tendermint/proto/crypto/types.proto|g' $(TM_PROTO)/types/types.proto
-	
+	@sed -i '' '9 s|proto/version/version.proto|third_party/proto/tendermint/proto/version/version.proto|g' $(TM_PROTO)/types/types.proto
+
 	@mkdir -p $(TM_PROTO)/libs/bits
 	@curl -sSL $(TM_URL)/proto/libs/bits/types.proto > $(TM_PROTO)/libs/bits/types.proto
 
-	@mkdir -p $(TM_PROTO)/crypto
-	@curl -sSL $(TM_URL)/proto/crypto/types.proto > $(TM_PROTO)/crypto/types.proto
+	@mkdir -p $(TM_PROTO)/crypto/keys
+	@curl -sSL $(TM_URL)/proto/crypto/keys/types.proto > $(TM_PROTO)/crypto/keys/types.proto
+
+	@mkdir -p $(TM_PROTO)/version
+	@curl -sSL $(TM_URL)/proto/version/version.proto > $(TM_PROTO)/version/version.proto
 
 	@mkdir -p $(TM_KV_TYPES)
 	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto

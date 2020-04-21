@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.37.10] - 2020-04-13
+
+### Bug Fixes
+
+* (client/context) [\#5964](https://github.com/cosmos/cosmos-sdk/issues/5964) Fix incorrect instantiation of tmlite verifier when --trust-node is off.
+
 ## [v0.37.9] - 2020-04-09
 
 ### Improvements

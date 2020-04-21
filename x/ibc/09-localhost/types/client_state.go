@@ -18,23 +18,23 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // ClientState requires (read-only) access to keys outside the client prefix.
-type ClientState struct {
-	store   sdk.KVStore
-	ID      string `json:"id" yaml:"id"`
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-	Height  int64  `json:"height" yaml:"height"`
-}
+// type ClientState struct {
+// 	store   sdk.KVStore
+// 	ID      string `json:"id" yaml:"id"`
+// 	ChainID string `json:"chain_id" yaml:"chain_id"`
+// 	Height  int64  `json:"height" yaml:"height"`
+// }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(store sdk.KVStore, chainID string, height int64) ClientState {
 	return ClientState{
-		store:   store,
+		// store:   store,
 		ID:      clientexported.Localhost.String(),
 		ChainID: chainID,
-		Height:  height,
+		Height:  uint64(height),
 	}
 }
 
@@ -55,7 +55,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.Height)
+	return cs.Height
 }
 
 // IsFrozen returns false.

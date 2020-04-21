@@ -16,9 +16,14 @@ func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.ProposalsKeyPrefix):
-			var proposalA, proposalB types.Proposal
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &proposalA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &proposalB)
+			proposalA, err := cdc.UnmarshalProposal(kvA.Value)
+			if err != nil {
+				panic(err)
+			}
+			proposalB, err := cdc.UnmarshalProposal(kvB.Value)
+			if err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%v\n%v", proposalA, proposalB)
 
 		case bytes.Equal(kvA.Key[:1], types.ActiveProposalQueuePrefix),

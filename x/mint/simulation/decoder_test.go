@@ -8,6 +8,7 @@ import (
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
@@ -21,7 +22,7 @@ func TestDecodeStore(t *testing.T) {
 	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryBare(minter)},
+		tmkv.Pair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryBare(&minter)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 	tests := []struct {

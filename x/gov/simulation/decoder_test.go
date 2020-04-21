@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -35,11 +36,14 @@ func TestDecodeStore(t *testing.T) {
 	deposit := types.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
 	vote := types.NewVote(1, delAddr1, types.OptionYes)
 
+	proposalBz, err := cdc.MarshalProposal(proposal)
+	require.NoError(t, err)
+
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.ProposalKey(1), Value: cdc.MustMarshalBinaryBare(proposal)},
+		tmkv.Pair{Key: types.ProposalKey(1), Value: proposalBz},
 		tmkv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
-		tmkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(deposit)},
-		tmkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(vote)},
+		tmkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
+		tmkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

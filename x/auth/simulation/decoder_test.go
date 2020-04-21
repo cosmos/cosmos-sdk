@@ -29,7 +29,7 @@ func TestDecodeStore(t *testing.T) {
 	accBz, err := cdc.MarshalAccount(acc)
 	require.NoError(t, err)
 
-	globalAccNumber := &gogotypes.UInt64Value{Value: 10}
+	globalAccNumber := gogotypes.UInt64Value{Value: 10}
 
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{
@@ -38,7 +38,7 @@ func TestDecodeStore(t *testing.T) {
 		},
 		tmkv.Pair{
 			Key:   types.GlobalAccountNumberKey,
-			Value: cdc.MustMarshalBinaryBare(globalAccNumber),
+			Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
 		},
 		tmkv.Pair{
 			Key:   []byte{0x99},

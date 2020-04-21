@@ -96,6 +96,7 @@ type BaseApp struct {
 	// side channel
 	beginSideBlocker     sdk.BeginSideBlocker
 	deliverSideTxHandler sdk.DeliverSideTxHandler
+	postDeliverTxHandler sdk.PostDeliverTxHandler
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -971,6 +972,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
+	}
+
+	// call post deliver tx handler
+	if app.postDeliverTxHandler != nil {
+		app.postDeliverTxHandler(ctx, tx, result)
 	}
 
 	return result

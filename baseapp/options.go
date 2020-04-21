@@ -135,3 +135,11 @@ func (app *BaseApp) SetDeliverSideTxHandler(deliverSideTxHandler sdk.DeliverSide
 	}
 	app.deliverSideTxHandler = deliverSideTxHandler
 }
+
+// SetPostDeliverTxHandler sets post deliver tx handler
+func (app *BaseApp) SetPostDeliverTxHandler(postDeliverTxHandler sdk.PostDeliverTxHandler) {
+	if app.sealed {
+		panic("SetPostDeliverTxHandler() on sealed BaseApp")
+	}
+	app.postDeliverTxHandler = postDeliverTxHandler
+}

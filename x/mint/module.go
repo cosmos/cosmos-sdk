@@ -27,7 +27,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the mint module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Marshaler
+}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
@@ -79,9 +81,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		authKeeper:     ak,
 	}
@@ -159,8 +161,8 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
-func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations doesn't return any mint module operation.

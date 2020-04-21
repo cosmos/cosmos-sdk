@@ -2,6 +2,7 @@ package std
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -18,10 +19,10 @@ func ConsensusParamsKeyTable() params.KeyTable {
 			baseapp.ParamStoreKeyBlockParams, abci.BlockParams{}, baseapp.ValidateBlockParams,
 		),
 		params.NewParamSetPair(
-			baseapp.ParamStoreKeyEvidenceParams, abci.EvidenceParams{}, baseapp.ValidateEvidenceParams,
+			baseapp.ParamStoreKeyEvidenceParams, tmproto.EvidenceParams{}, baseapp.ValidateEvidenceParams,
 		),
 		params.NewParamSetPair(
-			baseapp.ParamStoreKeyValidatorParams, abci.ValidatorParams{}, baseapp.ValidateValidatorParams,
+			baseapp.ParamStoreKeyValidatorParams, tmproto.ValidatorParams{}, baseapp.ValidateValidatorParams,
 		),
 	)
 }

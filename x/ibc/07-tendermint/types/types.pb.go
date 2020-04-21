@@ -154,8 +154,10 @@ func (m *MsgSubmitClientMisbehaviour) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitClientMisbehaviour proto.InternalMessageInfo
 
-// ClientState defines a Tendermint consensus light client state.
+// ClientState from Tendermint tracks the current validator set, latest height,
+// and a possible frozen height.
 type ClientState struct {
+	// client id
 	ID string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// duration of the period since the LastestTimestamp during which the submitted
 	// headers are valid for upgrade

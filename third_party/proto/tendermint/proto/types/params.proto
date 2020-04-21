@@ -1,0 +1,53 @@
+syntax = "proto3";
+package tendermint.proto.types;
+
+option go_package = "github.com/tendermint/tendermint/proto/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+// ConsensusParams contains consensus critical parameters that determine the
+// validity of blocks.
+message ConsensusParams {
+  BlockParams     block     = 1 [(gogoproto.nullable) = false];
+  EvidenceParams  evidence  = 2 [(gogoproto.nullable) = false];
+  ValidatorParams validator = 3 [(gogoproto.nullable) = false];
+}
+
+// BlockParams contains limits on the block size.
+message BlockParams {
+  // Note: must be greater than 0
+  int64 max_bytes = 1;
+  // Note: must be greater or equal to -1
+  int64 max_gas = 2;
+  // Minimum time increment between consecutive blocks (in milliseconds)
+  // Not exposed to the application.
+  int64 time_iota_ms = 3;
+}
+
+// EvidenceParams determine how we handle evidence of malfeasance.
+message EvidenceParams {
+  option (gogoproto.populate) = true;
+  option (gogoproto.equal)    = true;
+  // Note: must be greater than 0
+  int64                    max_age_num_blocks = 1;
+  google.protobuf.Duration max_age_duration   = 2
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+}
+
+// ValidatorParams restrict the public key types validators can use.
+// NOTE: uses ABCI pubkey naming, not Amino names.
+message ValidatorParams {
+  option (gogoproto.populate) = true;
+  option (gogoproto.equal)    = true;
+
+  repeated string pub_key_types = 1;
+}
+
+// HashedParams is a subset of ConsensusParams.
+// It is amino encoded and hashed into
+// the Header.ConsensusHash.
+message HashedParams {
+  int64 block_max_bytes = 1;
+  int64 block_max_gas   = 2;
+}

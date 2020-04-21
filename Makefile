@@ -22,7 +22,19 @@ all: tools build lint test
 
 build: go.sum
 	@go build -mod=readonly ./...
-.PHONY: build
+
+build-sim: go.sum
+ifeq ($(OS),Windows_NT)
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
+else
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
+endif
+
+.PHONY: \
+ build \
+ build-sim
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -270,11 +282,13 @@ proto-update-deps:
 	@sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
 	@sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
 	@sed -i '' '10 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '11 s|proto/types/params.proto|third_party/proto/tendermint/proto/types/params.proto|g' $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_PROTO)/types
 	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
+	@curl -sSL $(TM_URL)/proto/types/params.proto > $(TM_PROTO)/types/params.proto
 	@sed -i '' '8 s|proto/libs/bits/types.proto|third_party/proto/tendermint/proto/libs/bits/types.proto|g' $(TM_PROTO)/types/types.proto
-	@sed -i '' '9 s|proto/crypto/keys/types.proto|third_party/proto/tendermint/proto/crypto/keys/types.proto|g' $(TM_PROTO)/types/types.proto
+	@sed -i '' '9 s|proto/version/version.proto|third_party/proto/tendermint/proto/version/version.proto|g' $(TM_PROTO)/types/types.proto
 
 	@curl -sSL $(TM_URL)/proto/types/evidence.proto > $(TM_PROTO)/types/evidence.proto
 	@sed -i '' '7 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_PROTO)/types/evidence.proto
@@ -295,6 +309,9 @@ proto-update-deps:
 
 	@mkdir -p $(TM_PROTO)/crypto/keys
 	@curl -sSL $(TM_URL)/proto/crypto/keys/types.proto > $(TM_PROTO)/crypto/keys/types.proto
+
+	@mkdir -p $(TM_PROTO)/version
+	@curl -sSL $(TM_URL)/proto/version/version.proto > $(TM_PROTO)/version/version.proto
 
 	@mkdir -p $(TM_KV_TYPES)
 	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto

@@ -332,13 +332,13 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	}
 
 	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
-		var ep abci.EvidenceParams
+		var ep tmproto.EvidenceParams
 		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
 		cp.Evidence = &ep
 	}
 
 	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
-		var vp abci.ValidatorParams
+		var vp tmproto.ValidatorParams
 		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
 		cp.Validator = &vp
 	}
@@ -364,7 +364,7 @@ func (app *BaseApp) storeConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 // one.
 func (app *BaseApp) getMaximumBlockGas(ctx sdk.Context) uint64 {
 	cp := app.GetConsensusParams(ctx)
-	if cp == nil || cp.Block == nil {
+	if cp == nil {
 		return 0
 	}
 

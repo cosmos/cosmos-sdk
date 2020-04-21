@@ -49,7 +49,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
 	cp := ctx.ConsensusParams()
-	if cp != nil && cp.Evidence != nil {
+	if cp != nil {
 		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
 			logger.Info(
 				"ignored equivocation; evidence too old",

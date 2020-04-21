@@ -6,8 +6,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/types"
+	"github.com/tendermint/tendermint/proto/version"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/version"
 )
 
 // MakeBlockID copied unimported test functions from tmtypes to use them here

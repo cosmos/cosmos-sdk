@@ -64,10 +64,11 @@ message MsgSubmitClientMisbehaviour {
   ];
 }
 
-// ClientState defines a Tendermint consensus light client state.
+// ClientState from Tendermint tracks the current validator set, latest height,
+// and a possible frozen height.
 message ClientState {
   option (gogoproto.goproto_getters) = false;
-
+  // client id
   string id = 1 [(gogoproto.customname) = "ID"];
   // duration of the period since the LastestTimestamp during which the submitted
   // headers are valid for upgrade

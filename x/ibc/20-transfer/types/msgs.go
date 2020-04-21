@@ -13,7 +13,7 @@ const (
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
-	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender, receiver sdk.AccAddress,
+	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender sdk.AccAddress, receiver string,
 ) MsgTransfer {
 	return MsgTransfer{
 		SourcePort:        sourcePort,
@@ -52,7 +52,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-	if msg.Receiver.Empty() {
+	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
 	return nil

@@ -24,7 +24,7 @@ const (
 
 var (
 	addr1     = sdk.AccAddress("testaddr1")
-	addr2     = sdk.AccAddress("testaddr2")
+	addr2     = sdk.AccAddress("testaddr2").String()
 	emptyAddr sdk.AccAddress
 
 	coins, _          = sdk.ParseCoins("100atom")
@@ -59,7 +59,7 @@ func TestMsgTransferValidation(t *testing.T) {
 		NewMsgTransfer(validPort, validChannel, 10, invalidDenomCoins, addr1, addr2), // invalid amount
 		NewMsgTransfer(validPort, validChannel, 10, negativeCoins, addr1, addr2),     // amount contains negative coin
 		NewMsgTransfer(validPort, validChannel, 10, coins, emptyAddr, addr2),         // missing sender address
-		NewMsgTransfer(validPort, validChannel, 10, coins, addr1, emptyAddr),         // missing recipient address
+		NewMsgTransfer(validPort, validChannel, 10, coins, addr1, ""),                // missing recipient address
 		NewMsgTransfer(validPort, validChannel, 10, sdk.Coins{}, addr1, addr2),       // not possitive coin
 	}
 

@@ -169,7 +169,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgAcknowledgement:
 			// Lookup module by channel capability
-			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if !ok {
 				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
 			}
@@ -183,7 +183,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgTimeout:
 			// Lookup module by channel capability
-			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
 			if !ok {
 				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
 			}

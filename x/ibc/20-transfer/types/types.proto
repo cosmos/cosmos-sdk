@@ -31,9 +31,7 @@ message MsgTransfer {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   // the recipient address on the destination chain
-  bytes receiver = 6 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-  ];
+  string receiver = 6;
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload
@@ -45,13 +43,9 @@ message FungibleTokenPacketData {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // the sender address
-  bytes sender = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-  ];
+  string sender = 2;
   // the recipient address on the destination chain
-  bytes receiver = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-  ];
+  string receiver = 3;
 }
 
 // FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg

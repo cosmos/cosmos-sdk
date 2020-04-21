@@ -7,7 +7,7 @@ import (
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, sender, receiver sdk.AccAddress) FungibleTokenPacketData {
+	amount sdk.Coins, sender, receiver string) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
 		Amount:   amount,
 		Sender:   sender,
@@ -23,10 +23,10 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if !ftpd.Amount.IsValid() {
 		return sdkerrors.ErrInvalidCoins
 	}
-	if ftpd.Sender.Empty() {
+	if ftpd.Sender == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-	if ftpd.Receiver.Empty() {
+	if ftpd.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing receiver address")
 	}
 	return nil

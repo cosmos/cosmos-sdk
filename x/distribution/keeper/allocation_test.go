@@ -98,7 +98,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-	feeCollector := app.SupplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
+	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
 	err = app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
@@ -190,7 +190,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)))
 
-	feeCollector := app.SupplyKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
+	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
 	err = app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)

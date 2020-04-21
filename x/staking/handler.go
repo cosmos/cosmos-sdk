@@ -66,7 +66,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	cp := ctx.ConsensusParams()
-	if cp != nil && cp.Validator != nil {
+	if cp != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(pk)
 
 		if !tmstrings.StringInSlice(tmPubKey.Type, cp.Validator.PubKeyTypes) {

@@ -20,9 +20,10 @@ const (
 	QuerierRoute = ModuleName
 )
 
-// KVStore key prefixes
+// KVStore keys
 var (
 	BalancesPrefix = []byte("balances")
+	SupplyKey      = []byte{0x00}
 )
 
 // AddressFromBalancesStore returns an account address from a balances prefix

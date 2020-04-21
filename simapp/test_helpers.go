@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -33,11 +32,11 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &abci.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  1814400,
 	},
-	Validator: &abci.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 			tmtypes.ABCIPubKeyTypeSecp256k1,
@@ -82,7 +81,12 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
 	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
 
-	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances)
+	totalSupply := sdk.NewCoins()
+	for _, b := range balances {
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances, totalSupply)
 	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
@@ -154,8 +158,8 @@ func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []crypto.PubK
 // setTotalSupply provides the total supply based on accAmt * totalAccounts.
 func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
-	prevSupply := app.SupplyKeeper.GetSupply(ctx)
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+	prevSupply := app.BankKeeper.GetSupply(ctx)
+	app.BankKeeper.SetSupply(ctx, bank.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an

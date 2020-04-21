@@ -26,6 +26,7 @@ type Fixtures struct {
 	SimdHome     string
 	SimcliHome   string
 	P2PAddr      string
+	Cdc          *codec.Codec
 	T            *testing.T
 }
 
@@ -40,6 +41,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
+	cdc := codec.New()
 	buildDir := os.Getenv("BUILDDIR")
 	if buildDir == "" {
 		buildDir, err = filepath.Abs("../../build/")
@@ -56,6 +58,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:      servAddr,
 		P2PAddr:      p2pAddr,
+		Cdc:          cdc,
 		Port:         port,
 	}
 }
@@ -67,11 +70,10 @@ func (f Fixtures) GenesisFile() string {
 
 // GenesisFile returns the application's genesis state
 func (f Fixtures) GenesisState() simapp.GenesisState {
-	cdc := codec.New()
 	genDoc, err := tmtypes.GenesisDocFromFile(f.GenesisFile())
 	require.NoError(f.T, err)
 
 	var appState simapp.GenesisState
-	require.NoError(f.T, cdc.UnmarshalJSON(genDoc.AppState, &appState))
+	require.NoError(f.T, f.Cdc.UnmarshalJSON(genDoc.AppState, &appState))
 	return appState
 }

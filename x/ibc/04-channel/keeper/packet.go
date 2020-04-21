@@ -241,7 +241,8 @@ func (k Keeper) PacketExecuted(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRecvPacket,
-			sdk.NewAttribute(types.AttributeKeyData, string(acknowledgement)),
+			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
+			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 			sdk.NewAttribute(types.AttributeKeyTimeout, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),

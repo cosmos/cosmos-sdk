@@ -56,9 +56,11 @@ Other notes:
 
 - Looking for a good place to start contributing? How about checking out some
   [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-- Please make sure to use `gofmt` before every commit - the easiest way to do
-  this is have your editor run it for you upon saving a file. Additionally
-  please ensure that your code is lint compliant by running `make lint`
+- Please make sure to run `make format` before every commit - the easiest way
+  to do this is have your editor run it for you upon saving a file. Additionally
+  please ensure that your code is lint compliant by running `golangci-lint run`.
+  A convenience git `pre-commit` hook that runs the formatters automatically
+  before each commit is available in the `contrib/githooks/` directory.
 
 ## Architecture Decision Records (ADR)
 

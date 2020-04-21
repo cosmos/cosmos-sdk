@@ -94,13 +94,6 @@ jobs:
           target: test-sim-multi-seed-long
           description: "Test multi-seed simulation (long)"
 
-  test-cli:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim
-          description: "Test client integration"
-
   update-swagger-docs:
     executor: golang
     steps:

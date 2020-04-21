@@ -2,9 +2,11 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {

@@ -2,10 +2,11 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 // InitFixtures is called at the beginning of a test  and initializes a chain

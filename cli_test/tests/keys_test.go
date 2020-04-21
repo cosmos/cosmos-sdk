@@ -2,9 +2,11 @@ package tests
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
 )
 
 func TestCLIKeysAddMultisig(t *testing.T) {

@@ -7,11 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/staking"
+
+	"github.com/stretchr/testify/require"
+
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -162,4 +165,115 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.SimcliBinary, f.SimcliHome, key, value)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags))
+}
+
+// TxSend is gaiacli tx send
+func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
+		to, amount, f.Flags())
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxSign is gaiacli tx sign
+func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx sign %v --keyring-backend=test --from=%s %v", f.SimcliBinary,
+		f.Flags(), signer, fileName)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxBroadcast is gaiacli tx broadcast
+func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxEncode is gaiacli tx encode
+func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxMultisign is gaiacli tx multisign
+func (f *Fixtures) TxMultisign(fileName, name string, signaturesFiles []string,
+	flags ...string) (bool, string, string) {
+
+	cmd := fmt.Sprintf("%s tx multisign --keyring-backend=test %v %s %s %s", f.SimcliBinary, f.Flags(),
+		fileName, name, strings.Join(signaturesFiles, " "),
+	)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags))
+}
+
+//___________________________________________________________________________________
+// gaiacli tx staking
+
+// TxStakingCreateValidator is gaiacli tx staking create-validator
+func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking create-validator %v --keyring-backend=test --from=%s"+
+		" --pubkey=%s", f.SimcliBinary, f.Flags(), from, consPubKey)
+	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
+	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
+	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxStakingUnbond is gaiacli tx staking unbond
+func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
+	cmd := fmt.Sprintf("%s tx staking unbond --keyring-backend=test %s %v --from=%s %v",
+		f.SimcliBinary, validator, shares, from, f.Flags())
+	return executeWrite(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// QueryStakingValidator is gaiacli query staking validator
+func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string) staking.Validator {
+	cmd := fmt.Sprintf("%s query staking validator %s %v", f.SimcliBinary, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var validator staking.Validator
+
+	err := cdc.UnmarshalJSON([]byte(out), &validator)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return validator
+}
+
+// QueryStakingUnbondingDelegationsFrom is gaiacli query staking unbonding-delegations-from
+func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
+	cmd := fmt.Sprintf("%s query staking unbonding-delegations-from %s %v", f.SimcliBinary, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var ubds []staking.UnbondingDelegation
+
+	err := cdc.UnmarshalJSON([]byte(out), &ubds)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return ubds
+}
+
+// QueryStakingDelegationsTo is gaiacli query staking delegations-to
+func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
+	cmd := fmt.Sprintf("%s query staking delegations-to %s %v", f.SimcliBinary, valAddr, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var delegations []staking.Delegation
+
+	err := cdc.UnmarshalJSON([]byte(out), &delegations)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return delegations
+}
+
+// QueryStakingPool is gaiacli query staking pool
+func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
+	cmd := fmt.Sprintf("%s query staking pool %v", f.SimcliBinary, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var pool staking.Pool
+
+	err := cdc.UnmarshalJSON([]byte(out), &pool)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return pool
+}
+
+// QueryStakingParameters is gaiacli query staking parameters
+func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
+	cmd := fmt.Sprintf("%s query staking params %v", f.SimcliBinary, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var params staking.Params
+
+	err := cdc.UnmarshalJSON([]byte(out), &params)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return params
 }

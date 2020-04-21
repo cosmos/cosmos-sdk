@@ -162,9 +162,9 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 }
 
 //___________________________________________________________________________________
-// gaiacli query account
+// simcli query account
 
-// QueryAccount is gaiacli query account
+// QueryAccount is simcli query account
 func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.BaseAccount {
 	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -194,9 +194,9 @@ func (f *Fixtures) QueryBalances(address sdk.AccAddress, flags ...string) sdk.Co
 }
 
 //___________________________________________________________________________________
-// gaiacli query txs
+// simcli query txs
 
-// QueryTxs is gaiacli query txs
+// QueryTxs is simcli query txs
 func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsResult {
 	cmd := fmt.Sprintf("%s query txs --page=%d --limit=%d --events='%s' %v", f.SimcliBinary, page, limit, queryEvents(events), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -217,33 +217,33 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	executeWriteCheckErr(f.T, addFlags(cmd, flags))
 }
 
-// TxSend is gaiacli tx send
+// TxSend is simcli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
 		to, amount, f.Flags())
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxSign is gaiacli tx sign
+// TxSign is simcli tx sign
 func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx sign %v --keyring-backend=test --from=%s %v", f.SimcliBinary,
 		f.Flags(), signer, fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxBroadcast is gaiacli tx broadcast
+// TxBroadcast is simcli tx broadcast
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxEncode is gaiacli tx encode
+// TxEncode is simcli tx encode
 func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxMultisign is gaiacli tx multisign
+// TxMultisign is simcli tx multisign
 func (f *Fixtures) TxMultisign(fileName, name string, signaturesFiles []string,
 	flags ...string) (bool, string, string) {
 
@@ -254,9 +254,9 @@ func (f *Fixtures) TxMultisign(fileName, name string, signaturesFiles []string,
 }
 
 //___________________________________________________________________________________
-// gaiacli tx staking
+// simcli tx staking
 
-// TxStakingCreateValidator is gaiacli tx staking create-validator
+// TxStakingCreateValidator is simcli tx staking create-validator
 func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx staking create-validator %v --keyring-backend=test --from=%s"+
 		" --pubkey=%s", f.SimcliBinary, f.Flags(), from, consPubKey)
@@ -266,14 +266,14 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxStakingUnbond is gaiacli tx staking unbond
+// TxStakingUnbond is simcli tx staking unbond
 func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
 	cmd := fmt.Sprintf("%s tx staking unbond --keyring-backend=test %s %v --from=%s %v",
 		f.SimcliBinary, validator, shares, from, f.Flags())
 	return executeWrite(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// QueryStakingValidator is gaiacli query staking validator
+// QueryStakingValidator is simcli query staking validator
 func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string) staking.Validator {
 	cmd := fmt.Sprintf("%s query staking validator %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -285,7 +285,7 @@ func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string
 	return validator
 }
 
-// QueryStakingUnbondingDelegationsFrom is gaiacli query staking unbonding-delegations-from
+// QueryStakingUnbondingDelegationsFrom is simcli query staking unbonding-delegations-from
 func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegations-from %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -297,7 +297,7 @@ func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, 
 	return ubds
 }
 
-// QueryStakingDelegationsTo is gaiacli query staking delegations-to
+// QueryStakingDelegationsTo is simcli query staking delegations-to
 func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
 	cmd := fmt.Sprintf("%s query staking delegations-to %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -309,7 +309,7 @@ func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...st
 	return delegations
 }
 
-// QueryStakingPool is gaiacli query staking pool
+// QueryStakingPool is simcli query staking pool
 func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 	cmd := fmt.Sprintf("%s query staking pool %v", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -321,7 +321,7 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 	return pool
 }
 
-// QueryStakingParameters is gaiacli query staking parameters
+// QueryStakingParameters is simcli query staking parameters
 func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
 	cmd := fmt.Sprintf("%s query staking params %v", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -334,9 +334,9 @@ func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
 }
 
 //___________________________________________________________________________________
-// gaiacli tx gov
+// simcli tx gov
 
-// TxGovSubmitProposal is gaiacli tx gov submit-proposal
+// TxGovSubmitProposal is simcli tx gov submit-proposal
 func (f *Fixtures) TxGovSubmitProposal(from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov submit-proposal %v --keyring-backend=test --from=%s --type=%s",
 		f.SimcliBinary, f.Flags(), from, typ)
@@ -344,14 +344,14 @@ func (f *Fixtures) TxGovSubmitProposal(from, typ, title, description string, dep
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxGovDeposit is gaiacli tx gov deposit
+// TxGovDeposit is simcli tx gov deposit
 func (f *Fixtures) TxGovDeposit(proposalID int, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov deposit %d %s --keyring-backend=test --from=%s %v",
 		f.SimcliBinary, proposalID, amount, from, f.Flags())
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxGovVote is gaiacli tx gov vote
+// TxGovVote is simcli tx gov vote
 func (f *Fixtures) TxGovVote(proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov vote %d %s --keyring-backend=test --from=%s %v",
 		f.SimcliBinary, proposalID, option, from, f.Flags())
@@ -388,9 +388,9 @@ func (f *Fixtures) TxGovSubmitCommunityPoolSpendProposal(
 
 
 //___________________________________________________________________________________
-// gaiacli query gov
+// simcli query gov
 
-// QueryGovParamDeposit is gaiacli query gov param deposit
+// QueryGovParamDeposit is simcli query gov param deposit
 func (f *Fixtures) QueryGovParamDeposit() gov.DepositParams {
 	cmd := fmt.Sprintf("%s query gov param deposit %s", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -402,7 +402,7 @@ func (f *Fixtures) QueryGovParamDeposit() gov.DepositParams {
 	return depositParam
 }
 
-// QueryGovParamVoting is gaiacli query gov param voting
+// QueryGovParamVoting is simcli query gov param voting
 func (f *Fixtures) QueryGovParamVoting() gov.VotingParams {
 	cmd := fmt.Sprintf("%s query gov param voting %s", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -414,7 +414,7 @@ func (f *Fixtures) QueryGovParamVoting() gov.VotingParams {
 	return votingParam
 }
 
-// QueryGovParamTallying is gaiacli query gov param tallying
+// QueryGovParamTallying is simcli query gov param tallying
 func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 	cmd := fmt.Sprintf("%s query gov param tallying %s", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -426,7 +426,7 @@ func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 	return tallyingParam
 }
 
-// QueryGovProposals is gaiacli query gov proposals
+// QueryGovProposals is simcli query gov proposals
 func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	cmd := fmt.Sprintf("%s query gov proposals %v", f.SimcliBinary, f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -442,7 +442,7 @@ func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	return out
 }
 
-// QueryGovProposal is gaiacli query gov proposal
+// QueryGovProposal is simcli query gov proposal
 func (f *Fixtures) QueryGovProposal(proposalID int, flags ...string) gov.Proposal {
 	cmd := fmt.Sprintf("%s query gov proposal %d %v", f.SimcliBinary, proposalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -454,7 +454,7 @@ func (f *Fixtures) QueryGovProposal(proposalID int, flags ...string) gov.Proposa
 	return proposal
 }
 
-// QueryGovVote is gaiacli query gov vote
+// QueryGovVote is simcli query gov vote
 func (f *Fixtures) QueryGovVote(proposalID int, voter sdk.AccAddress, flags ...string) gov.Vote {
 	cmd := fmt.Sprintf("%s query gov vote %d %s %v", f.SimcliBinary, proposalID, voter, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -466,7 +466,7 @@ func (f *Fixtures) QueryGovVote(proposalID int, voter sdk.AccAddress, flags ...s
 	return vote
 }
 
-// QueryGovVotes is gaiacli query gov votes
+// QueryGovVotes is simcli query gov votes
 func (f *Fixtures) QueryGovVotes(proposalID int, flags ...string) []gov.Vote {
 	cmd := fmt.Sprintf("%s query gov votes %d %v", f.SimcliBinary, proposalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -478,7 +478,7 @@ func (f *Fixtures) QueryGovVotes(proposalID int, flags ...string) []gov.Vote {
 	return votes
 }
 
-// QueryGovDeposit is gaiacli query gov deposit
+// QueryGovDeposit is simcli query gov deposit
 func (f *Fixtures) QueryGovDeposit(proposalID int, depositor sdk.AccAddress, flags ...string) gov.Deposit {
 	cmd := fmt.Sprintf("%s query gov deposit %d %s %v", f.SimcliBinary, proposalID, depositor, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -490,7 +490,7 @@ func (f *Fixtures) QueryGovDeposit(proposalID int, depositor sdk.AccAddress, fla
 	return deposit
 }
 
-// QueryGovDeposits is gaiacli query gov deposits
+// QueryGovDeposits is simcli query gov deposits
 func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposit {
 	cmd := fmt.Sprintf("%s query gov deposits %d %v", f.SimcliBinary, propsalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")

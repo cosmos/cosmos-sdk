@@ -217,6 +217,7 @@ functionality that requires an online connection.
 * (client) [\#5895](https://github.com/cosmos/cosmos-sdk/issues/5895) show config options in the config command's help screen.
 * (types/rest) [\#5900](https://github.com/cosmos/cosmos-sdk/pull/5900) Add Check*Error function family to spare developers from replicating tons of boilerplate code.
 * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Tendermint Consensus parameters can now be changed via parameter change proposals through `x/gov`.
+* (x/auth/ante) [\#6040](https://github.com/cosmos/cosmos-sdk/pull/6040) `AccountKeeper` interface used for `NewAnteHandler` and handler's decorators to add support of using custom `AccountKeeper` implementations.
 
 ## [v0.38.3] - 2020-04-09
 

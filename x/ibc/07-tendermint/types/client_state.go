@@ -12,6 +12,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -32,7 +33,7 @@ type ClientState struct {
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 	// Last Header that was stored by client
-	LastHeader Header
+	LastHeader Header `json:"last_header" yaml:"last_header"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
@@ -124,7 +125,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryLengthPrefixed(consensusState)
+	bz, err := cdc.MarshalBinaryBare(consensusState)
 	if err != nil {
 		return err
 	}
@@ -156,7 +157,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryLengthPrefixed(connectionEnd)
+	bz, err := cdc.MarshalBinaryBare(connectionEnd)
 	if err != nil {
 		return err
 	}
@@ -189,7 +190,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryLengthPrefixed(channel)
+	bz, err := cdc.MarshalBinaryBare(channel)
 	if err != nil {
 		return err
 	}
@@ -250,7 +251,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); err != nil {
+	if err := proof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 

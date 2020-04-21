@@ -22,7 +22,19 @@ all: tools build lint test
 
 build: go.sum
 	@go build -mod=readonly ./...
-.PHONY: build
+
+build-sim: go.sum
+ifeq ($(OS),Windows_NT)
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
+else
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
+endif
+
+.PHONY: \
+ build \
+ build-sim
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -107,7 +119,7 @@ test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)

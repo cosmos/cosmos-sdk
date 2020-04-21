@@ -21,6 +21,7 @@ const (
 	EventTypeTimeoutPacket     = "timeout_packet"
 
 	AttributeKeyData             = "packet_data"
+	AttributeKeyAck              = "packet_ack"
 	AttributeKeyTimeoutHeight    = "packet_timeout_height"
 	AttributeKeyTimeoutTimestamp = "packet_timeout_timestamp"
 	AttributeKeySequence         = "packet_sequence"

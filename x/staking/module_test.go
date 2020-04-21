@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -22,9 +22,9 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, bank.NewModuleAddress(staking.BondedPoolName))
+	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(staking.BondedPoolName))
 	require.NotNil(t, acc)
 
-	acc = app.AccountKeeper.GetAccount(ctx, bank.NewModuleAddress(staking.NotBondedPoolName))
+	acc = app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(staking.NotBondedPoolName))
 	require.NotNil(t, acc)
 }

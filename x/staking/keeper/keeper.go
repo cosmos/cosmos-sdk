@@ -24,6 +24,7 @@ var _ types.DelegationSet = Keeper{}
 type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.Marshaler
+	authKeeper         types.AccountKeeper
 	bankKeeper         types.BankKeeper
 	hooks              types.StakingHooks
 	paramstore         paramtypes.Subspace
@@ -33,7 +34,8 @@ type Keeper struct {
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, bk types.BankKeeper, ps paramtypes.Subspace,
+	cdc codec.Marshaler, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
+	ps paramtypes.Subspace,
 ) Keeper {
 
 	// set KeyTable if it has not already been set
@@ -42,17 +44,18 @@ func NewKeeper(
 	}
 
 	// ensure bonded and not bonded module accounts are set
-	if addr := bk.GetModuleAddress(types.BondedPoolName); addr == nil {
+	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
 	}
 
-	if addr := bk.GetModuleAddress(types.NotBondedPoolName); addr == nil {
+	if addr := ak.GetModuleAddress(types.NotBondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
 	return Keeper{
 		storeKey:           key,
 		cdc:                cdc,
+		authKeeper:         ak,
 		bankKeeper:         bk,
 		paramstore:         ps,
 		hooks:              nil,

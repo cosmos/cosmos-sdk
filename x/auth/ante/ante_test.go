@@ -359,7 +359,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdkerrors.ErrInsufficientFunds)
 
-	modAcc := app.BankKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
+	modAcc := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 
 	require.True(t, app.BankKeeper.GetAllBalances(ctx, modAcc.GetAddress()).Empty())
 	require.True(sdk.IntEq(t, app.BankKeeper.GetAllBalances(ctx, addr1).AmountOf("atom"), sdk.NewInt(149)))

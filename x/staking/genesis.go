@@ -105,7 +105,7 @@ func InitGenesis(
 			panic(err)
 		}
 
-		bankKeeper.SetModuleAccount(ctx, bondedPool)
+		accountKeeper.SetModuleAccount(ctx, bondedPool)
 	}
 
 	notBondedPool := keeper.GetNotBondedPool(ctx)
@@ -118,7 +118,7 @@ func InitGenesis(
 			panic(err)
 		}
 
-		bankKeeper.SetModuleAccount(ctx, notBondedPool)
+		accountKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
 	// don't need to run Tendermint updates if we exported

@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/version"
 )
 
 // Copied unimported test functions from tmtypes to use them here
@@ -25,7 +24,7 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
 	vsetHash := valSet.Hash()
 	tmHeader := tmtypes.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
+		// Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,

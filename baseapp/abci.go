@@ -91,7 +91,7 @@ func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// FilterPeerByIDfilters peers by node ID.
+// FilterPeerByID filters peers by node ID.
 func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 	if app.idPeerFilter != nil {
 		return app.idPeerFilter(info)

@@ -32,11 +32,11 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &abci.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  1814400,
 	},
-	Validator: &abci.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 			tmtypes.ABCIPubKeyTypeSecp256k1,

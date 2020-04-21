@@ -15,10 +15,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -32,9 +32,9 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
 	require.NoError(t, err)
-	app.SupplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+	app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
 
 	return app, ctx, addrDels, addrVals
 }

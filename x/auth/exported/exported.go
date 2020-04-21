@@ -29,6 +29,16 @@ type Account interface {
 	String() string
 }
 
+// ModuleAccountI defines an account interface for modules that hold tokens in
+// an escrow.
+type ModuleAccountI interface {
+	Account
+
+	GetName() string
+	GetPermissions() []string
+	HasPermission(string) bool
+}
+
 // GenesisAccounts defines a slice of GenesisAccount objects
 type GenesisAccounts []GenesisAccount
 

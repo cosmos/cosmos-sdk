@@ -7,16 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 var (
 	_ auth.Codec     = (*Codec)(nil)
-	_ supply.Codec   = (*Codec)(nil)
+	_ bank.Codec     = (*Codec)(nil)
 	_ evidence.Codec = (*Codec)(nil)
 	_ gov.Codec      = (*Codec)(nil)
 )
@@ -77,7 +77,7 @@ func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
 // MarshalSupply marshals a SupplyI interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalSupply(supplyI supplyexported.SupplyI) ([]byte, error) {
+func (c *Codec) MarshalSupply(supplyI bankexported.SupplyI) ([]byte, error) {
 	supply := &Supply{}
 	if err := supply.SetSupplyI(supplyI); err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (c *Codec) MarshalSupply(supplyI supplyexported.SupplyI) ([]byte, error) {
 
 // UnmarshalSupply returns a SupplyI interface from raw encoded account bytes
 // of a Proto-based SupplyI type. An error is returned upon decoding failure.
-func (c *Codec) UnmarshalSupply(bz []byte) (supplyexported.SupplyI, error) {
+func (c *Codec) UnmarshalSupply(bz []byte) (bankexported.SupplyI, error) {
 	supply := &Supply{}
 	if err := c.Marshaler.UnmarshalBinaryBare(bz, supply); err != nil {
 		return nil, err
@@ -99,12 +99,12 @@ func (c *Codec) UnmarshalSupply(bz []byte) (supplyexported.SupplyI, error) {
 
 // MarshalSupplyJSON JSON encodes a supply object implementing the SupplyI
 // interface.
-func (c *Codec) MarshalSupplyJSON(supply supplyexported.SupplyI) ([]byte, error) {
+func (c *Codec) MarshalSupplyJSON(supply bankexported.SupplyI) ([]byte, error) {
 	return c.Marshaler.MarshalJSON(supply)
 }
 
 // UnmarshalSupplyJSON returns a SupplyI from JSON encoded bytes.
-func (c *Codec) UnmarshalSupplyJSON(bz []byte) (supplyexported.SupplyI, error) {
+func (c *Codec) UnmarshalSupplyJSON(bz []byte) (bankexported.SupplyI, error) {
 	supply := &Supply{}
 	if err := c.Marshaler.UnmarshalJSON(bz, supply); err != nil {
 		return nil, err

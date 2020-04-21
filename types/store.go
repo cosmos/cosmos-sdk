@@ -76,6 +76,7 @@ const (
 	StoreTypeDB        = types.StoreTypeDB
 	StoreTypeIAVL      = types.StoreTypeIAVL
 	StoreTypeTransient = types.StoreTypeTransient
+	StoreTypeMemory    = types.StoreTypeMemory
 )
 
 // nolint - reexport
@@ -84,6 +85,7 @@ type (
 	CapabilityKey     = types.CapabilityKey
 	KVStoreKey        = types.KVStoreKey
 	TransientStoreKey = types.TransientStoreKey
+	MemoryStoreKey    = types.MemoryStoreKey
 )
 
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
@@ -115,6 +117,17 @@ func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 	keys := make(map[string]*TransientStoreKey)
 	for _, name := range names {
 		keys[name] = NewTransientStoreKey(name)
+	}
+
+	return keys
+}
+
+// NewMemoryStoreKeys constructs a new map matching store key names to their
+// respective MemoryStoreKey references.
+func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
+	keys := make(map[string]*MemoryStoreKey)
+	for _, name := range names {
+		keys[name] = types.NewMemoryStoreKey(name)
 	}
 
 	return keys

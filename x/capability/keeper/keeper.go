@@ -135,10 +135,11 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 func (k Keeper) InitializeIndex(ctx sdk.Context) {
 	// set the global index to start at 1 if it is unset
 	index := k.GetLatestIndex(ctx)
-	if index == 0 {
-		store := ctx.KVStore(k.storeKey)
-		store.Set(types.KeyIndex, types.IndexToKey(1))
+	if index != 0 {
+		return
 	}
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.KeyIndex, types.IndexToKey(1))
 }
 
 // GetLatestIndex returns the latest index of the CapabilityKeeper

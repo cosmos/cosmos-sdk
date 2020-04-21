@@ -63,7 +63,7 @@ func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection t
 	store.Set(ibctypes.KeyConnection(connectionID), bz)
 }
 
-// GetTimestampAtHeight returns the timestamp of the consensus state at the
+// GetTimestampAtHeight returns the timestamp in nanoseconds of the consensus state at the
 // given height.
 func (k Keeper) GetTimestampAtHeight(ctx sdk.Context, connection types.ConnectionEnd, height uint64) (uint64, error) {
 	consensusState, found := k.clientKeeper.GetClientConsensusState(

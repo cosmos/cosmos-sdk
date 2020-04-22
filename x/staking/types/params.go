@@ -28,7 +28,7 @@ const (
 
 	// DefaultHistorical entries is 0 since it must only be non-zero for
 	// IBC connected chains
-	DefaultHistoricalEntries uint32 = 0
+	DefaultHistoricalEntries uint32 = 1000
 )
 
 // nolint - Keys for parameter access

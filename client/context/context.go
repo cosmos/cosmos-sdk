@@ -74,8 +74,9 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		}
 	}
 
+	trustNode := viper.GetBool(flags.FlagTrustNode)
 	// We need to use a single verifier for all contexts
-	if verifier == nil || verifierHome != viper.GetString(flags.FlagHome) {
+	if !trustNode && (verifier == nil || verifierHome != viper.GetString(flags.FlagHome)) {
 		verifier = createVerifier()
 		verifierHome = viper.GetString(flags.FlagHome)
 	}
@@ -87,7 +88,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		From:          viper.GetString(flags.FlagFrom),
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
-		TrustNode:     viper.GetBool(flags.FlagTrustNode),
+		TrustNode:     trustNode,
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Verifier:      verifier,
@@ -105,16 +106,6 @@ func NewCLIContextWithFrom(from string) CLIContext {
 func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom)) }
 
 func createVerifier() tmlite.Verifier {
-	trustNodeDefined := viper.IsSet(flags.FlagTrustNode)
-	if !trustNodeDefined {
-		return nil
-	}
-
-	trustNode := viper.GetBool(flags.FlagTrustNode)
-	if trustNode {
-		return nil
-	}
-
 	chainID := viper.GetString(flags.FlagChainID)
 	home := viper.GetString(flags.FlagHome)
 	nodeURI := viper.GetString(flags.FlagNode)

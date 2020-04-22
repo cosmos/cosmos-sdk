@@ -3,15 +3,17 @@ package common
 import (
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	cdc := codec.New()
-	ctx := context.NewCLIContext().WithCodec(cdc)
+	viper.Set(flags.FlagTrustNode, true)
+	ctx := context.NewCLIContext().WithCodec(codec.New())
 	type args struct {
 		delAddr string
 		valAddr string

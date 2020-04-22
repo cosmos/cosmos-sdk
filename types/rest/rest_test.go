@@ -10,11 +10,13 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -162,6 +164,7 @@ func TestProcessPostResponse(t *testing.T) {
 		Sequence      uint64           `json:"sequence"`
 	}
 
+	viper.Set(flags.FlagTrustNode, true)
 	// setup
 	ctx := context.NewCLIContext()
 	height := int64(194423)

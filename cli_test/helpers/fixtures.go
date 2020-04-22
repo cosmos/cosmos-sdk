@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,7 +28,17 @@ type Fixtures struct {
 	SimdHome     string
 	SimcliHome   string
 	P2PAddr      string
+	Cdc          *codec.Codec
 	T            *testing.T
+}
+
+var (
+	cdc      = codecstd.MakeCodec(simapp.ModuleBasics)
+	appCodec = codecstd.NewAppCodec(cdc)
+)
+
+func init() {
+	authclient.Codec = appCodec
 }
 
 // NewFixtures creates a new instance of Fixtures with many vars set
@@ -42,7 +54,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 
 	buildDir := os.Getenv("BUILDDIR")
 	if buildDir == "" {
-		buildDir, err = filepath.Abs("../../build/")
+		buildDir, err = filepath.Abs("../../../../build/")
 		require.NoError(t, err)
 	}
 
@@ -56,6 +68,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:      servAddr,
 		P2PAddr:      p2pAddr,
+		Cdc:          cdc,
 		Port:         port,
 	}
 }
@@ -67,11 +80,10 @@ func (f Fixtures) GenesisFile() string {
 
 // GenesisFile returns the application's genesis state
 func (f Fixtures) GenesisState() simapp.GenesisState {
-	cdc := codec.New()
 	genDoc, err := tmtypes.GenesisDocFromFile(f.GenesisFile())
 	require.NoError(f.T, err)
 
 	var appState simapp.GenesisState
-	require.NoError(f.T, cdc.UnmarshalJSON(genDoc.AppState, &appState))
+	require.NoError(f.T, f.Cdc.UnmarshalJSON(genDoc.AppState, &appState))
 	return appState
 }

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"github.com/stretchr/testify/require"
@@ -266,6 +266,24 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
+func (f *Fixtures) TxStakingEditValidator(from string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking edit-validator %v --keyring-backend=test "+
+		"--from=%s", f.SimcliBinary, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+func (f *Fixtures) TxStakingDelegate(validatorOperatorAddress, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking delegate %s %v %v --keyring-backend=test "+
+		"--from=%s", f.SimcliBinary, validatorOperatorAddress, amount, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+func (f *Fixtures) TxStakingReDelegate(srcOperatorAddress, dstOperatorAddress, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx staking redelegate %s %s %v %v --keyring-backend=test "+
+		"--from=%s", f.SimcliBinary, srcOperatorAddress, dstOperatorAddress, amount, f.Flags(), from)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
 // TxStakingUnbond is simcli tx staking unbond
 func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
 	cmd := fmt.Sprintf("%s tx staking unbond --keyring-backend=test %s %v --from=%s %v",
@@ -279,8 +297,7 @@ func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var validator staking.Validator
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &validator)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return validator
 }
@@ -291,8 +308,7 @@ func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, 
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var ubds []staking.UnbondingDelegation
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &ubds)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return ubds
 }
@@ -303,8 +319,7 @@ func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...st
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var delegations []staking.Delegation
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &delegations)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return delegations
 }
@@ -315,8 +330,7 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var pool staking.Pool
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &pool)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &pool)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return pool
 }
@@ -327,8 +341,7 @@ func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var params staking.Params
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &params)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return params
 }

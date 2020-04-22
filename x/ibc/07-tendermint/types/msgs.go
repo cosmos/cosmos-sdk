@@ -32,19 +32,22 @@ type MsgCreateClient struct {
 	Header          Header         `json:"header" yaml:"header"`
 	TrustingPeriod  time.Duration  `json:"trusting_period" yaml:"trusting_period"`
 	UnbondingPeriod time.Duration  `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration  `json:"max_clock_drift" yaml:"max_clock_drift"`
 	Signer          sdk.AccAddress `json:"address" yaml:"address"`
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, header Header,
-	trustingPeriod, unbondingPeriod time.Duration, signer sdk.AccAddress,
+	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
 ) MsgCreateClient {
+
 	return MsgCreateClient{
 		ClientID:        id,
 		Header:          header,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
+		MaxClockDrift:   maxClockDrift,
 		Signer:          signer,
 	}
 }

@@ -116,7 +116,7 @@ func TestAppImportExport(t *testing.T) {
 
 	fmt.Printf("exporting genesis...\n")
 
-	appState, _, _, err := app.ExportAppStateAndValidators(false, []string{})
+	appState, _, consensusParams, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
 
 	fmt.Printf("importing genesis...\n")
@@ -139,6 +139,7 @@ func TestAppImportExport(t *testing.T) {
 	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.Codec(), genesisState)
+	newApp.StoreConsensusParams(ctxB, consensusParams)
 
 	fmt.Printf("comparing stores...\n")
 

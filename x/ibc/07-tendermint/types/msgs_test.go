@@ -17,14 +17,14 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		expPass bool
 		errMsg  string
 	}{
-		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, trustingPeriod, ubdPeriod, signer), true, "success msg should pass"},
-		{ibctmtypes.NewMsgCreateClient("BADCHAIN", suite.header, trustingPeriod, ubdPeriod, signer), false, "invalid client id passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, signer), false, "unregistered client type passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, signer), false, "invalid Consensus State in msg passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, 0, ubdPeriod, signer), false, "zero trusting period passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, 0, signer), false, "zero unbonding period passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, nil), false, "Empty address passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, nil), false, "Empty chain ID"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), true, "success msg should pass"},
+		{ibctmtypes.NewMsgCreateClient("BADCHAIN", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "invalid client id passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "unregistered client type passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "invalid Consensus State in msg passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, 0, ubdPeriod, maxClockDrift, signer), false, "zero trusting period passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, 0, maxClockDrift, signer), false, "zero unbonding period passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, nil), false, "Empty address passed"},
+		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, nil), false, "Empty chain ID"},
 	}
 
 	for i, tc := range cases {

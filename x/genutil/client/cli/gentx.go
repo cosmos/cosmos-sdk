@@ -138,7 +138,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			if key.GetType() == keyring.TypeOffline || key.GetType() == keyring.TypeMulti {
-				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
+				cmd.PrintErrln("Offline key passed in. Use `tx sign` command to sign.")
 				return authclient.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
@@ -175,7 +175,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 
-			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
+			cmd.PrintErrf("Genesis transaction written to %q\n", outputDocument)
 			return nil
 
 		},

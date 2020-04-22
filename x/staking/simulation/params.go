@@ -28,7 +28,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyHistoricalEntries),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GetHistEntries(r))
+				return fmt.Sprintf("%d", GetHistEntries(r))
 			},
 		),
 	}

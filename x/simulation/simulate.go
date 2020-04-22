@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+const AverageBlockTime = 6 * time.Second
+
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
@@ -25,9 +27,12 @@ func initChain(
 
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
+	consensusParams := RandomConsensusParams(r, appState)
+
 	req := abci.RequestInitChain{
-		AppStateBytes: appState,
-		ChainId:       chainID,
+		AppStateBytes:   appState,
+		ChainId:         chainID,
+		ConsensusParams: consensusParams,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
@@ -108,7 +113,7 @@ func SimulateFromSeed(
 
 	// These are operations which have been queued by previous operations
 	operationQueue := NewOperationQueue()
-	timeOperationQueue := []simulation.FutureOperation{}
+	var timeOperationQueue []simulation.FutureOperation
 
 	logWriter := NewLogWriter(testingMode)
 

@@ -130,6 +130,14 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	k.sealed = true
 }
 
+// SetIndex sets the index to one in InitChain
+// Since it is an exported function, we check that index is indeed unset, before initializing
+func (k Keeper) SetIndex(ctx sdk.Context, index uint64) {
+	// set the global index to the passed index
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.KeyIndex, types.IndexToKey(index))
+}
+
 // GetLatestIndex returns the latest index of the CapabilityKeeper
 func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)

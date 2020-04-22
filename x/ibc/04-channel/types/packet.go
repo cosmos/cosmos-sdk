@@ -35,7 +35,7 @@ type Packet struct {
 	DestinationPort    string `json:"destination_port" yaml:"destination_port"`       // identifies the port on the receiving chain.
 	DestinationChannel string `json:"destination_channel" yaml:"destination_channel"` // identifies the channel end on the receiving chain.
 	TimeoutHeight      uint64 `json:"timeout_height" yaml:"timeout_height"`           // block height after which the packet times out
-	TimeoutTimestamp   uint64 `json:"timeout_timestamp" yaml:"timeout_timestamp"`     // block timestamp after which the packet times out
+	TimeoutTimestamp   uint64 `json:"timeout_timestamp" yaml:"timeout_timestamp"`     // block timestamp (in nanoseconds) after which the packet times out
 }
 
 // NewPacket creates a new Packet instance

@@ -46,7 +46,12 @@ const (
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
+  maxClockDrift  time.Duration = time.Second * 10
+
+	timeoutHeight            = 100
+	timeoutTimestamp         = 100
+	disabledTimeoutTimestamp = 0
+	disabledTimeoutHeight    = 0
 )
 
 type KeeperTestSuite struct {
@@ -192,6 +197,12 @@ func commitNBlocks(chain *TestChain, n int) {
 		chain.App.Commit()
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1}})
 	}
+}
+
+// commit current block and start the next block with the provided time
+func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
+	chain.App.Commit()
+	chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1, Time: time.Unix(timestamp, 0)}})
 }
 
 // nolint: unused

@@ -36,7 +36,13 @@ const (
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
+  maxClockDrift  time.Duration = time.Second * 10
+
+	nextTimestamp = 10 // increment used for the next header's timestamp
+)
+
+var (
+	timestamp = time.Now() // starting timestamp for the client test chain
 )
 
 type KeeperTestSuite struct {
@@ -124,6 +130,42 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	suite.Require().ElementsMatch(expConnections, connections)
 }
 
+// TestGetTimestampAtHeight verifies if the clients on each chain return the correct timestamp
+// for the other chain.
+func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
+	cases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"verification success", func() {
+			suite.chainA.CreateClient(suite.chainB)
+		}, true},
+		{"client state not found", func() {}, false},
+	}
+
+	for i, tc := range cases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			// create and store a connection to chainB on chainA
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
+
+			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
+				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height),
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().EqualValues(uint64(suite.chainB.Header.Time.UnixNano()), actualTimestamp)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
+}
+
 // TestChain is a testing struct that wraps a simapp with the latest Header, Vals and Signers
 // It also contains a field called ClientID. This is the clientID that *other* chains use
 // to refer to this TestChain. For simplicity's sake it is also the chainID on the TestChain Header
@@ -146,9 +188,8 @@ func NewTestChain(clientID string) *TestChain {
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
-	now := time.Now()
 
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
+	header := ibctmtypes.CreateTestHeader(clientID, 1, timestamp, valSet, signers)
 
 	return &TestChain{
 		ClientID: clientID,
@@ -321,7 +362,7 @@ func (chain *TestChain) createChannel(
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
-		time.Now(), chain.Vals, chain.Signers)
+		chain.Header.Time.Add(nextTimestamp), chain.Vals, chain.Signers)
 }
 
 func prefixedClientKey(clientID string, key []byte) []byte {

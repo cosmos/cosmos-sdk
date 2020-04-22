@@ -118,7 +118,6 @@ func TestAppImportExport(t *testing.T) {
 
 	appState, _, consensusParams, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
-	fmt.Printf("%v", consensusParams)
 
 	fmt.Printf("importing genesis...\n")
 

@@ -303,6 +303,7 @@ func PrepareFlagsForTxCreateValidator(
 	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))
 	viper.Set(FlagNodeID, nodeID)
 	viper.Set(FlagIP, ip)
+	viper.Set(client.FlagTrustNode, true)
 	viper.Set(FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
 	viper.Set(FlagMoniker, config.Moniker)
 	viper.Set(FlagWebsite, website)

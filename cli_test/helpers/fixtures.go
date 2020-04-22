@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -30,6 +32,15 @@ type Fixtures struct {
 	T            *testing.T
 }
 
+var (
+	cdc      = codecstd.MakeCodec(simapp.ModuleBasics)
+	appCodec = codecstd.NewAppCodec(cdc)
+)
+
+func init() {
+	authclient.Codec = appCodec
+}
+
 // NewFixtures creates a new instance of Fixtures with many vars set
 func NewFixtures(t *testing.T) *Fixtures {
 	tmpDir, err := ioutil.TempDir("", "sdk_integration_"+t.Name()+"_")
@@ -41,7 +52,6 @@ func NewFixtures(t *testing.T) *Fixtures {
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
-	cdc := codec.New()
 	buildDir := os.Getenv("BUILDDIR")
 	if buildDir == "" {
 		buildDir, err = filepath.Abs("../../build/")

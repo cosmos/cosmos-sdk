@@ -34,7 +34,7 @@ func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Height
 }
 
-// GetTimestamp returns block time at which the consensus state was stored
+// GetTimestamp returns block time in nanoseconds at which the consensus state was stored
 func (cs ConsensusState) GetTimestamp() uint64 {
 	return uint64(cs.Timestamp.UnixNano())
 }

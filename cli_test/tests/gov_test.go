@@ -5,7 +5,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"path/filepath"
 	"testing"
 	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
 
@@ -150,5 +153,133 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Len(t, proposalsQuery, 2)
 	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
+	f.Cleanup()
+}
+
+func TestGaiaCLISubmitParamChangeProposal(t *testing.T) {
+	t.Parallel()
+	f := helpers.InitFixtures(t)
+
+	proc := f.SDStart()
+	defer proc.Stop(false)
+
+	fooAddr := f.KeyAddress(helpers.KeyFoo)
+	startTokens := sdk.TokensFromConsensusPower(50)
+	require.Equal(t, startTokens, f.QueryBalances(fooAddr).AmountOf(sdk.DefaultBondDenom))
+
+	// write proposal to file
+	proposalTokens := sdk.TokensFromConsensusPower(5)
+	proposal := fmt.Sprintf(`{
+  "title": "Param Change",
+  "description": "Update max validators",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "MaxValidators",
+      "value": 105
+    }
+  ],
+  "deposit": "%sstake"
+}
+`, proposalTokens.String())
+
+	proposalFile := helpers.WriteToNewTempFile(t, proposal)
+
+	// create the param change proposal
+	f.TxGovSubmitParamChangeProposal(helpers.KeyFoo, proposalFile.Name(), sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// ensure transaction events can be queried
+	txsPage := f.QueryTxs(1, 50, "message.action=submit_proposal", fmt.Sprintf("message.sender=%s", fooAddr))
+	require.Len(t, txsPage.Txs, 1)
+
+	// ensure deposit was deducted
+	require.Equal(t, startTokens.Sub(proposalTokens).String(), f.QueryBalances(fooAddr).AmountOf(sdk.DefaultBondDenom).String())
+
+	// ensure proposal is directly queryable
+	proposal1 := f.QueryGovProposal(1)
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
+
+	// ensure correct query proposals result
+	proposalsQuery := f.QueryGovProposals()
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+
+	// ensure the correct deposit amount on the proposal
+	deposit := f.QueryGovDeposit(1, fooAddr)
+	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(helpers.Denom))
+
+	// Cleanup testing directories
+	f.Cleanup()
+}
+
+func TestGaiaCLISubmitCommunityPoolSpendProposal(t *testing.T) {
+	t.Parallel()
+	f := helpers.InitFixtures(t)
+
+	// create some inflation
+	genesisState := f.GenesisState()
+	inflationMin := sdk.MustNewDecFromStr("1.0")
+	var mintData mint.GenesisState
+	cdc.UnmarshalJSON(genesisState[mint.ModuleName], &mintData)
+	mintData.Minter.Inflation = inflationMin
+	mintData.Params.InflationMin = inflationMin
+	mintData.Params.InflationMax = sdk.MustNewDecFromStr("1.0")
+	mintDataBz, err := cdc.MarshalJSON(mintData)
+	require.NoError(t, err)
+	genesisState[mint.ModuleName] = mintDataBz
+
+	genFile := filepath.Join(f.SimdHome, "config", "genesis.json")
+	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
+	require.NoError(t, err)
+	genDoc.AppState, err = cdc.MarshalJSON(genesisState)
+	require.NoError(t, genDoc.SaveAs(genFile))
+
+	proc := f.SDStart()
+	defer proc.Stop(false)
+
+	fooAddr := f.KeyAddress(helpers.KeyFoo)
+	startTokens := sdk.TokensFromConsensusPower(50)
+	require.Equal(t, startTokens, f.QueryBalances(fooAddr).AmountOf(sdk.DefaultBondDenom))
+
+	tests.WaitForNextNBlocksTM(3, f.Port)
+
+	// write proposal to file
+	proposalTokens := sdk.TokensFromConsensusPower(5)
+	proposal := fmt.Sprintf(`{
+  "title": "Community Pool Spend",
+  "description": "Spend from community pool",
+  "recipient": "%s",
+  "amount": "1%s",
+  "deposit": "%s%s"
+}
+`, fooAddr, sdk.DefaultBondDenom, proposalTokens.String(), sdk.DefaultBondDenom)
+	proposalFile := helpers.WriteToNewTempFile(t, proposal)
+
+	// create the param change proposal
+	f.TxGovSubmitCommunityPoolSpendProposal(helpers.KeyFoo, proposalFile.Name(), sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// ensure transaction events can be queried
+	txsPage := f.QueryTxs(1, 50, "message.action=submit_proposal", fmt.Sprintf("message.sender=%s", fooAddr))
+	require.Len(t, txsPage.Txs, 1)
+
+	// ensure deposit was deducted
+	require.Equal(t, startTokens.Sub(proposalTokens).String(), f.QueryBalances(fooAddr).AmountOf(sdk.DefaultBondDenom).String())
+
+	// ensure proposal is directly queryable
+	proposal1 := f.QueryGovProposal(1)
+	require.Equal(t, uint64(1), proposal1.ProposalID)
+	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
+
+	// ensure correct query proposals result
+	proposalsQuery := f.QueryGovProposals()
+	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+
+	// ensure the correct deposit amount on the proposal
+	deposit := f.QueryGovDeposit(1, fooAddr)
+	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(helpers.Denom))
+
+	// Cleanup testing directories
 	f.Cleanup()
 }

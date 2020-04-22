@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -93,7 +94,7 @@ func (k Keeper) SendPacket(
 	if packet.GetTimeoutTimestamp() != 0 && latestTimestamp >= packet.GetTimeoutTimestamp() {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"receiving chain block timestamp >= packet timeout timestamp (%d >= %d)", latestTimestamp, packet.GetTimeoutTimestamp(),
+			"receiving chain block timestamp >= packet timeout timestamp (%s >= %s)", time.Unix(0, int64(latestTimestamp)), time.Unix(0, int64(packet.GetTimeoutTimestamp())),
 		)
 	}
 
@@ -195,7 +196,7 @@ func (k Keeper) RecvPacket(
 	if packet.GetTimeoutTimestamp() != 0 && uint64(ctx.BlockTime().UnixNano()) >= packet.GetTimeoutTimestamp() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"block timestamp >= packet timeout timestamp (%d >= %d)", uint64(ctx.BlockTime().UnixNano()), packet.GetTimeoutTimestamp(),
+			"block timestamp >= packet timeout timestamp (%s >= %s)", ctx.BlockTime(), time.Unix(0, int64(packet.GetTimeoutTimestamp())),
 		)
 	}
 

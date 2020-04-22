@@ -1,4 +1,4 @@
-package tests
+package cli_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/cli_test/helpers"

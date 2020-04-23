@@ -1,7 +1,6 @@
 package std
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -118,22 +117,24 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (bankexported.SupplyI, error) {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
-	return codec.MarshalAny(evidenceI)
+	evidence := &Evidence{}
+	if err := evidence.SetEvidence(evidenceI); err != nil {
+		return nil, err
+	}
+
+	return c.Marshaler.MarshalBinaryBare(evidence)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
 // bytes of a Proto-based Evidence type. An error is returned upon decoding
 // failure.
 func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
-	x, err := codec.UnmarshalAny(bz)
-	if err != nil {
+	evidence := &Evidence{}
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, evidence); err != nil {
 		return nil, err
 	}
-	evi, ok := x.(eviexported.Evidence)
-	if !ok {
-		return nil, fmt.Errorf("couldn't unmarshal evidence")
-	}
-	return evi, nil
+
+	return evidence.GetEvidence(), nil
 }
 
 // MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence

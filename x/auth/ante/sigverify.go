@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -49,10 +48,10 @@ type SigVerifiableTx interface {
 // PubKeys must be set in context for all signers before any other sigverify decorators run
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SetPubKeyDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewSetPubKeyDecorator(ak keeper.AccountKeeper) SetPubKeyDecorator {
+func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
 	return SetPubKeyDecorator{
 		ak: ak,
 	}
@@ -104,11 +103,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigGasConsumeDecorator struct {
-	ak             keeper.AccountKeeper
+	ak             AccountKeeper
 	sigGasConsumer SignatureVerificationGasConsumer
 }
 
-func NewSigGasConsumeDecorator(ak keeper.AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) SigGasConsumeDecorator {
+func NewSigGasConsumeDecorator(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) SigGasConsumeDecorator {
 	return SigGasConsumeDecorator{
 		ak:             ak,
 		sigGasConsumer: sigGasConsumer,
@@ -159,10 +158,10 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewSigVerificationDecorator(ak keeper.AccountKeeper) SigVerificationDecorator {
+func NewSigVerificationDecorator(ak AccountKeeper) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak: ak,
 	}
@@ -226,10 +225,10 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 // a reliable way unless sequence numbers are managed and tracked manually by a
 // client. It is recommended to instead use multiple messages in a tx.
 type IncrementSequenceDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewIncrementSequenceDecorator(ak keeper.AccountKeeper) IncrementSequenceDecorator {
+func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator {
 	return IncrementSequenceDecorator{
 		ak: ak,
 	}
@@ -264,10 +263,10 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 // Use this decorator to set parameterized limit on number of signatures in tx
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type ValidateSigCountDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewValidateSigCountDecorator(ak keeper.AccountKeeper) ValidateSigCountDecorator {
+func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	return ValidateSigCountDecorator{
 		ak: ak,
 	}
@@ -340,7 +339,7 @@ func ConsumeMultisignatureVerificationGas(
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak keeper.AccountKeeper, addr sdk.AccAddress) (exported.Account, error) {
+func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (exported.Account, error) {
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, nil
 	}

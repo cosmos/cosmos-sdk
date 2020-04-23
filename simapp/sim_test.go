@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -117,7 +118,7 @@ func TestAppImportExport(t *testing.T) {
 
 	fmt.Printf("exporting genesis...\n")
 
-	appState, _, _, err := app.ExportAppStateAndValidators(false, []string{})
+	appState, _, consensusParams, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
 
 	fmt.Printf("importing genesis...\n")
@@ -140,6 +141,7 @@ func TestAppImportExport(t *testing.T) {
 	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.Codec(), genesisState)
+	newApp.StoreConsensusParams(ctxB, consensusParams)
 
 	fmt.Printf("comparing stores...\n")
 
@@ -156,6 +158,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[bank.StoreKey], newApp.keys[bank.StoreKey], [][]byte{bank.BalancesPrefix}},
 		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
 		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
+		{app.keys[evidence.StoreKey], newApp.keys[evidence.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
@@ -166,7 +169,7 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
-		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, app.Codec(), failedKVAs, failedKVBs))
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -48,10 +47,10 @@ type TxWithMemo interface {
 // If memo is too large decorator returns with error, otherwise call next AnteHandler
 // CONTRACT: Tx must implement TxWithMemo interface
 type ValidateMemoDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewValidateMemoDecorator(ak keeper.AccountKeeper) ValidateMemoDecorator {
+func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 	return ValidateMemoDecorator{
 		ak: ak,
 	}
@@ -86,10 +85,10 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 // CONTRACT: To use this decorator, signatures of transaction must be represented
 // as types.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
 type ConsumeTxSizeGasDecorator struct {
-	ak keeper.AccountKeeper
+	ak AccountKeeper
 }
 
-func NewConsumeGasForTxSizeDecorator(ak keeper.AccountKeeper) ConsumeTxSizeGasDecorator {
+func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator {
 	return ConsumeTxSizeGasDecorator{
 		ak: ak,
 	}

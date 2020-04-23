@@ -75,7 +75,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	cmd.Flags().Uint32(flagCoinType, sdk.CoinType, "coin type number for HD derivation")
+	cmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")

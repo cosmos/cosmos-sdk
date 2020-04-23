@@ -32,6 +32,7 @@ var (
 
 // AppModuleBasic defines the basic application module used by the gov module.
 type AppModuleBasic struct {
+	cdc              Codec
 	proposalHandlers []client.ProposalHandler // proposal handlers which live in governance cli and rest
 }
 
@@ -106,9 +107,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc Codec, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -192,8 +193,8 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for gov module's types
-func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

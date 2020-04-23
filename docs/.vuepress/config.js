@@ -70,9 +70,9 @@ module.exports = {
       title: "Help & Support",
       editLink: true,
       chat: {
-        title: "Riot Chat",
-        text: "Chat with Cosmos developers on Riot Chat.",
-        url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org",
+        title: "Discord",
+        text: "Chat with Cosmos developers on Discord.",
+        url: "https://discordapp.com/channels/669268347736686612",
         bg: "linear-gradient(225.11deg, #2E3148 0%, #161931 95.68%)"
       },
       forum: {

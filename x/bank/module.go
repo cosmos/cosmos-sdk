@@ -28,7 +28,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc Codec
+}
 
 // Name returns the bank module's name.
 func (AppModuleBasic) Name() string { return ModuleName }
@@ -78,9 +80,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
+func NewAppModule(cdc Codec, keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 	}
@@ -153,8 +155,8 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

@@ -47,9 +47,7 @@ func ExportGenesisFileWithTime(
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config,
-) (nodeID string, valPubKey crypto.PubKey, err error) {
-
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err

@@ -262,17 +262,17 @@ func NewSimApp(
 	// must be passed by reference here.
 	app.mm = module.NewManager(
 		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx),
-		auth.NewAppModule(app.AccountKeeper),
-		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
+		auth.NewAppModule(appCodec, app.AccountKeeper),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(*app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),
-		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.MintKeeper, app.AccountKeeper),
-		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
+		evidence.NewAppModule(appCodec, app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
@@ -281,6 +281,7 @@ func NewSimApp(
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
+	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
 		upgrade.ModuleName, mint.ModuleName, distr.ModuleName, slashing.ModuleName,
 		evidence.ModuleName, staking.ModuleName, ibc.ModuleName,
@@ -289,8 +290,11 @@ func NewSimApp(
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
+	// NOTE: Capability module must occur first so that it can initialize any capabilities
+	// so that other modules that want to create or claim capabilities afterwards in InitChain
+	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		auth.ModuleName, distr.ModuleName, staking.ModuleName, bank.ModuleName,
+		capability.ModuleName, auth.ModuleName, distr.ModuleName, staking.ModuleName, bank.ModuleName,
 		slashing.ModuleName, gov.ModuleName, mint.ModuleName, crisis.ModuleName,
 		ibc.ModuleName, genutil.ModuleName, evidence.ModuleName, transfer.ModuleName,
 	)
@@ -303,14 +307,15 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(app.AccountKeeper),
-		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
-		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(app.MintKeeper, app.AccountKeeper),
-		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		auth.NewAppModule(appCodec, app.AccountKeeper),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
+		evidence.NewAppModule(appCodec, app.EvidenceKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -339,6 +344,8 @@ func NewSimApp(
 	// Initialize and seal the capability keeper so all persistent capabilities
 	// are loaded in-memory and prevent any further modules from creating scoped
 	// sub-keepers.
+	// This must be done during creation of baseapp rather than in InitChain so
+	// that in-memory capabilities get regenerated on app restart
 	ctx := app.BaseApp.NewContext(true, tmproto.Header{})
 	app.CapabilityKeeper.InitializeAndSeal(ctx)
 

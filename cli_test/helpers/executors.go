@@ -9,16 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
-func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
-	require.True(t, executeWrite(t, cmdStr, writes...))
+func ExecuteWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
+	require.True(t, ExecuteWrite(t, cmdStr, writes...))
 }
 
-func executeWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
-	exitSuccess, _, _ = executeWriteRetStdStreams(t, cmdStr, writes...)
+func ExecuteWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
+	exitSuccess, _, _ = ExecuteWriteRetStdStreams(t, cmdStr, writes...)
 	return
 }
 
-func executeWriteRetStdStreams(t *testing.T, cmdStr string, writes ...string) (bool, string, string) {
+func ExecuteWriteRetStdStreams(t *testing.T, cmdStr string, writes ...string) (bool, string, string) {
 	proc := tests.GoExecuteT(t, cmdStr)
 
 	// Enables use of interactive commands

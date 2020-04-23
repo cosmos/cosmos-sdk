@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -16,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
+
+var cdc = codecstd.MakeCodec(simapp.ModuleBasics)
 
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
@@ -31,15 +31,6 @@ type Fixtures struct {
 	P2PAddr      string
 	Cdc          *codec.Codec
 	T            *testing.T
-}
-
-var (
-	cdc      = codecstd.MakeCodec(simapp.ModuleBasics)
-	appCodec = codecstd.NewAppCodec(cdc)
-)
-
-func init() {
-	authclient.Codec = appCodec
 }
 
 // NewFixtures creates a new instance of Fixtures with many vars set

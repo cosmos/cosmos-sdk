@@ -10,6 +10,8 @@ import (
 )
 
 func TestConnectionValidateBasic(t *testing.T) {
+	connectionID := "connectionidone"
+	clientID := "clientidone"
 	testCases := []struct {
 		name       string
 		connection ConnectionEnd
@@ -17,27 +19,32 @@ func TestConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
 			true,
 		},
 		{
+			"invalid connection id",
+			ConnectionEnd{exported.INIT, "connectionIDONE", clientID, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			false,
+		},
+		{
 			"invalid client id",
-			ConnectionEnd{exported.INIT, "ClientIDTwo", Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			ConnectionEnd{exported.INIT, connectionID, "ClientIDTwo", Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
 			false,
 		},
 		{
 			"empty versions",
-			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, nil},
+			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, nil},
 			false,
 		},
 		{
 			"invalid version",
-			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{""}},
+			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{"clientidtwo", "connectionidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{""}},
 			false,
 		},
 		{
 			"invalid counterparty",
-			ConnectionEnd{exported.INIT, "clientidone", Counterparty{"clientidtwo", "connectionidone", nil}, []string{"1.0.0"}},
+			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{"clientidtwo", "connectionidone", nil}, []string{"1.0.0"}},
 			false,
 		},
 	}

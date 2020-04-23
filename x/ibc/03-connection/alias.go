@@ -69,4 +69,5 @@ type (
 	ConnectionResponse           = types.ConnectionResponse
 	ClientConnectionsResponse    = types.ClientConnectionsResponse
 	QueryClientConnectionsParams = types.QueryClientConnectionsParams
+	GenesisState                 = types.GenesisState
 )

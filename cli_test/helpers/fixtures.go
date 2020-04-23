@@ -1,12 +1,13 @@
 package helpers
 
 import (
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -53,10 +54,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 	require.NoError(t, err)
 
 	buildDir := os.Getenv("BUILDDIR")
-	if buildDir == "" {
-		buildDir, err = filepath.Abs("../../../../build/")
-		require.NoError(t, err)
-	}
+	require.NotNil(t, buildDir)
 
 	return &Fixtures{
 		T:            t,

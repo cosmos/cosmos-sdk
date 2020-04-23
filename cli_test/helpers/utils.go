@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func addFlags(cmd string, flags []string) string {
+func AddFlags(cmd string, flags []string) string {
 	for _, f := range flags {
 		cmd += " " + f
 	}

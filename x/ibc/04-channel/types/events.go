@@ -21,6 +21,7 @@ const (
 	EventTypeTimeoutPacket     = "timeout_packet"
 
 	AttributeKeyData       = "packet_data"
+	AttributeKeyAck        = "packet_ack"
 	AttributeKeyTimeout    = "packet_timeout"
 	AttributeKeySequence   = "packet_sequence"
 	AttributeKeySrcPort    = "packet_src_port"

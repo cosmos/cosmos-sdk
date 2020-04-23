@@ -6,10 +6,12 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
+BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
+export BUILDDIR
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -195,7 +197,7 @@ test-sim-profile:
 .PHONY: test-sim-profile test-sim-benchmark
 
 test-cover:
-	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
 
 benchmark:

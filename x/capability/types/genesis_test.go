@@ -7,7 +7,6 @@ import (
 )
 
 func TestValidateGenesis(t *testing.T) {
-
 	testCases := []struct {
 		name     string
 		genState GenesisState
@@ -25,6 +24,14 @@ func TestValidateGenesis(t *testing.T) {
 				Owners: []Owner{{Module: "ibc", Name: "port/transfer"}},
 			},
 			expPass: true,
+		},
+		{
+			name: "invalid index",
+			genState: GenesisState{
+				Index:  0,
+				Owners: []Owner{{Module: "ibc", Name: "port/transfer"}},
+			},
+			expPass: false,
 		},
 		{
 			name: "blank owner module",
@@ -46,7 +53,7 @@ func TestValidateGenesis(t *testing.T) {
 
 	for _, tc := range testCases {
 		tc := tc
-		err := ValidateGenesis(tc.genState)
+		err := tc.genState.Validate()
 		if tc.expPass {
 			require.NoError(t, err, tc.name)
 		} else {

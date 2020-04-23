@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -24,11 +25,14 @@ func DefaultGenesis() GenesisState {
 	}
 }
 
-// ValidateGenesis validates the capability GenesiState. It returns an error if
+// Validate validates the capability GenesiState. It returns an error if
 // an owner contains a blank field.
-func ValidateGenesis(data GenesisState) error {
-	// NOTE: Index 0 is supported
-	for _, owner := range data.Owners {
+func (gs GenesisState) Validate() error {
+	if gs.Index == 0 {
+		return errors.New("global index cannot be 0")
+	}
+
+	for _, owner := range gs.Owners {
 		if strings.TrimSpace(owner.Module) == "" {
 			return fmt.Errorf("owner's module cannot be blank: %s", owner)
 		}
@@ -36,5 +40,6 @@ func ValidateGenesis(data GenesisState) error {
 			return fmt.Errorf("owner's name cannot be blank: %s", owner)
 		}
 	}
+
 	return nil
 }

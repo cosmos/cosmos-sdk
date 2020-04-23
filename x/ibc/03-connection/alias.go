@@ -47,6 +47,7 @@ var (
 	LatestVersion                    = types.LatestVersion
 	PickVersion                      = types.PickVersion
 	DefaultGenesisState              = types.DefaultGenesisState
+	NewGenesisState                  = types.NewGenesisState
 
 	// variable aliases
 	SubModuleCdc                   = types.SubModuleCdc
@@ -71,4 +72,5 @@ type (
 	ClientConnectionsResponse    = types.ClientConnectionsResponse
 	QueryClientConnectionsParams = types.QueryClientConnectionsParams
 	GenesisState                 = types.GenesisState
+	ConnectionPaths              = types.ConnectionPaths
 )

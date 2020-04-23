@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -81,6 +82,12 @@ func (c ConnectionEnd) ValidateBasic() error {
 		if strings.TrimSpace(version) == "" {
 			return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 		}
+	}
+	if c.ID == c.Counterparty.ConnectionID {
+		return fmt.Errorf("connection ID (%s) must be different from counterparty ID (%s)", c.ID, c.Counterparty.ConnectionID)
+	}
+	if c.ClientID == c.Counterparty.ClientID {
+		return fmt.Errorf("client ID (%s) must be different from counterparty's client ID (%s)", c.ClientID, c.Counterparty.ClientID)
 	}
 	return c.Counterparty.ValidateBasic()
 }

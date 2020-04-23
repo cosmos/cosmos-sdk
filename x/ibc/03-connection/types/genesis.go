@@ -12,7 +12,7 @@ type ConnectionPaths struct {
 	Paths    []string `json:"paths" yaml:"paths"`
 }
 
-// GenesisState defines the evidence module's genesis state.
+// GenesisState defines the ibc connection submodule's genesis state.
 type GenesisState struct {
 	Connections           []ConnectionEnd   `json:"connections" yaml:"connections"`
 	ClientConnectionPaths []ConnectionPaths `json:"client_connection_paths" yaml:"client_connection_paths"`

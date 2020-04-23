@@ -46,6 +46,7 @@ var (
 	GetCompatibleVersions            = types.GetCompatibleVersions
 	LatestVersion                    = types.LatestVersion
 	PickVersion                      = types.PickVersion
+	DefaultGenesisState              = types.DefaultGenesisState
 
 	// variable aliases
 	SubModuleCdc                   = types.SubModuleCdc

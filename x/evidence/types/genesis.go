@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
@@ -27,7 +29,10 @@ func DefaultGenesisState() GenesisState {
 // Validate performs basic gensis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	for _, e := range gs.Evidence {
+	for i, e := range gs.Evidence {
+		if e == nil {
+			return fmt.Errorf("evidence %d cannot be nil", i)
+		}
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}

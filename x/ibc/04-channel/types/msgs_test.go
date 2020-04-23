@@ -354,13 +354,15 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 
 // define variables used for testing
 var (
-	timeout           = uint64(100)
+	timeoutHeight     = uint64(100)
+	timeoutTimestamp  = uint64(100)
+	disabledTimeout   = uint64(0)
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
 	invalidAckData    = []byte("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
 
-	packet        = NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, 100)
-	unknownPacket = NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, 100)
+	packet        = NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
+	unknownPacket = NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 	invalidAck    = invalidAckData
 
 	emptyProof     = commitmenttypes.MerkleProof{Proof: nil}
@@ -425,7 +427,7 @@ func TestMsgPacketGetSignBytes(t *testing.T) {
 	res := msg.GetSignBytes()
 
 	expected := fmt.Sprintf(
-		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
+		`{"type":"ibc/channel/MsgPacket","value":{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":"100","timeout_timestamp":"100"},"proof":{"type":"ibc/commitment/MerkleProof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`,
 		string(msg.GetDataSignBytes()),
 	)
 	require.Equal(t, expected, string(res))

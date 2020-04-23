@@ -54,7 +54,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 
 	buildDir := os.Getenv("BUILDDIR")
 	if buildDir == "" {
-		buildDir, err = filepath.Abs("../../build/")
+		buildDir = os.ExpandEnv("$GOPATH/src/github.com/cosmos/cosmos-sdk/build")
 		require.NoError(t, err)
 	}
 

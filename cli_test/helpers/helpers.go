@@ -173,9 +173,8 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 	require.NoError(f.T, err, "out %v, err %v", out, err)
 	value := initRes["value"]
 	var acc auth.BaseAccount
-	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
-	err = cdc.UnmarshalJSON(value, &acc)
+	err = f.Cdc.UnmarshalJSON(value, &acc)
 	require.NoError(f.T, err, "value %v, err %v", string(value), err)
 	return acc
 }
@@ -187,8 +186,7 @@ func (f *Fixtures) QueryBalances(address sdk.AccAddress, flags ...string) sdk.Co
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 
 	var balances sdk.Coins
-	cdc := codec.New()
-	require.NoError(f.T, cdc.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
+	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
 
 	return balances
 }
@@ -202,8 +200,7 @@ func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsRes
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var result sdk.SearchTxsResult
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &result)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &result)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return &result
 }
@@ -399,7 +396,6 @@ func (f *Fixtures) TxGovSubmitCommunityPoolSpendProposal(
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-
 //___________________________________________________________________________________
 // simcli query gov
 
@@ -409,8 +405,7 @@ func (f *Fixtures) QueryGovParamDeposit() gov.DepositParams {
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var depositParam gov.DepositParams
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &depositParam)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &depositParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return depositParam
 }
@@ -421,8 +416,7 @@ func (f *Fixtures) QueryGovParamVoting() gov.VotingParams {
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var votingParam gov.VotingParams
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &votingParam)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &votingParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return votingParam
 }
@@ -433,8 +427,7 @@ func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var tallyingParam gov.TallyParams
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &tallyingParam)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &tallyingParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return tallyingParam
 }
@@ -449,8 +442,7 @@ func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	require.Empty(f.T, stderr)
 	var out gov.Proposals
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(stdout), &out)
+	err := f.Cdc.UnmarshalJSON([]byte(stdout), &out)
 	require.NoError(f.T, err)
 	return out
 }
@@ -461,8 +453,7 @@ func (f *Fixtures) QueryGovProposal(proposalID int, flags ...string) gov.Proposa
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var proposal gov.Proposal
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &proposal)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &proposal)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return proposal
 }
@@ -473,8 +464,7 @@ func (f *Fixtures) QueryGovVote(proposalID int, voter sdk.AccAddress, flags ...s
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var vote gov.Vote
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &vote)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return vote
 }
@@ -485,8 +475,7 @@ func (f *Fixtures) QueryGovVotes(proposalID int, flags ...string) []gov.Vote {
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var votes []gov.Vote
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &votes)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &votes)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return votes
 }
@@ -497,8 +486,7 @@ func (f *Fixtures) QueryGovDeposit(proposalID int, depositor sdk.AccAddress, fla
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var deposit gov.Deposit
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &deposit)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &deposit)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return deposit
 }
@@ -509,8 +497,7 @@ func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposi
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var deposits []gov.Deposit
 
-	cdc := codec.New()
-	err := cdc.UnmarshalJSON([]byte(out), &deposits)
+	err := f.Cdc.UnmarshalJSON([]byte(out), &deposits)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return deposits
 }

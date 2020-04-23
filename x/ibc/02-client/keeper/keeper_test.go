@@ -29,6 +29,7 @@ const (
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
+	maxClockDrift  time.Duration = time.Second * 10
 )
 
 type KeeperTestSuite struct {
@@ -54,7 +55,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
-	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
+
+	pubKey, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+
+	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.header = ibctmtypes.CreateTestHeader(testClientID, testClientHeight, now2, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.ConsensusState{
@@ -67,7 +72,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	var validators staking.Validators
 	for i := 1; i < 11; i++ {
 		privVal := tmtypes.NewMockPV()
-		pk := privVal.GetPubKey()
+		pk, err := privVal.GetPubKey()
+		suite.Require().NoError(err)
 		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
@@ -82,7 +88,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, ibctmtypes.Header{})
+	clientState := ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{})
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -113,9 +119,9 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
 	}
 
 	for i := range expClients {
@@ -155,7 +161,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, _ := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+	clientState, _ := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 

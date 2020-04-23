@@ -1,4 +1,4 @@
-package cli_test
+package cli
 
 import (
 	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
@@ -26,13 +26,13 @@ func TestCLISend(t *testing.T) {
 	sendTokens := sdk.TokensFromConsensusPower(10)
 
 	// It does not allow to send in offline mode
-	success, _, stdErr := f.TxSend(helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y", "--offline")
+	success, _, stdErr := TxSend(f, helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y", "--offline")
 	require.Contains(t, stdErr, "no RPC client is defined in offline mode")
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Send some tokens from one account to the other
-	f.TxSend(helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y")
+	TxSend(f, helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
@@ -40,12 +40,12 @@ func TestCLISend(t *testing.T) {
 	require.Equal(t, startTokens.Sub(sendTokens), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
 
 	// Test --dry-run
-	success, _, _ = f.TxSend(helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "--dry-run")
+	success, _, _ = TxSend(f, helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "--dry-run")
 	require.True(t, success)
 
 	// Test --generate-only
-	success, stdout, stderr := f.TxSend(
-		fooAddr.String(), barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "--generate-only=true",
+	success, stdout, stderr := TxSend(
+		f, fooAddr.String(), barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "--generate-only=true",
 	)
 	require.Empty(t, stderr)
 	require.True(t, success)
@@ -59,7 +59,7 @@ func TestCLISend(t *testing.T) {
 	require.Equal(t, startTokens.Sub(sendTokens), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
 
 	// test autosequencing
-	f.TxSend(helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y")
+	TxSend(f, helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
@@ -67,7 +67,7 @@ func TestCLISend(t *testing.T) {
 	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(2)), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
 
 	// test memo
-	f.TxSend(helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "--memo='testmemo'", "-y")
+	TxSend(f, helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "--memo='testmemo'", "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected

@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
-	"strings"
 )
 
 // TxSend is gaiacli tx send
@@ -17,16 +16,6 @@ func TxSend(f *helpers.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin
 	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
 		to, amount, f.Flags())
 	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-// TxMultisign is gaiacli tx multisign
-func TxMultisign(f *helpers.Fixtures, fileName, name string, signaturesFiles []string,
-	flags ...string) (bool, string, string) {
-
-	cmd := fmt.Sprintf("%s tx multisign --keyring-backend=test %v %s %s %s", f.SimcliBinary, f.Flags(),
-		fileName, name, strings.Join(signaturesFiles, " "),
-	)
-	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags))
 }
 
 // QueryAccount is gaiacli query account

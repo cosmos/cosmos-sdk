@@ -19,16 +19,16 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB tmkv.Pair) string {
 		case bytes.Equal(kvA.Key, types.KeyIndex):
 			idxA := sdk.BigEndianToUint64(kvA.Value)
 			idxB := sdk.BigEndianToUint64(kvB.Value)
-			return fmt.Sprintf("Index A: %d\nIndex B: %d", idxA, idxB)
+			return fmt.Sprintf("Index A: %d\nIndex B: %d\n", idxA, idxB)
 
-		case bytes.Equal(kvA.Key, types.KeyPrefixIndexCapability):
+		case bytes.HasPrefix(kvA.Key, types.KeyPrefixIndexCapability):
 			var capOwnersA, capOwnersB types.CapabilityOwners
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &capOwnersA)
 			cdc.MustUnmarshalBinaryBare(kvB.Value, &capOwnersB)
-			return fmt.Sprintf("%v\n%v", capOwnersA, capOwnersB)
+			return fmt.Sprintf("CapabilityOwners A: %v\nCapabilityOwners B: %v\n", capOwnersA, capOwnersB)
 
 		default:
-			panic(fmt.Sprintf("invalid %s key prefix %X (%s)", types.ModuleName, kvA.Key, string(kvA.Key[:1])))
+			panic(fmt.Sprintf("invalid %s key prefix %X (%s)", types.ModuleName, kvA.Key, string(kvA.Key)))
 		}
 	}
 }

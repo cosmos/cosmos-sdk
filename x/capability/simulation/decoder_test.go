@@ -19,7 +19,7 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	capOwners := types.CapabilityOwners{
-		Owners: []types.Owner{{Module: "transfer", Name: "bank"}},
+		Owners: []types.Owner{{Module: "transfer", Name: "ports/transfer"}},
 	}
 
 	kvPairs := tmkv.Pairs{
@@ -40,8 +40,8 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"Index", "Index A: 10\nIndex B: 10"},
-		{"CapabilityOwners", fmt.Sprintf("%v\n%v", capOwners, capOwners)},
+		{"Index", "Index A: 10\nIndex B: 10\n"},
+		{"CapabilityOwners", fmt.Sprintf("CapabilityOwners A: %v\nCapabilityOwners B: %v\n", capOwners, capOwners)},
 		{"other", ""},
 	}
 

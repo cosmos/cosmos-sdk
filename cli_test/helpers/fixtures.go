@@ -66,6 +66,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:      servAddr,
 		P2PAddr:      p2pAddr,
+		Cdc:          cdc,
 		Port:         port,
 	}
 }

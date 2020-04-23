@@ -7,7 +7,6 @@ import (
 )
 
 func TestValidateGenesis(t *testing.T) {
-
 	testCases := []struct {
 		name     string
 		malleate func(*GenesisState)

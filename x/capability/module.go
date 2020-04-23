@@ -57,11 +57,11 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the capability module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(genState)
 }
 
 // RegisterRESTRoutes registers the capability module's REST service handlers.
@@ -70,7 +70,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-// GetTxCmd returns the capability module's root query command.
+// GetQueryCmd returns the capability module's root query command.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 // ----------------------------------------------------------------------------

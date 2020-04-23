@@ -27,7 +27,7 @@ func DefaultGenesis() GenesisState {
 	}
 }
 
-// ValidateGenesis validates the capability GenesiState. It returns an error if
+// Validate validates the capability GenesiState. It returns an error if
 // an owner contains a blank field.
 func ValidateGenesis(data GenesisState) error {
 	// NOTE: Index must be greater than 0
@@ -55,5 +55,6 @@ func ValidateGenesis(data GenesisState) error {
 			}
 		}
 	}
+
 	return nil
 }

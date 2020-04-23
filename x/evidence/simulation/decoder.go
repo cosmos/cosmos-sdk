@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-// DONTCOVER
-
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding evidence type.
 func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {

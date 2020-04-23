@@ -15,9 +15,7 @@ import (
 )
 
 // Simulation parameter constants
-const (
-	evidence = "evidence"
-)
+const evidence = "evidence"
 
 // GenEvidences returns an empty slice of evidences.
 func GenEvidences(_ *rand.Rand, _ []simtypes.Account) []exported.Evidence {

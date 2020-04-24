@@ -2,6 +2,7 @@ package ibc
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -56,8 +57,13 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the ibc module.
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ json.RawMessage) error {
-	return nil
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+	var gs GenesisState
+	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+	}
+
+	return gs.Validate()
 }
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.
@@ -120,14 +126,20 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // InitGenesis performs genesis initialization for the ibc module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
+	var gs GenesisState
+	err := cdc.UnmarshalJSON(bz, &gs)
+	if err != nil {
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
+	}
+	InitGenesis(ctx, *am.keeper, gs)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the ibc
 // module.
-func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONMarshaler) json.RawMessage {
-	return nil
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(ExportGenesis(ctx, *am.keeper))
 }
 
 // BeginBlock returns the begin blocker for the ibc module.

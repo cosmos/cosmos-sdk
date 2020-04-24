@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
 	)
 	connection1 := types.NewConnectionEnd(
-		exported.UNINITIALIZED, testClientIDB, counterparty,
+		exported.UNINITIALIZED, testConnectionIDB, testClientIDB, counterparty,
 		types.GetCompatibleVersions(),
 	)
 
@@ -135,8 +135,8 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			}
 
 			// Create B's connection to A
-			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testClientIDA, counterparty, []string{"1.0.0"})
+			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	)
 
 	connection := types.NewConnectionEnd(
-		exported.UNINITIALIZED, testClientIDA, counterparty,
+		exported.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty,
 		types.GetCompatibleVersions(),
 	)
 

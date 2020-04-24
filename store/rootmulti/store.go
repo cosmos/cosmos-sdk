@@ -526,8 +526,8 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 		switch store := rs.GetCommitKVStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
-		case *transient.Store:
-			// Transient stores aren't persisted and shouldn't be snapshotted
+		case *transient.Store, *mem.Store:
+			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
 			return nil, errors.Errorf("don't know how to snapshot store %q of type %T", key.Name(), store)

@@ -35,10 +35,10 @@ func TestValidateGenesis(t *testing.T) {
 			genState: GenesisState{
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.ConnectionEnd{
-						{connectionexported.INIT, connectionID, clientID, connection.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+						connection.NewConnectionEnd(connectionexported.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					[]connection.ConnectionPaths{
-						{clientID, []string{ibctypes.ConnectionPath(connectionID)}},
+						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
 					},
 				),
 			},
@@ -49,7 +49,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: GenesisState{
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.ConnectionEnd{
-						connection.NewConnectionEnd(connectionexported.INIT, connectionID, clientID, connection.Counterparty{clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+						connection.NewConnectionEnd(connectionexported.INIT, connectionID, clientID, connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					nil,
 				),

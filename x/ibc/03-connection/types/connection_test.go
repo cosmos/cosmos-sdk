@@ -52,6 +52,16 @@ func TestConnectionValidateBasic(t *testing.T) {
 			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, nil}, []string{"1.0.0"}},
 			false,
 		},
+		{
+			"same connection ids",
+			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{clientID2, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			false,
+		},
+		{
+			"same client ids",
+			ConnectionEnd{exported.INIT, connectionID, clientID, Counterparty{clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+			false,
+		},
 	}
 
 	for i, tc := range testCases {

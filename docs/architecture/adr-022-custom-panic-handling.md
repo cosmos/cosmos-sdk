@@ -7,16 +7,17 @@
 ## Context
 
 Current implementation of BaseApp does not allow developers to write custom error handlers in
-[runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L538)
+[runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
 method. We think that this method can be more flexible and can give SDK users more options for customizations without
 the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error which feels like dirty
 hack in non-flexible environment.
 
-We propose middleware-solution, which could help developers implement following cases:
+We propose middleware-solution, which could help developers implement the following cases:
 * add external logging (let's say sending reports to external services like Sentry);
 * call panic for specific error cases;
 
 It will also make `OutOfGas` case and `default` case one of the middlewares.
+`Default` case wraps recovery object to an error and logs it ([example middleware implementation](#Recovery-middleware)).
 
 ## Decision
 
@@ -30,7 +31,7 @@ can be found [here](https://github.com/cosmos/cosmos-sdk/pull/6053).
 
 #### Implementation details
 
-##### RecoveryHandler
+##### Recovery handler
 
 We add a `recover()` object handler type:
 
@@ -58,19 +59,13 @@ func(recoveryObj interface{}) error {
 
 This example breaks the application execution, but it also might enrich the error's context like the `OutOfGas` handler.
 
-##### RecoveryMiddleware
+##### Recovery middleware
 
 We also add a middleware type:
 
 ```go
 type recoveryMiddleware func(recoveryObj interface{}) (recoveryMiddleware, error)
-```
 
-Function receives a `recover()` object and returns (`next middleware`, `nil`) if object wasn't handled (not a target type)
-or (`nil`, `error`) if input object was handled and other middlewares in the chain should not be executed.
-
-`OutOfGas` middleware example:
-```go
 func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) recoveryMiddleware {
     return func(recoveryObj interface{}) (recoveryMiddleware, error) {
         if err := handler(recoveryObj); err != nil {
@@ -79,7 +74,13 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
         return next, nil
     }
 }
+```
 
+Function receives a `recover()` object and returns (`next middleware`, `nil`) if object wasn't handled (not a target type)
+or (`nil`, `error`) if input object was handled and other middlewares in the chain should not be executed.
+
+`OutOfGas` middleware example:
+```go
 func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recoveryMiddleware) recoveryMiddleware {
     handler := func(recoveryObj interface{}) error {
         err, ok := recoveryObj.(sdk.ErrorOutOfGas)
@@ -93,6 +94,19 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
     }
     
     return newRecoveryMiddleware(handler, next)
+}
+```
+
+`Default` middleware example:
+```go
+func newDefaultRecoveryMiddleware() recoveryMiddleware {
+    handler := func(recoveryObj interface{}) error {
+        return sdkerrors.Wrap(
+            sdkerrors.ErrPanic, fmt.Sprintf("recovered: %v\nstack:\n%v", recoveryObj, string(debug.Stack())),
+        )
+    }
+    
+    return newRecoveryMiddleware(handler, nil)
 }
 ```
 

@@ -41,4 +41,4 @@ fi
 go mod tidy
 
 # Run golangci-lint
-which golangci-lint && golangci-lint run --fast --issues-exit-code=0 || f_echo_stderr "couldn't find golangci-lint"
+which golangci-lint &>/dev/null && golangci-lint run --fast --issues-exit-code=0 || f_echo_stderr "couldn't find golangci-lint"

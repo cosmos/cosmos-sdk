@@ -249,6 +249,9 @@ proto-all: proto-gen proto-lint proto-check-breaking
 proto-gen:
 	@./scripts/protocgen.sh
 
+proto-gen-any:
+	@./scripts/protocgen-any.sh
+
 proto-lint:
 	@buf check lint --error-format=json
 

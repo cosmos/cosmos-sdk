@@ -167,7 +167,8 @@ test-sim-benchmark-invariants:
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 test-cli: build-sim
-	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=cli_test -v
+	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=keys_cli_test -v
+	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
 
 .PHONY: \
 test-sim-nondeterminism \

@@ -102,13 +102,15 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	store.Set(ibctypes.KeyClientConnections(clientID), bz)
 }
 
-// GetAllClientConnectionPaths returns all stored clients connection id paths.
+// GetAllClientConnectionPaths returns all stored clients connection id paths. It
+// will ignore the clients that haven't initialized a connection handshake since
+// no paths are stored.
 func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionPaths {
 	var allConnectionPaths []types.ConnectionPaths
 	k.clientKeeper.IterateClients(ctx, func(cs clientexported.ClientState) bool {
 		paths, found := k.GetClientConnectionPaths(ctx, cs.GetID())
 		if !found {
-			// continue
+			// continue when connection handshake is not initialized
 			return false
 		}
 		connPaths := types.NewConnectionPaths(cs.GetID(), paths)

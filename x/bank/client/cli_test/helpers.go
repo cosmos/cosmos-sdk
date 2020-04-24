@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TxSend is gaiacli tx send
+// TxSend is simcli tx send
 func TxSend(f *helpers.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
 		to, amount, f.Flags())
 	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// QueryAccount is gaiacli query account
+// QueryAccount is simcli query account
 func QueryAccount(f *helpers.Fixtures, address sdk.AccAddress, flags ...string) auth.BaseAccount {
 	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")

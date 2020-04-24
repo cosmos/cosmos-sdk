@@ -20,24 +20,6 @@ func TxStakingCreateValidator(f *helpers.Fixtures, from, consPubKey string, amou
 	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-func TxStakingEditValidator(f *helpers.Fixtures, from string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx staking edit-validator %v --keyring-backend=test "+
-		"--from=%s", f.SimcliBinary, f.Flags(), from)
-	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-func TxStakingDelegate(f *helpers.Fixtures, validatorOperatorAddress, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx staking delegate %s %v %v --keyring-backend=test "+
-		"--from=%s", f.SimcliBinary, validatorOperatorAddress, amount, f.Flags(), from)
-	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-func TxStakingReDelegate(f *helpers.Fixtures, srcOperatorAddress, dstOperatorAddress, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx staking redelegate %s %s %v %v --keyring-backend=test "+
-		"--from=%s", f.SimcliBinary, srcOperatorAddress, dstOperatorAddress, amount, f.Flags(), from)
-	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
 // TxStakingUnbond is simcli tx staking unbond
 func TxStakingUnbond(f *helpers.Fixtures, from, shares string, validator sdk.ValAddress, flags ...string) bool {
 	cmd := fmt.Sprintf("%s tx staking unbond --keyring-backend=test %s %v --from=%s %v",

@@ -13,7 +13,7 @@ func TestCLISend(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
-	// start gaiad server
+	// start simd server
 	proc := f.SDStart()
 	defer proc.Stop(false)
 

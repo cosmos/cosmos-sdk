@@ -41,7 +41,7 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 	//
 	// A validator that is jailed but has no ValidatorSigningInfo object signals
 	// that the validator was never bonded and must've been jailed due to falling
-	// below their minimum self-delegation. The validator can unjail at point
+	// below their minimum self-delegation. The validator can unjail at any point
 	// assuming they've now bonded above their minimum self-delegation.
 	info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if found {

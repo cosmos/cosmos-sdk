@@ -1,0 +1,54 @@
+syntax = "proto3";
+package cosmos_sdk.tx.v1;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "types/types.proto";
+
+option go_package                       = "github.com/cosmos/cosmos-sdk/tx";
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all)         = false;
+
+message Transaction {
+    repeated google.protobuf.Any msgs = 1;
+    Fee fee = 2;
+    Signature signatures = 3;
+    string memo = 4;
+}
+
+// SignDoc defines a standard application-level signing document to compose
+// signatures for a Transaction.
+message SignDoc {
+    repeated google.protobuf.Any msgs = 1;
+    string chain_id = 2 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
+    uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
+    uint64 sequence = 4;
+    string memo = 5;
+    Fee fee = 6;
+}
+
+// Fee includes the amount of coins paid in fees and the maximum
+// gas to be used by the transaction. The ratio yields an effective "gasprice",
+// which must be above some miminum to be accepted into the mempool.
+message Fee {
+    option (gogoproto.goproto_getters) = false;
+    option (gogoproto.equal) = true;
+
+    repeated cosmos_sdk.v1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "Coins"];
+    uint64 gas = 2;
+}
+
+// Signature defines a signature structure that contains the signature of a
+// transaction and an optional public key.
+message Signature {
+    option (gogoproto.goproto_getters) = false;
+
+    PublicKey pub_key = 1 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
+    bytes signature = 2;
+}
+
+message PublicKey {
+    string type = 1;
+    bytes bytes = 2;
+}
+

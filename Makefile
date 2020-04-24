@@ -166,7 +166,7 @@ test-sim-benchmark-invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
-test-cli: build-sim
+cli-test: build-sim
 	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=keys_cli_test -v
 	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
 
@@ -179,7 +179,7 @@ test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
 test-sim-benchmark-invariants \
-test-cli
+cli-test
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

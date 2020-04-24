@@ -134,7 +134,8 @@ func (k Keeper) createOutgoingPacket(
 		sourceChannel,
 		destinationPort,
 		destinationChannel,
-		destHeight+DefaultPacketTimeout,
+		destHeight+DefaultPacketTimeoutHeight,
+		DefaultPacketTimeoutTimestamp,
 	)
 
 	return k.channelKeeper.SendPacket(ctx, channelCap, packet)

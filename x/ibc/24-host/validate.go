@@ -33,10 +33,10 @@ func defaultIdentifierValidator(id string, min, max int) error {
 }
 
 // DefaultClientIdentifierValidator is the default validator function for Client identifiers
-// A valid Identifier must be between 10-20 characters and only contain lowercase
+// A valid Identifier must be between 9-20 characters and only contain lowercase
 // alphabetic characters,
 func DefaultClientIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, 20)
+	return defaultIdentifierValidator(id, 9, 20)
 }
 
 // DefaultConnectionIdentifierValidator is the default validator function for Connection identifiers

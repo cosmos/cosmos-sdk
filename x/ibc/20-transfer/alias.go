@@ -12,20 +12,21 @@ import (
 )
 
 const (
-	DefaultPacketTimeout       = keeper.DefaultPacketTimeout
-	EventTypeTimeout           = types.EventTypeTimeout
-	EventTypePacket            = types.EventTypePacket
-	EventTypeChannelClose      = types.EventTypeChannelClose
-	AttributeKeyReceiver       = types.AttributeKeyReceiver
-	AttributeKeyValue          = types.AttributeKeyValue
-	AttributeKeyRefundReceiver = types.AttributeKeyRefundReceiver
-	AttributeKeyRefundValue    = types.AttributeKeyRefundValue
-	AttributeKeyAckSuccess     = types.AttributeKeyAckSuccess
-	AttributeKeyAckError       = types.AttributeKeyAckError
-	ModuleName                 = types.ModuleName
-	StoreKey                   = types.StoreKey
-	RouterKey                  = types.RouterKey
-	QuerierRoute               = types.QuerierRoute
+	DefaultPacketTimeoutHeight    = keeper.DefaultPacketTimeoutHeight
+	DefaultPacketTimeoutTimestamp = keeper.DefaultPacketTimeoutTimestamp
+	EventTypeTimeout              = types.EventTypeTimeout
+	EventTypePacket               = types.EventTypePacket
+	EventTypeChannelClose         = types.EventTypeChannelClose
+	AttributeKeyReceiver          = types.AttributeKeyReceiver
+	AttributeKeyValue             = types.AttributeKeyValue
+	AttributeKeyRefundReceiver    = types.AttributeKeyRefundReceiver
+	AttributeKeyRefundValue       = types.AttributeKeyRefundValue
+	AttributeKeyAckSuccess        = types.AttributeKeyAckSuccess
+	AttributeKeyAckError          = types.AttributeKeyAckError
+	ModuleName                    = types.ModuleName
+	StoreKey                      = types.StoreKey
+	RouterKey                     = types.RouterKey
+	QuerierRoute                  = types.QuerierRoute
 )
 
 var (

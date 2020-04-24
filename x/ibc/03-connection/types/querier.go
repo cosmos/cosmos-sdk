@@ -15,16 +15,10 @@ const (
 	QueryClientConnections = "client_connections"
 )
 
-// IdentifiedConnectionEnd defines the union of a connection end & an identifier.
-type IdentifiedConnectionEnd struct {
-	Connection ConnectionEnd `json:"connection_end" yaml:"connection_end"`
-	Identifier string        `json:"identifier" yaml:"identifier"`
-}
-
 // ConnectionResponse defines the client query response for a connection which
 // also includes a proof and the height from which the proof was retrieved.
 type ConnectionResponse struct {
-	Connection  IdentifiedConnectionEnd     `json:"connection" yaml:"connection"`
+	Connection  ConnectionEnd               `json:"connection" yaml:"connection"`
 	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
 	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
 	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
@@ -35,7 +29,7 @@ func NewConnectionResponse(
 	connectionID string, connection ConnectionEnd, proof *merkle.Proof, height int64,
 ) ConnectionResponse {
 	return ConnectionResponse{
-		Connection:  IdentifiedConnectionEnd{connection, connectionID},
+		Connection:  connection,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
 		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),

@@ -20,7 +20,10 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 
 	// Setup different validators and signers for testing different types of updates
 	altPrivVal := tmtypes.NewMockPV()
-	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), height)
+	altPubKey, err := altPrivVal.GetPubKey()
+	suite.Require().NoError(err)
+
+	altVal := tmtypes.NewValidator(altPubKey, height)
 
 	// Create bothValSet with both suite validator and altVal. Would be valid update
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -28,9 +31,13 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
 	signers := []tmtypes.PrivValidator{suite.privVal}
+
+	pubKey, err := suite.privVal.GetPubKey()
+	suite.Require().NoError(err)
+
 	// Create signer array and ensure it is in same order as bothValSet
 	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(altPrivVal.GetPubKey().Address(), suite.privVal.GetPubKey().Address()) == -1 {
+	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
 		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
 	} else {
 		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
@@ -46,7 +53,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "successful update with next height and same validator set",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
 				currentTime = suite.now
 			},
@@ -55,7 +62,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "successful update with future height and different validator set",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+5, suite.headerTime, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -64,7 +71,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "unsuccessful update with next height: update header mismatches nextValSetHash",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -73,7 +80,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "unsuccessful update with future height: too much change in validator set",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+5, suite.headerTime, altValSet, altSigners)
 				currentTime = suite.now
 			},
@@ -82,7 +89,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "unsuccessful update: trusting period has passed since last client timestamp",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
 				// make current time pass trusting period from last timestamp on clientstate
 				currentTime = suite.now.Add(ubdPeriod)
@@ -92,7 +99,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "unsuccessful update: header timestamp is past current timestamp",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.now.Add(time.Minute), suite.valSet, signers)
 				currentTime = suite.now
 			},
@@ -101,7 +108,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "unsuccessful update: header timestamp is not past last client timestamp",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.clientTime, suite.valSet, signers)
 				currentTime = suite.now
 			},
@@ -110,7 +117,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "header basic validation failed",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height+1, suite.headerTime, suite.valSet, signers)
 				// cause new header to fail validatebasic by changing commit height to mismatch header height
 				newHeader.SignedHeader.Commit.Height = height - 1
@@ -121,7 +128,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		{
 			name: "header height < latest client height",
 			setup: func() {
-				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header)
+				clientState = ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				// Make new header at height less than latest client state
 				newHeader = ibctmtypes.CreateTestHeader(chainID, height-1, suite.headerTime, suite.valSet, signers)
 				currentTime = suite.now

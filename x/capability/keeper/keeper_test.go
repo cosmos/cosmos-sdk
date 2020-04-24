@@ -21,6 +21,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx    sdk.Context
+	app    *simapp.SimApp
 	keeper *keeper.Keeper
 }
 
@@ -32,6 +33,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// create new keeper so we can define custom scoping before init and seal
 	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey))
 
+	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.keeper = keeper
 }
@@ -91,6 +93,16 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	cap, err = sk.NewCapability(suite.ctx, "transfer")
 	suite.Require().Error(err)
 	suite.Require().Nil(cap)
+}
+
+func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
+	got, ok := suite.app.ScopedIBCKeeper.GetCapability(suite.ctx, "invalid")
+	suite.Require().False(ok)
+	suite.Require().Nil(got)
+
+	port, ok := suite.app.ScopedIBCKeeper.GetCapability(suite.ctx, "ports/transfer")
+	suite.Require().True(ok)
+	suite.Require().NotNil(port)
 }
 
 func (suite *KeeperTestSuite) TestAuthenticateCapability() {

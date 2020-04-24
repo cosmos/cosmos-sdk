@@ -65,7 +65,7 @@ func NewEvent(ty string, attrs ...Attribute) Event {
 	e := Event{Type: ty}
 
 	for _, attr := range attrs {
-		e.Attributes = append(e.Attributes, attr.ToKVPair())
+		e.Attributes = append(e.Attributes, attr.ToEventAttributes())
 	}
 
 	return e
@@ -90,10 +90,15 @@ func (a Attribute) ToKVPair() tmkv.Pair {
 	return tmkv.Pair{Key: toBytes(a.Key), Value: toBytes(a.Value)}
 }
 
+// ToEventAttributes converts an Attribute object into a Tendermint EventAttributes object.
+func (a Attribute) ToEventAttributes() abci.EventAttribute {
+	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+}
+
 // AppendAttributes adds one or more attributes to an Event.
 func (e Event) AppendAttributes(attrs ...Attribute) Event {
 	for _, attr := range attrs {
-		e.Attributes = append(e.Attributes, attr.ToKVPair())
+		e.Attributes = append(e.Attributes, attr.ToEventAttributes())
 	}
 	return e
 }

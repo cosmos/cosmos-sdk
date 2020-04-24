@@ -327,6 +327,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 	require.True(t, validator.IsBonded())
 
 	selfDelegation := types.NewDelegation(sdk.AccAddress(addrVals[0].Bytes()), addrVals[0], issuedShares)

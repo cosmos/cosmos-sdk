@@ -30,19 +30,25 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 
 	consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
 
+	// If the validator has a ValidatorSigningInfo object that signals that the
+	// validator was bonded and so we must check that the validator is not tombstoned
+	// and can be unjailed at the current block.
+	//
+	// A validator that is jailed but has no ValidatorSigningInfo object signals
+	// that the validator was never bonded and must've been jailed due to falling
+	// below their minimum self-delegation. The validator can unjail at point
+	// assuming they've now bonded above their minimum self-delegation.
 	info, found := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		return types.ErrNoValidatorForAddress
-	}
+	if found {
+		// cannot be unjailed if tombstoned
+		if info.Tombstoned {
+			return types.ErrValidatorJailed
+		}
 
-	// cannot be unjailed if tombstoned
-	if info.Tombstoned {
-		return types.ErrValidatorJailed
-	}
-
-	// cannot be unjailed until out of jail
-	if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-		return types.ErrValidatorJailed
+		// cannot be unjailed until out of jail
+		if ctx.BlockHeader().Time.Before(info.JailedUntil) {
+			return types.ErrValidatorJailed
+		}
 	}
 
 	k.sk.Unjail(ctx, consAddr)

@@ -1,4 +1,4 @@
-# ADR 022: Custom baseapp panic handling
+# ADR 022: Custom BaseApp panic handling
 
 ## Changelog
 
@@ -9,11 +9,11 @@
 Current implementation of BaseApp does not allow developers to write custom error handlers in
 [runTx()](https://github.com/cosmos/cosmos-sdk/blob/bad4ca75f58b182f600396ca350ad844c18fc80b/baseapp/baseapp.go#L539)
 method. We think that this method can be more flexible and can give SDK users more options for customizations without
-the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error which feels like dirty
-hack in non-flexible environment.
+the need to rewrite whole BaseApp. Also there's one special case for `sdk.ErrorOutOfGas` error handling, that case
+might be handled in a "standard" way (middleware) alongside the others.
 
 We propose middleware-solution, which could help developers implement the following cases:
-* add external logging (let's say sending reports to external services like Sentry);
+* add external logging (let's say sending reports to external services like [Sentry](https://sentry.io));
 * call panic for specific error cases;
 
 It will also make `OutOfGas` case and `default` case one of the middlewares.
@@ -120,22 +120,52 @@ func processRecovery(recoveryObj interface{}, middleware recoveryMiddleware) err
 
 	next, err := middleware(recoveryObj)
 	if err != nil { return err }
+	if next == nil { return nil }
 
-	if next != nil { return processRecovery(recoveryObj, next) }
-
-	return nil
+	return processRecovery(recoveryObj, next)
 }
 ```
 
 That way we can create a middleware chain which is executed from left to right, the rightmost middleware is a
 `default` handler which must return an `error`.
 
-##### Baseapp changes
+##### BaseApp changes
 
-The default middleware chain must exist in a `baseapp` object and developers can add their custom `RecoveryHandler`s:
+The default middleware chain must exist in a `BaseApp` object. `Baseapp` modifications:
 
 ```go
-func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler)
+type BaseApp struct {
+    // ...
+    runTxRecoveryMiddleware recoveryMiddleware
+}
+
+func NewBaseApp(...) {
+    // ...
+    app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
+}
+
+func (app *BaseApp) runTx(...) {
+    // ...
+    defer func() {
+        if r := recover(); r != nil {
+            recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
+            err, result = processRecovery(r, recoveryMW), nil
+        }
+
+        gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
+    }()
+    // ...
+}
+```
+
+Developers can add their custom `RecoveryHandler`s:
+
+```go
+func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
+    for _, h := range handlers {
+        app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
+    }
+}
 ```
 
 This method would prepend handlers to an existing chain.
@@ -152,7 +182,7 @@ Proposed
     * add error context for custom panic sources (panic inside of custom keepers);
     * emit `panic()`: passthrough recovery object to the Tendermint core;
     * other necessary handling;
-- Developers can use standard Cosmos SDK `baseapp` implementation, rather that rewriting it in their projects;
+- Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
 - Proposed solution doesn't break the current "standard" `runTx()` flow;
 
 ### Negative
@@ -167,3 +197,4 @@ Proposed
 ## References
 
 - [PR-6053 with proposed solution](https://github.com/cosmos/cosmos-sdk/pull/6053)
+- [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)

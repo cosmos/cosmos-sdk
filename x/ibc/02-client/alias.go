@@ -37,6 +37,8 @@ var (
 	ErrRootNotFound           = types.ErrRootNotFound
 	ErrInvalidHeader          = types.ErrInvalidHeader
 	ErrInvalidEvidence        = types.ErrInvalidEvidence
+	DefaultGenesisState       = types.DefaultGenesisState
+	NewGenesisState           = types.NewGenesisState
 
 	// variable aliases
 	SubModuleCdc           = types.SubModuleCdc
@@ -48,4 +50,5 @@ var (
 type (
 	Keeper        = keeper.Keeper
 	StakingKeeper = types.StakingKeeper
+	GenesisState  = types.GenesisState
 )

@@ -98,6 +98,54 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 	store.Set(ibctypes.KeyConsensusState(height), bz)
 }
 
+// IterateConsensusStates provides an iterator over all stored consensus states.
+// objects. For each State object, cb will be called. If the cb returns true,
+// the iterator will close and stop.
+func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs exported.ConsensusState) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, ibctypes.KeyClientStorePrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		keySplit := strings.Split(string(iterator.Key()), "/")
+		fmt.Println(keySplit)
+		if keySplit[len(keySplit)-2] != "consensusState" {
+			continue
+		}
+		clientID := keySplit[len(keySplit)-3]
+		var consensusState exported.ConsensusState
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
+
+		if cb(clientID, consensusState) {
+			break
+		}
+	}
+}
+
+// GetAllConsensusStates returns all stored client consensus states
+func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types.ClientConsensusStates) {
+	// create map to add consensus states to the existing clients
+	cons := make(map[string][]exported.ConsensusState)
+
+	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
+		consensusStates, ok := cons[clientID]
+		if !ok {
+			cons[clientID] = []exported.ConsensusState{cs}
+			return false
+		}
+
+		cons[clientID] = append(consensusStates, cs)
+		return false
+	})
+
+	for clientID, consensusStates := range cons {
+		clientConsState := types.NewClientConsensusStates(clientID, consensusStates)
+		clientConsStates = append(clientConsStates, clientConsState)
+	}
+
+	return clientConsStates
+}
+
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular
 // client at the given height
 func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {

@@ -12,6 +12,14 @@ type ConnectionPaths struct {
 	Paths    []string `json:"paths" yaml:"paths"`
 }
 
+// NewConnectionPaths creates a ConnectionPaths instance.
+func NewConnectionPaths(id string, paths []string) ConnectionPaths {
+	return ConnectionPaths{
+		ClientID: id,
+		Paths:    paths,
+	}
+}
+
 // GenesisState defines the ibc connection submodule's genesis state.
 type GenesisState struct {
 	Connections           []ConnectionEnd   `json:"connections" yaml:"connections"`

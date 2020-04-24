@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -99,6 +100,23 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(paths)
 	store.Set(ibctypes.KeyClientConnections(clientID), bz)
+}
+
+// GetAllClientConnectionPaths returns all stored clients connection id paths.
+func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionPaths {
+	var allConnectionPaths []types.ConnectionPaths
+	k.clientKeeper.IterateClients(ctx, func(cs clientexported.ClientState) bool {
+		paths, found := k.GetClientConnectionPaths(ctx, cs.GetID())
+		if !found {
+			// continue
+			return false
+		}
+		connPaths := types.NewConnectionPaths(cs.GetID(), paths)
+		allConnectionPaths = append(allConnectionPaths, connPaths)
+		return false
+	})
+
+	return allConnectionPaths
 }
 
 // IterateConnections provides an iterator over all ConnectionEnd objects.

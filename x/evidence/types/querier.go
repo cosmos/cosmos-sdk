@@ -2,7 +2,6 @@ package types
 
 // Querier routes for the evidence module
 const (
-	QueryParameters  = "parameters"
 	QueryEvidence    = "evidence"
 	QueryAllEvidence = "all_evidence"
 )

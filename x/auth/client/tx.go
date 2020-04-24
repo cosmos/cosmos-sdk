@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -95,7 +98,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
 		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf)
+		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 		if err != nil || !ok {
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err
@@ -142,7 +145,7 @@ func CalculateGas(
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	simRes, err := parseQueryResponse(cdc, rawRes)
+	simRes, err := parseQueryResponse(rawRes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
@@ -182,7 +185,7 @@ func SignStdTx(
 
 	var signedStdTx authtypes.StdTx
 
-	info, err := txBldr.Keybase().Get(name)
+	info, err := txBldr.Keybase().Key(name)
 	if err != nil {
 		return signedStdTx, err
 	}
@@ -191,7 +194,7 @@ func SignStdTx(
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", authtypes.ErrorInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
@@ -214,7 +217,7 @@ func SignStdTxWithSignerAddress(
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", authtypes.ErrorInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 
 	if !offline {
@@ -286,9 +289,9 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 	return uint64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (sdk.SimulationResponse, error) {
+func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	var simRes sdk.SimulationResponse
-	if err := cdc.UnmarshalBinaryBare(rawRes, &simRes); err != nil {
+	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
 		return sdk.SimulationResponse{}, err
 	}
 

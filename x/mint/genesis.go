@@ -6,11 +6,10 @@ import (
 )
 
 // InitGenesis new mint genesis
-func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper, data GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
-
-	supplyKeeper.GetModuleAccount(ctx, ModuleName)
+	ak.GetModuleAccount(ctx, ModuleName)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.

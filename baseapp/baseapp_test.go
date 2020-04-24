@@ -3,6 +3,7 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -31,6 +31,43 @@ var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
 )
+
+type paramStore struct {
+	db *dbm.MemDB
+}
+
+func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+	bz, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	ps.db.Set(key, bz)
+}
+
+func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
+	ok, err := ps.db.Has(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return ok
+}
+
+func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
+	bz, err := ps.db.Get(key)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(bz) == 0 {
+		return
+	}
+
+	if err := json.Unmarshal(bz, ptr); err != nil {
+		panic(err)
+	}
+}
 
 func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
@@ -61,15 +98,11 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
-	// no stores are mounted
-	require.Panics(t, func() {
-		app.LoadLatestVersion(capKey1)
-	})
-
 	app.MountStores(capKey1, capKey2)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	// stores are mounted
-	err := app.LoadLatestVersion(capKey1)
+	err := app.LoadLatestVersion()
 	require.Nil(t, err)
 	return app
 }
@@ -150,9 +183,7 @@ func TestLoadVersion(t *testing.T) {
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey(MainStoreKey)
-	app.MountStores(capKey)
-	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
 	emptyCommitID := sdk.CommitID{}
@@ -177,16 +208,15 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadLatestVersion
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-	err = app.LoadLatestVersion(capKey)
+	app.MountStores()
+	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-	err = app.LoadVersion(1, capKey)
+	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -265,10 +295,8 @@ func TestSetLoader(t *testing.T) {
 				opts = append(opts, tc.setLoader)
 			}
 			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
-			capKey := sdk.NewKVStoreKey(MainStoreKey)
-			app.MountStores(capKey)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
-			err := app.LoadLatestVersion(capKey)
+			err := app.LoadLatestVersion()
 			require.Nil(t, err)
 
 			// "execute" one block
@@ -310,13 +338,11 @@ func TestLoadVersionInvalid(t *testing.T) {
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
-	capKey := sdk.NewKVStoreKey(MainStoreKey)
-	app.MountStores(capKey)
-	err := app.LoadLatestVersion(capKey)
+	err := app.LoadLatestVersion()
 	require.Nil(t, err)
 
 	// require error when loading an invalid version
-	err = app.LoadVersion(-1, capKey)
+	err = app.LoadVersion(-1)
 	require.Error(t, err)
 
 	header := abci.Header{Height: 1}
@@ -326,15 +352,14 @@ func TestLoadVersionInvalid(t *testing.T) {
 
 	// create a new app with the stores mounted under the same cap key
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
 
 	// require we can load the latest version
-	err = app.LoadVersion(1, capKey)
+	err = app.LoadVersion(1)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
 
 	// require error when loading an invalid version
-	err = app.LoadVersion(2, capKey)
+	err = app.LoadVersion(2)
 	require.Error(t, err)
 }
 
@@ -350,9 +375,10 @@ func TestLoadVersionPruning(t *testing.T) {
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey(MainStoreKey)
+	capKey := sdk.NewKVStoreKey("key1")
 	app.MountStores(capKey)
-	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+
+	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 
 	emptyCommitID := sdk.CommitID{}
@@ -383,7 +409,8 @@ func TestLoadVersionPruning(t *testing.T) {
 	// reload with LoadLatestVersion, check it loads last flushed version
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
-	err = app.LoadLatestVersion(capKey)
+
+	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 
@@ -408,7 +435,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	// reload with LoadLatestVersion, check it loads last flushed version
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
-	err = app.LoadLatestVersion(capKey)
+	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(4), commitID4)
 
@@ -416,7 +443,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	// and check it fails since previous flush should be pruned
 	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
-	err = app.LoadVersion(2, capKey)
+	err = app.LoadVersion(2)
 	require.NotNil(t, err)
 }
 
@@ -529,7 +556,7 @@ func TestInitChainer(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
-	capKey := sdk.NewKVStoreKey(MainStoreKey)
+	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
 
@@ -555,7 +582,7 @@ func TestInitChainer(t *testing.T) {
 	app.SetInitChainer(initChainer)
 
 	// stores are mounted and private members are set - sealing baseapp
-	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	err := app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 	require.Equal(t, int64(0), app.LastBlockHeight())
 
@@ -577,7 +604,7 @@ func TestInitChainer(t *testing.T) {
 	app = NewBaseApp(name, logger, db, nil)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
-	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	err = app.LoadLatestVersion() // needed to make stores non-nil
 	require.Nil(t, err)
 	require.Equal(t, int64(1), app.LastBlockHeight())
 
@@ -1243,7 +1270,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 			return
 		})
-
 	}
 
 	routerOpt := func(bapp *BaseApp) {
@@ -1684,18 +1710,20 @@ func TestP2PQuery(t *testing.T) {
 
 func TestGetMaximumBlockGas(t *testing.T) {
 	app := setupBaseApp(t)
+	app.InitChain(abci.RequestInitChain{})
+	ctx := app.NewContext(true, abci.Header{})
 
-	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 0}})
+	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
 
-	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
-	require.Equal(t, uint64(0), app.getMaximumBlockGas())
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -1}})
+	require.Equal(t, uint64(0), app.getMaximumBlockGas(ctx))
 
-	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
-	require.Equal(t, uint64(5000000), app.getMaximumBlockGas())
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: 5000000}})
+	require.Equal(t, uint64(5000000), app.getMaximumBlockGas(ctx))
 
-	app.setConsensusParams(&abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
-	require.Panics(t, func() { app.getMaximumBlockGas() })
+	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
+	require.Panics(t, func() { app.getMaximumBlockGas(ctx) })
 }
 
 // NOTE: represents a new custom router for testing purposes of WithRouter()

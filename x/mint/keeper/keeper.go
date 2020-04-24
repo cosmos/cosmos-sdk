@@ -16,28 +16,34 @@ type Keeper struct {
 	cdc              codec.Marshaler
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
-	sk               types.StakingKeeper
-	supplyKeeper     types.SupplyKeeper
+	stakingKeeper    types.StakingKeeper
+	bankKeeper       types.BankKeeper
 	feeCollectorName string
 }
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, feeCollectorName string,
+	sk types.StakingKeeper, ak types.AccountKeeper, bk types.BankKeeper,
+	feeCollectorName string,
 ) Keeper {
 
 	// ensure mint module account is set
-	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the mint module account has not been set")
+	}
+
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
 		cdc:              cdc,
 		storeKey:         key,
-		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
-		sk:               sk,
-		supplyKeeper:     supplyKeeper,
+		paramSpace:       paramSpace,
+		stakingKeeper:    sk,
+		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 	}
 }
@@ -86,13 +92,13 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
 func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
-	return k.sk.StakingTokenSupply(ctx)
+	return k.stakingKeeper.StakingTokenSupply(ctx)
 }
 
 // BondedRatio implements an alias call to the underlying staking keeper's
 // BondedRatio to be used in BeginBlocker.
 func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	return k.sk.BondedRatio(ctx)
+	return k.stakingKeeper.BondedRatio(ctx)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's
@@ -103,11 +109,11 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 		return nil
 	}
 
-	return k.supplyKeeper.MintCoins(ctx, types.ModuleName, newCoins)
+	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
 // AddCollectedFees implements an alias call to the underlying supply keeper's
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
-	return k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }

@@ -1,26 +1,33 @@
 package keyring
 
-// SigningAlgo defines an algorithm to derive key-pairs which can be used for cryptographic signing.
-type SigningAlgo string
+import (
+	"fmt"
 
-const (
-	// MultiAlgo implies that a pubkey is a multisignature
-	MultiAlgo = SigningAlgo("multi")
-	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
-	Secp256k1 = SigningAlgo("secp256k1")
-	// Ed25519 represents the Ed25519 signature system.
-	// It is currently not supported for end-user keys (wallets/ledgers).
-	Ed25519 = SigningAlgo("ed25519")
-	// Sr25519 represents the Sr25519 signature system.
-	Sr25519 = SigningAlgo("sr25519")
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
-// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
-func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
-	for _, supportedAlgo := range supported {
-		if algo == supportedAlgo {
+type SignatureAlgo interface {
+	Name() hd.PubKeyType
+	Derive() hd.DeriveFn
+	Generate() hd.GenerateFn
+}
+
+func NewSigningAlgoFromString(str string) (SignatureAlgo, error) {
+	if str != string(hd.Secp256k1.Name()) {
+		return nil, fmt.Errorf("provided algorithm `%s` is not supported", str)
+	}
+
+	return hd.Secp256k1, nil
+}
+
+type SigningAlgoList []SignatureAlgo
+
+func (l SigningAlgoList) Contains(algo SignatureAlgo) bool {
+	for _, cAlgo := range l {
+		if cAlgo.Name() == algo.Name() {
 			return true
 		}
 	}
+
 	return false
 }

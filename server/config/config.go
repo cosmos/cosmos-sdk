@@ -41,7 +41,9 @@ type BaseConfig struct {
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
-	Pruning string `mapstructure:"pruning"`
+	Pruning              string `mapstructure:"pruning"`
+	PruningKeepEvery     string `mapstructure:"pruning-keep-every"`
+	PruningSnapshotEvery string `mapstructure:"pruning-snapshot-every"`
 }
 
 // Config defines the server's top level configuration
@@ -80,11 +82,13 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig{
-			MinGasPrices:      defaultMinGasPrices,
-			InterBlockCache:   true,
-			Pruning:           store.PruningStrategySyncable,
-			SnapshotInterval:  0,
-			SnapshotRetention: 3,
+			InterBlockCache:      true,
+			Pruning:              store.PruningStrategySyncable,
+			PruningKeepEvery:     "0",
+			PruningSnapshotEvery: "0",
+			MinGasPrices:         defaultMinGasPrices,
+			SnapshotInterval:     0,
+			SnapshotRetention:    3,
 		},
 	}
 }

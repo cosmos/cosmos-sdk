@@ -20,7 +20,7 @@ import (
 func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Bank transaction subcommands",
+		Short:                      "Slashing transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -45,10 +45,14 @@ $ <appcli> tx slashing unjail --from mykey
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
 			valAddr := cliCtx.GetFromAddress()
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
 		},
 	}

@@ -3,7 +3,6 @@ package types
 import (
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -28,7 +27,7 @@ type (
 
 // StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
 // simulation.
-type StoreDecoderRegistry map[string]func(cdc *codec.Codec, kvA, kvB tmkv.Pair) string
+type StoreDecoderRegistry map[string]func(kvA, kvB tmkv.Pair) string
 
 // Iterator over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
@@ -76,6 +75,7 @@ const (
 	StoreTypeDB        = types.StoreTypeDB
 	StoreTypeIAVL      = types.StoreTypeIAVL
 	StoreTypeTransient = types.StoreTypeTransient
+	StoreTypeMemory    = types.StoreTypeMemory
 )
 
 // nolint - reexport
@@ -84,6 +84,7 @@ type (
 	CapabilityKey     = types.CapabilityKey
 	KVStoreKey        = types.KVStoreKey
 	TransientStoreKey = types.TransientStoreKey
+	MemoryStoreKey    = types.MemoryStoreKey
 )
 
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
@@ -99,6 +100,7 @@ func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
 	for _, name := range names {
 		keys[name] = NewKVStoreKey(name)
 	}
+
 	return keys
 }
 
@@ -115,6 +117,18 @@ func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 	for _, name := range names {
 		keys[name] = NewTransientStoreKey(name)
 	}
+
+	return keys
+}
+
+// NewMemoryStoreKeys constructs a new map matching store key names to their
+// respective MemoryStoreKey references.
+func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
+	keys := make(map[string]*MemoryStoreKey)
+	for _, name := range names {
+		keys[name] = types.NewMemoryStoreKey(name)
+	}
+
 	return keys
 }
 

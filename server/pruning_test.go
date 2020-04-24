@@ -14,6 +14,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 		name            string
 		initParams      func()
 		expectedOptions store.PruningOptions
+		wantErr         bool
 	}{
 		{
 			name: "pruning",
@@ -25,6 +26,7 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 		{
 			name: "granular pruning",
 			initParams: func() {
+				viper.Set(flagPruning, "custom")
 				viper.Set(flagPruningSnapshotEvery, 1234)
 				viper.Set(flagPruningKeepEvery, 4321)
 			},
@@ -44,8 +46,14 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(j *testing.T) {
 			viper.Reset()
+			viper.SetDefault(flagPruning, "syncable")
 			tt.initParams()
-			require.Equal(t, tt.expectedOptions, GetPruningOptionsFromFlags())
+			opts, err := GetPruningOptionsFromFlags()
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.Equal(t, tt.expectedOptions, opts)
 		})
 	}
 }

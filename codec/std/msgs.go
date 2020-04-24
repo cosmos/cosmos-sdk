@@ -5,12 +5,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
 	_ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
-	_ gov.MsgSubmitProposalI        = MsgSubmitProposal{}
+	_ gov.MsgSubmitProposalI        = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
@@ -47,13 +47,13 @@ func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence { return msg.Evi
 func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress      { return msg.Submitter }
 
 // NewMsgSubmitProposal returns a new MsgSubmitProposal.
-func NewMsgSubmitProposal(c gov.Content, d sdk.Coins, p sdk.AccAddress) (MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(c gov.Content, d sdk.Coins, p sdk.AccAddress) (gov.MsgSubmitProposalI, error) {
 	content := &Content{}
 	if err := content.SetContent(c); err != nil {
-		return MsgSubmitProposal{}, err
+		return nil, err
 	}
 
-	return MsgSubmitProposal{
+	return &MsgSubmitProposal{
 		Content:               content,
 		MsgSubmitProposalBase: gov.NewMsgSubmitProposalBase(d, p),
 	}, nil
@@ -79,6 +79,13 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 }
 
 // nolint
-func (msg MsgSubmitProposal) GetContent() gov.Content      { return msg.Content.GetContent() }
-func (msg MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
-func (msg MsgSubmitProposal) GetProposer() sdk.AccAddress  { return msg.Proposer }
+func (msg *MsgSubmitProposal) GetContent() gov.Content { return msg.Content.GetContent() }
+func (msg *MsgSubmitProposal) SetContent(content gov.Content) error {
+	stdContent := &Content{}
+	err := stdContent.SetContent(content)
+	if err != nil {
+		return err
+	}
+	msg.Content = stdContent
+	return nil
+}

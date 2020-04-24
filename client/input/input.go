@@ -2,8 +2,8 @@ package input
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -36,40 +36,15 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	return pass, nil
 }
 
-// GetCheckPassword will prompt for a password twice to verify they
-// match (for creating a new password).
-// It enforces the password length. Only parses password once if
-// input is piped in.
-func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error) {
-	// simple read on no-tty
-	if !inputIsTty() {
-		return GetPassword(prompt, buf)
-	}
-
-	// TODO: own function???
-	pass, err := GetPassword(prompt, buf)
-	if err != nil {
-		return "", err
-	}
-	pass2, err := GetPassword(prompt2, buf)
-	if err != nil {
-		return "", err
-	}
-	if pass != pass2 {
-		return "", errors.New("passphrases don't match")
-	}
-	return pass, nil
-}
-
 // GetConfirmation will request user give the confirmation from stdin.
 // "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
 // If the input is not recognized, it returns false and a nil error.
-func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
+func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) {
 	if inputIsTty() {
 		fmt.Printf("%s [y/N]: ", prompt)
 	}
 
-	response, err := readLineFromBuf(buf)
+	response, err := readLineFromBuf(r)
 	if err != nil {
 		return false, err
 	}
@@ -90,7 +65,7 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 // GetString simply returns the trimmed string output of a given reader.
 func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	if inputIsTty() && prompt != "" {
-		PrintPrefixed(prompt)
+		fmt.Fprintf(os.Stderr, "> %s\n", prompt)
 	}
 
 	out, err := readLineFromBuf(buf)
@@ -116,10 +91,4 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(pass), nil
-}
-
-// PrintPrefixed prints a string with > prefixed for use in prompts.
-func PrintPrefixed(msg string) {
-	msg = fmt.Sprintf("> %s\n", msg)
-	fmt.Fprint(os.Stderr, msg)
 }

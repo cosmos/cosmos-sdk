@@ -44,4 +44,4 @@ jobs:
     steps:
       - name: cli-test
           run: |
-            make test-sim
+            make test-cli

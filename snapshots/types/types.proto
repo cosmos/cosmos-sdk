@@ -1,11 +1,19 @@
 syntax = "proto3";
 package cosmos_sdk.snapshots.v1;
 
+import "third_party/proto/gogoproto/gogo.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 
 // Snapshot contains snapshot metadata.
 message Snapshot {
-  uint64         height = 1;
-  uint32         format = 2;
-  repeated bytes chunk_hashes = 3; // SHA-256 chunk hashes
+  uint64   height   = 1;
+  uint32   format   = 2;
+  uint32   chunks   = 3;
+  bytes    hash     = 4;
+  Metadata metadata = 5 [(gogoproto.nullable) = false];
+}
+
+message Metadata {
+  repeated bytes chunk_hashes = 1; // SHA-256 chunk hashes
 }

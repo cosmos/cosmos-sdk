@@ -128,9 +128,13 @@ func TestStore_Get(t *testing.T) {
 	assert.Equal(t, &types.Snapshot{
 		Height: 2,
 		Format: 1,
-		ChunkHashes: [][]byte{
-			checksum([]byte{2, 1, 0}),
-			checksum([]byte{2, 1, 1}),
+		Chunks: 2,
+		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+		Metadata: types.Metadata{
+			ChunkHashes: [][]byte{
+				checksum([]byte{2, 1, 0}),
+				checksum([]byte{2, 1, 1}),
+			},
 		},
 	}, snapshot)
 }
@@ -145,10 +149,18 @@ func TestStore_GetLatest(t *testing.T) {
 	assert.Equal(t, &types.Snapshot{
 		Height: 3,
 		Format: 2,
-		ChunkHashes: [][]byte{
-			checksum([]byte{3, 2, 0}),
-			checksum([]byte{3, 2, 1}),
-			checksum([]byte{3, 2, 2}),
+		Chunks: 3,
+		Hash: hash([][]byte{
+			{3, 2, 0},
+			{3, 2, 1},
+			{3, 2, 2},
+		}),
+		Metadata: types.Metadata{
+			ChunkHashes: checksums([][]byte{
+				{3, 2, 0},
+				{3, 2, 1},
+				{3, 2, 2},
+			}),
 		},
 	}, snapshot)
 }
@@ -161,24 +173,18 @@ func TestStore_List(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, ChunkHashes: [][]byte{
-			checksum([]byte{3, 2, 0}),
-			checksum([]byte{3, 2, 1}),
-			checksum([]byte{3, 2, 2}),
-		}},
-		{Height: 2, Format: 2, ChunkHashes: [][]byte{
-			checksum([]byte{2, 2, 0}),
-			checksum([]byte{2, 2, 1}),
-			checksum([]byte{2, 2, 2}),
-		}},
-		{Height: 2, Format: 1, ChunkHashes: [][]byte{
-			checksum([]byte{2, 1, 0}),
-			checksum([]byte{2, 1, 1}),
-		}},
-		{Height: 1, Format: 1, ChunkHashes: [][]byte{
-			checksum([]byte{1, 1, 0}),
-			checksum([]byte{1, 1, 1}),
-		}},
+		{Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}})},
+		},
+		{Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}})},
+		},
+		{Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 1, 0}, {2, 1, 1}})},
+		},
+		{Height: 1, Format: 1, Chunks: 2, Hash: hash([][]byte{{1, 1, 0}, {1, 1, 1}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{1, 1, 0}, {1, 1, 1}})},
+		},
 	}, snapshots)
 }
 
@@ -198,13 +204,17 @@ func TestStore_Load(t *testing.T) {
 	assert.Equal(t, &types.Snapshot{
 		Height: 2,
 		Format: 1,
-		ChunkHashes: [][]byte{
-			checksum([]byte{2, 1, 0}),
-			checksum([]byte{2, 1, 1}),
+		Chunks: 2,
+		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+		Metadata: types.Metadata{
+			ChunkHashes: [][]byte{
+				checksum([]byte{2, 1, 0}),
+				checksum([]byte{2, 1, 1}),
+			},
 		},
 	}, snapshot)
 
-	for i := range snapshot.ChunkHashes {
+	for i := uint32(0); i < snapshot.Chunks; i++ {
 		reader, ok := <-chunks
 		require.True(t, ok)
 		chunk, err := ioutil.ReadAll(reader)
@@ -262,20 +272,15 @@ func TestStore_Prune(t *testing.T) {
 	snapshots, err = store.List()
 	require.NoError(t, err)
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, ChunkHashes: [][]byte{
-			checksum([]byte{3, 2, 0}),
-			checksum([]byte{3, 2, 1}),
-			checksum([]byte{3, 2, 2}),
-		}},
-		{Height: 2, Format: 2, ChunkHashes: [][]byte{
-			checksum([]byte{2, 2, 0}),
-			checksum([]byte{2, 2, 1}),
-			checksum([]byte{2, 2, 2}),
-		}},
-		{Height: 2, Format: 1, ChunkHashes: [][]byte{
-			checksum([]byte{2, 1, 0}),
-			checksum([]byte{2, 1, 1}),
-		}},
+		{Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}})},
+		},
+		{Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}})},
+		},
+		{Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 1, 0}, {2, 1, 1}})},
+		},
 	}, snapshots)
 
 	// Pruning all heights should also be fine
@@ -298,9 +303,13 @@ func TestStore_Save(t *testing.T) {
 	assert.Equal(t, &snapshots.Snapshot{
 		Height: 4,
 		Format: 1,
-		ChunkHashes: [][]byte{
-			checksum([]byte{1}),
-			checksum([]byte{2}),
+		Chunks: 2,
+		Hash:   hash([][]byte{{1}, {2}}),
+		Metadata: snapshots.Metadata{
+			ChunkHashes: [][]byte{
+				checksum([]byte{1}),
+				checksum([]byte{2}),
+			},
 		},
 	}, snapshot)
 	loaded, err := store.Get(snapshot.Height, snapshot.Format)
@@ -324,7 +333,7 @@ func TestStore_Save(t *testing.T) {
 	require.NoError(t, err)
 	snapshot, chunks, err := store.Load(5, 1)
 	require.NoError(t, err)
-	assert.Equal(t, &types.Snapshot{Height: 5, Format: 1, ChunkHashes: [][]byte{}}, snapshot)
+	assert.Equal(t, &types.Snapshot{Height: 5, Format: 1, Hash: hash([][]byte{}), Metadata: types.Metadata{ChunkHashes: [][]byte{}}}, snapshot)
 	assert.Empty(t, chunks)
 
 	// Saving a snapshot should error if a chunk reader returns an error, and it should empty out

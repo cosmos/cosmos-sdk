@@ -140,8 +140,13 @@ func (m *Manager) Prune(retain uint32) (uint64, error) {
 // Restore begins an async snapshot restoration, mirroring ABCI OfferSnapshot. Chunks must be fed
 // via RestoreChunk() until the restore is complete or a chunk fails.
 func (m *Manager) Restore(snapshot Snapshot) error {
-	if len(snapshot.ChunkHashes) == 0 {
+	if snapshot.Chunks == 0 {
 		return errors.New("snapshot has no chunks")
+	}
+	if uint32(len(snapshot.Metadata.ChunkHashes)) != snapshot.Chunks {
+		return fmt.Errorf("snapshot only has %v chunk hashes, expected %v",
+			uint32(len(snapshot.Metadata.ChunkHashes)),
+			snapshot.Chunks)
 	}
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
@@ -171,12 +176,13 @@ func (m *Manager) Restore(snapshot Snapshot) error {
 
 	m.chRestore = chChunks
 	m.chRestoreDone = chDone
-	m.restorePending = snapshot.ChunkHashes
+	m.restorePending = snapshot.Metadata.ChunkHashes
 	return nil
 }
 
 // RestoreChunk adds a chunk to an active snapshot restoration, mirring ABCI ApplySnapshotChunk.
 // Chunks must be given until the restore is complete, returning true, or a chunk errors.
+// FIXME This needs to verify the chunk hash.
 func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()

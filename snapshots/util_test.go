@@ -34,7 +34,7 @@ func TestChunkWriter(t *testing.T) {
 		require.NoError(t, err)
 
 		// closed writer should error
-		n, err = chunkWriter.Write([]byte{10})
+		_, err = chunkWriter.Write([]byte{10})
 		require.Error(t, err)
 
 		// closing again should be fine

@@ -1551,20 +1551,16 @@ func TestListSnapshots(t *testing.T) {
 	defer teardown()
 
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
+	for _, s := range resp.Snapshots {
+		assert.NotEmpty(t, s.Hash)
+		assert.NotEmpty(t, s.Metadata)
+		s.Hash = nil
+		s.Metadata = nil
+	}
 	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 5, Format: 1, ChunkHashes: [][]byte{
-			[]byte("v$\227\346\206I\216\0369\242o\230 \224\263\303\302vh\264\310\340\232\325\375\230H\033\360`\217;"),
-			[]byte("\252w\\2\267\037\360J\213\236\032\323\236\233\214\373X\326\346\207*\024h`\316\337=9\026\315\004s"),
-			[]byte(",Y\313W3\013\260d\356\347\251\372\337Tjm\2171\375\273\327fS\333\273F\360\357\003\266\353\t"),
-		}, Metadata: nil},
-		{Height: 4, Format: 1, ChunkHashes: [][]byte{
-			[]byte("\367'\377\021\033f\221\353\360\265\007A|X\340[\242\367\345\321b\355< \330\223O\035A\032\207\232"),
-			[]byte("\035\257J\214\270\033#\033\020\3218\262R\256C\334\014c\352JDo\024\354E\000\217Y\326R\275\312"),
-		}, Metadata: nil},
-		{Height: 3, Format: 1, ChunkHashes: [][]byte{
-			[]byte("nT\334\303\322\344m\005\022\035\344\r\036\266\227\357\014wqh\232\244\231\200\226yJb\303\023\036H"),
-			[]byte("\337@'\374\033\256\240\210\026\230sX\322\030j%W\223\225\313\264\242\037\242\022\262!\263 \351$\034"),
-		}, Metadata: nil},
+		{Height: 5, Format: 1, Chunks: 3},
+		{Height: 4, Format: 1, Chunks: 2},
+		{Height: 3, Format: 1, Chunks: 2},
 	}}, resp)
 }
 
@@ -1609,35 +1605,51 @@ func TestOfferSnapshotChunk_Errors(t *testing.T) {
 
 	// Nil snapshot should error
 	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{})
-	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: false}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}, resp)
+
+	metadata := snapshots.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
+	metadataBytes, err := metadata.Marshal()
+	require.NoError(t, err)
 
 	// Invalid snapshot format should error
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:      1,
-		Format:      9,
-		ChunkHashes: nil,
+		Height:   1,
+		Format:   9,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadataBytes,
 	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{
-		Accepted: false,
-		Reason:   abci.ResponseOfferSnapshot_invalid_format,
-	}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject_format}, resp)
+
+	// Invalid chunk hashes should be aborted
+	// FIXME This should be reject
+	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height:   1,
+		Format:   9,
+		Chunks:   2,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadataBytes,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}, resp)
 
 	// Offering a snapshot after one has been accepted should error
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:      1,
-		Format:      snapshots.CurrentFormat,
-		ChunkHashes: nil,
+		Height:   1,
+		Format:   snapshots.CurrentFormat,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadataBytes,
 	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{
-		Accepted: true,
-	}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}, resp)
 
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:      1,
-		Format:      snapshots.CurrentFormat,
-		ChunkHashes: nil,
+		Height:   2,
+		Format:   snapshots.CurrentFormat,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadataBytes,
 	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: false}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}, resp)
 }
 
 func TestApplySnapshotChunk(t *testing.T) {
@@ -1653,24 +1665,26 @@ func TestApplySnapshotChunk(t *testing.T) {
 	snapshot := respList.Snapshots[0]
 
 	// Make sure the snapshot has at least 3 chunks
-	require.GreaterOrEqual(t, len(snapshot.ChunkHashes), 3, "Not enough snapshot chunks")
+	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
 
 	// Begin a snapshot restoration in the target
 	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
-	require.Equal(t, abci.ResponseOfferSnapshot{Accepted: true}, respOffer)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}, respOffer)
 
 	// Fetch each chunk from the source and apply it to the target
-	for chunk := uint32(0); chunk < uint32(len(snapshot.ChunkHashes)); chunk++ {
+	for index := uint32(0); index < snapshot.Chunks; index++ {
 		respChunk := source.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
 			Height: snapshot.Height,
 			Format: snapshot.Format,
-			Chunk:  chunk,
+			Chunk:  index,
 		})
 		require.NotNil(t, respChunk.Chunk)
 		respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
 			Chunk: respChunk.Chunk,
 		})
-		require.Equal(t, abci.ResponseApplySnapshotChunk{Applied: true}, respApply)
+		require.Equal(t, abci.ResponseApplySnapshotChunk{
+			Result: abci.ResponseApplySnapshotChunk_accept,
+		}, respApply)
 	}
 
 	// The target should now have the same hash as the source

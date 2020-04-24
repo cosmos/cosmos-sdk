@@ -29,6 +29,14 @@ func checksums(slice [][]byte) [][]byte {
 	return checksums
 }
 
+func hash(chunks [][]byte) []byte {
+	hasher := sha256.New()
+	for _, chunk := range chunks {
+		hasher.Write(chunk)
+	}
+	return hasher.Sum(nil)
+}
+
 func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
 	ch := make(chan io.ReadCloser, len(chunks))
 	for _, chunk := range chunks {
@@ -125,7 +133,7 @@ func (m *hungSnapshotter) Close() {
 }
 
 func (m *hungSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	_, _ = <-m.ch
+	<-m.ch
 	ch := make(chan io.ReadCloser, 1)
 	ch <- ioutil.NopCloser(bytes.NewReader([]byte{}))
 	return ch, nil

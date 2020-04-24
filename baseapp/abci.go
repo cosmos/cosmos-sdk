@@ -355,12 +355,12 @@ func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseLi
 		return resp
 	}
 	for _, snapshot := range snapshots {
-		resp.Snapshots = append(resp.Snapshots, &abci.Snapshot{
-			Height:      snapshot.Height,
-			Format:      snapshot.Format,
-			ChunkHashes: snapshot.ChunkHashes,
-			Metadata:    nil,
-		})
+		abciSnapshot, err := snapshot.ToABCI()
+		if err != nil {
+			app.logger.Error("Failed to list snapshots", "err", err.Error())
+			return resp
+		}
+		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
 	}
 
 	return resp
@@ -384,23 +384,26 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
 	if req.Snapshot == nil {
 		app.logger.Error("Received nil snapshot")
-		return abci.ResponseOfferSnapshot{Accepted: false}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
 	}
 
-	err := app.snapshotManager.Restore(snapshots.Snapshot{
-		Height:      req.Snapshot.Height,
-		Format:      req.Snapshot.Format,
-		ChunkHashes: req.Snapshot.ChunkHashes,
-	})
+	snapshot, err := snapshots.SnapshotFromABCI(req.Snapshot)
+	if err != nil {
+		app.logger.Error("Failed to decode snapshot metadata", "err", err)
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
+	}
+	err = app.snapshotManager.Restore(snapshot)
 	switch err {
 	case nil:
-		return abci.ResponseOfferSnapshot{Accepted: true}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}
 	case snapshots.ErrUnknownFormat:
-		return abci.ResponseOfferSnapshot{Reason: abci.ResponseOfferSnapshot_invalid_format}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject_format}
 	default:
 		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
 			"format", req.Snapshot.Format, "err", err.Error())
-		return abci.ResponseOfferSnapshot{Accepted: false}
+		// FIXME We shouldn't abort, but instead reset the IAVL stores and try restoring
+		// a different snapshot.
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}
 	}
 }
 
@@ -409,9 +412,10 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	if err != nil {
 		app.logger.Error("Failed to restore snapshot", "err", err.Error())
-		return abci.ResponseApplySnapshotChunk{Applied: false}
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_abort}
 	}
-	return abci.ResponseApplySnapshotChunk{Applied: true}
+	// FIXME This should handle verification failures and such as well.
+	return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_accept}
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

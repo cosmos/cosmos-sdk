@@ -8,9 +8,11 @@ const (
 
 var (
 	ErrUnknownFormat = types.ErrUnknownFormat
+	SnapshotFromABCI = types.SnapshotFromABCI
 )
 
 type (
 	Snapshotter = types.Snapshotter
 	Snapshot    = types.Snapshot
+	Metadata    = types.Metadata
 )

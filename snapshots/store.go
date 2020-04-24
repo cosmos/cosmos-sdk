@@ -70,7 +70,7 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	return nil
 }
 
-// Get fetches snapshot metadata from the database.
+// Get fetches snapshot info from the database.
 func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	bytes, err := s.db.Get(encodeKey(height, format))
 	if err != nil {
@@ -80,16 +80,16 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	if bytes == nil {
 		return nil, nil
 	}
-	metadata := &types.Snapshot{}
-	err = proto.Unmarshal(bytes, metadata)
+	snapshot := &types.Snapshot{}
+	err = proto.Unmarshal(bytes, snapshot)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode snapshot metadata for height %v format %v: %w",
 			height, format, err)
 	}
-	if metadata.ChunkHashes == nil {
-		metadata.ChunkHashes = [][]byte{}
+	if snapshot.Metadata.ChunkHashes == nil {
+		snapshot.Metadata.ChunkHashes = [][]byte{}
 	}
-	return metadata, nil
+	return snapshot, nil
 }
 
 // Get fetches the latest snapshot from the database, if any.
@@ -128,7 +128,7 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 		snapshot := &types.Snapshot{}
 		err := proto.Unmarshal(iter.Value(), snapshot)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode snapshot metadata: %w", err)
+			return nil, fmt.Errorf("failed to decode snapshot info: %w", err)
 		}
 		snapshots = append(snapshots, snapshot)
 	}
@@ -153,10 +153,10 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 	ch := make(chan io.ReadCloser)
 	go func() {
 		defer close(ch)
-		for i := range snapshot.ChunkHashes {
+		for i := uint32(0); i < snapshot.Chunks; i++ {
 			pr, pw := io.Pipe()
 			ch <- pr
-			chunk, err := s.loadChunkFile(height, format, uint32(i))
+			chunk, err := s.loadChunkFile(height, format, i)
 			if err != nil {
 				pw.CloseWithError(err)
 				return
@@ -273,45 +273,43 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 		Format: format,
 	}
 	index := uint32(0)
+	snapshotHasher := sha256.New()
 	for chunkBody := range chunks {
-		hash, err := s.saveChunk(height, format, index, chunkBody)
+		defer chunkBody.Close()
+		chunkHasher := sha256.New()
+		dir := s.pathSnapshot(height, format)
+		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
 		}
-		snapshot.ChunkHashes = append(snapshot.ChunkHashes, hash)
+		path := s.pathChunk(height, format, index)
+		file, err := os.Create(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
+		}
+		defer file.Close()
+		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate snapshot chunk %v: %w", index, err)
+		}
+		err = file.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close snapshot chunk %v: %w", index, err)
+		}
+		err = chunkBody.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close snapshot chunk %v: %w", index, err)
+		}
+		snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 		index++
 	}
+	snapshot.Chunks = index
+	snapshot.Hash = snapshotHasher.Sum(nil)
 	err = s.saveSnapshot(snapshot)
 	if err != nil {
 		return nil, err
 	}
 	return snapshot, nil
-}
-
-// saveChunk saves a chunk to disk, returning its hash.
-func (s *Store) saveChunk(height uint64, format uint32, index uint32, chunk io.ReadCloser) ([]byte, error) {
-	defer chunk.Close()
-	dir := s.pathSnapshot(height, format)
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
-	}
-	path := s.pathChunk(height, format, index)
-	file, err := os.Create(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
-	}
-	defer file.Close()
-	hasher := sha256.New()
-	_, err = io.Copy(io.MultiWriter(file, hasher), chunk)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate snapshot chunk file %q: %w", path, err)
-	}
-	err = file.Close()
-	if err != nil {
-		return nil, fmt.Errorf("failed to close snapshot chunk file %q: %w", path, err)
-	}
-	return hasher.Sum(nil), nil
 }
 
 // saveSnapshot saves snapshot metadata to the database.

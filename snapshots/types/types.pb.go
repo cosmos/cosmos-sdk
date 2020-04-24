@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
@@ -24,9 +25,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Snapshot contains snapshot metadata.
 type Snapshot struct {
-	Height      uint64   `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
-	Format      uint32   `protobuf:"varint,2,opt,name=format,proto3" json:"format,omitempty"`
-	ChunkHashes [][]byte `protobuf:"bytes,3,rep,name=chunk_hashes,json=chunkHashes,proto3" json:"chunk_hashes,omitempty"`
+	Height   uint64   `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	Format   uint32   `protobuf:"varint,2,opt,name=format,proto3" json:"format,omitempty"`
+	Chunks   uint32   `protobuf:"varint,3,opt,name=chunks,proto3" json:"chunks,omitempty"`
+	Hash     []byte   `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
+	Metadata Metadata `protobuf:"bytes,5,opt,name=metadata,proto3" json:"metadata"`
 }
 
 func (m *Snapshot) Reset()         { *m = Snapshot{} }
@@ -76,7 +79,65 @@ func (m *Snapshot) GetFormat() uint32 {
 	return 0
 }
 
-func (m *Snapshot) GetChunkHashes() [][]byte {
+func (m *Snapshot) GetChunks() uint32 {
+	if m != nil {
+		return m.Chunks
+	}
+	return 0
+}
+
+func (m *Snapshot) GetHash() []byte {
+	if m != nil {
+		return m.Hash
+	}
+	return nil
+}
+
+func (m *Snapshot) GetMetadata() Metadata {
+	if m != nil {
+		return m.Metadata
+	}
+	return Metadata{}
+}
+
+type Metadata struct {
+	ChunkHashes [][]byte `protobuf:"bytes,1,rep,name=chunk_hashes,json=chunkHashes,proto3" json:"chunk_hashes,omitempty"`
+}
+
+func (m *Metadata) Reset()         { *m = Metadata{} }
+func (m *Metadata) String() string { return proto.CompactTextString(m) }
+func (*Metadata) ProtoMessage()    {}
+func (*Metadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_03ed7742cffb8ebd, []int{1}
+}
+func (m *Metadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Metadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Metadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Metadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Metadata.Merge(m, src)
+}
+func (m *Metadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *Metadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_Metadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Metadata proto.InternalMessageInfo
+
+func (m *Metadata) GetChunkHashes() [][]byte {
 	if m != nil {
 		return m.ChunkHashes
 	}
@@ -85,25 +146,31 @@ func (m *Snapshot) GetChunkHashes() [][]byte {
 
 func init() {
 	proto.RegisterType((*Snapshot)(nil), "cosmos_sdk.snapshots.v1.Snapshot")
+	proto.RegisterType((*Metadata)(nil), "cosmos_sdk.snapshots.v1.Metadata")
 }
 
 func init() { proto.RegisterFile("snapshots/types/types.proto", fileDescriptor_03ed7742cffb8ebd) }
 
 var fileDescriptor_03ed7742cffb8ebd = []byte{
-	// 194 bytes of a gzipped FileDescriptorProto
+	// 288 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x2e, 0xce, 0x4b, 0x2c,
 	0x28, 0xce, 0xc8, 0x2f, 0x29, 0xd6, 0x2f, 0xa9, 0x2c, 0x48, 0x85, 0x92, 0x7a, 0x05, 0x45, 0xf9,
 	0x25, 0xf9, 0x42, 0xe2, 0xc9, 0xf9, 0xc5, 0xb9, 0xf9, 0xc5, 0xf1, 0xc5, 0x29, 0xd9, 0x7a, 0x70,
-	0x75, 0x7a, 0x65, 0x86, 0x4a, 0xb1, 0x5c, 0x1c, 0xc1, 0x50, 0xbe, 0x90, 0x18, 0x17, 0x5b, 0x46,
-	0x6a, 0x66, 0x7a, 0x46, 0x89, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x4b, 0x10, 0x94, 0x07, 0x12, 0x4f,
-	0xcb, 0x2f, 0xca, 0x4d, 0x2c, 0x91, 0x60, 0x52, 0x60, 0xd4, 0xe0, 0x0d, 0x82, 0xf2, 0x84, 0x14,
-	0xb9, 0x78, 0x92, 0x33, 0x4a, 0xf3, 0xb2, 0xe3, 0x33, 0x12, 0x8b, 0x33, 0x52, 0x8b, 0x25, 0x98,
-	0x15, 0x98, 0x35, 0x78, 0x82, 0xb8, 0xc1, 0x62, 0x1e, 0x60, 0x21, 0x27, 0xb7, 0x13, 0x8f, 0xe4,
-	0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f,
-	0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0xd2, 0x49, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b,
-	0xce, 0xcf, 0xd5, 0x87, 0x38, 0x0e, 0x4a, 0xe9, 0x16, 0xa7, 0x64, 0xeb, 0xa3, 0xf9, 0x25, 0x89,
-	0x0d, 0xec, 0x0d, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x74, 0x08, 0x41, 0xe5, 0x00,
-	0x00, 0x00,
+	0x75, 0x7a, 0x65, 0x86, 0x52, 0x6a, 0x25, 0x19, 0x99, 0x45, 0x29, 0xf1, 0x05, 0x89, 0x45, 0x25,
+	0x95, 0xfa, 0x60, 0xb5, 0xfa, 0xe9, 0xf9, 0xe9, 0xf9, 0x08, 0x16, 0xc4, 0x00, 0xa5, 0xd5, 0x8c,
+	0x5c, 0x1c, 0xc1, 0x50, 0x8d, 0x42, 0x62, 0x5c, 0x6c, 0x19, 0xa9, 0x99, 0xe9, 0x19, 0x25, 0x12,
+	0x8c, 0x0a, 0x8c, 0x1a, 0x2c, 0x41, 0x50, 0x1e, 0x48, 0x3c, 0x2d, 0xbf, 0x28, 0x37, 0xb1, 0x44,
+	0x82, 0x49, 0x81, 0x51, 0x83, 0x37, 0x08, 0xca, 0x03, 0x89, 0x27, 0x67, 0x94, 0xe6, 0x65, 0x17,
+	0x4b, 0x30, 0x43, 0xc4, 0x21, 0x3c, 0x21, 0x21, 0x2e, 0x96, 0x8c, 0xc4, 0xe2, 0x0c, 0x09, 0x16,
+	0x05, 0x46, 0x0d, 0x9e, 0x20, 0x30, 0x5b, 0xc8, 0x99, 0x8b, 0x23, 0x37, 0xb5, 0x24, 0x31, 0x25,
+	0xb1, 0x24, 0x51, 0x82, 0x55, 0x81, 0x51, 0x83, 0xdb, 0x48, 0x51, 0x0f, 0x87, 0xe3, 0xf5, 0x7c,
+	0xa1, 0x0a, 0x9d, 0x58, 0x4e, 0xdc, 0x93, 0x67, 0x08, 0x82, 0x6b, 0x54, 0xd2, 0xe5, 0xe2, 0x80,
+	0xc9, 0x09, 0x29, 0x72, 0xf1, 0x80, 0xad, 0x8b, 0x07, 0x19, 0x9f, 0x5a, 0x2c, 0xc1, 0xa8, 0xc0,
+	0xac, 0xc1, 0x13, 0xc4, 0x0d, 0x16, 0xf3, 0x00, 0x0b, 0x39, 0xb9, 0x9d, 0x78, 0x24, 0xc7, 0x78,
+	0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7,
+	0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x4e, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e,
+	0xae, 0x3e, 0xc4, 0x15, 0x50, 0x4a, 0xb7, 0x38, 0x25, 0x5b, 0x1f, 0x2d, 0xc4, 0x93, 0xd8, 0xc0,
+	0x61, 0x65, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x15, 0xba, 0x89, 0x65, 0x8b, 0x01, 0x00, 0x00,
 }
 
 func (m *Snapshot) Marshal() (dAtA []byte, err error) {
@@ -126,14 +193,27 @@ func (m *Snapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ChunkHashes) > 0 {
-		for iNdEx := len(m.ChunkHashes) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ChunkHashes[iNdEx])
-			copy(dAtA[i:], m.ChunkHashes[iNdEx])
-			i = encodeVarintTypes(dAtA, i, uint64(len(m.ChunkHashes[iNdEx])))
-			i--
-			dAtA[i] = 0x1a
+	{
+		size, err := m.Metadata.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintTypes(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	if len(m.Hash) > 0 {
+		i -= len(m.Hash)
+		copy(dAtA[i:], m.Hash)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Hash)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Chunks != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.Chunks))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Format != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.Format))
@@ -144,6 +224,38 @@ func (m *Snapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTypes(dAtA, i, uint64(m.Height))
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Metadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Metadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Metadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ChunkHashes) > 0 {
+		for iNdEx := len(m.ChunkHashes) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.ChunkHashes[iNdEx])
+			copy(dAtA[i:], m.ChunkHashes[iNdEx])
+			i = encodeVarintTypes(dAtA, i, uint64(len(m.ChunkHashes[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -171,6 +283,24 @@ func (m *Snapshot) Size() (n int) {
 	if m.Format != 0 {
 		n += 1 + sovTypes(uint64(m.Format))
 	}
+	if m.Chunks != 0 {
+		n += 1 + sovTypes(uint64(m.Chunks))
+	}
+	l = len(m.Hash)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = m.Metadata.Size()
+	n += 1 + l + sovTypes(uint64(l))
+	return n
+}
+
+func (m *Metadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	if len(m.ChunkHashes) > 0 {
 		for _, b := range m.ChunkHashes {
 			l = len(b)
@@ -254,6 +384,145 @@ func (m *Snapshot) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Chunks", wireType)
+			}
+			m.Chunks = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Chunks |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hash = append(m.Hash[:0], dAtA[iNdEx:postIndex]...)
+			if m.Hash == nil {
+				m.Hash = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Metadata.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Metadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Metadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Metadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChunkHashes", wireType)
 			}

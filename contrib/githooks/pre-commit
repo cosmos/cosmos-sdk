@@ -38,7 +38,7 @@ if [[ $STAGED_GO_FILES != "" ]]; then
 fi
 
 # Run go mod tidy
-go mod tidy
+go mod tidy && git add go.mod go.sum
 
 # Run golangci-lint
 which golangci-lint &>/dev/null && golangci-lint run --fast --issues-exit-code=0 || f_echo_stderr "couldn't find golangci-lint"

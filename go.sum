@@ -129,8 +129,8 @@ github.com/magiconair/properties v1.8.1 h1:ZC2Vc7/ZFkGmsVC9KvOjumD+G5lXy2RtTKyzR
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/maticnetwork/bor v0.0.0-20191204165821-bd9cd503a1b3 h1:KhlP5W7sxwgk/zA+7HB2cNzHQNyGU+ijc5x5sfq1HxI=
 github.com/maticnetwork/bor v0.0.0-20191204165821-bd9cd503a1b3/go.mod h1:Bdz1Wi8GdWw8sXeXhUhQtTFMi+jolJdyjejdXc5fks4=
-github.com/maticnetwork/tendermint v0.26.0-dev0.0.20200424100043-e69ded97a8ed h1:L/pLdvLW+79kKwJXwZ9AcV/dngJAWbUfvbWluZfRqPc=
-github.com/maticnetwork/tendermint v0.26.0-dev0.0.20200424100043-e69ded97a8ed/go.mod h1:2uZWl1/STgy84Y0QUipDtU7pMbKQxpFRi1h1qt7B/vE=
+github.com/maticnetwork/tendermint v0.26.0-dev0.0.20200424192220-565f65589887 h1:FAMm+aDZu75u/4jdSDtftcZurP2khr44MWkkYT3ta3Q=
+github.com/maticnetwork/tendermint v0.26.0-dev0.0.20200424192220-565f65589887/go.mod h1:2uZWl1/STgy84Y0QUipDtU7pMbKQxpFRi1h1qt7B/vE=
 github.com/mattn/go-isatty v0.0.6 h1:SrwhHcpV4nWrMGdNcC2kXpMfcBVYGDuTArqyhocJgvA=
 github.com/mattn/go-isatty v0.0.6/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=

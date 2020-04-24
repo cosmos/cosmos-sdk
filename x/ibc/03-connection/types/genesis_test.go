@@ -38,7 +38,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid connection",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(exported.INIT, connectionID, clientID, Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(exported.INIT, connectionID, "CLIENTIDONE", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{ibctypes.ConnectionPath(connectionID)}},

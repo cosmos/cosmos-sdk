@@ -49,7 +49,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: GenesisState{
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.ConnectionEnd{
-						connection.NewConnectionEnd(connectionexported.INIT, connectionID, clientID, connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connection.NewConnectionEnd(connectionexported.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					nil,
 				),

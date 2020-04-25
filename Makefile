@@ -121,7 +121,7 @@ test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
@@ -166,8 +166,9 @@ test-sim-benchmark-invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
-test-cli: build-sim
-	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=cli_test -v
+cli-test: build-sim
+	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=keys_cli_test -v
+	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
 
 .PHONY: \
 test-sim-nondeterminism \
@@ -178,7 +179,7 @@ test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
 test-sim-benchmark-invariants \
-test-cli
+cli-test
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

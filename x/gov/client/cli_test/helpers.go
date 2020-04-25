@@ -12,9 +12,9 @@ import (
 )
 
 //___________________________________________________________________________________
-// gaiacli query gov
+// simcli query gov
 
-// QueryGovParamDeposit is gaiacli query gov param deposit
+// QueryGovParamDeposit is simcli query gov param deposit
 func QueryGovParamDeposit(f *helpers.Fixtures) gov.DepositParams {
 	cmd := fmt.Sprintf("%s query gov param deposit %s", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -25,7 +25,7 @@ func QueryGovParamDeposit(f *helpers.Fixtures) gov.DepositParams {
 	return depositParam
 }
 
-// QueryGovParamVoting is gaiacli query gov param voting
+// QueryGovParamVoting is simcli query gov param voting
 func QueryGovParamVoting(f *helpers.Fixtures) gov.VotingParams {
 	cmd := fmt.Sprintf("%s query gov param voting %s", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -36,7 +36,7 @@ func QueryGovParamVoting(f *helpers.Fixtures) gov.VotingParams {
 	return votingParam
 }
 
-// QueryGovParamTallying is gaiacli query gov param tallying
+// QueryGovParamTallying is simcli query gov param tallying
 func QueryGovParamTallying(f *helpers.Fixtures) gov.TallyParams {
 	cmd := fmt.Sprintf("%s query gov param tallying %s", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
@@ -47,7 +47,7 @@ func QueryGovParamTallying(f *helpers.Fixtures) gov.TallyParams {
 	return tallyingParam
 }
 
-// QueryGovProposal is gaiacli query gov proposal
+// QueryGovProposal is simcli query gov proposal
 func QueryGovProposal(f *helpers.Fixtures, proposalID int, flags ...string) gov.Proposal {
 	cmd := fmt.Sprintf("%s query gov proposal %d %v", f.SimcliBinary, proposalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
@@ -58,7 +58,7 @@ func QueryGovProposal(f *helpers.Fixtures, proposalID int, flags ...string) gov.
 	return proposal
 }
 
-// QueryGovProposals is gaiacli query gov proposals
+// QueryGovProposals is simcli query gov proposals
 func QueryGovProposals(f *helpers.Fixtures, flags ...string) gov.Proposals {
 	cmd := fmt.Sprintf("%s query gov proposals %v", f.SimcliBinary, f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
@@ -73,7 +73,7 @@ func QueryGovProposals(f *helpers.Fixtures, flags ...string) gov.Proposals {
 	return out
 }
 
-// QueryGovVote is gaiacli query gov vote
+// QueryGovVote is simcli query gov vote
 func QueryGovVote(f *helpers.Fixtures, proposalID int, voter sdk.AccAddress, flags ...string) gov.Vote {
 	cmd := fmt.Sprintf("%s query gov vote %d %s %v", f.SimcliBinary, proposalID, voter, f.Flags())
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
@@ -84,7 +84,7 @@ func QueryGovVote(f *helpers.Fixtures, proposalID int, voter sdk.AccAddress, fla
 	return vote
 }
 
-// QueryGovVotes is gaiacli query gov votes
+// QueryGovVotes is simcli query gov votes
 func QueryGovVotes(f *helpers.Fixtures, proposalID int, flags ...string) []gov.Vote {
 	cmd := fmt.Sprintf("%s query gov votes %d %v", f.SimcliBinary, proposalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
@@ -95,7 +95,7 @@ func QueryGovVotes(f *helpers.Fixtures, proposalID int, flags ...string) []gov.V
 	return votes
 }
 
-// QueryGovDeposit is gaiacli query gov deposit
+// QueryGovDeposit is simcli query gov deposit
 func QueryGovDeposit(f *helpers.Fixtures, proposalID int, depositor sdk.AccAddress, flags ...string) gov.Deposit {
 	cmd := fmt.Sprintf("%s query gov deposit %d %s %v", f.SimcliBinary, proposalID, depositor, f.Flags())
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
@@ -106,7 +106,7 @@ func QueryGovDeposit(f *helpers.Fixtures, proposalID int, depositor sdk.AccAddre
 	return deposit
 }
 
-// QueryGovDeposits is gaiacli query gov deposits
+// QueryGovDeposits is simcli query gov deposits
 func QueryGovDeposits(f *helpers.Fixtures, propsalID int, flags ...string) []gov.Deposit {
 	cmd := fmt.Sprintf("%s query gov deposits %d %v", f.SimcliBinary, propsalID, f.Flags())
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
@@ -118,9 +118,9 @@ func QueryGovDeposits(f *helpers.Fixtures, propsalID int, flags ...string) []gov
 }
 
 //___________________________________________________________________________________
-// gaiacli tx gov
+// simcli tx gov
 
-// TxGovSubmitProposal is gaiacli tx gov submit-proposal
+// TxGovSubmitProposal is simcli tx gov submit-proposal
 func TxGovSubmitProposal(f *helpers.Fixtures, from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov submit-proposal %v --keyring-backend=test --from=%s --type=%s",
 		f.SimcliBinary, f.Flags(), from, typ)
@@ -128,14 +128,14 @@ func TxGovSubmitProposal(f *helpers.Fixtures, from, typ, title, description stri
 	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxGovDeposit is gaiacli tx gov deposit
+// TxGovDeposit is simcli tx gov deposit
 func TxGovDeposit(f *helpers.Fixtures, proposalID int, from string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov deposit %d %s --keyring-backend=test --from=%s %v",
 		f.SimcliBinary, proposalID, amount, from, f.Flags())
 	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxGovVote is gaiacli tx gov vote
+// TxGovVote is simcli tx gov vote
 func TxGovVote(f *helpers.Fixtures, proposalID int, option gov.VoteOption, from string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx gov vote %d %s --keyring-backend=test --from=%s %v",
 		f.SimcliBinary, proposalID, option, from, f.Flags())

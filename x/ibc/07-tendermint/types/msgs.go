@@ -211,8 +211,8 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Submitter}
 }
 
-func (msg MsgSubmitClientMisbehaviour) GetEvidence(sdk.InterfaceContext) (evidenceexported.Evidence, error) {
-	return msg.Evidence, nil
+func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
+	return msg.Evidence
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

@@ -13,12 +13,17 @@ const (
 
 var (
 	_ sdk.Msg                    = MsgSubmitEvidence{}
+	_ sdk.InterfaceMsg           = MsgSubmitEvidence{}
 	_ exported.MsgSubmitEvidence = MsgSubmitEvidence{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
-func NewMsgSubmitEvidence(s sdk.AccAddress) MsgSubmitEvidence {
-	return MsgSubmitEvidence{Submitter: s}
+func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (MsgSubmitEvidence, error) {
+	any, err := sdk.NewAnyWithValue(evi)
+	if err != nil {
+		return MsgSubmitEvidence{Submitter: s}, err
+	}
+	return MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
 }
 
 // Route returns the MsgSubmitEvidenceBase's route.
@@ -47,15 +52,19 @@ func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Submitter}
 }
 
-func (m MsgSubmitEvidence) GetEvidence(ctx sdk.InterfaceContext) (exported.Evidence, error) {
-	var evi exported.Evidence
-	x, err := ctx.UnpackAny(m.Evidence, (*exported.Evidence)(nil))
-	if err != nil {
-		return nil, err
+func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
+	evi, ok := m.Evidence.CachedValue().(exported.Evidence)
+	if !ok {
+		return nil
 	}
-	return x.(exported.Evidence), nil
+	return evi
 }
 
 func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
 	return m.Submitter
+}
+
+func (m MsgSubmitEvidence) Rehydrate(ctx sdk.InterfaceContext) error {
+	var evi exported.Evidence
+	return ctx.UnpackAny(m.Evidence, &evi)
 }

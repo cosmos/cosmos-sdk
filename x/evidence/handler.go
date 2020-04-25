@@ -11,7 +11,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case MsgSubmitEvidenceBase:
+		case exported.MsgSubmitEvidence:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%T must be extended to support evidence", msg)
 
 		default:
@@ -26,7 +26,7 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg exported.MsgSubmitEvidence) (*sdk.Result, error) {
-	evidence, _ := msg.GetEvidence(nil)
+	evidence := msg.GetEvidence()
 	if err := k.SubmitEvidence(ctx, evidence); err != nil {
 		return nil, err
 	}

@@ -44,6 +44,19 @@ type Any struct {
 	cachedValue          interface{}
 }
 
+func NewAnyWithValue(value interface{}) (*Any, error) {
+	any := &Any{}
+	msg, ok := value.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't pack %T", msg)
+	}
+	err := any.Pack(msg)
+	if err != nil {
+		return nil, err
+	}
+	return any, nil
+}
+
 type interfaceMap = map[string]reflect.Type
 
 type interfaceContext struct {
@@ -91,6 +104,10 @@ func (any *Any) Pack(x proto.Message) error {
 	any.Value = bz
 	any.cachedValue = x
 	return nil
+}
+
+func (any *Any) CachedValue() interface{} {
+	return any.cachedValue
 }
 
 func (ctx *interfaceContext) UnpackAny(any *Any, iface interface{}) error {
@@ -147,4 +164,8 @@ func UnmarshalAny(ctx InterfaceContext, iface interface{}, bz []byte) error {
 		return err
 	}
 	return ctx.UnpackAny(any, iface)
+}
+
+type InterfaceMsg interface {
+	Rehydrate(ctx InterfaceContext) error
 }

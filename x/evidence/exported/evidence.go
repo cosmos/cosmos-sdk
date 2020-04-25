@@ -40,6 +40,6 @@ type ValidatorEvidence interface {
 type MsgSubmitEvidence interface {
 	sdk.Msg
 
-	GetEvidence(ctx sdk.InterfaceContext) (Evidence, error)
+	GetEvidence() Evidence
 	GetSubmitter() sdk.AccAddress
 }

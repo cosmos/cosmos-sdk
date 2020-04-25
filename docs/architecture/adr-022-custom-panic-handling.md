@@ -39,13 +39,15 @@ We add a `recover()` object handler type:
 type RecoveryHandler func(recoveryObj interface{}) error
 ```
 
-This handler receives an object, processes it and returns contextually enriched `error` or `nil`
-if object is not a handle's target type.
+`recoveryObj` is a return value of `recover()` function.
+Handler should type assert (or other methods) an object to define if object should be handled.
+`nil` should be returned if input object can't be handled by that `RecoveryHandler` (not a handler's target type).
+Not `nil` error should be returned if input object was handled and middleware chain execution should be stopped.
 
 An example:
 
 ```go
-func(recoveryObj interface{}) error {
+func exampleErrHandler(recoveryObj interface{}) error {
     err, ok := recoveryObj.(error)
     if !ok { return nil }
     
@@ -61,7 +63,9 @@ This example breaks the application execution, but it also might enrich the erro
 
 ##### Recovery middleware
 
-We also add a middleware type:
+We also add a middleware type (decorator). That function type wraps `RecoveryHandler` and returns next middleware in
+execution chain and handler's `error`. Type is used to separate actual `recovery()` object handling from middleware
+chain processing.
 
 ```go
 type recoveryMiddleware func(recoveryObj interface{}) (recoveryMiddleware, error)
@@ -76,8 +80,11 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
 }
 ```
 
-Function receives a `recover()` object and returns (`next middleware`, `nil`) if object wasn't handled (not a target type)
-or (`nil`, `error`) if input object was handled and other middlewares in the chain should not be executed.
+Function receives a `recover()` object and returns:
+* (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
+* (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
+* (`nil`, `nil`) this is an invalid behaviour 'cause in that case panic recovery might not be properly handled;
+This can be avoided by always using a `default` as a rightmost middleware in chain (always returns an `error`'); 
 
 `OutOfGas` middleware example:
 ```go

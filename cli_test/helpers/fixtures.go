@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 

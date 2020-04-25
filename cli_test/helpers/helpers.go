@@ -3,11 +3,11 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"github.com/stretchr/testify/require"
 

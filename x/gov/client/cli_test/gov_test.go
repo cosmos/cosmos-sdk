@@ -1,4 +1,4 @@
-package cli
+package test
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestGaiaCLISubmitProposal(t *testing.T) {
+func TestSimCLISubmitProposal(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
@@ -18,21 +18,21 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	proc := f.SDStart()
 	defer proc.Stop(false)
 
-	f.QueryGovParamDeposit()
-	f.QueryGovParamVoting()
-	f.QueryGovParamTallying()
+	QueryGovParamDeposit(f)
+	QueryGovParamVoting(f)
+	QueryGovParamTallying(f)
 
 	fooAddr := f.KeyAddress(helpers.KeyFoo)
 
 	startTokens := sdk.TokensFromConsensusPower(50)
 	require.Equal(t, startTokens, f.QueryBalances(fooAddr).AmountOf(sdk.DefaultBondDenom))
 
-	proposalsQuery := f.QueryGovProposals()
+	proposalsQuery := QueryGovProposals(f)
 	require.Empty(t, proposalsQuery)
 
 	// Test submit generate only for submit proposal
 	proposalTokens := sdk.TokensFromConsensusPower(5)
-	success, stdout, stderr := f.TxGovSubmitProposal(
+	success, stdout, stderr := TxGovSubmitProposal(f,
 		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "--generate-only", "-y")
 	require.True(t, success)
 	require.Empty(t, stderr)
@@ -42,11 +42,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	success, _, _ = f.TxGovSubmitProposal(helpers.KeyFoo, "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "--dry-run")
+	success, _, _ = TxGovSubmitProposal(f, helpers.KeyFoo, "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "--dry-run")
 	require.True(t, success)
 
 	// Create the proposal
-	f.TxGovSubmitProposal(helpers.KeyFoo, "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
+	TxGovSubmitProposal(f, helpers.KeyFoo, "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure transaction events can be queried
@@ -57,21 +57,21 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, startTokens.Sub(proposalTokens), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
 
 	// Ensure propsal is directly queryable
-	proposal1 := f.QueryGovProposal(1)
+	proposal1 := QueryGovProposal(f, 1)
 	require.Equal(t, uint64(1), proposal1.ProposalID)
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
 
 	// Ensure query proposals returns properly
-	proposalsQuery = f.QueryGovProposals()
+	proposalsQuery = QueryGovProposals(f)
 	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// Query the deposits on the proposal
-	deposit := f.QueryGovDeposit(1, fooAddr)
+	deposit := QueryGovDeposit(f, 1, fooAddr)
 	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(helpers.Denom))
 
 	// Test deposit generate only
 	depositTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr = f.TxGovDeposit(1, fooAddr.String(), sdk.NewCoin(helpers.Denom, depositTokens), "--generate-only")
+	success, stdout, stderr = TxGovDeposit(f, 1, fooAddr.String(), sdk.NewCoin(helpers.Denom, depositTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = helpers.UnmarshalStdTx(t, f.Cdc, stdout)
@@ -80,16 +80,16 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Run the deposit transaction
-	f.TxGovDeposit(1, helpers.KeyFoo, sdk.NewCoin(helpers.Denom, depositTokens), "-y")
+	TxGovDeposit(f, 1, helpers.KeyFoo, sdk.NewCoin(helpers.Denom, depositTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// test query deposit
-	deposits := f.QueryGovDeposits(1)
+	deposits := QueryGovDeposits(f, 1)
 	require.Len(t, deposits, 1)
 	require.Equal(t, proposalTokens.Add(depositTokens), deposits[0].Amount.AmountOf(helpers.Denom))
 
 	// Ensure querying the deposit returns the proper amount
-	deposit = f.QueryGovDeposit(1, fooAddr)
+	deposit = QueryGovDeposit(f, 1, fooAddr)
 	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(helpers.Denom))
 
 	// Ensure events are set on the transaction
@@ -100,12 +100,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
 
 	// Fetch the proposal and ensure it is now in the voting period
-	proposal1 = f.QueryGovProposal(1)
+	proposal1 = QueryGovProposal(f, 1)
 	require.Equal(t, uint64(1), proposal1.ProposalID)
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.Status)
 
 	// Test vote generate only
-	success, stdout, stderr = f.TxGovVote(1, gov.OptionYes, fooAddr.String(), "--generate-only")
+	success, stdout, stderr = TxGovVote(f, 1, gov.OptionYes, fooAddr.String(), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = helpers.UnmarshalStdTx(t, f.Cdc, stdout)
@@ -114,16 +114,16 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Vote on the proposal
-	f.TxGovVote(1, gov.OptionYes, helpers.KeyFoo, "-y")
+	TxGovVote(f, 1, gov.OptionYes, helpers.KeyFoo, "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Query the vote
-	vote := f.QueryGovVote(1, fooAddr)
+	vote := QueryGovVote(f, 1, fooAddr)
 	require.Equal(t, uint64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 
 	// Query the votes
-	votes := f.QueryGovVotes(1)
+	votes := QueryGovVotes(f, 1)
 	require.Len(t, votes, 1)
 	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
@@ -133,19 +133,19 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure no proposals in deposit period
-	proposalsQuery = f.QueryGovProposals("--status=DepositPeriod")
+	proposalsQuery = QueryGovProposals(f, "--status=DepositPeriod")
 	require.Empty(t, proposalsQuery)
 
 	// Ensure the proposal returns as in the voting period
-	proposalsQuery = f.QueryGovProposals("--status=VotingPeriod")
+	proposalsQuery = QueryGovProposals(f, "--status=VotingPeriod")
 	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// submit a second test proposal
-	f.TxGovSubmitProposal(helpers.KeyFoo, "Text", "Apples", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
+	TxGovSubmitProposal(f, helpers.KeyFoo, "Text", "Apples", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Test limit on proposals query
-	proposalsQuery = f.QueryGovProposals("--limit=2")
+	proposalsQuery = QueryGovProposals(f, "--limit=2")
 	require.Len(t, proposalsQuery, 2)
 	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 

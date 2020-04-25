@@ -3,7 +3,6 @@ package std
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -32,10 +31,10 @@ type Codec struct {
 	// with type, and interface registration.
 	amino *codec.Codec
 
-	anyContext types.AnyContext
+	anyContext sdk.InterfaceContext
 }
 
-func NewAppCodec(amino *codec.Codec, ctx types.AnyContext) *Codec {
+func NewAppCodec(amino *codec.Codec, ctx sdk.InterfaceContext) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino, anyContext: ctx}
 }
 
@@ -121,20 +120,17 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (bankexported.SupplyI, error) {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
-	return types.MarshalAny(evidenceI)
+	return sdk.MarshalAny(evidenceI)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
 // bytes of a Proto-based Evidence type. An error is returned upon decoding
 // failure.
 func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
-	x, err := types.UnmarshalAny(c.anyContext, (*eviexported.Evidence)(nil), bz)
+	var evi eviexported.Evidence
+	err := sdk.UnmarshalAny(c.anyContext, &evi, bz)
 	if err != nil {
 		return nil, err
-	}
-	evi, ok := x.(eviexported.Evidence)
-	if !ok {
-		return nil, fmt.Errorf("%T is not an Evidence type", x)
 	}
 	return evi, nil
 }

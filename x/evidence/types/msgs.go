@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Message types for the evidence module
@@ -11,24 +12,23 @@ const (
 )
 
 var (
-	_ sdk.Msg = MsgSubmitEvidenceBase{}
+	_ sdk.Msg                    = MsgSubmitEvidence{}
+	_ exported.MsgSubmitEvidence = MsgSubmitEvidence{}
 )
 
-// NewMsgSubmitEvidenceBase returns a new MsgSubmitEvidenceBase with a signer/submitter.
-// Note, the MsgSubmitEvidenceBase is not to be used as an actual message, but
-// rather to be extended with Evidence.
-func NewMsgSubmitEvidenceBase(s sdk.AccAddress) MsgSubmitEvidenceBase {
-	return MsgSubmitEvidenceBase{Submitter: s}
+// NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
+func NewMsgSubmitEvidence(s sdk.AccAddress) MsgSubmitEvidence {
+	return MsgSubmitEvidence{Submitter: s}
 }
 
 // Route returns the MsgSubmitEvidenceBase's route.
-func (m MsgSubmitEvidenceBase) Route() string { return RouterKey }
+func (m MsgSubmitEvidence) Route() string { return RouterKey }
 
 // Type returns the MsgSubmitEvidenceBase's type.
-func (m MsgSubmitEvidenceBase) Type() string { return TypeMsgSubmitEvidence }
+func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidenceBase.
-func (m MsgSubmitEvidenceBase) ValidateBasic() error {
+func (m MsgSubmitEvidence) ValidateBasic() error {
 	if m.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String())
 	}
@@ -38,11 +38,24 @@ func (m MsgSubmitEvidenceBase) ValidateBasic() error {
 
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
 // a MsgSubmitEvidenceBase message.
-func (m MsgSubmitEvidenceBase) GetSignBytes() []byte {
+func (m MsgSubmitEvidence) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(m))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitEvidenceBase.
-func (m MsgSubmitEvidenceBase) GetSigners() []sdk.AccAddress {
+func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Submitter}
+}
+
+func (m MsgSubmitEvidence) GetEvidence(ctx sdk.InterfaceContext) (exported.Evidence, error) {
+	var evi exported.Evidence
+	x, err := ctx.UnpackAny(m.Evidence, (*exported.Evidence)(nil))
+	if err != nil {
+		return nil, err
+	}
+	return x.(exported.Evidence), nil
+}
+
+func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
+	return m.Submitter
 }

@@ -24,7 +24,7 @@ func TestNewMsgSubmitEvidence(t *testing.T) {
 
 	msg, err := std.NewMsgSubmitEvidence(e, s)
 	require.NoError(t, err)
-	require.Equal(t, msg.GetEvidence(), &e)
+	require.Equal(t, msg.GetEvidence(nil), &e)
 	require.Equal(t, msg.GetSubmitter(), s)
 	require.NoError(t, msg.ValidateBasic())
 }

@@ -26,7 +26,7 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg exported.MsgSubmitEvidence) (*sdk.Result, error) {
-	evidence := msg.GetEvidence()
+	evidence, _ := msg.GetEvidence(nil)
 	if err := k.SubmitEvidence(ctx, evidence); err != nil {
 		return nil, err
 	}

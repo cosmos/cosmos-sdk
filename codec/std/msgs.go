@@ -9,8 +9,7 @@ import (
 )
 
 var (
-	_ eviexported.MsgSubmitEvidence = MsgSubmitEvidence{}
-	_ gov.MsgSubmitProposalI        = &MsgSubmitProposal{}
+	_ gov.MsgSubmitProposalI = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence.
@@ -43,8 +42,10 @@ func (msg MsgSubmitEvidence) ValidateBasic() error {
 }
 
 // nolint
-func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence { return msg.Evidence.GetEvidence() }
-func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress      { return msg.Submitter }
+func (msg MsgSubmitEvidence) GetEvidence(sdk.InterfaceContext) (eviexported.Evidence, error) {
+	return msg.Evidence.GetEvidence(), nil
+}
+func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress { return msg.Submitter }
 
 // NewMsgSubmitProposal returns a new MsgSubmitProposal.
 func NewMsgSubmitProposal(c gov.Content, d sdk.Coins, p sdk.AccAddress) (gov.MsgSubmitProposalI, error) {

@@ -32,6 +32,8 @@ syntax = "proto3";
 
 package google.protobuf;
 
+import "third_party/proto/gogoproto/gogo.proto";
+
 option csharp_namespace = "Google.Protobuf.WellKnownTypes";
 option go_package = "types";
 option java_package = "com.google.protobuf";
@@ -152,4 +154,6 @@ message Any {
 
   // Must be a valid serialized protocol buffer of the above specified type.
   bytes value = 2;
+
+  option (gogoproto.typedecl) = false;
 }

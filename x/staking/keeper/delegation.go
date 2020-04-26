@@ -582,7 +582,7 @@ func (k Keeper) Unbond(
 	if isValidatorOperator && !validator.Jailed &&
 		validator.TokensFromShares(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 
-		k.Jail(ctx, validator.GetConsAddr())
+		k.jailValidator(ctx, validator)
 		validator = k.mustGetValidator(ctx, validator.OperatorAddress)
 	}
 

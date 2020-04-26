@@ -48,7 +48,23 @@ message Signature {
 }
 
 message PublicKey {
-    string type = 1;
+    enum Type {
+        TYPE_UNSPECIFIED = 0;
+        TYPE_SECP256K1 = 1;
+        TYPE_MULTISIG = 2;
+        TYPE_ED25519 = 3;
+        TYPE_SR25519 = 4;
+        TYPE_SECP256R1 = 5;
+        reserved 6 to 1024;
+    }
+
+    enum SignDocAlgorithm {
+        SIGN_DOC_ALGORITHM_DEFAULT = 0;
+        SIGN_DOCK_ALGORITHM_LEGACY_AMINO = 1;
+    }
+
+    Type type = 1;
     bytes bytes = 2;
+    SignDocAlgorithm sign_doc_algorithm = 3;
 }
 

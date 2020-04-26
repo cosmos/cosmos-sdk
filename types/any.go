@@ -139,6 +139,10 @@ func (ctx *interfaceContext) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
+	err = UnpackInterfaces(msg, ctx)
+	if err != nil {
+		return err
+	}
 	rv.Elem().Set(reflect.ValueOf(msg))
 	any.cachedValue = msg
 	return nil
@@ -167,5 +171,12 @@ func UnmarshalAny(ctx InterfaceContext, iface interface{}, bz []byte) error {
 }
 
 type InterfaceMsg interface {
-	Rehydrate(ctx InterfaceContext) error
+	UnpackInterfaces(ctx InterfaceContext) error
+}
+
+func UnpackInterfaces(x interface{}, ctx InterfaceContext) error {
+	if msg, ok := x.(InterfaceMsg); ok {
+		return msg.UnpackInterfaces(ctx)
+	}
+	return nil
 }

@@ -64,7 +64,7 @@ func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
 	return m.Submitter
 }
 
-func (m MsgSubmitEvidence) Rehydrate(ctx sdk.InterfaceContext) error {
+func (m MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceContext) error {
 	var evi exported.Evidence
 	return ctx.UnpackAny(m.Evidence, &evi)
 }

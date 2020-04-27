@@ -21,7 +21,7 @@ func defaultIdentifierValidator(id string, min, max int) error {
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)
 	}
-	// valid id must be between 10 and 20 characters
+	// valid id must be between 9 and 20 characters
 	if len(id) < min || len(id) > max {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}

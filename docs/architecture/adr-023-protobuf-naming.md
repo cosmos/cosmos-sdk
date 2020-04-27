@@ -11,16 +11,17 @@ Proposed
 ## Context
 
 Protocol Buffers provide a basic [style guide](https://developers.google.com/protocol-buffers/docs/style)
-and [Buf](https://buf.build/docs/style-guide) builds upon that. To do the
-extent possible we want to follow industry accepted wisdom and guidelines for
-the effective use of protobuf, deviating from those only when there is clear
-rationale for our use case. 
+and [Buf](https://buf.build/docs/style-guide) builds upon that. To the
+extent possible, we want to follow industry accepted guidelines and wisdom for
+the effective usage of protobuf, deviating from those only when there is clear
+rationale for our use case.
 
 ### Adoption of `Any`
 
 The adoption of `google.protobuf.Any` as the recommended approach for encoding
 interface types (as opposed to `oneof`) makes package naming a central part
-of the encoding as package names now appear in encoded messages.
+of the encoding as fully-qualified message names now appear in encoded
+transactions.
 
 ### Current Directory Organization
 
@@ -28,6 +29,7 @@ Thus far we have mostly followed [Buf's](https://buf.build) [DEFAULT](https://bu
 recommendations, with the minor deviation of disabling [`PACKAGE_DIRECTORY_MATCH`](https://buf.build/docs/lint-checkers#file_layout)
 which although being convenient for developing code comes with the warning
 from Buf that:
+
 > you will have a very bad time with many Protobuf plugins across various languages if you do not do this
 
 ### Adoption of gRPC Queries
@@ -40,14 +42,24 @@ script binaries.
 
 ## Decision
 
+The goal of this ADR is to provide thoughtful naming conventions that
+
+* encourage a good user experience for when users interact directly with
+.proto files and fully-qualified protobuf names
+* balance conciseness against the possibility of either over-optimizing (making
+names too short and cryptic) or under-optimizing (just accepting bloated names
+with lots of redundant information)
+
 These guidelines are meant to act as a style guide for both the SDK and
 third-party modules.
 
-We should adopt all of the [DEFAULT](https://buf.build/docs/lint-checkers#default)
+As a starting point, we should adopt all of the [DEFAULT](https://buf.build/docs/lint-checkers#default)
 checkers in [Buf's](https://buf.build) including [`PACKAGE_DIRECTORY_MATCH`](https://buf.build/docs/lint-checkers#file_layout),
 except:
 * [PACKAGE_VERSION_SUFFIX](https://buf.build/docs/lint-checkers#package_version_suffix)
 * [SERICE_SUFFIX](https://buf.build/docs/lint-checkers#service_suffix)
+
+Further guidelines to be described below.
 
 ### Principles
 
@@ -69,9 +81,9 @@ If we needed version 2 of bank, we could just write `cosmos.bank2.Send`.
 Such conciseness makes names both more pleasant to work with and take up less
 space within transactions and on the wire.
 
-We should also resist the temptation to make names cryptically short with
-abbreviations. For instance, we shouldn't try to reduce `cosmos.bank.Send`
-to `csm.bk.Snd` just to save six bytes.
+We should also resist the temptation to over-optimize, by making names
+cryptically short with abbreviations. For instance, we shouldn't try to
+reduce `cosmos.bank.Send` to `csm.bk.Snd` just to save six bytes.
 
 The goal is to make names **_concise but not cryptic_**.
 
@@ -92,21 +104,21 @@ the best choices for the future.
 
 Always use a breaking change detector such as [Buf](https://buf.build) to prevent
 breaking changes in stable (non-alpha or beta) packages. Breaking changes can
-break persistent scripts/smart contracts and generally provide a bad UX for
+break smart contracts/persistent scripts and generally provide a bad UX for
 clients. With protobuf, there should usually be ways to extend existing
-functionality rather than just breaking it.
+functionality instead of just breaking it.
 
 #### Use Simple Version Suffixes
 
 Instead of using [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix),
 we can more concisely indicate version 2, 3, etc. of a package with a simple
-suffix rather than a sub-package, ex. `cosmos.bank2.Send` or `cosmos.bank.Send2`.
+package suffix rather than a sub-package, ex. `cosmos.bank2.Send` or `cosmos.bank.Send2`.
 Version 1 should obviously be the non-suffixed version, ex. `cosmos.bank.Send`.
 
 #### Use `alpha` or `beta` to Denote Non-stable Packages
 
 [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
-(ex. `v1alpha1`) _should_ be used for non-stable packages. These packages will
+(ex. `v1alpha1`) _should_ be used for non-stable packages. These packages should
 likely be excluded from breaking change detection and _should_ generally 
 be blacklisted from usage by smart contracts/persistent scripts to prevent them
 from breaking. The SDK _should_ mark any packages as alpha or beta where the
@@ -116,9 +128,10 @@ API is likely to change significantly in the near future.
 
 #### Adopt a short, unique top-level package name
 
-Top-level packages should adopt a short name that is unlikely to collide with
-other names in common usage. In the near future, a registry should be created
-to reserve and index top-level package names used within the Cosmos ecosystem.
+Top-level packages should adopt a short name that is known to not collide with
+other names in common usage within the Cosmos ecosystem. In the near future, a
+registry should be created to reserve and index top-level package names used
+within the Cosmos ecosystem.
 
 #### Limit sub-package depth
 
@@ -139,17 +152,17 @@ Historically all transaction messages in the SDK have been prefixed with `Msg`
 which is a shortening of messsage. To begin with "message", not being an action
 word, does not clearly indicate the concept of transaction or operation. So
 understanding that `Msg` indicates transaction likely requires knowledge of
-Cosmos SDK conventions. Once if someone understands that `Msg` means transaction,
+Cosmos SDK conventions. Once someone understands that `Msg` means transaction,
 however, it still is likely redundant information as the type name usually
 includes an action verb such as "send", "create" or "submit".
 
 Going forward, for both conciseness and clarity, transaction messages should
-simply use a descriptive action verb to indicate that this is something which
+simply use a descriptive action verb to indicate that this is a type which
 performs an action in a transaction. This should also be made clear in the
 documentation.
 
 To maintain compatibility with existing names in go code, an alias can be
-introduced for the previous type name.
+introduced for legacy type names.
 
 #### Use simple nouns for state types
 
@@ -160,16 +173,16 @@ arguments to some transaction messages. Ex. `Coin`, `Proposal` and `Delegation`.
 
 [ADR 021](adr-021-protobuf-query-encoding.md) specifies that modules should
 implement a gRPC query service. We should consider the principle of conciseness
-for query service and RPC names as these may be called within the state machine
-from persistent script modules such as CosmWasm. For example, we can shorten
+for query service and RPC names as these may be called from persistent script
+modules such as CosmWasm. Also, users may use these query paths from tools like
+[gRPCurl](https://github.com/fullstorydev/grpcurl). As an example, we can shorten
 `/cosmos_sdk.x.bank.v1.QueryService/QueryBalance` to
 `/cosmos.bank.Query/Balance` without losing much useful information.
 
-#### Use just `Query` or `Q` for the query service
+#### Use just `Query` for the query service
 
 Instead of [Buf's default service suffix recommendation](https://github.com/cosmos/cosmos-sdk/pull/6033),
-we should simply use the shorter `Query` or even consider just `Q` for query
-services.
+we should simply use the shorter `Query` for query services.
 
 For other types of gRPC services, we should consider sticking with Buf's
 default recommendation.
@@ -182,16 +195,23 @@ just says `Query` twice without any new information.
 
 ## Future Improvements
 
+A registry of top-level package names should be created to coordinate naming
+across the ecosystem, prevent collisions, and also help developers discover
+useful schemas. A simple starting point would be a git repository with
+community-based governance.
+
 ## Consequences
 
 ### Positive
 
-* names will be more concise and easier to read
+* names will be more concise and easier to read and type
 * all transactions using `Any` will be at least 12 bytes shorter
 (`_sdk.x`, `.v1`, `Msg` will be removed from `sdk.Msg` message names)
-* query RPC names also be more concise and easy to read
-* `.proto` file imports can be more standard (without `"third_party/proto" in
+* `.proto` file imports will be more standard (without `"third_party/proto"` in
 the path)
+* code generation will be easier for clients because .proto files will be
+in a single `proto/` directory which can be copied rather than scattered
+throughout the SDK
 
 ### Negative
 
@@ -201,5 +221,7 @@ legacy Amino type names will not change
 ### Neutral
 
 * `.proto`  files will need to be reorganized and refactored
+* go code will need refactored where type names change
+* some modules may need to be marked as alpha or beta
 
 ## References

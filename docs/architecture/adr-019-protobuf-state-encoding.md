@@ -148,11 +148,11 @@ and cause it to be loaded and unmarshaled by a transaction that referenced
 it in the `type_url` field.
 
 To prevent this, we introduce a type registration mechanism for decoding `Any`
-values into concrete types through the `InterfaceContext` interface which
+values into concrete types through the `InterfaceRegistry` interface which
 bears some similarity to type registration with Amino:
 
 ```go
-type InterfaceContext interface {
+type InterfaceRegistry interface {
     // RegisterInterface associates protoName as the public name for the
     // interface passed in as iface
     // Ex:
@@ -176,10 +176,10 @@ type InterfaceContext interface {
 }
 ```
 
-In addition to serving as a whitelist, `InterfaceContext` can also serve
+In addition to serving as a whitelist, `InterfaceRegistry` can also serve
 to communicate the list of concrete types that satisfy an interface to clients.
 
-Note that `InterfaceContext` usage does not deviate from standard protobuf
+Note that `InterfaceRegistry` usage does not deviate from standard protobuf
 usage of `Any`, it just introduces a security and introspection layer for 
 golang usage.
 
@@ -222,17 +222,17 @@ message MsgSubmitEvidence {
 ```
 
 Note that in order to unpack the evidence from `Any` we do need a reference to
-`InterfaceContext`. This is inconvenient if we want to reference the evidence
+`InterfaceRegistry`. This is inconvenient if we want to reference the evidence
 in methods like `ValidateBasic`. We can work around this limitation by
 introducing an `UnpackInterfaces` phase to deserialization.
 
 ### Unpacking Interfaces
 
-To ease unpacking of interfacing with `InterfaceContext`, we add introduce an
+To ease unpacking of interfacing with `InterfaceRegistry`, we add introduce an
 interface that `sdk.Msg`s and other types can implement:
 ```go
 type UnpackInterfacesMsg interface {
-  UnpackInterfaces(InterfaceContext) error
+  UnpackInterfaces(InterfaceRegistry) error
 }
 ```
 
@@ -250,7 +250,7 @@ is read.
 `GetEvidence` as follows:
 
 ```go
-func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceContext) error {
+func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceRegistry) error {
   var evi eviexported.Evidence
   return ctx.UnpackAny(msg.Evidence, *evi)
 }

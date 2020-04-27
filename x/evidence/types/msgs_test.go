@@ -1,10 +1,10 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -13,8 +13,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
-	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
+func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) std.MsgSubmitEvidence {
+	msg, err := std.NewMsgSubmitEvidence(e, s)
 	require.NoError(t, err)
 	return msg
 }

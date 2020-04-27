@@ -2,18 +2,18 @@ package simapp
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func TestGetSimulationLog(t *testing.T) {
-	cdc := codecstd.MakeCodec(ModuleBasics)
+	cdc := std.MakeCodec(ModuleBasics)
 
 	decoders := make(sdk.StoreDecoderRegistry)
 	decoders[auth.StoreKey] = func(kvAs, kvBs tmkv.Pair) string { return "10" }

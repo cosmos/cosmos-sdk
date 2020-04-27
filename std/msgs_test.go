@@ -1,6 +1,7 @@
 package std_test
 
 import (
+	std2 "github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
 
@@ -8,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 )
@@ -22,7 +22,7 @@ func TestNewMsgSubmitEvidence(t *testing.T) {
 		ConsensusAddress: sdk.ConsAddress("test"),
 	}
 
-	msg, err := std.NewMsgSubmitEvidence(e, s)
+	msg, err := std2.NewMsgSubmitEvidence(e, s)
 	require.NoError(t, err)
 	require.Equal(t, msg.GetEvidence(), &e)
 	require.Equal(t, msg.GetSubmitter(), s)
@@ -42,21 +42,21 @@ func TestMsgSubmitProposal(t *testing.T) {
 	// test constructor
 	//
 
-	msg, err := std.NewMsgSubmitProposal(c, d, p)
+	msg, err := std2.NewMsgSubmitProposal(c, d, p)
 	require.NoError(t, err)
 	require.Equal(t, msg.GetContent(), c)
 	require.Equal(t, msg.GetProposer(), p)
 	require.Equal(t, msg.GetInitialDeposit(), d)
 	require.NoError(t, msg.ValidateBasic())
 
-	_, err = std.NewMsgSubmitProposal(invalidProposal{}, d, p)
+	_, err = std2.NewMsgSubmitProposal(invalidProposal{}, d, p)
 	require.Error(t, err)
 
 	//
 	// test setter methods
 	//
 
-	msg = &std.MsgSubmitProposal{}
+	msg = &std2.MsgSubmitProposal{}
 	msg.SetProposer(p)
 	msg.SetInitialDeposit(d)
 	err = msg.SetContent(c)
@@ -66,7 +66,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 	require.Equal(t, msg.GetInitialDeposit(), d)
 	require.NoError(t, msg.ValidateBasic())
 
-	msg = &std.MsgSubmitProposal{}
+	msg = &std2.MsgSubmitProposal{}
 	err = msg.SetContent(invalidProposal{})
 	require.Error(t, err)
 

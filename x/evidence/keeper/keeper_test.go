@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		codecstd.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
+		std.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
 		app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()

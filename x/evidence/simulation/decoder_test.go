@@ -2,6 +2,7 @@ package simulation_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
@@ -17,7 +17,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := codecstd.NewAppCodec(codecstd.MakeCodec(simapp.ModuleBasics))
+	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
 	dec := simulation.NewDecodeStore(cdc)
 
 	delPk1 := ed25519.GenPrivKey().PubKey()

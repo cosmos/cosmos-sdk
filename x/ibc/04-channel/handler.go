@@ -10,7 +10,7 @@ import (
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit
 func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenInit) (*sdk.Result, *capability.Capability, error) {
 	capKey, err := k.ChanOpenInit(
-		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
+		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.Channel.PortID, msg.Channel.ID,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version,
 	)
 	if err != nil {
@@ -20,8 +20,8 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenInit,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.Channel.PortID),
+			sdk.NewAttribute(types.AttributeKeyChannelID, msg.Channel.ID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
@@ -40,7 +40,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
 func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capability.Capability, msg types.MsgChannelOpenTry) (*sdk.Result, *capability.Capability, error) {
-	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
+	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.Channel.PortID, msg.Channel.ID,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {
@@ -50,8 +50,8 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenTry,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.Channel.PortID),
+			sdk.NewAttribute(types.AttributeKeyChannelID, msg.Channel.ID),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate

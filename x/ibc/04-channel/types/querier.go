@@ -16,29 +16,21 @@ const (
 	QueryConnectionChannels = "connection-channels"
 )
 
-type IdentifiedChannel struct {
-	Channel           Channel `json:"channel_end" yaml:"channel_end"`
-	PortIdentifier    string  `json:"port_identifier" yaml:"port_identifier"`
-	ChannelIdentifier string  `json:"channel_identifier" yaml:"channel_identifier"`
-}
-
 // ChannelResponse defines the client query response for a channel which also
 // includes a proof,its path and the height from which the proof was retrieved.
 type ChannelResponse struct {
-	Channel     IdentifiedChannel           `json:"channel" yaml:"channel"`
+	Channel     Channel                     `json:"channel" yaml:"channel"`
 	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
 	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
 	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewChannelResponse creates a new ChannelResponse instance
-func NewChannelResponse(
-	portID, channelID string, channel Channel, proof *merkle.Proof, height int64,
-) ChannelResponse {
+func NewChannelResponse(channel Channel, proof *merkle.Proof, height int64) ChannelResponse {
 	return ChannelResponse{
-		Channel:     IdentifiedChannel{Channel: channel, PortIdentifier: portID, ChannelIdentifier: channelID},
+		Channel:     channel,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(portID, channelID), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(channel.PortID, channel.ID), "/")),
 		ProofHeight: uint64(height),
 	}
 }

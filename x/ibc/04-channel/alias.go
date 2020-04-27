@@ -82,4 +82,5 @@ type (
 	MsgTimeout             = types.MsgTimeout
 	Packet                 = types.Packet
 	ChannelResponse        = types.ChannelResponse
+	GenesisState           = types.GenesisState
 )

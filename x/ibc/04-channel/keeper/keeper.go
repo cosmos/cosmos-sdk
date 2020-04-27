@@ -58,10 +58,10 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 }
 
 // SetChannel sets a channel to the store
-func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
+func (k Keeper) SetChannel(ctx sdk.Context, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(channel)
-	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
+	store.Set(ibctypes.KeyChannel(channel.PortID, channel.ID), bz)
 }
 
 // GetNextSequenceSend gets a channel's next send sequence from the store
@@ -137,25 +137,23 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 // IterateChannels provides an iterator over all Channel objects. For each
 // Channel, cb will be called. If the cb returns true, the iterator will close
 // and stop.
-func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.IdentifiedChannel) bool) {
+func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.Channel) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(ibctypes.KeyChannelPrefix))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var channel types.Channel
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &channel)
-		portID, channelID := ibctypes.MustParseChannelPath(string(iterator.Key()))
 
-		if cb(types.IdentifiedChannel{Channel: channel, PortIdentifier: portID, ChannelIdentifier: channelID}) {
+		if cb(channel) {
 			break
 		}
 	}
 }
 
 // GetAllChannels returns all stored Channel objects.
-func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.IdentifiedChannel) {
-	k.IterateChannels(ctx, func(channel types.IdentifiedChannel) bool {
+func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.Channel) {
+	k.IterateChannels(ctx, func(channel types.Channel) bool {
 		channels = append(channels, channel)
 		return false
 	})

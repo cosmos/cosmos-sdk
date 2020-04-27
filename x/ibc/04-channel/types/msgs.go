@@ -16,10 +16,8 @@ import (
 var _ sdk.Msg = MsgChannelOpenInit{}
 
 type MsgChannelOpenInit struct {
-	PortID    string         `json:"port_id"`
-	ChannelID string         `json:"channel_id"`
-	Channel   Channel        `json:"channel"`
-	Signer    sdk.AccAddress `json:"signer"`
+	Channel Channel        `json:"channel"`
+	Signer  sdk.AccAddress `json:"signer"`
 }
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
@@ -28,12 +26,10 @@ func NewMsgChannelOpenInit(
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(exported.INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(channelID, portID, exported.INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenInit{
-		PortID:    portID,
-		ChannelID: channelID,
-		Channel:   channel,
-		Signer:    signer,
+		Channel: channel,
+		Signer:  signer,
 	}
 }
 
@@ -49,12 +45,6 @@ func (msg MsgChannelOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenInit) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdkerrors.Wrap(err, "invalid port ID")
-	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
-	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
 }
@@ -88,10 +78,8 @@ func NewMsgChannelOpenTry(
 	proofInit commitmentexported.Proof, proofHeight uint64, signer sdk.AccAddress,
 ) MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(exported.INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(channelID, portID, exported.INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenTry{
-		PortID:              portID,
-		ChannelID:           channelID,
 		Channel:             channel,
 		CounterpartyVersion: counterpartyVersion,
 		ProofInit:           proofInit,
@@ -112,12 +100,6 @@ func (msg MsgChannelOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenTry) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdkerrors.Wrap(err, "invalid port ID")
-	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
-	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}

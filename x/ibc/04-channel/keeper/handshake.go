@@ -63,8 +63,8 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
-	channel := types.NewChannel(exported.INIT, order, counterparty, connectionHops, version)
-	k.SetChannel(ctx, portID, channelID, channel)
+	channel := types.NewChannel(channelID, portID, exported.INIT, order, counterparty, connectionHops, version)
+	k.SetChannel(ctx, channel)
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
@@ -121,7 +121,7 @@ func (k Keeper) ChanOpenTry(
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(exported.TRYOPEN, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(channelID, portID, exported.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
@@ -133,6 +133,7 @@ func (k Keeper) ChanOpenTry(
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
+		counterparty.ChannelID, counterparty.PortID,
 		exported.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
@@ -144,7 +145,7 @@ func (k Keeper) ChanOpenTry(
 		return nil, err
 	}
 
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, channel)
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
@@ -202,9 +203,10 @@ func (k Keeper) ChanOpenAck(
 	}
 
 	// counterparty of the counterparty channel end (i.e self)
-	counterparty := types.NewCounterparty(portID, channelID)
+	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		exported.TRYOPEN, channel.Ordering, counterparty,
+		channel.Counterparty.ChannelID, channel.Counterparty.PortID,
+		exported.TRYOPEN, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
 
@@ -218,7 +220,7 @@ func (k Keeper) ChanOpenAck(
 
 	channel.State = exported.OPEN
 	channel.Version = counterpartyVersion
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, channel)
 
 	return nil
 }
@@ -269,6 +271,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
+		channel.Counterparty.ChannelID, channel.Counterparty.PortID,
 		exported.OPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
@@ -282,7 +285,7 @@ func (k Keeper) ChanOpenConfirm(
 	}
 
 	channel.State = exported.OPEN
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, channel)
 
 	return nil
 }
@@ -326,7 +329,7 @@ func (k Keeper) ChanCloseInit(
 	}
 
 	channel.State = exported.CLOSED
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, channel)
 	k.Logger(ctx).Info("channel close initialized: portID (%s), channelID (%s)", portID, channelID)
 	return nil
 }
@@ -374,6 +377,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
+		channel.Counterparty.ChannelID, channel.Counterparty.PortID,
 		exported.CLOSED, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
@@ -387,7 +391,7 @@ func (k Keeper) ChanCloseConfirm(
 	}
 
 	channel.State = exported.CLOSED
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, channel)
 
 	return nil
 }

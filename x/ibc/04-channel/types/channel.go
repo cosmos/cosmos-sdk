@@ -11,6 +11,8 @@ import (
 
 // Channel defines...
 type Channel struct {
+	ID             string         `json:"id" yaml:"id"`
+	PortID         string         `json:"port_id" yaml:"port_id"`
 	State          exported.State `json:"state" yaml:"state"`
 	Ordering       exported.Order `json:"ordering" yaml:"ordering"`
 	Counterparty   Counterparty   `json:"counterparty" yaml:"counterparty"`
@@ -20,10 +22,12 @@ type Channel struct {
 
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state exported.State, ordering exported.Order, counterparty Counterparty,
-	hops []string, version string,
+	channelID, portID string, state exported.State, ordering exported.Order,
+	counterparty Counterparty, hops []string, version string,
 ) Channel {
 	return Channel{
+		ID:             channelID,
+		PortID:         portID,
 		State:          state,
 		Ordering:       ordering,
 		Counterparty:   counterparty,
@@ -59,6 +63,12 @@ func (ch Channel) GetVersion() string {
 
 // ValidateBasic performs a basic validation of the channel fields
 func (ch Channel) ValidateBasic() error {
+	if err := host.DefaultChannelIdentifierValidator(ch.ID); err != nil {
+		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
+	}
+	if err := host.DefaultPortIdentifierValidator(ch.PortID); err != nil {
+		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
+	}
 	if ch.State.String() == "" {
 		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}

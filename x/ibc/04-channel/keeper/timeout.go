@@ -144,7 +144,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability,
 
 	if channel.Ordering == exported.ORDERED {
 		channel.State = exported.CLOSED
-		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
+		k.SetChannel(ctx, channel)
 	}
 
 	return nil
@@ -212,6 +212,7 @@ func (k Keeper) TimeoutOnClose(
 
 	counterparty := types.NewCounterparty(packet.GetSourcePort(), packet.GetSourceChannel())
 	expectedChannel := types.NewChannel(
+		channel.Counterparty.ChannelID, channel.Counterparty.PortID,
 		exported.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
 	)
 

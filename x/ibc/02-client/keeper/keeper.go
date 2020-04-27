@@ -108,11 +108,11 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keySplit := strings.Split(string(iterator.Key()), "/")
-		fmt.Println(keySplit)
-		if keySplit[len(keySplit)-2] != "consensusState" {
+		// consensus key is in the format "clients/<clientID>/consensusState/<height>"
+		if len(keySplit) != 4 || keySplit[2] != "consensusState" {
 			continue
 		}
-		clientID := keySplit[len(keySplit)-3]
+		clientID := keySplit[1]
 		var consensusState exported.ConsensusState
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
 
@@ -122,7 +122,8 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 	}
 }
 
-// GetAllConsensusStates returns all stored client consensus states
+// GetAllConsensusStates returns all stored client consensus states.
+// NOTE: non deterministic.
 func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types.ClientConsensusStates) {
 	// create map to add consensus states to the existing clients
 	cons := make(map[string][]exported.ConsensusState)

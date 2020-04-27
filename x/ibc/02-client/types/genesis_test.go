@@ -19,9 +19,7 @@ import (
 )
 
 const (
-	testClientID2 = "ethbridge"
-
-	testClientHeight = 5
+	clientID = "ethbridge"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -56,12 +54,12 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState(store, "chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
 					{
-						testClientID2,
+						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
 								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), header.GetHeight(), header.ValidatorSet,
@@ -76,7 +74,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState(store, "chaindID", 0),
 				},
 				nil,
@@ -87,7 +85,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState(store, "chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
@@ -107,12 +105,12 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState(store, "chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
-						testClientID2,
+						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
 								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), 0, header.ValidatorSet,

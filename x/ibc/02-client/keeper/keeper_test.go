@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -161,7 +162,9 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, _ := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+	clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+	suite.Require().NoError(err)
+
 	suite.keeper.SetClientState(suite.ctx, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
@@ -191,4 +194,37 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	lte.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower()
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", testClientHeight+3)
+}
+
+func (suite KeeperTestSuite) TestGetAllConsensusStates() {
+	expConsensus := []types.ClientConsensusStates{
+		types.NewClientConsensusStates(
+			testClientID,
+			[]exported.ConsensusState{
+				suite.consensusState,
+				ibctmtypes.NewConsensusState(
+					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, suite.consensusState.ValidatorSet,
+				),
+			},
+		),
+		types.NewClientConsensusStates(
+			testClientID2,
+			[]exported.ConsensusState{
+				ibctmtypes.NewConsensusState(
+					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, suite.consensusState.ValidatorSet,
+				),
+			},
+		),
+	}
+
+	for i := range expConsensus {
+		for _, cons := range expConsensus[i].ConsensusStates {
+			suite.keeper.SetClientConsensusState(suite.ctx, expConsensus[i].ClientID, cons.GetHeight(), cons)
+		}
+	}
+
+	// FIXME: non-determinism
+	consStates := suite.keeper.GetAllConsensusStates(suite.ctx)
+	suite.Require().Len(consStates, len(expConsensus))
+	suite.Require().EqualValues(expConsensus, consStates)
 }

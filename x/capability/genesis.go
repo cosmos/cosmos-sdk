@@ -1,8 +1,6 @@
 package capability
 
 import (
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -12,29 +10,26 @@ func InitGenesis(ctx sdk.Context, k Keeper, genState GenesisState) {
 	k.SetIndex(ctx, genState.Index)
 
 	// set owners for each index and initialize capability
-	for i, owners := range genState.Owners {
-		index, err := strconv.Atoi(i)
-		if err != nil {
-			panic(err)
-		}
-		k.SetOwners(ctx, uint64(index), owners)
-		k.InitializeCapability(ctx, uint64(index), owners)
+	for _, genOwner := range genState.Owners {
+		k.SetOwners(ctx, genOwner.Index, genOwner.Owners)
+		k.InitializeCapability(ctx, genOwner.Index, genOwner.Owners)
 	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	index := k.GetLatestIndex(ctx)
-	owners := make(map[string]CapabilityOwners)
+	owners := []GenesisOwners{}
 	for i := uint64(1); i < index; i++ {
 		iOwners, ok := k.GetOwners(ctx, i)
-		// Skip if nil
-		if !ok {
-			continue
-		}
+
 		// only export non-empty owners
-		if len(iOwners.Owners) != 0 {
-			owners[strconv.Itoa(int(i))] = *iOwners
+		if ok && len(iOwners.Owners) != 0 {
+			genOwner := GenesisOwners{
+				Index:  i,
+				Owners: *iOwners,
+			}
+			owners = append(owners, genOwner)
 		}
 	}
 	return GenesisState{

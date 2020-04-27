@@ -38,4 +38,5 @@ type (
 	Capability       = types.Capability
 	CapabilityOwners = types.CapabilityOwners
 	GenesisState     = types.GenesisState
+	GenesisOwners    = types.GenesisOwners
 )

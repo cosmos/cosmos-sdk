@@ -27,6 +27,7 @@ type GenesisState struct {
 func DefaultGenesis() GenesisState {
 	return GenesisState{
 		Index: DefaultIndex,
+		Owners: []GenesisOwners{},
 	}
 }
 

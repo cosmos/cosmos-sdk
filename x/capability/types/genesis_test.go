@@ -21,7 +21,12 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis state",
 			malleate: func(genState *GenesisState) {
 				genState.Index = 10
-				genState.Owners["1"] = CapabilityOwners{[]Owner{{Module: "ibc", Name: "port/transfer"}}}
+				genOwner := GenesisOwners{
+					Index:  1,
+					Owners: CapabilityOwners{[]Owner{{Module: "ibc", Name: "port/transfer"}}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
 			},
 			expPass: true,
 		},
@@ -29,7 +34,13 @@ func TestValidateGenesis(t *testing.T) {
 			name: "initial index is 0",
 			malleate: func(genState *GenesisState) {
 				genState.Index = 0
-				genState.Owners["1"] = CapabilityOwners{[]Owner{{Module: "ibc", Name: "port/transfer"}}}
+				genOwner := GenesisOwners{
+					Index:  0,
+					Owners: CapabilityOwners{[]Owner{{Module: "ibc", Name: "port/transfer"}}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -37,24 +48,28 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "blank owner module",
 			malleate: func(genState *GenesisState) {
-				genState.Index = 0
-				genState.Owners["1"] = CapabilityOwners{[]Owner{{Module: "module", Name: "port/transfer"}}}
+				genState.Index = 1
+				genOwner := GenesisOwners{
+					Index:  1,
+					Owners: CapabilityOwners{[]Owner{{Module: "", Name: "port/transfer"}}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
 		{
 			name: "blank owner name",
 			malleate: func(genState *GenesisState) {
-				genState.Index = 0
-				genState.Owners["1"] = CapabilityOwners{[]Owner{{Module: "module", Name: ""}}}
-			},
-			expPass: false,
-		},
-		{
-			name: "index key is not a number",
-			malleate: func(genState *GenesisState) {
-				genState.Index = 10
-				genState.Owners["one"] = CapabilityOwners{[]Owner{{Module: "module", Name: ""}}}
+				genState.Index = 1
+				genOwner := GenesisOwners{
+					Index:  1,
+					Owners: CapabilityOwners{[]Owner{{Module: "ibc", Name: ""}}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -62,7 +77,13 @@ func TestValidateGenesis(t *testing.T) {
 			name: "index above range",
 			malleate: func(genState *GenesisState) {
 				genState.Index = 10
-				genState.Owners["12"] = CapabilityOwners{[]Owner{{Module: "module", Name: ""}}}
+				genOwner := GenesisOwners{
+					Index:  12,
+					Owners: CapabilityOwners{[]Owner{{Module: "ibc", Name: "port/transfer"}}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -70,7 +91,13 @@ func TestValidateGenesis(t *testing.T) {
 			name: "index below range",
 			malleate: func(genState *GenesisState) {
 				genState.Index = 10
-				genState.Owners["-3"] = CapabilityOwners{[]Owner{{Module: "module", Name: ""}}}
+				genOwner := GenesisOwners{
+					Index:  0,
+					Owners: CapabilityOwners{[]Owner{{Module: "ibc", Name: "port/transfer"}}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -78,7 +105,13 @@ func TestValidateGenesis(t *testing.T) {
 			name: "owners are empty",
 			malleate: func(genState *GenesisState) {
 				genState.Index = 10
-				genState.Owners["3"] = CapabilityOwners{[]Owner{}}
+				genOwner := GenesisOwners{
+					Index:  0,
+					Owners: CapabilityOwners{[]Owner{}},
+				}
+
+				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},

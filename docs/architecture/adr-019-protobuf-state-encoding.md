@@ -238,11 +238,12 @@ type UnpackInterfacesMsg interface {
 We also introduce a private `cachedValue interface{}` field onto the `Any`
 struct itself with a public getter `GetUnpackedValue() interface{}`.
 
-This `UnpackInterfaces` is to be invoked during message deserialization right
+The `UnpackInterfaces` method is to be invoked during message deserialization right
 after the call to `Unmarshal`. Then the unpacked interface value can safely
 be used in any code afterwards and messages can introduce a simple getter to
-cast to the interface type. This has the added benefit that unmarshaling of `Any`
-values only happens once rather than every time the value is read.
+cast the cached value to the interface type. This has the added benefit that
+unmarshaling of `Any` values only happens once rather than every time the value
+is read.
 
 `MsgSubmitEvidence` could implement `UnpackInterfaces`, plus a convenience getter
 `GetEvidence` as follows:
@@ -285,6 +286,11 @@ In the future we may consider a compression layer right above the persistence
 layer which doesn't change tx or merkle tree hashes, but reduces the storage
 overhead of `Any`. In addition, we may adopt protobuf naming conventions which
 make type URLs a bit more concise while remaining descriptive.
+
+Additional code generation support around the usage of `Any` is something that
+could also be explored in the future. For instance, a gogo protobuf extension
+in the future could possibly marshal `Any` values directly to go interfaces
+like Amino. This is, however, unneeded as a starting point.
 
 ## Consequences
 

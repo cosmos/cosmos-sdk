@@ -40,5 +40,6 @@ fi
 # Run go mod tidy
 go mod tidy && git add go.mod go.sum
 
+GOLANGCI_LINT_PATH="$(go env GOPATH)/bin/golangci-lint"
 # Run golangci-lint
-which golangci-lint &>/dev/null && golangci-lint run --fast --issues-exit-code=0 || f_echo_stderr "couldn't find golangci-lint"
+[ -x "${GOLANGCI_LINT_PATH}" ] && "${GOLANGCI_LINT_PATH}" run --fast --issues-exit-code=0 || f_echo_stderr "couldn't find golangci-lint"

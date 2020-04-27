@@ -121,7 +121,7 @@ func TestValidateGenesis(t *testing.T) {
 		tc := tc
 		genState := DefaultGenesis()
 		tc.malleate(&genState)
-		err := ValidateGenesis(genState)
+		err := genState.Validate()
 		if tc.expPass {
 			require.NoError(t, err, tc.name)
 		} else {

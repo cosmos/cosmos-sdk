@@ -22,9 +22,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-
-	// TODO: Enable simulation once concrete types are defined.
-	// _ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
 // ----------------------------------------------------------------------------
@@ -61,7 +58,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
-	return types.ValidateGenesis(genState)
+	return genState.Validate()
 }
 
 // RegisterRESTRoutes registers the capability module's REST service handlers.

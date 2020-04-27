@@ -90,7 +90,7 @@ func (kv KVPair) Bytes() []byte {
 
 // EncodeByteSlice encodes a byte slice with its length prefixed
 func encodeByteSlice(w io.Writer, bz []byte) (err error) {
-	var buf [10]byte
+	var buf [8]byte
 	n := binary.PutUvarint(buf[:], uint64(len(bz)))
 	_, err = w.Write(buf[0:n])
 	if err != nil {

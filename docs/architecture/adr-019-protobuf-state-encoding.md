@@ -119,6 +119,7 @@ After [extension discussion](https://github.com/cosmos/cosmos-sdk/issues/6030),
 this was chosen as the preferred alternative to application-level `oneof`s
 as in our original protobuf design. The arguments in favor of `Any` can be
 summarized as follows:
+
 * `Any` provides a simpler, more consistent client UX for dealing with
 interfaces than app-level `oneof`s that will need to be coordinated more
 carefully across applications. Creating a generic transaction

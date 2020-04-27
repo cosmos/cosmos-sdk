@@ -131,7 +131,9 @@ API is likely to change significantly in the near future.
 Top-level packages should adopt a short name that is known to not collide with
 other names in common usage within the Cosmos ecosystem. In the near future, a
 registry should be created to reserve and index top-level package names used
-within the Cosmos ecosystem.
+within the Cosmos ecosystem. Because the Cosmos SDK is intended to provide
+the top-level types for the Cosmos project, the top-level package name `cosmos`
+is recommended for usage within the Cosmos SDK instead of the longer `cosmos_sdk`.
 
 #### Limit sub-package depth
 
@@ -141,6 +143,13 @@ is used in source code to denote modules, this is often unnecessary for .proto
 files as modules are the primary thing sub-packages are used for. Only items which
 are known to be used infrequently should have deep sub-package depths.
 
+For the Cosmos SDK, it is recommended that that we simply write `cosmos.bank`,
+`cosmos.gov`, etc. rather than `cosmos.x.bank`. In practice, most non-module
+types can go straight in the `cosmos` package or we can introduce a
+`cosmos.libs` package if needed. Note that this naming _will not_ change
+go package names, i.e. the `cosmos.bank` protobuf package will still live in
+`x/bank`.
+
 ### Message Naming
 
 #### Use simple verbs for transaction messages
@@ -149,7 +158,7 @@ This is likely one of the most controversial recommendations here as it will
 change legacy go struct names.
 
 Historically all transaction messages in the SDK have been prefixed with `Msg`
-which is a shortening of messsage. To begin with "message", not being an action
+which is a shortening of msssage. To begin with "message", not being an action
 word, does not clearly indicate the concept of transaction or operation. So
 understanding that `Msg` indicates transaction likely requires knowledge of
 Cosmos SDK conventions. Once someone understands that `Msg` means transaction,

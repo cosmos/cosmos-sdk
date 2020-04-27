@@ -21,14 +21,18 @@ func TxSend(f *helpers.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin
 // QueryAccount is simcli query account
 func QueryAccount(f *helpers.Fixtures, address sdk.AccAddress, flags ...string) auth.BaseAccount {
 	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
+
 	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
+
 	var initRes map[string]json.RawMessage
 	err := json.Unmarshal([]byte(out), &initRes)
 	require.NoError(f.T, err, "out %v, err %v", out, err)
 	value := initRes["value"]
+
 	var acc auth.BaseAccount
 	err = f.Cdc.UnmarshalJSON(value, &acc)
 	require.NoError(f.T, err, "value %v, err %v", string(value), err)
+
 	return acc
 }
 

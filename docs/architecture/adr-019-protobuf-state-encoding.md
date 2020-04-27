@@ -288,9 +288,8 @@ overhead of `Any`. In addition, we may adopt protobuf naming conventions which
 make type URLs a bit more concise while remaining descriptive.
 
 Additional code generation support around the usage of `Any` is something that
-could also be explored in the future. For instance, a gogo protobuf extension
-in the future could possibly marshal `Any` values directly to go interfaces
-like Amino. This is, however, unneeded as a starting point.
+could also be explored in the future to make the UX for go developers more
+seamless.
 
 ## Consequences
 

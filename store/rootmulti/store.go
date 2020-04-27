@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
 
@@ -571,7 +569,7 @@ func (ci commitInfo) Hash() []byte {
 		m[storeInfo.Name] = storeInfo.Hash()
 	}
 
-	return merkle.SimpleHashFromMap(m)
+	return SimpleHashFromMap(m)
 }
 
 func (ci commitInfo) CommitID() types.CommitID {
@@ -600,7 +598,7 @@ type storeCore struct {
 
 // Implements merkle.Hasher.
 func (si storeInfo) Hash() []byte {
-	// Doesn't write Name, since merkle.SimpleHashFromMap() will
+	// Doesn't write Name, since SimpleHashFromMap() will
 	// include them via the keys.
 	bz := si.Core.CommitID.Hash
 	hasher := tmhash.New()
@@ -704,4 +702,15 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 	if err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
+}
+
+// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
+// root.
+func SimpleHashFromMap(m map[string][]byte) []byte {
+	mm := newMerkleMap()
+	for k, v := range m {
+		mm.set(k, v)
+	}
+
+	return mm.hash()
 }

@@ -54,7 +54,6 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 	}
 
 	nodeID = string(nodeKey.ID())
-	server.UpgradeOldPrivValFile(config)
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {

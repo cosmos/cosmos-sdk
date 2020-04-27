@@ -3,7 +3,6 @@ on:
   push: 
     branches: 
       - /^v.*/
-  pull_request: # only for testing
     
 jobs:
   cleanup-runs:

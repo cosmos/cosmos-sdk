@@ -48,7 +48,8 @@ var (
 )
 
 type (
-	Keeper        = keeper.Keeper
-	StakingKeeper = types.StakingKeeper
-	GenesisState  = types.GenesisState
+	Keeper                = keeper.Keeper
+	StakingKeeper         = types.StakingKeeper
+	GenesisState          = types.GenesisState
+	ClientConsensusStates = types.ClientConsensusStates
 )

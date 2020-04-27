@@ -7,11 +7,13 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+// ClientConsensusStates defines all the stored consensus states for a given client.
 type ClientConsensusStates struct {
 	ClientID        string                    `json:"client_id" yaml:"client_id"`
 	ConsensusStates []exported.ConsensusState `json:"consensus_states" yaml:"consensus_states"`
 }
 
+// NewClientConsensusStates creates a new ClientConsensusStates instance.
 func NewClientConsensusStates(id string, states []exported.ConsensusState) ClientConsensusStates {
 	return ClientConsensusStates{
 		ClientID:        id,
@@ -46,12 +48,11 @@ func DefaultGenesisState() GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	// TODO:
-	// for i, client := range gs.Clients {
-	// if err := client.ValidateBasic(); err != nil {
-	// 	return fmt.Errorf("invalid client %d: %w", i, err)
-	// }
-	// }
+	for i, client := range gs.Clients {
+		if err := client.Validate(); err != nil {
+			return fmt.Errorf("invalid client %d: %w", i, err)
+		}
+	}
 
 	for i, cs := range gs.ClientsConsensus {
 		if err := host.DefaultClientIdentifierValidator(cs.ClientID); err != nil {

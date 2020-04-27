@@ -13,7 +13,6 @@ func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 	}
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
-			// TODO: double-check if the consState will be invalidated on import at 0 height.
 			k.SetClientConsensusState(ctx, cs.ClientID, consState.GetHeight(), consState)
 		}
 	}

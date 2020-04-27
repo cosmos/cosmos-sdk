@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	std2 "github.com/cosmos/cosmos-sdk/std"
 	"math"
 	"math/rand"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	std "github.com/cosmos/cosmos-sdk/std"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -126,7 +126,7 @@ func SimulateSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		msg, err := std2.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+		msg, err := std.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}

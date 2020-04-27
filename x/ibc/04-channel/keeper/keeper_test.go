@@ -119,6 +119,53 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	suite.Require().Equal(expChannels, channels)
 }
 
+func (suite KeeperTestSuite) TestGetAllSequences() {
+	seq1 := types.NewPacketSequence(testPort1, testChannel1, 1)
+	seq2 := types.NewPacketSequence(testPort2, testChannel2, 2)
+
+	expSeqs := []types.PacketSequence{seq1, seq2}
+
+	ctx := suite.chainB.GetContext()
+
+	for _, seq := range expSeqs {
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
+	}
+
+	sendSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketSendSeqs(ctx)
+	recvSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketRecvSeqs(ctx)
+	suite.Require().Len(sendSeqs, 2)
+	suite.Require().Len(recvSeqs, 2)
+
+	suite.Require().Equal(expSeqs, sendSeqs)
+	suite.Require().Equal(expSeqs, recvSeqs)
+}
+
+func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
+	ack1 := types.NewPacketAcknowledgement(testPort1, testChannel1, 1, []byte("ack"))
+	ack2 := types.NewPacketAcknowledgement(testPort1, testChannel1, 2, []byte("ack"))
+	comm1 := types.NewPacketCommitment(testPort1, testChannel1, 1, []byte("hash"))
+	comm2 := types.NewPacketCommitment(testPort1, testChannel1, 2, []byte("hash"))
+
+	expAcks := []types.PacketAcknowledgement{ack1, ack2}
+	expCommitments := []types.PacketCommitment{comm1, comm2}
+
+	ctx := suite.chainB.GetContext()
+
+	for i := 0; i < 2; i++ {
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, expAcks[i].PortID, expAcks[i].ChannelID, expAcks[i].Sequence, expAcks[i].Ack)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, expCommitments[i].PortID, expCommitments[i].ChannelID, expCommitments[i].Sequence, expCommitments[i].Hash)
+	}
+
+	acks := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketAcks(ctx)
+	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitments(ctx)
+	suite.Require().Len(acks, 2)
+	suite.Require().Len(commitments, 2)
+
+	suite.Require().Equal(expAcks, acks)
+	suite.Require().Equal(expCommitments, commitments)
+}
+
 func (suite *KeeperTestSuite) TestSetSequence() {
 	ctx := suite.chainB.GetContext()
 	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
+	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -136,33 +137,17 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 	return bz, true
 }
 
-// IteratePacketSeqSend provides an iterator over all send sequences. For each
+// IteratePacketSequence provides an iterator over all send and receive sequences. For each
 // sequence, cb will be called. If the cb returns true, the iterator will close
 // and stop.
-func (k Keeper) IteratePacketSeqSend(ctx sdk.Context, cb func(portID, channelID string, nextSendSeq uint64) bool) {
+func (k Keeper) IteratePacketSequence(ctx sdk.Context, send bool, cb func(portID, channelID string, sequence uint64) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(ibctypes.KeyNextSeqSendPrefix))
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		keySplit := strings.Split(string(iterator.Key()), "/")
-		portID := keySplit[2]
-		channelID := keySplit[4]
-
-		nextSendSeq := sdk.BigEndianToUint64(iterator.Value())
-
-		if cb(portID, channelID, nextSendSeq) {
-			break
-		}
+	var iterator db.Iterator
+	if send {
+		iterator = sdk.KVStorePrefixIterator(store, []byte(ibctypes.KeyNextSeqSendPrefix))
+	} else {
+		iterator = sdk.KVStorePrefixIterator(store, []byte(ibctypes.KeyNextSeqRecvPrefix))
 	}
-}
-
-// IteratePacketSeqRecv provides an iterator over all receive sequences. For each
-// sequence, cb will be called. If the cb returns true, the iterator will close
-// and stop.
-func (k Keeper) IteratePacketSeqRecv(ctx sdk.Context, cb func(portID, channelID string, nextRecvSeq uint64) bool) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(ibctypes.KeyNextSeqSendPrefix))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -170,9 +155,9 @@ func (k Keeper) IteratePacketSeqRecv(ctx sdk.Context, cb func(portID, channelID 
 		portID := keySplit[2]
 		channelID := keySplit[4]
 
-		nextRecvSeq := sdk.BigEndianToUint64(iterator.Value())
+		sequence := sdk.BigEndianToUint64(iterator.Value())
 
-		if cb(portID, channelID, nextRecvSeq) {
+		if cb(portID, channelID, sequence) {
 			break
 		}
 	}
@@ -180,7 +165,7 @@ func (k Keeper) IteratePacketSeqRecv(ctx sdk.Context, cb func(portID, channelID 
 
 // GetAllPacketSendSeqs returns all stored next send sequences.
 func (k Keeper) GetAllPacketSendSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
-	k.IteratePacketAcknowledgement(ctx, func(portID, channelID string, nextSendSeq uint64, hash []byte) bool {
+	k.IteratePacketSequence(ctx, true, func(portID, channelID string, nextSendSeq uint64) bool {
 		ps := types.NewPacketSequence(portID, channelID, nextSendSeq)
 		seqs = append(seqs, ps)
 		return false
@@ -190,7 +175,7 @@ func (k Keeper) GetAllPacketSendSeqs(ctx sdk.Context) (seqs []types.PacketSequen
 
 // GetAllPacketRecvSeqs returns all stored next recv sequences.
 func (k Keeper) GetAllPacketRecvSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
-	k.IteratePacketAcknowledgement(ctx, func(portID, channelID string, nextRecvSeq uint64, hash []byte) bool {
+	k.IteratePacketSequence(ctx, false, func(portID, channelID string, nextRecvSeq uint64) bool {
 		ps := types.NewPacketSequence(portID, channelID, nextRecvSeq)
 		seqs = append(seqs, ps)
 		return false
@@ -224,7 +209,7 @@ func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channel
 
 // GetAllPacketCommitments returns all stored PacketCommitments objects.
 func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.PacketCommitment) {
-	k.IteratePacketAcknowledgement(ctx, func(portID, channelID string, sequence uint64, hash []byte) bool {
+	k.IteratePacketCommitment(ctx, func(portID, channelID string, sequence uint64, hash []byte) bool {
 		pc := types.NewPacketCommitment(portID, channelID, sequence, hash)
 		commitments = append(commitments, pc)
 		return false

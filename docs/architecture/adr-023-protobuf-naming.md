@@ -1,8 +1,8 @@
-# ADR 023: Protocol Buffer Naming and Style Conventions
+# ADR 023: Protocol Buffer Naming and Versioning Conventions
 
 ## Changelog
 
-- 2020 April 26: Initial Draft
+- 2020 April 27: Initial Draft
 
 ## Status
 
@@ -113,7 +113,8 @@ to reserve and index top-level package names used within the Cosmos ecosystem.
 Sub-package depth should be increased with caution. Generally a single
 sub-package is needed for a module or a library. Even though `x` or `modules`
 is used in source code to denote modules, this is often unnecessary for .proto
-files. Only items which are known to be used infrequently should have 
+files as modules are the primary thing sub-packages are used for. Only items which
+are known to be used infrequently should have deep sub-package depths.
 
 ### Message Naming
 
@@ -133,17 +134,19 @@ files. Only items which are known to be used infrequently should have
 
 ### Positive
 
-* names will be shorter
+* names will be shorter and more concise
+* all transactions will be at least 12 bytes shorter (`_sdk.x`, `.v1`, `Msg`
+get removed from `sdk.Msg` message names)
 * `.proto` file imports can be more standard (without `"third_party/proto" in
 the path)
 
 ### Negative
 
-* some proto names will diverge from their go names or the go names will have to
+* some proto names will diverge from their go names, or the go names will have to
 change (ex. `MsgSend` vs `Send`)
 
 ### Neutral
 
-* `.proto`  files will need to be moved into a top-level `proto/` directory
+* `.proto`  files will need to be reorganized and refactored
 
 ## References

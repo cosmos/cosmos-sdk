@@ -105,7 +105,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			expPass: false,
 		},
 		{
-			name: "invalid connection genesis",
+			name: "invalid channel genesis",
 			genState: ibc.GenesisState{
 				ClientGenesis:     client.DefaultGenesisState(),
 				ConnectionGenesis: connection.DefaultGenesisState(),

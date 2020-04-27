@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/std"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -25,8 +26,8 @@ type HandlerTestSuite struct {
 	app     *simapp.SimApp
 }
 
-func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) codecstd.MsgSubmitEvidence {
-	msg, err := codecstd.NewMsgSubmitEvidence(e, s)
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) std.MsgSubmitEvidence {
+	msg, err := std.NewMsgSubmitEvidence(e, s)
 	r.NoError(err)
 	return msg
 }
@@ -55,7 +56,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		codecstd.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
+		std.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
 		app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
@@ -118,7 +119,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			suite.Require().NoError(err, "unexpected error; tc #%d", i)
 			suite.Require().NotNil(res, "expected non-nil result; tc #%d", i)
 
-			msg := tc.msg.(codecstd.MsgSubmitEvidence)
+			msg := tc.msg.(std.MsgSubmitEvidence)
 			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), res.Data, "invalid hash; tc #%d", i)
 		}
 	}

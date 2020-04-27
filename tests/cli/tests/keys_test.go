@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
+	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 )
 
 func TestCLIKeysAddMultisig(t *testing.T) {

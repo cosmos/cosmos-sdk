@@ -3,8 +3,8 @@
 package cli_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	"github.com/stretchr/testify/require"

@@ -33,13 +33,13 @@ can be found [here](https://github.com/cosmos/cosmos-sdk/pull/6053).
 
 ##### Recovery handler
 
-We add a `recover()` object handler type:
+New `RecoveryHandler` type added. `recoveryObj` input argument is an object returned by the standard Go function
+`recover()` from the `builtin` package.
 
 ```go
 type RecoveryHandler func(recoveryObj interface{}) error
 ```
 
-`recoveryObj` is a return value of `recover()` function.
 Handler should type assert (or other methods) an object to define if object should be handled.
 `nil` should be returned if input object can't be handled by that `RecoveryHandler` (not a handler's target type).
 Not `nil` error should be returned if input object was handled and middleware chain execution should be stopped.
@@ -80,11 +80,12 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
 }
 ```
 
-Function receives a `recover()` object and returns:
+Function receives a `recoveryObj` object and returns:
 * (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
 * (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
 * (`nil`, `nil`) this is an invalid behaviour 'cause in that case panic recovery might not be properly handled;
-This can be avoided by always using a `default` as a rightmost middleware in chain (always returns an `error`'); 
+this can be avoided by always using a `default` as a rightmost middleware in chain (always returns an `error`'); 
+
 
 `OutOfGas` middleware example:
 ```go
@@ -138,7 +139,7 @@ That way we can create a middleware chain which is executed from left to right, 
 
 ##### BaseApp changes
 
-The default middleware chain must exist in a `BaseApp` object. `Baseapp` modifications:
+The `default` middleware chain must exist in a `BaseApp` object. `Baseapp` modifications:
 
 ```go
 type BaseApp struct {

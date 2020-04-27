@@ -43,7 +43,7 @@ func ValidateGenesis(data GenesisState) error {
 			return fmt.Errorf("empty owners in genesis")
 		}
 		// All exported existing indices must be between [1, data.Index)
-		if genOwner.Index <= 0 || genOwner.Index >= data.Index {
+		if genOwner.Index == 0 || genOwner.Index >= data.Index {
 			return fmt.Errorf("owners exist for index %d outside of valid range: %d-%d", genOwner.Index, 1, data.Index-1)
 		}
 		for _, owner := range genOwner.Owners.Owners {

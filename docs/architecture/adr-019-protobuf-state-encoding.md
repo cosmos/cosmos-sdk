@@ -4,6 +4,7 @@
 
 - 2020 Feb 15: Initial Draft
 - 2020 Feb 24: Updates to handle messages with interface fields
+- 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
 
 ## Status
 
@@ -68,7 +69,7 @@ as the concrete codec it accepts and/or extends. This means that all client JSON
 genesis state, will still use Amino. The ultimate goal will be to replace Amino JSON encoding with
 Protbuf encoding and thus have modules accept and/or extend `ProtoCodec`.
 
-### Module Design
+### Module Codec's
 
 Modules that do not require the ability to work with and serialize interfaces, the path to Protobuf
 migration is pretty straightforward. These modules are to simply migrate any existing types that
@@ -110,161 +111,142 @@ type Codec interface {
 }
 ```
 
-Note, concrete types implementing these interfaces can be defined outside the scope of the module
-that defines the interface (e.g. `ModuleAccount` in `x/supply`). To handle these cases, a Protobuf
-message must be defined at the application-level along with a single codec that will be passed to _all_
-modules using a `oneof` approach.
+### Usage of `Any` to encode interfaces
 
-Example:
+In general, module-level .proto files should a message which encodes interfaces
+using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto).
+After [extension discussion](https://github.com/cosmos/cosmos-sdk/issues/6030),
+this was chosen as a better alternative than using application-level `oneof`s
+as in our original protobuf design. The arguments in favor of `Any` can be
+summarized as follows:
+* `Any` provides a simpler, more consistent client UX for dealing with
+interfaces than app-level `oneof`s that will likely need to be coordinated
+carefully across applications
+* `Any` provides more resistance against human error than `oneof`
+* `Any` is generally simpler to implement for both modules and apps
 
-```protobuf
-// app/codec/codec.proto
+The main counter-argument to using `Any` centers around its additional space
+and possibly performance overhead. The space overhead could be dealt with using
+compression at the persistence layer in the future and the performance impact
+is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization
+and user experience as a higher order concern.
 
-import "third_party/proto/cosmos-proto/cosmos.proto";
-import "x/auth/types/types.proto";
-import "x/auth/vesting/types/types.proto";
-import "x/supply/types/types.proto";
+Note, that given the SDK's decision to adopt the `Codec` interfaces described
+above, app's can still choose to use `oneof` to encode state and transactions,
+but it is not the recommended approach.
 
-message Account {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/auth/exported.Account";
+### Safe usage of `Any`
 
-  // sum defines a list of all acceptable concrete Account implementations.
-  oneof sum {
-    cosmos_sdk.x.auth.v1.BaseAccount                      base_account               = 1;
-    cosmos_sdk.x.auth.vesting.v1.ContinuousVestingAccount continuous_vesting_account = 2;
-    cosmos_sdk.x.auth.vesting.v1.DelayedVestingAccount    delayed_vesting_account    = 3;
-    cosmos_sdk.x.auth.vesting.v1.PeriodicVestingAccount   periodic_vesting_account   = 4;
-    cosmos_sdk.x.supply.v1.ModuleAccount                  module_account             = 5;
-  }
+By default, the [gogo protobuf implementations of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
+uses global type registration to decode values packed in `Any` into concrete
+go types. This introduces a security vulnerability where any malicious module
+in the dependency tree could registry a type with the global protobuf registry
+and cause it to be loaded and unmarshaled by a transaction that included
+its type URL in the `type_url` field.
 
-  // ...
-}
-```
-
-```go
-// app/codec/codec.go
-
-type Codec struct {
-  codec.Marshaler
-
-
-  amino *codec.Codec
-}
-
-func NewAppCodec(amino *codec.Codec) *Codec {
-  return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
-}
-
-func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
-  acc := &Account{}
-  if err := acc.SetAccount(accI); err != nil {
-    return nil, err
-  }
-
-  return c.Marshaler.MarshalBinaryBare(acc)
-}
-
-func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
-  acc := &Account{}
-  if err := c.Marshaler.UnmarshalBinaryBare(bz, acc); err != nil {
-    return nil, err
-  }
-
-  return acc.GetAccount(), nil
-}
-```
-
-Since the `Codec` implements `auth.Codec` (and all other required interfaces), it is passed to _all_
-the modules and satisfies all the interfaces. Now each module needing to work with interfaces will know
-about all the required types. Note, the use of `interface_type` allows us to avoid a significant
-amount of code boilerplate when implementing the `Codec`.
-
-A similar concept is to be applied for messages that contain interfaces fields. The module will
-define a "base" concrete message type that the application-level codec will extend via `oneof` that
-fulfills the required message interface.
-
-Example:
-
-The `MsgSubmitEvidence` defined by the `x/evidence` module contains a field `Evidence` which is an
-interface.
+To prevent this, we introduce a type registration mechanism for decoding `Any`
+values into concrete types through the `InterfaceContext` interface which
+bears some similarity to type registration with Amino:
 
 ```go
-type MsgSubmitEvidence struct {
-  Evidence  exported.Evidence
-  Submitter sdk.AccAddress
+type InterfaceContext interface {
+    // RegisterInterface associates protoName as the public name for the
+    // interface passed in as iface
+    // Ex:
+	//   ctx.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
+	RegisterInterface(protoName string, iface interface{})
+
+    // RegisterImplementation registers impl as a concrete implementation of
+    // the interface iface
+    // Ex:
+	//   ctx.RegisterImplementation((*sdk.Msg)(nil), &MsgSend{})
+	RegisterImplementation(iface interface{}, impl proto.Message)
+
+    // UnpackAny unpacks the value in any to the interface pointer passed in as
+    // iface. Note that the type in any must have been registered with
+    // RegisterImplementation as a concrete type for that interface
+    // Ex:
+    //    var msg sdk.Msg
+    //    err := ctx.UnpackAny(any, &msg)
+    //    ...
+	UnpackAny(any *Any, iface interface{}) error
 }
 ```
 
-Instead, we will implement a "base" message type and an interface which the concrete message type
-must implement.
+In addition to serving as a whitelist, `InterfaceContext` could also serve
+to communicate the list of concrete types that satisfy an interface to clients.
+
+Note that `InterfaceContext` usage does not deviate from standard protobuf
+usage of `Any`, it just introduces a security and introspection layer.
+
+### Using `Any` to encode state
+
+The SDK will provide support methods `MarshalAny` and `UnmarshalAny` to allow
+easy encoding of state to `Any` in `Codec` implementations. Ex:
+
+```go
+func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
+	return codec.MarshalAny(evidenceI)
+}
+
+func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
+	var evi eviexported.Evidence
+	err := codec.UnmarshalAny(c.interfaceContext, &evi, bz)
+	if err != nil {
+		return nil, err
+	}
+	return evi, nil
+}
+```
+
+### Using `Any` in `sdk.Msg`s
+
+A similar concept is to be applied for messages that contain interfaces fields.
+For example, we can define `MsgSubmitEvidence` as follows where `Evidence` is
+an interface:
 
 ```protobuf
 // x/evidence/types/types.proto
 
-message MsgSubmitEvidenceBase {
+message MsgSubmitEvidence {
   bytes submitter = 1
     [
       (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
     ];
+  google.protobuf.Any evidence = 2;
 }
 ```
 
+Note that in order to unpack the evidence from `Any` we do need a reference to
+`InterfaceContext`. This is inconvenient if we want to reference the evidence
+in methods like `ValidateBasic`. We can work around this limitation be
+introducing an unpacking interfaces phase to deserialization.
+
+### Unpacking Interfaces
+
+To ease unpacking of interfacing with `InterfaceContext`, we add introduce an
+interface:
 ```go
-// x/evidence/exported/evidence.go
-
-type MsgSubmitEvidence interface {
-  sdk.Msg
-
-  GetEvidence() Evidence
-  GetSubmitter() sdk.AccAddress
+type UnpackInterfacesMsg interface {
+  UnpackInterfaces(InterfaceContext) error
 }
 ```
 
-Notice the `MsgSubmitEvidence` interface extends `sdk.Msg` and allows for the `Evidence` interface
-to be retrieved from the concrete message type.
+We also introduce a private `cachedValue interface{}` field onto the `Any`
+struct itself with a public getter `GetUnpackedValue() interface{}`.
 
-Now, the application-level codec will define the concrete `MsgSubmitEvidence` type and will have it
-fulfill the `MsgSubmitEvidence` interface defined by `x/evidence`.
-
-```protobuf
-// app/codec/codec.proto
-
-message Evidence {
-  option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
-
-  oneof sum {
-    cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
-  }
-}
-
-message MsgSubmitEvidence {
-  option (gogoproto.equal)           = true;
-  option (gogoproto.goproto_getters) = false;
-
-  Evidence                                       evidence = 1;
-  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 2
-    [
-      (gogoproto.nullable) = false,
-      (gogoproto.embed)    = true
-    ];
-}
-```
+This `UnpackInterfaces` is to be invoked during message deserialization right
+after the call to `Unmarshal`. Then the unpacked interface value can safely
+be used in any code afterwards and `MsgSubmitEvidence` our example above
+could introduce a convenience getter `GetEvidence` as follows:
 
 ```go
 // app/codec/msgs.go
 
 func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence {
-  return msg.Evidence.GetEvidence()
-}
-
-func (msg MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
-  return msg.Submitter
+  return msg.Evidence.GetUnpackedValue().(eviexported.Evidence)
 }
 ```
-
-Note, however, the module's message handler must now handle the interface `MsgSubmitEvidence` in
-addition to any concrete types.
 
 ### Why Wasn't X Chosen Instead
 
@@ -288,9 +270,10 @@ untrusted inputs.
 
 ## Future Improvements & Roadmap
 
-The landscape and roadmap to restructuring queriers and tx generation to fully support
-Protobuf isn't fully understood yet. Once all modules are migrated, we will have a better
-understanding on how to proceed with client improvements (e.g. gRPC) <sup>2</sup>.
+In the future we may consider a compression layer right above the persistence
+layer which doesn't change tx or merkle tree hashes, but reduces the storage
+overhead of `Any`. In addition, we may adopt protobuf naming conventions which
+make type URLs a bit more concise while remaining descriptive.
 
 ## Consequences
 
@@ -303,9 +286,8 @@ understanding on how to proceed with client improvements (e.g. gRPC) <sup>2</sup
 ### Negative
 
 - Learning curve required to understand and implement Protobuf messages.
-- Less flexibility in cross-module type registration. We now need to define types
-at the application-level.
-- Client business logic and tx generation may become a bit more complex.
+- Slightly larger message size due to use of `Any`, although this could be offset
+by a compression layer in the future
 
 ### Neutral
 

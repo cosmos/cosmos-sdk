@@ -163,7 +163,7 @@ type InterfaceContext interface {
     // the interface iface
     // Ex:
     //   ctx.RegisterImplementation((*sdk.Msg)(nil), &MsgSend{})
-	RegisterImplementation(iface interface{}, impl proto.Message)
+    RegisterImplementation(iface interface{}, impl proto.Message)
 
     // UnpackAny unpacks the value in any to the interface pointer passed in as
     // iface. Note that the type in any must have been registered with

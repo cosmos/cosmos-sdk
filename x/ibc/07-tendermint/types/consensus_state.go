@@ -19,6 +19,19 @@ type ConsensusState struct {
 	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
 }
 
+// NewConsensusState creates a new ConsensusState instance.
+func NewConsensusState(
+	timestamp time.Time, root commitmentexported.Root, height uint64,
+	valset *tmtypes.ValidatorSet,
+) ConsensusState {
+	return ConsensusState{
+		Timestamp:    timestamp,
+		Root:         root,
+		Height:       height,
+		ValidatorSet: valset,
+	}
+}
+
 // ClientType returns Tendermint
 func (ConsensusState) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint

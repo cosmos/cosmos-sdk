@@ -32,14 +32,14 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						localhosttypes.NewClientState(suite.store, "chaindID", 10),
 					},
 					[]client.ClientConsensusStates{
-						{
+						client.NewClientConsensusStates(
 							clientID,
 							[]exported.ConsensusState{
 								ibctmtypes.NewConsensusState(
 									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet,
 								),
 							},
-						},
+						),
 					},
 				),
 				ConnectionGenesis: connection.NewGenesisState(

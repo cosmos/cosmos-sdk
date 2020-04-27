@@ -39,6 +39,7 @@ var (
 	ErrInvalidEvidence        = types.ErrInvalidEvidence
 	DefaultGenesisState       = types.DefaultGenesisState
 	NewGenesisState           = types.NewGenesisState
+	NewClientConsensusStates  = types.NewClientConsensusStates
 
 	// variable aliases
 	SubModuleCdc           = types.SubModuleCdc
@@ -47,6 +48,7 @@ var (
 	AttributeValueCategory = types.AttributeValueCategory
 )
 
+// nolint
 type (
 	Keeper                = keeper.Keeper
 	StakingKeeper         = types.StakingKeeper

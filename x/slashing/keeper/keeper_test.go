@@ -4,15 +4,93 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
+
+func TestUnJailNotBonded(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, abci.Header{})
+
+	p := app.StakingKeeper.GetParams(ctx)
+	p.MaxValidators = 5
+	app.StakingKeeper.SetParams(ctx, p)
+
+	amt := sdk.TokensFromConsensusPower(100)
+	sh := staking.NewHandler(app.StakingKeeper)
+
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.TokensFromConsensusPower(200))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
+	pks := simapp.CreateTestPubKeys(6)
+
+	// create max (5) validators all with the same power
+	for i := uint32(0); i < p.MaxValidators; i++ {
+		addr, val := valAddrs[i], pks[i]
+		res, err := sh(ctx, keeper.NewTestMsgCreateValidator(addr, val, amt))
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	}
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// create a 6th validator with less power than the cliff validator (won't be bonded)
+	addr, val := valAddrs[5], pks[5]
+	createValMsg := keeper.NewTestMsgCreateValidator(addr, val, sdk.TokensFromConsensusPower(50))
+	createValMsg.MinSelfDelegation = sdk.TokensFromConsensusPower(50)
+	res, err := sh(ctx, createValMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	validator, ok := app.StakingKeeper.GetValidator(ctx, addr)
+	require.True(t, ok)
+	require.False(t, validator.Jailed)
+	require.Equal(t, sdk.BondStatusUnbonded, validator.GetStatus().String())
+
+	// unbond below minimum self-delegation
+	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
+	res, err = sh(ctx, msgUnbond)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// verify that validator is jailed
+	validator, ok = app.StakingKeeper.GetValidator(ctx, addr)
+	require.True(t, ok)
+	require.True(t, validator.Jailed)
+
+	// verify we cannot unjail (yet)
+	require.Error(t, app.SlashingKeeper.Unjail(ctx, addr))
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// bond to meet minimum self-delegation
+	msgBond := staking.NewMsgDelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
+	res, err = sh(ctx, msgBond)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// verify we can immediately unjail
+	require.NoError(t, app.SlashingKeeper.Unjail(ctx, addr))
+
+	validator, ok = app.StakingKeeper.GetValidator(ctx, addr)
+	require.True(t, ok)
+	require.False(t, validator.Jailed)
+}
 
 // Test a new validator entering the validator set
 // Ensure that SigningInfo.StartHeight is set correctly

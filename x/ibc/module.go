@@ -58,12 +58,7 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the ibc module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var gs GenesisState
-	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
-	}
-
-	return gs.Validate()
+	return nil
 }
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.

@@ -155,7 +155,7 @@ type InterfaceContext interface {
     // RegisterInterface associates protoName as the public name for the
     // interface passed in as iface
     // Ex:
-	//   ctx.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
+    //   ctx.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
 	RegisterInterface(protoName string, iface interface{})
 
     // RegisterImplementation registers impl as a concrete implementation of

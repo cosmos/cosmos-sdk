@@ -7,7 +7,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// PacketAcknowledgement defines the genesis type necesary to retrieve and store
+// PacketAcknowledgement defines the genesis type necessary to retrieve and store
 // acknowlegements.
 type PacketAcknowledgement struct {
 	PortID    string `json:"port_id" yaml:"port_id"`
@@ -35,7 +35,7 @@ func (pa PacketAcknowledgement) Validate() error {
 	return validateGenFields(pa.PortID, pa.ChannelID, pa.Sequence)
 }
 
-// PacketCommitment defines the genesis type necesary to retrieve and store
+// PacketCommitment defines the genesis type necessary to retrieve and store
 // packet commitments.
 type PacketCommitment struct {
 	PortID    string `json:"port_id" yaml:"port_id"`
@@ -63,7 +63,7 @@ func (pc PacketCommitment) Validate() error {
 	return validateGenFields(pc.PortID, pc.ChannelID, pc.Sequence)
 }
 
-// PacketSequence defines the genesis type necesary to retrieve and store
+// PacketSequence defines the genesis type necessary to retrieve and store
 // next send and receive sequences.
 type PacketSequence struct {
 	PortID    string `json:"port_id" yaml:"port_id"`

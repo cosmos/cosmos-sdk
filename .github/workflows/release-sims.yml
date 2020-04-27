@@ -1,4 +1,4 @@
-name: Sims
+name: Release Sims
 on: 
   push: 
     branches: 

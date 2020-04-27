@@ -201,9 +201,11 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 		types.NewClientConsensusStates(
 			testClientID,
 			[]exported.ConsensusState{
-				suite.consensusState,
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, suite.consensusState.ValidatorSet,
+					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.GetHeight(), &tmtypes.ValidatorSet{},
+				),
+				ibctmtypes.NewConsensusState(
+					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, &tmtypes.ValidatorSet{},
 				),
 			},
 		),
@@ -211,7 +213,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 			testClientID2,
 			[]exported.ConsensusState{
 				ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, suite.consensusState.ValidatorSet,
+					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, &tmtypes.ValidatorSet{},
 				),
 			},
 		),
@@ -223,8 +225,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 		}
 	}
 
-	// FIXME: non-determinism
 	consStates := suite.keeper.GetAllConsensusStates(suite.ctx)
 	suite.Require().Len(consStates, len(expConsensus))
-	suite.Require().EqualValues(expConsensus, consStates)
+	suite.Require().Equal(expConsensus, consStates)
 }

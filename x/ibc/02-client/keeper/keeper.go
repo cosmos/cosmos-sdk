@@ -125,12 +125,14 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 // GetAllConsensusStates returns all stored client consensus states.
 // NOTE: non deterministic.
 func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types.ClientConsensusStates) {
+	var clientIDs []string
 	// create map to add consensus states to the existing clients
 	cons := make(map[string][]exported.ConsensusState)
 
 	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
 		consensusStates, ok := cons[clientID]
 		if !ok {
+			clientIDs = append(clientIDs, clientID)
 			cons[clientID] = []exported.ConsensusState{cs}
 			return false
 		}
@@ -139,9 +141,19 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types
 		return false
 	})
 
-	for clientID, consensusStates := range cons {
-		clientConsState := types.NewClientConsensusStates(clientID, consensusStates)
+	// create ClientConsensusStates in the same order of iteration to prevent non-determinism
+	for len(clientIDs) > 0 {
+		id := clientIDs[len(clientIDs)-1]
+		consensusStates, ok := cons[id]
+		if !ok {
+			panic(fmt.Sprintf("consensus states from client id %s not found", id))
+		}
+
+		clientConsState := types.NewClientConsensusStates(id, consensusStates)
 		clientConsStates = append(clientConsStates, clientConsState)
+
+		// remove the last element
+		clientIDs = clientIDs[:len(clientIDs)-1]
 	}
 
 	return clientConsStates

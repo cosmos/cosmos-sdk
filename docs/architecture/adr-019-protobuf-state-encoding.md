@@ -183,6 +183,19 @@ Note that `InterfaceRegistry` usage does not deviate from standard protobuf
 usage of `Any`, it just introduces a security and introspection layer for 
 golang usage.
 
+`InterfaceRegistry` will be a member of `ProtoCodec` and `HybridCodec` as
+described above. In order for modules to register interface types, app modules
+can optionally implement the following interface:
+
+```go
+type InterfaceModule interface {
+    RegisterInterfaceTypes(InterfaceRegistry)
+}
+```
+
+The module manager will include a method to call `RegisterInterfaceTypes` on
+every module that implements in order to populate the `InterfaceRegistry`.
+
 ### Using `Any` to encode state
 
 The SDK will provide support methods `MarshalAny` and `UnmarshalAny` to allow

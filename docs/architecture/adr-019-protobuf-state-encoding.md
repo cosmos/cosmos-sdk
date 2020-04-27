@@ -148,11 +148,11 @@ and cause it to be loaded and unmarshaled by a transaction that referenced
 it in the `type_url` field.
 
 To prevent this, we introduce a type registration mechanism for decoding `Any`
-values into concrete types through the `InterfaceContext` interface which
+values into concrete types through the `InterfaceRegistry` interface which
 bears some similarity to type registration with Amino:
 
 ```go
-type InterfaceContext interface {
+type InterfaceRegistry interface {
     // RegisterInterface associates protoName as the public name for the
     // interface passed in as iface
     // Ex:
@@ -176,10 +176,10 @@ type InterfaceContext interface {
 }
 ```
 
-In addition to serving as a whitelist, `InterfaceContext` can also serve
+In addition to serving as a whitelist, `InterfaceRegistry` can also serve
 to communicate the list of concrete types that satisfy an interface to clients.
 
-Note that `InterfaceContext` usage does not deviate from standard protobuf
+Note that `InterfaceRegistry` usage does not deviate from standard protobuf
 usage of `Any`, it just introduces a security and introspection layer for 
 golang usage.
 
@@ -222,17 +222,19 @@ message MsgSubmitEvidence {
 ```
 
 Note that in order to unpack the evidence from `Any` we do need a reference to
-`InterfaceContext`. This is inconvenient if we want to reference the evidence
-in methods like `ValidateBasic`. We can work around this limitation by
-introducing an `UnpackInterfaces` phase to deserialization.
+`InterfaceRegistry`. In order to reference evidence in methods like
+`ValidateBasic` which shouldn't have to know about the `InterfaceRegistry`, we
+introduce an `UnpackInterfaces` phase to deserialization which unpacks
+interfaces before they're needed.
 
 ### Unpacking Interfaces
 
-To ease unpacking of interfacing with `InterfaceContext`, we add introduce an
-interface that `sdk.Msg`s and other types can implement:
+To implement the `UnpackInterfaces` phase of deserialization which unpacks
+interfaces wrapped in `Any` before they're needed, we create an interface
+that `sdk.Msg`s and other types can implement:
 ```go
 type UnpackInterfacesMsg interface {
-  UnpackInterfaces(InterfaceContext) error
+  UnpackInterfaces(InterfaceRegistry) error
 }
 ```
 
@@ -240,17 +242,25 @@ We also introduce a private `cachedValue interface{}` field onto the `Any`
 struct itself with a public getter `GetUnpackedValue() interface{}`.
 
 The `UnpackInterfaces` method is to be invoked during message deserialization right
-after the call to `Unmarshal`. Then the unpacked interface value can safely
-be used in any code afterwards and messages can introduce a simple getter to
-cast the cached value to the interface type. This has the added benefit that
-unmarshaling of `Any` values only happens once rather than every time the value
-is read.
+after `Unmarshal` and any interface values packed in `Any`s will be decoded
+and stored in `cachedValue` for reference later.
+
+Then unpacked interface values can safely be used in any code afterwards
+without knowledge of the `InterfaceRegistry`
+and messages can introduce a simple getter to cast the cached value to the
+correct interface type.
+
+This has the added benefit that unmarshaling of `Any` values only happens once
+during initial deserialization rather than every time the value is read. Also,
+when `Any` values are first packed (for instance in a call to
+`NewMsgSubmitEvidence`), the original interface value is cached so that 
+unmarshaling isn't needed to read it again.
 
 `MsgSubmitEvidence` could implement `UnpackInterfaces`, plus a convenience getter
 `GetEvidence` as follows:
 
 ```go
-func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceContext) error {
+func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceRegistry) error {
   var evi eviexported.Evidence
   return ctx.UnpackAny(msg.Evidence, *evi)
 }

@@ -147,7 +147,7 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	for i, rs := range gs.SendSequences {
+	for i, rs := range gs.RecvSequences {
 		if err := rs.Validate(); err != nil {
 			return fmt.Errorf("invalid receive sequence %d: %w", i, err)
 		}

@@ -50,8 +50,12 @@ var (
 	NewMsgTimeout                = types.NewMsgTimeout
 	NewMsgAcknowledgement        = types.NewMsgAcknowledgement
 	NewPacket                    = types.NewPacket
+	NewPacketAcknowledgement     = types.NewPacketAcknowledgement
+	NewPacketCommitment          = types.NewPacketCommitment
+	NewPacketSequence            = types.NewPacketSequence
 	NewChannelResponse           = types.NewChannelResponse
 	DefaultGenesisState          = types.DefaultGenesisState
+	NewGenesisState              = types.NewGenesisState
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc
@@ -83,5 +87,8 @@ type (
 	MsgTimeout             = types.MsgTimeout
 	Packet                 = types.Packet
 	ChannelResponse        = types.ChannelResponse
+	PacketAcknowledgement  = types.PacketAcknowledgement
+	PacketCommitment       = types.PacketCommitment
+	PacketSequence         = types.PacketSequence
 	GenesisState           = types.GenesisState
 )

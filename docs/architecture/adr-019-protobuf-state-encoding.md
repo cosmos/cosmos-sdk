@@ -162,7 +162,7 @@ type InterfaceContext interface {
     // RegisterImplementation registers impl as a concrete implementation of
     // the interface iface
     // Ex:
-	//   ctx.RegisterImplementation((*sdk.Msg)(nil), &MsgSend{})
+    //   ctx.RegisterImplementation((*sdk.Msg)(nil), &MsgSend{})
 	RegisterImplementation(iface interface{}, impl proto.Message)
 
     // UnpackAny unpacks the value in any to the interface pointer passed in as

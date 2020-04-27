@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/std"
 	"io"
+
+	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

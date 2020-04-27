@@ -1,9 +1,10 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/std"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"

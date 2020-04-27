@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/std"
 	"os"
 	"path"
+
+	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

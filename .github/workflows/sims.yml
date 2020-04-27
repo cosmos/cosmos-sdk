@@ -11,6 +11,8 @@ jobs:
         with:
           SUFFIX_FILTER: .go
           SEPARATOR: ','
+          SET_ENV_NAME_INSERTIONS: 1
+          SET_ENV_NAME_LINES: 1
 
   cleanup-runs:
     runs-on: ubuntu-latest

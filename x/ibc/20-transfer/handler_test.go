@@ -296,11 +296,11 @@ func (chain *TestChain) createChannel(
 	state channelexported.State, order channelexported.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := channeltypes.NewChannel(state, order, counterparty,
+	channel := channeltypes.NewChannel(channelID, portID, state, order, counterparty,
 		[]string{connectionID}, "1.0",
 	)
 	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
+	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
 	return channel
 }
 

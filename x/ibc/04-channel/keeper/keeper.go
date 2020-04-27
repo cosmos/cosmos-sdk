@@ -144,7 +144,7 @@ func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.Channel) bool) {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var channel types.Channel
-
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &channel)
 		if cb(channel) {
 			break
 		}

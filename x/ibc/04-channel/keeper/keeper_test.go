@@ -46,7 +46,7 @@ const (
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-  maxClockDrift  time.Duration = time.Second * 10
+	maxClockDrift  time.Duration = time.Second * 10
 
 	timeoutHeight            = 100
 	timeoutTimestamp         = 100
@@ -75,17 +75,12 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
 	suite.False(found)
 
-	channel := types.Channel{
-		State:    exported.OPEN,
-		Ordering: testChannelOrder,
-		Counterparty: types.Counterparty{
-			PortID:    testPort2,
-			ChannelID: testChannel2,
-		},
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
+	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
+	channel := types.NewChannel(
+		testChannel1, testPort1, exported.INIT, testChannelOrder,
+		counterparty2, []string{testConnectionIDA}, testChannelVersion,
+	)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
 
 	storedChannel, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
 	suite.True(found)
@@ -98,40 +93,26 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
-	channel1 := types.Channel{
-		State:          exported.INIT,
-		Ordering:       testChannelOrder,
-		Counterparty:   counterparty3,
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
+	channel1 := types.NewChannel(
+		testChannel1, testPort1, exported.INIT, testChannelOrder,
+		counterparty3, []string{testConnectionIDA}, testChannelVersion,
+	)
+	channel2 := types.NewChannel(
+		testChannel2, testPort2, exported.INIT, testChannelOrder,
+		counterparty1, []string{testConnectionIDA}, testChannelVersion,
+	)
+	channel3 := types.NewChannel(
+		testChannel3, testPort3, exported.CLOSED, testChannelOrder,
+		counterparty2, []string{testConnectionIDA}, testChannelVersion,
+	)
 
-	channel2 := types.Channel{
-		State:          exported.INIT,
-		Ordering:       testChannelOrder,
-		Counterparty:   counterparty1,
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
-
-	channel3 := types.Channel{
-		State:          exported.CLOSED,
-		Ordering:       testChannelOrder,
-		Counterparty:   counterparty2,
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
-
-	expChannels := []types.IdentifiedChannel{
-		{Channel: channel1, PortIdentifier: testPort1, ChannelIdentifier: testChannel1},
-		{Channel: channel2, PortIdentifier: testPort2, ChannelIdentifier: testChannel2},
-		{Channel: channel3, PortIdentifier: testPort3, ChannelIdentifier: testChannel3},
-	}
+	expChannels := []types.Channel{channel1, channel2, channel3}
 
 	ctx := suite.chainB.GetContext()
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel1)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort2, testChannel2, channel2)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort3, testChannel3, channel3)
+
+	for _, channel := range expChannels {
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
+	}
 
 	channels := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 	suite.Require().Len(channels, len(expChannels))
@@ -391,11 +372,11 @@ func (chain *TestChain) createChannel(
 	state exported.State, order exported.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := types.NewChannel(state, order, counterparty,
+	channel := types.NewChannel(channelID, portID, state, order, counterparty,
 		[]string{connectionID}, "1.0",
 	)
 	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
+	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
 	return channel
 }
 

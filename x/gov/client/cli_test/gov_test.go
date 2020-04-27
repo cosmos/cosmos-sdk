@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankCli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -25,7 +26,7 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	fooAddr := f.KeyAddress(helpers.KeyFoo)
 
 	startTokens := sdk.TokensFromConsensusPower(50)
-	require.Equal(t, startTokens, f.QueryBalances(fooAddr).AmountOf(sdk.DefaultBondDenom))
+	require.Equal(t, startTokens, bankCli.QueryBalances(f, fooAddr).AmountOf(sdk.DefaultBondDenom))
 
 	proposalsQuery := QueryGovProposals(f)
 	require.Empty(t, proposalsQuery)
@@ -54,7 +55,7 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure deposit was deducted
-	require.Equal(t, startTokens.Sub(proposalTokens), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
+	require.Equal(t, startTokens.Sub(proposalTokens), bankCli.QueryBalances(f, fooAddr).AmountOf(helpers.Denom))
 
 	// Ensure propsal is directly queryable
 	proposal1 := QueryGovProposal(f, 1)
@@ -97,7 +98,7 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure account has expected amount of funds
-	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), f.QueryBalances(fooAddr).AmountOf(helpers.Denom))
+	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), bankCli.QueryBalances(f, fooAddr).AmountOf(helpers.Denom))
 
 	// Fetch the proposal and ensure it is now in the voting period
 	proposal1 = QueryGovProposal(f, 1)

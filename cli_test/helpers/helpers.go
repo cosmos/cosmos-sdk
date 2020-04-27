@@ -3,8 +3,6 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,36 +154,6 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 	accAddr, err := sdk.AccAddressFromBech32(ko.Address)
 	require.NoError(f.T, err)
 	return accAddr
-}
-
-//___________________________________________________________________________________
-// simcli query account
-
-// QueryAccount is simcli query account
-func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.BaseAccount {
-	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
-	out, _ := tests.ExecuteT(f.T, AddFlags(cmd, flags), "")
-	var initRes map[string]json.RawMessage
-	err := json.Unmarshal([]byte(out), &initRes)
-	require.NoError(f.T, err, "out %v, err %v", out, err)
-	value := initRes["value"]
-	var acc auth.BaseAccount
-	codec.RegisterCrypto(cdc)
-	err = f.Cdc.UnmarshalJSON(value, &acc)
-	require.NoError(f.T, err, "value %v, err %v", string(value), err)
-	return acc
-}
-
-// QueryBalances executes the bank query balances command for a given address and
-// flag set.
-func (f *Fixtures) QueryBalances(address sdk.AccAddress, flags ...string) sdk.Coins {
-	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.Flags())
-	out, _ := tests.ExecuteT(f.T, AddFlags(cmd, flags), "")
-
-	var balances sdk.Coins
-	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
-
-	return balances
 }
 
 //___________________________________________________________________________________

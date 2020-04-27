@@ -156,7 +156,7 @@ type InterfaceContext interface {
     // interface passed in as iface
     // Ex:
     //   ctx.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
-	RegisterInterface(protoName string, iface interface{})
+    RegisterInterface(protoName string, iface interface{})
 
     // RegisterImplementation registers impl as a concrete implementation of
     // the interface iface

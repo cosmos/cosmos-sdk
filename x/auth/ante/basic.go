@@ -1,13 +1,12 @@
 package ante
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -139,6 +138,40 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 		}
+	}
+
+	return next(ctx, tx, simulate)
+}
+
+type (
+	// TxHeightTimeoutDecorator defines an AnteHandler decerator that checks for a
+	// tx height timeout.
+	TxHeightTimeoutDecorator struct{}
+
+	// TxWithHeightTimeout defines the interface a tx must implement in order for
+	// TxHeightTimeoutDecorator to process the tx.
+	TxWithHeightTimeout interface {
+		sdk.Tx
+
+		GetHeightTimeout() uint64
+	}
+)
+
+// AnteHandle implements an AnteHandler decerator for the TxHeightTimeoutDecorator
+// type where the current block height is checked against the tx's height timeout.
+// If a height timeout is provided (non-zero) and is less than the current block
+// height, than an error is returned.
+func (txh TxHeightTimeoutDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	timeoutTx, ok := tx.(TxWithHeightTimeout)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithHeightTimeout")
+	}
+
+	heightTimeout := timeoutTx.GetHeightTimeout()
+	if heightTimeout > 0 && uint64(ctx.BlockHeight()) > heightTimeout {
+		return ctx, sdkerrors.Wrapf(
+			sdkerrors.ErrTxHeightTimeout, "block height: %d, timeout height: %d", ctx.BlockHeight(), heightTimeout,
+		)
 	}
 
 	return next(ctx, tx, simulate)

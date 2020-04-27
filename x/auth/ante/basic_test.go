@@ -143,3 +143,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 	require.True(t, consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 }
+
+func TestTxHeightTimeoutDecorator(t *testing.T) {
+	// TODO: Wait for a standard type to implement TxWithHeightTimeout.
+}

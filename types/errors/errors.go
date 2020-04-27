@@ -94,6 +94,9 @@ var (
 	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
 	ErrorInvalidGasAdjustment = Register(RootCodespace, 25, "invalid gas adjustment")
 
+	// ErrTxHeightTimeout defines an error for when a tx timesout due to it's height
+	ErrTxHeightTimeout = Register(RootCodespace, 26, "tx timeout")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

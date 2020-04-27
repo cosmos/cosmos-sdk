@@ -113,36 +113,38 @@ type Codec interface {
 
 ### Usage of `Any` to encode interfaces
 
-In general, module-level .proto files should a message which encodes interfaces
+In general, module-level .proto files should define messages which encode interfaces
 using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto).
 After [extension discussion](https://github.com/cosmos/cosmos-sdk/issues/6030),
-this was chosen as a better alternative than using application-level `oneof`s
+this was chosen as the preferred alternative to application-level `oneof`s
 as in our original protobuf design. The arguments in favor of `Any` can be
 summarized as follows:
 * `Any` provides a simpler, more consistent client UX for dealing with
-interfaces than app-level `oneof`s that will likely need to be coordinated
-carefully across applications
+interfaces than app-level `oneof`s that will need to be coordinated more
+carefully across applications. Creating a generic transaction
+signing library using `oneof`s may be cumbersome and critical logic may need
+to be reimplemented for each chain
 * `Any` provides more resistance against human error than `oneof`
 * `Any` is generally simpler to implement for both modules and apps
 
 The main counter-argument to using `Any` centers around its additional space
 and possibly performance overhead. The space overhead could be dealt with using
 compression at the persistence layer in the future and the performance impact
-is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization
-and user experience as a higher order concern.
+is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization,
+with user experience as the higher order concern.
 
 Note, that given the SDK's decision to adopt the `Codec` interfaces described
-above, app's can still choose to use `oneof` to encode state and transactions,
+above, app's can still choose to use `oneof` to encode state and transactions
 but it is not the recommended approach.
 
 ### Safe usage of `Any`
 
-By default, the [gogo protobuf implementations of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
+By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
 uses global type registration to decode values packed in `Any` into concrete
-go types. This introduces a security vulnerability where any malicious module
+go types. This introduces a vulnerability where any malicious module
 in the dependency tree could registry a type with the global protobuf registry
-and cause it to be loaded and unmarshaled by a transaction that included
-its type URL in the `type_url` field.
+and cause it to be loaded and unmarshaled by a transaction that referenced
+it in the `type_url` field.
 
 To prevent this, we introduce a type registration mechanism for decoding `Any`
 values into concrete types through the `InterfaceContext` interface which
@@ -173,11 +175,12 @@ type InterfaceContext interface {
 }
 ```
 
-In addition to serving as a whitelist, `InterfaceContext` could also serve
+In addition to serving as a whitelist, `InterfaceContext` can also serve
 to communicate the list of concrete types that satisfy an interface to clients.
 
 Note that `InterfaceContext` usage does not deviate from standard protobuf
-usage of `Any`, it just introduces a security and introspection layer.
+usage of `Any`, it just introduces a security and introspection layer for 
+golang usage.
 
 ### Using `Any` to encode state
 
@@ -219,13 +222,13 @@ message MsgSubmitEvidence {
 
 Note that in order to unpack the evidence from `Any` we do need a reference to
 `InterfaceContext`. This is inconvenient if we want to reference the evidence
-in methods like `ValidateBasic`. We can work around this limitation be
-introducing an unpacking interfaces phase to deserialization.
+in methods like `ValidateBasic`. We can work around this limitation by
+introducing an `UnpackInterfaces` phase to deserialization.
 
 ### Unpacking Interfaces
 
 To ease unpacking of interfacing with `InterfaceContext`, we add introduce an
-interface:
+interface that `sdk.Msg`s and other types can implement:
 ```go
 type UnpackInterfacesMsg interface {
   UnpackInterfaces(InterfaceContext) error
@@ -237,11 +240,19 @@ struct itself with a public getter `GetUnpackedValue() interface{}`.
 
 This `UnpackInterfaces` is to be invoked during message deserialization right
 after the call to `Unmarshal`. Then the unpacked interface value can safely
-be used in any code afterwards and `MsgSubmitEvidence` our example above
-could introduce a convenience getter `GetEvidence` as follows:
+be used in any code afterwards and messages can introduce a simple getter to
+cast to the interface type. This has the added benefit that unmarshaling of `Any`
+values only happens once rather than every time the value is read.
+
+`MsgSubmitEvidence` could implement `UnpackInterfaces`, plus a convenience getter
+`GetEvidence` as follows:
 
 ```go
 // app/codec/msgs.go
+func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceContext) error {
+  var evi eviexported.Evidence
+  return ctx.UnpackAny(msg.Evidence, *evi)
+}
 
 func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence {
   return msg.Evidence.GetUnpackedValue().(eviexported.Evidence)

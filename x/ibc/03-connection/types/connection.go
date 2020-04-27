@@ -20,6 +20,7 @@ var _ exported.ConnectionI = ConnectionEnd{}
 // between two chains.
 type ConnectionEnd struct {
 	State    exported.State `json:"state" yaml:"state"`
+	ID       string         `json:"id" yaml:"id"`
 	ClientID string         `json:"client_id" yaml:"client_id"`
 
 	// Counterparty chain associated with this connection.
@@ -30,9 +31,10 @@ type ConnectionEnd struct {
 }
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state exported.State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state exported.State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		State:        state,
+		ID:           connectionID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     versions,
@@ -42,6 +44,11 @@ func NewConnectionEnd(state exported.State, clientID string, counterparty Counte
 // GetState implements the Connection interface
 func (c ConnectionEnd) GetState() exported.State {
 	return c.State
+}
+
+// GetID implements the Connection interface
+func (c ConnectionEnd) GetID() string {
+	return c.ID
 }
 
 // GetClientID implements the Connection interface
@@ -59,8 +66,13 @@ func (c ConnectionEnd) GetVersions() []string {
 	return c.Versions
 }
 
-// ValidateBasic implements the Connection interface
+// ValidateBasic implements the Connection interface.
+// NOTE: the protocol supports that the connection and client IDs match the
+// counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
+	if err := host.DefaultConnectionIdentifierValidator(c.ID); err != nil {
+		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
+	}
 	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}

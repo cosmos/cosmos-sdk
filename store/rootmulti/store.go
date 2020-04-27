@@ -710,7 +710,7 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 // `item = []byte(Hash(key) | Hash(value))`,
 // sorted by `item`.
 func SimpleHashFromMap(m map[string][]byte) []byte {
-	sm := newSimpleMap()
+	sm := newMerkleMap()
 	for k, v := range m {
 		sm.Set(k, v)
 	}

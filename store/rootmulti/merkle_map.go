@@ -2,32 +2,33 @@ package rootmulti
 
 import (
 	"bytes"
+	"encoding/binary"
+	"io"
 
-	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/kv"
 )
 
-// Merkle tree from a map.
+// MerkleMap is a merkle tree from a map.
 // Leaves are `hash(key) | hash(value)`.
 // Leaves are sorted before Merkle hashing.
-type simpleMap struct {
+type merkleMap struct {
 	kvs    kv.Pairs
 	sorted bool
 }
 
-func newSimpleMap() *simpleMap {
-	return &simpleMap{
+func newMerkleMap() *merkleMap {
+	return &merkleMap{
 		kvs:    nil,
 		sorted: false,
 	}
 }
 
 // Set creates a kv pair of the key and the hash of the value,
-// and then appends it to simpleMap's kv pairs.
-func (sm *simpleMap) Set(key string, value []byte) {
+// and then appends it to merkleMap's kv pairs.
+func (sm *merkleMap) Set(key string, value []byte) {
 	sm.sorted = false
 
 	// The value is hashed, so you can
@@ -43,12 +44,12 @@ func (sm *simpleMap) Set(key string, value []byte) {
 
 // Hash Merkle root hash of items sorted by key
 // (UNSTABLE: and by value too if duplicate key).
-func (sm *simpleMap) Hash() []byte {
+func (sm *merkleMap) Hash() []byte {
 	sm.Sort()
 	return hashKVPairs(sm.kvs)
 }
 
-func (sm *simpleMap) Sort() {
+func (sm *merkleMap) Sort() {
 	if sm.sorted {
 		return
 	}
@@ -58,7 +59,7 @@ func (sm *simpleMap) Sort() {
 
 // Returns a copy of sorted KVPairs.
 // NOTE these contain the hashed key and value.
-func (sm *simpleMap) KVPairs() kv.Pairs {
+func (sm *merkleMap) KVPairs() kv.Pairs {
 	sm.Sort()
 	kvs := make(kv.Pairs, len(sm.kvs))
 	copy(kvs, sm.kvs)
@@ -76,17 +77,30 @@ type KVPair kv.Pair
 // key and value length prefixed.
 func (kv KVPair) Bytes() []byte {
 	var b bytes.Buffer
-	err := amino.EncodeByteSlice(&b, kv.Key)
+	err := encodeByteSlice(&b, kv.Key)
 	if err != nil {
 		panic(err)
 	}
-	err = amino.EncodeByteSlice(&b, kv.Value)
+	err = encodeByteSlice(&b, kv.Value)
 	if err != nil {
 		panic(err)
 	}
 	return b.Bytes()
 }
 
+// EncodeByteSlice encodes a byte slice with its length prefixed
+func encodeByteSlice(w io.Writer, bz []byte) (err error) {
+	var buf [10]byte
+	n := binary.PutUvarint(buf[:], uint64(len(bz)))
+	_, err = w.Write(buf[0:n])
+	if err != nil {
+		return
+	}
+	_, err = w.Write(bz)
+	return
+}
+
+// hashKVPairs hashes a KVPair and creates a merkle tree where the leaves are byte slices
 func hashKVPairs(kvs kv.Pairs) []byte {
 	kvsH := make([][]byte, len(kvs))
 	for i, kvp := range kvs {

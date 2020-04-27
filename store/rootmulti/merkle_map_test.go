@@ -39,7 +39,7 @@ func TestSimpleMap(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		db := newSimpleMap()
+		db := newMerkleMap()
 		for i := 0; i < len(tc.keys); i++ {
 			db.Set(tc.keys[i], []byte(tc.values[i]))
 		}

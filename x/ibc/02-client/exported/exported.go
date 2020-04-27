@@ -147,8 +147,9 @@ const (
 
 // string representation of the client types
 const (
-	ClientTypeTendermint string = "tendermint"
-	ClientTypeLocalHost  string = "localhost"
+	ClientTypeTendermint  string = "tendermint"
+	ClientTypeLocalHost   string = "localhost"
+	ClientTypeSoloMachine string = "solomachine"
 )
 
 func (ct ClientType) String() string {

@@ -250,7 +250,6 @@ is read.
 `GetEvidence` as follows:
 
 ```go
-// app/codec/msgs.go
 func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceContext) error {
   var evi eviexported.Evidence
   return ctx.UnpackAny(msg.Evidence, *evi)

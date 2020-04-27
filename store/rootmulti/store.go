@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
@@ -705,14 +704,13 @@ func flushCommitInfo(db dbm.DB, version int64, cInfo commitInfo) {
 	}
 }
 
-// SimpleHashFromMap computes a Merkle tree from sorted map.
-// Like calling SimpleHashFromHashers with
-// `item = []byte(Hash(key) | Hash(value))`,
-// sorted by `item`.
+// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
+// root.
 func SimpleHashFromMap(m map[string][]byte) []byte {
-	sm := newMerkleMap()
+	mm := newMerkleMap()
 	for k, v := range m {
-		sm.Set(k, v)
+		mm.set(k, v)
 	}
-	return sm.Hash()
+
+	return mm.hash()
 }

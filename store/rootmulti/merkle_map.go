@@ -6,14 +6,12 @@ import (
 	"io"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/kv"
 )
 
-// MerkleMap is a merkle tree from a map.
-// Leaves are `hash(key) | hash(value)`.
-// Leaves are sorted before Merkle hashing.
+// merkleMap defines a merkle-ized tree from a map. Leave values are treated as
+// hash(key) | hash(value). Leaves are sorted before Merkle hashing.
 type merkleMap struct {
 	kvs    kv.Pairs
 	sorted bool
@@ -26,13 +24,13 @@ func newMerkleMap() *merkleMap {
 	}
 }
 
-// Set creates a kv pair of the key and the hash of the value,
-// and then appends it to merkleMap's kv pairs.
-func (sm *merkleMap) Set(key string, value []byte) {
+// set creates a kv.Pair from the provided key and value. The value is hashed prior
+// to creating a kv.Pair. The created kv.Pair is appended to the merkleMap's slice
+// of kv.Pairs. Whenever called, the merkleMap must be resorted.
+func (sm *merkleMap) set(key string, value []byte) {
 	sm.sorted = false
 
-	// The value is hashed, so you can
-	// check for equality with a cached value (say)
+	// The value is hashed, so you can check for equality with a cached value (say)
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
@@ -42,69 +40,73 @@ func (sm *merkleMap) Set(key string, value []byte) {
 	})
 }
 
-// Hash Merkle root hash of items sorted by key
-// (UNSTABLE: and by value too if duplicate key).
-func (sm *merkleMap) Hash() []byte {
-	sm.Sort()
+// hash returns the merkle root of items sorted by key. Note, it is unstable.
+func (sm *merkleMap) hash() []byte {
+	sm.sort()
 	return hashKVPairs(sm.kvs)
 }
 
-func (sm *merkleMap) Sort() {
+func (sm *merkleMap) sort() {
 	if sm.sorted {
 		return
 	}
+
 	sm.kvs.Sort()
 	sm.sorted = true
 }
 
-// Returns a copy of sorted KVPairs.
-// NOTE these contain the hashed key and value.
-func (sm *merkleMap) KVPairs() kv.Pairs {
-	sm.Sort()
+// kvPairs sorts the merkleMap kv.Pair objects and returns a copy as a slice.
+func (sm *merkleMap) kvPairs() kv.Pairs {
+	sm.sort()
+
 	kvs := make(kv.Pairs, len(sm.kvs))
 	copy(kvs, sm.kvs)
+
 	return kvs
 }
 
-//----------------------------------------
+// kvPair defines a type alias for kv.Pair so that we can create bytes to hash
+// when constructing the merkle root. Note, key and values are both length-prefixed.
+type kvPair kv.Pair
 
-// A local extension to KVPair that can be hashed.
-// Key and value are length prefixed and concatenated,
-// then hashed.
-type KVPair kv.Pair
-
-// Bytes returns key || value, with both the
-// key and value length prefixed.
-func (kv KVPair) Bytes() []byte {
+// bytes returns a byte slice representation of the kvPair where the key and value
+// are length-prefixed.
+func (kv kvPair) bytes() []byte {
 	var b bytes.Buffer
+
 	err := encodeByteSlice(&b, kv.Key)
 	if err != nil {
 		panic(err)
 	}
+
 	err = encodeByteSlice(&b, kv.Value)
 	if err != nil {
 		panic(err)
 	}
+
 	return b.Bytes()
 }
 
-// EncodeByteSlice encodes a byte slice with its length prefixed
-func encodeByteSlice(w io.Writer, bz []byte) (err error) {
+func encodeByteSlice(w io.Writer, bz []byte) error {
 	var buf [8]byte
 	n := binary.PutUvarint(buf[:], uint64(len(bz)))
-	_, err = w.Write(buf[0:n])
+
+	_, err := w.Write(buf[:n])
 	if err != nil {
-		return
+		return err
 	}
+
 	_, err = w.Write(bz)
-	return
+	return err
 }
 
-// hashKVPairs hashes a KVPair and creates a merkle tree where the leaves are byte slices
+// hashKVPairs hashes a kvPair and creates a merkle tree where the leaves are
+// byte slices.
 func hashKVPairs(kvs kv.Pairs) []byte {
 	kvsH := make([][]byte, len(kvs))
 	for i, kvp := range kvs {
-		kvsH[i] = KVPair(kvp).Bytes()
+		kvsH[i] = kvPair(kvp).bytes()
 	}
+
 	return merkle.SimpleHashFromByteSlices(kvsH)
 }

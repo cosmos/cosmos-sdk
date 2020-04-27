@@ -22,22 +22,22 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		return
 	}
 
-	// To make sure clear upgrade is executed at the same block
+	// to make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(ctx) {
-		// If skip upgrade has been set for current height, we clear the upgrade plan
+		// if skip upgrade has been set for current height, we clear the upgrade plan
 		if k.IsSkipHeight(ctx.BlockHeight()) {
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
-			ctx.Logger().Info(skipUpgradeMsg)
+			k.Logger(ctx).Info(skipUpgradeMsg)
 
-			// Clear the upgrade plan at current height
+			// clear the upgrade plan at current height
 			k.ClearUpgradePlan(ctx)
 			return
 		}
 
 		if !k.HasHandler(plan.Name) {
 			upgradeMsg := fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
-			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
-			ctx.Logger().Error(upgradeMsg)
+			// we don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
+			k.Logger(ctx).Error(upgradeMsg)
 
 			// Write the upgrade info to disk. The UpgradeStoreLoader uses this info to perform or skip
 			// store migrations.
@@ -48,18 +48,22 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 			panic(upgradeMsg)
 		}
-		// We have an upgrade handler for this upgrade name, so apply the upgrade
-		ctx.Logger().Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
+
+		// we have an upgrade handler for this upgrade name, so apply the upgrade
+		k.Logger(ctx).Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
+
+		// TODO: Document why we use an infinite gas meter.
 		ctx = ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 		k.ApplyUpgrade(ctx, plan)
+
 		return
 	}
 
-	// if we have a pending upgrade, but it is not yet time, make sure we did not
-	// set the handler already
+	// If we have a pending upgrade, but it is not yet time, make sure we did not
+	// set the handler already.
 	if k.HasHandler(plan.Name) {
 		downgradeMsg := fmt.Sprintf("BINARY UPDATED BEFORE TRIGGER! UPGRADE \"%s\" - in binary but not executed on chain", plan.Name)
-		ctx.Logger().Error(downgradeMsg)
+		k.Logger(ctx).Error(downgradeMsg)
 		panic(downgradeMsg)
 	}
 }

@@ -2,6 +2,7 @@ package simulation_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -24,7 +24,7 @@ var (
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
-	cdc := codecstd.NewAppCodec(codecstd.MakeCodec(simapp.ModuleBasics))
+	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
 	dec := simulation.NewDecodeStore(cdc)
 
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}

@@ -17,11 +17,11 @@ jobs:
       - uses: rokroskar/workflow-run-cleanup-action@master
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
+    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master' && steps.git_diff.outputs.diff"
 
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip-sims')"
+    if: "!contains(github.event.head_commit.message, 'skip-sims') && steps.git_diff.outputs.diff"
     steps:
       - uses: actions/setup-go@v2-beta
       - uses: actions/checkout@v2

@@ -8,11 +8,6 @@ import (
 	"os"
 	"strings"
 
-	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -25,8 +20,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
-
-var ErrorInvalidGasAdjustment = errors2.Register(types.ModuleName, 3, "invalid gas adjustment")
 
 type (
 	// Generator defines an interface a client can utilize to generate an

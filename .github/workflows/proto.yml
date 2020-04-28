@@ -14,8 +14,8 @@ jobs:
       # - uses: docker-practice/actions-setup-docker@master
       #   if: "env.GIT_DIFF != ''"
       - name: lint
-        run: make proto-lint
+        run: make proto-lint-docker
         if: "env.GIT_DIFF != ''"
       - name: check-breakage
-        run: make proto-check-breaking-ci
+        run: make proto-check-breaking-docker
         if: "env.GIT_DIFF != ''"

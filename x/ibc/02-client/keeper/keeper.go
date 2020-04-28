@@ -98,6 +98,67 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 	store.Set(ibctypes.KeyConsensusState(height), bz)
 }
 
+// IterateConsensusStates provides an iterator over all stored consensus states.
+// objects. For each State object, cb will be called. If the cb returns true,
+// the iterator will close and stop.
+func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs exported.ConsensusState) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, ibctypes.KeyClientStorePrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		keySplit := strings.Split(string(iterator.Key()), "/")
+		// consensus key is in the format "clients/<clientID>/consensusState/<height>"
+		if len(keySplit) != 4 || keySplit[2] != "consensusState" {
+			continue
+		}
+		clientID := keySplit[1]
+		var consensusState exported.ConsensusState
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &consensusState)
+
+		if cb(clientID, consensusState) {
+			break
+		}
+	}
+}
+
+// GetAllConsensusStates returns all stored client consensus states.
+// NOTE: non deterministic.
+func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (clientConsStates []types.ClientConsensusStates) {
+	var clientIDs []string
+	// create map to add consensus states to the existing clients
+	cons := make(map[string][]exported.ConsensusState)
+
+	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
+		consensusStates, ok := cons[clientID]
+		if !ok {
+			clientIDs = append(clientIDs, clientID)
+			cons[clientID] = []exported.ConsensusState{cs}
+			return false
+		}
+
+		cons[clientID] = append(consensusStates, cs)
+		return false
+	})
+
+	// create ClientConsensusStates in the same order of iteration to prevent non-determinism
+	for len(clientIDs) > 0 {
+		id := clientIDs[len(clientIDs)-1]
+		consensusStates, ok := cons[id]
+		if !ok {
+			panic(fmt.Sprintf("consensus states from client id %s not found", id))
+		}
+
+		clientConsState := types.NewClientConsensusStates(id, consensusStates)
+		clientConsStates = append(clientConsStates, clientConsState)
+
+		// remove the last element
+		clientIDs = clientIDs[:len(clientIDs)-1]
+	}
+
+	return clientConsStates
+}
+
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular
 // client at the given height
 func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {

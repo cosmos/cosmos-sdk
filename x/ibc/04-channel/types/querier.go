@@ -19,18 +19,21 @@ const (
 // ChannelResponse defines the client query response for a channel which also
 // includes a proof,its path and the height from which the proof was retrieved.
 type ChannelResponse struct {
-	Channel     Channel                     `json:"channel" yaml:"channel"`
+	Channel     IdentifiedChannel           `json:"channel" yaml:"channel"`
 	Proof       commitmenttypes.MerkleProof `json:"proof,omitempty" yaml:"proof,omitempty"`
 	ProofPath   commitmenttypes.MerklePath  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
 	ProofHeight uint64                      `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewChannelResponse creates a new ChannelResponse instance
-func NewChannelResponse(channel Channel, proof *merkle.Proof, height int64) ChannelResponse {
+func NewChannelResponse(
+	portID, channelID string, channel Channel, proof *merkle.Proof, height int64,
+) ChannelResponse {
 	return ChannelResponse{
-		Channel:     channel,
+
+		Channel:     NewIdentifiedChannel(portID, channelID, channel),
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(channel.PortID, channel.ID), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(portID, channelID), "/")),
 		ProofHeight: uint64(height),
 	}
 }

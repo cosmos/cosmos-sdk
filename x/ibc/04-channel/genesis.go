@@ -8,7 +8,8 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 	for _, channel := range gs.Channels {
-		k.SetChannel(ctx, channel)
+		ch := NewChannel(channel.State, channel.Ordering, channel.Counterparty, channel.ConnectionHops, channel.Version)
+		k.SetChannel(ctx, channel.PortID, channel.ID, ch)
 	}
 	for _, ack := range gs.Acknowledgements {
 		k.SetPacketAcknowledgement(ctx, ack.PortID, ack.ChannelID, ack.Sequence, ack.Hash)

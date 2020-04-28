@@ -36,14 +36,16 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "valid genesis",
 			genState: NewGenesisState(
-				[]Channel{
-					NewChannel(
-						testChannel1, testPort1, exported.INIT, testChannelOrder,
-						counterparty2, []string{testConnectionIDA}, testChannelVersion,
+				[]IdentifiedChannel{
+					NewIdentifiedChannel(
+						testPort1, testChannel1, NewChannel(
+							exported.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+						),
 					),
-					NewChannel(
-						testChannel2, testPort2, exported.INIT, testChannelOrder,
-						counterparty1, []string{testConnectionIDA}, testChannelVersion,
+					NewIdentifiedChannel(
+						testPort2, testChannel2, NewChannel(
+							exported.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
+						),
 					),
 				},
 				[]PacketAckCommitment{
@@ -64,10 +66,11 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "invalid channel",
 			genState: GenesisState{
-				Channels: []Channel{
-					NewChannel(
-						"testChannel1", testPort1, exported.INIT, testChannelOrder,
-						counterparty2, []string{testConnectionIDA}, testChannelVersion,
+				Channels: []IdentifiedChannel{
+					NewIdentifiedChannel(
+						testPort1, "testChannel1", NewChannel(
+							exported.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+						),
 					),
 				},
 			},

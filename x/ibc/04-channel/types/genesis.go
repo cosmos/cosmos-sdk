@@ -60,7 +60,7 @@ func (ps PacketSequence) Validate() error {
 
 // GenesisState defines the ibc channel submodule's genesis state.
 type GenesisState struct {
-	Channels         []Channel             `json:"channels" yaml:"channels"`
+	Channels         []IdentifiedChannel   `json:"channels" yaml:"channels"`
 	Acknowledgements []PacketAckCommitment `json:"acknowledgements" yaml:"acknowledgements"`
 	Commitments      []PacketAckCommitment `json:"commitments" yaml:"commitments"`
 	SendSequences    []PacketSequence      `json:"send_sequences" yaml:"send_sequences"`
@@ -69,7 +69,7 @@ type GenesisState struct {
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	channels []Channel, acks, commitments []PacketAckCommitment,
+	channels []IdentifiedChannel, acks, commitments []PacketAckCommitment,
 	sendSeqs, recvSeqs []PacketSequence,
 ) GenesisState {
 	return GenesisState{
@@ -84,7 +84,7 @@ func NewGenesisState(
 // DefaultGenesisState returns the ibc channel submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Channels:         []Channel{},
+		Channels:         []IdentifiedChannel{},
 		Acknowledgements: []PacketAckCommitment{},
 		Commitments:      []PacketAckCommitment{},
 		SendSequences:    []PacketSequence{},

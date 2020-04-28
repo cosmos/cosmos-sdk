@@ -53,10 +53,12 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					},
 				),
 				ChannelGenesis: channel.NewGenesisState(
-					[]channel.Channel{
-						channel.NewChannel(
-							channel1, port1, channelexported.INIT, channelOrder,
-							channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+					[]channel.IdentifiedChannel{
+						channel.NewIdentifiedChannel(
+							port1, channel1, channel.NewChannel(
+								channelexported.INIT, channelOrder,
+								channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+							),
 						),
 					},
 					[]channel.PacketAckCommitment{

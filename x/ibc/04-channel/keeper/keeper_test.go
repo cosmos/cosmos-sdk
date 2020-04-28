@@ -77,10 +77,10 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	channel := types.NewChannel(
-		testChannel1, testPort1, exported.INIT, testChannelOrder,
+		exported.INIT, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
-	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
 
 	storedChannel, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
 	suite.True(found)
@@ -94,25 +94,29 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.NewChannel(
-		testChannel1, testPort1, exported.INIT, testChannelOrder,
+		exported.INIT, testChannelOrder,
 		counterparty3, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel2 := types.NewChannel(
-		testChannel2, testPort2, exported.INIT, testChannelOrder,
+		exported.INIT, testChannelOrder,
 		counterparty1, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel3 := types.NewChannel(
-		testChannel3, testPort3, exported.CLOSED, testChannelOrder,
+		exported.CLOSED, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 
-	expChannels := []types.Channel{channel1, channel2, channel3}
+	expChannels := []types.IdentifiedChannel{
+		types.NewIdentifiedChannel(testPort1, testChannel1, channel1),
+		types.NewIdentifiedChannel(testPort2, testChannel2, channel2),
+		types.NewIdentifiedChannel(testPort3, testChannel3, channel3),
+	}
 
 	ctx := suite.chainB.GetContext()
 
-	for _, channel := range expChannels {
-		suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
-	}
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel1)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort2, testChannel2, channel2)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort3, testChannel3, channel3)
 
 	channels := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 	suite.Require().Len(channels, len(expChannels))
@@ -419,11 +423,11 @@ func (chain *TestChain) createChannel(
 	state exported.State, order exported.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := types.NewChannel(channelID, portID, state, order, counterparty,
+	channel := types.NewChannel(state, order, counterparty,
 		[]string{connectionID}, "1.0",
 	)
 	ctx := chain.GetContext()
-	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, channel)
+	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
 	return channel
 }
 

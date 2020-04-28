@@ -66,5 +66,5 @@ func QueryChannel(
 	if err := ctx.Codec.UnmarshalBinaryBare(res.Value, &channel); err != nil {
 		return types.ChannelResponse{}, err
 	}
-	return types.NewChannelResponse(channel, res.Proof, res.Height), nil
+	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }

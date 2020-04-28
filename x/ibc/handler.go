@@ -39,7 +39,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		// IBC channel msgs
 		case channel.MsgChannelOpenInit:
 			// Lookup module by port capability
-			module, portCap, ok := k.PortKeeper.LookupModuleByPort(ctx, msg.Channel.PortID)
+			module, portCap, ok := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
 			if !ok {
 				return nil, sdkerrors.Wrap(port.ErrInvalidPort, "could not retrieve module from portID")
 			}
@@ -52,7 +52,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			if !ok {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
-			err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.Channel.PortID, msg.Channel.ID, cap, msg.Channel.Counterparty, msg.Channel.Version)
+			err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID, cap, msg.Channel.Counterparty, msg.Channel.Version)
 			if err != nil {
 				return nil, err
 			}

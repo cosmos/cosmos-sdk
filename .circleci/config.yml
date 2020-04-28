@@ -77,16 +77,6 @@ jobs:
           paths:
             - ".git"
 
-  proto:
-    executor: protoc
-    steps:
-      - make:
-          target: protoc-gen-gocosmos
-          description: "Generate go plugin for protoc"
-      - make:
-          target: proto-gen proto-lint proto-check-breaking
-          description: "Lint and verify Protocol Buffer definitions"
-
   update-swagger-docs:
     executor: golang
     steps:
@@ -107,9 +97,6 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - proto:
-          requires:
-            - setup-dependencies
       - build-docs:
           context: docs-deployment-master
           filters:

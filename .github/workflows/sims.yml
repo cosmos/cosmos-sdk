@@ -14,8 +14,9 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: test
         run: |
-          echo ::set-env name=action_state::yellow
-          echo ${{env.GIT_DIFF}}
+          echo "::set-env name=action_state::yellow"
+          echo ${{env.GIT_DIFF}} != ' ' 
+    # env: 
 
   cleanup-runs:
     runs-on: ubuntu-latest

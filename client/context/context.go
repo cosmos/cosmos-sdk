@@ -60,12 +60,13 @@ type CLIContext struct {
 func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
+	var err error
 
 	offline := viper.GetBool(flags.FlagOffline)
 	if !offline {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc, err := rpchttp.New(nodeURI, "/websocket")
+			rpc, err = rpchttp.New(nodeURI, "/websocket")
 			if err != nil {
 				fmt.Printf("failted to get client: %v\n", err)
 				os.Exit(1)
@@ -137,12 +138,12 @@ func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLICon
 		backend = keyring.BackendMemory
 	}
 
-	keyring, err := newKeyringFromFlags(backend, homedir, input, genOnly)
+	kr, err := newKeyringFromFlags(backend, homedir, input, genOnly)
 	if err != nil {
 		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
 	}
 
-	fromAddress, fromName, err := GetFromFields(keyring, from, genOnly)
+	fromAddress, fromName, err := GetFromFields(kr, from, genOnly)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
@@ -151,7 +152,7 @@ func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLICon
 	ctx.HomeDir = homedir
 
 	return ctx.
-		WithKeyring(keyring).
+		WithKeyring(kr).
 		WithFromAddress(fromAddress).
 		WithFromName(fromName).
 		WithGenerateOnly(genOnly)

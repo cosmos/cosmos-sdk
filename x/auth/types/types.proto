@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos_sdk.x.auth.v1;
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -19,25 +18,14 @@ message BaseAccount {
   uint64 sequence       = 4;
 }
 
-// StdFee includes the amount of coins paid in fees and the maximum
-// gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
-message StdFee {
-  option (gogoproto.goproto_getters) = false;
-  option (gogoproto.equal)           = true;
+// ModuleAccount defines an account for modules that holds coins on a pool
+message ModuleAccount {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
 
-  repeated cosmos_sdk.v1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  uint64 gas = 2;
-}
-
-// StdSignature defines a signature structure that contains the signature of a
-// transaction and an optional public key.
-message StdSignature {
-  option (gogoproto.goproto_getters) = false;
-
-  bytes pub_key   = 1 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
-  bytes signature = 2;
+  BaseAccount     base_account = 1 [(gogoproto.embed) = true, (gogoproto.moretags) = "yaml:\"base_account\""];
+  string          name         = 2;
+  repeated string permissions  = 3;
 }
 
 // Params defines the parameters for the auth module.
@@ -52,22 +40,4 @@ message Params {
       [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
   uint64 sig_verify_cost_secp256k1 = 5
       [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
-}
-
-// StdTxBase defines a transaction base which application-level concrete transaction
-// types can extend.
-message StdTxBase {
-  StdFee                fee        = 1 [(gogoproto.nullable) = false];
-  repeated StdSignature signatures = 2 [(gogoproto.nullable) = false];
-  string                memo       = 3;
-}
-
-// StdSignDocBase defines the base structure for which applications can extend
-// to define the concrete structure that signers sign over.
-message StdSignDocBase {
-  string chain_id       = 1 [(gogoproto.customname) = "ChainID", (gogoproto.moretags) = "yaml:\"chain_id\""];
-  uint64 account_number = 2 [(gogoproto.moretags) = "yaml:\"account_number\""];
-  uint64 sequence       = 3;
-  string memo           = 4;
-  StdFee fee            = 5 [(gogoproto.nullable) = false];
 }

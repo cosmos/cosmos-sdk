@@ -11,7 +11,7 @@ import (
 // QueryPacket returns a packet from the store
 func QueryPacket(
 	ctx context.CLIContext, portID, channelID string,
-	sequence, timeout uint64, prove bool,
+	sequence, timeoutHeight, timeoutTimestamp uint64, prove bool,
 ) (types.PacketResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -39,7 +39,8 @@ func QueryPacket(
 		channelID,
 		destPortID,
 		destChannelID,
-		timeout,
+		timeoutHeight,
+		timeoutTimestamp,
 	)
 
 	// FIXME: res.Height+1 is hack, fix later
@@ -62,7 +63,7 @@ func QueryChannel(
 	}
 
 	var channel types.Channel
-	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
+	if err := ctx.Codec.UnmarshalBinaryBare(res.Value, &channel); err != nil {
 		return types.ChannelResponse{}, err
 	}
 	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil

@@ -6,15 +6,16 @@ import (
 	"testing"
 	"time"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	"github.com/cosmos/cosmos-sdk/std"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -83,8 +84,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		codecstd.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
-		app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
+		std.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
+		app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))
@@ -125,7 +126,7 @@ func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
 	// add accounts and set total supply
 	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
-	suite.app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+	suite.app.BankKeeper.SetSupply(ctx, bank.NewSupply(totalSupply))
 
 	for _, addr := range valAddresses {
 		_, err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)

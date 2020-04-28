@@ -9,10 +9,12 @@ import (
 	"strings"
 
 	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,8 +22,8 @@ import (
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var ErrorInvalidGasAdjustment = errors2.Register(types.ModuleName, 3, "invalid gas adjustment")
@@ -195,7 +197,7 @@ func WriteGeneratedTxResponse(
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, ErrorInvalidGasAdjustment.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, sdkerrors.ErrorInvalidGasAdjustment.Error())
 			return
 		}
 
@@ -252,17 +254,17 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 		}
 	}
 
-	tx := txf.txGenerator.NewTx()
 	clientFee := txf.txGenerator.NewFee()
 	clientFee.SetAmount(fees)
 	clientFee.SetGas(txf.gas)
-	err := tx.SetFee(clientFee)
-	if err != nil {
+
+	tx := txf.txGenerator.NewTx()
+
+	if err := tx.SetFee(clientFee); err != nil {
 		return nil, err
 	}
-	tx.SetMemo(txf.memo)
-	err = tx.SetSignatures()
-	if err != nil {
+
+	if err := tx.SetSignatures(); err != nil {
 		return nil, err
 	}
 
@@ -285,8 +287,8 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := txf.txGenerator.NewSignature()
-	err = tx.SetSignatures(sig)
-	if err != nil {
+
+	if err := tx.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
@@ -370,15 +372,16 @@ func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 	}
 
 	sig := txf.txGenerator.NewSignature()
-	err = sig.SetPubKey(pubkey)
-	if err != nil {
-		return nil, err
-	}
 	sig.SetSignature(sigBytes)
-	err = tx.SetSignatures(sig)
-	if err != nil {
+
+	if err := sig.SetPubKey(pubkey); err != nil {
 		return nil, err
 	}
+
+	if err := tx.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
 	return tx.Marshal()
 }
 

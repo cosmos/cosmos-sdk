@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -26,7 +27,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
 	)
 	connection1 := types.NewConnectionEnd(
-		exported.UNINITIALIZED, testClientIDB, counterparty,
+		exported.UNINITIALIZED, testConnectionIDB, testClientIDB, counterparty,
 		types.GetCompatibleVersions(),
 	)
 
@@ -134,8 +135,8 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			}
 
 			// Create B's connection to A
-			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDA, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testClientIDA, counterparty, []string{"1.0.0"})
+			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
@@ -160,7 +161,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	)
 
 	connection := types.NewConnectionEnd(
-		exported.UNINITIALIZED, testClientIDA, counterparty,
+		exported.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty,
 		types.GetCompatibleVersions(),
 	)
 
@@ -305,7 +306,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 
 			tc.malleate()
 			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort1, testChannel1, 1, ack)
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort1, testChannel1, 1, channeltypes.CommitAcknowledgement(ack))
 			suite.chainB.updateClient(suite.chainA)
 
 			// TODO check this proof height

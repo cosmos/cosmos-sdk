@@ -8,6 +8,8 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
+HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
+DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
 
@@ -22,7 +24,19 @@ all: tools build lint test
 
 build: go.sum
 	@go build -mod=readonly ./...
-.PHONY: build
+
+build-sim: go.sum
+ifeq ($(OS),Windows_NT)
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
+else
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
+endif
+
+.PHONY: \
+ build \
+ build-sim
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -107,7 +121,7 @@ test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
+	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
@@ -242,6 +256,14 @@ proto-lint:
 
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=master'
+
+proto-lint-docker:
+	@$(DOCKER_BUF) check lint --error-format=json
+.PHONY: proto-lint
+
+proto-check-breaking-docker:
+	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+.PHONY: proto-check-breaking-ci
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos

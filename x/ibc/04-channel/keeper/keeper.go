@@ -53,14 +53,14 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 	}
 
 	var channel types.Channel
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &channel)
+	k.cdc.MustUnmarshalBinaryBare(bz, &channel)
 	return channel, true
 }
 
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(channel)
+	bz := k.cdc.MustMarshalBinaryBare(channel)
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
 }
 
@@ -144,7 +144,7 @@ func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.IdentifiedChannel
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var channel types.Channel
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &channel)
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &channel)
 		portID, channelID := ibctypes.MustParseChannelPath(string(iterator.Key()))
 
 		if cb(types.IdentifiedChannel{Channel: channel, PortIdentifier: portID, ChannelIdentifier: channelID}) {

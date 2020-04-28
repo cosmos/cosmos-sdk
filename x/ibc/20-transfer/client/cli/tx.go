@@ -44,10 +44,6 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			receiver, err := sdk.AccAddressFromBech32(args[3])
-			if err != nil {
-				return err
-			}
 
 			// parse coin trying to be sent
 			coins, err := sdk.ParseCoins(args[4])
@@ -55,7 +51,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgTransfer(srcPort, srcChannel, uint64(destHeight), coins, sender, receiver)
+			msg := types.NewMsgTransfer(srcPort, srcChannel, uint64(destHeight), coins, sender, args[3])
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

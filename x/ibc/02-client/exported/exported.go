@@ -20,6 +20,7 @@ type ClientState interface {
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
+	Validate() error
 
 	// State verification functions
 
@@ -103,6 +104,9 @@ type ConsensusState interface {
 	// which is used for key-value pair verification.
 	GetRoot() commitmentexported.Root
 
+	// GetTimestamp returns the timestamp (in nanoseconds) of the consensus state
+	GetTimestamp() uint64
+
 	ValidateBasic() error
 }
 
@@ -142,17 +146,21 @@ type ClientType byte
 // available client types
 const (
 	Tendermint ClientType = iota + 1 // 1
+	Localhost
 )
 
 // string representation of the client types
 const (
 	ClientTypeTendermint string = "tendermint"
+	ClientTypeLocalHost  string = "localhost"
 )
 
 func (ct ClientType) String() string {
 	switch ct {
 	case Tendermint:
 		return ClientTypeTendermint
+	case Localhost:
+		return ClientTypeLocalHost
 	default:
 		return ""
 	}
@@ -186,7 +194,8 @@ func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
 	case ClientTypeTendermint:
 		return Tendermint
-
+	case ClientTypeLocalHost:
+		return Localhost
 	default:
 		return 0
 	}

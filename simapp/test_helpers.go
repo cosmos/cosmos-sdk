@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -21,13 +22,31 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
+
+// DefaultConsensusParams defines the default Tendermint consensus params used in
+// SimApp testing.
+var DefaultConsensusParams = &abci.ConsensusParams{
+	Block: &abci.BlockParams{
+		MaxBytes: 200000,
+		MaxGas:   2000000,
+	},
+	Evidence: &abci.EvidenceParams{
+		MaxAgeNumBlocks: 302400,
+		MaxAgeDuration:  1814400,
+	},
+	Validator: &abci.ValidatorParams{
+		PubKeyTypes: []string{
+			tmtypes.ABCIPubKeyTypeEd25519,
+			tmtypes.ABCIPubKeyTypeSecp256k1,
+		},
+	},
+}
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
@@ -39,8 +58,9 @@ func Setup(isCheckTx bool) *SimApp {
 		// Initialize the chain
 		app.InitChain(
 			abci.RequestInitChain{
-				Validators:    []abci.ValidatorUpdate{},
-				AppStateBytes: stateBytes,
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
 			},
 		)
 	}
@@ -60,7 +80,12 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
 	genesisState[auth.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
 
-	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances)
+	totalSupply := sdk.NewCoins()
+	for _, b := range balances {
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	bankGenesis := bank.NewGenesisState(bank.DefaultGenesisState().SendEnabled, balances, totalSupply)
 	genesisState[bank.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
@@ -70,8 +95,9 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount, balances ..
 
 	app.InitChain(
 		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
 		},
 	)
 
@@ -131,8 +157,8 @@ func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []crypto.PubK
 // setTotalSupply provides the total supply based on accAmt * totalAccounts.
 func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
-	prevSupply := app.SupplyKeeper.GetSupply(ctx)
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+	prevSupply := app.BankKeeper.GetSupply(ctx)
+	app.BankKeeper.SetSupply(ctx, bank.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an

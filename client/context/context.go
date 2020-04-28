@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -80,7 +81,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	if !offline {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
+			rpc, err = rpchttp.New(nodeURI, "/websocket")
 			if err != nil {
 				fmt.Printf("failted to get client: %v\n", err)
 				os.Exit(1)
@@ -88,6 +89,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		}
 	}
 
+	trustNode := viper.GetBool(flags.FlagTrustNode)
 	ctx := CLIContext{
 		Client:        rpc,
 		ChainID:       viper.GetString(flags.FlagChainID),
@@ -99,7 +101,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
 		HomeDir:       homedir,
-		TrustNode:     viper.GetBool(flags.FlagTrustNode),
+		TrustNode:     trustNode,
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
@@ -111,9 +113,13 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
 
+	if offline {
+		return ctx
+	}
+
 	// create a verifier for the specific chain ID and RPC client
 	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && viper.IsSet(flags.FlagTrustNode) {
+	if err != nil && !trustNode {
 		fmt.Printf("failed to create verifier: %s\n", err)
 		os.Exit(1)
 	}
@@ -187,10 +193,11 @@ func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
-	client, err := rpcclient.NewHTTP(nodeURI, "/websocket")
+	client, err := rpchttp.New(nodeURI, "/websocket")
 	if err != nil {
 		panic(err)
 	}
+
 	ctx.Client = client
 	return ctx
 }

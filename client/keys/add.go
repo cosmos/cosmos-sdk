@@ -75,7 +75,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	cmd.Flags().Uint32(flagCoinType, sdk.CoinType, "coin type number for HD derivation")
+	cmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
@@ -190,23 +190,16 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	coinType := uint32(viper.GetInt(flagCoinType))
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
+	hdPath := viper.GetString(flagHDPath)
 
-	useBIP44 := !viper.IsSet(flagHDPath)
-	var hdPath string
-
-	if useBIP44 {
+	if len(hdPath) == 0 {
 		hdPath = hd.CreateHDPath(coinType, account, index).String()
-	} else {
-		hdPath = viper.GetString(flagHDPath)
+	} else if viper.GetBool(flags.FlagUseLedger) {
+		return errors.New("cannot set custom bip32 path with ledger")
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if viper.GetBool(flags.FlagUseLedger) {
-
-		if !useBIP44 {
-			return errors.New("cannot set custom bip32 path with ledger")
-		}
-
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		info, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {

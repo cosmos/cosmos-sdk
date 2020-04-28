@@ -195,27 +195,27 @@ const (
 )
 
 // Implements Content Interface
-var _ Content = TextProposal{}
+var _ Content = &TextProposal{}
 
 // NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {
-	return TextProposal{title, description}
+	return &TextProposal{title, description}
 }
 
 // GetTitle returns the proposal title
-func (tp TextProposal) GetTitle() string { return tp.Title }
+func (tp *TextProposal) GetTitle() string { return tp.Title }
 
 // GetDescription returns the proposal description
-func (tp TextProposal) GetDescription() string { return tp.Description }
+func (tp *TextProposal) GetDescription() string { return tp.Description }
 
 // ProposalRoute returns the proposal router key
-func (tp TextProposal) ProposalRoute() string { return RouterKey }
+func (tp *TextProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType is "Text"
-func (tp TextProposal) ProposalType() string { return ProposalTypeText }
+func (tp *TextProposal) ProposalType() string { return ProposalTypeText }
 
 // ValidateBasic validates the content's title and description of the proposal
-func (tp TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
+func (tp *TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
 
 // String implements Stringer interface
 func (tp TextProposal) String() string {

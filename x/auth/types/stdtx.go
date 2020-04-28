@@ -19,9 +19,6 @@ import (
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-var _ clientx.ClientFee = &StdFee{}
-var _ clientx.ClientSignature = &StdSignature{}
-
 // NewStdFee returns a new instance of StdFee
 func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
@@ -71,6 +68,7 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
 }
 
+// Deprecated
 func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
 	var pkBz []byte
 	if pk != nil {
@@ -131,24 +129,6 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	}
 
 	return string(bz), err
-}
-
-func NewStdTxBase(fee StdFee, sigs []StdSignature, memo string) StdTxBase {
-	return StdTxBase{
-		Fee:        fee,
-		Signatures: sigs,
-		Memo:       memo,
-	}
-}
-
-func NewStdSignDocBase(num, seq uint64, cid, memo string, fee StdFee) StdSignDocBase {
-	return StdSignDocBase{
-		ChainID:       cid,
-		AccountNumber: num,
-		Sequence:      seq,
-		Memo:          memo,
-		Fee:           fee,
-	}
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
@@ -339,6 +319,12 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	}
 
 	return sdk.MustSortJSON(bz)
+}
+
+// Deprecated: StdSignature represents a sig
+type StdSignature struct {
+	PubKey    []byte `json:"pub_key" yaml:"pub_key"` // optional
+	Signature []byte `json:"signature" yaml:"signature"`
 }
 
 // DefaultTxDecoder logic for standard transaction decoding

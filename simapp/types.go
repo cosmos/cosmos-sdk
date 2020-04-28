@@ -36,7 +36,7 @@ type App interface {
 	// Exports the state of the application for a genesis file.
 	ExportAppStateAndValidators(
 		forZeroHeight bool, jailWhiteList []string,
-	) (json.RawMessage, []tmtypes.GenesisValidator, error)
+	) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error)
 
 	// All the registered module account addreses.
 	ModuleAccountAddrs() map[string]bool

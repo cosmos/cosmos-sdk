@@ -112,7 +112,12 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 		Power:            power,
 		ConsensusAddress: sdk.ConsAddress(val.Address()),
 	}
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(suite.app.EvidenceKeeper.MaxEvidenceAge(ctx) + 1))
+
+	cp := suite.app.BaseApp.GetConsensusParams(ctx)
+
+	ctx = ctx.WithConsensusParams(cp)
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
 	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
 
 	suite.False(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())

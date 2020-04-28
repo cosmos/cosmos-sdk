@@ -8,9 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/std"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
@@ -87,7 +86,7 @@ func TestBuildSimTx(t *testing.T) {
 
 	tx := &std.Transaction{}
 	require.NoError(t, tx.Unmarshal(bz))
-	require.Equal(t, []sdk.Signature{sdk.Signature(auth.StdSignature{})}, tx.GetSignatures())
+	require.Equal(t, []sdk.Signature{sdk.Signature(std.StdSignature{})}, tx.GetSignatures())
 }
 
 func TestBuildUnsignedTx(t *testing.T) {

@@ -3,14 +3,12 @@ package gov_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov"
-
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
@@ -24,6 +22,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		},
 	)
 
-	acc := app.AccountKeeper.GetAccount(ctx, supply.NewModuleAddress(gov.ModuleName))
+	acc := app.AccountKeeper.GetAccount(ctx, auth.NewModuleAddress(gov.ModuleName))
 	require.NotNil(t, acc)
 }

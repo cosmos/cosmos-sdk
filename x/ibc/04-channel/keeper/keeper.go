@@ -260,7 +260,7 @@ func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string)
 	return ibctypes.GetModuleOwner(modules), cap, true
 }
 
-// common functionallity for IteratePacketCommitment and IteratePacketAcknowledgemen
+// common functionality for IteratePacketCommitment and IteratePacketAcknowledgemen
 func (k Keeper) iterateHashes(ctx sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

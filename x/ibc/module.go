@@ -62,7 +62,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 	// TODO: UNDO this when DefaultGenesis() is implemented
 	// This validation is breaking the state as it is trying to
 	// validate nil. DefaultGenesis is not implemented and it just returns nil
-	// This is a quick fix to make the cli-tests work and SHOULD BE reverted when addressed in #6073
+	// This is a quick fix to make the cli-tests work and
+	// SHOULD BE reverted when #5948 is addressed
 	// To UNDO this, just uncomment the code below
 
 	// var gs GenesisState

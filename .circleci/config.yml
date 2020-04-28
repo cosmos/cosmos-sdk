@@ -77,23 +77,6 @@ jobs:
           paths:
             - ".git"
 
-  proto:
-    executor: protoc
-    steps:
-      - make:
-          target: protoc-gen-gocosmos
-          description: "Generate go plugin for protoc"
-      - make:
-          target: proto-gen proto-lint proto-check-breaking
-          description: "Lint and verify Protocol Buffer definitions"
-
-  test-sim-multi-seed-long:
-    executor: golang
-    steps:
-      - make:
-          target: test-sim-multi-seed-long
-          description: "Test multi-seed simulation (long)"
-
   update-swagger-docs:
     executor: golang
     steps:
@@ -114,19 +97,6 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - test-sim-multi-seed-long:
-          requires:
-            - setup-dependencies
-          # These filters ensure that the long sim only runs during release
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only:
-                - /^v.*/
-      - proto:
-          requires:
-            - setup-dependencies
       - build-docs:
           context: docs-deployment-master
           filters:

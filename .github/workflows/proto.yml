@@ -15,5 +15,5 @@ jobs:
         run: make proto-lint-docker
         if: "env.GIT_DIFF != ''"
       - name: check-breakage
-        run: make proto-check-breaking-docker
-        if: "env.GIT_DIFF != ''"
+        # run: make proto-check-breaking-docker
+        # if: "env.GIT_DIFF != ''"

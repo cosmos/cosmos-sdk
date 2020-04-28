@@ -33,7 +33,7 @@ jobs:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
 
-  test-sim-nondeterminism:
+  test-sim-multi-seed-long:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
@@ -42,6 +42,6 @@ jobs:
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
-      - name: test-sim-nondeterminism
+      - name: test-sim-multi-seed-long
         run: |
-          make test-sim-nondeterminism
+          make test-sim-multi-seed-long

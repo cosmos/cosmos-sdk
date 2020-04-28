@@ -12,6 +12,9 @@ jobs:
           SUFFIX_FILTER: .go
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
+      - name: test
+        run: |
+          github.jobs.diff.outputs.diff > 1
 
   cleanup-runs:
     runs-on: ubuntu-latest

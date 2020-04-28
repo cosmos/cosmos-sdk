@@ -2,7 +2,6 @@ name: Sims
 on: [pull_request]
 jobs:
   diff:
-    name: git-diff
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

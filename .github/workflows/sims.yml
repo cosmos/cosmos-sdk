@@ -30,7 +30,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip-sims') && github.jobs.diff.outputs.diff != ' '"
+    if: "!contains(github.event.head_commit.message, 'skip-sims') && github.jobs.git-diff.outputs.diff != ' '"
     needs: diff
     steps:
       - uses: actions/checkout@v2

@@ -166,7 +166,7 @@ func (app *BaseApp) runTx(...) {
 }
 ```
 
-Developers can add their custom `RecoveryHandler`s:
+Developers can add their custom `RecoveryHandler`s by providing `AddRunTxRecoveryHandler` as a BaseApp option parameter to the `NewBaseapp` constructor:
 
 ```go
 func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {

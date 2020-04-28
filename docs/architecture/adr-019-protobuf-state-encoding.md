@@ -69,7 +69,7 @@ as the concrete codec it accepts and/or extends. This means that all client JSON
 genesis state, will still use Amino. The ultimate goal will be to replace Amino JSON encoding with
 Protbuf encoding and thus have modules accept and/or extend `ProtoCodec`.
 
-### Module Codec's
+### Module Codecs
 
 Modules that do not require the ability to work with and serialize interfaces, the path to Protobuf
 migration is pretty straightforward. These modules are to simply migrate any existing types that
@@ -135,13 +135,18 @@ is likely to be small. Thus, not using `Any` is seem as a pre-mature optimizatio
 with user experience as the higher order concern.
 
 Note, that given the SDK's decision to adopt the `Codec` interfaces described
-above, app's can still choose to use `oneof` to encode state and transactions
-but it is not the recommended approach.
+above, apps can still choose to use `oneof` to encode state and transactions
+but it is not the recommended approach. If apps do choose to use `oneof`s
+instead of `Any` they will likely lose compatibility with client apps that
+support multiple chains. Thus developers should think carefully about whether
+they care more about what is possibly a pre-mature optimization or end-user
+and client developer UX.
 
 ### Safe usage of `Any`
 
 By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types)
-uses global type registration to decode values packed in `Any` into concrete
+uses [global type registration]( https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540)
+to decode values packed in `Any` into concrete
 go types. This introduces a vulnerability where any malicious module
 in the dependency tree could registry a type with the global protobuf registry
 and cause it to be loaded and unmarshaled by a transaction that referenced
@@ -156,18 +161,30 @@ type InterfaceRegistry interface {
     // RegisterInterface associates protoName as the public name for the
     // interface passed in as iface
     // Ex:
-    //   ctx.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
+    //   registry.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
     RegisterInterface(protoName string, iface interface{})
 
-    // RegisterImplementation registers impl as a concrete implementation of
+    // RegisterImplementations registers impls as a concrete implementations of
     // the interface iface
     // Ex:
-    //   ctx.RegisterImplementation((*sdk.Msg)(nil), &MsgSend{})
-    RegisterImplementation(iface interface{}, impl proto.Message)
+    //  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
+    RegisterImplementations(iface interface{}, impls ...proto.Message)
 
+}
+```
+
+In addition to serving as a whitelist, `InterfaceRegistry` can also serve
+to communicate the list of concrete types that satisfy an interface to clients.
+
+
+The same struct that implements `InterfaceRegistry` will also implement an
+interface `InterfaceUnpacker` to be used for unpacking `Any`s:
+
+```go
+type InterfaceUnpacker interface {
     // UnpackAny unpacks the value in any to the interface pointer passed in as
     // iface. Note that the type in any must have been registered with
-    // RegisterImplementation as a concrete type for that interface
+    // RegisterImplementations as a concrete type for that interface
     // Ex:
     //    var msg sdk.Msg
     //    err := ctx.UnpackAny(any, &msg)
@@ -175,9 +192,6 @@ type InterfaceRegistry interface {
     UnpackAny(any *Any, iface interface{}) error
 }
 ```
-
-In addition to serving as a whitelist, `InterfaceRegistry` can also serve
-to communicate the list of concrete types that satisfy an interface to clients.
 
 Note that `InterfaceRegistry` usage does not deviate from standard protobuf
 usage of `Any`, it just introduces a security and introspection layer for 
@@ -194,7 +208,7 @@ type InterfaceModule interface {
 ```
 
 The module manager will include a method to call `RegisterInterfaceTypes` on
-every module that implements in order to populate the `InterfaceRegistry`.
+every module that implements it in order to populate the `InterfaceRegistry`.
 
 ### Using `Any` to encode state
 
@@ -247,7 +261,7 @@ interfaces wrapped in `Any` before they're needed, we create an interface
 that `sdk.Msg`s and other types can implement:
 ```go
 type UnpackInterfacesMsg interface {
-  UnpackInterfaces(InterfaceRegistry) error
+  UnpackInterfaces(InterfaceUnpacker) error
 }
 ```
 

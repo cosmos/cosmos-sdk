@@ -8,6 +8,7 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
+HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
@@ -261,8 +262,8 @@ proto-lint-docker:
 .PHONY: proto-lint
 
 proto-check-breaking-docker:
-	@$(DOCKER_BUF) check breaking --against-input .git#branch=master
-.PHONY: proto-check-breaking
+	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+.PHONY: proto-check-breaking-ci
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos

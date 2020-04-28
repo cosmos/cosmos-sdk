@@ -28,6 +28,7 @@ jobs:
       - name: test
         run: |
           echo ${{env.action_state}}
+          echo ${{github.jobs.git-diff.env}}
 
   build:
     runs-on: ubuntu-latest

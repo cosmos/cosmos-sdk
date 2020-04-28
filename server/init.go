@@ -17,7 +17,6 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
-
 	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
 }
 

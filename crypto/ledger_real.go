@@ -12,7 +12,6 @@ func init() {
 		device, err := ledger.FindLedgerCosmosUserApp()
 		if err != nil {
 			return nil, err
-
 		}
 
 		return device, nil

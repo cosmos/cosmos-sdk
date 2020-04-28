@@ -129,6 +129,7 @@ func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 	return types.IndexFromKey(store.Get(types.KeyIndex))
 }
 
+// SetOwners set the capability owners to the store
 func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(index)
@@ -137,18 +138,19 @@ func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.Capability
 	prefixStore.Set(indexKey, k.cdc.MustMarshalBinaryBare(&owners))
 }
 
-func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (*types.CapabilityOwners, bool) {
+// GetOwners returns the capability owners with a given index.
+func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners, bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(index)
 
 	// get owners for index from persistent store
 	ownerBytes := prefixStore.Get(indexKey)
 	if ownerBytes == nil {
-		return nil, false
+		return types.CapabilityOwners{}, false
 	}
 	var owners types.CapabilityOwners
 	k.cdc.MustUnmarshalBinaryBare(ownerBytes, &owners)
-	return &owners, true
+	return owners, true
 }
 
 // InitializeCapability takes in an index and an owners array. It creates the capability in memory

@@ -14,7 +14,7 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: test
         run: exit 1
-        if: "!steps.git_diff.outputs.diff"
+        if: "steps.git_diff.outputs.diff"
 
   cleanup-runs:
     runs-on: ubuntu-latest

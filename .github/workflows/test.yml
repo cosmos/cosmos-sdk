@@ -18,9 +18,6 @@ jobs:
     steps:
       - uses: actions/setup-go@v2-beta
       - uses: actions/checkout@v2
-      - name: build
-        run: |
-          make build
       - uses: technote-space/get-diff-action@v1
         id: git_diff
         with:
@@ -28,6 +25,10 @@ jobs:
             .go
             .mod
             .sum
+      - name: build
+        run: |
+          make build
+        if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
           go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'

@@ -14,8 +14,8 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: test
         run: |
-          echo ${{github.jobs.diff}}
-          echo ${{env}}
+          echo ${{github.jobs.git-diff.outputs.diff}}
+          echo ${{env.GIT_DIFF}}
 
   cleanup-runs:
     runs-on: ubuntu-latest
@@ -27,7 +27,7 @@ jobs:
       - name: test
         run: |
           echo ${{github.jobs.git-diff.outputs}}
-          echo ${{env}}
+          echo ${{env.GIT_DIFF}}
 
   build:
     runs-on: ubuntu-latest

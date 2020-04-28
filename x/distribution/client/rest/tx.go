@@ -87,7 +87,7 @@ func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msgs...)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msgs...)
 	}
 }
 
@@ -120,7 +120,7 @@ func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Ma
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -148,7 +148,7 @@ func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.M
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -177,7 +177,7 @@ func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msgs...)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msgs...)
 	}
 }
 
@@ -204,7 +204,7 @@ func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 

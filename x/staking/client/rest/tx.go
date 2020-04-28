@@ -86,7 +86,7 @@ func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, t
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -119,7 +119,7 @@ func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -151,7 +151,7 @@ func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 

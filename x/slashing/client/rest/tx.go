@@ -61,7 +61,7 @@ func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg co
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
-		tx.WriteGeneratedTxResponse(ctx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(ctx, w, req.BaseReq, msg)
 	}
 }
 

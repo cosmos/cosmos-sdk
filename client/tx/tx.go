@@ -124,9 +124,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
-func WriteGeneratedTxResponse(
-	ctx context.CLIContext, w http.ResponseWriter, txg context.TxGenerator, br rest.BaseReq, msgs ...sdk.Msg,
-) {
+func WriteGeneratedTxResponse(ctx context.CLIContext, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg) {
 
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -145,7 +143,8 @@ func WriteGeneratedTxResponse(
 		WithGasAdjustment(gasAdj).
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
-		WithSimulateAndExecute(br.Simulate)
+		WithSimulateAndExecute(br.Simulate).
+		WithTxGenerator(ctx.TxGenerator)
 
 	if br.Simulate || simAndExec {
 		if gasAdj < 0 {

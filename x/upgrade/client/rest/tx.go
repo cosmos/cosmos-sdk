@@ -101,7 +101,7 @@ func newPostPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, newM
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -137,7 +137,7 @@ func newCancelPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, ne
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 

@@ -175,3 +175,7 @@ func (am AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
 func (am AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command {
 	return nil
 }
+
+func (am AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	rest.RegisterHandlers(ctx, rtr)
+}

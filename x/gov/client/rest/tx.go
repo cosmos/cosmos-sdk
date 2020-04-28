@@ -52,7 +52,7 @@ func newPostProposalHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -87,7 +87,7 @@ func newDepositHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) htt
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -127,7 +127,7 @@ func newVoteHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) http.H
 			return
 		}
 
-		tx.WriteGeneratedTxResponse(cliCtx, w, txg, req.BaseReq, msg)
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, msg)
 	}
 }
 

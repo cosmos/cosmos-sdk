@@ -8,7 +8,10 @@ jobs:
       - uses: technote-space/get-diff-action@v1
         id: git_diff
         with:
-          SUFFIX_FILTER: .go
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - name: test

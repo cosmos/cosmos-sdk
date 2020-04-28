@@ -21,7 +21,7 @@ import (
 // nolint
 func newRegisterTxRoutes(
 	cliCtx context.CLIContext,
-	txg tx.Generator,
+	txg context.TxGenerator,
 	newMsgFn func() gov.MsgSubmitProposalI,
 	r *mux.Router) {
 	r.HandleFunc("/upgrade/plan", newPostPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
@@ -61,7 +61,7 @@ func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler 
 }
 
 // nolint
-func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newPostPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
@@ -106,7 +106,7 @@ func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn fu
 }
 
 // nolint
-func newCancelPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newCancelPlanHandler(cliCtx context.CLIContext, txg context.TxGenerator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 

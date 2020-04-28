@@ -17,7 +17,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
-func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewTxCmd(cliCtx context.CLIContext) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Bank transaction subcommands",
@@ -26,21 +26,20 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(NewSendTxCmd(m, txg, ar))
+	txCmd.AddCommand(NewSendTxCmd(cliCtx))
 
 	return txCmd
 }
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
-func NewSendTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewSendTxCmd(cliCtx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",
 		Short: "Create and/or sign and broadcast a MsgSend transaction",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInputAndFrom(inBuf, args[0]).WithMarshaler(m)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			cliCtx.InitWithInputAndFrom(inBuf, args[0])
 
 			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
@@ -57,7 +56,7 @@ func NewSendTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 

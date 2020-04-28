@@ -31,7 +31,7 @@ const (
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal(
-	m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever,
+	m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever,
 	newMsgFn func() gov.MsgSubmitProposalI,
 ) *cobra.Command {
 
@@ -75,7 +75,7 @@ func NewCmdSubmitUpgradeProposal(
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 
@@ -92,8 +92,8 @@ func NewCmdSubmitUpgradeProposal(
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
 func NewCmdSubmitCancelUpgradeProposal(
 	m codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
+	txg context.TxGenerator,
+	ar context.AccountRetriever,
 	newMsgFn func() gov.MsgSubmitProposalI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
@@ -140,7 +140,7 @@ func NewCmdSubmitCancelUpgradeProposal(
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 

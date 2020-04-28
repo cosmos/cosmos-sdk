@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator, r *mux.Router) {
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/delegations",
 		newPostDelegationsHandlerFn(cliCtx, m, txg),
@@ -57,7 +57,7 @@ type (
 	}
 )
 
-func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req DelegateRequest
@@ -90,7 +90,7 @@ func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, t
 	}
 }
 
-func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req RedelegateRequest
@@ -123,7 +123,7 @@ func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 	}
 }
 
-func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req UndelegateRequest

@@ -31,7 +31,7 @@ type (
 	}
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator, r *mux.Router) {
 	// Withdraw all delegator rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
@@ -63,7 +63,7 @@ func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Gen
 	).Methods("POST")
 }
 
-func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
@@ -91,7 +91,7 @@ func newWithdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 	}
 }
 
-func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
@@ -124,7 +124,7 @@ func newWithdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext, m codec.Ma
 	}
 }
 
-func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req setWithdrawalAddrReq
@@ -152,7 +152,7 @@ func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, m codec.M
 	}
 }
 
-func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req withdrawRewardsReq
@@ -181,7 +181,7 @@ func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 	}
 }
 
-func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 		var req fundCommunityPoolReq

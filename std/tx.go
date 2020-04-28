@@ -4,7 +4,8 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 
-	clientx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -12,26 +13,26 @@ import (
 
 var (
 	_ sdk.Tx                  = (*Transaction)(nil)
-	_ clientx.ClientTx        = (*Transaction)(nil)
-	_ clientx.Generator       = TxGenerator{}
-	_ clientx.ClientFee       = &StdFee{}
-	_ clientx.ClientSignature = &StdSignature{}
+	_ context.ClientTx        = (*Transaction)(nil)
+	_ context.TxGenerator     = TxGenerator{}
+	_ context.ClientFee       = &StdFee{}
+	_ context.ClientSignature = &StdSignature{}
 )
 
 // TxGenerator defines a transaction generator that allows clients to construct
 // transactions.
 type TxGenerator struct{}
 
-func (g TxGenerator) NewFee() clientx.ClientFee {
+func (g TxGenerator) NewFee() context.ClientFee {
 	return &StdFee{}
 }
 
-func (g TxGenerator) NewSignature() clientx.ClientSignature {
+func (g TxGenerator) NewSignature() context.ClientSignature {
 	return &StdSignature{}
 }
 
 // NewTx returns a reference to an empty Transaction type.
-func (TxGenerator) NewTx() clientx.ClientTx {
+func (TxGenerator) NewTx() context.ClientTx {
 	return &Transaction{}
 }
 
@@ -134,7 +135,7 @@ func (tx Transaction) GetSignatures() []sdk.Signature {
 
 // SetSignatures sets the transaction's signatures. It will overwrite any
 // existing signatures set.
-func (tx *Transaction) SetSignatures(sdkSigs ...clientx.ClientSignature) error {
+func (tx *Transaction) SetSignatures(sdkSigs ...context.ClientSignature) error {
 	sigs := make([]StdSignature, len(sdkSigs))
 	for i, sig := range sdkSigs {
 		if sig != nil {
@@ -152,7 +153,7 @@ func (tx Transaction) GetFee() sdk.Fee {
 }
 
 // SetFee sets the transaction's fee. It will overwrite any existing fee set.
-func (tx *Transaction) SetFee(fee clientx.ClientFee) error {
+func (tx *Transaction) SetFee(fee context.ClientFee) error {
 	tx.Fee = NewStdFee(fee.GetGas(), fee.GetAmount())
 	return nil
 }

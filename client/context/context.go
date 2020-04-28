@@ -22,28 +22,30 @@ import (
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	FromAddress   sdk.AccAddress
-	Client        rpcclient.Client
-	ChainID       string
-	Marshaler     codec.JSONMarshaler
-	Input         io.Reader
-	Keyring       keyring.Keyring
-	Output        io.Writer
-	OutputFormat  string
-	Height        int64
-	HomeDir       string
-	NodeURI       string
-	From          string
-	BroadcastMode string
-	Verifier      tmlite.Verifier
-	FromName      string
-	TrustNode     bool
-	UseLedger     bool
-	Simulate      bool
-	GenerateOnly  bool
-	Offline       bool
-	Indent        bool
-	SkipConfirm   bool
+	FromAddress      sdk.AccAddress
+	Client           rpcclient.Client
+	ChainID          string
+	Marshaler        codec.JSONMarshaler
+	Input            io.Reader
+	Keyring          keyring.Keyring
+	Output           io.Writer
+	OutputFormat     string
+	Height           int64
+	HomeDir          string
+	NodeURI          string
+	From             string
+	BroadcastMode    string
+	Verifier         tmlite.Verifier
+	FromName         string
+	TrustNode        bool
+	UseLedger        bool
+	Simulate         bool
+	GenerateOnly     bool
+	Offline          bool
+	Indent           bool
+	SkipConfirm      bool
+	TxGenerator      TxGenerator
+	AccountRetriever AccountRetriever
 
 	// TODO: Deprecated (remove).
 	Codec *codec.Codec
@@ -59,29 +61,11 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
-	homedir := viper.GetString(flags.FlagHome)
-	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	backend := viper.GetString(flags.FlagKeyringBackend)
-	if len(backend) == 0 {
-		backend = keyring.BackendMemory
-	}
-
-	keyring, err := newKeyringFromFlags(backend, homedir, input, genOnly)
-	if err != nil {
-		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
-	}
-
-	fromAddress, fromName, err := GetFromFields(keyring, from, genOnly)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v\n", err)
-		os.Exit(1)
-	}
-
 	offline := viper.GetBool(flags.FlagOffline)
 	if !offline {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc, err = rpchttp.New(nodeURI, "/websocket")
+			rpc, err := rpchttp.New(nodeURI, "/websocket")
 			if err != nil {
 				fmt.Printf("failted to get client: %v\n", err)
 				os.Exit(1)
@@ -97,21 +81,18 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		From:          viper.GetString(flags.FlagFrom),
-		Keyring:       keyring,
 		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(flags.FlagHeight),
-		HomeDir:       homedir,
 		TrustNode:     trustNode,
 		UseLedger:     viper.GetBool(flags.FlagUseLedger),
 		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
 		Simulate:      viper.GetBool(flags.FlagDryRun),
-		GenerateOnly:  genOnly,
 		Offline:       offline,
-		FromAddress:   fromAddress,
-		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
+
+	ctx.InitWithInputAndFrom(input, from)
 
 	if offline {
 		return ctx
@@ -145,6 +126,46 @@ func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(f
 // from the command line using Viper.
 func NewCLIContextWithInput(input io.Reader) CLIContext {
 	return NewCLIContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+}
+
+// InitWithInputAndFrom re-initializes an existing CLI with a new io.Reader and from parameter
+func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLIContext {
+	homedir := viper.GetString(flags.FlagHome)
+	genOnly := viper.GetBool(flags.FlagGenerateOnly)
+	backend := viper.GetString(flags.FlagKeyringBackend)
+	if len(backend) == 0 {
+		backend = keyring.BackendMemory
+	}
+
+	keyring, err := newKeyringFromFlags(backend, homedir, input, genOnly)
+	if err != nil {
+		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
+	}
+
+	fromAddress, fromName, err := GetFromFields(keyring, from, genOnly)
+	if err != nil {
+		fmt.Printf("failed to get from fields: %v\n", err)
+		os.Exit(1)
+	}
+
+	ctx.HomeDir = homedir
+
+	return ctx.
+		WithKeyring(keyring).
+		WithFromAddress(fromAddress).
+		WithFromName(fromName).
+		WithGenerateOnly(genOnly)
+
+}
+
+// InitWithInputAndFrom re-initializes an existing CLI with a new io.Reader
+func (ctx *CLIContext) InitWithInput(input io.Reader) CLIContext {
+	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+}
+
+// InitWithInputAndFrom re-initializes an existing CLI with a new from parameter
+func (ctx *CLIContext) InitWithFrom(from string) CLIContext {
+	return ctx.InitWithInputAndFrom(os.Stdin, from)
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -262,6 +283,18 @@ func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
 // mode.
 func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 	ctx.BroadcastMode = mode
+	return ctx
+}
+
+// WithTxGenerator returns the context with an updated TxGenerator
+func (ctx CLIContext) WithTxGenerator(generator TxGenerator) CLIContext {
+	ctx.TxGenerator = generator
+	return ctx
+}
+
+// WithAccountRetriever returns the context with an updated AccountRetriever
+func (ctx CLIContext) WithAccountRetriever(retriever AccountRetriever) CLIContext {
+	ctx.AccountRetriever = retriever
 	return ctx
 }
 

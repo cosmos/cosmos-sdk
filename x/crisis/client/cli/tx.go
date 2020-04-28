@@ -17,7 +17,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/crisis transaction commands.
-func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Crisis transactions subcommands",
@@ -33,7 +33,7 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 
 // NewMsgVerifyInvariantTxCmd returns a CLI command handler for creating a
 // MsgVerifyInvariant transaction.
-func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "invariant-broken [module-name] [invariant-route]",
 		Short: "Submit proof that an invariant broken to halt the chain",
@@ -51,7 +51,7 @@ func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.Accou
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 

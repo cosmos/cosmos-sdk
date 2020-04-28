@@ -37,7 +37,7 @@ const (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
-func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
@@ -87,7 +87,7 @@ func newSplitAndApply(
 	return nil
 }
 
-func NewWithdrawRewardsCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewWithdrawRewardsCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
@@ -127,14 +127,14 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				}
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msgs...)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msgs...)
 		},
 	}
 	cmd.Flags().Bool(flagCommission, false, "also withdraw validator's commission")
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewWithdrawAllRewardsCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewWithdrawAllRewardsCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
@@ -169,13 +169,13 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
-			return newSplitAndApply(tx.GenerateOrBroadcastTx, cliCtx, txf, msgs, chunkSize)
+			return newSplitAndApply(tx.GenerateOrBroadcastTxWithFactory, cliCtx, txf, msgs, chunkSize)
 		},
 	}
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewSetWithdrawAddrCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewSetWithdrawAddrCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
@@ -207,13 +207,13 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewFundCommunityPoolCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewFundCommunityPoolCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -256,7 +256,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]

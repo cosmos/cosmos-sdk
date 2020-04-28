@@ -3,7 +3,6 @@ package rest
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/gorilla/mux"
@@ -33,7 +32,7 @@ type ProposalRESTHandler struct {
 
 func RegisterHandlers(
 	cliCtx context.CLIContext,
-	txg tx.Generator,
+	txg context.TxGenerator,
 	r *mux.Router,
 	newMsgFn func() types.MsgSubmitProposalI,
 	phs []ProposalRESTHandler) {

@@ -21,7 +21,7 @@ import (
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
 // a parameter change proposal governance transaction.
-func NewSubmitParamChangeProposalTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewSubmitParamChangeProposalTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -85,7 +85,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 

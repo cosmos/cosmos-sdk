@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, txg tx.Generator, r *mux.Router, newMsgFn func() types.MsgSubmitProposalI, phs []ProposalRESTHandler) {
+func registerTxHandlers(cliCtx context.CLIContext, txg context.TxGenerator, r *mux.Router, newMsgFn func() types.MsgSubmitProposalI, phs []ProposalRESTHandler) {
 	propSubRtr := r.PathPrefix("/gov/proposals").Subrouter()
 	for _, ph := range phs {
 		propSubRtr.HandleFunc(fmt.Sprintf("/%s", ph.SubRoute), ph.Handler).Methods("POST")
@@ -26,7 +26,7 @@ func registerTxHandlers(cliCtx context.CLIContext, txg tx.Generator, r *mux.Rout
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), newVoteHandlerFn(cliCtx, txg)).Methods("POST")
 }
 
-func newPostProposalHandlerFn(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() types.MsgSubmitProposalI) http.HandlerFunc {
+func newPostProposalHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator, newMsgFn func() types.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PostProposalReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -56,7 +56,7 @@ func newPostProposalHandlerFn(cliCtx context.CLIContext, txg tx.Generator, newMs
 	}
 }
 
-func newDepositHandlerFn(cliCtx context.CLIContext, txg tx.Generator) http.HandlerFunc {
+func newDepositHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
@@ -91,7 +91,7 @@ func newDepositHandlerFn(cliCtx context.CLIContext, txg tx.Generator) http.Handl
 	}
 }
 
-func newVoteHandlerFn(cliCtx context.CLIContext, txg tx.Generator) http.HandlerFunc {
+func newVoteHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]

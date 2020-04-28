@@ -17,7 +17,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
-func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
@@ -30,7 +30,7 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 	return slashingTxCmd
 }
 
-func NewUnjailTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewUnjailTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
@@ -53,7 +53,7 @@ $ <appcli> tx slashing unjail --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]

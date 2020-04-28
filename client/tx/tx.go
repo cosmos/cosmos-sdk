@@ -9,67 +9,26 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
-type (
-	// Generator defines an interface a client can utilize to generate an
-	// application-defined concrete transaction type. The type returned must
-	// implement ClientTx.
-	Generator interface {
-		NewTx() ClientTx
-		NewFee() ClientFee
-		NewSignature() ClientSignature
-	}
-
-	ClientFee interface {
-		sdk.Fee
-		SetGas(uint64)
-		SetAmount(sdk.Coins)
-	}
-
-	ClientSignature interface {
-		sdk.Signature
-		SetPubKey(crypto.PubKey) error
-		SetSignature([]byte)
-	}
-
-	// ClientTx defines an interface which an application-defined concrete transaction
-	// type must implement. Namely, it must be able to set messages, generate
-	// signatures, and provide canonical bytes to sign over. The transaction must
-	// also know how to encode itself.
-	ClientTx interface {
-		sdk.Tx
-		codec.ProtoMarshaler
-
-		SetMsgs(...sdk.Msg) error
-		GetSignatures() []sdk.Signature
-		SetSignatures(...ClientSignature) error
-		GetFee() sdk.Fee
-		SetFee(ClientFee) error
-		GetMemo() string
-		SetMemo(string)
-
-		// CanonicalSignBytes returns the canonical JSON bytes to sign over, given a
-		// chain ID, along with an account and sequence number. The JSON encoding
-		// ensures all field names adhere to their proto definition, default values
-		// are omitted, and follows the JSON Canonical Form.
-		CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error)
-	}
-)
-
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTx(ctx context.CLIContext, msgs ...sdk.Msg) error {
+	txf := NewFactoryFromCLI(ctx.Input).WithTxGenerator(ctx.TxGenerator).WithAccountRetriever(ctx.AccountRetriever)
+	return GenerateOrBroadcastTxWithFactory(ctx, txf, msgs...)
+}
+
+// GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
+// or sign it and broadcast it returning an error upon failure.
+func GenerateOrBroadcastTxWithFactory(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 	if ctx.GenerateOnly {
 		return GenerateTx(ctx, txf, msgs...)
 	}
@@ -166,7 +125,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 func WriteGeneratedTxResponse(
-	ctx context.CLIContext, w http.ResponseWriter, txg Generator, br rest.BaseReq, msgs ...sdk.Msg,
+	ctx context.CLIContext, w http.ResponseWriter, txg context.TxGenerator, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
@@ -225,7 +184,7 @@ func WriteGeneratedTxResponse(
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The
 // transaction is initially created via the provided factory's generator. Once
 // created, the fee, memo, and messages are set.
-func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
+func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (context.ClientTx, error) {
 	if txf.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
@@ -252,6 +211,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 	clientFee.SetGas(txf.gas)
 
 	tx := txf.txGenerator.NewTx()
+	tx.SetMemo(txf.memo)
 
 	if err := tx.SetFee(clientFee); err != nil {
 		return nil, err
@@ -349,7 +309,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
+func Sign(txf Factory, name, passphrase string, tx context.ClientTx) ([]byte, error) {
 	if txf.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}

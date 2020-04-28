@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func registerTxHandlers(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+func registerTxHandlers(ctx context.CLIContext, m codec.Marshaler, txg context.TxGenerator, r *mux.Router) {
 	r.HandleFunc("/slashing/validators/{validatorAddr}/unjail", NewUnjailRequestHandlerFn(ctx, m, txg)).Methods("POST")
 }
 
@@ -26,7 +26,7 @@ type UnjailReq struct {
 
 // NewUnjailRequestHandlerFn returns an HTTP REST handler for creating a MsgUnjail
 // transaction.
-func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx = ctx.WithMarshaler(m)
 		vars := mux.Vars(r)

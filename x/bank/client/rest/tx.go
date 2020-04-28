@@ -22,7 +22,7 @@ type SendReq struct {
 
 // NewSendRequestHandlerFn returns an HTTP REST handler for creating a MsgSend
 // transaction.
-func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx = ctx.WithMarshaler(m)
 

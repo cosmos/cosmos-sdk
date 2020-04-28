@@ -37,7 +37,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -56,7 +56,7 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 	return stakingTxCmd
 }
 
-func NewCreateValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewCreateValidatorCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -72,7 +72,7 @@ func NewCreateValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRet
 			if err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	cmd.Flags().AddFlagSet(FsPk)
@@ -91,7 +91,7 @@ func NewCreateValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRet
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewEditValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewEditValidatorCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
@@ -142,13 +142,13 @@ func NewEditValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetri
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewDelegateCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewDelegateCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -186,7 +186,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
@@ -196,7 +196,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewRedelegateCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewRedelegateCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -238,13 +238,13 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewUnbondCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewUnbondCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond [validator-addr] [amount]",
 		Short: "Unbond shares from a validator",
@@ -282,7 +282,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]

@@ -57,8 +57,8 @@ var ProposalFlags = []string{
 // under the governance CLI (eg. parameter change proposals).
 func NewTxCmd(
 	cdc codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
+	txg context.TxGenerator,
+	ar context.AccountRetriever,
 	newMsgFn func() types.MsgSubmitProposalI,
 	pcmds []*cobra.Command) *cobra.Command {
 	govTxCmd := &cobra.Command{
@@ -86,8 +86,8 @@ func NewTxCmd(
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal(
 	cdc codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
+	txg context.TxGenerator,
+	ar context.AccountRetriever,
 	newMsgFn func() types.MsgSubmitProposalI) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
@@ -144,7 +144,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 
@@ -158,7 +158,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
-func NewCmdDeposit(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewCmdDeposit(cdc codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
@@ -199,13 +199,13 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 }
 
 // NewCmdVote implements creating a new vote command.
-func NewCmdVote(cdc codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+func NewCmdVote(cdc codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
 	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
@@ -248,7 +248,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
 		},
 	}
 }

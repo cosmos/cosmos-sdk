@@ -63,7 +63,7 @@ This example breaks the application execution, but it also might enrich the erro
 
 ##### Recovery middleware
 
-We also add a middleware type (decorator). That function type wraps `RecoveryHandler` and returns next middleware in
+We also add a middleware type (decorator). That function type wraps `RecoveryHandler` and returns the next middleware in
 execution chain and handler's `error`. Type is used to separate actual `recovery()` object handling from middleware
 chain processing.
 

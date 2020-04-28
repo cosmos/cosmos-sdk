@@ -16,7 +16,7 @@ jobs:
         run: |
           echo ::set-env name=action_state::yellow
           echo ${{env.GIT_DIFF}}
-          echo ${{env.1}}
+          echo ${{env}}
 
   cleanup-runs:
     runs-on: ubuntu-latest

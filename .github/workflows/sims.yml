@@ -15,7 +15,7 @@ jobs:
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - name: test
-        run: exit 1
+        run: exit 0
         if: "env.GIT_DIFF == ''"
 
   cleanup-runs:

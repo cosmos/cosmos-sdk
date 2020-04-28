@@ -11,8 +11,6 @@ jobs:
           SUFFIX_FILTER: .proto
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: docker-practice/actions-setup-docker@master
-        if: "env.GIT_DIFF != ''"
       - name: lint
         run: make proto-lint-docker
         if: "env.GIT_DIFF != ''"

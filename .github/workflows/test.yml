@@ -17,7 +17,7 @@ jobs:
             .mod
             .sum
       - name: test
-        run: exit 1
+        run: exit 0
         if: "env.GIT_DIFF == ''"
 
   cleanup-runs:

@@ -25,7 +25,6 @@ import (
 func init() {
 	discoverLedger = func() (LedgerSECP256K1, error) {
 		return LedgerSECP256K1Mock{}, nil
-
 	}
 }
 

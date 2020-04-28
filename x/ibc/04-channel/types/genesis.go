@@ -7,46 +7,18 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// PacketAcknowledgement defines the genesis type necessary to retrieve and store
+// PacketAckCommitment defines the genesis type necessary to retrieve and store
 // acknowlegements.
-type PacketAcknowledgement struct {
-	PortID    string `json:"port_id" yaml:"port_id"`
-	ChannelID string `json:"channel_id" yaml:"channel_id"`
-	Sequence  uint64 `json:"sequence" yaml:"sequence"`
-	Ack       []byte `json:"ack" yaml:"ack"`
-}
-
-// NewPacketAcknowledgement creates a new PacketAcknowledgement instance.
-func NewPacketAcknowledgement(portID, channelID string, seq uint64, ack []byte) PacketAcknowledgement {
-	return PacketAcknowledgement{
-		PortID:    portID,
-		ChannelID: channelID,
-		Sequence:  seq,
-		Ack:       ack,
-	}
-}
-
-// Validate performs basic validation of fields returning an error upon any
-// failure.
-func (pa PacketAcknowledgement) Validate() error {
-	if len(pa.Ack) == 0 {
-		return errors.New("acknowledgement bytes cannot be empty")
-	}
-	return validateGenFields(pa.PortID, pa.ChannelID, pa.Sequence)
-}
-
-// PacketCommitment defines the genesis type necessary to retrieve and store
-// packet commitments.
-type PacketCommitment struct {
+type PacketAckCommitment struct {
 	PortID    string `json:"port_id" yaml:"port_id"`
 	ChannelID string `json:"channel_id" yaml:"channel_id"`
 	Sequence  uint64 `json:"sequence" yaml:"sequence"`
 	Hash      []byte `json:"hash" yaml:"hash"`
 }
 
-// NewPacketCommitment creates a new PacketCommitment instance.
-func NewPacketCommitment(portID, channelID string, seq uint64, hash []byte) PacketCommitment {
-	return PacketCommitment{
+// NewPacketAckCommitment creates a new PacketAckCommitment instance.
+func NewPacketAckCommitment(portID, channelID string, seq uint64, hash []byte) PacketAckCommitment {
+	return PacketAckCommitment{
 		PortID:    portID,
 		ChannelID: channelID,
 		Sequence:  seq,
@@ -56,11 +28,11 @@ func NewPacketCommitment(portID, channelID string, seq uint64, hash []byte) Pack
 
 // Validate performs basic validation of fields returning an error upon any
 // failure.
-func (pc PacketCommitment) Validate() error {
-	if len(pc.Hash) == 0 {
+func (pa PacketAckCommitment) Validate() error {
+	if len(pa.Hash) == 0 {
 		return errors.New("hash bytes cannot be empty")
 	}
-	return validateGenFields(pc.PortID, pc.ChannelID, pc.Sequence)
+	return validateGenFields(pa.PortID, pa.ChannelID, pa.Sequence)
 }
 
 // PacketSequence defines the genesis type necessary to retrieve and store
@@ -88,16 +60,16 @@ func (ps PacketSequence) Validate() error {
 
 // GenesisState defines the ibc channel submodule's genesis state.
 type GenesisState struct {
-	Channels         []Channel               `json:"channels" yaml:"channels"`
-	Acknowledgements []PacketAcknowledgement `json:"acknowledgements" yaml:"acknowledgements"`
-	Commitments      []PacketCommitment      `json:"commitments" yaml:"commitments"`
-	SendSequences    []PacketSequence        `json:"send_sequences" yaml:"send_sequences"`
-	RecvSequences    []PacketSequence        `json:"recv_sequences" yaml:"recv_sequences"`
+	Channels         []Channel             `json:"channels" yaml:"channels"`
+	Acknowledgements []PacketAckCommitment `json:"acknowledgements" yaml:"acknowledgements"`
+	Commitments      []PacketAckCommitment `json:"commitments" yaml:"commitments"`
+	SendSequences    []PacketSequence      `json:"send_sequences" yaml:"send_sequences"`
+	RecvSequences    []PacketSequence      `json:"recv_sequences" yaml:"recv_sequences"`
 }
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	channels []Channel, acks []PacketAcknowledgement, commitments []PacketCommitment,
+	channels []Channel, acks, commitments []PacketAckCommitment,
 	sendSeqs, recvSeqs []PacketSequence,
 ) GenesisState {
 	return GenesisState{
@@ -113,8 +85,8 @@ func NewGenesisState(
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Channels:         []Channel{},
-		Acknowledgements: []PacketAcknowledgement{},
-		Commitments:      []PacketCommitment{},
+		Acknowledgements: []PacketAckCommitment{},
+		Commitments:      []PacketAckCommitment{},
 		SendSequences:    []PacketSequence{},
 		RecvSequences:    []PacketSequence{},
 	}

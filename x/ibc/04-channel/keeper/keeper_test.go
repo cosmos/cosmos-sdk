@@ -142,18 +142,18 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 }
 
 func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
-	ack1 := types.NewPacketAcknowledgement(testPort1, testChannel1, 1, []byte("ack"))
-	ack2 := types.NewPacketAcknowledgement(testPort1, testChannel1, 2, []byte("ack"))
-	comm1 := types.NewPacketCommitment(testPort1, testChannel1, 1, []byte("hash"))
-	comm2 := types.NewPacketCommitment(testPort1, testChannel1, 2, []byte("hash"))
+	ack1 := types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("ack"))
+	ack2 := types.NewPacketAckCommitment(testPort1, testChannel1, 2, []byte("ack"))
+	comm1 := types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("hash"))
+	comm2 := types.NewPacketAckCommitment(testPort1, testChannel1, 2, []byte("hash"))
 
-	expAcks := []types.PacketAcknowledgement{ack1, ack2}
-	expCommitments := []types.PacketCommitment{comm1, comm2}
+	expAcks := []types.PacketAckCommitment{ack1, ack2}
+	expCommitments := []types.PacketAckCommitment{comm1, comm2}
 
 	ctx := suite.chainB.GetContext()
 
 	for i := 0; i < 2; i++ {
-		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, expAcks[i].PortID, expAcks[i].ChannelID, expAcks[i].Sequence, expAcks[i].Ack)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, expAcks[i].PortID, expAcks[i].ChannelID, expAcks[i].Sequence, expAcks[i].Hash)
 		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, expCommitments[i].PortID, expCommitments[i].ChannelID, expCommitments[i].Sequence, expCommitments[i].Hash)
 	}
 

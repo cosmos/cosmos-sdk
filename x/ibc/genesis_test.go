@@ -59,11 +59,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
 						),
 					},
-					[]channel.PacketAcknowledgement{
-						channel.NewPacketAcknowledgement(port2, channel2, 1, []byte("ack")),
+					[]channel.PacketAckCommitment{
+						channel.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
 					},
-					[]channel.PacketCommitment{
-						channel.NewPacketCommitment(port1, channel1, 1, []byte("commit_hash")),
+					[]channel.PacketAckCommitment{
+						channel.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
 					},
 					[]channel.PacketSequence{
 						channel.NewPacketSequence(port1, channel1, 1),
@@ -110,8 +110,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis:     client.DefaultGenesisState(),
 				ConnectionGenesis: connection.DefaultGenesisState(),
 				ChannelGenesis: channel.GenesisState{
-					Acknowledgements: []channel.PacketAcknowledgement{
-						channel.NewPacketAcknowledgement("portID", channel1, 1, []byte("ack")),
+					Acknowledgements: []channel.PacketAckCommitment{
+						channel.NewPacketAckCommitment("portID", channel1, 1, []byte("ack")),
 					},
 				},
 			},

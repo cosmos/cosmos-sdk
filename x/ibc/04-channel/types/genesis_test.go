@@ -46,11 +46,11 @@ func TestValidateGenesis(t *testing.T) {
 						counterparty1, []string{testConnectionIDA}, testChannelVersion,
 					),
 				},
-				[]PacketAcknowledgement{
-					NewPacketAcknowledgement(testPort2, testChannel2, 1, []byte("ack")),
+				[]PacketAckCommitment{
+					NewPacketAckCommitment(testPort2, testChannel2, 1, []byte("ack")),
 				},
-				[]PacketCommitment{
-					NewPacketCommitment(testPort1, testChannel1, 1, []byte("commit_hash")),
+				[]PacketAckCommitment{
+					NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("commit_hash")),
 				},
 				[]PacketSequence{
 					NewPacketSequence(testPort1, testChannel1, 1),
@@ -76,8 +76,8 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "invalid ack",
 			genState: GenesisState{
-				Acknowledgements: []PacketAcknowledgement{
-					NewPacketAcknowledgement(testPort2, testChannel2, 1, nil),
+				Acknowledgements: []PacketAckCommitment{
+					NewPacketAckCommitment(testPort2, testChannel2, 1, nil),
 				},
 			},
 			expPass: false,
@@ -85,8 +85,8 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "invalid commitment",
 			genState: GenesisState{
-				Commitments: []PacketCommitment{
-					NewPacketCommitment(testPort1, testChannel1, 1, nil),
+				Commitments: []PacketAckCommitment{
+					NewPacketAckCommitment(testPort1, testChannel1, 1, nil),
 				},
 			},
 			expPass: false,

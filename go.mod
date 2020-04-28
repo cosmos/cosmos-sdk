@@ -1,5 +1,7 @@
 module github.com/cosmos/cosmos-sdk
 
+go 1.14
+
 require (
 	github.com/99designs/keyring v1.1.5
 	github.com/bgentry/speakeasy v0.1.0
@@ -35,5 +37,3 @@ require (
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
-
-go 1.14

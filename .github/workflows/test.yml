@@ -12,9 +12,10 @@ jobs:
       - uses: technote-space/get-diff-action@v1
         id: git_diff
         with:
-          SUFFIX_FILTER: .go
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
       - name: test
         run: exit 1
         if: "env.GIT_DIFF == ''"

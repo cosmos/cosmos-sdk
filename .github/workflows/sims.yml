@@ -16,8 +16,6 @@ jobs:
         run: |
           echo ::set-env name=action_state::yellow
           echo ${{env.GIT_DIFF}}
-          echo ${{env.COUNT}}
-          echo ${{env.count}}
 
   cleanup-runs:
     runs-on: ubuntu-latest
@@ -32,7 +30,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip-sims') && github.jobs.diff.outputs.diff"
+    if: "!contains(github.event.head_commit.message, 'skip-sims') && github.jobs.diff.outputs.diff != ' '"
     needs: diff
     steps:
       - uses: actions/checkout@v2

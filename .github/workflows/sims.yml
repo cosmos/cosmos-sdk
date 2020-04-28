@@ -15,6 +15,7 @@ jobs:
       - name: test
         run: |
           echo ${{github.jobs.git-diff.outputs.diff}}
+          echo ::set-env name=action_state::yellow
           echo ${{env.GIT_DIFF}}
 
   cleanup-runs:
@@ -26,8 +27,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: test
         run: |
-          echo ${{github.jobs.git-diff.outputs}}
-          echo ${{env.GIT_DIFF}}
+          echo ${{env.action_state}}
 
   build:
     runs-on: ubuntu-latest

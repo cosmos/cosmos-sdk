@@ -14,10 +14,9 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: test
         run: |
-          if  ${{env.GIT_DIFF}} == ' ' {
+          if  ${{env.GIT_DIFF}} == ' ' 
             exit 1
             echo "Failing because no go files were touched"
-          }
 
   cleanup-runs:
     runs-on: ubuntu-latest

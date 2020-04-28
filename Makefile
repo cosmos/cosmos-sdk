@@ -167,7 +167,7 @@ test-sim-benchmark-invariants:
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 cli-test: build-sim
-	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=cli_test -v
+	@go test -mod=readonly -p 4 `go list ./tests/cli/tests/...` -tags=cli_test -v
 	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
 
 .PHONY: \

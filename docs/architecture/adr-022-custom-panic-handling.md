@@ -84,7 +84,7 @@ Function receives a `recoveryObj` object and returns:
 * (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
 * (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
 * (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
-this can be avoided by always using a `default` as a rightmost middleware in chain (always returns an `error`'); 
+this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`'); 
 
 
 `OutOfGas` middleware example:

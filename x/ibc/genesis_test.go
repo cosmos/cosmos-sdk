@@ -1,38 +1,47 @@
-package ibc
+package ibc_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var (
-	connectionID  = "connectionidone"
-	clientID      = "clientidone"
-	connectionID2 = "connectionidtwo"
-	clientID2     = "clientidtwo"
-)
-
-func TestValidateGenesis(t *testing.T) {
-
+func (suite *IBCTestSuite) TestValidateGenesis() {
 	testCases := []struct {
 		name     string
-		genState GenesisState
+		genState ibc.GenesisState
 		expPass  bool
 	}{
 		{
 			name:     "default",
-			genState: DefaultGenesisState(),
+			genState: ibc.DefaultGenesisState(),
 			expPass:  true,
 		},
 		{
 			name: "valid genesis",
-			genState: GenesisState{
+			genState: ibc.GenesisState{
+				ClientGenesis: client.NewGenesisState(
+					[]exported.ClientState{
+						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState(suite.store, "chaindID", 10),
+					},
+					[]client.ClientConsensusStates{
+						client.NewClientConsensusStates(
+							clientID,
+							[]exported.ConsensusState{
+								ibctmtypes.NewConsensusState(
+									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet,
+								),
+							},
+						),
+					},
+				),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.ConnectionEnd{
 						connection.NewConnectionEnd(connectionexported.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
@@ -45,13 +54,30 @@ func TestValidateGenesis(t *testing.T) {
 			expPass: true,
 		},
 		{
+			name: "invalid client genesis",
+			genState: ibc.GenesisState{
+				ClientGenesis: client.NewGenesisState(
+					[]exported.ClientState{
+						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState(suite.store, "chaindID", 0),
+					},
+					nil,
+				),
+				ConnectionGenesis: connection.DefaultGenesisState(),
+			},
+			expPass: false,
+		},
+		{
 			name: "invalid connection genesis",
-			genState: GenesisState{
+			genState: ibc.GenesisState{
+				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.ConnectionEnd{
 						connection.NewConnectionEnd(connectionexported.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
-					nil,
+					[]connection.ConnectionPaths{
+						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
+					},
 				),
 			},
 			expPass: false,
@@ -62,9 +88,9 @@ func TestValidateGenesis(t *testing.T) {
 		tc := tc
 		err := tc.genState.Validate()
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }

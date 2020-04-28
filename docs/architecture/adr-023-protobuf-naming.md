@@ -57,7 +57,7 @@ As a starting point, we should adopt all of the [DEFAULT](https://buf.build/docs
 checkers in [Buf's](https://buf.build) including [`PACKAGE_DIRECTORY_MATCH`](https://buf.build/docs/lint-checkers#file_layout),
 except:
 * [PACKAGE_VERSION_SUFFIX](https://buf.build/docs/lint-checkers#package_version_suffix)
-* [SERICE_SUFFIX](https://buf.build/docs/lint-checkers#service_suffix)
+* [SERVICE_SUFFIX](https://buf.build/docs/lint-checkers#service_suffix)
 
 Further guidelines to be described below.
 

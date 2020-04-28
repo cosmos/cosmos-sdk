@@ -52,11 +52,10 @@ var (
 	NewMsgAcknowledgement        = types.NewMsgAcknowledgement
 	NewPacket                    = types.NewPacket
 	NewPacketAckCommitment       = types.NewPacketAckCommitment
-
-	NewPacketSequence   = types.NewPacketSequence
-	NewChannelResponse  = types.NewChannelResponse
-	DefaultGenesisState = types.DefaultGenesisState
-	NewGenesisState     = types.NewGenesisState
+	NewPacketSequence            = types.NewPacketSequence
+	NewChannelResponse           = types.NewChannelResponse
+	DefaultGenesisState          = types.DefaultGenesisState
+	NewGenesisState              = types.NewGenesisState
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc

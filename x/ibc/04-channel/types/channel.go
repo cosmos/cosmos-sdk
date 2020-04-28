@@ -152,6 +152,7 @@ func NewIdentifiedChannel(portID, channelID string, ch Channel) IdentifiedChanne
 	}
 }
 
+// ValidateBasic performs a basic validation of the identifiers and channel fields.
 func (ic IdentifiedChannel) ValidateBasic() error {
 	if err := host.DefaultChannelIdentifierValidator(ic.ID); err != nil {
 		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())

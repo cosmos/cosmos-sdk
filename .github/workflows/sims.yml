@@ -12,6 +12,10 @@ jobs:
           SUFFIX_FILTER: .go
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
+      - name: test
+        run: |
+          echo ${{github.jobs.diff}}
+          echo ${{env}}
 
   cleanup-runs:
     runs-on: ubuntu-latest
@@ -22,7 +26,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: test
         run: |
-          echo ${{github.jobs.diff.outputs.diff.env}}
+          echo ${{github.jobs.git-diff.outputs}}
           echo ${{env}}
 
   build:

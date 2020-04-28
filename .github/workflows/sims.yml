@@ -22,7 +22,8 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: test
         run: |
-          echo ${{github.jobs.diff.outputs.diff}}
+          echo ${{github.jobs.diff.outputs.diff.env}}
+          echo ${{env}}
 
   build:
     runs-on: ubuntu-latest

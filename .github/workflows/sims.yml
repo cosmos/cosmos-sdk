@@ -14,7 +14,8 @@ jobs:
             .sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - name: test
+      - name: Fail if no changes
+        # this is used to notify the other jobs that there are no changes and so they should not run
         run: exit 1
         if: "env.GIT_DIFF == ''"
 

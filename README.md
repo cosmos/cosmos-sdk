@@ -15,6 +15,7 @@ parent:
 [![license](https://img.shields.io/github/license/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE)
 [![LoC](https://tokei.rs/b1/github/cosmos/cosmos-sdk)](https://github.com/cosmos/cosmos-sdk)
 [![API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg)](https://godoc.org/github.com/cosmos/cosmos-sdk)
+[![Discord chat](https://img.shields.io/discord/669268347736686612.svg)](https://discord.gg/AzefAFd)
 
 The Cosmos-SDK is a framework for building blockchain applications in Golang.
 It is being used to build [`Gaia`](https://github.com/cosmos/gaia), the first implementation of the Cosmos Hub.

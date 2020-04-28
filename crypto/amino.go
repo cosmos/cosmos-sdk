@@ -10,6 +10,7 @@ var cdc = amino.NewCodec()
 func init() {
 	RegisterAmino(cdc)
 	cryptoAmino.RegisterAmino(cdc)
+
 }
 
 // RegisterAmino registers all go-crypto related types in the given (amino) codec.

@@ -19,6 +19,12 @@ We propose middleware-solution, which could help developers implement the follow
 It will also make `OutOfGas` case and `default` case one of the middlewares.
 `Default` case wraps recovery object to an error and logs it ([example middleware implementation](#Recovery-middleware)).
 
+Our project has a sidecar service running alongside the blockchain node (smart contracts virtual machine). It is
+essential that node <-> sidecar connectivity stays stable for TXs processing. So when the communication breaks we need
+to crash the node and reboot it once the problem is solved. That behaviour makes node's state machine execution
+deterministic. As all keeper panics are caught by runTx's `defer()` handler, we have to adjust the BaseApp code
+in order to customize it.
+
 ## Decision
 
 ### Design

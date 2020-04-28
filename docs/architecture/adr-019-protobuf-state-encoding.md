@@ -216,6 +216,8 @@ The SDK will provide support methods `MarshalAny` and `UnmarshalAny` to allow
 easy encoding of state to `Any` in `Codec` implementations. Ex:
 
 ```go
+import "github.com/cosmos/cosmos-sdk/codec"
+
 func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
 	return codec.MarshalAny(evidenceI)
 }

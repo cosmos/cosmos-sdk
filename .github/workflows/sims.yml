@@ -14,9 +14,10 @@ jobs:
           SET_ENV_NAME_LINES: 1
       - name: test
         run: |
-          echo "::set-env name=action_state::yellow"
-          echo ${{env.GIT_DIFF}} != ' ' 
-    # env: 
+          if  ${{env.GIT_DIFF}} == ' ' {
+            exit 1
+            echo "Failing because no go files were touched"
+          }
 
   cleanup-runs:
     runs-on: ubuntu-latest
@@ -25,14 +26,10 @@ jobs:
       - uses: rokroskar/workflow-run-cleanup-action@master
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      - name: test
-        run: |
-          echo ${{env.action_state}}
-          echo ${{github.jobs.git-diff.env}}
 
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip-sims') && github.jobs.git-diff.outputs.diff != ' '"
+    if: "!contains(github.event.head_commit.message, 'skip-sims')"
     needs: diff
     steps:
       - uses: actions/checkout@v2

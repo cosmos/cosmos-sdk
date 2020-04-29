@@ -202,20 +202,3 @@ func TestCLIFeesDeduction(t *testing.T) {
 
 	f.Cleanup()
 }
-
-func TestGaiaCLIQuerySupply(t *testing.T) {
-	t.Parallel()
-	f := helpers.InitFixtures(t)
-
-	// start simd server
-	proc := f.SDStart()
-	defer proc.Stop(false)
-
-	totalSupply := bankcli.QueryTotalSupply(f)
-	totalSupplyOf := bankcli.QueryTotalSupplyOf(f, helpers.FooDenom)
-
-	require.Equal(t, helpers.TotalCoins, totalSupply)
-	require.True(sdk.IntEq(t, helpers.TotalCoins.AmountOf(helpers.FooDenom), totalSupplyOf))
-
-	f.Cleanup()
-}

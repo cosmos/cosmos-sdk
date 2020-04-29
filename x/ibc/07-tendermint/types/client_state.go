@@ -15,6 +15,7 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -87,7 +88,10 @@ func (cs ClientState) GetID() string {
 
 // GetChainID returns the chain-id from the last header
 func (cs ClientState) GetChainID() string {
-	return cs.LastHeader.ChainID
+	if cs.LastHeader.SignedHeader.Header == nil {
+		return ""
+	}
+	return cs.LastHeader.SignedHeader.Header.ChainID
 }
 
 // ClientType is tendermint.
@@ -108,6 +112,23 @@ func (cs ClientState) GetLatestTimestamp() time.Time {
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
+}
+
+// Validate performs a basic validation of the client state fields.
+func (cs ClientState) Validate() error {
+	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+		return err
+	}
+	if cs.TrustingPeriod == 0 {
+		return errors.New("trusting period cannot be zero")
+	}
+	if cs.UnbondingPeriod == 0 {
+		return errors.New("unbonding period cannot be zero")
+	}
+	if cs.MaxClockDrift == 0 {
+		return errors.New("max clock drift cannot be zero")
+	}
+	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the

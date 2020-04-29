@@ -5,16 +5,66 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
+	testClientID     = "clientidone"
 	testConnectionID = "connectionid"
 	testPortID       = "testportid"
 	testChannelID    = "testchannelid"
 	testSequence     = 1
 )
+
+func (suite *TendermintTestSuite) TestValidate() {
+	testCases := []struct {
+		name        string
+		clientState types.ClientState
+		expPass     bool
+	}{
+		{
+			name:        "valid client",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     true,
+		},
+		{
+			name:        "invalid client id",
+			clientState: ibctmtypes.NewClientState("testClientID", trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid trusting period",
+			clientState: ibctmtypes.NewClientState(testClientID, 0, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid unbonding period",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, 0, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid max clock drift",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, 0, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid header",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+			expPass:     false,
+		},
+	}
+
+	for _, tc := range testCases {
+		err := tc.clientState.Validate()
+		if tc.expPass {
+			suite.Require().NoError(err, tc.name)
+		} else {
+			suite.Require().Error(err, tc.name)
+		}
+	}
+}
 
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {

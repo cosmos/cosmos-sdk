@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -796,5 +795,5 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 			},
 		}.Hash()
 	}
-	return merkle.SimpleHashFromMap(m)
+	return SimpleHashFromMap(m)
 }

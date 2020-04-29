@@ -16,6 +16,44 @@ const (
 	testSequence     = 1
 )
 
+func (suite *LocalhostTestSuite) TestValidate() {
+	testCases := []struct {
+		name        string
+		clientState types.ClientState
+		expPass     bool
+	}{
+		{
+			name:        "valid client",
+			clientState: types.NewClientState(suite.store, "chainID", 10),
+			expPass:     true,
+		},
+		{
+			name:        "invalid chain id",
+			clientState: types.NewClientState(suite.store, " ", 10),
+			expPass:     false,
+		},
+		{
+			name:        "invalid height",
+			clientState: types.NewClientState(suite.store, "chainID", 0),
+			expPass:     false,
+		},
+		{
+			name:        "invalid store",
+			clientState: types.NewClientState(nil, "chainID", 10),
+			expPass:     false,
+		},
+	}
+
+	for _, tc := range testCases {
+		err := tc.clientState.Validate()
+		if tc.expPass {
+			suite.Require().NoError(err, tc.name)
+		} else {
+			suite.Require().Error(err, tc.name)
+		}
+	}
+}
+
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name        string

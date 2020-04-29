@@ -43,7 +43,6 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config
-			UpgradeOldPrivValFile(cfg)
 
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valPubKey, err := privValidator.GetPubKey()
@@ -77,7 +76,6 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
-			UpgradeOldPrivValFile(cfg)
 			privValidator := pvm.LoadOrGenFilePV(
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())

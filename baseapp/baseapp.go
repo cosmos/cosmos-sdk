@@ -349,7 +349,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	return cp
 }
 
-// AddRunTxRecoveryHandler adds custom app.runTx panic handlers.
+// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
 func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 	for _, h := range handlers {
 		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)

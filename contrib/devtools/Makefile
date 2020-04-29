@@ -52,6 +52,9 @@ RUNSIM         = $(TOOLS_DESTDIR)/runsim
 
 tools: tools-stamp
 tools-stamp: proto-tools statik runsim
+	# Create dummy file to satisfy dependency and avoid
+	# rebuilding when this Makefile target is hit twice
+	# in a row.
 	touch $@
 
 # Install the runsim binary with a temporary workaround of entering an outside

@@ -96,7 +96,8 @@ var _ App = (*SimApp)(nil)
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
-	cdc *codec.Codec
+	cdc      *codec.Codec
+	appCodec *std.Codec
 
 	invCheckPeriod uint
 
@@ -142,10 +143,7 @@ func NewSimApp(
 ) *SimApp {
 
 	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
-	cdc := std.MakeCodec(ModuleBasics)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	module.RegisterInterfaceModules(ModuleBasics, interfaceRegistry)
-	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
+	appCodec, cdc := MakeCodecs()
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -163,6 +161,7 @@ func NewSimApp(
 	app := &SimApp{
 		BaseApp:        bApp,
 		cdc:            cdc,
+		appCodec:       appCodec,
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
@@ -357,6 +356,14 @@ func NewSimApp(
 	return app
 }
 
+func MakeCodecs() (*std.Codec, *codec.Codec) {
+	cdc := std.MakeCodec(ModuleBasics)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	module.RegisterInterfaceModules(ModuleBasics, interfaceRegistry)
+	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
+	return appCodec, cdc
+}
+
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
@@ -408,6 +415,14 @@ func (app *SimApp) BlacklistedAccAddrs() map[string]bool {
 // for modules to register their own custom testing types.
 func (app *SimApp) Codec() *codec.Codec {
 	return app.cdc
+}
+
+// AppCodec returns SimApp's app codec.
+//
+// NOTE: This is solely to be used for testing purposes as it may be desirable
+// for modules to register their own custom testing types.
+func (app *SimApp) AppCodec() *std.Codec {
+	return app.appCodec
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

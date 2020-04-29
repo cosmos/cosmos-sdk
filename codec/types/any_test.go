@@ -15,8 +15,8 @@ var _ TestI = &testdata.Dog{}
 func TestAny_Pack(t *testing.T) {
 	ctx := NewInterfaceRegistry()
 	ctx.RegisterInterface("cosmos_sdk.test.TestI", (*TestI)(nil))
-	ctx.RegisterImplementation((*TestI)(nil), &testdata.Dog{})
-	ctx.RegisterImplementation((*TestI)(nil), &testdata.Cat{})
+	ctx.RegisterImplementations((*TestI)(nil), &testdata.Dog{})
+	ctx.RegisterImplementations((*TestI)(nil), &testdata.Cat{})
 
 	// without cache
 	spot := &testdata.Dog{Name: "Spot"}

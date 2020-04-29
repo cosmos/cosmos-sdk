@@ -157,3 +157,5 @@ message Any {
 
   option (gogoproto.typedecl) = false;
 }
+
+option (gogoproto.goproto_registration) = false;

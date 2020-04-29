@@ -35,7 +35,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Valid() {
 
 	testEvidence := make([]exported.Evidence, 100)
 	for i := 0; i < 100; i++ {
-		testEvidence[i] = types.Equivocation{
+		testEvidence[i] = &types.Equivocation{
 			Height:           int64(i + 1),
 			Power:            100,
 			Time:             time.Now().UTC(),
@@ -58,7 +58,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Invalid() {
 
 	testEvidence := make([]exported.Evidence, 100)
 	for i := 0; i < 100; i++ {
-		testEvidence[i] = types.Equivocation{
+		testEvidence[i] = &types.Equivocation{
 			Power:            100,
 			Time:             time.Now().UTC(),
 			ConsensusAddress: pk.PubKey().Address().Bytes(),

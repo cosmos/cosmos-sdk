@@ -29,6 +29,7 @@ var (
 	NewQueryEvidenceParams       = types.NewQueryEvidenceParams
 	NewQueryAllEvidenceParams    = types.NewQueryAllEvidenceParams
 	RegisterCodec                = types.RegisterCodec
+	RegisterInterfaces           = types.RegisterInterfaces
 	ModuleCdc                    = types.ModuleCdc
 	NewGenesisState              = types.NewGenesisState
 	DefaultGenesisState          = types.DefaultGenesisState

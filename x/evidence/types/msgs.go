@@ -27,28 +27,36 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (MsgSubmitEvi
 	return MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
 }
 
-// Route returns the MsgSubmitEvidenceBase's route.
+// Route returns the MsgSubmitEvidence's route.
 func (m MsgSubmitEvidence) Route() string { return RouterKey }
 
-// Type returns the MsgSubmitEvidenceBase's type.
+// Type returns the MsgSubmitEvidence's type.
 func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
-// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidenceBase.
+// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) ValidateBasic() error {
 	if m.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String())
+	}
+
+	evi := m.GetEvidence()
+	if evi == nil {
+		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
+	}
+	if err := evi.ValidateBasic(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
-// a MsgSubmitEvidenceBase message.
+// a MsgSubmitEvidence message.
 func (m MsgSubmitEvidence) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(m))
 }
 
-// GetSigners returns the single expected signer for a MsgSubmitEvidenceBase.
+// GetSigners returns the single expected signer for a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Submitter}
 }

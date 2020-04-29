@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
@@ -21,7 +22,16 @@ type Codec interface {
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterConcrete(MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
-	cdc.RegisterConcrete(Equivocation{}, "cosmos-sdk/Equivocation", nil)
+	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation", nil)
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSubmitEvidence{})
+	registry.RegisterInterface(
+		"cosmos_sdk.evidence.v1.Evidence",
+		(*exported.Evidence)(nil),
+		&Equivocation{},
+	)
 }
 
 var (

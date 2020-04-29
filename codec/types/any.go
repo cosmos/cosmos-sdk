@@ -75,29 +75,32 @@ func NewInterfaceRegistry() InterfaceRegistry {
 type InterfaceRegistry interface {
 	AnyUnpacker
 
-	RegisterInterface(protoName string, ptr interface{})
-	RegisterImplementation(iface interface{}, impl proto.Message)
+	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
+	RegisterImplementations(iface interface{}, impls ...proto.Message)
 }
 
 type AnyUnpacker interface {
 	UnpackAny(any *Any, iface interface{}) error
 }
 
-func (a *interfaceRegistry) RegisterInterface(protoName string, ptr interface{}) {
-	a.interfaceNames[protoName] = reflect.TypeOf(ptr)
+func (a *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
+	a.interfaceNames[protoName] = reflect.TypeOf(iface)
+	a.RegisterImplementations(iface, impls...)
 }
 
-func (a *interfaceRegistry) RegisterImplementation(iface interface{}, impl proto.Message) {
+func (a *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := a.interfaceImpls[ityp]
 	if !found {
 		imap = map[string]reflect.Type{}
 	}
-	implType := reflect.TypeOf(impl)
-	if !implType.AssignableTo(ityp) {
-		panic(fmt.Errorf("type %T doesn't actually implement interface %T", implType, ityp))
+	for _, impl := range impls {
+		implType := reflect.TypeOf(impl)
+		if !implType.AssignableTo(ityp) {
+			panic(fmt.Errorf("type %T doesn't actually implement interface %T", implType, ityp))
+		}
+		imap["/"+proto.MessageName(impl)] = implType
 	}
-	imap["/"+proto.MessageName(impl)] = implType
 	a.interfaceImpls[ityp] = imap
 }
 

@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	"math/rand"
 	"strings"
 	"testing"
 	"time"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -147,7 +149,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec := std.NewAppCodec(app.Codec(), codectypes.NewInterfaceRegistry())
 
 	querier := keeper.NewQuerier(app.GovKeeper)
 

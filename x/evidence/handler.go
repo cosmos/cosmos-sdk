@@ -12,13 +12,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		case exported.MsgSubmitEvidence:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%T must be extended to support evidence", msg)
+			return handleMsgSubmitEvidence(ctx, k, msg)
 
 		default:
-			msgSubEv, ok := msg.(exported.MsgSubmitEvidence)
-			if ok {
-				return handleMsgSubmitEvidence(ctx, k, msgSubEv)
-			}
 
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}

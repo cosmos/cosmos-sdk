@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -23,7 +21,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
+	cdc, _ := simapp.MakeCodecs()
 	acc := types.NewBaseAccountWithAddress(delAddr1)
 	dec := simulation.NewDecodeStore(cdc)
 

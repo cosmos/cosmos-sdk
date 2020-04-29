@@ -99,7 +99,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 func (a AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
-	registry.RegisterImplementation((*sdk.Msg)(nil), &MsgSubmitEvidence{})
+	RegisterInterfaces(registry)
 }
 
 // ----------------------------------------------------------------------------

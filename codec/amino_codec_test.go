@@ -3,6 +3,8 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/stretchr/testify/require"
 	amino "github.com/tendermint/go-amino"
 
@@ -17,7 +19,25 @@ func createTestCodec() *amino.Codec {
 	cdc.RegisterConcrete(testdata.Dog{}, "testdata/Dog", nil)
 	cdc.RegisterConcrete(testdata.Cat{}, "testdata/Cat", nil)
 
+	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Dog{},
+		&testdata.Cat{},
+	)
+
 	return cdc
+}
+
+func createTestIntefaceRegistry() types.InterfaceRegistry {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Dog{},
+		&testdata.Cat{},
+	)
+
+	return interfaceRegistry
 }
 
 func TestAminoCodec(t *testing.T) {

@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +18,9 @@ import (
 
 func TestCodec(t *testing.T) {
 	app := simapp.Setup(false)
-	appCodec := std.NewAppCodec(app.Codec())
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(interfaceRegistry)
+	appCodec := std.NewAppCodec(app.Codec(), interfaceRegistry)
 	pk := ed25519.GenPrivKey()
 
 	var e exported.Evidence = &types.Equivocation{

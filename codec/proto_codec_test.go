@@ -20,7 +20,7 @@ func TestProtoCodec(t *testing.T) {
 	}{
 		{
 			"valid encoding and decoding",
-			codec.NewProtoCodec(),
+			codec.NewProtoCodec(createTestIntefaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Dog{},
 			false,
@@ -28,7 +28,7 @@ func TestProtoCodec(t *testing.T) {
 		},
 		{
 			"invalid decode type",
-			codec.NewProtoCodec(),
+			codec.NewProtoCodec(createTestIntefaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Cat{},
 			false,

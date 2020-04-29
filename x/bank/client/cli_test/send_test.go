@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"

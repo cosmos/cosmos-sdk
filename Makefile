@@ -6,12 +6,14 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
+BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
+export BUILDDIR
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -166,6 +168,10 @@ test-sim-benchmark-invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
+cli-test: build-sim
+	@go test -mod=readonly -p 4 `go list ./tests/cli/tests/...` -tags=cli_test -v
+	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
+
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-custom-genesis-fast \
@@ -174,7 +180,8 @@ test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
-test-sim-benchmark-invariants
+test-sim-benchmark-invariants \
+cli-test
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -193,7 +200,7 @@ test-sim-profile:
 .PHONY: test-sim-profile test-sim-benchmark
 
 test-cover:
-	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
 
 benchmark:

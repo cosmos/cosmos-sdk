@@ -202,9 +202,9 @@ func (k Keeper) ChanOpenAck(
 	}
 
 	// counterparty of the counterparty channel end (i.e self)
-	counterparty := types.NewCounterparty(portID, channelID)
+	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		exported.TRYOPEN, channel.Ordering, counterparty,
+		exported.TRYOPEN, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
 

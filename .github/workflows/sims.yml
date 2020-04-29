@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v2      
+      - uses: actions/checkout@v2
       - run: |
           make build
 
@@ -42,16 +42,16 @@ jobs:
             .mod
             .sum
           SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1      
+          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
-        if: "env.GIT_DIFF == ''"
+        if: "env.GIT_DIFF != ''"
       - name: test-sim-nondeterminism
         run: |
           make test-sim-nondeterminism
-        if: "env.GIT_DIFF == ''"
+        if: "env.GIT_DIFF != ''"
 
   test-sim-import-export:
     runs-on: ubuntu-latest
@@ -65,16 +65,16 @@ jobs:
             .mod
             .sum
           SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1         
+          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
-        if: "env.GIT_DIFF == ''"
+        if: "env.GIT_DIFF != ''"
       - name: test-sim-import-export
         run: |
           make test-sim-import-export
-        if: "env.GIT_DIFF == ''"
+        if: "env.GIT_DIFF != ''"
 
   test-sim-after-import:
     runs-on: ubuntu-latest
@@ -88,14 +88,16 @@ jobs:
             .mod
             .sum
           SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1         
+          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
+        if: "env.GIT_DIFF != ''"
       - name: test-sim-after-import
         run: |
           make test-sim-after-import
+        if: "env.GIT_DIFF != ''"
 
   test-sim-multi-seed-short:
     runs-on: ubuntu-latest
@@ -109,13 +111,13 @@ jobs:
             .mod
             .sum
           SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1               
+          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
-        if: "env.GIT_DIFF == ''"
+        if: "env.GIT_DIFF != ''"
       - name: test-sim-multi-seed-short
         run: |
           make test-sim-multi-seed-short
-        if: "env.GIT_DIFF == ''"
+        if: "env.GIT_DIFF != ''"

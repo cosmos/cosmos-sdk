@@ -1,9 +1,10 @@
 package gov_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

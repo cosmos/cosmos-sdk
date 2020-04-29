@@ -24,7 +24,7 @@ var (
 	NewKeeper  = keeper.NewKeeper
 	NewQuerier = keeper.NewQuerier
 
-	NewMsgSubmitEvidenceBase     = types.NewMsgSubmitEvidenceBase
+	NewMsgSubmitEvidence         = types.NewMsgSubmitEvidence
 	NewRouter                    = types.NewRouter
 	NewQueryEvidenceParams       = types.NewQueryEvidenceParams
 	NewQueryAllEvidenceParams    = types.NewQueryAllEvidenceParams
@@ -43,10 +43,10 @@ var (
 type (
 	Keeper = keeper.Keeper
 
-	GenesisState          = types.GenesisState
-	MsgSubmitEvidenceBase = types.MsgSubmitEvidenceBase
-	Handler               = types.Handler
-	Router                = types.Router
-	Equivocation          = types.Equivocation
-	Codec                 = types.Codec
+	GenesisState      = types.GenesisState
+	MsgSubmitEvidence = types.MsgSubmitEvidence
+	Handler           = types.Handler
+	Router            = types.Router
+	Equivocation      = types.Equivocation
+	Codec             = types.Codec
 )

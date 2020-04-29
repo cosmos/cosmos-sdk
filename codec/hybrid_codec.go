@@ -1,5 +1,7 @@
 package codec
 
+import "github.com/cosmos/cosmos-sdk/codec/types"
+
 // HybridCodec defines a codec that utilizes Protobuf for binary encoding
 // and Amino for JSON encoding.
 type HybridCodec struct {
@@ -7,9 +9,9 @@ type HybridCodec struct {
 	amino Marshaler
 }
 
-func NewHybridCodec(amino *Codec) Marshaler {
+func NewHybridCodec(amino *Codec, unpacker types.AnyUnpacker) Marshaler {
 	return &HybridCodec{
-		proto: NewProtoCodec(),
+		proto: NewProtoCodec(unpacker),
 		amino: NewAminoCodec(amino),
 	}
 }

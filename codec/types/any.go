@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"reflect"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 type Any struct {
@@ -59,29 +60,34 @@ func NewAnyWithValue(value interface{}) (*Any, error) {
 
 type interfaceMap = map[string]reflect.Type
 
-type interfaceContext struct {
+type interfaceRegistry struct {
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
 }
 
-func NewInterfaceContext() InterfaceContext {
-	return &interfaceContext{
+func NewInterfaceRegistry() InterfaceRegistry {
+	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
 	}
 }
 
-type InterfaceContext interface {
+type InterfaceRegistry interface {
+	AnyUnpacker
+
 	RegisterInterface(protoName string, ptr interface{})
 	RegisterImplementation(iface interface{}, impl proto.Message)
+}
+
+type AnyUnpacker interface {
 	UnpackAny(any *Any, iface interface{}) error
 }
 
-func (a *interfaceContext) RegisterInterface(protoName string, ptr interface{}) {
+func (a *interfaceRegistry) RegisterInterface(protoName string, ptr interface{}) {
 	a.interfaceNames[protoName] = reflect.TypeOf(ptr)
 }
 
-func (a *interfaceContext) RegisterImplementation(iface interface{}, impl proto.Message) {
+func (a *interfaceRegistry) RegisterImplementation(iface interface{}, impl proto.Message) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := a.interfaceImpls[ityp]
 	if !found {
@@ -110,7 +116,7 @@ func (any *Any) CachedValue() interface{} {
 	return any.cachedValue
 }
 
-func (ctx *interfaceContext) UnpackAny(any *Any, iface interface{}) error {
+func (ctx *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
 	rv := reflect.ValueOf(iface)
 	if rv.Kind() != reflect.Ptr {
 		return fmt.Errorf("UnpackAny expects a pointer")
@@ -161,7 +167,7 @@ func MarshalAny(x interface{}) ([]byte, error) {
 	return any.Marshal()
 }
 
-func UnmarshalAny(ctx InterfaceContext, iface interface{}, bz []byte) error {
+func UnmarshalAny(ctx AnyUnpacker, iface interface{}, bz []byte) error {
 	any := &Any{}
 	err := any.Unmarshal(bz)
 	if err != nil {
@@ -170,12 +176,12 @@ func UnmarshalAny(ctx InterfaceContext, iface interface{}, bz []byte) error {
 	return ctx.UnpackAny(any, iface)
 }
 
-type InterfaceMsg interface {
-	UnpackInterfaces(ctx InterfaceContext) error
+type UnpackInterfacesMsg interface {
+	UnpackInterfaces(ctx AnyUnpacker) error
 }
 
-func UnpackInterfaces(x interface{}, ctx InterfaceContext) error {
-	if msg, ok := x.(InterfaceMsg); ok {
+func UnpackInterfaces(x interface{}, ctx AnyUnpacker) error {
+	if msg, ok := x.(UnpackInterfacesMsg); ok {
 		return msg.UnpackInterfaces(ctx)
 	}
 	return nil

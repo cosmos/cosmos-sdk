@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -13,13 +14,13 @@ const (
 
 var (
 	_ sdk.Msg                    = MsgSubmitEvidence{}
-	_ sdk.InterfaceMsg           = MsgSubmitEvidence{}
+	_ types.UnpackInterfacesMsg  = MsgSubmitEvidence{}
 	_ exported.MsgSubmitEvidence = MsgSubmitEvidence{}
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
 func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (MsgSubmitEvidence, error) {
-	any, err := sdk.NewAnyWithValue(evi)
+	any, err := types.NewAnyWithValue(evi)
 	if err != nil {
 		return MsgSubmitEvidence{Submitter: s}, err
 	}
@@ -64,7 +65,7 @@ func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
 	return m.Submitter
 }
 
-func (m MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceContext) error {
+func (m MsgSubmitEvidence) UnpackInterfaces(ctx types.AnyUnpacker) error {
 	var evi exported.Evidence
 	return ctx.UnpackAny(m.Evidence, &evi)
 }

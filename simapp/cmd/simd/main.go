@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/spf13/cobra"
@@ -32,7 +35,9 @@ var invCheckPeriod uint
 
 func main() {
 	cdc := std.MakeCodec(simapp.ModuleBasics)
-	appCodec := std.NewAppCodec(cdc)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	module.RegisterInterfaceModules(simapp.ModuleBasics, interfaceRegistry)
+	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)

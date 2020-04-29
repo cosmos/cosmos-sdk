@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
@@ -19,7 +20,7 @@ type Codec interface {
 // evidence module.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
-	cdc.RegisterConcrete(MsgSubmitEvidenceBase{}, "cosmos-sdk/MsgSubmitEvidenceBase", nil)
+	cdc.RegisterConcrete(MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
 	cdc.RegisterConcrete(Equivocation{}, "cosmos-sdk/Equivocation", nil)
 }
 
@@ -32,7 +33,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/evidence and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino)
+	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
 )
 
 func init() {

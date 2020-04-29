@@ -1,9 +1,11 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/codec/testdata"
 )
 
 type TestI interface{}
@@ -11,7 +13,7 @@ type TestI interface{}
 var _ TestI = &testdata.Dog{}
 
 func TestAny_Pack(t *testing.T) {
-	ctx := NewInterfaceContext()
+	ctx := NewInterfaceRegistry()
 	ctx.RegisterInterface("cosmos_sdk.test.TestI", (*TestI)(nil))
 	ctx.RegisterImplementation((*TestI)(nil), &testdata.Dog{})
 	ctx.RegisterImplementation((*TestI)(nil), &testdata.Cat{})

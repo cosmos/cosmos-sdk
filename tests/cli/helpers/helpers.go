@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -168,18 +169,6 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 
-// TxBroadcast is simcli tx broadcast
-func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-// TxEncode is simcli tx encode
-func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
 //utils
 
 func AddFlags(cmd string, flags []string) string {
@@ -187,6 +176,21 @@ func AddFlags(cmd string, flags []string) string {
 		cmd += " " + f
 	}
 	return strings.TrimSpace(cmd)
+}
+
+// Write the given string to a new temporary file
+func WriteToNewTempFile(t *testing.T, s string) *os.File {
+	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
+	require.Nil(t, err)
+	_, err = fp.WriteString(s)
+	require.Nil(t, err)
+	return fp
+}
+
+func MarshalStdTx(t *testing.T, c *codec.Codec, stdTx auth.StdTx) []byte {
+	bz, err := c.MarshalBinaryBare(stdTx)
+	require.NoError(t, err)
+	return bz
 }
 
 func UnmarshalStdTx(t *testing.T, c *codec.Codec, s string) (stdTx auth.StdTx) {

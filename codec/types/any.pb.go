@@ -77,7 +77,6 @@ func (*Any) XXX_MessageName() string {
 	return "google.protobuf.Any"
 }
 func init() {
-	proto.RegisterType((*Any)(nil), "google.protobuf.Any")
 }
 
 func init() {

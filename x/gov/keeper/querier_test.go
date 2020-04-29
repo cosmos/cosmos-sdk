@@ -297,7 +297,7 @@ func TestQueries(t *testing.T) {
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec := app.AppCodec()
 
 	proposal := types.Proposal{
 		ProposalBase: types.ProposalBase{

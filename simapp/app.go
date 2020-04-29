@@ -359,6 +359,7 @@ func NewSimApp(
 func MakeCodecs() (*std.Codec, *codec.Codec) {
 	cdc := std.MakeCodec(ModuleBasics)
 	interfaceRegistry := types.NewInterfaceRegistry()
+	sdk.RegisterInterfaces(interfaceRegistry)
 	module.RegisterInterfaceModules(ModuleBasics, interfaceRegistry)
 	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
 	return appCodec, cdc

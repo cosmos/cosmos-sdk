@@ -5,9 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/libs/log"
-	tmlite "github.com/tendermint/tendermint/lite"
-	tmliteproxy "github.com/tendermint/tendermint/lite/proxy"
-	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
+	tmlite "github.com/tendermint/tendermint/lite2"
+	tmliteproxy "github.com/tendermint/tendermint/lite2/proxy"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 const (
@@ -43,7 +43,7 @@ func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
 	// create an RPC client based off of the RPC URI if no RPC client exists
 	client := ctx.Client
 	if client == nil {
-		client, err = tmhttp.New(ctx.NodeURI, "/websocket")
+		client, err = rpchttp.New(ctx.NodeURI, "/websocket")
 		if err != nil {
 			return nil, err
 		}

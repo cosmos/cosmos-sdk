@@ -37,12 +37,12 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 		i := i
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, suite.header)
+				clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				suite.Require().NoError(err, "err on client state initialization")
 				suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, suite.header)
+			clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 			if tc.expPass {
 				suite.Require().NoError(err, "errored on initialization")
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 			if err != nil {
 				return err
 			}
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 			if err != nil {
 				return err
 			}
@@ -198,9 +198,9 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altPrivVal := tmtypes.NewMockPV()
-	pk, err := altPrivVal.GetPubKey()
+	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
-	altVal := tmtypes.NewValidator(pk, 4)
+	altVal := tmtypes.NewValidator(altPubKey, 4)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -209,12 +209,12 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	pk2, err := suite.privVal.GetPubKey()
+	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
 	// Create signer array and ensure it is in same order as bothValSet
 	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(pk.Address(), pk2.Address()) == -1 {
+	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
 		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
 	} else {
 		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
@@ -238,7 +238,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = protoBothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				if err != nil {
 					return err
 				}
@@ -258,7 +258,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = protoBothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				if err != nil {
 					return err
 				}
@@ -313,7 +313,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				if err != nil {
 					return err
 				}

@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		{"couldn't add connection to client", func() {}, false},
 	}
 
-	counterparty := connection.NewCounterparty(testClientIDA, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	counterparty := connection.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 
 	for i, tc := range testCases {
 		tc := tc

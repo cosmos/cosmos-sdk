@@ -9,8 +9,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmlite "github.com/tendermint/tendermint/lite2"
+	tmliteproxy "github.com/tendermint/tendermint/lite2/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -132,9 +132,9 @@ func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
 	if ctx.Verifier == nil {
 		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
 	}
-	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
+	check, err := tmliteproxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 	switch {
-	case tmliteErr.IsErrCommitNotFound(err):
+	case tmlite.IsErrCommitNotFound(err):
 		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
 	case err != nil:
 		return tmtypes.SignedHeader{}, err

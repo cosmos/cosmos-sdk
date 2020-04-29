@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmliteproxy "github.com/tendermint/tendermint/lite2/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -55,11 +55,11 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 			return nil, err
 		}
 
-		if err := tmliteProxy.ValidateHeader(&res.Block.Header, check); err != nil {
+		if err := tmliteproxy.ValidateHeader(&res.Block.Header, check); err != nil {
 			return nil, err
 		}
 
-		if err = tmliteProxy.ValidateBlock(res.Block, check); err != nil {
+		if err = tmliteproxy.ValidateBlock(res.Block, check); err != nil {
 			return nil, err
 		}
 	}
@@ -71,7 +71,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	return codec.Cdc.MarshalJSON(res)
 }
 
-// get the current blockchain height
+// GetChainHeight gets the current blockchain height
 func GetChainHeight(cliCtx context.CLIContext) (int64, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {

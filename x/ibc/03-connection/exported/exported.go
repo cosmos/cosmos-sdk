@@ -8,6 +8,7 @@ import (
 // ConnectionI describes the required methods for a connection.
 type ConnectionI interface {
 	GetState() ibctypes.State
+	GetID() string
 	GetClientID() string
 	GetCounterparty() CounterpartyI
 	GetVersions() []string

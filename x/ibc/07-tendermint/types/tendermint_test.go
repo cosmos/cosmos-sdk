@@ -19,6 +19,7 @@ const (
 	height                       = 4
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
+	maxClockDrift  time.Duration = time.Second * 10
 )
 
 type TendermintTestSuite struct {
@@ -40,10 +41,11 @@ func (suite *TendermintTestSuite) SetupTest() {
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()
-	pk, err := suite.privVal.GetPubKey()
+
+	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	val := tmtypes.NewValidator(pk, 10)
+	val := tmtypes.NewValidator(pubKey, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.protoValSet, err = suite.valSet.ToProto()
 	suite.Require().NoError(err)

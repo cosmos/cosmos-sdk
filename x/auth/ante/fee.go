@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -72,11 +71,11 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
-	ak         keeper.AccountKeeper
+	ak         AccountKeeper
 	bankKeeper types.BankKeeper
 }
 
-func NewDeductFeeDecorator(ak keeper.AccountKeeper, bk types.BankKeeper) DeductFeeDecorator {
+func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		ak:         ak,
 		bankKeeper: bk,

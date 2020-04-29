@@ -14,9 +14,10 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state ibctypes.State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state ibctypes.State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		State:        state,
+		ID:           connectionID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     versions,
@@ -26,6 +27,11 @@ func NewConnectionEnd(state ibctypes.State, clientID string, counterparty Counte
 // GetState implements the Connection interface
 func (c ConnectionEnd) GetState() ibctypes.State {
 	return c.State
+}
+
+// GetID implements the Connection interface
+func (c ConnectionEnd) GetID() string {
+	return c.ID
 }
 
 // GetClientID implements the Connection interface
@@ -43,8 +49,13 @@ func (c ConnectionEnd) GetVersions() []string {
 	return c.Versions
 }
 
-// ValidateBasic implements the Connection interface
+// ValidateBasic implements the Connection interface.
+// NOTE: the protocol supports that the connection and client IDs match the
+// counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
+	if err := host.DefaultConnectionIdentifierValidator(c.ID); err != nil {
+		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
+	}
 	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}

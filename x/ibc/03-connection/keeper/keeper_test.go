@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -36,6 +38,13 @@ const (
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
+	maxClockDrift  time.Duration = time.Second * 10
+
+	nextTimestamp = 10 // increment used for the next header's timestamp
+)
+
+var (
+	timestamp = time.Now() // starting timestamp for the client test chain
 )
 
 type KeeperTestSuite struct {
@@ -81,7 +90,7 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	suite.Require().False(existed)
 
 	counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
-	expConn := types.NewConnectionEnd(ibctypes.INIT, testClientIDB, counterparty, types.GetCompatibleVersions())
+	expConn := types.NewConnectionEnd(ibctypes.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
 	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConn)
 	conn, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
 	suite.Require().True(existed)
@@ -104,23 +113,80 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	counterparty2 := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 
-	conn1 := types.NewConnectionEnd(ibctypes.INIT, testClientIDA, counterparty3, types.GetCompatibleVersions())
-	conn2 := types.NewConnectionEnd(ibctypes.INIT, testClientIDB, counterparty1, types.GetCompatibleVersions())
-	conn3 := types.NewConnectionEnd(ibctypes.UNINITIALIZED, testClientID3, counterparty2, types.GetCompatibleVersions())
+	conn1 := types.NewConnectionEnd(ibctypes.INIT, testConnectionIDA, testClientIDA, counterparty3, types.GetCompatibleVersions())
+	conn2 := types.NewConnectionEnd(ibctypes.INIT, testConnectionIDB, testClientIDB, counterparty1, types.GetCompatibleVersions())
+	conn3 := types.NewConnectionEnd(ibctypes.UNINITIALIZED, testConnectionID3, testClientID3, counterparty2, types.GetCompatibleVersions())
 
-	expConnections := []types.IdentifiedConnectionEnd{
-		{Connection: conn1, Identifier: testConnectionIDA},
-		{Connection: conn2, Identifier: testConnectionIDB},
-		{Connection: conn3, Identifier: testConnectionID3},
+	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
+
+	for i := range expConnections {
+		suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), expConnections[i].ID, expConnections[i])
 	}
-
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, conn1)
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDB, conn2)
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionID3, conn3)
 
 	connections := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
 	suite.Require().Len(connections, len(expConnections))
 	suite.Require().ElementsMatch(expConnections, connections)
+}
+
+func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
+	clients := []clientexported.ClientState{
+		ibctmtypes.NewClientState(testClientIDA, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientIDB, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+	}
+
+	for i := range clients {
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clients[i])
+	}
+
+	expPaths := []types.ConnectionPaths{
+		types.NewConnectionPaths(testClientIDA, []string{ibctypes.ConnectionPath(testConnectionIDA)}),
+		types.NewConnectionPaths(testClientIDB, []string{ibctypes.ConnectionPath(testConnectionIDB), ibctypes.ConnectionPath(testConnectionID3)}),
+	}
+
+	for i := range expPaths {
+		suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), expPaths[i].ClientID, expPaths[i].Paths)
+	}
+
+	connPaths := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllClientConnectionPaths(suite.chainA.GetContext())
+	suite.Require().Len(connPaths, 2)
+	suite.Require().Equal(connPaths, expPaths)
+}
+
+// TestGetTimestampAtHeight verifies if the clients on each chain return the correct timestamp
+// for the other chain.
+func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
+	cases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"verification success", func() {
+			suite.chainA.CreateClient(suite.chainB)
+		}, true},
+		{"client state not found", func() {}, false},
+	}
+
+	for i, tc := range cases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			// create and store a connection to chainB on chainA
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
+
+			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
+				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height),
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+				suite.Require().EqualValues(uint64(suite.chainB.Header.Time.UnixNano()), actualTimestamp)
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			}
+		})
+	}
 }
 
 // TestChain is a testing struct that wraps a simapp with the latest Header, Vals and Signers
@@ -136,17 +202,17 @@ type TestChain struct {
 
 func NewTestChain(clientID string) *TestChain {
 	privVal := tmtypes.NewMockPV()
-	pk, err := privVal.GetPubKey()
+
+	pubKey, err := privVal.GetPubKey()
 	if err != nil {
 		panic(err)
 	}
 
-	validator := tmtypes.NewValidator(pk, 1)
+	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
-	now := time.Now()
 
-	header := ibctmtypes.CreateTestHeader(clientID, 1, now, valSet, signers)
+	header := ibctmtypes.CreateTestHeader(clientID, 1, timestamp, valSet, signers)
 
 	return &TestChain{
 		ClientID: clientID,
@@ -196,7 +262,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
 	if err != nil {
 		return err
 	}
@@ -277,7 +343,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -300,6 +366,7 @@ func (chain *TestChain) createConnection(
 	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := types.ConnectionEnd{
 		State:        state,
+		ID:           connID,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     types.GetCompatibleVersions(),
@@ -321,8 +388,11 @@ func (chain *TestChain) createChannel(
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, chain.Header.SignedHeader.Header.Height+1,
-		time.Now(), chain.Vals, chain.Signers)
+	return ibctmtypes.CreateTestHeader(
+		chain.Header.SignedHeader.Header.ChainID,
+		chain.Header.SignedHeader.Header.Height+1,
+		chain.Header.Time.Add(nextTimestamp), chain.Vals, chain.Signers,
+	)
 }
 
 func prefixedClientKey(clientID string, key []byte) []byte {

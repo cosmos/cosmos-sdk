@@ -6,20 +6,29 @@ import (
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// DecodeStore unmarshals the KVPair's values to the corresponding types.
-func DecodeStore(cdc *codec.Codec, kvA, kvB tmkv.Pair) string {
-	switch {
-	case bytes.Equal(kvA.Key[:1], types.SupplyKey):
-		var supplyA, supplyB types.Supply
-		cdc.MustUnmarshalBinaryBare(kvA.Value, &supplyA)
-		cdc.MustUnmarshalBinaryBare(kvB.Value, &supplyB)
-		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
+// NewDecodeStore returns a function closure that unmarshals the KVPair's values
+// to the corresponding types.
+func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
+	return func(kvA, kvB tmkv.Pair) string {
+		switch {
+		case bytes.Equal(kvA.Key[:1], types.SupplyKey):
+			supplyA, err := cdc.UnmarshalSupply(kvA.Value)
+			if err != nil {
+				panic(err)
+			}
 
-	default:
-		panic(fmt.Sprintf("unknown %s key %X (%s)", types.ModuleName, kvA.Key, kvA.Key))
+			supplyB, err := cdc.UnmarshalSupply(kvB.Value)
+			if err != nil {
+				panic(err)
+			}
+
+			return fmt.Sprintf("%v\n%v", supplyA, supplyB)
+
+		default:
+			panic(fmt.Sprintf("unexpected %s key %X (%s)", types.ModuleName, kvA.Key, kvA.Key))
+		}
 	}
 }

@@ -1,7 +1,7 @@
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/99designs/keyring v1.1.4
+	github.com/99designs/keyring v1.1.5
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
@@ -29,13 +29,13 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.13.3
-	github.com/tendermint/tendermint v0.33.3
+	github.com/tendermint/tendermint v0.33.4
 	github.com/tendermint/tm-db v0.5.1
 	gopkg.in/yaml.v2 v2.2.8
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
-replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200421130418-95e3cad4bcbd
+replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200428180958-d4fc4efefac8
 
 go 1.14

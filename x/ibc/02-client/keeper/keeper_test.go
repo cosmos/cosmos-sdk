@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -29,6 +30,7 @@ const (
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
+	maxClockDrift  time.Duration = time.Second * 10
 )
 
 type KeeperTestSuite struct {
@@ -55,10 +57,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()
-	pk, err := suite.privVal.GetPubKey()
+
+	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	validator := tmtypes.NewValidator(pk, 1)
+	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.protoValSet, err = suite.valSet.ToProto()
 	suite.Require().NoError(err)
@@ -90,7 +93,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, ibctmtypes.Header{})
+	clientState := ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{})
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -125,9 +128,9 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
-		ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID2, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID3, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+		ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
 	}
 
 	for i := range expClients {
@@ -167,7 +170,9 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState, _ := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, suite.header)
+	clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+	suite.Require().NoError(err)
+
 	suite.keeper.SetClientState(suite.ctx, clientState)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, suite.consensusState)
 
@@ -204,4 +209,38 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	latest.(ibctmtypes.ConsensusState).ValidatorSet.TotalVotingPower = tmValSet.TotalVotingPower()
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", testClientHeight+3)
+}
+
+func (suite KeeperTestSuite) TestGetAllConsensusStates() {
+	expConsensus := []types.ClientConsensusStates{
+		types.NewClientConsensusStates(
+			testClientID,
+			[]exported.ConsensusState{
+				ibctmtypes.NewConsensusState(
+					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.GetHeight(), &tmtypes.ValidatorSet{},
+				),
+				ibctmtypes.NewConsensusState(
+					suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, &tmtypes.ValidatorSet{},
+				),
+			},
+		),
+		types.NewClientConsensusStates(
+			testClientID2,
+			[]exported.ConsensusState{
+				ibctmtypes.NewConsensusState(
+					suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, &tmtypes.ValidatorSet{},
+				),
+			},
+		),
+	}
+
+	for i := range expConsensus {
+		for _, cons := range expConsensus[i].ConsensusStates {
+			suite.keeper.SetClientConsensusState(suite.ctx, expConsensus[i].ClientID, cons.GetHeight(), cons)
+		}
+	}
+
+	consStates := suite.keeper.GetAllConsensusStates(suite.ctx)
+	suite.Require().Len(consStates, len(expConsensus))
+	suite.Require().Equal(expConsensus, consStates)
 }

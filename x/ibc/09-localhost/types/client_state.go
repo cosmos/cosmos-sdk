@@ -3,7 +3,9 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +17,7 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -61,6 +64,23 @@ func (cs ClientState) GetLatestHeight() uint64 {
 // IsFrozen returns false.
 func (cs ClientState) IsFrozen() bool {
 	return false
+}
+
+// Validate performs a basic validation of the client state fields.
+func (cs ClientState) Validate() error {
+	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+		return err
+	}
+	if strings.TrimSpace(cs.ChainID) == "" {
+		return errors.New("chain id cannot be blank")
+	}
+	if cs.Height <= 0 {
+		return fmt.Errorf("height must be positive: %d", cs.Height)
+	}
+	if cs.store == nil {
+		return errors.New("KVStore cannot be nil")
+	}
+	return nil
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus

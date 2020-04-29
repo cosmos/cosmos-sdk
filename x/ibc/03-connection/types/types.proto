@@ -90,19 +90,23 @@ message MsgConnectionOpenConfirm {
 // between two chains.
 message ConnectionEnd {
   option (gogoproto.goproto_getters) = false;
-
+  // connection identifier.
+  string id = 1 [
+    (gogoproto.customname) = "ID",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
   // client associated with this connection.
-  string client_id = 1 [
+  string client_id = 2 [
     (gogoproto.customname) = "ClientID",
     (gogoproto.moretags)   = "yaml:\"client_id\""
   ];
   // opaque string which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
-  repeated string versions = 2;
+  repeated string versions = 3;
   // current state of the connection end.
-  cosmos_sdk.x.ibc.v1.State state = 3;
+  cosmos_sdk.x.ibc.v1.State state = 4;
   // counterparty chain associated with this connection.
-  Counterparty counterparty = 4 [
+  Counterparty counterparty = 5 [
     (gogoproto.nullable) = false
   ];
 }

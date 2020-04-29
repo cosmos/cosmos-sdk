@@ -1,8 +1,10 @@
+// +build cli_test
+
 package cli_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli_test"

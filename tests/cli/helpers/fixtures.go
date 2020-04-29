@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-var cdc = codecstd.MakeCodec(simapp.ModuleBasics)
+var cdc = std.MakeCodec(simapp.ModuleBasics)
 
 // Fixtures is used to setup the testing environment
 type Fixtures struct {

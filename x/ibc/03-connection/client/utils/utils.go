@@ -17,7 +17,7 @@ import (
 
 // QueryAllConnections returns all the connections. It _does not_ return
 // any merkle proof.
-func QueryAllConnections(cliCtx context.CLIContext, page, limit int) ([]types.IdentifiedConnectionEnd, int64, error) {
+func QueryAllConnections(cliCtx context.CLIContext, page, limit int) ([]types.ConnectionEnd, int64, error) {
 	params := types.NewQueryAllConnectionsParams(page, limit)
 	bz, err := cliCtx.Codec.MarshalJSON(params)
 	if err != nil {
@@ -30,7 +30,7 @@ func QueryAllConnections(cliCtx context.CLIContext, page, limit int) ([]types.Id
 		return nil, 0, err
 	}
 
-	var connections []types.IdentifiedConnectionEnd
+	var connections []types.ConnectionEnd
 	err = cliCtx.Codec.UnmarshalJSON(res, &connections)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal connections: %w", err)

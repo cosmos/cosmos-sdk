@@ -6,13 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
@@ -189,4 +192,18 @@ func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, 
 func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
 	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+//utils
+
+func AddFlags(cmd string, flags []string) string {
+	for _, f := range flags {
+		cmd += " " + f
+	}
+	return strings.TrimSpace(cmd)
+}
+
+func UnmarshalStdTx(t *testing.T, c *codec.Codec, s string) (stdTx auth.StdTx) {
+	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
+	return
 }

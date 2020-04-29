@@ -15,6 +15,7 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -25,49 +26,56 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
+
 	// Duration of the period since the LastestTimestamp during which the
 	// submitted headers are valid for upgrade
 	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`
+
 	// Duration of the staking unbonding period
 	UnbondingPeriod time.Duration `json:"unbonding_period" yaml:"unbonding_period"`
+
+	// MaxClockDrift defines how much new (untrusted) header's Time can drift into
+	// the future.
+	MaxClockDrift time.Duration
+
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
+
 	// Last Header that was stored by client
 	LastHeader Header `json:"last_header" yaml:"last_header"`
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(
-	msg MsgCreateClient,
-) (ClientState, error) {
-	return Initialize(msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.Header)
+func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
+	return Initialize(
+		msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift, msg.Header,
+	)
 }
 
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustingPeriod, ubdPeriod time.Duration,
-	header Header,
+	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
 ) (ClientState, error) {
+
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
 
-	clientState := NewClientState(
-		id, trustingPeriod, ubdPeriod, header,
-	)
+	clientState := NewClientState(id, trustingPeriod, ubdPeriod, maxClockDrift, header)
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustingPeriod, ubdPeriod time.Duration,
-	header Header,
+	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
 ) ClientState {
+
 	return ClientState{
 		ID:              id,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
+		MaxClockDrift:   maxClockDrift,
 		LastHeader:      header,
 		FrozenHeight:    0,
 	}
@@ -80,7 +88,10 @@ func (cs ClientState) GetID() string {
 
 // GetChainID returns the chain-id from the last header
 func (cs ClientState) GetChainID() string {
-	return cs.LastHeader.ChainID
+	if cs.LastHeader.SignedHeader.Header == nil {
+		return ""
+	}
+	return cs.LastHeader.SignedHeader.Header.ChainID
 }
 
 // ClientType is tendermint.
@@ -101,6 +112,23 @@ func (cs ClientState) GetLatestTimestamp() time.Time {
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
+}
+
+// Validate performs a basic validation of the client state fields.
+func (cs ClientState) Validate() error {
+	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+		return err
+	}
+	if cs.TrustingPeriod == 0 {
+		return errors.New("trusting period cannot be zero")
+	}
+	if cs.UnbondingPeriod == 0 {
+		return errors.New("unbonding period cannot be zero")
+	}
+	if cs.MaxClockDrift == 0 {
+		return errors.New("max clock drift cannot be zero")
+	}
+	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the

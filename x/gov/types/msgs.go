@@ -194,8 +194,8 @@ var _ MsgSubmitProposalI = &MsgSubmitProposal{}
 // NewMsgSubmitProposal returns a (deprecated) MsgSubmitProposal message.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposal {
-	return MsgSubmitProposal{content, initialDeposit, proposer}
+func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) *MsgSubmitProposal {
+	return &MsgSubmitProposal{content, initialDeposit, proposer}
 }
 
 // ValidateBasic implements Msg

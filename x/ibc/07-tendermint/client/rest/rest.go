@@ -30,6 +30,7 @@ type CreateClientReq struct {
 	Header          ibctmtypes.Header `json:"consensus_state" yaml:"consensus_state"`
 	TrustingPeriod  time.Duration     `json:"trusting_period" yaml:"trusting_period"`
 	UnbondingPeriod time.Duration     `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration     `json:"max_clock_drift" yaml:"max_clock_drift"`
 }
 
 // UpdateClientReq defines the properties of a update client request's body.

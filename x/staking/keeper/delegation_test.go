@@ -327,6 +327,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 	require.True(t, validator.IsBonded())
 
 	selfDelegation := types.NewDelegation(sdk.AccAddress(addrVals[0].Bytes()), addrVals[0], issuedShares)
@@ -380,6 +381,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
 	require.Equal(t, delTokens, issuedShares.RoundInt())
@@ -480,6 +482,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	// create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := sdk.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
@@ -564,6 +567,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := sdk.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
@@ -820,6 +824,8 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+
 	valTokens := sdk.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
@@ -877,6 +883,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := sdk.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
@@ -961,6 +968,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := sdk.TokensFromConsensusPower(10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)

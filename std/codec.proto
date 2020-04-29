@@ -15,6 +15,9 @@ import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
+import "x/ibc/03-connection/types/types.proto";
+import "x/ibc/04-channel/types/types.proto";
+import "x/ibc/20-transfer/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/std";
 
@@ -75,8 +78,8 @@ message MsgSubmitProposal {
   Content                                   content = 2;
 }
 
-// Proposal defines the application-level concrete proposal type used in governance
-// proposals.
+// Proposal defines the application-level concrete proposal type used in
+// governance proposals.
 message Proposal {
   option (gogoproto.equal) = true;
 
@@ -90,7 +93,8 @@ message Content {
   option (gogoproto.equal)             = true;
   option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/gov/types.Content";
 
-  // sum defines a set of all acceptable concrete governance proposal Content types.
+  // sum defines a set of all acceptable concrete governance proposal Content
+  // types.
   oneof sum {
     cosmos_sdk.x.gov.v1.TextProposal                        text                    = 1;
     cosmos_sdk.x.params.v1.ParameterChangeProposal          parameter_change        = 2;
@@ -134,6 +138,19 @@ message Message {
     cosmos_sdk.x.staking.v1.MsgDelegate                         msg_delegate                      = 15;
     cosmos_sdk.x.staking.v1.MsgBeginRedelegate                  msg_begin_redelegate              = 16;
     cosmos_sdk.x.staking.v1.MsgUndelegate                       msg_undelegate                    = 17;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenInit        msg_connection_open_init          = 18;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenTry         msg_connection_open_try           = 19;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenAck         msg_connection_open_ack           = 20;
+    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenConfirm     msg_connection_open_confirm       = 21;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenInit              msg_channel_open_init             = 22;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenTry               msg_channel_open_try              = 23;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenAck               msg_channel_open_ack              = 24;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenConfirm           msg_channel_open_confirm          = 25;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelCloseInit             msg_channel_close_init            = 26;
+    cosmos_sdk.x.ibc.channel.v1.MsgChannelCloseConfirm          msg_channel_close_confirm         = 27;
+    cosmos_sdk.x.ibc.channel.v1.MsgPacket                       msg_packet                        = 28;
+    cosmos_sdk.x.ibc.channel.v1.MsgAcknowledgement              msg_acknowledgement               = 29;
+    cosmos_sdk.x.ibc.transfer.v1.MsgTransfer                    msg_transfer                      = 30;
   }
 }
 

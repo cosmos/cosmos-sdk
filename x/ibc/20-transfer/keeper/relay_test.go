@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -27,8 +25,8 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			func() {
 				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
 				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, true, true},
 		{"successful transfer from external chain", prefixCoins,
@@ -37,8 +35,8 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, prefixCoins)
 				suite.Require().NoError(err)
 				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, false, true},
 		{"source channel not found", testCoins,
@@ -46,32 +44,32 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		{"next seq send not found", testCoins,
 			func() {
 				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 			}, true, false},
 		// createOutgoingPacket tests
 		// - source chain
 		{"send coins failed", testCoins,
 			func() {
 				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, true, false},
 		// - receiving chain
 		{"send from module account failed", testCoins,
 			func() {
 				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, false, false},
 		{"channel capability not found", testCoins,
 			func() {
 				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
 				suite.chainA.CreateClient(suite.chainB)
-				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channelexported.OPEN, channelexported.ORDERED, testConnection)
+				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 				// Release channel capability
 				cap, _ := suite.chainA.App.ScopedTransferKeeper.GetCapability(suite.chainA.GetContext(), capName)

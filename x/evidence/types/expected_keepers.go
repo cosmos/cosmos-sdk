@@ -3,13 +3,27 @@ package types
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
-
 	"github.com/tendermint/tendermint/crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 type (
+
+	// AccountKeeper defines the expected account keeper interface used for simulations.
+	AccountKeeper interface {
+		GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
+	}
+
+	// BankKeeper defines the expected bank keeper interface used for simulations.
+	BankKeeper interface {
+		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+		GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+		SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	}
+
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {

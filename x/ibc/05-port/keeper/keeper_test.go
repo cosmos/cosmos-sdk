@@ -6,9 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/keeper"
@@ -22,7 +21,6 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
 	ctx    sdk.Context
 	keeper *keeper.Keeper
 }
@@ -31,8 +29,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
 
-	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	suite.keeper = &app.IBCKeeper.PortKeeper
 }
 

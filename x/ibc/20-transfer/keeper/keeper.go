@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -102,7 +101,7 @@ func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
 	store.Set([]byte(types.PortKey), []byte(portID))
 
 	cap := k.portKeeper.BindPort(ctx, portID)
-	return k.ClaimCapability(ctx, cap, porttypes.PortPath(portID))
+	return k.ClaimCapability(ctx, cap, ibctypes.PortPath(portID))
 }
 
 // GetPort returns the portID for the transfer module. Used in ExportGenesis

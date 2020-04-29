@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
@@ -138,7 +137,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 // Implement IBCModule callbacks
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
-	order channelexported.Order,
+	order ibctypes.Order,
 	connectionHops []string,
 	portID string,
 	channelID string,
@@ -169,7 +168,7 @@ func (am AppModule) OnChanOpenInit(
 
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
-	order channelexported.Order,
+	order ibctypes.Order,
 	connectionHops []string,
 	portID,
 	channelID string,

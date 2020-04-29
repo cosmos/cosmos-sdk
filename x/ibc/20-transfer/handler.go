@@ -20,7 +20,7 @@ func NewHandler(k Keeper) sdk.Handler {
 // See createOutgoingPacket in spec:https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
 	if err := k.SendTransfer(
-		ctx, msg.SourcePort, msg.SourceChannel, msg.DestHeight, msg.Amount, msg.Sender, msg.Receiver,
+		ctx, msg.SourcePort, msg.SourceChannel, msg.DestinationHeight, msg.Amount, msg.Sender, msg.Receiver,
 	); err != nil {
 		return nil, err
 	}

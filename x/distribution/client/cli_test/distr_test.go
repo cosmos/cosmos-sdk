@@ -1,14 +1,16 @@
 package cli_test
 
 import (
+	"path/filepath"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrcli "github.com/cosmos/cosmos-sdk/x/distribution/client/cli_test"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"path/filepath"
-	"testing"
 )
 
 func TestCliWithdrawRewards(t *testing.T) {

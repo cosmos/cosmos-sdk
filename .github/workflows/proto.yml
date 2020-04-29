@@ -1,7 +1,7 @@
-name: Proto check
+name: Protobuf
 on: [pull_request]
 jobs:
-  proto-lint:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -14,7 +14,7 @@ jobs:
       - name: lint
         run: make proto-lint-docker
         if: "env.GIT_DIFF != ''"
-  proto-breakage:
+  breakage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

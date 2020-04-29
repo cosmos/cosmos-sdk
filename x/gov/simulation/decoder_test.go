@@ -3,9 +3,10 @@ package simulation_test
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/stretchr/testify/require"
 

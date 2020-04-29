@@ -207,3 +207,10 @@ func UnmarshalStdTx(t *testing.T, c *codec.Codec, s string) (stdTx auth.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
 }
+
+func queryEvents(events []string) (out string) {
+	for _, event := range events {
+		out += event + "&"
+	}
+	return strings.TrimSuffix(out, "&")
+}

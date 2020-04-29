@@ -9,6 +9,6 @@ message Dog {
 }
 
 message Cat {
-  string moniker = 1; 
-  int32 lives = 2;
+  string moniker = 1;
+  int32  lives   = 2;
 }

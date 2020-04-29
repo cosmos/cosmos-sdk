@@ -35,8 +35,8 @@ contributors, the general procedure for contributing has been established:
    4. Follow standard Github best practices: fork the repo, branch from the
       HEAD of `master`, make some commits, and submit a PR to `master`
       - For core developers working within the cosmos-sdk repo, to ensure a clear
-      ownership of branches, branches must be named with the convention
-      `{moniker}/{issue#}-branch-name`
+        ownership of branches, branches must be named with the convention
+        `{moniker}/{issue#}-branch-name`
    5. Be sure to submit the PR in `Draft` mode submit your PR early, even if
       it's incomplete as this indicates to the community you're working on
       something and allows them to provide comments early in the development process
@@ -56,9 +56,11 @@ Other notes:
 
 - Looking for a good place to start contributing? How about checking out some
   [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-- Please make sure to use `gofmt` before every commit - the easiest way to do
-  this is have your editor run it for you upon saving a file. Additionally
-  please ensure that your code is lint compliant by running `make lint`
+- Please make sure to run `make format` before every commit - the easiest way
+  to do this is have your editor run it for you upon saving a file. Additionally
+  please ensure that your code is lint compliant by running `golangci-lint run`.
+  A convenience git `pre-commit` hook that runs the formatters automatically
+  before each commit is available in the `contrib/githooks/` directory.
 
 ## Architecture Decision Records (ADR)
 
@@ -124,7 +126,7 @@ Please don't make Pull Requests from `master`.
 
 ## Dependencies
 
-We use [Go 1.11 Modules](https://github.com/golang/go/wiki/Modules) to manage
+We use [Go 1.14 Modules](https://github.com/golang/go/wiki/Modules) to manage
 dependency versions.
 
 The master branch of every Cosmos repository should just build with `go get`,
@@ -133,6 +135,14 @@ get away with telling people they can just `go get` our software.
 
 Since some dependencies are not under our control, a third party may break our
 build, in which case we can fall back on `go mod tidy -v`.
+
+## Protobuf
+
+We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos-SDK.
+
+For linting and checking breaking changes, we use [buf](https://buf.build/). There are two options for linting and to check if your changes will cause a break. The first is that you can install [buf](https://buf.build/docs/installation) locally, the commands for running buf after installing are `make proto-lint` and the breaking changes check will be `make proto-check-breaking`. If you do not want to install buf and have docker installed already then you can use these commands `make proto-lint-docker` and `make proto-check-breaking-docker`.
+
+To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make protoc` & `make protoc-gen-gocosmos`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
 
 ## Testing
 
@@ -232,11 +242,11 @@ releases will be based off of that release.
 - create a PR into `master` containing ONLY the CHANGELOG.md updates
 - tag and release `release/vX.XX.X`
 
-## Code Owner Membership 
+## Code Owner Membership
 
 In the ethos of open source projects, and out of necessity to keep the code
 alive, the core contributor team will strive to permit special repo privileges
-to developers who show an aptitude towards developing with this code base. 
+to developers who show an aptitude towards developing with this code base.
 
 Several different kinds of privileges may be granted however most common
 privileges to be granted are merge rights to either part of, or the entire the
@@ -247,7 +257,7 @@ potential new candidates as well as the potential for existing code-owners to
 exit or "pass on the torch". This private meeting is to be a held as a
 phone/video meeting. Subsequently at the end of the meeting, one of the existing
 code owners should open a PR modifying the `CODEOWNERS` file. The other code
-owners should then all approve this PR to publicly display their support. 
+owners should then all approve this PR to publicly display their support.
 
 Only if unanimous consensus is reached among all the existing code-owners will
 an invitation be extended to a new potential-member. Likewise, when an existing
@@ -255,9 +265,8 @@ member is suggested to be removed/or have their privileges reduced, the member
 in question must agree on the decision for their removal or else no action
 should be taken. If however, a code-owner is verifiably shown to intentionally
 have had acted maliciously or grossly negligent, code-owner privileges may be
-stripped with no prior warning or consent from the member in question. 
+stripped with no prior warning or consent from the member in question.
 
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
-the community of this project.  
-
+the community of this project.

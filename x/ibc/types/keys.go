@@ -144,12 +144,6 @@ func KeyChannel(portID, channelID string) []byte {
 	return []byte(ChannelPath(portID, channelID))
 }
 
-// KeyChannelCapabilityPath returns the store key for the capability key of a
-// particular channel binded to a specific port
-func KeyChannelCapabilityPath(portID, channelID string) []byte {
-	return []byte(ChannelCapabilityPath(portID, channelID))
-}
-
 // KeyNextSequenceSend returns the store key for the send sequence of a particular
 // channel binded to a specific port
 func KeyNextSequenceSend(portID, channelID string) []byte {

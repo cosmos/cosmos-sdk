@@ -47,7 +47,7 @@ func QuerierConnectionChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 
 	connectionChannels := []types.IdentifiedChannel{}
 	for _, channel := range channels {
-		if channel.Channel.ConnectionHops[0] == params.Connection {
+		if channel.ConnectionHops[0] == params.Connection {
 			connectionChannels = append(connectionChannels, channel)
 		}
 	}

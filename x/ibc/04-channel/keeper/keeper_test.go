@@ -75,16 +75,11 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	_, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
 	suite.False(found)
 
-	channel := types.Channel{
-		State:    exported.OPEN,
-		Ordering: testChannelOrder,
-		Counterparty: types.Counterparty{
-			PortID:    testPort2,
-			ChannelID: testChannel2,
-		},
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
+	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
+	channel := types.NewChannel(
+		exported.INIT, testChannelOrder,
+		counterparty2, []string{testConnectionIDA}, testChannelVersion,
+	)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
 
 	storedChannel, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetChannel(ctx, testPort1, testChannel1)
@@ -98,37 +93,27 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
-	channel1 := types.Channel{
-		State:          exported.INIT,
-		Ordering:       testChannelOrder,
-		Counterparty:   counterparty3,
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
-
-	channel2 := types.Channel{
-		State:          exported.INIT,
-		Ordering:       testChannelOrder,
-		Counterparty:   counterparty1,
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
-
-	channel3 := types.Channel{
-		State:          exported.CLOSED,
-		Ordering:       testChannelOrder,
-		Counterparty:   counterparty2,
-		ConnectionHops: []string{testConnectionIDA},
-		Version:        testChannelVersion,
-	}
+	channel1 := types.NewChannel(
+		exported.INIT, testChannelOrder,
+		counterparty3, []string{testConnectionIDA}, testChannelVersion,
+	)
+	channel2 := types.NewChannel(
+		exported.INIT, testChannelOrder,
+		counterparty1, []string{testConnectionIDA}, testChannelVersion,
+	)
+	channel3 := types.NewChannel(
+		exported.CLOSED, testChannelOrder,
+		counterparty2, []string{testConnectionIDA}, testChannelVersion,
+	)
 
 	expChannels := []types.IdentifiedChannel{
-		{Channel: channel1, PortIdentifier: testPort1, ChannelIdentifier: testChannel1},
-		{Channel: channel2, PortIdentifier: testPort2, ChannelIdentifier: testChannel2},
-		{Channel: channel3, PortIdentifier: testPort3, ChannelIdentifier: testChannel3},
+		types.NewIdentifiedChannel(testPort1, testChannel1, channel1),
+		types.NewIdentifiedChannel(testPort2, testChannel2, channel2),
+		types.NewIdentifiedChannel(testPort3, testChannel3, channel3),
 	}
 
 	ctx := suite.chainB.GetContext()
+
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort2, testChannel2, channel2)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort3, testChannel3, channel3)
@@ -136,6 +121,53 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	channels := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 	suite.Require().Len(channels, len(expChannels))
 	suite.Require().Equal(expChannels, channels)
+}
+
+func (suite KeeperTestSuite) TestGetAllSequences() {
+	seq1 := types.NewPacketSequence(testPort1, testChannel1, 1)
+	seq2 := types.NewPacketSequence(testPort2, testChannel2, 2)
+
+	expSeqs := []types.PacketSequence{seq1, seq2}
+
+	ctx := suite.chainB.GetContext()
+
+	for _, seq := range expSeqs {
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
+	}
+
+	sendSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketSendSeqs(ctx)
+	recvSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketRecvSeqs(ctx)
+	suite.Require().Len(sendSeqs, 2)
+	suite.Require().Len(recvSeqs, 2)
+
+	suite.Require().Equal(expSeqs, sendSeqs)
+	suite.Require().Equal(expSeqs, recvSeqs)
+}
+
+func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
+	ack1 := types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("ack"))
+	ack2 := types.NewPacketAckCommitment(testPort1, testChannel1, 2, []byte("ack"))
+	comm1 := types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("hash"))
+	comm2 := types.NewPacketAckCommitment(testPort1, testChannel1, 2, []byte("hash"))
+
+	expAcks := []types.PacketAckCommitment{ack1, ack2}
+	expCommitments := []types.PacketAckCommitment{comm1, comm2}
+
+	ctx := suite.chainB.GetContext()
+
+	for i := 0; i < 2; i++ {
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctx, expAcks[i].PortID, expAcks[i].ChannelID, expAcks[i].Sequence, expAcks[i].Hash)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctx, expCommitments[i].PortID, expCommitments[i].ChannelID, expCommitments[i].Sequence, expCommitments[i].Hash)
+	}
+
+	acks := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketAcks(ctx)
+	commitments := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitments(ctx)
+	suite.Require().Len(acks, 2)
+	suite.Require().Len(commitments, 2)
+
+	suite.Require().Equal(expAcks, acks)
+	suite.Require().Equal(expCommitments, commitments)
 }
 
 func (suite *KeeperTestSuite) TestSetSequence() {

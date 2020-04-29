@@ -49,3 +49,10 @@ jobs:
           file: ./coverage.txt # optional
           fail_ci_if_error: true
         if: "env.GIT_DIFF != ''"
+  cli-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: cli-test
+        run: |
+          make cli-test

@@ -91,7 +91,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
-	msg := channel.NewMsgPacket(packet, nil, 0, addr1)
+	msg := channel.NewMsgPacket(packet, commitmenttypes.MerkleProof{}, 0, addr1)
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
 
@@ -327,7 +327,7 @@ func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state ibctypes.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,

@@ -109,14 +109,14 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 	var chanCap *capability.Capability
 	testCases := []testCase{
 		{"success ORDERED", func() {
-			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 100)
+			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnectionIDA)
 		}, true},
 		{"channel not found", func() {}, false},
 		{"incorrect capability", func() {
-			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3)
+			packet = types.NewPacket(newMockTimeoutPacket().GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnectionIDA)
-			chanCap = capability.NewCapability(timeoutHeight, disabledTimeoutTimestamp)
+			chanCap = capability.NewCapability(100)
 		}, false},
 	}
 
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 
 			var err error
 			chanCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
-				suite.chainA.GetContext(), ibctypes.ChannelCapabilityPath(testPort1, testChanneltimeoutHeight, disabledTimeoutTimestamp),
+				suite.chainA.GetContext(), ibctypes.ChannelCapabilityPath(testPort1, testChannel1),
 			)
 			suite.Require().NoError(err, "could not create capability")
 

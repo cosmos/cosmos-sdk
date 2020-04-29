@@ -67,8 +67,8 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), disabledTimeoutHeight, timeoutTimestamp)
 			commitBlockWithNewTimestamp(suite.chainB, timeoutTimestamp)
 			suite.chainB.CreateClient(suite.chainA)
-			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connectionexported.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, exported.OPEN, exported.ORDERED, testConnectionIDA)
+			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnectionIDA)
 		}, false},
 		{"next sequence send not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)

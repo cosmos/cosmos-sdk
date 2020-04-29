@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -158,7 +157,7 @@ func NewTestChain(clientID string) *TestChain {
 
 // Creates simple context for testing purposes
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, tmproto.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: chain.Header.SignedHeader.Header.GetHeight()})
+	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: chain.Header.SignedHeader.Header.Height})
 }
 
 // createClient will create a client for clientChain on targetChain
@@ -167,7 +166,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: client.Header.SignedHeader.Header.GetHeight(), Time: client.Header.GetTime()}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.SignedHeader.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -178,12 +177,12 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	validator.Tokens = sdk.NewInt(1000000) // get one voting power
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
-		Header: tmproto.Header{
+		Header: abci.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
 	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.GetHeight(), histInfo)
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
 
 	// Create target ctx
 	ctxTarget := chain.GetContext()
@@ -229,7 +228,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: client.Header.SignedHeader.Header.GetHeight(), Time: client.Header.GetTime()}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.SignedHeader.Header.Height, Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -240,27 +239,22 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	validator.Tokens = sdk.NewInt(1000000)
 	validators := []staking.Validator{validator}
 	histInfo := staking.HistoricalInfo{
-		Header: tmproto.Header{
+		Header: abci.Header{
 			AppHash: commitID.Hash,
 		},
 		Valset: validators,
 	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.GetHeight(), histInfo)
-
-	protoValset, err := client.Vals.ToProto()
-	if err != nil {
-		panic(err)
-	}
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       uint64(client.Header.SignedHeader.Header.GetHeight()),
-		Timestamp:    client.Header.GetTime(),
+		Height:       uint64(client.Header.SignedHeader.Header.Height),
+		Timestamp:    client.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
-		ValidatorSet: protoValset,
+		ValidatorSet: client.Vals,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, client.ClientID, uint64(client.Header.SignedHeader.Header.GetHeight()), consensusState,
+		ctxTarget, client.ClientID, uint64(client.Header.SignedHeader.Header.Height), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
 		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
@@ -310,6 +304,6 @@ func (chain *TestChain) createChannel(
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, chain.Header.SignedHeader.Header.GetHeight()+1,
-		chain.Header.GetTime().Add(time.Minute), chain.Vals, chain.Signers)
+	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, chain.Header.SignedHeader.Header.Height+1,
+		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }

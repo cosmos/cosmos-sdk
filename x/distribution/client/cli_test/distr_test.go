@@ -32,7 +32,7 @@ func TestCliWithdrawRewards(t *testing.T) {
 	genDoc.AppState, err = f.Cdc.MarshalJSON(genesisState)
 	require.NoError(t, genDoc.SaveAs(genFile))
 
-	// start gaiad server
+	// start simd server
 	proc := f.SDStart()
 	defer proc.Stop(false)
 

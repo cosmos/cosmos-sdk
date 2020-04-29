@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestGaiadCollectGentxs(t *testing.T) {
+func TestSimdCollectGentxs(t *testing.T) {
 	t.Parallel()
 	var customMaxBytes, customMaxGas int64 = 99999999, 1234567
 	f := helpers.NewFixtures(t)
@@ -62,7 +62,7 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	f.Cleanup(gentxDir)
 }
 
-func TestGaiadAddGenesisAccount(t *testing.T) {
+func TestSimdAddGenesisAccount(t *testing.T) {
 	t.Parallel()
 	f := helpers.NewFixtures(t)
 
@@ -117,7 +117,7 @@ func TestValidateGenesis(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
-	// start gaiad server
+	// start simd server
 	proc := f.SDStart()
 	defer proc.Stop(false)
 

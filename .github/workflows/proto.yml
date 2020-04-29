@@ -1,7 +1,7 @@
-name: Proto check
+name: Protobuf
 on: [pull_request]
 jobs:
-  proto-checks:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -14,6 +14,16 @@ jobs:
       - name: lint
         run: make proto-lint-docker
         if: "env.GIT_DIFF != ''"
+  breakage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: .proto
+          SET_ENV_NAME_INSERTIONS: 1
+          SET_ENV_NAME_LINES: 1
       - name: check-breakage
         run: make proto-check-breaking-docker
         if: "env.GIT_DIFF != ''"

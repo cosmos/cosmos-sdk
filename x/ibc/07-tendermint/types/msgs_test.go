@@ -19,18 +19,16 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 	}{
 		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), true, "success msg should pass"},
 		{ibctmtypes.NewMsgCreateClient("BADCHAIN", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "invalid client id passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "unregistered client type passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "invalid Consensus State in msg passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, 0, ubdPeriod, maxClockDrift, signer), false, "zero trusting period passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, 0, maxClockDrift, signer), false, "zero unbonding period passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, nil), false, "Empty address passed"},
-		{ibctmtypes.NewMsgCreateClient("goodchain", suite.header, trustingPeriod, ubdPeriod, maxClockDrift, nil), false, "Empty chain ID"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, 0, ubdPeriod, maxClockDrift, signer), false, "zero trusting period passed"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, trustingPeriod, 0, maxClockDrift, signer), false, "zero unbonding period passed"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, trustingPeriod, ubdPeriod, maxClockDrift, nil), false, "Empty address passed"},
+		{ibctmtypes.NewMsgCreateClient(exported.ClientTypeTendermint, ibctmtypes.Header{}, trustingPeriod, ubdPeriod, maxClockDrift, signer), false, "nil header"},
 	}
 
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			suite.Require().NoError(err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %v", i, tc.errMsg)
 		} else {
 			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}

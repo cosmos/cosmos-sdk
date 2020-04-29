@@ -9,6 +9,8 @@ BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
+HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
+DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
 export BUILDDIR
@@ -167,7 +169,7 @@ test-sim-benchmark-invariants:
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 cli-test: build-sim
-	@go test -mod=readonly -p 4 `go list ./cli_test/tests/...` -tags=keys_cli_test -v
+	@go test -mod=readonly -p 4 `go list ./tests/cli/tests/...` -tags=cli_test -v
 	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
 
 .PHONY: \
@@ -261,6 +263,14 @@ proto-lint:
 
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=master'
+
+proto-lint-docker:
+	@$(DOCKER_BUF) check lint --error-format=json
+.PHONY: proto-lint
+
+proto-check-breaking-docker:
+	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+.PHONY: proto-check-breaking-ci
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos

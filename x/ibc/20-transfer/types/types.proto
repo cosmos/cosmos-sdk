@@ -52,10 +52,6 @@ message FungibleTokenPacketData {
 // error msg is empty string on success
 // See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 message FungibleTokenPacketAcknowledgement {
-  bool success = 1 [
-    (gogoproto.moretags) = "yaml:\"success\""
-  ];
-  string error = 2 [
-    (gogoproto.moretags) = "yaml:\"error\""
-  ];
+  bool   success = 1;
+  string error   = 2;
 }

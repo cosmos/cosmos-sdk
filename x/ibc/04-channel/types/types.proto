@@ -44,9 +44,10 @@ message MsgChannelOpenTry {
     (gogoproto.moretags) = "yaml:\"counterparty_version\""
   ];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 5 [
-    (gogoproto.nullable) = false
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"proof_init\""
   ];
-  uint64 proof_height = 6;
+  uint64 proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 7 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -67,9 +68,10 @@ message MsgChannelOpenAck {
     (gogoproto.moretags) = "yaml:\"counterparty_version\""
   ];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 4 [
-    (gogoproto.nullable) = false
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"proof_try\""
   ];
-  uint64 proof_height = 5;
+  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 6 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -87,9 +89,10 @@ message MsgChannelOpenConfirm {
     (gogoproto.moretags)   = "yaml:\"channel_id\""
   ];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 3 [
-    (gogoproto.nullable) = false
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"proof_ack\""
   ];
-  uint64 proof_height = 4;
+  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -123,9 +126,10 @@ message MsgChannelCloseConfirm {
     (gogoproto.moretags)   = "yaml:\"channel_id\""
   ];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 3 [
-    (gogoproto.nullable) = false
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"proof_init\""
   ];
-  uint64 proof_height = 4;
+  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -139,7 +143,7 @@ message MsgPacket {
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 2 [
     (gogoproto.nullable) = false
   ];
-  uint64 proof_height = 3;
+  uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 4 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -153,8 +157,8 @@ message MsgTimeout {
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof = 2 [
     (gogoproto.nullable) = false
   ];
-  uint64 proof_height       = 3;
-  uint64 next_sequence_recv = 4;
+  uint64 proof_height       = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  uint64 next_sequence_recv = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
   bytes  signer             = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -169,7 +173,7 @@ message MsgAcknowledgement {
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof           = 3 [
     (gogoproto.nullable) = false
   ];
-  uint64 proof_height = 4;
+  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 5 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
@@ -231,7 +235,7 @@ message Packet {
   // identifies the channel end on the receiving chain.
   string destination_channel = 5 [(gogoproto.moretags) = "yaml:\"destination_channel\""];
   // actual opaque bytes transferred directly to the application module
-  bytes data = 6 [(gogoproto.moretags) = "yaml:\"data\""];
+  bytes data = 6;
   // block height after which the packet times out
   uint64 timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
   // block timestamp (in nanoseconds) after which the packet times out

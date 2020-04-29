@@ -6,6 +6,7 @@ option go_package = "github.com/tendermint/tendermint/proto/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "third_party/proto/tendermint/proto/libs/bits/types.proto";
+import "third_party/proto/tendermint/proto/crypto/merkle/types.proto";
 import "third_party/proto/tendermint/proto/version/version.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
@@ -37,6 +38,12 @@ message PartSetHeader {
 
   uint32 total = 1;
   bytes  hash  = 2;
+}
+
+message Parts {
+  uint32                                     index = 1;
+  bytes                                      bytes = 2;
+  tendermint.proto.crypto.merkle.SimpleProof proof = 3 [(gogoproto.nullable) = false];
 }
 
 // BlockID

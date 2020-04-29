@@ -247,7 +247,7 @@ message Event {
 // One usage is indexing transaction results.
 message TxResult {
   int64             height = 1;
-  uint32            Index  = 2;
+  uint32            index  = 2;
   bytes             tx     = 3;
   ResponseDeliverTx result = 4 [(gogoproto.nullable) = false];
 }

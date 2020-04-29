@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	tmlite "github.com/tendermint/tendermint/lite"
+	tmlite "github.com/tendermint/tendermint/lite2"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 

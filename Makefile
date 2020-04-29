@@ -272,7 +272,7 @@ COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/
 TM_KV_TYPES         = third_party/proto/tendermint/libs/kv
 TM_MERKLE_TYPES     = third_party/proto/tendermint/crypto/merkle
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci/types
-TM_PROTO      = third_party/proto/tendermint/proto
+TM_PROTO     				= third_party/proto/tendermint/proto
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos-proto
 SDK_PROTO_TYPES     = third_party/proto/cosmos-sdk/types
@@ -295,15 +295,18 @@ proto-update-deps:
 	@sed -i '' '11 s|proto/types/params.proto|third_party/proto/tendermint/proto/types/params.proto|g' $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_PROTO)/types
-	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
 	@curl -sSL $(TM_URL)/proto/types/params.proto > $(TM_PROTO)/types/params.proto
+	@curl -sSL $(TM_URL)/proto/types/types.proto > $(TM_PROTO)/types/types.proto
 	@sed -i '' '8 s|proto/libs/bits/types.proto|third_party/proto/tendermint/proto/libs/bits/types.proto|g' $(TM_PROTO)/types/types.proto
-	@sed -i '' '9 s|proto/version/version.proto|third_party/proto/tendermint/proto/version/version.proto|g' $(TM_PROTO)/types/types.proto
+	@sed -i '' '9 s|proto/crypto/merkle/types.proto|third_party/proto/tendermint/proto/crypto/merkle/types.proto|g' $(TM_PROTO)/types/types.proto
+	@sed -i '' '10 s|proto/version/version.proto|third_party/proto/tendermint/proto/version/version.proto|g' $(TM_PROTO)/types/types.proto
 
 	@mkdir -p $(TM_PROTO)/libs/bits
 	@curl -sSL $(TM_URL)/proto/libs/bits/types.proto > $(TM_PROTO)/libs/bits/types.proto
 
+	@mkdir -p $(TM_PROTO)/crypto/merkle
 	@mkdir -p $(TM_PROTO)/crypto/keys
+	@curl -sSL $(TM_URL)/proto/crypto/merkle/types.proto > $(TM_PROTO)/crypto/merkle/types.proto
 	@curl -sSL $(TM_URL)/proto/crypto/keys/types.proto > $(TM_PROTO)/crypto/keys/types.proto
 
 	@mkdir -p $(TM_PROTO)/version
@@ -311,9 +314,5 @@ proto-update-deps:
 
 	@mkdir -p $(TM_KV_TYPES)
 	@curl -sSL $(TM_URL)/libs/kv/types.proto > $(TM_KV_TYPES)/types.proto
-
-	@mkdir -p $(TM_MERKLE_TYPES)
-	@curl -sSL $(TM_URL)/crypto/merkle/merkle.proto > $(TM_MERKLE_TYPES)/merkle.proto
-
 
 .PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps

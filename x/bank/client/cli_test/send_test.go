@@ -81,11 +81,11 @@ func TestCLISend(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestGaiaCLIMinimumFees(t *testing.T) {
+func TestCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
-	// start gaiad server with minimum fees
+	// start simd server with minimum fees
 	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
 	fees := fmt.Sprintf(
 		"--minimum-gas-prices=%s,%s",
@@ -119,11 +119,11 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestGaiaCLIGasPrices(t *testing.T) {
+func TestCLIGasPrices(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
-	// start gaiad server with minimum fees
+	// start simd server with minimum fees
 	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
 	proc := f.SDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewDecCoinFromDec(helpers.FeeDenom, minGasPrice)))
 	defer proc.Stop(false)
@@ -153,11 +153,11 @@ func TestGaiaCLIGasPrices(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestGaiaCLIFeesDeduction(t *testing.T) {
+func TestCLIFeesDeduction(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
-	// start gaiad server with minimum fees
+	// start simd server with minimum fees
 	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
 	proc := f.SDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewDecCoinFromDec(helpers.FeeDenom, minGasPrice)))
 	defer proc.Stop(false)

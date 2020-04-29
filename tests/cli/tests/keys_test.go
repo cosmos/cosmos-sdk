@@ -38,7 +38,7 @@ func TestCLIKeysAddMultisig(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestGaiaCLIKeysAddRecover(t *testing.T) {
+func TestCLIKeysAddRecover(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
@@ -53,7 +53,7 @@ func TestGaiaCLIKeysAddRecover(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestGaiaCLIKeysAddRecoverHDPath(t *testing.T) {
+func TestCLIKeysAddRecoverHDPath(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 

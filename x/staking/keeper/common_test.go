@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/std"
+	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 

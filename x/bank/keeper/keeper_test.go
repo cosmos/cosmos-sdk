@@ -1,10 +1,9 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"

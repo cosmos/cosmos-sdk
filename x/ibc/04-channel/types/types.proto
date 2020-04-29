@@ -26,8 +26,8 @@ message MsgChannelOpenInit {
   ];
 }
 
-// MsgChannelOpenInit defines an sdk.Msg to try open  a channel handshake. It is
-// called by a relayer on Chain A.
+// MsgChannelOpenInit  defines a msg sent by a Relayer to try to open a channel
+// on Chain B.
 message MsgChannelOpenTry {
   string port_id = 1 [
     (gogoproto.customname) = "PortID",
@@ -52,6 +52,8 @@ message MsgChannelOpenTry {
   ];
 }
 
+// MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
+// the change of channel state to TRYOPEN on Chain B.
 message MsgChannelOpenAck {
   string port_id = 1 [
     (gogoproto.customname) = "PortID",
@@ -73,6 +75,8 @@ message MsgChannelOpenAck {
   ];
 }
 
+// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
+// the change of channel state to OPEN on Chain A.
 message MsgChannelOpenConfirm {
   string port_id = 1 [
     (gogoproto.customname) = "PortID",
@@ -91,6 +95,8 @@ message MsgChannelOpenConfirm {
   ];
 }
 
+// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain A
+// to close a channel with Chain B.
 message MsgChannelCloseInit {
   string port_id = 1 [
     (gogoproto.customname) = "PortID",
@@ -105,6 +111,8 @@ message MsgChannelCloseInit {
   ];
 }
 
+// MsgChannelCloseConfirm defines a msg sent by a Relayer to Chain B
+// to acknowledge the change of channel state to CLOSED on Chain A.
 message MsgChannelCloseConfirm {
   string port_id = 1 [
     (gogoproto.customname) = "PortID",

@@ -24,6 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// KeyEncoding defines the encoding format of a key's bytes.
 type KeyEncoding int32
 
 const (

@@ -21,12 +21,12 @@ type Keeper struct {
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
+	cdc *codec.Codec, appCodec codec.Marshaler, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
 ) *Keeper {
 	clientKeeper := client.NewKeeper(cdc, key, stakingKeeper)
-	connectionKeeper := connection.NewKeeper(cdc, key, clientKeeper)
+	connectionKeeper := connection.NewKeeper(cdc, appCodec, key, clientKeeper)
 	portKeeper := port.NewKeeper(scopedKeeper)
-	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
+	channelKeeper := channel.NewKeeper(appCodec, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
 		ClientKeeper:     clientKeeper,
@@ -36,7 +36,8 @@ func NewKeeper(
 	}
 }
 
-// Set the Router in IBC Keeper and seal it
+// SetRouter sets the Router in IBC Keeper and seals it. The method panics if
+// there is an existing router that's already sealed.
 func (k *Keeper) SetRouter(rtr *port.Router) {
 	if k.Router != nil && k.Router.Sealed() {
 		panic("cannot reset a sealed router")

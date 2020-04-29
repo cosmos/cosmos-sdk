@@ -29,7 +29,7 @@ const (
 // Keeper defines the IBC transfer keeper
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      *codec.Codec
+	cdc      codec.Marshaler
 
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
@@ -40,7 +40,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey,
+	cdc codec.Marshaler, key sdk.StoreKey,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {

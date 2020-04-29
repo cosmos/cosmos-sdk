@@ -130,3 +130,8 @@ message Counterparty {
     (gogoproto.nullable) = false
   ];
 }
+
+// ClientPaths define all the connection paths for a client state.
+message ClientPaths {
+  repeated string paths = 1;
+}

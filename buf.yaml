@@ -10,6 +10,8 @@ lint:
     - UNARY_RPC
     - COMMENT_FIELD
     - PACKAGE_DIRECTORY_MATCH
+    - ENUM_ZERO_VALUE_SUFFIX
+    - ENUM_VALUE_PREFIX
   ignore:
     - third_party
     - codec/testdata

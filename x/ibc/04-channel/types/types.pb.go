@@ -96,8 +96,8 @@ func (m *MsgChannelOpenInit) GetSigner() github_com_cosmos_cosmos_sdk_types.AccA
 	return nil
 }
 
-// MsgChannelOpenInit defines an sdk.Msg to try open  a channel handshake. It is
-// called by a relayer on Chain A.
+// MsgChannelOpenInit  defines a msg sent by a Relayer to try to open a channel
+// on Chain B.
 type MsgChannelOpenTry struct {
 	PortID              string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID           string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
@@ -190,6 +190,8 @@ func (m *MsgChannelOpenTry) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAd
 	return nil
 }
 
+// MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
+// the change of channel state to TRYOPEN on Chain B.
 type MsgChannelOpenAck struct {
 	PortID              string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID           string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
@@ -274,6 +276,8 @@ func (m *MsgChannelOpenAck) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAd
 	return nil
 }
 
+// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
+// the change of channel state to OPEN on Chain A.
 type MsgChannelOpenConfirm struct {
 	PortID      string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID   string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
@@ -350,6 +354,8 @@ func (m *MsgChannelOpenConfirm) GetSigner() github_com_cosmos_cosmos_sdk_types.A
 	return nil
 }
 
+// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain A
+// to close a channel with Chain B.
 type MsgChannelCloseInit struct {
 	PortID    string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
@@ -410,6 +416,8 @@ func (m *MsgChannelCloseInit) GetSigner() github_com_cosmos_cosmos_sdk_types.Acc
 	return nil
 }
 
+// MsgChannelCloseConfirm defines a msg sent by a Relayer to Chain B
+// to acknowledge the change of channel state to CLOSED on Chain A.
 type MsgChannelCloseConfirm struct {
 	PortID      string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID   string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`

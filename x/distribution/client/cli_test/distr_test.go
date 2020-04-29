@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestCLIQueryRewards(t *testing.T) {
+func TestCliWithdrawRewards(t *testing.T) {
 	t.Parallel()
 	f := helpers.InitFixtures(t)
 
@@ -39,6 +39,15 @@ func TestCLIQueryRewards(t *testing.T) {
 	fooAddr := f.KeyAddress(helpers.KeyFoo)
 	rewards := distrcli.QueryRewards(f, fooAddr)
 	require.Equal(t, 1, len(rewards.Rewards))
+	require.NotNil(t, rewards.Total)
 
+	fooVal := sdk.ValAddress(fooAddr)
+	success := distrcli.TxWithdrawRewards(f, fooVal, fooAddr.String(), "-y")
+	require.True(t, success)
+
+	rewards = distrcli.QueryRewards(f, fooAddr)
+	require.Equal(t, 1, len(rewards.Rewards))
+
+	require.Nil(t, rewards.Total)
 	f.Cleanup()
 }

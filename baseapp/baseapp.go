@@ -1098,8 +1098,6 @@ func (app *BaseApp) DeliverSideTx(req abci.RequestDeliverSideTx) (res abci.Respo
 
 // runSideTx processes a side transaction. App can make an external call here.
 func (app *BaseApp) runSideTx(txBytes []byte, tx sdk.Tx, req abci.RequestDeliverSideTx) (res abci.ResponseDeliverSideTx) {
-	ctx := app.getContextForTx(runTxModeCheck, txBytes)
-
 	defer func() {
 		if r := recover(); r != nil {
 			res = abci.ResponseDeliverSideTx{
@@ -1122,6 +1120,9 @@ func (app *BaseApp) runSideTx(txBytes []byte, tx sdk.Tx, req abci.RequestDeliver
 	}
 
 	if app.deliverSideTxHandler != nil {
+		// get deliver-tx context
+		ctx := app.getContextForTx(runTxModeDeliver, txBytes)
+
 		res = app.deliverSideTxHandler(ctx, tx, req)
 	} else {
 		res = abci.ResponseDeliverSideTx{

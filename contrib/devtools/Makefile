@@ -100,12 +100,6 @@ proto-tools-stamp:
     -o "${BIN}/protoc-gen-buf-check-breaking" && \
 	chmod +x "${BIN}/protoc-gen-buf-check-breaking"
 
-	@echo "Installing protoc-gen-buf-check-lint..."
-	@curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-lint-${UNAME_S}-${UNAME_M}" \
-    -o "${BIN}/protoc-gen-buf-check-lint" && \
-	chmod +x "${BIN}/protoc-gen-buf-check-lint"
-
 	@echo "Installing buf..."
 	@curl -sSL \
     "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" \

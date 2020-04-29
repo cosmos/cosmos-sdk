@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/cli_test/helpers"
+	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankCli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"

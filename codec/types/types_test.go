@@ -1,9 +1,9 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/magiconair/properties/assert"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -116,5 +116,5 @@ func TestUnpackInterfaces(t *testing.T) {
 	err = types.UnpackInterfaces(hasAny2, registry)
 	require.NoError(t, err)
 
-	assert.Equal(t, spot, hasAny2.Animal.GetCachedValue())
+	require.Equal(t, spot, hasAny2.Animal.GetCachedValue())
 }

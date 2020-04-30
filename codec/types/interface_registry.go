@@ -8,11 +8,11 @@ import (
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
-// with Any against a whitelist of registered types
+// in Any's against a whitelist of registered types
 type AnyUnpacker interface {
 	// UnpackAny unpacks the value in any to the interface pointer passed in as
-	// iface. Note that the type in any must have been registered with
-	// RegisterImplementations as a concrete type for that interface
+	// iface. Note that the type in any must have been registered in the
+	// underlying whitelist registry as a concrete type for that interface
 	// Ex:
 	//    var msg sdk.Msg
 	//    err := ctx.UnpackAny(any, &msg)
@@ -26,13 +26,19 @@ type InterfaceRegistry interface {
 	AnyUnpacker
 
 	// RegisterInterface associates protoName as the public name for the
-	// interface passed in as iface
+	// interface passed in as iface. This is to be used primarily to create
+	// a public facing registry of interface implementations for clients.
+	// protoName should be a well-chosen public facing name that remains stable.
+	// RegisterInterface takes an optional list of impls to be registered
+	// as implementations of iface.
+	//
 	// Ex:
 	//   registry.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
 	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
 
-	// RegisterImplementations registers impls as a concrete implementations of
-	// the interface iface
+	// RegisterImplementations registers impls as concrete implementations of
+	// the interface iface.
+	//
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
@@ -69,7 +75,7 @@ type interfaceRegistry struct {
 
 type interfaceMap = map[string]reflect.Type
 
-// NewInterfaceRegistry creates a new InterfaceRegistry
+// NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
@@ -88,6 +94,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	if !found {
 		imap = map[string]reflect.Type{}
 	}
+
 	for _, impl := range impls {
 		implType := reflect.TypeOf(impl)
 		if !implType.AssignableTo(ityp) {
@@ -95,6 +102,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 		}
 		imap["/"+proto.MessageName(impl)] = implType
 	}
+
 	registry.interfaceImpls[ityp] = imap
 }
 
@@ -103,7 +111,9 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	if rv.Kind() != reflect.Ptr {
 		return fmt.Errorf("UnpackAny expects a pointer")
 	}
+
 	rt := rv.Elem().Type()
+
 	cachedValue := any.cachedValue
 	if cachedValue != nil {
 		if reflect.TypeOf(cachedValue).AssignableTo(rt) {
@@ -111,28 +121,36 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 			return nil
 		}
 	}
+
 	imap, found := registry.interfaceImpls[rt]
 	if !found {
 		return fmt.Errorf("no registered implementations of interface type %T", iface)
 	}
+
 	typ, found := imap[any.TypeUrl]
 	if !found {
 		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
 	}
+
 	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto unmarshal %T", msg)
 	}
+
 	err := proto.Unmarshal(any.Value, msg)
 	if err != nil {
 		return err
 	}
+
 	err = UnpackInterfaces(msg, registry)
 	if err != nil {
 		return err
 	}
+
 	rv.Elem().Set(reflect.ValueOf(msg))
+
 	any.cachedValue = msg
+
 	return nil
 }
 

@@ -268,7 +268,7 @@ type UnpackInterfacesMessage interface {
 ```
 
 We also introduce a private `cachedValue interface{}` field onto the `Any`
-struct itself with a public getter `GetUnpackedValue() interface{}`.
+struct itself with a public getter `GetCachedValue() interface{}`.
 
 The `UnpackInterfaces` method is to be invoked during message deserialization right
 after `Unmarshal` and any interface values packed in `Any`s will be decoded
@@ -295,7 +295,7 @@ func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceRegistry) error {
 }
 
 func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence {
-  return msg.Evidence.GetUnpackedValue().(eviexported.Evidence)
+  return msg.Evidence.GetCachedValue().(eviexported.Evidence)
 }
 ```
 

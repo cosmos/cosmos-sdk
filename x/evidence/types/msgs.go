@@ -62,7 +62,7 @@ func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
-	evi, ok := m.Evidence.CachedValue().(exported.Evidence)
+	evi, ok := m.Evidence.GetCachedValue().(exported.Evidence)
 	if !ok {
 		return nil
 	}

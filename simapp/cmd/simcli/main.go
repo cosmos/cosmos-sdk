@@ -5,11 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
@@ -29,14 +24,10 @@ import (
 )
 
 var (
-	cdc               = std.MakeCodec(simapp.ModuleBasics)
-	interfaceRegistry = types.NewInterfaceRegistry()
-	appCodec          *std.Codec
+	appCodec, cdc = simapp.MakeCodecs()
 )
 
 func init() {
-	module.RegisterInterfaceModules(simapp.ModuleBasics, interfaceRegistry)
-	appCodec = std.NewAppCodec(cdc, interfaceRegistry)
 	authclient.Codec = appCodec
 }
 

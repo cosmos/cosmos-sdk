@@ -27,7 +27,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
-	cdc, _ := simapp.MakeCodecs()
+	cdc := app.AppCodec()
 
 	// create new keeper so we can define custom scoping before init and seal
 	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey))

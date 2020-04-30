@@ -5,10 +5,6 @@ import (
 	"testing"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -58,7 +54,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		std.NewAppCodec(app.Codec(), codectypes.NewInterfaceRegistry()), app.GetKey(evidence.StoreKey),
+		app.AppCodec(), app.GetKey(evidence.StoreKey),
 		app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()

@@ -4,11 +4,6 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -34,10 +29,7 @@ const flagInvCheckPeriod = "inv-check-period"
 var invCheckPeriod uint
 
 func main() {
-	cdc := std.MakeCodec(simapp.ModuleBasics)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	module.RegisterInterfaceModules(simapp.ModuleBasics, interfaceRegistry)
-	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
+	appCodec, cdc := simapp.MakeCodecs()
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)

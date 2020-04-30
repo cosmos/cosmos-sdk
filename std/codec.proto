@@ -102,7 +102,6 @@ message Message {
     cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward     = 5;
     cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission = 6;
     cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool           = 7;
-    cosmos_sdk.x.evidence.v1.MsgSubmitEvidence                  msg_submit_evidence               = 8;
     MsgSubmitProposal                                           msg_submit_proposal               = 9;
     cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                          = 10;
     cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                       = 11;

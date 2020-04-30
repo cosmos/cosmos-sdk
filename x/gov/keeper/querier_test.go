@@ -10,9 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -148,7 +146,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := std.NewAppCodec(app.Codec(), codectypes.NewInterfaceRegistry())
+	appCodec := app.AppCodec()
 
 	querier := keeper.NewQuerier(app.GovKeeper)
 

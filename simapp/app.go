@@ -357,6 +357,9 @@ func NewSimApp(
 	return app
 }
 
+// MakeCodecs constructs the *std.Codec and *codec.Codec instances used by
+// simapp. It is useful for tests and clients who do not want to construct the
+// full simapp
 func MakeCodecs() (*std.Codec, *codec.Codec) {
 	cdc := std.MakeCodec(ModuleBasics)
 	interfaceRegistry := types.NewInterfaceRegistry()

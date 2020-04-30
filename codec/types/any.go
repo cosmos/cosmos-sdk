@@ -53,6 +53,10 @@ type Any struct {
 	cachedValue interface{}
 }
 
+// NewAnyWithValue constructs a new Any packed with the value provided or
+// returns an error if that value couldn't be packed. This also caches
+// the packed value so that it can be retrieved from GetCachedValue without
+// unmarshaling
 func NewAnyWithValue(value interface{}) (*Any, error) {
 	any := &Any{}
 	msg, ok := value.(proto.Message)
@@ -66,6 +70,9 @@ func NewAnyWithValue(value interface{}) (*Any, error) {
 	return any, nil
 }
 
+// Pack packs the value x in the Any or returns an error. This also caches
+// the packed value so that it can be retrieved from GetCachedValue without
+// unmarshaling
 func (any *Any) Pack(x proto.Message) error {
 	any.TypeUrl = "/" + proto.MessageName(x)
 	bz, err := proto.Marshal(x)
@@ -77,10 +84,13 @@ func (any *Any) Pack(x proto.Message) error {
 	return nil
 }
 
-func (any *Any) CachedValue() interface{} {
+// GetCachedValue returns the cached value from the Any if present
+func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
 }
 
+// MarshalAny is a convenience function for packing the provided value in an
+// Any and then proto marshaling it to bytes
 func MarshalAny(x interface{}) ([]byte, error) {
 	msg, ok := x.(proto.Message)
 	if !ok {
@@ -94,11 +104,18 @@ func MarshalAny(x interface{}) ([]byte, error) {
 	return any.Marshal()
 }
 
-func UnmarshalAny(ctx AnyUnpacker, iface interface{}, bz []byte) error {
+// UnmarshalAny is a convenience function for proto unmarshaling an Any from
+// bz and then unpacking it to the interface pointer passed in as iface using
+// the provided AnyUnpacker or returning an error
+//
+// Ex:
+//		var x MyInterface
+//		err := UnmarshalAny(unpacker &x, bz)
+func UnmarshalAny(unpacker AnyUnpacker, iface interface{}, bz []byte) error {
 	any := &Any{}
 	err := any.Unmarshal(bz)
 	if err != nil {
 		return err
 	}
-	return ctx.UnpackAny(any, iface)
+	return unpacker.UnpackAny(any, iface)
 }

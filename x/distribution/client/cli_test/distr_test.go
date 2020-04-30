@@ -1,13 +1,13 @@
 package cli_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrcli "github.com/cosmos/cosmos-sdk/x/distribution/client/cli_test"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -15,7 +15,7 @@ import (
 
 func TestCliWithdrawRewards(t *testing.T) {
 	t.Parallel()
-	f := helpers.InitFixtures(t)
+	f := cli.InitFixtures(t)
 
 	genesisState := f.GenesisState()
 	inflationMin := sdk.MustNewDecFromStr("1.0")
@@ -38,7 +38,7 @@ func TestCliWithdrawRewards(t *testing.T) {
 	proc := f.SDStart()
 	defer proc.Stop(false)
 
-	fooAddr := f.KeyAddress(helpers.KeyFoo)
+	fooAddr := f.KeyAddress(cli.KeyFoo)
 	rewards := distrcli.QueryRewards(f, fooAddr)
 	require.Equal(t, 1, len(rewards.Rewards))
 	require.NotNil(t, rewards.Total)

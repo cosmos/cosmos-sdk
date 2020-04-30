@@ -59,14 +59,17 @@ type Any struct {
 // unmarshaling
 func NewAnyWithValue(value interface{}) (*Any, error) {
 	any := &Any{}
+
 	msg, ok := value.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("can't pack %T", msg)
 	}
+
 	err := any.Pack(msg)
 	if err != nil {
 		return nil, err
 	}
+
 	return any, nil
 }
 
@@ -79,8 +82,10 @@ func (any *Any) Pack(x proto.Message) error {
 	if err != nil {
 		return err
 	}
+
 	any.Value = bz
 	any.cachedValue = x
+
 	return nil
 }
 
@@ -96,11 +101,13 @@ func MarshalAny(x interface{}) ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("can't proto marshal %T", x)
 	}
+
 	any := &Any{}
 	err := any.Pack(msg)
 	if err != nil {
 		return nil, err
 	}
+
 	return any.Marshal()
 }
 
@@ -113,9 +120,11 @@ func MarshalAny(x interface{}) ([]byte, error) {
 //		err := UnmarshalAny(unpacker &x, bz)
 func UnmarshalAny(unpacker AnyUnpacker, iface interface{}, bz []byte) error {
 	any := &Any{}
+
 	err := any.Unmarshal(bz)
 	if err != nil {
 		return err
 	}
+
 	return unpacker.UnpackAny(any, iface)
 }

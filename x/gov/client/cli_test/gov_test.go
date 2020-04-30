@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
+	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankCli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
@@ -13,7 +13,7 @@ import (
 
 func TestSimCLISubmitProposal(t *testing.T) {
 	t.Parallel()
-	f := helpers.InitFixtures(t)
+	f := cli.InitFixtures(t)
 
 	// start simd server
 	proc := f.SDStart()
@@ -23,7 +23,7 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	QueryGovParamVoting(f)
 	QueryGovParamTallying(f)
 
-	fooAddr := f.KeyAddress(helpers.KeyFoo)
+	fooAddr := f.KeyAddress(cli.KeyFoo)
 
 	startTokens := sdk.TokensFromConsensusPower(50)
 	require.Equal(t, startTokens, bankCli.QueryBalances(f, fooAddr).AmountOf(sdk.DefaultBondDenom))
@@ -34,20 +34,20 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	// Test submit generate only for submit proposal
 	proposalTokens := sdk.TokensFromConsensusPower(5)
 	success, stdout, stderr := TxGovSubmitProposal(f,
-		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "--generate-only", "-y")
+		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--generate-only", "-y")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg := helpers.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	success, _, _ = TxGovSubmitProposal(f, helpers.KeyFoo, "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "--dry-run")
+	success, _, _ = TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--dry-run")
 	require.True(t, success)
 
 	// Create the proposal
-	TxGovSubmitProposal(f, helpers.KeyFoo, "Text", "Test", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
+	TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure transaction events can be queried
@@ -55,7 +55,7 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure deposit was deducted
-	require.Equal(t, startTokens.Sub(proposalTokens), bankCli.QueryBalances(f, fooAddr).AmountOf(helpers.Denom))
+	require.Equal(t, startTokens.Sub(proposalTokens), bankCli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	// Ensure propsal is directly queryable
 	proposal1 := QueryGovProposal(f, 1)
@@ -68,37 +68,37 @@ func TestSimCLISubmitProposal(t *testing.T) {
 
 	// Query the deposits on the proposal
 	deposit := QueryGovDeposit(f, 1, fooAddr)
-	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(helpers.Denom))
+	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(cli.Denom))
 
 	// Test deposit generate only
 	depositTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr = TxGovDeposit(f, 1, fooAddr.String(), sdk.NewCoin(helpers.Denom, depositTokens), "--generate-only")
+	success, stdout, stderr = TxGovDeposit(f, 1, fooAddr.String(), sdk.NewCoin(cli.Denom, depositTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg = helpers.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Run the deposit transaction
-	TxGovDeposit(f, 1, helpers.KeyFoo, sdk.NewCoin(helpers.Denom, depositTokens), "-y")
+	TxGovDeposit(f, 1, cli.KeyFoo, sdk.NewCoin(cli.Denom, depositTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// test query deposit
 	deposits := QueryGovDeposits(f, 1)
 	require.Len(t, deposits, 1)
-	require.Equal(t, proposalTokens.Add(depositTokens), deposits[0].Amount.AmountOf(helpers.Denom))
+	require.Equal(t, proposalTokens.Add(depositTokens), deposits[0].Amount.AmountOf(cli.Denom))
 
 	// Ensure querying the deposit returns the proper amount
 	deposit = QueryGovDeposit(f, 1, fooAddr)
-	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(helpers.Denom))
+	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(cli.Denom))
 
 	// Ensure events are set on the transaction
 	searchResult = f.QueryTxs(1, 50, "message.action=deposit", fmt.Sprintf("message.sender=%s", fooAddr))
 	require.Len(t, searchResult.Txs, 1)
 
 	// Ensure account has expected amount of funds
-	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), bankCli.QueryBalances(f, fooAddr).AmountOf(helpers.Denom))
+	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), bankCli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	// Fetch the proposal and ensure it is now in the voting period
 	proposal1 = QueryGovProposal(f, 1)
@@ -109,13 +109,13 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	success, stdout, stderr = TxGovVote(f, 1, gov.OptionYes, fooAddr.String(), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg = helpers.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Vote on the proposal
-	TxGovVote(f, 1, gov.OptionYes, helpers.KeyFoo, "-y")
+	TxGovVote(f, 1, gov.OptionYes, cli.KeyFoo, "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Query the vote
@@ -142,7 +142,7 @@ func TestSimCLISubmitProposal(t *testing.T) {
 	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
 
 	// submit a second test proposal
-	TxGovSubmitProposal(f, helpers.KeyFoo, "Text", "Apples", "test", sdk.NewCoin(helpers.Denom, proposalTokens), "-y")
+	TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Apples", "test", sdk.NewCoin(cli.Denom, proposalTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Test limit on proposals query

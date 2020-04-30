@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 
@@ -182,7 +181,14 @@ func AddFlags(cmd string, flags []string) string {
 	return strings.TrimSpace(cmd)
 }
 
-func UnmarshalStdTx(t *testing.T, c *codec.Codec, s string) (stdTx auth.StdTx) {
+func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx auth.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
+}
+
+func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx auth.StdTx) []byte {
+	bz, err := c.MarshalBinaryBare(stdTx)
+	require.NoError(t, err)
+
+	return bz
 }

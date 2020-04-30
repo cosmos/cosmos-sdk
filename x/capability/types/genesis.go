@@ -35,22 +35,26 @@ func DefaultGenesis() GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	// NOTE: Index must be greater than 0
+	// NOTE: index must be greater than 0
 	if gs.Index == 0 {
 		return fmt.Errorf("capability index must be non-zero")
 	}
+
 	for _, genOwner := range gs.Owners {
 		if len(genOwner.Owners.Owners) == 0 {
 			return fmt.Errorf("empty owners in genesis")
 		}
-		// All exported existing indices must be between [1, gs.Index)
+
+		// all exported existing indices must be between [1, gs.Index)
 		if genOwner.Index == 0 || genOwner.Index >= gs.Index {
 			return fmt.Errorf("owners exist for index %d outside of valid range: %d-%d", genOwner.Index, 1, gs.Index-1)
 		}
+
 		for _, owner := range genOwner.Owners.Owners {
 			if strings.TrimSpace(owner.Module) == "" {
 				return fmt.Errorf("owner's module cannot be blank: %s", owner)
 			}
+
 			if strings.TrimSpace(owner.Name) == "" {
 				return fmt.Errorf("owner's name cannot be blank: %s", owner)
 			}

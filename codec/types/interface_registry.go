@@ -100,6 +100,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 		if !implType.AssignableTo(ityp) {
 			panic(fmt.Errorf("type %T doesn't actually implement interface %T", implType, ityp))
 		}
+
 		imap["/"+proto.MessageName(impl)] = implType
 	}
 

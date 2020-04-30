@@ -94,6 +94,11 @@ func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
 }
 
+// ClearCachedValue clears the cached value from the Any
+func (any *Any) ClearCachedValue() {
+	any.cachedValue = nil
+}
+
 // MarshalAny is a convenience function for packing the provided value in an
 // Any and then proto marshaling it to bytes
 func MarshalAny(x interface{}) ([]byte, error) {

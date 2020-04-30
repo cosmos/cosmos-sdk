@@ -9,7 +9,6 @@ import "x/auth/vesting/types/types.proto";
 import "x/bank/types/types.proto";
 import "x/crisis/types/types.proto";
 import "x/distribution/types/types.proto";
-import "x/evidence/types/types.proto";
 import "x/gov/types/types.proto";
 import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";

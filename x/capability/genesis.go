@@ -20,6 +20,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, genState GenesisState) {
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	index := k.GetLatestIndex(ctx)
 	owners := []GenesisOwners{}
+
 	for i := uint64(1); i < index; i++ {
 		capabilityOwners, ok := k.GetOwners(ctx, i)
 		if !ok || len(capabilityOwners.Owners) == 0 {
@@ -32,6 +33,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		}
 		owners = append(owners, genOwner)
 	}
+
 	return GenesisState{
 		Index:  index,
 		Owners: owners,

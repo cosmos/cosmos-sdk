@@ -5,6 +5,7 @@
 - 2020 March 06: Initial Draft
 - 2020 March 12: API Updates
 - 2020 April 13: Added details on interface `oneof` handling
+- 2020 April 30: Switch to `Any`
 
 ## Status
 
@@ -28,69 +29,67 @@ addressed in a future ADR, but it should build off of these proposals.
 
 ### Transactions
 
-Since the messages that an application is known and allowed to handle are specific
-to the application itself, so must the transactions be specific to the application
-itself. Similar to how we described in [ADR 019](./adr-019-protobuf-state-encoding.md),
-the concrete types will be defined at the application level via Protobuf `oneof`.
+Since are encoding interface values using `google.protobuf.any` (see [ADR 019](adr-019-protobuf-state-encoding.md)),
+`sdk.Msg`s are encoding with `Any` in transactions. One of the primary goals of
+using `Any` to encode interface values which vary from chain to chain is to have
+a core set of types which is reused by apps so that clients can safely be
+compatible with as many chains as possible. It is one of the goals of this
+specification to provide a flexible cross-chain transaction format that can
+serve a wide variety of use cases without breaking compatibility.
 
-The application will define a single canonical `Message` Protobuf message
-with a single `oneof` that implements the SDK's `Msg` interface.
+In order to facilitate signing, transactions are separated into a body (`TxBody`),
+which will be re-used by `SignDoc` below, and `Signature`s:
 
-Example:
+```proto
+// types/types.proto
+package cosmos_sdk.v1;
 
-```protobuf
-// app/codec/codec.proto
+message Tx {
+    TxBody body = 1;
+    repeated Signature signatures = 2;
+}
 
-message Message {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
-
-  oneof sum {
-    cosmos_sdk.x.bank.v1.MsgSend              msg_send             = 1;
-    cosmos_sdk.x.bank.v1.MsgMultiSend         msg_multi_send       = 2;
-    cosmos_sdk.x.crisis.v1.MsgVerifyInvariant msg_verify_invariant = 3;
-    // ...
-  }
+message TxBody {
+    repeated google.protobuf.Any messages = 1;
+    Fee fee = 2;
+    string memo = 3;
+    int64 timeout_height = 4;
+    repeated google.protobuf.Any extension_options = 5;
 }
 ```
 
-Because an application needs to define it's unique `Message` Protobuf message, it
-will by proxy have to define a `Transaction` Protobuf message that encapsulates this
-`Message` type. The `Transaction` message type must implement the SDK's `Tx` interface.
-
-Example:
-
-```protobuf
-// app/codec/codec.proto
-
-message Transaction {
-  cosmos_sdk.x.auth.v1.StdTxBase base = 1;
-  repeated Message               msgs = 2;
-}
-```
-
-Note, the `Transaction` type includes `StdTxBase` which will be defined by the SDK
-and includes all the core field members that are common across all transaction types.
-Developers do not have to include `StdTxBase` if they wish, so it is meant to be
-used as an auxiliary type.
+Because we are aiming for be a flexible, extensible cross-chain transaction
+format, new transaction processing options should be added to `TxBody` as those
+use cases are discovered. Because there is coordination overhead in this,
+however, `TxBody` includes an `extension_options` field which can be used by apps to
+add custom transaction processing options that have not yet been upstreamed
+into the canonical `TxBody` as fields. Apps may use this field as necessary
+using their own processing middleware, but _should_ attempt to upstream useful
+features to core SDK .proto files even if the SDK does not yet support these
+options.
 
 ### Signing
 
-Signing of a `Transaction` must be canonical across clients and binaries. In order
-to provide canonical representation of a `Transaction` to sign over, clients must
-obey the following rules:
-
-- Encode `SignDoc` (see below) via [Protobuf's canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json).
-  - Default must be stripped from the output!
-  - JSON keys adhere to their Proto-defined field names.
-- Generate canonical JSON to sign via the [JSON Canonical Form Spec](https://gibson042.github.io/canonicaljson-spec/).
-  - This spec should be trivial to interpret and implement in any language.
-
-```Protobuf
-// app/codec/codec.proto
+```proto
+// types/types.proto
 
 message SignDoc {
-  StdSignDocBase base = 1;
-  repeated Message msgs = 2;
+    TxBody body = 1;
+    string chain_id = 2;
+    uint64 account_number = 3;
+    uint64 account_sequence = 4;
+}
+
+message Signature {
+    PublicKey public_key = 1;
+    bytes signature = 2;
+    SignMode mode = 3;
+}
+
+enum SignMode {
+    SIGN_MODE_DEFAULT = 0;
+    SIGN_MODE_EXTENDED = 1;
+    SIGN_MODE_LEGACY_AMINO = 1024;
 }
 ```
 
@@ -135,66 +134,8 @@ Then, each module's client handler will at the minimum accept a `Marshaler` inst
 of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
 that account fields can be retrieved for signing.
 
-#### Interface `oneof` Handling
-
-If the module needs to work with any `sdk.Msg`s that use interface types, that
-`sdk.Msg` should be implemented as an interface with getters and setters on the
-module level and a no-arg constructor function should be passed around to
-required CLI and REST client commands.
-
-For example, in `x/gov`, `Content` is an interface type, so `MsgSubmitProposalI`
-should also be an interface and implement setter methods:
-
-```go
-// x/gov/types/msgs.go
-type MsgSubmitProposalI interface {
-	sdk.Msg
-
-	GetContent() Content
-    // SetContent returns an error if the underlying oneof does not support
-    // the concrete Content passed in
-	SetContent(Content) error
-
-	GetInitialDeposit() sdk.Coins
-	SetInitialDeposit(sdk.Coins)
-
-	GetProposer() sdk.AccAddress
-	SetProposer(sdk.AccAddress)
-}
-```
-
-Note that the implementation of `MsgSubmitProposalI` can be simplified by
-using an embedded base struct which implements most of that interface - in this
-case `MsgSubmitProposalBase`.
-
-A parameter `ctr func() MsgSubmitProposalI` would then be passed to CLI client
-methods in order to construct a concrete instance.
 
 ## Future Improvements
-
-Requiring application developers to have to redefine their `Message` Protobuf types
-can be extremely tedious and may increase the surface area of bugs by potentially
-missing one or more messages in the `oneof`.
-
-To circumvent this, an optional strategy can be taken that has each module define
-it's own `oneof` and then the application-level `Message` simply imports each module's
-`oneof`. However, this requires additional tooling and the use of reflection.
-
-Example:
-
-```protobuf
-// app/codec/codec.proto
-
-message Message {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
-
-  oneof sum {
-    bank.Msg = 1;
-    staking.Msg = 2;
-    // ...
-  }
-}
-```
 
 ## Consequences
 
@@ -206,11 +147,8 @@ message Message {
 
 ### Negative
 
-- Learning curve required to understand and implement Protobuf messages.
-- Less flexibility in cross-module type registration. We now need to define types
-at the application-level.
-- Client business logic and tx generation become a bit more complex as developers
-have to define more types and implement more interfaces.
+- `google.protobuf.Any` type URLs increase transaction size although the effect
+may be negligible or compression may be able to mitigate it.
 
 ### Neutral
 

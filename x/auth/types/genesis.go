@@ -31,6 +31,7 @@ func DefaultGenesisState() GenesisState {
 // genesis state.
 func GetGenesisStateFromAppState(cdc Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
+
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}
@@ -60,8 +61,8 @@ func SanitizeGenesisAccounts(genAccs exported.GenesisAccounts) exported.GenesisA
 // ValidateGenAccounts validates an array of GenesisAccounts and checks for duplicates
 func ValidateGenAccounts(accounts exported.GenesisAccounts) error {
 	addrMap := make(map[string]bool, len(accounts))
-	for _, acc := range accounts {
 
+	for _, acc := range accounts {
 		// check for duplicated accounts
 		addrStr := acc.GetAddress().String()
 		if _, ok := addrMap[addrStr]; ok {
@@ -87,7 +88,6 @@ type GenesisAccountIterator struct{}
 func (GenesisAccountIterator) IterateGenesisAccounts(
 	cdc Codec, appGenesis map[string]json.RawMessage, cb func(exported.Account) (stop bool),
 ) {
-
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
 		if cb(genAcc) {
 			break

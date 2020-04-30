@@ -19,12 +19,13 @@ func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
 			if err != nil {
 				panic(fmt.Sprintf("cannot unmarshal evidence: %s", err.Error()))
 			}
+
 			evidenceB, err := cdc.UnmarshalEvidence(kvB.Value)
 			if err != nil {
 				panic(fmt.Sprintf("cannot unmarshal evidence: %s", err.Error()))
 			}
-			return fmt.Sprintf("%v\n%v", evidenceA, evidenceB)
 
+			return fmt.Sprintf("%v\n%v", evidenceA, evidenceB)
 		default:
 			panic(fmt.Sprintf("invalid %s key prefix %X", types.ModuleName, kvA.Key[:1]))
 		}

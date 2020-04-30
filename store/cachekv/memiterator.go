@@ -19,15 +19,19 @@ type memIterator struct {
 
 func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
 	itemsInDomain := make([]*tmkv.Pair, 0)
+
 	var entered bool
+
 	for e := items.Front(); e != nil; e = e.Next() {
 		item := e.Value.(*tmkv.Pair)
 		if !dbm.IsKeyInDomain(item.Key, start, end) {
 			if entered {
 				break
 			}
+
 			continue
 		}
+
 		itemsInDomain = append(itemsInDomain, item)
 		entered = true
 	}
@@ -56,6 +60,7 @@ func (mi *memIterator) assertValid() {
 
 func (mi *memIterator) Next() {
 	mi.assertValid()
+
 	if mi.ascending {
 		mi.items = mi.items[1:]
 	} else {
@@ -65,17 +70,21 @@ func (mi *memIterator) Next() {
 
 func (mi *memIterator) Key() []byte {
 	mi.assertValid()
+
 	if mi.ascending {
 		return mi.items[0].Key
 	}
+
 	return mi.items[len(mi.items)-1].Key
 }
 
 func (mi *memIterator) Value() []byte {
 	mi.assertValid()
+
 	if mi.ascending {
 		return mi.items[0].Value
 	}
+
 	return mi.items[len(mi.items)-1].Value
 }
 

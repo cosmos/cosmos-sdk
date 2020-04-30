@@ -4,12 +4,14 @@ package cli_test
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCLISend(t *testing.T) {

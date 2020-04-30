@@ -34,6 +34,7 @@ func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return newDBKeybase(db), nil
 }
 
@@ -202,7 +203,9 @@ func NewInfoImporter(
 	if err != nil {
 		return keyringMigrator{}, err
 	}
+
 	kr := keyring.(keystore)
+
 	return keyringMigrator{kr}, nil
 }
 

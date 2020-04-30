@@ -64,6 +64,7 @@ func (v Validators) String() (out string) {
 	for _, val := range v {
 		out += val.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -72,6 +73,7 @@ func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
+
 	return validators
 }
 
@@ -81,6 +83,7 @@ func (v Validators) ToTmValidators() []*tmtypes.Validator {
 	for i, val := range v {
 		validators[i] = val.ToTmValidator()
 	}
+
 	return validators
 }
 
@@ -117,6 +120,7 @@ func MustUnmarshalValidator(cdc codec.Marshaler, value []byte) Validator {
 	if err != nil {
 		panic(err)
 	}
+
 	return validator
 }
 
@@ -166,15 +170,19 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 	if d2.Moniker == DoNotModifyDesc {
 		d2.Moniker = d.Moniker
 	}
+
 	if d2.Identity == DoNotModifyDesc {
 		d2.Identity = d.Identity
 	}
+
 	if d2.Website == DoNotModifyDesc {
 		d2.Website = d.Website
 	}
+
 	if d2.SecurityContact == DoNotModifyDesc {
 		d2.SecurityContact = d.SecurityContact
 	}
+
 	if d2.Details == DoNotModifyDesc {
 		d2.Details = d.Details
 	}
@@ -193,15 +201,19 @@ func (d Description) EnsureLength() (Description, error) {
 	if len(d.Moniker) > MaxMonikerLength {
 		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid moniker length; got: %d, max: %d", len(d.Moniker), MaxMonikerLength)
 	}
+
 	if len(d.Identity) > MaxIdentityLength {
 		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid identity length; got: %d, max: %d", len(d.Identity), MaxIdentityLength)
 	}
+
 	if len(d.Website) > MaxWebsiteLength {
 		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid website length; got: %d, max: %d", len(d.Website), MaxWebsiteLength)
 	}
+
 	if len(d.SecurityContact) > MaxSecurityContactLength {
 		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid security contact length; got: %d, max: %d", len(d.SecurityContact), MaxSecurityContactLength)
 	}
+
 	if len(d.Details) > MaxDetailsLength {
 		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid details length; got: %d, max: %d", len(d.Details), MaxDetailsLength)
 	}
@@ -240,6 +252,7 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, error
 	}
 
 	v.Commission = commission
+
 	return v, nil
 }
 
@@ -291,6 +304,7 @@ func (v Validator) BondedTokens() sdk.Int {
 	if v.IsBonded() {
 		return v.Tokens
 	}
+
 	return sdk.ZeroInt()
 }
 
@@ -300,6 +314,7 @@ func (v Validator) ConsensusPower() int64 {
 	if v.IsBonded() {
 		return v.PotentialConsensusPower()
 	}
+
 	return 0
 }
 
@@ -317,7 +332,6 @@ func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
 
 // AddTokensFromDel adds tokens to a validator
 func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
-
 	// calculate the shares to issue
 	var issuedShares sdk.Dec
 	if v.DelegatorShares.IsZero() {
@@ -343,10 +357,13 @@ func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
 	if tokens.IsNegative() {
 		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
 	}
+
 	if v.Tokens.LT(tokens) {
 		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
 	}
+
 	v.Tokens = v.Tokens.Sub(tokens)
+
 	return v
 }
 
@@ -373,6 +390,7 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 	}
 
 	v.DelegatorShares = remainingShares
+
 	return v, issuedTokens
 }
 

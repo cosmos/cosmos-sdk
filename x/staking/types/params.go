@@ -44,10 +44,7 @@ var (
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 // NewParams creates a new Params instance
-func NewParams(
-	unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string,
-) Params {
-
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
@@ -91,6 +88,7 @@ func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
 	if err != nil {
 		panic(err)
 	}
+
 	return params
 }
 
@@ -100,6 +98,7 @@ func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) 
 	if err != nil {
 		return
 	}
+
 	return
 }
 
@@ -108,12 +107,15 @@ func (p Params) Validate() error {
 	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
 		return err
 	}
+
 	if err := validateMaxValidators(p.MaxValidators); err != nil {
 		return err
 	}
+
 	if err := validateMaxEntries(p.MaxEntries); err != nil {
 		return err
 	}
+
 	if err := validateBondDenom(p.BondDenom); err != nil {
 		return err
 	}
@@ -178,6 +180,7 @@ func validateBondDenom(i interface{}) error {
 	if strings.TrimSpace(v) == "" {
 		return errors.New("bond denom cannot be blank")
 	}
+
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
 	}

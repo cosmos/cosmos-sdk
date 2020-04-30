@@ -42,7 +42,7 @@ func (ac *AminoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMars
 	ac.amino.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
-func (ac *AminoCodec) MarshalJSON(o interface{}) ([]byte, error) { // nolint: stdmethods
+func (ac *AminoCodec) MarshalJSON(o interface{}) ([]byte, error) {
 	return ac.amino.MarshalJSON(o)
 }
 
@@ -50,7 +50,7 @@ func (ac *AminoCodec) MustMarshalJSON(o interface{}) []byte {
 	return ac.amino.MustMarshalJSON(o)
 }
 
-func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error { // nolint: stdmethods
+func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	return ac.amino.UnmarshalJSON(bz, ptr)
 }
 

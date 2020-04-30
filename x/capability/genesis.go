@@ -22,7 +22,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	owners := []GenesisOwners{}
 	for i := uint64(1); i < index; i++ {
 		capabilityOwners, ok := k.GetOwners(ctx, i)
-		if !ok || len(capabilityOwners.Owners) != 0 {
+		if !ok || len(capabilityOwners.Owners) == 0 {
 			continue
 		}
 

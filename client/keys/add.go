@@ -80,6 +80,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	cmd.Flags().String(flagKeyAlgo, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+
 	return cmd
 }
 
@@ -94,6 +95,7 @@ func getKeybase(transient bool, buf io.Reader) (keyring.Keyring, error) {
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	kb, err := getKeybase(viper.GetBool(flags.FlagDryRun), inBuf)
+
 	if err != nil {
 		return err
 	}
@@ -131,6 +133,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 			if err2 != nil {
 				return err2
 			}
+
 			if !response {
 				return errors.New("aborted")
 			}
@@ -155,6 +158,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 				if err != nil {
 					return err
 				}
+
 				pks = append(pks, k.GetPubKey())
 			}
 
@@ -171,6 +175,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 			}
 
 			cmd.PrintErrf("Key %q saved to disk.\n", name)
+
 			return nil
 		}
 	}
@@ -180,10 +185,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		if err != nil {
 			return err
 		}
-		_, err = kb.SavePubKey(name, pk, algo.Name())
-		if err != nil {
+
+		if _, err := kb.SavePubKey(name, pk, algo.Name()); err != nil {
 			return err
 		}
+
 		return nil
 	}
 
@@ -202,6 +208,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	if viper.GetBool(flags.FlagUseLedger) {
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		info, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
+
 		if err != nil {
 			return err
 		}
@@ -210,8 +217,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	}
 
 	// Get bip39 mnemonic
-	var mnemonic string
-	var bip39Passphrase string
+	var mnemonic, bip39Passphrase string
 
 	if interactive || viper.GetBool(flagRecover) {
 		bip39Message := "Enter your bip39 mnemonic"
@@ -314,6 +320,7 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 		if err != nil {
 			return err
 		}
+
 		cmd.PrintErrln(string(jsonString))
 	default:
 		return fmt.Errorf("invalid output format %s", output)

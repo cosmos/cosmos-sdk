@@ -94,6 +94,12 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID, chanCap)
 }
 
+// IsBound checks if the transfer module is already bound to the desired port
+func (k Keeper) IsBound(ctx sdk.Context, portID string) bool {
+	_, ok := k.scopedKeeper.GetCapability(ctx, porttypes.PortPath(portID))
+	return ok
+}
+
 // BindPort defines a wrapper function for the ort Keeper's function in
 // order to expose it to module's InitGenesis function
 func (k Keeper) BindPort(ctx sdk.Context, portID string) error {

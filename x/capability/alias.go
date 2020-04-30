@@ -36,4 +36,6 @@ type (
 	ScopedKeeper     = keeper.ScopedKeeper
 	Capability       = types.Capability
 	CapabilityOwners = types.CapabilityOwners
+	GenesisState     = types.GenesisState
+	GenesisOwners    = types.GenesisOwners
 )

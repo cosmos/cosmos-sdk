@@ -21,14 +21,14 @@ func TestDecodeStore(t *testing.T) {
 
 	delPk1 := ed25519.GenPrivKey().PubKey()
 
-	ev := types.Equivocation{
+	ev := &types.Equivocation{
 		Height:           10,
 		Time:             time.Now().UTC(),
 		Power:            1000,
 		ConsensusAddress: sdk.ConsAddress(delPk1.Address()),
 	}
 
-	evBz, err := cdc.MarshalEvidence(&ev)
+	evBz, err := cdc.MarshalEvidence(ev)
 	require.NoError(t, err)
 
 	kvPairs := tmkv.Pairs{

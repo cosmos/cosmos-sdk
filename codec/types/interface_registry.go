@@ -57,6 +57,44 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	registry.interfaceImpls[ityp] = imap
 }
 
+func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
+	rv := reflect.ValueOf(iface)
+	if rv.Kind() != reflect.Ptr {
+		return fmt.Errorf("UnpackAny expects a pointer")
+	}
+	rt := rv.Elem().Type()
+	cachedValue := any.cachedValue
+	if cachedValue != nil {
+		if reflect.TypeOf(cachedValue).AssignableTo(rt) {
+			rv.Elem().Set(reflect.ValueOf(cachedValue))
+			return nil
+		}
+	}
+	imap, found := registry.interfaceImpls[rt]
+	if !found {
+		return fmt.Errorf("no registered implementations of interface type %T", iface)
+	}
+	typ, found := imap[any.TypeUrl]
+	if !found {
+		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
+	}
+	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto unmarshal %T", msg)
+	}
+	err := proto.Unmarshal(any.Value, msg)
+	if err != nil {
+		return err
+	}
+	err = UnpackInterfaces(msg, registry)
+	if err != nil {
+		return err
+	}
+	rv.Elem().Set(reflect.ValueOf(msg))
+	any.cachedValue = msg
+	return nil
+}
+
 func UnpackInterfaces(x interface{}, ctx AnyUnpacker) error {
 	if msg, ok := x.(UnpackInterfacesMsg); ok {
 		return msg.UnpackInterfaces(ctx)

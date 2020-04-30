@@ -142,6 +142,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
+
 		if err != nil || !ok {
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
 			return err
@@ -168,7 +169,6 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 func WriteGeneratedTxResponse(
 	ctx context.CLIContext, w http.ResponseWriter, txg Generator, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
-
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
 		return
@@ -231,6 +231,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 	}
 
 	fees := txf.fees
+
 	if !txf.gasPrices.IsZero() {
 		if !fees.IsZero() {
 			return nil, errors.New("cannot provide both fees and gas prices")
@@ -241,6 +242,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (ClientTx, error) {
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
 		fees = make(sdk.Coins, len(txf.gasPrices))
+
 		for i, gp := range txf.gasPrices {
 			fee := gp.Amount.Mul(glDec)
 			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
@@ -294,7 +296,6 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
 ) (sdk.SimulationResponse, uint64, error) {
-
 	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
@@ -334,6 +335,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 		if initNum == 0 {
 			txf = txf.WithAccountNumber(num)
 		}
+
 		if initSeq == 0 {
 			txf = txf.WithSequence(seq)
 		}

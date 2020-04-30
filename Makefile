@@ -253,7 +253,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-gen proto-lint proto-check-breaking
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking
 
 proto-gen:
 	@./scripts/protocgen.sh

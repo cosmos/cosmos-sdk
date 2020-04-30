@@ -29,6 +29,10 @@ jobs:
         run: |
           make build
         if: "env.GIT_DIFF != ''"
+      - name: build-sim
+        run: |
+          make build-sim
+        if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
           go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock cli_test'

@@ -46,7 +46,7 @@ func (hc *HybridCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMar
 	hc.proto.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
-func (hc *HybridCodec) MarshalJSON(o interface{}) ([]byte, error) { // nolint: stdmethods
+func (hc *HybridCodec) MarshalJSON(o interface{}) ([]byte, error) {
 	return hc.amino.MarshalJSON(o)
 }
 
@@ -54,7 +54,7 @@ func (hc *HybridCodec) MustMarshalJSON(o interface{}) []byte {
 	return hc.amino.MustMarshalJSON(o)
 }
 
-func (hc *HybridCodec) UnmarshalJSON(bz []byte, ptr interface{}) error { // nolint: stdmethods
+func (hc *HybridCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	return hc.amino.UnmarshalJSON(bz, ptr)
 }
 

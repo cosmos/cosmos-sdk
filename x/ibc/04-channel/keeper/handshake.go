@@ -18,13 +18,16 @@ import (
 // The counterparty hops are stored in the inverse order as the channel's.
 func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, bool) {
 	counterPartyHops := make([]string, len(ch.ConnectionHops))
+
 	for i, hop := range ch.ConnectionHops {
-		connection, found := k.connectionKeeper.GetConnection(ctx, hop)
+		conn, found := k.connectionKeeper.GetConnection(ctx, hop)
 		if !found {
 			return []string{}, false
 		}
-		counterPartyHops[len(counterPartyHops)-1-i] = connection.GetCounterparty().GetConnectionID()
+
+		counterPartyHops[len(counterPartyHops)-1-i] = conn.GetCounterparty().GetConnectionID()
 	}
+
 	return counterPartyHops, true
 }
 
@@ -41,7 +44,6 @@ func (k Keeper) ChanOpenInit(
 	version string,
 ) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
-
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return nil, sdkerrors.Wrap(types.ErrChannelExists, channelID)
@@ -70,9 +72,11 @@ func (k Keeper) ChanOpenInit(
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
+
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
+	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID)
 	return capKey, nil
 }
 
@@ -92,7 +96,6 @@ func (k Keeper) ChanOpenTry(
 	proofHeight uint64,
 ) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
-
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
 	if found && !(previousChannel.State == exported.INIT &&
 		previousChannel.Ordering == order &&
@@ -100,7 +103,7 @@ func (k Keeper) ChanOpenTry(
 		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
 		previousChannel.ConnectionHops[0] == connectionHops[0] &&
 		previousChannel.Version == version) {
-		sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
+		return nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
@@ -150,9 +153,11 @@ func (k Keeper) ChanOpenTry(
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
+
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
+	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, channelID)
 	return capKey, nil
 }
 
@@ -220,6 +225,7 @@ func (k Keeper) ChanOpenAck(
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
+	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: INIT -> OPEN", portID, channelID)
 	return nil
 }
 
@@ -284,6 +290,7 @@ func (k Keeper) ChanOpenConfirm(
 	channel.State = exported.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
 
+	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID)
 	return nil
 }
 
@@ -325,9 +332,11 @@ func (k Keeper) ChanCloseInit(
 		)
 	}
 
+	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State)
+
 	channel.State = exported.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
-	k.Logger(ctx).Info("channel close initialized: portID (%s), channelID (%s)", portID, channelID)
+
 	return nil
 }
 
@@ -385,6 +394,8 @@ func (k Keeper) ChanCloseConfirm(
 	); err != nil {
 		return err
 	}
+
+	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State)
 
 	channel.State = exported.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)

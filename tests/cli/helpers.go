@@ -1,4 +1,4 @@
-package helpers
+package cli
 
 import (
 	"encoding/json"
@@ -19,21 +19,21 @@ import (
 )
 
 var (
-	totalCoins = sdk.NewCoins(
+	TotalCoins = sdk.NewCoins(
 		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(2000000)),
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(2000000)),
 		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(2000)),
 		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(300).Add(sdk.NewInt(12))), // add coins from inflation
 	)
 
-	startCoins = sdk.NewCoins(
+	StartCoins = sdk.NewCoins(
 		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(1000)),
 		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(150)),
 	)
 
-	vestingCoins = sdk.NewCoins(
+	VestingCoins = sdk.NewCoins(
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(500000)),
 	)
 )

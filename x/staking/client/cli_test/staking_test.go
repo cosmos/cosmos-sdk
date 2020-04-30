@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
+	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli_test"
@@ -17,44 +17,44 @@ import (
 
 func TestCLICreateValidator(t *testing.T) {
 	t.Parallel()
-	f := helpers.InitFixtures(t)
+	f := cli.InitFixtures(t)
 
 	// start simd server
 	proc := f.SDStart()
 	defer proc.Stop(false)
 
-	barAddr := f.KeyAddress(helpers.KeyBar)
+	barAddr := f.KeyAddress(cli.KeyBar)
 	barVal := sdk.ValAddress(barAddr)
 
 	consPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
 
 	sendTokens := sdk.TokensFromConsensusPower(10)
-	bankcli.TxSend(f, helpers.KeyFoo, barAddr, sdk.NewCoin(helpers.Denom, sendTokens), "-y")
+	bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	require.Equal(t, sendTokens, bankcli.QueryBalances(f, barAddr).AmountOf(helpers.Denom))
+	require.Equal(t, sendTokens, bankcli.QueryBalances(f, barAddr).AmountOf(cli.Denom))
 
 	//Generate a create validator transaction and ensure correctness
-	success, stdout, stderr := stakingcli.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewInt64Coin(helpers.Denom, 2), "--generate-only")
+	success, stdout, stderr := stakingcli.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewInt64Coin(cli.Denom, 2), "--generate-only")
 	require.True(f.T, success)
 	require.Empty(f.T, stderr)
 
-	msg := helpers.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
 	newValTokens := sdk.TokensFromConsensusPower(2)
-	success, _, _ = stakingcli.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewCoin(helpers.Denom, newValTokens), "--dry-run")
+	success, _, _ = stakingcli.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewCoin(cli.Denom, newValTokens), "--dry-run")
 	require.True(t, success)
 
 	// Create the validator
-	stakingcli.TxStakingCreateValidator(f, helpers.KeyBar, consPubKey, sdk.NewCoin(helpers.Denom, newValTokens), "-y")
+	stakingcli.TxStakingCreateValidator(f, cli.KeyBar, consPubKey, sdk.NewCoin(cli.Denom, newValTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure funds were deducted properly
-	require.Equal(t, sendTokens.Sub(newValTokens), bankcli.QueryBalances(f, barAddr).AmountOf(helpers.Denom))
+	require.Equal(t, sendTokens.Sub(newValTokens), bankcli.QueryBalances(f, barAddr).AmountOf(cli.Denom))
 
 	// Ensure that validator state is as expected
 	validator := stakingcli.QueryStakingValidator(f, barVal)
@@ -68,7 +68,7 @@ func TestCLICreateValidator(t *testing.T) {
 
 	// unbond a single share
 	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(1))
-	success = stakingcli.TxStakingUnbond(f, helpers.KeyBar, unbondAmt.String(), barVal, "-y")
+	success = stakingcli.TxStakingUnbond(f, cli.KeyBar, unbondAmt.String(), barVal, "-y")
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 

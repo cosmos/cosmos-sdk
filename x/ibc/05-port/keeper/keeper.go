@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
@@ -20,6 +22,11 @@ func NewKeeper(sck capability.ScopedKeeper) Keeper {
 	return Keeper{
 		scopedKeeper: sck,
 	}
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
 }
 
 // isBounded checks a given port ID is already bounded.
@@ -46,6 +53,7 @@ func (k *Keeper) BindPort(ctx sdk.Context, portID string) *capability.Capability
 		panic(err.Error())
 	}
 
+	k.Logger(ctx).Info("port %s binded", portID)
 	return key
 }
 

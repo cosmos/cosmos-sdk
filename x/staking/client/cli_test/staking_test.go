@@ -3,14 +3,16 @@
 package cli_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli_test"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"testing"
 )
 
 func TestCLICreateValidator(t *testing.T) {

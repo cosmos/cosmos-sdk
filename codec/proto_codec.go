@@ -89,7 +89,7 @@ func (pc *ProtoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMars
 	}
 }
 
-func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) { // nolint: stdmethods
+func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) {
 	m, ok := o.(ProtoMarshaler)
 	if !ok {
 		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
@@ -107,7 +107,7 @@ func (pc *ProtoCodec) MustMarshalJSON(o interface{}) []byte {
 	return bz
 }
 
-func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error { // nolint: stdmethods
+func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	m, ok := ptr.(ProtoMarshaler)
 	if !ok {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)

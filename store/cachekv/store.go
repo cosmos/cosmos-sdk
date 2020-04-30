@@ -100,6 +100,7 @@ func (store *Store) Write() {
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
 	keys := make([]string, 0, len(store.cache))
+
 	for key, dbValue := range store.cache {
 		if dbValue.dirty {
 			keys = append(keys, key)
@@ -112,6 +113,7 @@ func (store *Store) Write() {
 	// at least happen atomically.
 	for _, key := range keys {
 		cacheValue := store.cache[key]
+
 		switch {
 		case cacheValue.deleted:
 			store.parent.Delete([]byte(key))
@@ -178,8 +180,10 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	for key := range store.unsortedCache {
 		cacheValue := store.cache[key]
+
 		if dbm.IsKeyInDomain([]byte(key), start, end) {
 			unsorted = append(unsorted, &tmkv.Pair{Key: []byte(key), Value: cacheValue.value})
+
 			delete(store.unsortedCache, key)
 		}
 	}
@@ -192,9 +196,11 @@ func (store *Store) dirtyItems(start, end []byte) {
 		uitem := unsorted[0]
 		sitem := e.Value.(*tmkv.Pair)
 		comp := bytes.Compare(uitem.Key, sitem.Key)
+
 		switch comp {
 		case -1:
 			unsorted = unsorted[1:]
+
 			store.sortedCache.InsertBefore(uitem, e)
 		case 1:
 			e = e.Next()
@@ -208,7 +214,6 @@ func (store *Store) dirtyItems(start, end []byte) {
 	for _, kvp := range unsorted {
 		store.sortedCache.PushBack(kvp)
 	}
-
 }
 
 //----------------------------------------

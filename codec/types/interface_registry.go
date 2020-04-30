@@ -7,19 +7,59 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+// AnyUnpacker is an interface which allows safely unpacking types packed
+// with Any against a whitelist of registered types
 type AnyUnpacker interface {
+	// UnpackAny unpacks the value in any to the interface pointer passed in as
+	// iface. Note that the type in any must have been registered with
+	// RegisterImplementations as a concrete type for that interface
+	// Ex:
+	//    var msg sdk.Msg
+	//    err := ctx.UnpackAny(any, &msg)
+	//    ...
 	UnpackAny(any *Any, iface interface{}) error
 }
 
+// InterfaceRegistry provides a mechanism for registering interfaces and
+// implementations that can be safely unpacked from Any
 type InterfaceRegistry interface {
 	AnyUnpacker
 
+	// RegisterInterface associates protoName as the public name for the
+	// interface passed in as iface
+	// Ex:
+	//   registry.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
 	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
+
+	// RegisterImplementations registers impls as a concrete implementations of
+	// the interface iface
+	// Ex:
+	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
 }
 
-type UnpackInterfacesMsg interface {
-	UnpackInterfaces(ctx AnyUnpacker) error
+// UnpackInterfacesMessage is meant to extend protobuf types (which implement
+// proto.Message) to support a post-deserialization phase which unpacks
+// types packed within Any's using the whitelist provided by AnyUnpacker
+type UnpackInterfacesMessage interface {
+	// UnpackInterfaces is implemented in order to unpack values packed within
+	// Any's using the AnyUnpacker. It should generally be implemented as
+	// follows:
+	//   func (s *MyStruct) UnpackInterfaces(unpacker AnyUnpacker) error {
+	//		var x AnInterface
+	//		// where X is an Any field on MyStruct
+	//		err := unpacker.UnpackAny(s.X, &x)
+	//		if err != nil {
+	//			return nil
+	//		}
+	//		// where Y is a field on MyStruct that implements UnpackInterfacesMessage itself
+	//		err = s.Y.UnpackInterfaces(unpacker)
+	//		if err != nil {
+	//			return nil
+	//		}
+	//		return nil
+	//	 }
+	UnpackInterfaces(unpacker AnyUnpacker) error
 }
 
 type interfaceRegistry struct {
@@ -29,6 +69,7 @@ type interfaceRegistry struct {
 
 type interfaceMap = map[string]reflect.Type
 
+// NewInterfaceRegistry creates a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
@@ -95,9 +136,11 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	return nil
 }
 
-func UnpackInterfaces(x interface{}, ctx AnyUnpacker) error {
-	if msg, ok := x.(UnpackInterfacesMsg); ok {
-		return msg.UnpackInterfaces(ctx)
+// UnpackInterfaces is a convenience function that calls UnpackInterfaces
+// on x if x implements UnpackInterfacesMessage
+func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
+	if msg, ok := x.(UnpackInterfacesMessage); ok {
+		return msg.UnpackInterfaces(unpacker)
 	}
 	return nil
 }

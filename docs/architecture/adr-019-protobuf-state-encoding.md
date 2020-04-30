@@ -262,7 +262,7 @@ To implement the `UnpackInterfaces` phase of deserialization which unpacks
 interfaces wrapped in `Any` before they're needed, we create an interface
 that `sdk.Msg`s and other types can implement:
 ```go
-type UnpackInterfacesMsg interface {
+type UnpackInterfacesMessage interface {
   UnpackInterfaces(InterfaceUnpacker) error
 }
 ```

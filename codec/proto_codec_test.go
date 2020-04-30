@@ -3,11 +3,24 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
 )
+
+func createTestInterfaceRegistry() types.InterfaceRegistry {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Dog{},
+		&testdata.Cat{},
+	)
+
+	return interfaceRegistry
+}
 
 func TestProtoCodec(t *testing.T) {
 	testCases := []struct {
@@ -20,7 +33,7 @@ func TestProtoCodec(t *testing.T) {
 	}{
 		{
 			"valid encoding and decoding",
-			codec.NewProtoCodec(createTestIntefaceRegistry()),
+			codec.NewProtoCodec(createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Dog{},
 			false,
@@ -28,7 +41,7 @@ func TestProtoCodec(t *testing.T) {
 		},
 		{
 			"invalid decode type",
-			codec.NewProtoCodec(createTestIntefaceRegistry()),
+			codec.NewProtoCodec(createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Cat{},
 			false,

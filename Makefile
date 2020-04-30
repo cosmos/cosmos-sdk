@@ -258,6 +258,8 @@ proto-all: proto-gen proto-lint proto-check-breaking
 proto-gen:
 	@./scripts/protocgen.sh
 
+# This generates the SDK's custom wrapper for google.protobuf.Any. Should
+# generally only be run manually when needed
 proto-gen-any:
 	@./scripts/protocgen-any.sh
 

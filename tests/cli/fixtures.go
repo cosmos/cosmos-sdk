@@ -1,4 +1,4 @@
-package helpers
+package cli
 
 import (
 	"io/ioutil"
@@ -6,16 +6,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-var cdc = std.MakeCodec(simapp.ModuleBasics)
+var (
+	cdc = std.MakeCodec(simapp.ModuleBasics)
+)
 
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
@@ -45,7 +48,9 @@ func NewFixtures(t *testing.T) *Fixtures {
 	require.NoError(t, err)
 
 	buildDir := os.Getenv("BUILDDIR")
-	require.NotNil(t, buildDir)
+	if buildDir == "" {
+		t.Skip("builddir is empty, skipping")
+	}
 
 	return &Fixtures{
 		T:            t,

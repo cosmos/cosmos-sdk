@@ -33,6 +33,7 @@ linters:
     - unconvert
     - unused
     - misspell
+    - wsl
 
 issues:
   exclude-rules:

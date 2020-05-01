@@ -34,10 +34,10 @@ type (
 	}
 
 	JSONMarshaler interface {
-		MarshalJSON(o interface{}) ([]byte, error) // nolint: stdmethods
+		MarshalJSON(o interface{}) ([]byte, error)
 		MustMarshalJSON(o interface{}) []byte
 
-		UnmarshalJSON(bz []byte, ptr interface{}) error // nolint: stdmethods
+		UnmarshalJSON(bz []byte, ptr interface{}) error
 		MustUnmarshalJSON(bz []byte, ptr interface{})
 	}
 

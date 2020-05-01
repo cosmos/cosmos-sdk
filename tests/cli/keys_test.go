@@ -1,7 +1,45 @@
+// +build cli_test
+
+package cli_test
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/cosmos/cosmos-sdk/tests/cli"
+	"github.com/stretchr/testify/require"
+)
+
+func TestCLIKeysAddMultisig(t *testing.T) {
+	t.Parallel()
+	f := cli.InitFixtures(t)
+
+	// key names order does not matter
+	f.KeysAdd("msig1", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", cli.KeyBar, cli.KeyBaz))
+	ke1Address1 := f.KeysShow("msig1").Address
+	f.KeysDelete("msig1")
+
+	f.KeysAdd("msig2", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", cli.KeyBaz, cli.KeyBar))
+	require.Equal(t, ke1Address1, f.KeysShow("msig2").Address)
+	f.KeysDelete("msig2")
+
+	f.KeysAdd("msig3", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", cli.KeyBar, cli.KeyBaz),
+		"--nosort")
+	f.KeysAdd("msig4", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", cli.KeyBaz, cli.KeyBar),
+		"--nosort")
+	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
+
+	// Cleanup testing directories
+	f.Cleanup()
+}
 
 func TestCLIKeysAddRecover(t *testing.T) {
 	t.Parallel()
-	f := helpers.InitFixtures(t)
+	f := cli.InitFixtures(t)
 
 	exitSuccess, _, _ := f.KeysAddRecover("empty-mnemonic", "")
 	require.False(t, exitSuccess)
@@ -16,7 +54,7 @@ func TestCLIKeysAddRecover(t *testing.T) {
 
 func TestCLIKeysAddRecoverHDPath(t *testing.T) {
 	t.Parallel()
-	f := helpers.InitFixtures(t)
+	f := cli.InitFixtures(t)
 
 	f.KeysAddRecoverHDPath("test-recoverHD1", "dentist task convince chimney quality leave banana trade firm crawl eternal easily", 0, 0)
 	require.Equal(t, "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4", f.KeyAddress("test-recoverHD1").String())

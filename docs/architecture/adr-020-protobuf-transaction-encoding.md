@@ -66,6 +66,7 @@ message SignerInfo {
 enum SignMode {
     SIGN_MODE_DEFAULT = 0;
     SIGN_MODE_LEGACY_AMINO = -1;
+    SIGN_MODE_EXTENDED = 1;
 }
 ```
 
@@ -154,6 +155,20 @@ Note that the standard `Tx` type can be used to decode `TxRaw`.
 
 Signature verifiers should verify signatures by decoding `TxRaw` and then
 encoding `SignDocRaw` with the raw body bytes.
+
+#### `SIGN_MODE_LEGACY_AMINO`
+
+In order to support legacy wallets and exchanges, we will temporarily support
+Amino JSON for signing transactions. Once wallets and exchanges have had a
+chance to upgrade to protobuf based signing, this option will be disabled. In
+the meantime, it is foreseen that disabling the current signing API would cause
+too much breakage to be feasible.
+
+Legacy integrations will be able to sign a transaction using the current Amino
+JSON format and have it encoded to protobuf using the REST `/tx/encode`
+endpoint before broadcasting.
+
+#### `SIGN_MODE_EXTENDED`
 
 ### CLI & REST
 

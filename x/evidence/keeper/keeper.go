@@ -32,20 +32,7 @@ func NewKeeper(
 ) *Keeper {
 
 	return &Keeper{
-		cdc:            &types.DefaultEvidenceCodec{Marshaler: m},
-		storeKey:       storeKey,
-		stakingKeeper:  stakingKeeper,
-		slashingKeeper: slashingKeeper,
-	}
-}
-
-func NewKeeperCustom(
-	cdc types.Codec, storeKey sdk.StoreKey, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper,
-) *Keeper {
-
-	return &Keeper{
-		cdc:            cdc,
+		cdc:            types.NewAnyCodec(m),
 		storeKey:       storeKey,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,

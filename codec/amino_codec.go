@@ -1,16 +1,19 @@
 package codec
 
-import "github.com/cosmos/cosmos-sdk/codec/types"
+import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
+)
 
 // AminoCodec defines a codec that utilizes Amino for both binary and JSON
 // encoding.
 type AminoCodec struct {
-	amino       *Codec
-	anyUnpacker types.AnyUnpacker
+	amino *Codec
 }
 
-func NewAminoCodec(amino *Codec, unpacker types.AnyUnpacker) Marshaler {
-	return &AminoCodec{amino, unpacker}
+func NewAminoCodec(amino *Codec) Marshaler {
+	return &AminoCodec{amino}
 }
 
 func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
@@ -61,6 +64,6 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 	ac.amino.MustUnmarshalJSON(bz, ptr)
 }
 
-func (ac *AminoCodec) UnpackAny(any *types.Any, iface interface{}) error {
-	return ac.anyUnpacker.UnpackAny(any, iface)
+func (*AminoCodec) UnpackAny(*types.Any, interface{}) error {
+	return fmt.Errorf("AminoCodec can't handle unpack protobuf Any's")
 }

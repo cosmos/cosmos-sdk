@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -27,12 +25,12 @@ type Keeper struct {
 }
 
 func NewKeeper(
-	m codec.Marshaler, storeKey sdk.StoreKey, stakingKeeper types.StakingKeeper,
+	cdc types.Codec, storeKey sdk.StoreKey, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 
 	return &Keeper{
-		cdc:            types.NewAnyCodec(m),
+		cdc:            cdc,
 		storeKey:       storeKey,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,

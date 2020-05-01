@@ -102,8 +102,7 @@ func (c AnyCodec) MarshalEvidenceJSON(evidence exported.Evidence) ([]byte, error
 // UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
 func (c AnyCodec) UnmarshalEvidenceJSON(bz []byte) (exported.Evidence, error) {
 	var any types.Any
-	err := c.UnmarshalJSON(bz, &any)
-	if err != nil {
+	if err := c.UnmarshalJSON(bz, &any); err != nil {
 		return nil, err
 	}
 	var evi exported.Evidence

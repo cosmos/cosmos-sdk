@@ -9,5 +9,6 @@ const (
 )
 
 var (
-	ErrInvalidHeader = sdkerrors.Register(SubModuleName, 1, "invalid header")
+	ErrInvalidHeader   = sdkerrors.Register(SubModuleName, 1, "invalid header")
+	ErrInvalidSequence = sdkerrors.Register(SubModuleName, 2, "invalid sequence")
 )

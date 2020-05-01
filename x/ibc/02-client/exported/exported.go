@@ -119,6 +119,13 @@ type Header interface {
 	GetHeight() uint64
 }
 
+// message types for the IBC client
+const (
+	TypeMsgCreateClient             string = "create_client"
+	TypeMsgUpdateClient             string = "update_client"
+	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
+)
+
 // MsgCreateClient defines the msg interface that the
 // CreateClient Handler expects
 type MsgCreateClient interface {

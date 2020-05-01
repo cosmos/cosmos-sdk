@@ -18,6 +18,20 @@ type ClientState struct {
 	ConsensusState ConsensusState `json:"consensus_state" yaml:"consensus_state"`
 }
 
+// InitializeFromMsg creates a solo machine client from a MsgCreateClient
+func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
+	return Initialize(msg.GetClientID(), msg.GetConsensusState())
+}
+
+// Initialize creates an unfrozen client with the initial consensus state
+func Initialize(id string, consensusState ConsensusState) (ClientState, error) {
+	return ClientState{
+		ClientID:       id,
+		Frozen:         false,
+		ConsensusState: consensusState,
+	}, nil
+}
+
 // GetID returns the solo machine client state identifier.
 func (cs ClientState) GetID() string {
 	return cs.ID

@@ -98,7 +98,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
 
-func (a AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	RegisterInterfaces(registry)
 }
 

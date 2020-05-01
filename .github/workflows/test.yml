@@ -29,13 +29,9 @@ jobs:
         run: |
           make build
         if: "env.GIT_DIFF != ''"
-      - name: build-sim
-        run: |
-          make build-sim
-        if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          BUILDDIR=`pwd`/build go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock cli_test'
+          go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -57,6 +53,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: build-sim
+        run: |
+          make build-sim
+        if: "env.GIT_DIFF != ''"
       - name: cli-test
         run: |
           make cli-test

@@ -106,8 +106,7 @@ func (c AnyCodec) UnmarshalEvidenceJSON(bz []byte) (exported.Evidence, error) {
 		return nil, err
 	}
 	var evi exported.Evidence
-	err = c.UnpackAny(&any, &evi)
-	if err != nil {
+	if err := c.UnpackAny(&any, &evi); err != nil {
 		return nil, err
 	}
 	return evi, nil

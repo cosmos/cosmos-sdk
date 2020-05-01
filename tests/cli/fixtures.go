@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"flag"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,7 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-var cdc = std.MakeCodec(simapp.ModuleBasics)
+var (
+	cdc      = std.MakeCodec(simapp.ModuleBasics)
+	buildDir = flag.String("builddir", "", "Build directory")
+)
 
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
@@ -45,15 +49,16 @@ func NewFixtures(t *testing.T) *Fixtures {
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
-	buildDir := os.Getenv("BUILDDIR")
-	require.NotNil(t, buildDir)
+	if *buildDir == "" {
+		t.Skip("builddir is empty, skipping")
+	}
 
 	return &Fixtures{
 		T:            t,
-		BuildDir:     buildDir,
+		BuildDir:     *buildDir,
 		RootDir:      tmpDir,
-		SimdBinary:   filepath.Join(buildDir, "simd"),
-		SimcliBinary: filepath.Join(buildDir, "simcli"),
+		SimdBinary:   filepath.Join(*buildDir, "simd"),
+		SimcliBinary: filepath.Join(*buildDir, "simcli"),
 		SimdHome:     filepath.Join(tmpDir, ".simd"),
 		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
 		RPCAddr:      servAddr,

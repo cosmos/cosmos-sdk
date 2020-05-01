@@ -1,6 +1,10 @@
 package types
 
 import (
+	"fmt"
+
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,7 +24,11 @@ var (
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
 func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (MsgSubmitEvidence, error) {
-	any, err := types.NewAnyWithValue(evi)
+	msg, ok := evi.(proto.Message)
+	if !ok {
+		fmt.Errorf("cannot proto marshal %T", evi)
+	}
+	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return MsgSubmitEvidence{Submitter: s}, err
 	}

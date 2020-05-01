@@ -1,6 +1,10 @@
 package types
 
 import (
+	"fmt"
+
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -84,7 +88,11 @@ func (c AnyCodec) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
 // MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
 // interface.
 func (c AnyCodec) MarshalEvidenceJSON(evidence exported.Evidence) ([]byte, error) {
-	any, err := types.NewAnyWithValue(evidence)
+	msg, ok := evidence.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", evidence)
+	}
+	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}

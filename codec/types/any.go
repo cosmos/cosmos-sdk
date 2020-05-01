@@ -57,15 +57,10 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(value interface{}) (*Any, error) {
+func NewAnyWithValue(value proto.Message) (*Any, error) {
 	any := &Any{}
 
-	msg, ok := value.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("can't pack %T", msg)
-	}
-
-	err := any.Pack(msg)
+	err := any.Pack(value)
 	if err != nil {
 		return nil, err
 	}

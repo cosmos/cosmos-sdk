@@ -117,7 +117,7 @@ func MarshalAny(x interface{}) ([]byte, error) {
 //
 // Ex:
 //		var x MyInterface
-//		err := UnmarshalAny(unpacker &x, bz)
+//		err := UnmarshalAny(unpacker, &x, bz)
 func UnmarshalAny(unpacker AnyUnpacker, iface interface{}, bz []byte) error {
 	any := &Any{}
 

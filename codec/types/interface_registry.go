@@ -15,7 +15,7 @@ type AnyUnpacker interface {
 	// underlying whitelist registry as a concrete type for that interface
 	// Ex:
 	//    var msg sdk.Msg
-	//    err := ctx.UnpackAny(any, &msg)
+	//    err := cdc.UnpackAny(any, &msg)
 	//    ...
 	UnpackAny(any *Any, iface interface{}) error
 }

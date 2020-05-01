@@ -2,12 +2,14 @@ package cli
 
 import (
 	"fmt"
+
+	"github.com/stretchr/testify/require"
+
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/stretchr/testify/require"
 )
 
 func TxWithdrawRewards(f *cli.Fixtures, valAddr sdk.ValAddress, from string, flags ...string) bool {

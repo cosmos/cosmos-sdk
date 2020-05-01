@@ -46,15 +46,26 @@ package cosmos_sdk.v1;
 
 message Tx {
     TxBody body = 1;
-    repeated Signature signatures = 2;
+    repeated bytes signatures = 2;
 }
 
 message TxBody {
     repeated google.protobuf.Any messages = 1;
-    Fee fee = 2;
-    string memo = 3;
-    int64 timeout_height = 4;
-    repeated google.protobuf.Any extension_options = 5;
+    repeated SignerInfo signer_info = 2;
+    Fee fee = 3;
+    string memo = 4;
+    int64 timeout_height = 5;
+    repeated google.protobuf.Any extension_options = 6;
+}
+
+message SignerInfo {
+    PublicKey pub_key = 1;
+    SignMode mode = 2;
+}
+
+enum SignMode {
+    SIGN_MODE_DEFAULT = 0;
+    SIGN_MODE_LEGACY_AMINO = -1;
 }
 ```
 
@@ -72,26 +83,77 @@ options.
 
 ```proto
 // types/types.proto
-
 message SignDoc {
     TxBody body = 1;
     string chain_id = 2;
     uint64 account_number = 3;
     uint64 account_sequence = 4;
 }
+```
 
-message Signature {
-    PublicKey public_key = 1;
-    bytes signature = 2;
-    SignMode mode = 3;
-}
+#### `SIGN_MODE_DEFAULT`
 
-enum SignMode {
-    SIGN_MODE_DEFAULT = 0;
-    SIGN_MODE_EXTENDED = 1;
-    SIGN_MODE_LEGACY_AMINO = 1024;
+The default signing behavior is to sign the raw `TxBody` bytes as broadcast over
+the wire. This has the advantages of:
+
+* requiring the minimum additional client capabilities beyond a standard protocol
+buffers implementation
+* leaving effectively zero holes for transaction malleability (i.e. there are no
+subtle differences between the signing and encoding formats which could be
+potentially exploited by an attacker)
+
+In order to sign in the default mode, clients take the following steps:
+
+1. Encode `TxBody`
+
+2. Sign `SignDocRaw`
+
+The raw encoded `TxBody` bytes are encoded into `SignDocRaw` below so that the
+encoded body bytes exactly match the signed body bytes with no need for
+["canonicalization"](https://github.com/regen-network/canonical-proto3) of that
+message.
+
+```proto
+// types/types.proto
+message SignDocRaw {
+    bytes body_bytes = 1;
+    string chain_id = 2;
+    uint64 account_number = 3;
+    uint64 account_sequence = 4;
 }
 ```
+
+The only requirements are that the client _must_ encode `SignDocRaw` canonically
+itself. This means that:
+* all of the fields must be encoded in order
+* default values (i.e. empty/zero values) must be omitted 
+
+If a protobuf implementation does not by default encode `SignDocRaw` canonically,
+the client _must_ manually encode `SignDocRaw` following the guidelines above.
+
+Again, it does not matter if `TxBody` was encoded canonically or not.
+
+Note that in order to decode `SignDocRaw`, the regular `SignDoc` type should
+be used.
+
+3. Broadcast `TxRaw`
+
+In order to make sure that the signed body bytes exactly match encoded body
+bytes, clients should broadcast `TxRaw` below copying the same body bytes as
+passed to `SignDocRaw`:
+
+```proto
+// types/types.proto
+message TxRaw {
+    bytes body_bytes = 1;
+    repeated bytes signatures = 2;
+}
+```
+
+Note that the standard `Tx` type can be used to decode `TxRaw`.
+
+Signature verifiers should verify signatures by decoding `TxRaw` and then
+encoding `SignDocRaw` with the raw body bytes.
 
 ### CLI & REST
 

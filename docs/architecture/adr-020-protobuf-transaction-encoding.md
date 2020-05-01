@@ -25,12 +25,17 @@ With this in mind, we will tackle the migration path via two main areas, txs and
 querying. However, this ADR solely focuses on transactions. Querying should be
 addressed in a future ADR, but it should build off of these proposals.
 
+Based on detailed discussions ([\#6030](https://github.com/cosmos/cosmos-sdk/issues/6030)
+and [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078)), the original 
+design for transactions was changes substantially from a `oneof`/JSON signing 
+approach to an `Any`/multi-modal signing approach.
+
 ## Decision
 
 ### Transactions
 
-Since are encoding interface values using `google.protobuf.any` (see [ADR 019](adr-019-protobuf-state-encoding.md)),
-`sdk.Msg`s are encoding with `Any` in transactions. One of the primary goals of
+Since interface values are encoded with `google.protobuf.Any` (see [ADR 019](adr-019-protobuf-state-encoding.md))
+in state, `sdk.Msg`s are encoding with `Any` in transactions. One of the main goals of
 using `Any` to encode interface values which vary from chain to chain is to have
 a core set of types which is reused by apps so that clients can safely be
 compatible with as many chains as possible. It is one of the goals of this
@@ -38,7 +43,7 @@ specification to provide a flexible cross-chain transaction format that can
 serve a wide variety of use cases without breaking compatibility.
 
 In order to facilitate signing, transactions are separated into a body (`TxBody`),
-which will be re-used by `SignDoc` below, and `Signature`s:
+which will be re-used by `SignDoc` below, and signatures:
 
 ```proto
 // types/types.proto
@@ -70,17 +75,23 @@ enum SignMode {
 }
 ```
 
+As will be discussed below, in order to include as much of the `Tx` as possible
+in the `SignDoc`, `SignerInfo` is separated from signatures so that only the
+raw signatures themselves live outside of `TxBody`.
+
 Because we are aiming for be a flexible, extensible cross-chain transaction
-format, new transaction processing options should be added to `TxBody` as those
-use cases are discovered. Because there is coordination overhead in this,
-however, `TxBody` includes an `extension_options` field which can be used by apps to
-add custom transaction processing options that have not yet been upstreamed
-into the canonical `TxBody` as fields. Apps may use this field as necessary
-using their own processing middleware, but _should_ attempt to upstream useful
-features to core SDK .proto files even if the SDK does not yet support these
-options.
+format, new transaction processing options should be added to `TxBody` as soon
+those as use cases are discovered, even if they can't be implemented yet.
+
+Because there is coordination overhead in this, `TxBody` includes an
+`extension_options` field which can be used for any transaction processing
+options that are not already covered. App developers should, nevertheless,
+attempt to upstream important additions to `Tx`.
 
 ### Signing
+
+Signatures are made using the `SignDoc` below which reuses `TxBody` and only
+adds the fields which are needed for signatures but not present on `TxBody`:
 
 ```proto
 // types/types.proto
@@ -170,6 +181,24 @@ endpoint before broadcasting.
 
 #### `SIGN_MODE_EXTENDED`
 
+As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
+there is a desire for a human-readable signing encoding, especially for hardware
+wallets like the [Ledger](https://www.ledger.com) which attempt to display
+transaction contents to users before signing. JSON was an attempt at this but 
+falls short of the ideal.
+
+`SIGN_MODE_EXTENDED` is intended as a placeholder for a human-readable
+transaction encoding which will replace Amino JSON, but be even more human-readable
+possibly based on formatting strings like [MessageFormat](http://userguide.icu-project.org/formatparse/messages).
+
+In order to ensure that the new human-readable format does not suffer from
+transaction malleability issues if the conversion is lossy, `SIGN_MODE_EXTENDED`
+requires that the _human-readable bytes are concatenated with the raw `SignDoc`_
+to generate sign bytes.
+
+Multiple human-readable formats (maybe even localized messages) may be supported
+by `SIGN_MODE_EXTENDED` when it is implemented.
+
 ### CLI & REST
 
 Currently, the REST and CLI handlers encode and decode types and txs via Amino
@@ -213,6 +242,9 @@ that account fields can be retrieved for signing.
 
 
 ## Future Improvements
+
+A concrete implementation of `SIGN_MODE_EXTENDED` is intended as a near-term
+future improvement.
 
 ## Consequences
 

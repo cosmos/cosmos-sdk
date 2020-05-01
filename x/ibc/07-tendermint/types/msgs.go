@@ -64,8 +64,8 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
-	if msg.TrustingPeriod == 0 {
-		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
+	if msg.TrustingPeriod == 0 || msg.TrustingPeriod.Minutes() > 90 {
+		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0 or greater than 90 minutes")
 	}
 	if msg.UnbondingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "duration cannot be 0")

@@ -3,7 +3,6 @@ package cli
 import (
 	"flag"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 

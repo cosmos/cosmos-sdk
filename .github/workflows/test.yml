@@ -59,4 +59,4 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: cli-test
         run: |
-          make cli-test
+          make test-integration

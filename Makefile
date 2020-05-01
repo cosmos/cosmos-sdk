@@ -13,7 +13,6 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
-export BUILDDIR
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -28,13 +27,9 @@ build: go.sum
 	@go build -mod=readonly ./...
 
 build-sim: go.sum
-ifeq ($(OS),Windows_NT)
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
-else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
-endif
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simcli
 
 .PHONY: \
  build \
@@ -128,6 +123,10 @@ test-unit:
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
+test-integration: build-sim
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./tests/cli/...` -tags=-tags='ledger test_ledger_mock cli_test'
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=-tags='ledger test_ledger_mock cli_test'
+
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 
 test-sim-nondeterminism:
@@ -168,10 +167,6 @@ test-sim-benchmark-invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
-cli-test: build-sim
-	@go test -mod=readonly -p 4 `go list ./tests/cli/tests/...` -tags=cli_test -v
-	@go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test -v
-
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-custom-genesis-fast \
@@ -181,7 +176,7 @@ test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
 test-sim-benchmark-invariants \
-cli-test
+test-integration
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

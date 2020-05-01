@@ -27,23 +27,26 @@ addressed in a future ADR, but it should build off of these proposals.
 
 Based on detailed discussions ([\#6030](https://github.com/cosmos/cosmos-sdk/issues/6030)
 and [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078)), the original 
-design for transactions was changes substantially from a `oneof`/JSON signing 
-approach to an `Any`/multi-modal signing approach.
+design for transactions was changed substantially from an `oneof` /JSON-signing
+approach to the approach described below.
 
 ## Decision
 
 ### Transactions
 
-Since interface values are encoded with `google.protobuf.Any` (see [ADR 019](adr-019-protobuf-state-encoding.md))
-in state, `sdk.Msg`s are encoding with `Any` in transactions. One of the main goals of
-using `Any` to encode interface values which vary from chain to chain is to have
-a core set of types which is reused by apps so that clients can safely be
-compatible with as many chains as possible. It is one of the goals of this
-specification to provide a flexible cross-chain transaction format that can
-serve a wide variety of use cases without breaking compatibility.
+Since interface values are encoded with `google.protobuf.Any` in state (see [ADR 019](adr-019-protobuf-state-encoding.md)),
+ `sdk.Msg`s are encoding with `Any` in transactions.
+ 
+ One of the main goals of using `Any` to encode interface values is to have a
+ core set of types which is reused by apps so that
+ clients can safely be compatible with as many chains as possible.
+ 
+ It is one of the goals of this specification to provide a flexible cross-chain transaction
+ format that can serve a wide variety of use cases without breaking client 
+ compatibility.
 
-In order to facilitate signing, transactions are separated into a body (`TxBody`),
-which will be re-used by `SignDoc` below, and signatures:
+In order to facilitate signing, transactions are separated into `TxBody`,
+which will be re-used by `SignDoc` below, and `signatures`:
 
 ```proto
 // types/types.proto
@@ -81,16 +84,16 @@ raw signatures themselves live outside of `TxBody`.
 
 Because we are aiming for be a flexible, extensible cross-chain transaction
 format, new transaction processing options should be added to `TxBody` as soon
-those as use cases are discovered, even if they can't be implemented yet.
+those use cases are discovered, even if they can't be implemented yet.
 
 Because there is coordination overhead in this, `TxBody` includes an
 `extension_options` field which can be used for any transaction processing
 options that are not already covered. App developers should, nevertheless,
-attempt to upstream important additions to `Tx`.
+attempt to upstream important improvements to `Tx`.
 
 ### Signing
 
-Signatures are made using the `SignDoc` below which reuses `TxBody` and only
+Signatures are structured using the `SignDoc` below which reuses `TxBody` and only
 adds the fields which are needed for signatures but not present on `TxBody`:
 
 ```proto
@@ -111,8 +114,8 @@ the wire. This has the advantages of:
 * requiring the minimum additional client capabilities beyond a standard protocol
 buffers implementation
 * leaving effectively zero holes for transaction malleability (i.e. there are no
-subtle differences between the signing and encoding formats which could be
-potentially exploited by an attacker)
+subtle differences between the signing and encoding formats which could 
+potentially be exploited by an attacker)
 
 In order to sign in the default mode, clients take the following steps:
 
@@ -135,8 +138,9 @@ message SignDocRaw {
 }
 ```
 
-The only requirements are that the client _must_ encode `SignDocRaw` canonically
-itself. This means that:
+The only requirements are that the client _must_ encode `SignDocRaw` itself canonically.
+ This means that:
+ 
 * all of the fields must be encoded in order
 * default values (i.e. empty/zero values) must be omitted 
 
@@ -145,14 +149,14 @@ the client _must_ manually encode `SignDocRaw` following the guidelines above.
 
 Again, it does not matter if `TxBody` was encoded canonically or not.
 
-Note that in order to decode `SignDocRaw`, the regular `SignDoc` type should
-be used.
+Note that in order to decode `SignDocRaw` for displaying contents to users,
+the regular `SignDoc` type should be used.
 
 3. Broadcast `TxRaw`
 
-In order to make sure that the signed body bytes exactly match encoded body
-bytes, clients should broadcast `TxRaw` below copying the same body bytes as
-passed to `SignDocRaw`:
+In order to make sure that the signed body bytes exactly match the encoded body
+bytes, clients should encode and broadcast `TxRaw` with the same body bytes used
+in `SignDocRaw`.
 
 ```proto
 // types/types.proto
@@ -162,20 +166,21 @@ message TxRaw {
 }
 ```
 
-Note that the standard `Tx` type can be used to decode `TxRaw`.
-
 Signature verifiers should verify signatures by decoding `TxRaw` and then
 encoding `SignDocRaw` with the raw body bytes.
 
+The standard `Tx` type (which is byte compatible with `TxRaw`) can be used to
+decode transactions for all other use cases.
+
 #### `SIGN_MODE_LEGACY_AMINO`
 
-In order to support legacy wallets and exchanges, we will temporarily support
-Amino JSON for signing transactions. Once wallets and exchanges have had a
+In order to support legacy wallets and exchanges, Amino JSON will be emporarily
+supported transaction signing. Once wallets and exchanges have had a
 chance to upgrade to protobuf based signing, this option will be disabled. In
-the meantime, it is foreseen that disabling the current signing API would cause
+the meantime, it is foreseen that disabling the current Amino signing would cause
 too much breakage to be feasible.
 
-Legacy integrations will be able to sign a transaction using the current Amino
+Legacy clients will be able to sign a transaction using the current Amino
 JSON format and have it encoded to protobuf using the REST `/tx/encode`
 endpoint before broadcasting.
 
@@ -183,16 +188,17 @@ endpoint before broadcasting.
 
 As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
 there is a desire for a human-readable signing encoding, especially for hardware
-wallets like the [Ledger](https://www.ledger.com) which attempt to display
+wallets like the [Ledger](https://www.ledger.com) which display
 transaction contents to users before signing. JSON was an attempt at this but 
 falls short of the ideal.
 
 `SIGN_MODE_EXTENDED` is intended as a placeholder for a human-readable
-transaction encoding which will replace Amino JSON, but be even more human-readable
-possibly based on formatting strings like [MessageFormat](http://userguide.icu-project.org/formatparse/messages).
+encoding which will replace Amino JSON. This new encoding should be even more
+focused on readability than JSON, possibly based on formatting strings like
+[MessageFormat](http://userguide.icu-project.org/formatparse/messages).
 
 In order to ensure that the new human-readable format does not suffer from
-transaction malleability issues if the conversion is lossy, `SIGN_MODE_EXTENDED`
+transaction malleability issues, `SIGN_MODE_EXTENDED`
 requires that the _human-readable bytes are concatenated with the raw `SignDoc`_
 to generate sign bytes.
 

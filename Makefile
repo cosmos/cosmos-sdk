@@ -168,8 +168,8 @@ test-sim-benchmark-invariants:
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 cli-test: build-sim
-	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./tests/cli/...` -tags=cli_test
-	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=cli_test
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./tests/cli/...` -tags=-tags='ledger test_ledger_mock cli_test'
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=-tags='ledger test_ledger_mock cli_test'
 
 .PHONY: \
 test-sim-nondeterminism \

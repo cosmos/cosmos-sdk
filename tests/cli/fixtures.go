@@ -18,8 +18,13 @@ import (
 
 var (
 	cdc      = std.MakeCodec(simapp.ModuleBasics)
-	buildDir = flag.String("builddir", "", "Build directory")
+	buildDir *string
 )
+
+func init() {
+	buildDir = flag.String("builddir", "", "Build directory")
+
+}
 
 // Fixtures is used to setup the testing environment
 type Fixtures struct {

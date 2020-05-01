@@ -51,3 +51,51 @@ func init() {
 	codec.RegisterCrypto(amino)
 	amino.Seal()
 }
+
+type DefaultEvidenceCodec struct {
+	codec.Marshaler
+}
+
+// MarshalEvidence marshals an Evidence interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (c *DefaultEvidenceCodec) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
+	return types.MarshalAny(evidenceI)
+}
+
+// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
+// bytes of a Proto-based Evidence type. An error is returned upon decoding
+// failure.
+func (c *DefaultEvidenceCodec) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
+	var evi exported.Evidence
+	err := types.UnmarshalAny(c, &evi, bz)
+	if err != nil {
+		return nil, err
+	}
+	return evi, nil
+}
+
+// MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
+// interface.
+func (c *DefaultEvidenceCodec) MarshalEvidenceJSON(evidence exported.Evidence) ([]byte, error) {
+	any, err := types.NewAnyWithValue(evidence)
+	if err != nil {
+		return nil, err
+	}
+	return c.MarshalJSON(any)
+}
+
+// UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
+func (c *DefaultEvidenceCodec) UnmarshalEvidenceJSON(bz []byte) (exported.Evidence, error) {
+	var any types.Any
+	err := c.UnmarshalJSON(bz, &any)
+	if err != nil {
+		return nil, err
+	}
+	var evi exported.Evidence
+	err = c.UnpackAny(&any, &evi)
+	if err != nil {
+		return nil, err
+	}
+	return evi, nil
+}

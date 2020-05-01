@@ -113,7 +113,14 @@ type AppModule struct {
 	keeper Keeper
 }
 
-func NewAppModule(cdc Codec, keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: keeper.GetCodec()},
+		keeper:         keeper,
+	}
+}
+
+func NewAppModuleCustom(cdc Codec, keeper Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

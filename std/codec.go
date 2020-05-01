@@ -10,16 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
-	_ auth.Codec     = (*Codec)(nil)
-	_ bank.Codec     = (*Codec)(nil)
-	_ evidence.Codec = (*Codec)(nil)
-	_ gov.Codec      = (*Codec)(nil)
+	_ auth.Codec = (*Codec)(nil)
+	_ bank.Codec = (*Codec)(nil)
+	_ gov.Codec  = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -114,50 +111,6 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (bankexported.SupplyI, error) {
 	}
 
 	return supply.GetSupplyI(), nil
-}
-
-// MarshalEvidence marshals an Evidence interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
-	return types.MarshalAny(evidenceI)
-}
-
-// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
-// bytes of a Proto-based Evidence type. An error is returned upon decoding
-// failure.
-func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
-	var evi eviexported.Evidence
-	err := types.UnmarshalAny(c.anyUnpacker, &evi, bz)
-	if err != nil {
-		return nil, err
-	}
-	return evi, nil
-}
-
-// MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
-// interface.
-func (c *Codec) MarshalEvidenceJSON(evidence eviexported.Evidence) ([]byte, error) {
-	any, err := types.NewAnyWithValue(evidence)
-	if err != nil {
-		return nil, err
-	}
-	return c.MarshalJSON(any)
-}
-
-// UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
-func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
-	var any types.Any
-	err := c.UnmarshalJSON(bz, &any)
-	if err != nil {
-		return nil, err
-	}
-	var evi eviexported.Evidence
-	err = c.anyUnpacker.UnpackAny(&any, &evi)
-	if err != nil {
-		return nil, err
-	}
-	return evi, nil
 }
 
 // MarshalProposal marshals a Proposal. It accepts a Proposal defined by the x/gov

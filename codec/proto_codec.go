@@ -133,3 +133,7 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 		panic(err)
 	}
 }
+
+func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
+	return pc.anyUnpacker.UnpackAny(any, iface)
+}

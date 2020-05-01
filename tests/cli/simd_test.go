@@ -2,16 +2,18 @@ package cli_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"io/ioutil"
-	"path/filepath"
-	"testing"
 )
 
 func TestSimdCollectGentxs(t *testing.T) {

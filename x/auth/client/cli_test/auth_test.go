@@ -5,6 +5,10 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
 	cli "github.com/cosmos/cosmos-sdk/tests/cli"
@@ -13,9 +17,6 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli_test"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"testing"
 )
 
 func TestCLIValidateSignatures(t *testing.T) {

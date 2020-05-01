@@ -67,5 +67,5 @@ func (hc *HybridCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 }
 
 func (hc *HybridCodec) UnpackAny(any *types.Any, iface interface{}) error {
-	return hc.UnpackAny(any, iface)
+	return hc.unpacker.UnpackAny(any, iface)
 }

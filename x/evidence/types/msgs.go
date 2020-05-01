@@ -26,7 +26,7 @@ var (
 func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (MsgSubmitEvidence, error) {
 	msg, ok := evi.(proto.Message)
 	if !ok {
-		fmt.Errorf("cannot proto marshal %T", evi)
+		return MsgSubmitEvidence{}, fmt.Errorf("cannot proto marshal %T", evi)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {

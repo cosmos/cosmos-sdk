@@ -16,7 +16,8 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	m, _ := simapp.MakeCodecs()
+	cdc := types.NewAnyCodec(m)
 	dec := simulation.NewDecodeStore(cdc)
 
 	delPk1 := ed25519.GenPrivKey().PubKey()

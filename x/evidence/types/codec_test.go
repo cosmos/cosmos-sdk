@@ -14,7 +14,7 @@ import (
 
 func TestCodec(t *testing.T) {
 	app := simapp.Setup(false)
-	appCodec := app.AppCodec()
+	evidenceCodec := types.NewAnyCodec(app.AppCodec())
 	pk := ed25519.GenPrivKey()
 
 	var e exported.Evidence = &types.Equivocation{
@@ -23,10 +23,10 @@ func TestCodec(t *testing.T) {
 		Power:            100000,
 		ConsensusAddress: pk.PubKey().Address().Bytes(),
 	}
-	bz, err := appCodec.MarshalEvidence(e)
+	bz, err := evidenceCodec.MarshalEvidence(e)
 	require.NoError(t, err)
 
-	other, err := appCodec.UnmarshalEvidence(bz)
+	other, err := evidenceCodec.UnmarshalEvidence(bz)
 	require.NoError(t, err)
 	require.Equal(t, e, other)
 }

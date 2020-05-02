@@ -207,6 +207,7 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 	if len(data.Amount) != 1 {
 		return sdkerrors.Wrapf(types.ErrOnlyOneDenomAllowed, "%d denoms included", len(data.Amount))
 	}
+
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 	source := strings.HasPrefix(data.Amount[0].Denom, prefix)

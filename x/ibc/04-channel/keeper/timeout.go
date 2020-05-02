@@ -88,7 +88,6 @@ func (k Keeper) TimeoutPacket(
 	case exported.ORDERED:
 		// check that packet has not been received
 		if nextSequenceRecv > packet.GetSequence() {
-			fmt.Printf("Sequence err, nextSeqRecv: %d, sequence: %d\n", nextSequenceRecv, packet.GetSequence())
 			return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
 		}
 

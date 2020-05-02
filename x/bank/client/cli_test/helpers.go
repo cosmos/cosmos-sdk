@@ -8,23 +8,23 @@ import (
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
+	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // TxSend is simcli tx send
-func TxSend(f *helpers.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
+func TxSend(f *cli.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from,
 		to, amount, f.Flags())
-	return helpers.ExecuteWriteRetStdStreams(f.T, helpers.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
 // QueryAccount is simcli query account
-func QueryAccount(f *helpers.Fixtures, address sdk.AccAddress, flags ...string) auth.BaseAccount {
+func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) auth.BaseAccount {
 	cmd := fmt.Sprintf("%s query account %s %v", f.SimcliBinary, address, f.Flags())
 
-	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 
 	var initRes map[string]json.RawMessage
 	err := json.Unmarshal([]byte(out), &initRes)
@@ -40,9 +40,9 @@ func QueryAccount(f *helpers.Fixtures, address sdk.AccAddress, flags ...string) 
 
 // QueryBalances executes the bank query balances command for a given address and
 // flag set.
-func QueryBalances(f *helpers.Fixtures, address sdk.AccAddress, flags ...string) sdk.Coins {
+func QueryBalances(f *cli.Fixtures, address sdk.AccAddress, flags ...string) sdk.Coins {
 	cmd := fmt.Sprintf("%s query bank balances %s %v", f.SimcliBinary, address, f.Flags())
-	out, _ := tests.ExecuteT(f.T, helpers.AddFlags(cmd, flags), "")
+	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 
 	var balances sdk.Coins
 

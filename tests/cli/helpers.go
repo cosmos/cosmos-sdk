@@ -1,4 +1,4 @@
-package helpers
+package cli
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ var (
 		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(150)),
 	)
 
-	vestingCoins = sdk.NewCoins(
+	VestingCoins = sdk.NewCoins(
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(500000)),
 	)
 )

@@ -633,7 +633,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
 		//Flush the event manager after processing every message
 		em := sdk.EventManager{}
-		ctx.WithEventManager(&em)
+		ctx = ctx.WithEventManager(&em)
 	}
 
 	return &sdk.Result{

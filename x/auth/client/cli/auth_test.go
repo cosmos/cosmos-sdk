@@ -5,6 +5,8 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	testutil2 "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"os"
 	"strings"
 	"testing"
@@ -14,8 +16,6 @@ import (
 	cli "github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,7 +31,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 
 	// generate sendTx with default gas
-	success, stdout, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 10), "--generate-only")
+	success, stdout, stderr := testutil2.TxSend(f, fooAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 10), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 
@@ -81,7 +81,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test generate sendTx with default gas
 	sendTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
+	success, stdout, stderr := testutil2.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
@@ -90,7 +90,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx with --gas=$amount
-	success, stdout, stderr = bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--gas=100", "--generate-only")
+	success, stdout, stderr = testutil2.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--gas=100", "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
@@ -99,7 +99,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx, estimate gas
-	success, stdout, stderr = bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
+	success, stdout, stderr = testutil2.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
@@ -146,7 +146,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Ensure foo has right amount of funds
 	startTokens := sdk.TokensFromConsensusPower(50)
-	require.Equal(t, startTokens, bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens, testutil2.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	// Test broadcast
 
@@ -161,8 +161,8 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account state
-	require.Equal(t, sendTokens, bankcli.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, sendTokens, testutil2.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens.Sub(sendTokens), testutil2.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	f.Cleanup()
 }
@@ -179,12 +179,12 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 
 	// Send some tokens from one account to the other
-	success, _, _ := bankcli.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
+	success, _, _ := testutil2.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Test generate sendTx with multisig
-	success, stdout, _ := bankcli.TxSend(f, fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 5), "--generate-only")
+	success, stdout, _ := testutil2.TxSend(f, fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 5), "--generate-only")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -233,7 +233,7 @@ func TestCLIEncode(t *testing.T) {
 	keyAddr := f.KeyAddress(cli.KeyFoo)
 
 	sendTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr := bankcli.TxSend(f, keyAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only", "--memo", "deadbeef")
+	success, stdout, stderr := testutil2.TxSend(f, keyAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only", "--memo", "deadbeef")
 	require.True(t, success)
 	require.Empty(t, stderr)
 
@@ -268,15 +268,15 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 
 	// Send some tokens from one account to the other
-	success, _, _ := bankcli.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
+	success, _, _ := testutil2.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
-	require.Equal(t, int64(10), bankcli.QueryBalances(f, fooBarBazAddr).AmountOf(cli.Denom).Int64())
+	require.Equal(t, int64(10), testutil2.QueryBalances(f, fooBarBazAddr).AmountOf(cli.Denom).Int64())
 
 	// Test generate sendTx with multisig
-	success, stdout, _ := bankcli.TxSend(f, fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 5), "--generate-only")
+	success, stdout, _ := testutil2.TxSend(f, fooBarBazAddr.String(), barAddr, sdk.NewInt64Coin(cli.Denom, 5), "--generate-only")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -332,15 +332,15 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	bazAddr := f.KeyAddress(cli.KeyBaz)
 
 	// Send some tokens from one account to the other
-	success, _, _ := bankcli.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
+	success, _, _ := testutil2.TxSend(f, cli.KeyFoo, fooBarBazAddr, sdk.NewInt64Coin(cli.Denom, 10), "-y")
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
-	require.Equal(t, int64(10), bankcli.QueryBalances(f, fooBarBazAddr).AmountOf(cli.Denom).Int64())
+	require.Equal(t, int64(10), testutil2.QueryBalances(f, fooBarBazAddr).AmountOf(cli.Denom).Int64())
 
 	// Test generate sendTx with multisig
-	success, stdout, stderr := bankcli.TxSend(f, fooBarBazAddr.String(), bazAddr, sdk.NewInt64Coin(cli.Denom, 10), "--generate-only")
+	success, stdout, stderr := testutil2.TxSend(f, fooBarBazAddr.String(), bazAddr, sdk.NewInt64Coin(cli.Denom, 10), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 

@@ -125,7 +125,7 @@ test-race:
 
 test-integration: build-sim
 	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./tests/cli/...` -tags=-tags='ledger test_ledger_mock cli_test'
-	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./x/.../client/cli_test/...` -tags=-tags='ledger test_ledger_mock cli_test'
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 `go list ./x/.../client/cli/...` -tags=-tags='ledger test_ledger_mock cli_test'
 
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 

@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 )
 
 func TestCLISend(t *testing.T) {
@@ -27,30 +27,30 @@ func TestCLISend(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 
 	startTokens := sdk.TokensFromConsensusPower(50)
-	require.Equal(t, startTokens, bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens, testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	sendTokens := sdk.TokensFromConsensusPower(10)
 
 	// It does not allow to send in offline mode
-	success, _, stdErr := bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y", "--offline")
+	success, _, stdErr := testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y", "--offline")
 	require.Contains(t, stdErr, "no RPC client is defined in offline mode")
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Send some tokens from one account to the other
-	bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
+	testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
-	require.Equal(t, sendTokens, bankcli.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, sendTokens, testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens.Sub(sendTokens), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	// Test --dry-run
-	success, _, _ = bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--dry-run")
+	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--dry-run")
 	require.True(t, success)
 
 	// Test --generate-only
-	success, stdout, stderr := bankcli.TxSend(
+	success, stdout, stderr := testutil.TxSend(
 		f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only=true",
 	)
 	require.Empty(t, stderr)
@@ -62,23 +62,23 @@ func TestCLISend(t *testing.T) {
 	require.Len(t, msg.GetSignatures(), 0)
 
 	// Check state didn't change
-	require.Equal(t, startTokens.Sub(sendTokens), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens.Sub(sendTokens), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	// test autosequencing
-	bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
+	testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
-	require.Equal(t, sendTokens.MulRaw(2), bankcli.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(2)), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, sendTokens.MulRaw(2), testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(2)), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	// test memo
-	bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--memo='testmemo'", "-y")
+	testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--memo='testmemo'", "-y")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account balances match expected
-	require.Equal(t, sendTokens.MulRaw(3), bankcli.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(3)), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	require.Equal(t, sendTokens.MulRaw(3), testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(3)), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
 
 	f.Cleanup()
 }
@@ -100,20 +100,20 @@ func TestCLIMinimumFees(t *testing.T) {
 	barAddr := f.KeyAddress(cli.KeyBar)
 
 	// Send a transaction that will get rejected
-	success, stdOut, _ := bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.Fee2Denom, 10), "-y")
+	success, stdOut, _ := testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.Fee2Denom, 10), "-y")
 	require.Contains(t, stdOut, "insufficient fees")
 	require.True(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure tx w/ correct fees pass
 	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2))
-	success, _, _ = bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.Fee2Denom, 10), txFees, "-y")
+	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.Fee2Denom, 10), txFees, "-y")
 	require.True(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure tx w/ improper fees fails
 	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 1))
-	success, _, _ = bankcli.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 10), txFees, "-y")
+	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 10), txFees, "-y")
 	require.Contains(t, stdOut, "insufficient fees")
 	require.True(f.T, success)
 
@@ -134,7 +134,7 @@ func TestCLIGasPrices(t *testing.T) {
 
 	// insufficient gas prices (tx fails)
 	badGasPrice, _ := sdk.NewDecFromStr("0.000003")
-	success, stdOut, _ := bankcli.TxSend(
+	success, stdOut, _ := testutil.TxSend(
 		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 50),
 		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(cli.FeeDenom, badGasPrice)), "-y")
 	require.Contains(t, stdOut, "insufficient fees")
@@ -144,7 +144,7 @@ func TestCLIGasPrices(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// sufficient gas prices (tx passes)
-	success, _, _ = bankcli.TxSend(
+	success, _, _ = testutil.TxSend(
 		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 50),
 		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(cli.FeeDenom, minGasPrice)), "-y")
 	require.True(t, success)
@@ -168,10 +168,10 @@ func TestCLIFeesDeduction(t *testing.T) {
 	fooAddr := f.KeyAddress(cli.KeyFoo)
 	barAddr := f.KeyAddress(cli.KeyBar)
 
-	fooAmt := bankcli.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom)
+	fooAmt := testutil.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom)
 
 	// test simulation
-	success, _, _ := bankcli.TxSend(
+	success, _, _ := testutil.TxSend(
 		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 1000),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2)), "--dry-run")
 	require.True(t, success)
@@ -180,11 +180,11 @@ func TestCLIFeesDeduction(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// ensure state didn't change
-	require.Equal(t, fooAmt.Int64(), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom).Int64())
+	require.Equal(t, fooAmt.Int64(), testutil.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom).Int64())
 
 	// insufficient funds (coins + fees) tx fails
 	largeCoins := sdk.TokensFromConsensusPower(10000000)
-	success, stdOut, _ := bankcli.TxSend(
+	success, stdOut, _ := testutil.TxSend(
 		f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.FooDenom, largeCoins),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2)), "-y")
 	require.Contains(t, stdOut, "insufficient funds")
@@ -194,10 +194,10 @@ func TestCLIFeesDeduction(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// ensure state didn't change
-	require.Equal(t, fooAmt.Int64(), bankcli.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom).Int64())
+	require.Equal(t, fooAmt.Int64(), testutil.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom).Int64())
 
 	// test success (transfer = coins + fees)
-	success, _, _ = bankcli.TxSend(
+	success, _, _ = testutil.TxSend(
 		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 500),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2)), "-y")
 	require.True(t, success)

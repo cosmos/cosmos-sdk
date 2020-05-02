@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	startCoins = sdk.NewCoins(
+	StartCoins = sdk.NewCoins(
 		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(1000)),

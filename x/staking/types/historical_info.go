@@ -38,6 +38,7 @@ func MustUnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) HistoricalIn
 // UnmarshalHistoricalInfo will unmarshal historical info and return any error
 func UnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) (hi HistoricalInfo, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &hi)
+
 	return hi, err
 }
 

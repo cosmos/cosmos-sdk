@@ -43,6 +43,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 		if invarRoute.FullRoute() == msgFullRoute {
 			res, stop = invarRoute.Invar(cacheCtx)
 			found = true
+
 			break
 		}
 	}

@@ -43,9 +43,7 @@ var (
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 // NewParams creates a new Params instance
-func NewParams(
-	unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string,
-) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,

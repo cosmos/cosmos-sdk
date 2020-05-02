@@ -14,7 +14,7 @@ import (
 	cli "github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli_test"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli_test"
 	"github.com/stretchr/testify/require"
 )
@@ -40,7 +40,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// validate we can successfully sign
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.True(t, success)
 	stdTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, len(stdTx.Msgs), 1)
@@ -52,7 +52,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// validate signatures
-	success, _, _ = authcli.TxSign(f, cli.KeyFoo, signedTxFile.Name(), "--validate-signatures")
+	success, _, _ = testutil.TxSign(f, cli.KeyFoo, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 
 	// modify the transaction
@@ -62,7 +62,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(modSignedTxFile.Name())
 
 	// validate signature validation failure due to different transaction sig bytes
-	success, _, _ = authcli.TxSign(f, cli.KeyFoo, modSignedTxFile.Name(), "--validate-signatures")
+	success, _, _ = testutil.TxSign(f, cli.KeyFoo, modSignedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
 
 	f.Cleanup()
@@ -111,23 +111,23 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Test sign --validate-signatures
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--validate-signatures")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
 	// Test sign
 
 	// Does not work in offline mode
-	success, stdout, stderr = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--offline")
+	success, stdout, stderr = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--offline")
 	require.Contains(t, stderr, "required flag(s) \"account-number\", \"sequence\" not set")
 	require.False(t, success)
 
 	// But works offline if we set account number and sequence
-	success, _, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
+	success, _, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
 	require.True(t, success)
 
 	// Sign transaction
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.True(t, success)
 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, len(msg.Msgs), 1)
@@ -139,7 +139,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Test sign --validate-signatures
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, signedTxFile.Name(), "--validate-signatures")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n  0: %v\t\t\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
@@ -151,12 +151,12 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Test broadcast
 
 	// Does not work in offline mode
-	success, _, stderr = authcli.TxBroadcast(f, signedTxFile.Name(), "--offline")
+	success, _, stderr = testutil.TxBroadcast(f, signedTxFile.Name(), "--offline")
 	require.Contains(t, stderr, "cannot broadcast tx during offline mode")
 	require.False(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	success, stdout, _ = authcli.TxBroadcast(f, signedTxFile.Name())
+	success, stdout, _ = testutil.TxBroadcast(f, signedTxFile.Name())
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
@@ -192,7 +192,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Sign with foo's key
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -200,7 +200,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	defer os.Remove(fooSignatureFile.Name())
 
 	// Multisign, not enough signatures
-	success, stdout, _ = authcli.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{fooSignatureFile.Name()})
+	success, stdout, _ = testutil.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{fooSignatureFile.Name()})
 	require.True(t, success)
 
 	// Write the output to disk
@@ -208,11 +208,11 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
-	success, _, _ = authcli.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
+	success, _, _ = testutil.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
 
 	// Broadcast the transaction
-	success, stdOut, _ := authcli.TxBroadcast(f, signedTxFile.Name())
+	success, stdOut, _ := testutil.TxBroadcast(f, signedTxFile.Name())
 	require.Contains(t, stdOut, "signature verification failed")
 	require.True(t, success)
 
@@ -242,7 +242,7 @@ func TestCLIEncode(t *testing.T) {
 	defer os.Remove(jsonTxFile.Name())
 
 	// Run the encode command, and trim the extras from the stdout capture
-	success, base64Encoded, _ := authcli.TxEncode(f, jsonTxFile.Name())
+	success, base64Encoded, _ := testutil.TxEncode(f, jsonTxFile.Name())
 	require.True(t, success)
 	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
 
@@ -284,7 +284,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Sign with foo's key
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
 	require.True(t, success)
 
 	// Write the output to disk
@@ -292,7 +292,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	defer os.Remove(fooSignatureFile.Name())
 
 	// Sign with baz's key
-	success, stdout, _ = authcli.TxSign(f, cli.KeyBaz, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyBaz, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
 	require.True(t, success)
 
 	// Write the output to disk
@@ -300,7 +300,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	defer os.Remove(bazSignatureFile.Name())
 
 	// Multisign, keys in different order
-	success, stdout, _ = authcli.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
+	success, stdout, _ = testutil.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
 		bazSignatureFile.Name(), fooSignatureFile.Name()})
 	require.True(t, success)
 
@@ -309,11 +309,11 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
-	success, _, _ = authcli.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
+	success, _, _ = testutil.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 
 	// Broadcast the transaction
-	success, _, _ = authcli.TxBroadcast(f, signedTxFile.Name())
+	success, _, _ = testutil.TxBroadcast(f, signedTxFile.Name())
 	require.True(t, success)
 
 	// Cleanup testing directories
@@ -349,7 +349,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Sign with foo's key
-	success, stdout, _ = authcli.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -357,7 +357,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	defer os.Remove(fooSignatureFile.Name())
 
 	// Sign with bar's key
-	success, stdout, _ = authcli.TxSign(f, cli.KeyBar, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyBar, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -367,13 +367,13 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	// Multisign
 
 	// Does not work in offline mode
-	success, stdout, _ = authcli.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
+	success, stdout, _ = testutil.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
 		fooSignatureFile.Name(), barSignatureFile.Name()}, "--offline")
 	require.Contains(t, "couldn't verify signature", stdout)
 	require.False(t, success)
 
 	// Success multisign
-	success, stdout, _ = authcli.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
+	success, stdout, _ = testutil.TxMultisign(f, unsignedTxFile.Name(), cli.KeyFooBarBaz, []string{
 		fooSignatureFile.Name(), barSignatureFile.Name()})
 	require.True(t, success)
 
@@ -382,11 +382,11 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
-	success, _, _ = authcli.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "-y")
+	success, _, _ = testutil.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "-y")
 	require.True(t, success)
 
 	// Broadcast the transaction
-	success, _, _ = authcli.TxBroadcast(f, signedTxFile.Name())
+	success, _, _ = testutil.TxBroadcast(f, signedTxFile.Name())
 	require.True(t, success)
 
 	// Cleanup testing directories

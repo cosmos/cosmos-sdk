@@ -13,6 +13,7 @@ import (
 // it will first sort valset before inclusion into historical info
 func NewHistoricalInfo(header abci.Header, valSet Validators) HistoricalInfo {
 	sort.Sort(valSet)
+
 	return HistoricalInfo{
 		Header: header,
 		Valset: valSet,
@@ -30,6 +31,7 @@ func MustUnmarshalHistoricalInfo(cdc codec.Marshaler, value []byte) HistoricalIn
 	if err != nil {
 		panic(err)
 	}
+
 	return hi
 }
 
@@ -44,6 +46,7 @@ func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.Valset) == 0 {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
 	}
+
 	if !sort.IsSorted(Validators(hi.Valset)) {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}

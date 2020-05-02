@@ -24,6 +24,9 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 
 // Context with current {check, deliver}State of the app used by tests.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
+	if header.Height < 0 {
+		return sdk.NewContext(app.cms, header, true, app.logger)
+	}
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)

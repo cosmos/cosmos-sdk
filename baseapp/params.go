@@ -38,6 +38,7 @@ func ValidateBlockParams(i interface{}) error {
 	if v.MaxBytes <= 0 {
 		return fmt.Errorf("block maximum bytes must be positive: %d", v.MaxBytes)
 	}
+
 	if v.MaxGas < -1 {
 		return fmt.Errorf("block maximum gas must be greater than or equal to -1: %d", v.MaxGas)
 	}
@@ -56,6 +57,7 @@ func ValidateEvidenceParams(i interface{}) error {
 	if v.MaxAgeNumBlocks <= 0 {
 		return fmt.Errorf("evidence maximum age in blocks must be positive: %d", v.MaxAgeNumBlocks)
 	}
+
 	if v.MaxAgeDuration <= 0 {
 		return fmt.Errorf("evidence maximum age time duration must be positive: %v", v.MaxAgeDuration)
 	}

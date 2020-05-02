@@ -127,6 +127,7 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 	}
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
+
 	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
 	if err != nil {
 		return nil, err
@@ -175,6 +176,7 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
 	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
+
 	if err != nil {
 		return nil, err
 	}
@@ -367,9 +369,9 @@ func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 
 func queryPool(ctx sdk.Context, k Keeper) ([]byte, error) {
 	bondDenom := k.BondDenom(ctx)
-
 	bondedPool := k.GetBondedPool(ctx)
 	notBondedPool := k.GetNotBondedPool(ctx)
+
 	if bondedPool == nil || notBondedPool == nil {
 		return nil, errors.New("pool accounts haven't been set")
 	}
@@ -418,8 +420,8 @@ func delegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegat
 func delegationsToDelegationResponses(
 	ctx sdk.Context, k Keeper, delegations types.Delegations,
 ) (types.DelegationResponses, error) {
-
 	resp := make(types.DelegationResponses, len(delegations))
+
 	for i, del := range delegations {
 		delResp, err := delegationToDelegationResponse(ctx, k, del)
 		if err != nil {
@@ -435,8 +437,8 @@ func delegationsToDelegationResponses(
 func redelegationsToRedelegationResponses(
 	ctx sdk.Context, k Keeper, redels types.Redelegations,
 ) (types.RedelegationResponses, error) {
-
 	resp := make(types.RedelegationResponses, len(redels))
+
 	for i, redel := range redels {
 		val, found := k.GetValidator(ctx, redel.ValidatorDstAddress)
 		if !found {

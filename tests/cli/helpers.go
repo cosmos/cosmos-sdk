@@ -19,13 +19,6 @@ import (
 )
 
 var (
-	TotalCoins = sdk.NewCoins(
-		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(2000000)),
-		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(2000000)),
-		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(2000)),
-		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(300).Add(sdk.NewInt(12))), // add coins from inflation
-	)
-
 	StartCoins = sdk.NewCoins(
 		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(1000000)),

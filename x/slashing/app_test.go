@@ -22,7 +22,7 @@ var (
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 )
 
-func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.AccAddress, expFound bool) staking.Validator {
+func checkValidator(t *testing.T, app *simapp.SimApp, _ sdk.AccAddress, expFound bool) staking.Validator {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	validator, found := app.StakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.Equal(t, expFound, found)

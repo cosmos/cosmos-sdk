@@ -72,6 +72,7 @@ func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(out), nil
 }
 
@@ -90,5 +91,6 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(pass), nil
 }

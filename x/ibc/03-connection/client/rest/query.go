@@ -28,7 +28,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/{connection-id} [get]
-func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
+func queryConnectionHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		connectionID := vars[RestConnectionID]
@@ -61,7 +61,7 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/connections [get]
-func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
+func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]

@@ -18,6 +18,7 @@ import (
 func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 
@@ -85,11 +86,13 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		params := types.NewQueryTotalSupplyParams(page, limit)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
+
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryTotalSupply), bz)
+
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -104,12 +107,13 @@ func supplyOfHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-		if !ok {
+		if !ok { //nolint:unparam
 			return
 		}
 
 		params := types.NewQuerySupplyOfParams(denom)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
+
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

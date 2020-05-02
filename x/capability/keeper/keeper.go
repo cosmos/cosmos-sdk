@@ -104,10 +104,12 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 
 	// initialize the in-memory store for all persisted capabilities
 	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		index := types.IndexFromKey(iterator.Key())
 
 		var capOwners types.CapabilityOwners
+
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
 		k.InitializeCapability(ctx, index, capOwners)
 	}
@@ -191,7 +193,6 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 
 	if _, ok := sk.GetCapability(ctx, name); ok {
 		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
-
 	}
 
 	// create new capability with the current global index
@@ -222,6 +223,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 	sk.capMap[index] = cap
 
 	logger(ctx).Info("created new capability", "module", sk.module, "name", name)
+
 	return cap, nil
 }
 
@@ -261,6 +263,7 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, n
 	memStore.Set(types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(cap.GetIndex()))
 
 	logger(ctx).Info("claimed capability", "module", sk.module, "name", name, "capability", cap.GetIndex())
+
 	return nil
 }
 
@@ -314,6 +317,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 	key := types.RevCapabilityKey(sk.module, name)
 	indexBytes := memStore.Get(key)
 	index := sdk.BigEndianToUint64(indexBytes)
+
 	if len(indexBytes) == 0 {
 		// If a tx failed and NewCapability got reverted, it is possible
 		// to still have the capability in the go map since changes to
@@ -360,8 +364,8 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 	}
 
 	sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
-	return &capOwners, true
 
+	return &capOwners, true
 }
 
 // LookupModules returns all the module owners for a given capability
@@ -381,8 +385,8 @@ func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, *t
 	for i, co := range capOwners.Owners {
 		mods[i] = co.Module
 	}
-	return mods, cap, true
 
+	return mods, cap, true
 }
 
 func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap *types.Capability, name string) error {
@@ -397,6 +401,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap *types.Capability, name str
 
 	// update capability owner set
 	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
+
 	return nil
 }
 

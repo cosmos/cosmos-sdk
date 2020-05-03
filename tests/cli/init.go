@@ -1,4 +1,4 @@
-package helpers
+package cli
 
 import (
 	"fmt"
@@ -42,10 +42,10 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	f.CLIConfig("trust-node", "true")
 
 	// start an account with tokens
-	f.AddGenesisAccount(f.KeyAddress(KeyFoo), startCoins)
+	f.AddGenesisAccount(f.KeyAddress(KeyFoo), StartCoins)
 	f.AddGenesisAccount(
-		f.KeyAddress(KeyVesting), startCoins,
-		fmt.Sprintf("--vesting-amount=%s", vestingCoins),
+		f.KeyAddress(KeyVesting), StartCoins,
+		fmt.Sprintf("--vesting-amount=%s", VestingCoins),
 		fmt.Sprintf("--vesting-start-time=%d", time.Now().UTC().UnixNano()),
 		fmt.Sprintf("--vesting-end-time=%d", time.Now().Add(60*time.Second).UTC().UnixNano()),
 	)

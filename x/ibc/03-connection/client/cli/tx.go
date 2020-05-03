@@ -71,6 +71,7 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }
 
@@ -136,6 +137,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }
 
@@ -185,6 +187,7 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }
 
@@ -232,6 +235,7 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }
 

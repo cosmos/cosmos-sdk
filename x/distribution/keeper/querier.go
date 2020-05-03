@@ -48,7 +48,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryParams(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper) ([]byte, error) {
 	params := k.GetParams(ctx)
 
 	res, err := codec.MarshalJSONIndent(k.cdc, params)
@@ -59,7 +59,7 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 	return res, nil
 }
 
-func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryValidatorOutstandingRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorOutstandingRewardsParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -79,7 +79,7 @@ func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.R
 	return bz, nil
 }
 
-func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryValidatorCommission(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorCommissionParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -99,7 +99,7 @@ func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQu
 	return bz, nil
 }
 
-func queryValidatorSlashes(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryValidatorSlashes(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryValidatorSlashesParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -167,6 +167,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 	ctx, _ = ctx.CacheContext()
 
 	total := sdk.DecCoins{}
+
 	var delRewards []types.DelegationDelegatorReward
 
 	k.stakingKeeper.IterateDelegations(
@@ -240,7 +241,7 @@ func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.Request
 	return bz, nil
 }
 
-func queryCommunityPool(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryCommunityPool(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper) ([]byte, error) {
 	pool := k.GetFeePoolCommunityCoins(ctx)
 	if pool == nil {
 		pool = sdk.DecCoins{}

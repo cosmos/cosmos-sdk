@@ -32,8 +32,10 @@ linters:
     - typecheck
     - unconvert
     - unused
+    - unparam
     - misspell
     - wsl
+    - nolintlint
 
 issues:
   exclude-rules:
@@ -54,6 +56,8 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
 
 linters-settings:
   dogsled:
@@ -61,3 +65,8 @@ linters-settings:
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
+  nolintlint:
+    allow-unused: false
+    allow-leading-space: true
+    require-explanation: false
+    require-specific: false

@@ -60,8 +60,8 @@ type (
 func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-		var req DelegateRequest
 
+		var req DelegateRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -93,8 +93,8 @@ func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, t
 func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
-		var req RedelegateRequest
 
+		var req RedelegateRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
 		}
@@ -126,6 +126,7 @@ func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
+
 		var req UndelegateRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return

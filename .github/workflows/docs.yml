@@ -23,6 +23,6 @@ jobs:
       - name: Deploy 🚀
         uses: peaceiris/actions-gh-pages@v3
         env:
-          github_token: ${{ secrets.GH_PAGES_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: docs/.vuepress/dist

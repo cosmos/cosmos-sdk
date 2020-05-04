@@ -147,7 +147,7 @@ func (g *infiniteGasMeter) IsOutOfGas() bool {
 }
 
 func (g *infiniteGasMeter) String() string {
-	return fmt.Sprintf("BasicGasMeter:\n  consumed: %d", g.consumed)
+	return fmt.Sprintf("InfiniteGasMeter:\n  consumed: %d", g.consumed)
 }
 
 // GasConfig defines gas cost for each operation on KVStores

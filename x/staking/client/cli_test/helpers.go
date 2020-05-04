@@ -19,6 +19,7 @@ func TxStakingCreateValidator(f *cli.Fixtures, from, consPubKey string, amount s
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
 	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
+
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
@@ -33,10 +34,12 @@ func TxStakingUnbond(f *cli.Fixtures, from, shares string, validator sdk.ValAddr
 func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) staking.Validator {
 	cmd := fmt.Sprintf("%s query staking validator %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
 	var validator staking.Validator
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
 	return validator
 }
 
@@ -44,10 +47,12 @@ func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...str
 func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("%s query staking unbonding-delegations-from %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
 	var ubds []staking.UnbondingDelegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
 	return ubds
 }
 
@@ -55,10 +60,12 @@ func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddres
 func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
 	cmd := fmt.Sprintf("%s query staking delegations-to %s %v", f.SimcliBinary, valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
 	var delegations []staking.Delegation
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
 	return delegations
 }
 
@@ -66,10 +73,12 @@ func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ..
 func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 	cmd := fmt.Sprintf("%s query staking pool %v", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
 	var pool staking.Pool
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &pool)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
 	return pool
 }
 
@@ -77,9 +86,11 @@ func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 	cmd := fmt.Sprintf("%s query staking params %v", f.SimcliBinary, f.Flags())
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
+
 	var params staking.Params
 
 	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+
 	return params
 }

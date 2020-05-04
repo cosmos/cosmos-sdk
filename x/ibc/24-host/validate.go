@@ -16,7 +16,7 @@ import (
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
 
-func defaultIdentifierValidator(id string, min, max int) error {
+func defaultIdentifierValidator(id string, min, max int) error { //nolint:unparam
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)

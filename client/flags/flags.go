@@ -97,6 +97,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.MarkFlagRequired(FlagChainID)
 
 		c.SetErr(c.ErrOrStderr())
+		c.SetOut(c.OutOrStdout())
 	}
 	return cmds
 }
@@ -135,6 +136,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.MarkFlagRequired(FlagChainID)
 
 		c.SetErr(c.ErrOrStderr())
+		c.SetOut(c.OutOrStdout())
 	}
 	return cmds
 }

@@ -1,4 +1,4 @@
-package cli
+package testutil
 
 import (
 	"encoding/json"

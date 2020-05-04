@@ -1,4 +1,4 @@
-package helpers
+package cli
 
 const (
 	Denom        = "stake"

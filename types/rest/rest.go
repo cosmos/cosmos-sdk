@@ -66,7 +66,6 @@ func NewBaseReq(
 	from, memo, chainID string, gas, gasAdjustment string, accNumber, seq uint64,
 	fees sdk.Coins, gasPrices sdk.DecCoins, simulate bool,
 ) BaseReq {
-
 	return BaseReq{
 		From:          strings.TrimSpace(from),
 		Memo:          strings.TrimSpace(memo),
@@ -154,6 +153,7 @@ func CheckError(w http.ResponseWriter, status int, err error) bool {
 		WriteErrorResponse(w, status, err.Error())
 		return true
 	}
+
 	return false
 }
 
@@ -204,8 +204,8 @@ func ParseUint64OrReturnBadRequest(w http.ResponseWriter, s string) (n uint64, o
 
 	n, err = strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		err := fmt.Errorf("'%s' is not a valid uint64", s)
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("'%s' is not a valid uint64", s))
+
 		return n, false
 	}
 
@@ -358,11 +358,13 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 
 		var value string
 		value, err = url.QueryUnescape(values[0])
+
 		if err != nil {
 			return tags, page, limit, err
 		}
 
 		var tag string
+
 		switch key {
 		case types.TxHeightKey:
 			tag = fmt.Sprintf("%s=%s", key, value)
@@ -419,5 +421,6 @@ func ParseQueryParamBool(r *http.Request, param string) bool {
 	if value, err := strconv.ParseBool(r.FormValue(param)); err == nil {
 		return value
 	}
+
 	return false
 }

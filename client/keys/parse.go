@@ -47,11 +47,13 @@ type bech32Output struct {
 
 func newBech32Output(bs []byte) bech32Output {
 	out := bech32Output{Formats: make([]string, len(bech32Prefixes))}
+
 	for i, prefix := range bech32Prefixes {
 		bech32Addr, err := bech32.ConvertAndEncode(prefix, bs)
 		if err != nil {
 			panic(err)
 		}
+
 		out.Formats[i] = bech32Addr
 	}
 
@@ -87,12 +89,15 @@ hexadecimal into bech32 cosmos prefixed format and vice versa.
 func parseKey(cmd *cobra.Command, args []string) error {
 	addr := strings.TrimSpace(args[0])
 	outstream := cmd.OutOrStdout()
+
 	if len(addr) == 0 {
 		return errors.New("couldn't parse empty input")
 	}
+
 	if !(runFromBech32(outstream, addr) || runFromHex(outstream, addr)) {
 		return errors.New("couldn't find valid bech32 nor hex data")
 	}
+
 	return nil
 }
 
@@ -102,7 +107,9 @@ func runFromBech32(w io.Writer, bech32str string) bool {
 	if err != nil {
 		return false
 	}
+
 	displayParseKeyInfo(w, newHexOutput(hrp, bz))
+
 	return true
 }
 
@@ -112,31 +119,33 @@ func runFromHex(w io.Writer, hexstr string) bool {
 	if err != nil {
 		return false
 	}
+
 	displayParseKeyInfo(w, newBech32Output(bz))
+
 	return true
 }
 
 func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer) {
-	var out []byte
-	var err error
+	var (
+		err error
+		out []byte
+	)
 
 	switch viper.Get(cli.OutputFlag) {
 	case OutputFormatText:
 		out, err = yaml.Marshal(&stringer)
 
 	case OutputFormatJSON:
-
 		if viper.GetBool(flags.FlagIndentResponse) {
 			out, err = KeysCdc.MarshalJSONIndent(stringer, "", "  ")
 		} else {
 			out = KeysCdc.MustMarshalJSON(stringer)
 		}
-
 	}
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, string(out))
+	_, _ = fmt.Fprintln(w, string(out))
 }

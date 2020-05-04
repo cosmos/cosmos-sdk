@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -132,9 +131,10 @@ func NewInMemory(opts ...Option) Keyring {
 func New(
 	appName, backend, rootDir string, userInput io.Reader, opts ...Option,
 ) (Keyring, error) {
-
-	var db keyring.Keyring
-	var err error
+	var (
+		db  keyring.Keyring
+		err error
+	)
 
 	switch backend {
 	case BackendMemory:
@@ -353,8 +353,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
-	err := ks.writeInfo(info)
-	if err != nil {
+	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
 
@@ -422,8 +421,9 @@ func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 
 func (ks keystore) List() ([]Info, error) {
 	var res []Info
+
 	keys, err := ks.db.Keys()
-	if err != nil {
+	if err != nil { //nolint:unparam
 		return nil, err
 	}
 
@@ -525,7 +525,8 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err
 	default:
 		return nil, nil, errors.New("not a ledger object")
 	}
-	path, err := info.GetPath()
+
+	path, err := info.GetPath() //nolint:unparam
 	if err != nil {
 		return
 	}
@@ -573,6 +574,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 
 func newPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
 	prefix := fmt.Sprintf(passKeyringPrefix, appName)
+
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.PassBackend},
 		ServiceName:     appName,
@@ -582,6 +584,7 @@ func newPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config 
 
 func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
 	fileDir := filepath.Join(dir, keyringFileDirName)
+
 	return keyring.Config{
 		AllowedBackends:  []keyring.BackendType{keyring.FileBackend},
 		ServiceName:      name,
@@ -598,6 +601,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 		var keyhash []byte
 
 		_, err := os.Stat(keyhashFilePath)
+
 		switch {
 		case err == nil:
 			keyhash, err = ioutil.ReadFile(keyhashFilePath)
@@ -615,6 +619,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 		}
 
 		failureCounter := 0
+
 		for {
 			failureCounter++
 			if failureCounter > maxPassphraseEntryAttempts {
@@ -623,7 +628,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 			buf := bufio.NewReader(buf)
 			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
-			if err != nil {
+			if err != nil { //nolint:unparam
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
@@ -633,6 +638,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 					fmt.Fprintln(os.Stderr, "incorrect passphrase")
 					continue
 				}
+
 				return pass, nil
 			}
 
@@ -649,7 +655,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 			saltBytes := tmcrypto.CRandBytes(16)
 			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
-			if err != nil {
+			if err != nil { //nolint:unparam
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
@@ -668,8 +674,7 @@ func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.Pub
 	pub := priv.PubKey()
 
 	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
-	err := ks.writeInfo(info)
-	if err != nil {
+	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
 
@@ -685,6 +690,7 @@ func (ks keystore) writeInfo(info Info) error {
 	if exists {
 		return fmt.Errorf("public key already exist in keybase")
 	}
+
 	if err != nil {
 		return err
 	}

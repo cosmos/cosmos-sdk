@@ -1,4 +1,4 @@
-name: Lint
+name: Documenation
 on: [pull_request]
 jobs:
   build-and-deploy:

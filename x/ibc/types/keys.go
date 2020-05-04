@@ -177,9 +177,11 @@ func MustParseChannelPath(path string) (string, string) {
 	if len(split) != 5 {
 		panic("cannot parse channel path")
 	}
+
 	if split[1] != "ports" || split[3] != "channels" {
 		panic("cannot parse channel path")
 	}
+
 	return split[2], split[4]
 }
 

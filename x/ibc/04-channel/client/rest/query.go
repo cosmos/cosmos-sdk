@@ -28,7 +28,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id} [get]
-func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
+func queryChannelHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]

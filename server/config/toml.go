@@ -50,7 +50,9 @@ var configTemplate *template.Template
 
 func init() {
 	var err error
+
 	tmpl := template.New("appConfigFileTemplate")
+
 	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
 		panic(err)
 	}
@@ -61,6 +63,7 @@ func init() {
 func ParseConfig() (*Config, error) {
 	conf := DefaultConfig()
 	err := viper.Unmarshal(conf)
+
 	return conf, err
 }
 

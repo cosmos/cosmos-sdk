@@ -53,21 +53,26 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if cmd.Name() == version.Cmd.Name() {
 			return nil
 		}
+
 		config, err := interceptLoadConfig()
 		if err != nil {
 			return err
 		}
+
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
 			return err
 		}
+
 		if viper.GetBool(cli.TraceFlag) {
 			logger = log.NewTracingLogger(logger)
 		}
+
 		logger = logger.With("module", "main")
 		context.Config = config
 		context.Logger = logger
+
 		return nil
 	}
 }
@@ -173,6 +178,7 @@ func ExternalIP() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	for _, iface := range ifaces {
 		if skipInterface(iface) {
 			continue
@@ -181,6 +187,7 @@ func ExternalIP() (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		for _, addr := range addrs {
 			ip := addrToIP(addr)
 			if ip == nil || ip.IsLoopback() {
@@ -200,18 +207,22 @@ func ExternalIP() (string, error) {
 func TrapSignal(cleanupFunc func()) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
 		sig := <-sigs
+
 		if cleanupFunc != nil {
 			cleanupFunc()
 		}
 		exitCode := 128
+
 		switch sig {
 		case syscall.SIGINT:
 			exitCode += int(syscall.SIGINT)
 		case syscall.SIGTERM:
 			exitCode += int(syscall.SIGTERM)
 		}
+
 		os.Exit(exitCode)
 	}()
 }
@@ -220,14 +231,17 @@ func skipInterface(iface net.Interface) bool {
 	if iface.Flags&net.FlagUp == 0 {
 		return true // interface down
 	}
+
 	if iface.Flags&net.FlagLoopback != 0 {
 		return true // loopback interface
 	}
+
 	return false
 }
 
 func addrToIP(addr net.Addr) net.IP {
 	var ip net.IP
+
 	switch v := addr.(type) {
 	case *net.IPNet:
 		ip = v.IP

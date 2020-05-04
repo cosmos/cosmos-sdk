@@ -80,6 +80,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }
 
@@ -123,6 +124,7 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }
 
@@ -165,5 +167,6 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
 }

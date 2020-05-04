@@ -10,11 +10,11 @@ enum Order {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // zero-value for channel ordering
-  NONE = 0;
+  ORDER_NONE = 0 [(gogoproto.enumvalue_customname) = "NONE"];
   // packets can be delivered in any order, which may differ from the order in which they were sent.
-  UNORDERED = 1;
+  ORDER_UNORDERED = 1 [(gogoproto.enumvalue_customname) = "UNORDERED"];
   // packets are delivered exactly in the order which they were sent
-  ORDERED = 2;
+  ORDER_ORDERED = 2 [(gogoproto.enumvalue_customname) = "ORDERED"];
 }
 
 // State defines if a channel or connection is in one of the following states:
@@ -23,14 +23,14 @@ enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // Default State
-  UNINITIALIZED = 0;
+  STATE_UNINITIALIZED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
   // A channel or connection end has just started the opening handshake.
-  INIT = 1;
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
   // A channel or connection end has acknowledged the handshake step on the counterparty chain.
-  TRYOPEN = 2;
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
   // A channel or connection end has completed the handshake. Open channels are
   // ready to send and receive packets.
-  OPEN = 3;
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
   // A channel end has been closed and can no longer be used to send or receive packets.
-  CLOSED = 4;
+  STATE_CLOSED = 4 [(gogoproto.enumvalue_customname) = "CLOSED"];
 }

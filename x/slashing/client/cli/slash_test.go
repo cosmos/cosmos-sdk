@@ -1,28 +1,28 @@
 package cli_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests/cli/helpers"
+	cli "github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashcli "github.com/cosmos/cosmos-sdk/x/slashing/client/cli_test"
 )
 
 func TestSlashingGetParams(t *testing.T) {
 	t.Parallel()
-	f := helpers.InitFixtures(t)
+	f := cli.InitFixtures(t)
 
 	// start simd server
 	proc := f.SDStart()
 	defer proc.Stop(false)
 
-	params := slashcli.QuerySlashingParams(f)
+	params := testutil.QuerySlashingParams(f)
 	require.Equal(t, int64(100), params.SignedBlocksWindow)
 	require.Equal(t, sdk.NewDecWithPrec(5, 1), params.MinSignedPerWindow)
 
-	sinfo := slashcli.QuerySigningInfo(f, f.SDTendermint("show-validator"))
+	sinfo := testutil.QuerySigningInfo(f, f.SDTendermint("show-validator"))
 	require.Equal(t, int64(0), sinfo.StartHeight)
 	require.False(t, sinfo.Tombstoned)
 

@@ -104,7 +104,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 		"/staking/parameters",
 		paramsHandlerFn(cliCtx),
 	).Methods("GET")
-
 }
 
 // HTTP request handler to query a delegator delegations
@@ -121,11 +120,11 @@ func delegatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.Hand
 func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var typesQuerySlice []string
+
 		vars := mux.Vars(r)
 		delegatorAddr := vars["delegatorAddr"]
 
-		_, err := sdk.AccAddressFromBech32(delegatorAddr)
-		if rest.CheckBadRequestError(w, err) {
+		if _, err := sdk.AccAddressFromBech32(delegatorAddr); rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -136,6 +135,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		typesQuery := r.URL.Query().Get("type")
 		trimmedQuery := strings.TrimSpace(typesQuery)
+
 		if len(trimmedQuery) != 0 {
 			typesQuerySlice = strings.Split(trimmedQuery, " ")
 		}
@@ -175,6 +175,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			if rest.CheckInternalServerError(w, errQuery) {
 				return
 			}
+
 			txs = append(txs, foundTxs)
 		}
 
@@ -211,6 +212,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			if rest.CheckBadRequestError(w, err) {
 				return
 			}
+
 			params.DelegatorAddr = delegatorAddr
 		}
 
@@ -219,6 +221,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			if rest.CheckBadRequestError(w, err) {
 				return
 			}
+
 			params.SrcValidatorAddr = srcValidatorAddr
 		}
 
@@ -227,6 +230,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			if rest.CheckBadRequestError(w, err) {
 				return
 			}
+
 			params.DstValidatorAddr = dstValidatorAddr
 		}
 
@@ -279,12 +283,14 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		params := types.NewQueryValidatorsParams(page, limit, status)
+
 		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidators)
+
 		res, height, err := cliCtx.QueryWithData(route, bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
@@ -315,6 +321,7 @@ func historicalInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		heightStr := vars["height"]
+
 		height, err := strconv.ParseInt(heightStr, 10, 64)
 		if err != nil || height < 0 {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Must provide non-negative integer for height: %v", err))
@@ -322,13 +329,13 @@ func historicalInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		params := types.NewQueryHistoricalInfoParams(height)
+
 		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryHistoricalInfo)
-		res, height, err := cliCtx.QueryWithData(route, bz)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryHistoricalInfo), bz)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

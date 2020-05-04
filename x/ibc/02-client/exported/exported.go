@@ -20,6 +20,7 @@ type ClientState interface {
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
+	Validate() error
 
 	// State verification functions
 
@@ -102,6 +103,9 @@ type ConsensusState interface {
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
 	GetRoot() commitmentexported.Root
+
+	// GetTimestamp returns the timestamp (in nanoseconds) of the consensus state
+	GetTimestamp() uint64
 
 	ValidateBasic() error
 }

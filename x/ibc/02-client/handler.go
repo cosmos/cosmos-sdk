@@ -16,7 +16,9 @@ import (
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
 	clientType := exported.ClientTypeFromString(msg.GetClientType())
+
 	var clientState exported.ClientState
+
 	switch clientType {
 	case 0:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
@@ -26,6 +28,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
 		}
 		var err error
+
 		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
 		if err != nil {
 			return nil, err
@@ -50,6 +53,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 
 	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
 	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
+
 	for i, signer := range msg.GetSigners() {
 		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
 	}
@@ -80,6 +84,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClie
 
 	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
 	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
+
 	for i, signer := range msg.GetSigners() {
 		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
 	}

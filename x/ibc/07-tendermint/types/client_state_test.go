@@ -5,16 +5,66 @@ import (
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
+	testClientID     = "clientidone"
 	testConnectionID = "connectionid"
 	testPortID       = "testportid"
 	testChannelID    = "testchannelid"
 	testSequence     = 1
 )
+
+func (suite *TendermintTestSuite) TestValidate() {
+	testCases := []struct {
+		name        string
+		clientState types.ClientState
+		expPass     bool
+	}{
+		{
+			name:        "valid client",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     true,
+		},
+		{
+			name:        "invalid client id",
+			clientState: ibctmtypes.NewClientState("testClientID", trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid trusting period",
+			clientState: ibctmtypes.NewClientState(testClientID, 0, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid unbonding period",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, 0, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid max clock drift",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, 0, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid header",
+			clientState: ibctmtypes.NewClientState(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}),
+			expPass:     false,
+		},
+	}
+
+	for _, tc := range testCases {
+		err := tc.clientState.Validate()
+		if tc.expPass {
+			suite.Require().NoError(err, tc.name)
+		} else {
+			suite.Require().Error(err, tc.name)
+		}
+	}
+}
 
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
@@ -37,7 +87,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -46,7 +96,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -64,7 +114,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
@@ -92,7 +142,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connection.NewConnectionEnd(connectionexported.OPEN, "clientA", counterparty, []string{"1.0.0"})
+	conn := connection.NewConnectionEnd(connectionexported.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name           string
@@ -116,7 +166,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -126,7 +176,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -146,7 +196,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			connection:  conn,
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -199,7 +249,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -209,7 +259,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -229,7 +279,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			channel:     ch,
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -279,7 +329,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -289,7 +339,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -309,7 +359,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			commitment:  []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -359,7 +409,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -369,7 +419,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -389,7 +439,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			ack:         []byte{},
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
@@ -438,7 +488,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -447,7 +497,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -465,7 +515,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,
@@ -513,7 +563,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -522,7 +572,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
@@ -540,7 +590,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, suite.header),
+			clientState: ibctmtypes.NewClientState(chainID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			consensusState: ibctmtypes.ConsensusState{
 				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				ValidatorSet: suite.valSet,

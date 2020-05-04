@@ -1,10 +1,18 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/types"
+
+	"github.com/tendermint/go-amino"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -141,4 +149,35 @@ func (w WeightedProposalContent) DefaultWeight() int {
 
 func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
 	return w.contentSimulatorFn
+}
+
+//-----------------------------------------------------------------------------
+// Param change proposals
+
+// RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
+func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
+	cdc := amino.NewCodec()
+
+	var genesisState map[string]json.RawMessage
+
+	cdc.UnmarshalJSON(appState, &genesisState)
+
+	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
+
+	consensusParams := &abci.ConsensusParams{
+		Block: &abci.BlockParams{
+			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
+			MaxGas:   -1,
+		},
+		Validator: &abci.ValidatorParams{
+			PubKeyTypes: []string{types.ABCIPubKeyTypeSecp256k1, types.ABCIPubKeyTypeEd25519},
+		},
+		Evidence: &abci.EvidenceParams{
+			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),
+			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
+		},
+	}
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
+
+	return consensusParams
 }

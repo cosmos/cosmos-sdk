@@ -149,8 +149,8 @@ func (pi *prefixIterator) Next() {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Next()")
 	}
-	pi.iter.Next()
-	if !pi.iter.Valid() || !bytes.HasPrefix(pi.iter.Key(), pi.prefix) {
+
+	if pi.iter.Next(); !pi.iter.Valid() || !bytes.HasPrefix(pi.iter.Key(), pi.prefix) {
 		// TODO: shouldn't pi be set to nil instead?
 		pi.valid = false
 	}
@@ -161,8 +161,10 @@ func (pi *prefixIterator) Key() (key []byte) {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Key()")
 	}
+
 	key = pi.iter.Key()
 	key = stripPrefix(key, pi.prefix)
+
 	return
 }
 
@@ -171,6 +173,7 @@ func (pi *prefixIterator) Value() []byte {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Value()")
 	}
+
 	return pi.iter.Value()
 }
 
@@ -194,6 +197,7 @@ func stripPrefix(key []byte, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
 	}
+
 	return key[len(prefix):]
 }
 

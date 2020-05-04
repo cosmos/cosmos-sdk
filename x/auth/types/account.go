@@ -30,6 +30,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber,
 	}
 
 	acc.SetPubKey(pubKey)
+
 	return acc
 }
 
@@ -150,51 +151,6 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 	return string(bz), err
 }
 
-// MarshalJSON returns the JSON representation of a BaseAccount.
-func (acc BaseAccount) MarshalJSON() ([]byte, error) {
-	alias := baseAccountPretty{
-		Address:       acc.Address,
-		AccountNumber: acc.AccountNumber,
-		Sequence:      acc.Sequence,
-	}
-
-	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.GetPubKey())
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	return json.Marshal(alias)
-}
-
-// UnmarshalJSON unmarshals raw JSON bytes into a BaseAccount.
-func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
-	var alias baseAccountPretty
-	if err := json.Unmarshal(bz, &alias); err != nil {
-		return err
-	}
-
-	// NOTE: This will not work for multisig-based accounts as their Bech32
-	// encoding is too long.
-	if alias.PubKey != "" {
-		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
-		if err != nil {
-			return err
-		}
-
-		acc.PubKey = pk.Bytes()
-	}
-
-	acc.Address = alias.Address
-	acc.AccountNumber = alias.AccountNumber
-	acc.Sequence = alias.Sequence
-
-	return nil
-}
-
 // NewModuleAddress creates an AccAddress from the hash of the module's name
 func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
@@ -264,6 +220,7 @@ func (ma ModuleAccount) Validate() error {
 	if strings.TrimSpace(ma.Name) == "" {
 		return errors.New("module account name cannot be blank")
 	}
+
 	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}

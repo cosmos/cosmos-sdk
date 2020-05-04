@@ -90,6 +90,7 @@ func (om OperationMsg) String() string {
 	if err != nil {
 		panic(err)
 	}
+
 	return string(out)
 }
 
@@ -99,6 +100,7 @@ func (om OperationMsg) MustMarshal() json.RawMessage {
 	if err != nil {
 		panic(err)
 	}
+
 	return out
 }
 
@@ -108,6 +110,7 @@ func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 	if !om.OK {
 		pass = "failure"
 	}
+
 	eventLogger(om.Route, om.Name, pass)
 }
 

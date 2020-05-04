@@ -17,9 +17,14 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// DefaultPacketTimeout is the default packet timeout relative to the current block height
 const (
-	DefaultPacketTimeout = 1000 // NOTE: in blocks
+	// DefaultPacketTimeoutHeight is the default packet timeout height relative
+	// to the current block height. The timeout is disabled when set to 0.
+	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks
+
+	// DefaultPacketTimeoutTimestamp is the default packet timeout timestamp relative
+	// to the current block timestamp. The timeout is disabled when set to 0.
+	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds
 )
 
 // Keeper defines the IBC transfer keeper
@@ -87,6 +92,12 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 		return sdkerrors.Wrapf(channel.ErrChannelCapabilityNotFound, "could not retrieve channel capability at: %s", capName)
 	}
 	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID, chanCap)
+}
+
+// IsBound checks if the transfer module is already bound to the desired port
+func (k Keeper) IsBound(ctx sdk.Context, portID string) bool {
+	_, ok := k.scopedKeeper.GetCapability(ctx, porttypes.PortPath(portID))
+	return ok
 }
 
 // BindPort defines a wrapper function for the ort Keeper's function in

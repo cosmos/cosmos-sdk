@@ -205,7 +205,7 @@ func TestCLIFeesDeduction(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestGaiaCLIQuerySupply(t *testing.T) {
+func TestCLIQuerySupply(t *testing.T) {
 	t.Parallel()
 	f := cli.InitFixtures(t)
 

@@ -24,5 +24,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         env:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: docs/.vuepress/dist
+          publish_dir: "docs/.vuepress/dist"

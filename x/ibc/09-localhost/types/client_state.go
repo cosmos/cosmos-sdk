@@ -125,7 +125,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored locally.
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec,
+	cdc clientexported.Codec,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -143,8 +143,8 @@ func (cs ClientState) VerifyConnectionState(
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
 
-	var prevConnection connectionexported.ConnectionI
-	if err := cdc.UnmarshalBinaryBare(bz, &prevConnection); err != nil {
+	prevConnection, err := cdc.UnmarshalConnection(bz)
+	if err != nil {
 		return err
 	}
 
@@ -161,7 +161,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the local machine.
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec,
+	cdc clientexported.Codec,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -180,10 +180,11 @@ func (cs ClientState) VerifyChannelState(
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
 
-	var prevChannel channelexported.ChannelI
-	if err := cdc.UnmarshalBinaryBare(bz, &prevChannel); err != nil {
+	prevChannel, err := cdc.UnmarshalChannel(bz)
+	if err != nil {
 		return err
 	}
+
 	if channel != prevChannel {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedChannelStateVerification,

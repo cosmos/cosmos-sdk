@@ -63,7 +63,7 @@ func (k Keeper) VerifyConnectionState(
 	}
 
 	return clientState.VerifyConnectionState(
-		k.aminoCdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
+		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
 	)
 }
 
@@ -95,7 +95,7 @@ func (k Keeper) VerifyChannelState(
 	}
 
 	return clientState.VerifyChannelState(
-		k.aminoCdc, height, connection.GetCounterparty().GetPrefix(), proof,
+		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof,
 		portID, channelID, channel, consensusState,
 	)
 }

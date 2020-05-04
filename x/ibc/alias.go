@@ -7,6 +7,7 @@ package ibc
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/types
 
 import (
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -26,4 +27,5 @@ var (
 
 type (
 	Keeper = keeper.Keeper
+	Codec  = clientexported.Codec
 )

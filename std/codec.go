@@ -12,6 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
 
 var (
@@ -19,6 +22,7 @@ var (
 	_ bank.Codec     = (*Codec)(nil)
 	_ evidence.Codec = (*Codec)(nil)
 	_ gov.Codec      = (*Codec)(nil)
+	_ ibc.Codec      = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -178,6 +182,86 @@ func (c *Codec) UnmarshalProposal(bz []byte) (gov.Proposal, error) {
 		Content:      proposal.Content.GetContent(),
 		ProposalBase: proposal.ProposalBase,
 	}, nil
+}
+
+// MarshalConnection marshals an Connection interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (c *Codec) MarshalConnection(connectionI connectionexported.ConnectionI) ([]byte, error) {
+	connection := &Connection{}
+	if err := connection.SetConnectionI(connectionI); err != nil {
+		return nil, err
+	}
+
+	return c.Marshaler.MarshalBinaryBare(connection)
+}
+
+// UnmarshalConnection returns a Connection interface from raw encoded evidence
+// bytes of a Proto-based Connection type. An error is returned upon decoding
+// failure.
+func (c *Codec) UnmarshalConnection(bz []byte) (connectionexported.ConnectionI, error) {
+	connection := &Connection{}
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, connection); err != nil {
+		return nil, err
+	}
+
+	return connection.GetConnectionI(), nil
+}
+
+// MarshalConnectionJSON JSON encodes a connection object implementing the Connection
+// interface.
+func (c *Codec) MarshalConnectionJSON(connection connectionexported.ConnectionI) ([]byte, error) {
+	return c.Marshaler.MarshalJSON(connection)
+}
+
+// UnmarshalConnectionJSON returns a Connection from JSON encoded bytes
+func (c *Codec) UnmarshalConnectionJSON(bz []byte) (connectionexported.ConnectionI, error) {
+	connection := &Connection{}
+	if err := c.Marshaler.UnmarshalJSON(bz, connection); err != nil {
+		return nil, err
+	}
+
+	return connection.GetConnectionI(), nil
+}
+
+// MarshalChannel marshals an Channel interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (c *Codec) MarshalChannel(channelI channelexported.ChannelI) ([]byte, error) {
+	channel := &Channel{}
+	if err := channel.SetChannelI(channelI); err != nil {
+		return nil, err
+	}
+
+	return c.Marshaler.MarshalBinaryBare(channel)
+}
+
+// UnmarshalChannel returns a Channel interface from raw encoded evidence
+// bytes of a Proto-based Channel type. An error is returned upon decoding
+// failure.
+func (c *Codec) UnmarshalChannel(bz []byte) (channelexported.ChannelI, error) {
+	channel := &Channel{}
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, channel); err != nil {
+		return nil, err
+	}
+
+	return channel.GetChannelI(), nil
+}
+
+// MarshalChannelJSON JSON encodes a channel object implementing the Channel
+// interface.
+func (c *Codec) MarshalChannelJSON(channel channelexported.ChannelI) ([]byte, error) {
+	return c.Marshaler.MarshalJSON(channel)
+}
+
+// UnmarshalChannelJSON returns a Channel from JSON encoded bytes
+func (c *Codec) UnmarshalChannelJSON(bz []byte) (channelexported.ChannelI, error) {
+	channel := &Channel{}
+	if err := c.Marshaler.UnmarshalJSON(bz, channel); err != nil {
+		return nil, err
+	}
+
+	return channel.GetChannelI(), nil
 }
 
 // ----------------------------------------------------------------------------

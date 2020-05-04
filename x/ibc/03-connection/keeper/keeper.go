@@ -20,13 +20,13 @@ import (
 // Keeper defines the IBC connection keeper
 type Keeper struct {
 	storeKey     sdk.StoreKey
-	aminoCdc     *codec.Codec    // amino codec. TODO: remove after clients have been migrated to proto
-	cdc          codec.Marshaler // hybrid codec
+	aminoCdc     *codec.Codec         // amino codec. TODO: remove after clients have been migrated to proto
+	cdc          clientexported.Codec // hybrid codec
 	clientKeeper types.ClientKeeper
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
+func NewKeeper(aminoCdc *codec.Codec, cdc clientexported.Codec, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
 	return Keeper{
 		storeKey:     key,
 		aminoCdc:     aminoCdc,
@@ -54,15 +54,28 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 		return types.ConnectionEnd{}, false
 	}
 
-	var connection types.ConnectionEnd
-	k.cdc.MustUnmarshalBinaryBare(bz, &connection)
-	return connection, true
+	connectionI, err := k.cdc.UnmarshalConnection(bz)
+	if err != nil {
+		panic(err)
+	}
+
+	connection, ok := connectionI.(*types.ConnectionEnd)
+	if !ok {
+		panic(fmt.Sprintf("invalid type %T", connectionI))
+	}
+
+	return *connection, true
 }
 
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&connection)
+
+	bz, err := k.cdc.MarshalConnection(connection)
+	if err != nil {
+		panic(err)
+	}
+
 	store.Set(ibctypes.KeyConnection(connectionID), bz)
 }
 

@@ -80,7 +80,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.cdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
+			suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
 
 			// suite.cdc, height, tc.prefix, tc.proof, nil,
 		)

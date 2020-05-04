@@ -104,6 +104,26 @@ message Content {
   }
 }
 
+// Connection defines the application-level concrete connection type.
+message Connection {
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported.ConnectionI";
+
+  // sum defines a set of all acceptable concrete connection types.
+  oneof sum {
+    cosmos_sdk.x.ibc.connection.v1.ConnectionEnd connection_end = 1;
+  }
+}
+
+// Channel defines the application-level concrete channel type.
+message Channel {
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.ChannelI";
+
+  // sum defines a set of all acceptable concrete channel types.
+  oneof sum {
+    cosmos_sdk.x.ibc.channel.v1.Channel channel = 1;
+  }
+}
+
 // Transaction defines the application-level transaction that can be signed and
 // processed by the state-machine. It contains a base of common fields and
 // repeated set of Message types.

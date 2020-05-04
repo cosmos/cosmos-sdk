@@ -168,7 +168,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec,
+	cdc clientexported.Codec,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -185,7 +185,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(connectionEnd)
+	bz, err := cdc.MarshalConnection(connectionEnd)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec,
+	cdc clientexported.Codec,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -218,7 +218,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(channel)
+	bz, err := cdc.MarshalChannel(channel)
 	if err != nil {
 		return err
 	}

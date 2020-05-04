@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -19,7 +19,7 @@ import (
 // Keeper defines the IBC channel keeper
 type Keeper struct {
 	storeKey         sdk.StoreKey
-	cdc              codec.Marshaler
+	cdc              clientexported.Codec
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
@@ -28,7 +28,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey,
+	cdc clientexported.Codec, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
 	portKeeper types.PortKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {
@@ -55,15 +55,26 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 		return types.Channel{}, false
 	}
 
-	var channel types.Channel
-	k.cdc.MustUnmarshalBinaryBare(bz, &channel)
-	return channel, true
+	channelI, err := k.cdc.UnmarshalChannel(bz)
+	if err != nil {
+		panic(err)
+	}
+
+	channel, ok := channelI.(*types.Channel)
+	if !ok {
+		panic(fmt.Sprintf("invalid type %T", channelI))
+	}
+
+	return *channel, true
 }
 
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&channel)
+	bz, err := k.cdc.MarshalChannel(channel)
+	if err != nil {
+		panic(err)
+	}
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
 }
 

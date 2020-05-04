@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestSlashingGetParams(t *testing.T) {
+func TestCLISlashingGetParams(t *testing.T) {
 	t.Parallel()
 	f := cli.InitFixtures(t)
 

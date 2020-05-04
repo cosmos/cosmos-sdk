@@ -15,7 +15,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Auth transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
 		GetMultiSignCommand(cdc),

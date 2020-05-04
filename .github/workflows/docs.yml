@@ -21,7 +21,7 @@ jobs:
 
         # if: "env.GIT_DIFF != ''"
       - name: Deploy 🚀
-      - uses: peaceiris/actions-gh-pages@v2
+        uses: peaceiris/actions-gh-pages@v2
         env:
           PERSONAL_TOKEN: ${{ secrets.GH_PAGES_TOKEN }}
           PUBLISH_BRANCH: gh-pages

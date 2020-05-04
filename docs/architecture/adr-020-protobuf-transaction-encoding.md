@@ -120,7 +120,6 @@ potentially be exploited by an attacker)
 In order to sign in the default mode, clients take the following steps:
 
 1. Encode `TxBody`
-
 2. Sign `SignDocRaw`
 
 The raw encoded `TxBody` bytes are encoded into `SignDocRaw` below so that the

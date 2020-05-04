@@ -146,10 +146,17 @@ func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var connection types.ConnectionEnd
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &connection)
+		connectionI, err := k.cdc.UnmarshalConnection(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
 
-		if cb(connection) {
+		connection, ok := connectionI.(*types.ConnectionEnd)
+		if !ok {
+			panic(fmt.Sprintf("invalid type %T", connectionI))
+		}
+
+		if cb(*connection) {
 			break
 		}
 	}

@@ -123,7 +123,7 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 	connections := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
 	suite.Require().Len(connections, len(expConnections))
-	suite.Require().ElementsMatch(expConnections, connections)
+	suite.Require().Equal(expConnections, connections)
 }
 
 func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {

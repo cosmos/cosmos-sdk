@@ -241,11 +241,18 @@ func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.IdentifiedChannel
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var channel types.Channel
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &channel)
+		channelI, err := k.cdc.UnmarshalChannel(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
+
+		channel, ok := channelI.(*types.Channel)
+		if !ok {
+			panic(fmt.Sprintf("invalid type %T", channelI))
+		}
 
 		portID, channelID := ibctypes.MustParseChannelPath(string(iterator.Key()))
-		identifiedChannel := types.NewIdentifiedChannel(portID, channelID, channel)
+		identifiedChannel := types.NewIdentifiedChannel(portID, channelID, *channel)
 		if cb(identifiedChannel) {
 			break
 		}

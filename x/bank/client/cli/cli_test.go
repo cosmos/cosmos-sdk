@@ -216,8 +216,8 @@ func TestCLIQuerySupply(t *testing.T) {
 	totalSupply := testutil.QueryTotalSupply(f)
 	totalSupplyOf := testutil.QueryTotalSupplyOf(f, cli.FooDenom)
 
-	require.Equal(t, cli.StartCoins, totalSupply)
-	require.True(sdk.IntEq(t, cli.StartCoins.AmountOf(cli.FooDenom), totalSupplyOf))
+	require.Equal(t, cli.TotalCoins, totalSupply)
+	require.True(sdk.IntEq(t, cli.TotalCoins.AmountOf(cli.FooDenom), totalSupplyOf))
 
 	f.Cleanup()
 }

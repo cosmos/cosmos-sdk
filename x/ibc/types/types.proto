@@ -10,7 +10,7 @@ enum Order {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // zero-value for channel ordering
-  ORDER_NONE = 0 [(gogoproto.enumvalue_customname) = "NONE"];
+  ORDER_NONE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "NONE"];
   // packets can be delivered in any order, which may differ from the order in which they were sent.
   ORDER_UNORDERED = 1 [(gogoproto.enumvalue_customname) = "UNORDERED"];
   // packets are delivered exactly in the order which they were sent
@@ -23,7 +23,7 @@ enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // Default State
-  STATE_UNINITIALIZED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
   // A channel or connection end has just started the opening handshake.
   STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
   // A channel or connection end has acknowledged the handshake step on the counterparty chain.

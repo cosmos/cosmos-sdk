@@ -63,7 +63,7 @@ enum KeyEncoding {
   option (gogoproto.goproto_enum_prefix)   = false;
 
   // URL encoding
-  KEY_ENCODING_URL = 0 [(gogoproto.enumvalue_customname) = "URL"];
+  KEY_ENCODING_URL_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "URL"];
   // Hex encoding
   KEY_ENCODING_HEX = 1 [(gogoproto.enumvalue_customname) = "HEX"];
 }

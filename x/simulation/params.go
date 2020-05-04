@@ -159,6 +159,7 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 	cdc := amino.NewCodec()
 
 	var genesisState map[string]json.RawMessage
+
 	cdc.UnmarshalJSON(appState, &genesisState)
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)

@@ -49,6 +49,7 @@ func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
 	if err != nil {
 		panic(err)
 	}
+
 	return delegation
 }
 
@@ -58,7 +59,6 @@ func UnmarshalDelegation(cdc codec.Marshaler, value []byte) (delegation Delegati
 	return delegation, err
 }
 
-// nolint - for Delegation
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
 func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
@@ -76,6 +76,7 @@ func (d Delegations) String() (out string) {
 	for _, del := range d {
 		out += del.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -104,7 +105,6 @@ func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) UnbondingDelegation {
-
 	return UnbondingDelegation{
 		DelegatorAddress: delegatorAddr,
 		ValidatorAddress: validatorAddr,
@@ -136,6 +136,7 @@ func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
 	if err != nil {
 		panic(err)
 	}
+
 	return ubd
 }
 
@@ -158,6 +159,7 @@ func (ubd UnbondingDelegation) String() string {
       Expected balance:          %s`, i, entry.CreationHeight,
 			entry.CompletionTime, entry.Balance)
 	}
+
 	return out
 }
 
@@ -168,6 +170,7 @@ func (ubds UnbondingDelegations) String() (out string) {
 	for _, u := range ubds {
 		out += u.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -195,7 +198,6 @@ func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec,
 ) Redelegation {
-
 	return Redelegation{
 		DelegatorAddress:    delegatorAddr,
 		ValidatorSrcAddress: validatorSrcAddr,
@@ -228,6 +230,7 @@ func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
 	if err != nil {
 		panic(err)
 	}
+
 	return red
 }
 
@@ -268,6 +271,7 @@ func (d Redelegations) String() (out string) {
 	for _, red := range d {
 		out += red.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -318,6 +322,7 @@ func (d DelegationResponses) String() (out string) {
 	for _, del := range d {
 		out += del.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }
 
@@ -407,5 +412,6 @@ func (r RedelegationResponses) String() (out string) {
 	for _, red := range r {
 		out += red.String() + "\n"
 	}
+
 	return strings.TrimSpace(out)
 }

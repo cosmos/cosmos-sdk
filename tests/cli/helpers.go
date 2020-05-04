@@ -1,4 +1,4 @@
-package helpers
+package cli
 
 import (
 	"encoding/json"
@@ -19,21 +19,14 @@ import (
 )
 
 var (
-	totalCoins = sdk.NewCoins(
-		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(2000000)),
-		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(2000000)),
-		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(2000)),
-		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(300).Add(sdk.NewInt(12))), // add coins from inflation
-	)
-
-	startCoins = sdk.NewCoins(
+	StartCoins = sdk.NewCoins(
 		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(1000)),
 		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(150)),
 	)
 
-	vestingCoins = sdk.NewCoins(
+	VestingCoins = sdk.NewCoins(
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(500000)),
 	)
 )
@@ -168,13 +161,13 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 
-// TxBroadcast is gaiacli tx broadcast
+// TxBroadcast is simcli tx broadcast
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
 	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxEncode is gaiacli tx encode
+// TxEncode is simcli tx encode
 func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
 	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)

@@ -62,6 +62,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	if err != nil {
 		return
 	}
+
 	rs.log.Info(
 		fmt.Sprintf(
 			"Starting application REST service (chain-id: %q)...",
@@ -70,6 +71,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	)
 
 	var h http.Handler = rs.Mux
+
 	if cors {
 		return rpcserver.StartHTTPServer(rs.listener, handlers.CORS()(h), rs.log, cfg)
 	}
@@ -111,6 +113,7 @@ func (rs *RestServer) registerSwaggerUI() {
 	if err != nil {
 		panic(err)
 	}
+
 	staticServer := http.FileServer(statikFS)
 	rs.Mux.PathPrefix("/").Handler(staticServer)
 }

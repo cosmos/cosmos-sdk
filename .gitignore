@@ -19,6 +19,7 @@ docs/tutorial
 docs/node_modules
 dist
 tools-stamp
+proto-tools-stamp
 
 # Data - ideally these don't exist
 baseapp/data/*

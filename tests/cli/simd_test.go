@@ -1,20 +1,24 @@
+// +build cli_test
+
 package cli_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"io/ioutil"
-	"path/filepath"
-	"testing"
 )
 
-func TestSimdCollectGentxs(t *testing.T) {
+func TestCLISimdCollectGentxs(t *testing.T) {
 	t.Parallel()
 	var customMaxBytes, customMaxGas int64 = 99999999, 1234567
 	f := cli.NewFixtures(t)
@@ -62,7 +66,7 @@ func TestSimdCollectGentxs(t *testing.T) {
 	f.Cleanup(gentxDir)
 }
 
-func TestSimdAddGenesisAccount(t *testing.T) {
+func TestCLISimdAddGenesisAccount(t *testing.T) {
 	t.Parallel()
 	f := cli.NewFixtures(t)
 
@@ -113,7 +117,7 @@ func TestSimdAddGenesisAccount(t *testing.T) {
 	f.Cleanup()
 }
 
-func TestValidateGenesis(t *testing.T) {
+func TestCLIValidateGenesis(t *testing.T) {
 	t.Parallel()
 	f := cli.InitFixtures(t)
 

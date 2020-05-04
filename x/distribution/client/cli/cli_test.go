@@ -1,19 +1,21 @@
+// +build cli_test
+
 package cli_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/tests/cli"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrcli "github.com/cosmos/cosmos-sdk/x/distribution/client/cli_test"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 )
 
-func TestCliWithdrawRewards(t *testing.T) {
+func TestCLIWithdrawRewards(t *testing.T) {
 	t.Parallel()
 	f := cli.InitFixtures(t)
 
@@ -36,18 +38,18 @@ func TestCliWithdrawRewards(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	fooAddr := f.KeyAddress(cli.KeyFoo)
-	rewards := distrcli.QueryRewards(f, fooAddr)
+	rewards := testutil.QueryRewards(f, fooAddr)
 	require.Equal(t, 1, len(rewards.Rewards))
 	require.NotNil(t, rewards.Total)
 
 	fooVal := sdk.ValAddress(fooAddr)
-	success := distrcli.TxWithdrawRewards(f, fooVal, fooAddr.String(), "-y")
+	success := testutil.TxWithdrawRewards(f, fooVal, fooAddr.String(), "-y")
 	require.True(t, success)
 
-	rewards = distrcli.QueryRewards(f, fooAddr)
+	rewards = testutil.QueryRewards(f, fooAddr)
 	require.Equal(t, 1, len(rewards.Rewards))
 
 	require.Nil(t, rewards.Total)

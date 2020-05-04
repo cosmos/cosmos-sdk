@@ -42,7 +42,6 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryPool(queryRoute, cdc))...)
 
 	return stakingQueryCmd
-
 }
 
 // GetCmdQueryValidator implements the validator query command.

@@ -28,7 +28,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 	}
 }
 
-func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper) ([]byte, error) {
 	plan, has := k.GetUpgradePlan(ctx)
 	if !has {
 		return nil, nil

@@ -43,12 +43,14 @@ func GetMigrationVersions() []string {
 	versions := make([]string, len(migrationMap))
 
 	var i int
+
 	for version := range migrationMap {
 		versions[i] = version
 		i++
 	}
 
 	sort.Strings(versions)
+
 	return versions
 }
 

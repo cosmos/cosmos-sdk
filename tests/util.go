@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -213,10 +212,15 @@ func ExtractPortFromAddress(listenAddress string) string {
 	return stringList[2]
 }
 
+type NamedTestingT interface {
+	require.TestingT
+	Name() string
+}
+
 // NewTestCaseDir creates a new temporary directory for a test case.
 // Returns the directory path and a cleanup function.
 // nolint: errcheck
-func NewTestCaseDir(t *testing.T) (string, func()) {
+func NewTestCaseDir(t NamedTestingT) (string, func()) {
 	dir, err := ioutil.TempDir("", t.Name()+"_")
 	require.NoError(t, err)
 	return dir, func() { os.RemoveAll(dir) }

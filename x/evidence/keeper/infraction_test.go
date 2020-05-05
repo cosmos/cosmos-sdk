@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 
 	// double sign less than max age
 	oldTokens := suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetTokens()
-	evidence := types.Equivocation{
+	evidence := &types.Equivocation{
 		Height:           0,
 		Time:             time.Unix(0, 0),
 		Power:            power,
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	)
 	suite.Equal(amt, suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetBondedTokens())
 
-	evidence := types.Equivocation{
+	evidence := &types.Equivocation{
 		Height:           0,
 		Time:             ctx.BlockTime(),
 		Power:            power,

@@ -5,6 +5,8 @@ package testdata
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type Animal interface {
@@ -17,4 +19,11 @@ func (c Cat) Greet() string {
 
 func (d Dog) Greet() string {
 	return fmt.Sprintf("Roof, my name is %s", d.Name)
+}
+
+var _ types.UnpackInterfacesMessage = HasAnimal{}
+
+func (m HasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var animal Animal
+	return unpacker.UnpackAny(m.Animal, &animal)
 }

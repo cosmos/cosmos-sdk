@@ -116,8 +116,8 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
-	// Test sign --validate-signatures
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--validate-signatures")
+	// Test validate-signatures
+	success, stdout, _ = testutil.TxValidateSignatures(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.False(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
@@ -144,8 +144,8 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	signedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
-	// Test sign --validate-signatures
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, signedTxFile.Name(), "--validate-signatures")
+	// Test validate-signatures
+	success, stdout, _ = testutil.TxValidateSignatures(f, cli.KeyFoo, signedTxFile.Name())
 	require.True(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n  0: %v\t\t\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
@@ -214,7 +214,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
-	success, _, _ = testutil.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
+	success, _, _ = testutil.TxValidateSignatures(f, cli.KeyFooBarBaz, signedTxFile.Name())
 	require.False(t, success)
 
 	// Broadcast the transaction
@@ -315,7 +315,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
-	success, _, _ = testutil.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
+	success, _, _ = testutil.TxValidateSignatures(f, cli.KeyFooBarBaz, signedTxFile.Name())
 	require.True(t, success)
 
 	// Broadcast the transaction
@@ -388,7 +388,7 @@ func TestCLIMultisign(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
-	success, _, _ = testutil.TxSign(f, cli.KeyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "-y")
+	success, _, _ = testutil.TxValidateSignatures(f, cli.KeyFooBarBaz, signedTxFile.Name())
 	require.True(t, success)
 
 	// Broadcast the transaction

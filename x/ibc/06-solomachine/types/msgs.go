@@ -6,6 +6,7 @@ import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -23,7 +24,7 @@ type MsgCreateClient struct {
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
-func NewMsgCreateClient(id string, consensusState ConsesnsusState) MsgCreateClient {
+func NewMsgCreateClient(id string, consensusState ConsensusState) MsgCreateClient {
 	return MsgCreateClient{
 		ClientID:       id,
 		ConsensusState: consensusState,
@@ -32,7 +33,7 @@ func NewMsgCreateClient(id string, consensusState ConsesnsusState) MsgCreateClie
 
 // Route implements sdk.Msg
 func (msg MsgCreateClient) Route() string {
-	ibctypes.RouterKey
+	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -56,7 +57,7 @@ func (msg MsgCreateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.ConsensusState.PublicKey.Address()}
+	return []sdk.AccAddress{sdk.AccAddress(msg.ConsensusState.PublicKey.Address())}
 }
 
 // GetClientID implements clientexported.MsgCreateClient
@@ -113,7 +114,7 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Header.NewPublicKey.Address()}
+	return []sdk.AccAddress{sdk.AccAddress(msg.Header.NewPublicKey.Address())}
 }
 
 // GetClientID implements clientexported.MsgUpdateClient

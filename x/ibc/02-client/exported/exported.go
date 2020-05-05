@@ -150,6 +150,7 @@ type ClientType byte
 const (
 	Tendermint ClientType = iota + 1 // 1
 	Localhost
+	SoloMachine
 )
 
 // string representation of the client types

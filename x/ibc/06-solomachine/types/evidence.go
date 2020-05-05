@@ -3,8 +3,16 @@ package types
 import (
 	"bytes"
 
+	yaml "gopkg.in/yaml.v2"
+
+	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
@@ -50,9 +58,15 @@ func (ev Evidence) String() string {
 	return string(bz)
 }
 
+// Hash implements Evidence interface
+func (ev Evidence) Hash() tmbytes.HexBytes {
+	bz := SubModuleCdc.MustMarshalBinaryBare(ev)
+	return tmhash.Sum(bz)
+}
+
 // GetHeight returns the sequence at which misbehaviour occurred.
 func (ev Evidence) GetHeight() int64 {
-	return ev.Sequence
+	return int64(ev.Sequence)
 }
 
 // ValidateBasic implements Evidence interface.
@@ -61,7 +75,7 @@ func (ev Evidence) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
-	if sequence == 0 {
+	if ev.Sequence == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "sequence cannot be 0")
 	}
 

@@ -1,7 +1,16 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -20,13 +29,13 @@ type ClientState struct {
 
 // InitializeFromMsg creates a solo machine client from a MsgCreateClient
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
-	return Initialize(msg.GetClientID(), msg.GetConsensusState())
+	return Initialize(msg.GetClientID(), msg.ConsensusState)
 }
 
 // Initialize creates an unfrozen client with the initial consensus state
 func Initialize(id string, consensusState ConsensusState) (ClientState, error) {
 	return ClientState{
-		ClientID:       id,
+		ID:             id,
 		Frozen:         false,
 		ConsensusState: consensusState,
 	}, nil
@@ -67,16 +76,16 @@ func (cs ClientState) VerifyClientConsensusState(
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusState(consensusHeight)
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz, err := cdc.MarshalBinaryBare(consensusState)
@@ -86,14 +95,11 @@ func (cs ClientState) VerifyClientConsensusState(
 
 	// value = sequence + path + consensus state
 	value := append(
-		append(
-			sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-			path...,
-		),
+		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if err := cs.ConsensusState.PublicKey.verifyBytes(value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "failed to verify proof against current public key, sequence, and consensus state")
 	}
 
 	//cs.ConsensusState.Sequence += 1
@@ -109,7 +115,7 @@ func (cs ClientState) VerifyConnectionState(
 	proof commitmentexported.Proof,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
 	if err != nil {
@@ -117,7 +123,7 @@ func (cs ClientState) VerifyConnectionState(
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz, err := cdc.MarshalBinaryBare(connectionEnd)
@@ -127,14 +133,14 @@ func (cs ClientState) VerifyConnectionState(
 
 	// value = sequence + path + connection end
 	value := append(
-		append(
-			sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-			path...,
-		),
+		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if err := cs.ConsensusState.PublicKey.VerifyBytes(value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(
+			clienttypes.ErrFailedConnectionStateVerification,
+			"failed to verify proof against current public key, sequence, and connection state",
+		)
 	}
 
 	//cs.ConsensusState.Sequence += 1
@@ -152,15 +158,15 @@ func (cs ClientState) VerifyChannelState(
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz, err := cdc.MarshalBinaryBare(channel)
@@ -170,14 +176,14 @@ func (cs ClientState) VerifyChannelState(
 
 	// value = sequence + path + channel
 	value := append(
-		append(
-			sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-			path...,
-		),
+		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if err := checkSignature(cs.ConsensusState.PublicKey, value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(
+			clienttypes.ErrFailedChannelStateVerification,
+			"failed to verify proof against current public key, sequence, and channel state",
+		)
 	}
 
 	//cs.ConsensusState.Sequence += 1
@@ -194,7 +200,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
@@ -202,19 +208,19 @@ func (cs ClientState) VerifyPacketCommitment(
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	// value = sequence + path + commitment bytes
 	value := append(
-		append(
-			sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-			path...,
-		),
+		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		commitmentBytes...,
 	)
-	if err := checkSignature(cs.ConsensusState.PublicKey, value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(
+			clienttypes.ErrFailedPacketCommitmentVerification,
+			"failed to verify proof against current public key, sequence, and packet commitment",
+		)
 	}
 
 	//cs.ConsensusState.Sequence += 1
@@ -232,7 +238,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
@@ -240,19 +246,19 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	// value = sequence + path + acknowledgement
 	value := append(
-		append(
-			sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-			path...,
-		),
+		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		acknowledgement...,
 	)
-	if err := checkSignature(cs.ConsensusState.PublicKey, value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(
+			clienttypes.ErrFailedPacketAckVerification,
+			"failed to verify proof against current public key, sequence, and acknowledgement",
+		)
 	}
 
 	//cs.ConsensusState.Sequence += 1
@@ -270,7 +276,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	portID,
 	channelID string,
 	sequence uint64,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
@@ -278,17 +284,17 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	// value = sequence + path
-	value := append(
-		sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-		path...,
-	)
+	value := combineSequenceAndPath(cs.ConsensusState.Sequence, path)
 
-	if err := checkSignature(cs.ConsensusState.PublicKey, value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(
+			clienttypes.ErrFailedPacketAckAbsenceVerification,
+			"failed to verify proof against current public key, sequence, and an absent acknowledgement",
+		)
 	}
 
 	//cs.ConsensusState.Sequence += 1
@@ -305,7 +311,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-	consensusState ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
@@ -313,23 +319,30 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	if cs.IsFrozen() {
-		return sdkerrors.Wrap(clienttypes.ErrClientFrozen)
+		return clienttypes.ErrClientFrozen
 	}
 
 	// value = sequence + path + nextSequenceRecv
 	value := append(
-		append(
-			sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence),
-			path...,
-		),
+		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		sdk.Uint64ToBigEndian(nextSequenceRecv)...,
 	)
 
-	if err := checkSignature(cs.ConsensusState.PublicKey, value, proof); err != nil {
-		return err
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+		return sdkerrors.Wrap(
+			clienttypes.ErrFailedNextSeqRecvVerification,
+			"failed to verify proof against current public key, sequence, and the next sequence number to be received",
+		)
 	}
 
 	//cs.ConsensusState.Sequence += 1
 	return nil
+}
 
+// combineSequenceAndPath appends the sequence and path represented as bytes.
+func combineSequenceAndPath(sequence uint64, path commitmenttypes.MerklePath) []byte {
+	return append(
+		sdk.Uint64ToBigEndian(sequence),
+		[]byte(path.String())...,
+	)
 }

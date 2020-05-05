@@ -5,15 +5,16 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 var _ clientexported.Header = Header{}
 
 // Header defines the Solo Machine consensus Header
 type Header struct {
-	Sequence     uint64           `json:"sequence" yaml:"sequence"`
-	Signature    []byte           `json:"signature" yaml:"signature"`
-	NewPublicKey crypto.PublicKey `json:"new_public_key" yaml:"new_public_key"`
+	Sequence     uint64        `json:"sequence" yaml:"sequence"`
+	Signature    []byte        `json:"signature" yaml:"signature"`
+	NewPublicKey crypto.PubKey `json:"new_public_key" yaml:"new_public_key"`
 }
 
 // ClientType defines that the Header is a Solo Machine verficiation algorithm.

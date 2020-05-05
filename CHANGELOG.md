@@ -505,6 +505,25 @@ to detail this new feature and how state transitions occur.
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
 
+
+## [v0.37.12] - 2020-05-05
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.11](https://github.com/tendermint/tendermint/releases/tag/v0.32.11).
+
+## [v0.37.11] - 2020-04-22
+
+### Bug Fixes
+
+* (x/staking) [\#6021](https://github.com/cosmos/cosmos-sdk/pull/6021) --trust-node's false default value prevents creation of the genesis transaction.
+
+## [v0.37.10] - 2020-04-22
+
+### Bug Fixes
+
+* (client/context) [\#5964](https://github.com/cosmos/cosmos-sdk/issues/5964) Fix incorrect instantiation of tmlite verifier when --trust-node is off.
+
 ## [v0.37.9] - 2020-04-09
 
 ### Improvements

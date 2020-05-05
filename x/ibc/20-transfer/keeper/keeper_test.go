@@ -63,6 +63,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainA = NewTestChain(testClientIDA)
 	suite.chainB = NewTestChain(testClientIDB)
 
+	// reset prefixCoins at each setup
+	prefixCoins = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
+	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+
 	suite.cdc = suite.chainA.App.Codec()
 }
 

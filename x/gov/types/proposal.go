@@ -3,11 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,7 +58,7 @@ func (m Proposal) GetContent() Content {
 
 func (m Proposal) ProposalType() string {
 	content := m.GetContent()
-	if content != nil {
+	if content == nil {
 		return ""
 	}
 	return content.ProposalType()
@@ -67,7 +66,7 @@ func (m Proposal) ProposalType() string {
 
 func (m Proposal) ProposalRoute() string {
 	content := m.GetContent()
-	if content != nil {
+	if content == nil {
 		return ""
 	}
 	return content.ProposalRoute()
@@ -75,7 +74,7 @@ func (m Proposal) ProposalRoute() string {
 
 func (m Proposal) GetTitle() string {
 	content := m.GetContent()
-	if content != nil {
+	if content == nil {
 		return ""
 	}
 	return content.GetTitle()

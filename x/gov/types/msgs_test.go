@@ -43,11 +43,13 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgSubmitProposalLegacy(
+		msg, err := NewMsgSubmitProposal(
 			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
 			tc.initialDeposit,
 			tc.proposerAddr,
 		)
+
+		require.NoError(t, err)
 
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)

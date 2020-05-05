@@ -42,22 +42,6 @@ message Supply {
   }
 }
 
-// Content defines the application-level allowed Content to be included in a
-// governance proposal.
-message Content {
-  option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/gov/types.Content";
-
-  // sum defines a set of all acceptable concrete governance proposal Content types.
-  oneof sum {
-    cosmos_sdk.x.gov.v1.TextProposal                        text                    = 1;
-    cosmos_sdk.x.params.v1.ParameterChangeProposal          parameter_change        = 2;
-    cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal         software_upgrade        = 3;
-    cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal   cancel_software_upgrade = 4;
-    cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend    = 5;
-  }
-}
-
 // Transaction defines the application-level transaction that can be signed and
 // processed by the state-machine. It contains a base of common fields and
 // repeated set of Message types.

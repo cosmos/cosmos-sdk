@@ -204,3 +204,20 @@ func TestCLIFeesDeduction(t *testing.T) {
 
 	f.Cleanup()
 }
+
+func TestCLIQuerySupply(t *testing.T) {
+	t.Parallel()
+	f := cli.InitFixtures(t)
+
+	// start simd server
+	proc := f.SDStart()
+	defer proc.Stop(false)
+
+	totalSupply := testutil.QueryTotalSupply(f)
+	totalSupplyOf := testutil.QueryTotalSupplyOf(f, cli.FooDenom)
+
+	require.Equal(t, cli.TotalCoins, totalSupply)
+	require.True(sdk.IntEq(t, cli.TotalCoins.AmountOf(cli.FooDenom), totalSupplyOf))
+
+	f.Cleanup()
+}

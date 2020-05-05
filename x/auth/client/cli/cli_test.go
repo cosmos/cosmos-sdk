@@ -117,7 +117,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Test validate-signatures
-	success, stdout, _ = testutil.TxValidateSignatures(f, cli.KeyFoo, unsignedTxFile.Name())
+	success, stdout, _ = testutil.TxValidateSignatures(f, unsignedTxFile.Name())
 	require.False(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
@@ -145,7 +145,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Test validate-signatures
-	success, stdout, _ = testutil.TxValidateSignatures(f, cli.KeyFoo, signedTxFile.Name())
+	success, stdout, _ = testutil.TxValidateSignatures(f, signedTxFile.Name())
 	require.True(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n  0: %v\t\t\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
@@ -214,7 +214,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
-	success, _, _ = testutil.TxValidateSignatures(f, cli.KeyFooBarBaz, signedTxFile.Name())
+	success, _, _ = testutil.TxValidateSignatures(f, signedTxFile.Name())
 	require.False(t, success)
 
 	// Broadcast the transaction
@@ -315,7 +315,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
-	success, _, _ = testutil.TxValidateSignatures(f, cli.KeyFooBarBaz, signedTxFile.Name())
+	success, _, _ = testutil.TxValidateSignatures(f, signedTxFile.Name())
 	require.True(t, success)
 
 	// Broadcast the transaction
@@ -388,7 +388,7 @@ func TestCLIMultisign(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Validate the multisignature
-	success, _, _ = testutil.TxValidateSignatures(f, cli.KeyFooBarBaz, signedTxFile.Name())
+	success, _, _ = testutil.TxValidateSignatures(f, signedTxFile.Name())
 	require.True(t, success)
 
 	// Broadcast the transaction

@@ -3,8 +3,9 @@
 package cli_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 
 	"github.com/stretchr/testify/require"
 

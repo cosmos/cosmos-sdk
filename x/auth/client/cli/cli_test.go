@@ -98,6 +98,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, stderr = bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--gas=100", "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
+
 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, msg.Fee.Gas, uint64(100))
 	require.Equal(t, len(msg.Msgs), 1)

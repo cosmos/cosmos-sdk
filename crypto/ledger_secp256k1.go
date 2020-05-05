@@ -104,7 +104,6 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 // LedgerShowAddress triggers a ledger device to show the corresponding address.
 func LedgerShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 	accountAddressPrefix string) error {
-
 	device, err := getLedgerDevice()
 	if err != nil {
 		return err

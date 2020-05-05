@@ -22,7 +22,6 @@ const (
 	RouterKey = ModuleName
 )
 
-//nolint
 var (
 	// Keys for store prefixes
 	// Last* values are constant during a block.
@@ -81,7 +80,6 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
 func getValidatorPowerRank(validator Validator) []byte {
-
 	consensusPower := sdk.TokensToConsensusPower(validator.Tokens)
 	consensusPowerBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(consensusPowerBytes, uint64(consensusPower))
@@ -94,10 +92,13 @@ func getValidatorPowerRank(validator Validator) []byte {
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
+
 	operAddrInvr := sdk.CopyBytes(validator.OperatorAddress)
+
 	for i, b := range operAddrInvr {
 		operAddrInvr[i] = ^b
 	}
+
 	copy(key[powerBytesLen+1:], operAddrInvr)
 
 	return key
@@ -109,10 +110,13 @@ func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	if len(key) != 1+powerBytesLen+sdk.AddrLen {
 		panic("Invalid validator power rank key length")
 	}
+
 	operAddr = sdk.CopyBytes(key[powerBytesLen+1:])
+
 	for i, b := range operAddr {
 		operAddr[i] = ^b
 	}
+
 	return operAddr
 }
 
@@ -157,8 +161,10 @@ func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
 	if len(addrs) != 2*sdk.AddrLen {
 		panic("unexpected key length")
 	}
+
 	valAddr := addrs[:sdk.AddrLen]
 	delAddr := addrs[sdk.AddrLen:]
+
 	return GetUBDKey(delAddr, valAddr)
 }
 
@@ -205,6 +211,7 @@ func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 	copy(key[0:offset], REDSFromValsSrcKey)
 	copy(key[offset:offset+sdk.AddrLen], delAddr.Bytes())
 	copy(key[offset+sdk.AddrLen:offset+2*sdk.AddrLen], valDstAddr.Bytes())
+
 	return key
 }
 
@@ -229,6 +236,7 @@ func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
+
 	valSrcAddr := indexKey[1 : sdk.AddrLen+1]
 	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
 	valDstAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
@@ -242,9 +250,11 @@ func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
+
 	valDstAddr := indexKey[1 : sdk.AddrLen+1]
 	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
 	valSrcAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
+
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 
@@ -274,9 +284,7 @@ func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
 // gets the prefix keyspace for all redelegations redelegating towards a destination validator
 // from a particular delegator
 func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) []byte {
-	return append(
-		GetREDsToValDstIndexKey(valDstAddr),
-		delAddr.Bytes()...)
+	return append(GetREDsToValDstIndexKey(valDstAddr), delAddr.Bytes()...)
 }
 
 //________________________________________________________________________________

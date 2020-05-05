@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// nolint
 const (
 	FlagAddressValidator    = "validator"
 	FlagAddressValidatorSrc = "addr-validator-source"

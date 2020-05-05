@@ -23,7 +23,6 @@ func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
 	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
 ) MsgCreateValidator {
-
 	var pkStr string
 	if pubKey != nil {
 		pkStr = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubKey)
@@ -57,6 +56,7 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	if !bytes.Equal(msg.DelegatorAddress.Bytes(), msg.ValidatorAddress.Bytes()) {
 		addrs = append(addrs, sdk.AccAddress(msg.ValidatorAddress))
 	}
+
 	return addrs
 }
 
@@ -72,30 +72,39 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
 		return ErrEmptyDelegatorAddr
 	}
+
 	if msg.ValidatorAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
+
 	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
 		return ErrBadValidatorAddr
 	}
+
 	if msg.Pubkey == "" {
 		return ErrEmptyValidatorPubKey
 	}
+
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
 		return ErrBadDelegationAmount
 	}
+
 	if msg.Description == (Description{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
+
 	if msg.Commission == (CommissionRates{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
 	}
+
 	if err := msg.Commission.Validate(); err != nil {
 		return err
 	}
+
 	if !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid
 	}
+
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
 		return ErrSelfDelegationBelowMinimum
 	}
@@ -135,12 +144,15 @@ func (msg MsgEditValidator) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
+
 	if msg.Description == (Description{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
+
 	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid
 	}
+
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
@@ -181,12 +193,15 @@ func (msg MsgDelegate) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
 		return ErrEmptyDelegatorAddr
 	}
+
 	if msg.ValidatorAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
+
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
 		return ErrBadDelegationAmount
 	}
+
 	return nil
 }
 
@@ -224,15 +239,19 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
 		return ErrEmptyDelegatorAddr
 	}
+
 	if msg.ValidatorSrcAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
+
 	if msg.ValidatorDstAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
+
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
 		return ErrBadSharesAmount
 	}
+
 	return nil
 }
 
@@ -265,11 +284,14 @@ func (msg MsgUndelegate) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
 		return ErrEmptyDelegatorAddr
 	}
+
 	if msg.ValidatorAddress.Empty() {
 		return ErrEmptyValidatorAddr
 	}
+
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
 		return ErrBadSharesAmount
 	}
+
 	return nil
 }

@@ -16,9 +16,8 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	m, _ := simapp.MakeCodecs()
-	cdc := types.NewAnyCodec(m)
-	dec := simulation.NewDecodeStore(cdc)
+	app := simapp.Setup(false)
+	dec := simulation.NewDecodeStore(app.EvidenceKeeper)
 
 	delPk1 := ed25519.GenPrivKey().PubKey()
 
@@ -29,7 +28,7 @@ func TestDecodeStore(t *testing.T) {
 		ConsensusAddress: sdk.ConsAddress(delPk1.Address()),
 	}
 
-	evBz, err := cdc.MarshalEvidence(ev)
+	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)
 	require.NoError(t, err)
 
 	kvPairs := tmkv.Pairs{

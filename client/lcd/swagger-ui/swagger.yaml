@@ -533,7 +533,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or delegation request body
         401:
@@ -622,7 +622,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or unbonding delegation request body
         401:
@@ -1035,7 +1035,7 @@ paths:
         200:
           description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid validator address or base_req
         500:
@@ -1296,7 +1296,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid proposal id or deposit body
         401:
@@ -1395,7 +1395,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid proposal id or vote body
         401:
@@ -1579,7 +1579,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address
         401:
@@ -1638,7 +1638,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or delegation body
         401:
@@ -1691,7 +1691,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator or withdraw address
         401:
@@ -1791,7 +1791,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid validator address
         401:

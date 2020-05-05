@@ -4,6 +4,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ConsensusState defines a Solo Machine consensus state
@@ -23,6 +25,20 @@ func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Sequence
 }
 
-// GetRoot
+// GetRoot returns nil as solo machines do not have roots
+func (cs ConsensusState) GetRoot() commitmentexported.Root {
+	return nil
+}
 
-// ValidateBasic
+// ValidateBasic defines basic validation for the solo machine consensus state.
+func (cs ConsensusState) ValidateBasic() error {
+	if cs.Sequence == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "sequence cannot be 0")
+	}
+
+	if cs.PublicKey == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")
+	}
+
+	return nil
+}

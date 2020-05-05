@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
@@ -19,27 +21,27 @@ type Evidence struct {
 	SignatureTwo SignatureAndData `json:"signature_one" yam;:"signature_two"`
 }
 
-// ClientType is a Solo Machine light client
+// ClientType is a Solo Machine light client.
 func (ev Evidence) ClientType() clientexported.ClientType {
 	return clientexported.SoloMachine
 }
 
-// GetClientID returns the ID of the client that committed a misbehaviour
+// GetClientID returns the ID of the client that committed a misbehaviour.
 func (ev Evidence) GetClientID() string {
 	return ev.ClientID
 }
 
-// Route implements Evidence interface
+// Route implements Evidence interface.
 func (ev Evidence) Route() string {
 	return clienttypes.SubModuleName
 }
 
-// Type implements Evidence interface
+// Type implements Evidence interface.
 func (ev Evidence) Type() string {
 	return "client_misbehaviour"
 }
 
-// String implements Evidence interface
+// String implements Evidence interface.
 func (ev Evidence) String() string {
 	bz, err := yaml.Marshal(ev)
 	if err != nil {
@@ -48,24 +50,32 @@ func (ev Evidence) String() string {
 	return string(bz)
 }
 
-// GetHeight returns the sequence at which misbehaviour occurred
+// GetHeight returns the sequence at which misbehaviour occurred.
 func (ev Evidence) GetHeight() int64 {
 	return ev.Sequence
 }
 
-// ValidateBasic implements Evidence interface
+// ValidateBasic implements Evidence interface.
 func (ev Evidence) ValidateBasic() error {
 	if err := host.DefaultClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
 	if sequence == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidSequence, "sequence cannot be 0")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "sequence cannot be 0")
 	}
 
-	// signatures should not be equal
+	// evidence signatures cannot be identical
+	if bytes.Equal(ev.SignatureOne.Signature, ev.SignatureTwo.Signature) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signatures cannot be equal")
+	}
 
-	// data of signatures must be different
+	// message data signed cannot be identical
+	if bytes.Equal(ev.SignatureOne.Data, ev.SignatureTwo.Data) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signatures must be signed over different messages")
+	}
+
+	return nil
 }
 
 // SignatureAndData is a signature and the data signed over to create the signature.

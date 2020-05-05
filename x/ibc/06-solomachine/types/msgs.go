@@ -43,7 +43,7 @@ func (msg MsgCreateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {
-		return err
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state failed validatebasic: %v", err)
 	}
 
 	return host.DefaultClientIdentifierValidator(msg.ClientID)
@@ -76,17 +76,15 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 
 // MsgUpdateClient defines a message to update an IBC client
 type MsgUpdateClient struct {
-	ClientID string         `json:"client_id" yaml:"client_id"`
-	Header   Header         `json:"header" yaml:"header"`
-	Signer   sdk.AccAddress `json:"address" yaml:"address"`
+	ClientID string `json:"client_id" yaml:"client_id"`
+	Header   Header `json:"header" yaml:"header"`
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
+func NewMsgUpdateClient(id string, header Header) MsgUpdateClient {
 	return MsgUpdateClient{
 		ClientID: id,
 		Header:   header,
-		Signer:   signer,
 	}
 }
 
@@ -102,8 +100,8 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
-	if msg.Signer.Empty() {
-		return sdkerrors.ErrInvalidAddress
+	if err := msg.Header.ValidateBasic(); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidHeader, "header validatebasic failed: %v", err)
 	}
 	return host.DefaultClientIdentifierValidator(msg.ClientID)
 }
@@ -115,7 +113,7 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	return []sdk.AccAddress{msg.Header.NewPublicKey.Address()}
 }
 
 // GetClientID implements clientexported.MsgUpdateClient

@@ -3,11 +3,13 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -15,37 +17,73 @@ import (
 // DefaultStartingProposalID is 1
 const DefaultStartingProposalID uint64 = 1
 
-// Proposal defines a struct used by the governance module to allow for voting
-// on network changes.
-type Proposal struct {
-	Content `json:"content" yaml:"content"` // Proposal content interface
-	ProposalBase
-}
-
 // NewProposal creates a new Proposal instance
-func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
-	return Proposal{
-		Content: content,
-		ProposalBase: ProposalBase{
-			ProposalID:       id,
-			Status:           StatusDepositPeriod,
-			FinalTallyResult: EmptyTallyResult(),
-			TotalDeposit:     sdk.NewCoins(),
-			SubmitTime:       submitTime,
-			DepositEndTime:   depositEndTime,
-		},
+func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
+	p := Proposal{
+		ProposalID:       id,
+		Status:           StatusDepositPeriod,
+		FinalTallyResult: EmptyTallyResult(),
+		TotalDeposit:     sdk.NewCoins(),
+		SubmitTime:       submitTime,
+		DepositEndTime:   depositEndTime,
 	}
-}
 
-// Equal returns true if two Proposal types are equal.
-func (p Proposal) Equal(other Proposal) bool {
-	return p.ProposalBase.Equal(other.ProposalBase) && p.Content.String() == other.Content.String()
+	msg, ok := content.(proto.Message)
+	if !ok {
+		return Proposal{}, fmt.Errorf("can't proto marshal %T", content)
+	}
+
+	any, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return Proposal{}, err
+	}
+
+	p.Content = any
+
+	return p, nil
 }
 
 // String implements stringer interface
 func (p Proposal) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
+}
+
+func (m Proposal) GetContent() Content {
+	content, ok := m.Content.GetCachedValue().(Content)
+	if !ok {
+		return nil
+	}
+	return content
+}
+
+func (m Proposal) ProposalType() string {
+	content := m.GetContent()
+	if content != nil {
+		return ""
+	}
+	return content.ProposalType()
+}
+
+func (m Proposal) ProposalRoute() string {
+	content := m.GetContent()
+	if content != nil {
+		return ""
+	}
+	return content.ProposalRoute()
+}
+
+func (m Proposal) GetTitle() string {
+	content := m.GetContent()
+	if content != nil {
+		return ""
+	}
+	return content.GetTitle()
+}
+
+func (m Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var content Content
+	return unpacker.UnpackAny(m.Content, &content)
 }
 
 // Proposals is an array of proposal

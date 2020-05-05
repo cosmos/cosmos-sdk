@@ -43,7 +43,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgSubmitProposal(
+		msg := NewMsgSubmitProposalLegacy(
 			ContentFromProposalType(tc.title, tc.description, tc.proposalType),
 			tc.initialDeposit,
 			tc.proposerAddr,

@@ -162,7 +162,7 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		proposalType := gcutils.NormalizeProposalType(req.ProposalType)
 		content := types.ContentFromProposalType(req.Title, req.Description, proposalType)
 
-		msg := types.NewMsgSubmitProposal(content, req.InitialDeposit, req.Proposer)
+		msg := types.NewMsgSubmitProposalLegacy(content, req.InitialDeposit, req.Proposer)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

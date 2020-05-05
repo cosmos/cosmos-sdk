@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -26,7 +27,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc types.Codec
+	cdc codec.Marshaler
 
 	// Proposal router
 	router types.Router
@@ -40,7 +41,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc types.Codec, key sdk.StoreKey, paramSpace types.ParamSubspace,
+	cdc codec.Marshaler, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
 ) Keeper {
 

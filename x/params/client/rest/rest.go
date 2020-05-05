@@ -36,7 +36,7 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		content := proposal.NewParameterChangeProposal(req.Title, req.Description, req.Changes.ToParamChanges())
 
-		msg := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg := govtypes.NewMsgSubmitProposalLegacy(content, req.Deposit, req.Proposer)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

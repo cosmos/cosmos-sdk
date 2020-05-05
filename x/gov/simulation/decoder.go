@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
@@ -12,15 +13,17 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding gov type.
-func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.ProposalsKeyPrefix):
-			proposalA, err := cdc.UnmarshalProposal(kvA.Value)
+			var proposalA types.Proposal
+			err := cdc.UnmarshalBinaryBare(kvA.Value, &proposalA)
 			if err != nil {
 				panic(err)
 			}
-			proposalB, err := cdc.UnmarshalProposal(kvB.Value)
+			var proposalB types.Proposal
+			err = cdc.UnmarshalBinaryBare(kvA.Value, &proposalB)
 			if err != nil {
 				panic(err)
 			}

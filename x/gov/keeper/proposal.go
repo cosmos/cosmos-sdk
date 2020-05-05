@@ -32,7 +32,10 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	if err != nil {
+		return types.Proposal{}, err
+	}
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
@@ -57,7 +60,8 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 		return types.Proposal{}, false
 	}
 
-	proposal, err := keeper.cdc.UnmarshalProposal(bz)
+	var proposal types.Proposal
+	err := keeper.cdc.UnmarshalBinaryBare(bz, &proposal)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +73,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz, err := keeper.cdc.MarshalProposal(proposal)
+	bz, err := keeper.cdc.MarshalBinaryBare(&proposal)
 	if err != nil {
 		panic(err)
 	}
@@ -97,7 +101,8 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		proposal, err := keeper.cdc.UnmarshalProposal(iterator.Value())
+		var proposal types.Proposal
+		err := keeper.cdc.UnmarshalBinaryBare(iterator.Value(), &proposal)
 		if err != nil {
 			panic(err)
 		}

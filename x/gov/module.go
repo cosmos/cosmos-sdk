@@ -5,6 +5,7 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -28,11 +29,12 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
 type AppModuleBasic struct {
-	cdc              Codec
+	cdc              codec.Marshaler
 	proposalHandlers []client.ProposalHandler // proposal handlers which live in governance cli and rest
 }
 
@@ -95,6 +97,10 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
 
+func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
+
 //____________________________________________________________________________
 
 // AppModule implements an application module for the gov module.
@@ -107,7 +113,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc Codec, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

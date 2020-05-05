@@ -6,6 +6,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types/types.proto";
 import "x/ibc/types/types.proto";
+import "google/protobuf/any.proto";
+
+// ChannelI defines the application-level concrete channel type.
+message ChannelI {
+  google.protobuf.Any channel = 1;
+}
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.
@@ -19,11 +25,11 @@ message MsgChannelOpenInit {
 // MsgChannelOpenInit  defines a msg sent by a Relayer to try to open a channel
 // on Chain B.
 message MsgChannelOpenTry {
-  string  port_id              = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
-  string  channel_id           = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
-  Channel channel              = 3 [(gogoproto.nullable) = false];
-  string  counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 5
+  string                                     port_id              = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
+  string                                     channel_id           = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
+  Channel                                    channel              = 3 [(gogoproto.nullable) = false];
+  string                                     counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init           = 5
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -32,10 +38,10 @@ message MsgChannelOpenTry {
 // MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of channel state to TRYOPEN on Chain B.
 message MsgChannelOpenAck {
-  string port_id              = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
-  string channel_id           = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
-  string counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 4
+  string                                     port_id              = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
+  string                                     channel_id           = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
+  string                                     counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try            = 4
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_try\""];
   uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -44,9 +50,9 @@ message MsgChannelOpenAck {
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of channel state to OPEN on Chain A.
 message MsgChannelOpenConfirm {
-  string port_id    = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 3
+  string                                     port_id    = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
+  string                                     channel_id = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack  = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_ack\""];
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -63,8 +69,8 @@ message MsgChannelCloseInit {
 // MsgChannelCloseConfirm defines a msg sent by a Relayer to Chain B
 // to acknowledge the change of channel state to CLOSED on Chain A.
 message MsgChannelCloseConfirm {
-  string port_id    = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
+  string                                     port_id    = 1 [(gogoproto.customname) = "PortID", (gogoproto.moretags) = "yaml:\"port_id\""];
+  string                                     channel_id = 2 [(gogoproto.customname) = "ChannelID", (gogoproto.moretags) = "yaml:\"channel_id\""];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
@@ -76,16 +82,16 @@ message MsgPacket {
   Packet                                     packet       = 1 [(gogoproto.nullable) = false];
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof        = 2 [(gogoproto.nullable) = false];
   uint64                                     proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes signer = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes                                      signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgTimeout receives timed-out packet
 message MsgTimeout {
-  Packet                                     packet       = 1 [(gogoproto.nullable) = false];
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof        = 2 [(gogoproto.nullable) = false];
-  uint64                                     proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  uint64 next_sequence_recv                               = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  bytes  signer = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  Packet                                     packet             = 1 [(gogoproto.nullable) = false];
+  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof              = 2 [(gogoproto.nullable) = false];
+  uint64                                     proof_height       = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  uint64                                     next_sequence_recv = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
+  bytes                                      signer             = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgAcknowledgement receives incoming IBC acknowledgement
@@ -94,7 +100,7 @@ message MsgAcknowledgement {
   bytes                                      acknowledgement = 2;
   cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof           = 3 [(gogoproto.nullable) = false];
   uint64                                     proof_height    = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes signer = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes                                      signer          = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // Channel defines pipeline for exactly-once packet delivery between specific

@@ -2,6 +2,8 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
 
@@ -23,6 +25,25 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTimeout{}, "ibc/channel/MsgTimeout", nil)
 }
 
+// RegisterInterfaces register the ibc channel submodule interfaces to protobuf
+// Any.
+func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenInit{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenTry{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenAck{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenConfirm{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelCloseInit{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelCloseConfirm{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgPacket{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgAcknowledgement{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTimeout{})
+	registry.RegisterInterface(
+		"cosmos_sdk.x.ibc.channel.v1.ChannelI",
+		(*exported.ChannelI)(nil),
+		&Channel{},
+	)
+}
+
 var (
 	amino = codec.New()
 
@@ -32,7 +53,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/04-channel and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino)
+	SubModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
 )
 
 func init() {

@@ -2,12 +2,20 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterCodec registers the IBC transfer types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTransfer{}, "ibc/transfer/MsgTransfer", nil)
 	cdc.RegisterConcrete(FungibleTokenPacketData{}, "ibc/transfer/PacketDataTransfer", nil)
+}
+
+// RegisterInterfaces register the ibc transfer module interfaces to protobuf
+// Any.
+func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTransfer{})
 }
 
 var (
@@ -19,7 +27,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/20-transfer and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino)
+	ModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
 )
 
 func init() {

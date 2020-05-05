@@ -16,17 +16,17 @@ message Connection {
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 message MsgConnectionOpenInit {
-  string client_id     = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
-  string connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
-  Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  bytes        signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string       client_id     = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
+  string       connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
+  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
+  bytes        signer        = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
 // on Chain B.
 message MsgConnectionOpenTry {
-  string client_id     = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
-  string connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
+  string          client_id             = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
+  string          connection_id         = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   Counterparty    counterparty          = 3 [(gogoproto.nullable) = false];
   repeated string counterparty_versions = 4 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`

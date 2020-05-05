@@ -2,6 +2,8 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 )
 
@@ -18,6 +20,20 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgConnectionOpenConfirm{}, "ibc/connection/MsgConnectionOpenConfirm", nil)
 }
 
+// RegisterInterfaces register the ibc interfaces submodule implementations to protobuf
+// Any.
+func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenInit{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenTry{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenAck{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenConfirm{})
+	registry.RegisterInterface(
+		"cosmos_sdk.x.ibc.connection.v1.Connection",
+		(*exported.ConnectionI)(nil),
+		&ConnectionEnd{},
+	)
+}
+
 var (
 	amino = codec.New()
 
@@ -27,7 +43,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/03-connectionl and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino)
+	SubModuleCdc = codec.NewHybridCodec(amino, cdctypes.NewInterfaceRegistry())
 )
 
 func init() {

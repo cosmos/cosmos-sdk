@@ -31,6 +31,7 @@ require (
 	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.4
 	github.com/tendermint/tm-db v0.5.1
+	google.golang.org/protobuf v1.21.0
 	gopkg.in/yaml.v2 v2.2.8
 )
 

@@ -5,7 +5,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-
 	"strings"
 	"testing"
 

@@ -50,6 +50,8 @@ type Any struct {
 	XXX_sizecache int32 `json:"-"`
 
 	cachedValue interface{}
+
+	aminoCompat *aminoCompat
 }
 
 // NewAnyWithValue constructs a new Any packed with the value provided or

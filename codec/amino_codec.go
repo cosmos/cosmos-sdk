@@ -16,36 +16,76 @@ func NewAminoCodec(amino *Codec) Marshaler {
 	return &AminoCodec{amino}
 }
 
+func (ac *AminoCodec) marshalAnys(o ProtoMarshaler) error {
+	return types.UnpackInterfaces(o, types.AminoPacker{Cdc: ac.amino})
+}
+
+func (ac *AminoCodec) unmarshalAnys(o ProtoMarshaler) error {
+	return types.UnpackInterfaces(o, types.AminoUnpacker{Cdc: ac.amino})
+}
+
 func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
+	err := ac.marshalAnys(o)
+	if err != nil {
+		return nil, err
+	}
 	return ac.amino.MarshalBinaryBare(o)
 }
 
 func (ac *AminoCodec) MustMarshalBinaryBare(o ProtoMarshaler) []byte {
+	err := ac.marshalAnys(o)
+	if err != nil {
+		panic(err)
+	}
 	return ac.amino.MustMarshalBinaryBare(o)
 }
 
 func (ac *AminoCodec) MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
+	err := ac.marshalAnys(o)
+	if err != nil {
+		return nil, err
+	}
 	return ac.amino.MarshalBinaryLengthPrefixed(o)
 }
 
 func (ac *AminoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
+	err := ac.marshalAnys(o)
+	if err != nil {
+		panic(err)
+	}
 	return ac.amino.MustMarshalBinaryLengthPrefixed(o)
 }
 
 func (ac *AminoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
-	return ac.amino.UnmarshalBinaryBare(bz, ptr)
+	err := ac.amino.UnmarshalBinaryBare(bz, ptr)
+	if err != nil {
+		return err
+	}
+	return ac.unmarshalAnys(ptr)
 }
 
 func (ac *AminoCodec) MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) {
 	ac.amino.MustUnmarshalBinaryBare(bz, ptr)
+	err := ac.unmarshalAnys(ptr)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ac *AminoCodec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
-	return ac.amino.UnmarshalBinaryLengthPrefixed(bz, ptr)
+	err := ac.amino.UnmarshalBinaryLengthPrefixed(bz, ptr)
+	if err != nil {
+		return err
+	}
+	return ac.unmarshalAnys(ptr)
 }
 
 func (ac *AminoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
 	ac.amino.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
+	err := ac.unmarshalAnys(ptr)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ac *AminoCodec) MarshalJSON(o interface{}) ([]byte, error) {

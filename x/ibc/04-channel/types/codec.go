@@ -28,15 +28,18 @@ func RegisterCodec(cdc *codec.Codec) {
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf
 // Any.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenInit{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenTry{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenAck{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelOpenConfirm{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelCloseInit{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgChannelCloseConfirm{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgPacket{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgAcknowledgement{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTimeout{})
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgChannelOpenInit{},
+		&MsgChannelOpenTry{},
+		&MsgChannelOpenAck{},
+		&MsgChannelOpenConfirm{},
+		&MsgChannelCloseInit{},
+		&MsgChannelCloseConfirm{},
+		&MsgPacket{},
+		&MsgAcknowledgement{},
+		&MsgTimeout{},
+	)
 	registry.RegisterInterface(
 		"cosmos_sdk.x.ibc.channel.v1.ChannelI",
 		(*exported.ChannelI)(nil),

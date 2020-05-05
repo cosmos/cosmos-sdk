@@ -23,10 +23,13 @@ func RegisterCodec(cdc *codec.Codec) {
 // RegisterInterfaces register the ibc interfaces submodule implementations to protobuf
 // Any.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenInit{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenTry{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenAck{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgConnectionOpenConfirm{})
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgConnectionOpenInit{},
+		&MsgConnectionOpenTry{},
+		&MsgConnectionOpenAck{},
+		&MsgConnectionOpenConfirm{},
+	)
 	registry.RegisterInterface(
 		"cosmos_sdk.x.ibc.connection.v1.Connection",
 		(*exported.ConnectionI)(nil),

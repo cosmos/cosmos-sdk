@@ -20,7 +20,7 @@ func QuerySigningInfo(f *cli.Fixtures, val string) slashing.ValidatorSigningInfo
 	return sinfo
 }
 
-// QuerySlashingParams is gaiacli query slashing params
+// QuerySlashingParams returns query slashing params
 func QuerySlashingParams(f *cli.Fixtures) slashing.Params {
 	cmd := fmt.Sprintf("%s query slashing params %s", f.SimcliBinary, f.Flags())
 	res, errStr := tests.ExecuteT(f.T, cmd, "")

@@ -9,15 +9,11 @@ import "x/auth/vesting/types/types.proto";
 import "x/bank/types/types.proto";
 import "x/crisis/types/types.proto";
 import "x/distribution/types/types.proto";
-import "x/evidence/types/types.proto";
 import "x/gov/types/types.proto";
 import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
-import "x/ibc/03-connection/types/types.proto";
-import "x/ibc/04-channel/types/types.proto";
-import "x/ibc/20-transfer/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/std";
 
@@ -44,28 +40,6 @@ message Supply {
   oneof sum {
     cosmos_sdk.x.bank.v1.Supply supply = 1;
   }
-}
-
-// Evidence defines the application-level allowed Evidence to be submitted via a
-// MsgSubmitEvidence message.
-message Evidence {
-  option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
-
-  // sum defines a set of all acceptable concrete Evidence implementations.
-  oneof sum {
-    cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
-  }
-}
-
-// MsgSubmitEvidence defines the application-level message type for handling
-// evidence submission.
-message MsgSubmitEvidence {
-  option (gogoproto.equal)           = true;
-  option (gogoproto.goproto_getters) = false;
-
-  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-  Evidence                                       evidence = 2;
 }
 
 // MsgSubmitProposal defines the application-level message type for handling
@@ -104,26 +78,6 @@ message Content {
   }
 }
 
-// Connection defines the application-level concrete connection type.
-message Connection {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported.ConnectionI";
-
-  // sum defines a set of all acceptable concrete connection types.
-  oneof sum {
-    cosmos_sdk.x.ibc.connection.v1.ConnectionEnd connection_end = 1;
-  }
-}
-
-// Channel defines the application-level concrete channel type.
-message Channel {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported.ChannelI";
-
-  // sum defines a set of all acceptable concrete channel types.
-  oneof sum {
-    cosmos_sdk.x.ibc.channel.v1.Channel channel = 1;
-  }
-}
-
 // Transaction defines the application-level transaction that can be signed and
 // processed by the state-machine. It contains a base of common fields and
 // repeated set of Message types.
@@ -148,7 +102,6 @@ message Message {
     cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward     = 5;
     cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission = 6;
     cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool           = 7;
-    MsgSubmitEvidence                                           msg_submit_evidence               = 8;
     MsgSubmitProposal                                           msg_submit_proposal               = 9;
     cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                          = 10;
     cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                       = 11;
@@ -158,19 +111,6 @@ message Message {
     cosmos_sdk.x.staking.v1.MsgDelegate                         msg_delegate                      = 15;
     cosmos_sdk.x.staking.v1.MsgBeginRedelegate                  msg_begin_redelegate              = 16;
     cosmos_sdk.x.staking.v1.MsgUndelegate                       msg_undelegate                    = 17;
-    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenInit        msg_connection_open_init          = 18;
-    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenTry         msg_connection_open_try           = 19;
-    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenAck         msg_connection_open_ack           = 20;
-    cosmos_sdk.x.ibc.connection.v1.MsgConnectionOpenConfirm     msg_connection_open_confirm       = 21;
-    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenInit              msg_channel_open_init             = 22;
-    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenTry               msg_channel_open_try              = 23;
-    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenAck               msg_channel_open_ack              = 24;
-    cosmos_sdk.x.ibc.channel.v1.MsgChannelOpenConfirm           msg_channel_open_confirm          = 25;
-    cosmos_sdk.x.ibc.channel.v1.MsgChannelCloseInit             msg_channel_close_init            = 26;
-    cosmos_sdk.x.ibc.channel.v1.MsgChannelCloseConfirm          msg_channel_close_confirm         = 27;
-    cosmos_sdk.x.ibc.channel.v1.MsgPacket                       msg_packet                        = 28;
-    cosmos_sdk.x.ibc.channel.v1.MsgAcknowledgement              msg_acknowledgement               = 29;
-    cosmos_sdk.x.ibc.transfer.v1.MsgTransfer                    msg_transfer                      = 30;
   }
 }
 

@@ -13,16 +13,6 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
-// Codec defines the interface required to serialize custom x/ibc types.
-type Codec interface {
-	codec.Marshaler
-
-	MarshalConnection(connectionexported.ConnectionI) ([]byte, error)
-	UnmarshalConnection([]byte) (connectionexported.ConnectionI, error)
-	MarshalChannel(channelexported.ChannelI) ([]byte, error)
-	UnmarshalChannel([]byte) (channelexported.ChannelI, error)
-}
-
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
 	GetID() string

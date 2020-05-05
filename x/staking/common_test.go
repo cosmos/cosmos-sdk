@@ -5,8 +5,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +42,7 @@ func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	appCodec := std.NewAppCodec(codec.New())
+	appCodec := app.AppCodec()
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,

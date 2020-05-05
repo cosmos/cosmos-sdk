@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // Codec defines the interface required to serialize custom x/gov types.
@@ -42,7 +43,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/gov and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino)
+	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
 )
 
 func init() {

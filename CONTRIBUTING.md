@@ -231,12 +231,12 @@ At the moment, only a single major release will be supported, so all point
 releases will be based off of that release.
 
 - start on `vX.XX.X`
-- checkout a new branch `rc/vX.X.X`
+- checkout a new branch `rcN/vX.X.X`
 - cherry pick the desired changes from `master`
   - these changes should be small and NON-BREAKING (both API and state machine)
 - add entries to CHANGELOG.md and remove corresponding pending log entries
-- checkout a new branch `release/vX.X.X` based off of `vX.XX.X`
-- create a PR merging `rc/vX.X.X` into `release/vX.X.X`
+- checkout a new branch `release/vX.X.X` based off of the previous release
+- create a PR merging `rcN/vX.X.X` into `release/vX.X.X`
 - run tests and simulations (noted in [Release Procedure](#release-procedure))
 - after tests and simulation have successfully completed, merge the `RC` branch into `release/vX.X.X`
 - create a PR into `master` containing ONLY the CHANGELOG.md updates

@@ -82,8 +82,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		evidence.NewAnyCodec(app.AppCodec()), app.GetKey(evidence.StoreKey),
-		app.StakingKeeper, app.SlashingKeeper,
+		app.AppCodec(), app.GetKey(evidence.StoreKey), app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))

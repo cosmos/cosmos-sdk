@@ -2,7 +2,7 @@ name: Release Sims
 on: 
   pull_request: 
     branches: 
-      - 'rc/**'
+      - 'rc**'
     
 jobs:
   cleanup-runs:

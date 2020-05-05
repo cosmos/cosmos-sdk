@@ -239,6 +239,7 @@ releases will be based off of that release.
 - create a PR merging `rcN/vX.X.X` into `release/vX.X.X`
 - run tests and simulations (noted in [Release Procedure](#release-procedure))
 - after tests and simulation have successfully completed, merge the `RC` branch into `release/vX.X.X`
+  - Make sure to delete the `RC` branch
 - create a PR into `master` containing ONLY the CHANGELOG.md updates
 - tag (use `git tag -a`) then push the tags (`git push --tags`)
 

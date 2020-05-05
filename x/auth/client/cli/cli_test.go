@@ -80,7 +80,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	fooAddr := f.KeyAddress(cli.KeyFoo)
 	barAddr := f.KeyAddress(cli.KeyBar)
@@ -179,7 +179,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 
 	// start simd server with minimum fees
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	fooBarBazAddr := f.KeyAddress(cli.KeyFooBarBaz)
 	barAddr := f.KeyAddress(cli.KeyBar)
@@ -232,7 +232,7 @@ func TestCLIEncode(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	// Build a testing transaction and write it to disk
 	barAddr := f.KeyAddress(cli.KeyBar)
@@ -268,7 +268,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 
 	// start simd server with minimum fees
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	fooBarBazAddr := f.KeyAddress(cli.KeyFooBarBaz)
 	barAddr := f.KeyAddress(cli.KeyBar)
@@ -332,7 +332,7 @@ func TestCLIMultisign(t *testing.T) {
 
 	// start simd server with minimum fees
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	fooBarBazAddr := f.KeyAddress(cli.KeyFooBarBaz)
 	bazAddr := f.KeyAddress(cli.KeyBaz)

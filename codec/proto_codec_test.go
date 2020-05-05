@@ -7,7 +7,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
+
+func createTestInterfaceRegistry() types.InterfaceRegistry {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Dog{},
+		&testdata.Cat{},
+	)
+
+	return interfaceRegistry
+}
 
 func TestProtoCodec(t *testing.T) {
 	testCases := []struct {
@@ -20,7 +32,7 @@ func TestProtoCodec(t *testing.T) {
 	}{
 		{
 			"valid encoding and decoding",
-			codec.NewProtoCodec(),
+			codec.NewProtoCodec(createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Dog{},
 			false,
@@ -28,7 +40,7 @@ func TestProtoCodec(t *testing.T) {
 		},
 		{
 			"invalid decode type",
-			codec.NewProtoCodec(),
+			codec.NewProtoCodec(createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Cat{},
 			false,

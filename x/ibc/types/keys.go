@@ -144,12 +144,6 @@ func KeyChannel(portID, channelID string) []byte {
 	return []byte(ChannelPath(portID, channelID))
 }
 
-// KeyChannelCapabilityPath returns the store key for the capability key of a
-// particular channel binded to a specific port
-func KeyChannelCapabilityPath(portID, channelID string) []byte {
-	return []byte(ChannelCapabilityPath(portID, channelID))
-}
-
 // KeyNextSequenceSend returns the store key for the send sequence of a particular
 // channel binded to a specific port
 func KeyNextSequenceSend(portID, channelID string) []byte {
@@ -183,9 +177,11 @@ func MustParseChannelPath(path string) (string, string) {
 	if len(split) != 5 {
 		panic("cannot parse channel path")
 	}
+
 	if split[1] != "ports" || split[3] != "channels" {
 		panic("cannot parse channel path")
 	}
+
 	return split[2], split[4]
 }
 

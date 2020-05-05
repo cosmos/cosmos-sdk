@@ -132,7 +132,9 @@ func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
 	if ctx.Verifier == nil {
 		return tmtypes.SignedHeader{}, fmt.Errorf("missing valid certifier to verify data from distrusted node")
 	}
+
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
+
 	switch {
 	case tmliteErr.IsErrCommitNotFound(err):
 		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
@@ -175,8 +177,8 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 		}
 		return nil
 	}
-	err = prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value)
-	if err != nil {
+
+	if err := prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value); err != nil {
 		return errors.Wrap(err, "failed to prove merkle proof")
 	}
 
@@ -199,6 +201,7 @@ func isQueryStoreWithProof(path string) bool {
 	}
 
 	paths := strings.SplitN(path[1:], "/", 3)
+
 	switch {
 	case len(paths) != 3:
 		return false
@@ -218,6 +221,7 @@ func parseQueryStorePath(path string) (storeName string, err error) {
 	}
 
 	paths := strings.SplitN(path[1:], "/", 3)
+
 	switch {
 	case len(paths) != 3:
 		return "", errors.New("expected format like /store/<storeName>/key")

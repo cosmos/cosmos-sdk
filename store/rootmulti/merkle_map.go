@@ -55,16 +55,6 @@ func (sm *merkleMap) sort() {
 	sm.sorted = true
 }
 
-// kvPairs sorts the merkleMap kv.Pair objects and returns a copy as a slice.
-func (sm *merkleMap) kvPairs() kv.Pairs {
-	sm.sort()
-
-	kvs := make(kv.Pairs, len(sm.kvs))
-	copy(kvs, sm.kvs)
-
-	return kvs
-}
-
 // kvPair defines a type alias for kv.Pair so that we can create bytes to hash
 // when constructing the merkle root. Note, key and values are both length-prefixed.
 type kvPair kv.Pair

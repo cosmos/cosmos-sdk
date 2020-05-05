@@ -1,7 +1,6 @@
 package staking_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -43,7 +42,7 @@ func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	appCodec := std.NewAppCodec(codec.New())
+	appCodec := app.AppCodec()
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,

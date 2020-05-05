@@ -27,13 +27,16 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 		if remain == 0 {
 			cache, remain = r.Int63(), letterIdxMax
 		}
+
 		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
 			b[i] = letterBytes[idx]
 			i--
 		}
+
 		cache >>= letterIdxBits
 		remain--
 	}
+
 	return string(b)
 }
 
@@ -42,7 +45,9 @@ func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
 	if !max.GTE(sdk.OneInt()) {
 		return sdk.Int{}, errors.New("max too small")
 	}
+
 	max = max.Sub(sdk.OneInt())
+
 	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
 }
 
@@ -50,6 +55,7 @@ func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	var randInt = big.NewInt(0)
+
 	switch r.Intn(10) {
 	case 0:
 		// randInt = big.NewInt(0)
@@ -58,6 +64,7 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	default: // NOTE: there are 10 total cases.
 		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
+
 	return sdk.NewIntFromBigInt(randInt)
 }
 
@@ -65,6 +72,7 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	var randInt = big.NewInt(0)
+
 	switch r.Intn(10) {
 	case 0:
 		// randInt = big.NewInt(0)
@@ -73,6 +81,7 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	default: // NOTE: there are 10 total cases.
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
+
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
@@ -103,7 +112,9 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	if err != nil {
 		return sdk.Coins{}
 	}
+
 	subset := sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
+
 	for i, c := range coins {
 		// skip denom that we already chose earlier
 		if i == denomIdx {
@@ -120,8 +131,10 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 		if err != nil {
 			continue
 		}
+
 		subset = append(subset, sdk.NewCoin(c.Denom, amt))
 	}
+
 	return subset.Sort()
 }
 
@@ -133,9 +146,11 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 func DeriveRand(r *rand.Rand) *rand.Rand {
 	const num = 8 // TODO what's a good number?  Too large is too slow.
 	ms := multiSource(make([]rand.Source, num))
+
 	for i := 0; i < num; i++ {
 		ms[i] = rand.NewSource(r.Int63())
 	}
+
 	return rand.New(ms)
 }
 
@@ -145,6 +160,7 @@ func (ms multiSource) Int63() (r int64) {
 	for _, source := range ms {
 		r ^= source.Int63()
 	}
+
 	return r
 }
 

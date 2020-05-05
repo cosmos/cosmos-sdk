@@ -37,7 +37,6 @@ func NewKeeper(
 	cdc codec.Marshaler, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
 	ps paramtypes.Subspace,
 ) Keeper {
-
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(ParamKeyTable())
@@ -74,7 +73,9 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
+
 	k.hooks = sh
+
 	return k
 }
 
@@ -82,12 +83,14 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
+
 	if bz == nil {
 		return sdk.ZeroInt()
 	}
 
 	ip := sdk.IntProto{}
 	k.cdc.MustUnmarshalBinaryBare(bz, &ip)
+
 	return ip.Int
 }
 

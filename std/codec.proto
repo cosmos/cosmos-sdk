@@ -9,7 +9,6 @@ import "x/auth/vesting/types/types.proto";
 import "x/bank/types/types.proto";
 import "x/crisis/types/types.proto";
 import "x/distribution/types/types.proto";
-import "x/evidence/types/types.proto";
 import "x/gov/types/types.proto";
 import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";
@@ -41,28 +40,6 @@ message Supply {
   oneof sum {
     cosmos_sdk.x.bank.v1.Supply supply = 1;
   }
-}
-
-// Evidence defines the application-level allowed Evidence to be submitted via a
-// MsgSubmitEvidence message.
-message Evidence {
-  option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence";
-
-  // sum defines a set of all acceptable concrete Evidence implementations.
-  oneof sum {
-    cosmos_sdk.x.evidence.v1.Equivocation equivocation = 1;
-  }
-}
-
-// MsgSubmitEvidence defines the application-level message type for handling
-// evidence submission.
-message MsgSubmitEvidence {
-  option (gogoproto.equal)           = true;
-  option (gogoproto.goproto_getters) = false;
-
-  cosmos_sdk.x.evidence.v1.MsgSubmitEvidenceBase base     = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-  Evidence                                       evidence = 2;
 }
 
 // MsgSubmitProposal defines the application-level message type for handling
@@ -124,7 +101,6 @@ message Message {
     cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward     = 5;
     cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission = 6;
     cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool           = 7;
-    MsgSubmitEvidence                                           msg_submit_evidence               = 8;
     MsgSubmitProposal                                           msg_submit_proposal               = 9;
     cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                          = 10;
     cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                       = 11;

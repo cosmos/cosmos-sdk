@@ -28,8 +28,8 @@ $ %s query ibc connection connections
 		`, version.ClientName),
 		),
 		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
@@ -44,6 +44,7 @@ $ %s query ibc connection connections
 	}
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
 	return cmd
 }
 

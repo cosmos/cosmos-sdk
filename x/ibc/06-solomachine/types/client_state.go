@@ -88,6 +88,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	bz, err := cdc.MarshalBinaryBare(consensusState)
 	if err != nil {
 		return err
@@ -98,7 +104,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "failed to verify proof against current public key, sequence, and consensus state")
 	}
 
@@ -126,6 +132,12 @@ func (cs ClientState) VerifyConnectionState(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	bz, err := cdc.MarshalBinaryBare(connectionEnd)
 	if err != nil {
 		return err
@@ -136,7 +148,7 @@ func (cs ClientState) VerifyConnectionState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedConnectionStateVerification,
 			"failed to verify proof against current public key, sequence, and connection state",
@@ -169,6 +181,12 @@ func (cs ClientState) VerifyChannelState(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	bz, err := cdc.MarshalBinaryBare(channel)
 	if err != nil {
 		return err
@@ -179,7 +197,7 @@ func (cs ClientState) VerifyChannelState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedChannelStateVerification,
 			"failed to verify proof against current public key, sequence, and channel state",
@@ -211,12 +229,18 @@ func (cs ClientState) VerifyPacketCommitment(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	// value = sequence + path + commitment bytes
 	value := append(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		commitmentBytes...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketCommitmentVerification,
 			"failed to verify proof against current public key, sequence, and packet commitment",
@@ -249,12 +273,18 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	// value = sequence + path + acknowledgement
 	value := append(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		acknowledgement...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketAckVerification,
 			"failed to verify proof against current public key, sequence, and acknowledgement",
@@ -287,10 +317,16 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	// value = sequence + path
 	value := combineSequenceAndPath(cs.ConsensusState.Sequence, path)
 
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketAckAbsenceVerification,
 			"failed to verify proof against current public key, sequence, and an absent acknowledgement",
@@ -322,13 +358,19 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return clienttypes.ErrClientFrozen
 	}
 
+	// cast the proof to a signature proof
+	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
+	if !ok {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+	}
+
 	// value = sequence + path + nextSequenceRecv
 	value := append(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		sdk.Uint64ToBigEndian(nextSequenceRecv)...,
 	)
 
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, proof) {
+	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedNextSeqRecvVerification,
 			"failed to verify proof against current public key, sequence, and the next sequence number to be received",

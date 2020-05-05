@@ -6,7 +6,7 @@ package solomachine
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types/
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types/"
+	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 const (
@@ -14,13 +14,28 @@ const (
 )
 
 var (
+	// functions aliases
+	InitializeFromMsg              = types.InitializeFromMsg
+	Initialize                     = types.Initialize
+	RegisterCodec                  = types.RegisterCodec
+	SetSubModuleCodec              = types.SetSubModuleCodec
+	NewMsgCreateClient             = types.NewMsgCreateClient
+	NewMsgUpdateClient             = types.NewMsgUpdateClient
+	NewMsgSubmitClientMisbehaviour = types.NewMsgSubmitClientMisbehaviour
 
 	// variable aliases
-	ErrInvalidHeader = types.ErrInvalidHeader
+	SubModuleCdc       = types.SubModuleCdc
+	ErrInvalidHeader   = types.ErrInvalidHeader
+	ErrInvalidSequence = types.ErrInvalidSequence
 )
 
 type (
-	ClientState    = types.ClientState
-	ConsensusState = types.ConsensusState
-	Header         = types.Header
+	ClientState                 = types.ClientState
+	ConsensusState              = types.ConsensusState
+	Evidence                    = types.Evidence
+	SignatureAndData            = types.SignatureAndData
+	Header                      = types.Header
+	MsgCreateClient             = types.MsgCreateClient
+	MsgUpdateClient             = types.MsgUpdateClient
+	MsgSubmitClientMisbehaviour = types.MsgSubmitClientMisbehaviour
 )

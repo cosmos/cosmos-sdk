@@ -1,6 +1,8 @@
 package solomachine
 
 import (
+	"bytes"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -53,7 +55,7 @@ func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
 
 	// check second signature
 	if pubKey.VerifyBytes(evidence.SignatureTwo.Data, evidence.SignatureTwo.Signature) {
-		return sdkerrors.Wrap(clienttypes.ERrInvlaidEvidence, "evidence signature two not signed by currently registered public key")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signature two not signed by currently registered public key")
 	}
 
 	return nil

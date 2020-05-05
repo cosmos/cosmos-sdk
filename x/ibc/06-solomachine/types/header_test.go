@@ -1,5 +1,6 @@
 package types_test
 
+/*
 import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibcsmtypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
@@ -29,3 +30,4 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 
 	}
 }
+*/

@@ -18,7 +18,7 @@ func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics06SoloMachineTxCmd.AddCommand(flags.PostCommand(
+	ics06SoloMachineTxCmd.AddCommand(flags.PostCommands(
 		GetCmdCreateClient(cdc),
 		GetCmdUpdateClient(cdc),
 		GetCmdSubmitMisbehaviour(cdc),

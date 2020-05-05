@@ -1,7 +1,10 @@
 package solomachine
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates
@@ -11,6 +14,7 @@ import (
 func CheckValidityAndUpdateState(
 	clientState clientexported.ClientState, header clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	// cast the client state to solo machine
 	smClientState, ok := clientState.(ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
@@ -30,7 +34,7 @@ func CheckValidityAndUpdateState(
 	}
 
 	smClientState, consensusState := update(smClientState, smHeader)
-	return smClientState, smHeader, nil
+	return smClientState, consensusState, nil
 }
 
 // checkValidity checks if the Solo Machine update signature is valid.

@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 		// - receiving chain
 		{"incorrect dest prefix on coin denom",
 			func() {
-				data.Amount = prefixCoins2
+				data.Amount = prefixCoins
 			}, false},
 		{"success receive from external chain",
 			func() {
@@ -164,8 +164,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 // TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
 // and failure acknowledment leads to refund
 func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
-	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1.String(), testAddr2.String())
-	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())
 
 	successAck := types.FungibleTokenPacketAcknowledgement{
 		Success: true,
@@ -186,13 +185,13 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			func() {}, true, true},
 		{"successful refund from source chain", failedAck,
 			func() {
-				escrow := types.GetEscrowAddress(testPort2, testChannel2)
+				escrow := types.GetEscrowAddress(testPort1, testChannel1)
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
 				suite.Require().NoError(err)
 			}, true, false},
 		{"successful refund from external chain", failedAck,
 			func() {
-				data.Amount = testCoins2
+				data.Amount = prefixCoins
 			}, false, false},
 	}
 
@@ -204,17 +203,17 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, prefixCoins[0].Denom)
-
 			tc.malleate()
 
 			var denom string
 			if tc.source {
-				prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-				denom = prefixCoins[0].Denom[len(prefix):]
+				prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+				denom = prefixCoins2[0].Denom[len(prefix):]
 			} else {
 				denom = data.Amount[0].Denom
 			}
+
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, denom)
 
 			err := suite.chainA.App.TransferKeeper.OnAcknowledgementPacket(suite.chainA.GetContext(), packet, data, tc.ack)
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
@@ -225,7 +224,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			if tc.success {
 				suite.Require().Equal(sdk.ZeroInt(), deltaAmount, "successful ack changed balance")
 			} else {
-				suite.Require().Equal(prefixCoins[0].Amount, deltaAmount, "failed ack did not trigger refund")
+				suite.Require().Equal(prefixCoins2[0].Amount, deltaAmount, "failed ack did not trigger refund")
 			}
 		})
 	}
@@ -233,8 +232,8 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 
 // TestOnTimeoutPacket test private refundPacket function since it is a simple wrapper over it
 func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
-	data := types.NewFungibleTokenPacketData(prefixCoins, testAddr1.String(), testAddr2.String())
-	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+	data := types.NewFungibleTokenPacketData(prefixCoins2, testAddr1.String(), testAddr2.String())
+	testCoins2 := sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
 
 	testCases := []struct {
 		msg      string
@@ -244,7 +243,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	}{
 		{"successful timeout from source chain",
 			func() {
-				escrow := types.GetEscrowAddress(testPort2, testChannel2)
+				escrow := types.GetEscrowAddress(testPort1, testChannel1)
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100))))
 				suite.Require().NoError(err)
 			}, true, true},
@@ -261,7 +260,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			}, true, false},
 		{"mint failed",
 			func() {
-				data.Amount[0].Denom = prefixCoins[0].Denom
+				data.Amount[0].Denom = prefixCoins2[0].Denom
 				data.Amount[0].Amount = sdk.ZeroInt()
 			}, true, false},
 	}
@@ -274,17 +273,17 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, prefixCoins[0].Denom)
-
 			tc.malleate()
 
 			var denom string
 			if tc.source {
-				prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-				denom = prefixCoins[0].Denom[len(prefix):]
+				prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+				denom = prefixCoins2[0].Denom[len(prefix):]
 			} else {
 				denom = data.Amount[0].Denom
 			}
+
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), testAddr1, denom)
 
 			err := suite.chainA.App.TransferKeeper.OnTimeoutPacket(suite.chainA.GetContext(), packet, data)
 
@@ -293,7 +292,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-				suite.Require().Equal(prefixCoins[0].Amount.Int64(), deltaAmount.Int64(), "failed ack did not trigger refund")
+				suite.Require().Equal(prefixCoins2[0].Amount.Int64(), deltaAmount.Int64(), "successful timeout did not trigger refund")
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

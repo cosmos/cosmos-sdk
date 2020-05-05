@@ -2,7 +2,6 @@ package std_test
 
 import (
 	"testing"
-	"time"
 
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -10,24 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
 )
-
-func TestNewMsgSubmitEvidence(t *testing.T) {
-	s := sdk.AccAddress("foo")
-	e := evidence.Equivocation{
-		Height:           100,
-		Time:             time.Now().UTC(),
-		Power:            40000000000,
-		ConsensusAddress: sdk.ConsAddress("test"),
-	}
-
-	msg, err := std.NewMsgSubmitEvidence(e, s)
-	require.NoError(t, err)
-	require.Equal(t, msg.GetEvidence(), &e)
-	require.Equal(t, msg.GetSubmitter(), s)
-	require.NoError(t, msg.ValidateBasic())
-}
 
 type invalidProposal struct {
 	*gov.TextProposal

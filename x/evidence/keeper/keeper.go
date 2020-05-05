@@ -165,3 +165,7 @@ func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
 
 	return bz
 }
+
+func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
+	return k.cdc.UnmarshalEvidence(bz)
+}

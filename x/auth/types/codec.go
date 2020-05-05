@@ -32,19 +32,10 @@ func RegisterCodec(cdc *codec.Codec) {
 // another module for the internal ModuleCdc.
 func RegisterKeyTypeCodec(o interface{}, name string) {
 	amino.RegisterConcrete(o, name, nil)
-	ModuleCdc = codec.NewHybridCodec(amino)
 }
 
 var (
 	amino = codec.New()
-
-	// ModuleCdc references the global x/auth module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/auth and
-	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino)
 )
 
 func init() {

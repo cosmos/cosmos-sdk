@@ -126,7 +126,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, tc.connection, nil,
+			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
 		)
 
 		if tc.expPass {
@@ -177,7 +177,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, tc.channel, nil,
+			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
 		)
 
 		if tc.expPass {

@@ -140,7 +140,7 @@ func (k Keeper) ChanOpenTry(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		counterparty.PortID, counterparty.ChannelID, expectedChannel,
+		counterparty.PortID, counterparty.ChannelID, &expectedChannel,
 	); err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (k Keeper) ChanOpenAck(
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel,
+		&expectedChannel,
 	); err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func (k Keeper) ChanOpenConfirm(
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofAck,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel,
+		&expectedChannel,
 	); err != nil {
 		return err
 	}
@@ -388,7 +388,7 @@ func (k Keeper) ChanCloseConfirm(
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		expectedChannel,
+		&expectedChannel,
 	); err != nil {
 		return err
 	}

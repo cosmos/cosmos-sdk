@@ -81,7 +81,7 @@ func (k Keeper) ConnOpenTry(
 	// Check that ChainA committed expectedConnectionEnd to its state
 	if err := k.VerifyConnectionState(
 		ctx, connection, proofHeight, proofInit, counterparty.ConnectionID,
-		expectedConnection,
+		&expectedConnection,
 	); err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (k Keeper) ConnOpenAck(
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
 		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionID,
-		expectedConnection,
+		&expectedConnection,
 	); err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (k Keeper) ConnOpenConfirm(
 	// Check that connection on ChainA is open
 	if err := k.VerifyConnectionState(
 		ctx, connection, proofHeight, proofAck, connection.Counterparty.ConnectionID,
-		expectedConnection,
+		&expectedConnection,
 	); err != nil {
 		return err
 	}

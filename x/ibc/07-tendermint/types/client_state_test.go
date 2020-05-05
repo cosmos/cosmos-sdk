@@ -294,7 +294,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, tc.channel, tc.consensusState,
+			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, tc.consensusState,
 		)
 
 		if tc.expPass {

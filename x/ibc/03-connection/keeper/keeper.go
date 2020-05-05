@@ -71,7 +71,7 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz, err := k.cdc.MarshalConnection(connection)
+	bz, err := k.cdc.MarshalConnection(&connection)
 	if err != nil {
 		panic(err)
 	}

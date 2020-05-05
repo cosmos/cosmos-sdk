@@ -28,7 +28,6 @@ var (
 	NewRouter                    = types.NewRouter
 	NewQueryEvidenceParams       = types.NewQueryEvidenceParams
 	NewQueryAllEvidenceParams    = types.NewQueryAllEvidenceParams
-	NewAnyCodec                  = types.NewAnyCodec
 	RegisterCodec                = types.RegisterCodec
 	RegisterInterfaces           = types.RegisterInterfaces
 	ModuleCdc                    = types.ModuleCdc
@@ -50,6 +49,4 @@ type (
 	Handler           = types.Handler
 	Router            = types.Router
 	Equivocation      = types.Equivocation
-	Codec             = types.Codec
-	AnyCodec          = types.AnyCodec
 )

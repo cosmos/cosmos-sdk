@@ -21,11 +21,13 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper  = keeper.NewKeeper
-	NewQuerier = keeper.NewQuerier
+	NewKeeper   = keeper.NewKeeper
+	NewQuerier  = keeper.NewQuerier
+	NewAnyCodec = clientexported.NewAnyCodec
 )
 
 type (
-	Keeper = keeper.Keeper
-	Codec  = clientexported.Codec
+	Keeper   = keeper.Keeper
+	Codec    = clientexported.Codec
+	AnyCodec = clientexported.AnyCodec
 )

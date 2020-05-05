@@ -233,7 +233,7 @@ func NewSimApp(
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibc.NewKeeper(
-		app.cdc, appCodec, keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
+		app.cdc, ibc.NewAnyCodec(appCodec), keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	// Create Transfer Keepers

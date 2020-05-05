@@ -3,7 +3,7 @@ package exported
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"

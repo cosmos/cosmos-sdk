@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -25,7 +23,7 @@ var (
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
-	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
+	cdc, _ := simapp.MakeCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}

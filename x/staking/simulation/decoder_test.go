@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -34,7 +32,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 }
 
 func TestDecodeStore(t *testing.T) {
-	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
+	cdc, _ := simapp.MakeCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	bondTime := time.Now().UTC()

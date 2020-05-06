@@ -93,7 +93,7 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerF
 // @Produce json
 // @Param page query int false "The page number to query" default(1)
 // @Param limit query int false "The number of results per page" default(100)
-// @Success 200 {object} QueryConnection "OK"
+// @Success 200 {object} QueryClientsConnections "OK"
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/connections [get]

@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -26,7 +25,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					{exported.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+					NewConnectionEnd(ibctypes.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{ibctypes.ConnectionPath(connectionID)}},
@@ -38,7 +37,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid connection",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(exported.INIT, connectionID, "CLIENTIDONE", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(ibctypes.INIT, connectionID, "CLIENTIDONE", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{ibctypes.ConnectionPath(connectionID)}},
@@ -50,7 +49,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client id",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					{exported.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+					NewConnectionEnd(ibctypes.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{"CLIENTIDONE", []string{ibctypes.ConnectionPath(connectionID)}},
@@ -62,7 +61,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid path",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					{exported.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}},
+					NewConnectionEnd(ibctypes.INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{connectionID}},

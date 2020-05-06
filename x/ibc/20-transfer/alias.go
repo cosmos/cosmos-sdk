@@ -37,6 +37,7 @@ var (
 	GetDenomPrefix       = types.GetDenomPrefix
 	GetModuleAccountName = types.GetModuleAccountName
 	NewMsgTransfer       = types.NewMsgTransfer
+	RegisterInterfaces   = types.RegisterInterfaces
 
 	// variable aliases
 	ModuleCdc              = types.ModuleCdc

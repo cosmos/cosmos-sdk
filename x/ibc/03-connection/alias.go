@@ -30,6 +30,7 @@ var (
 	QuerierClientConnections         = keeper.QuerierClientConnections
 	QuerierAllClientConnections      = keeper.QuerierAllClientConnections
 	RegisterCodec                    = types.RegisterCodec
+	RegisterInterfaces               = types.RegisterInterfaces
 	NewConnectionEnd                 = types.NewConnectionEnd
 	NewCounterparty                  = types.NewCounterparty
 	ErrConnectionExists              = types.ErrConnectionExists

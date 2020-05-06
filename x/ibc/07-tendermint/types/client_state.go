@@ -11,6 +11,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -168,7 +169,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -185,7 +186,12 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(connectionEnd)
+	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
+	if !ok {
+		return fmt.Errorf("invalid connection type %T", connectionEnd)
+	}
+
+	bz, err := cdc.MarshalBinaryBare(&connection)
 	if err != nil {
 		return err
 	}
@@ -200,7 +206,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -218,7 +224,12 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(channel)
+	channelEnd, ok := channel.(channeltypes.Channel)
+	if !ok {
+		return fmt.Errorf("invalid channel type %T", channel)
+	}
+
+	bz, err := cdc.MarshalBinaryBare(&channelEnd)
 	if err != nil {
 		return err
 	}

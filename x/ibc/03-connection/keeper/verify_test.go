@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -24,10 +22,10 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 	// create connection on chainA to chainB
 	counterparty := types.NewCounterparty(
 		testClientIDA, testConnectionIDA,
-		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
 	)
 	connection1 := types.NewConnectionEnd(
-		exported.UNINITIALIZED, testConnectionIDB, testClientIDB, counterparty,
+		ibctypes.UNINITIALIZED, testConnectionIDB, testClientIDB, counterparty,
 		types.GetCompatibleVersions(),
 	)
 
@@ -67,7 +65,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			suite.chainA.updateClient(suite.chainB)
 
 			// TODO: is this the right consensus height
-			consensusHeight := uint64(suite.chainA.Header.Height)
+			consensusHeight := suite.chainA.Header.GetHeight()
 			consensusKey := prefixedClientKey(testClientIDA, ibctypes.KeyConsensusState(consensusHeight))
 
 			// get proof that chainB stored chainA' consensus state
@@ -119,11 +117,11 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			tc.malleate()
 
 			// create and store connection on chain A
-			expectedConnection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, exported.OPEN)
+			expectedConnection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.OPEN)
 
 			// // create expected connection
 			// TODO: why is this commented
-			// expectedConnection := types.NewConnectionEnd(exported.INIT, testClientIDB, counterparty, []string{"1.0.0"})
+			// expectedConnection := types.NewConnectionEnd(types.INIT, testClientIDB, counterparty, []string{"1.0.0"})
 
 			// perform a couple updates of chain A on chain B
 			suite.chainB.updateClient(suite.chainA)
@@ -136,7 +134,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 
 			// Create B's connection to A
 			counterparty := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-			connection := types.NewConnectionEnd(exported.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
+			connection := types.NewConnectionEnd(ibctypes.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
 				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
@@ -157,11 +155,11 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 	// create connection of chainB to pass into verify function
 	counterparty := types.NewCounterparty(
 		testClientIDB, testConnectionIDB,
-		suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(),
+		commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()),
 	)
 
 	connection := types.NewConnectionEnd(
-		exported.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty,
+		ibctypes.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty,
 		types.GetCompatibleVersions(),
 	)
 
@@ -195,7 +193,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			// Create and store channel on chain A
 			channel := suite.chainA.createChannel(
 				testPort1, testChannel1, testPort2, testChannel2,
-				channelexported.OPEN, channelexported.ORDERED, testConnectionIDA,
+				ibctypes.OPEN, ibctypes.ORDERED, testConnectionIDA,
 			)
 
 			// Update chainA client on chainB
@@ -252,7 +250,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			tc.malleate()
 
 			// Set PacketCommitment on chainA
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.OPEN)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), testPort1, testChannel1, 1, commitmentBz)
 
 			// Update ChainA client on chainB
@@ -305,7 +303,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.OPEN)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort1, testChannel1, 1, channeltypes.CommitAcknowledgement(ack))
 			suite.chainB.updateClient(suite.chainA)
 
@@ -355,7 +353,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.OPEN)
 			suite.chainB.updateClient(suite.chainA)
 
 			proof, proofHeight := queryProof(suite.chainA, packetAckKey)
@@ -403,7 +401,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, exported.OPEN)
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, ibctypes.OPEN)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			suite.chainB.updateClient(suite.chainA)
 

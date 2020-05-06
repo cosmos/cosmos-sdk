@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -50,6 +48,8 @@ type Any struct {
 	XXX_sizecache int32 `json:"-"`
 
 	cachedValue interface{}
+
+	aminoCompat *aminoCompat
 }
 
 // NewAnyWithValue constructs a new Any packed with the value provided or
@@ -91,39 +91,4 @@ func (any *Any) GetCachedValue() interface{} {
 // ClearCachedValue clears the cached value from the Any
 func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
-}
-
-// MarshalAny is a convenience function for packing the provided value in an
-// Any and then proto marshaling it to bytes
-func MarshalAny(x interface{}) ([]byte, error) {
-	msg, ok := x.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("can't proto marshal %T", x)
-	}
-
-	any := &Any{}
-	err := any.Pack(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return any.Marshal()
-}
-
-// UnmarshalAny is a convenience function for proto unmarshaling an Any from
-// bz and then unpacking it to the interface pointer passed in as iface using
-// the provided AnyUnpacker or returning an error
-//
-// Ex:
-//		var x MyInterface
-//		err := UnmarshalAny(unpacker, &x, bz)
-func UnmarshalAny(unpacker AnyUnpacker, iface interface{}, bz []byte) error {
-	any := &Any{}
-
-	err := any.Unmarshal(bz)
-	if err != nil {
-		return err
-	}
-
-	return unpacker.UnpackAny(any, iface)
 }

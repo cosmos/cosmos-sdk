@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
@@ -218,79 +219,4 @@ func (msg MsgVote) GetSignBytes() []byte {
 // GetSigners implements Msg
 func (msg MsgVote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Voter}
-}
-
-// ---------------------------------------------------------------------------
-// Deprecated
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-// ---------------------------------------------------------------------------
-
-// MsgSubmitProposalLegacy defines a (deprecated) message to create/submit a governance
-// proposal.
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-type MsgSubmitProposalLegacy struct {
-	Content        Content        `json:"content" yaml:"content"`
-	InitialDeposit sdk.Coins      `json:"initial_deposit" yaml:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
-	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               //  Address of the proposer
-}
-
-var _ MsgSubmitProposalI = &MsgSubmitProposalLegacy{}
-
-// NewMsgSubmitProposalLegacy returns a (deprecated) MsgSubmitProposalLegacy message.
-//
-// TODO: Remove once client-side Protobuf migration has been completed.
-func NewMsgSubmitProposalLegacy(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) *MsgSubmitProposalLegacy {
-	return &MsgSubmitProposalLegacy{content, initialDeposit, proposer}
-}
-
-// ValidateBasic implements Msg
-func (msg MsgSubmitProposalLegacy) ValidateBasic() error {
-	if msg.Content == nil {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
-	}
-	if msg.Proposer.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
-	}
-	if !msg.InitialDeposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
-	}
-	if msg.InitialDeposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
-	}
-	if !IsValidProposalType(msg.Content.ProposalType()) {
-		return sdkerrors.Wrap(ErrInvalidProposalType, msg.Content.ProposalType())
-	}
-
-	return msg.Content.ValidateBasic()
-}
-
-// GetSignBytes implements Msg
-func (msg MsgSubmitProposalLegacy) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// nolint
-func (msg MsgSubmitProposalLegacy) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Proposer}
-}
-func (msg MsgSubmitProposalLegacy) Route() string                { return RouterKey }
-func (msg MsgSubmitProposalLegacy) Type() string                 { return TypeMsgSubmitProposal }
-func (msg MsgSubmitProposalLegacy) GetContent() Content          { return msg.Content }
-func (msg MsgSubmitProposalLegacy) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
-func (msg MsgSubmitProposalLegacy) GetProposer() sdk.AccAddress  { return msg.Proposer }
-
-func (msg *MsgSubmitProposalLegacy) SetContent(content Content) error {
-	msg.Content = content
-	return nil
-}
-
-func (msg *MsgSubmitProposalLegacy) SetInitialDeposit(deposit sdk.Coins) {
-	msg.InitialDeposit = deposit
-}
-
-func (msg *MsgSubmitProposalLegacy) SetProposer(proposer sdk.AccAddress) {
-	msg.Proposer = proposer
 }

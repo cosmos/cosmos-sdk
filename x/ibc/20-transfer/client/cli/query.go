@@ -38,6 +38,7 @@ $ %s query ibc channel next-recv [port-id] [channel-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(sequenceRes.ProofHeight))
 			return cliCtx.PrintOutput(sequenceRes)
 		},
 	}

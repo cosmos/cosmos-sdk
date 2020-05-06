@@ -45,6 +45,8 @@ func (any *Any) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// amino for the binary un-marshaling phase
 type AminoUnpacker struct {
 	Cdc *amino.Codec
 }
@@ -69,9 +71,13 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	return nil
 }
 
+// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// amino for the binary marshaling phase
 type AminoPacker struct {
 	Cdc *amino.Codec
 }
+
+var _ AnyUnpacker = AminoPacker{}
 
 func (a AminoPacker) UnpackAny(any *Any, _ interface{}) error {
 	err := UnpackInterfaces(any.cachedValue, a)
@@ -86,12 +92,8 @@ func (a AminoPacker) UnpackAny(any *Any, _ interface{}) error {
 	return err
 }
 
-var _ AnyUnpacker = AminoJSONPacker{}
-
-type AminoJSONPacker struct {
-	Cdc *amino.Codec
-}
-
+// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// amino for the JSON marshaling phase
 type AminoJSONUnpacker struct {
 	Cdc *amino.Codec
 }
@@ -116,6 +118,14 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	return nil
 }
 
+// AminoUnpacker is an AnyUnpacker provided for backwards compatibility with
+// amino for the JSON un-marshaling phase
+type AminoJSONPacker struct {
+	Cdc *amino.Codec
+}
+
+var _ AnyUnpacker = AminoJSONPacker{}
+
 func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 	err := UnpackInterfaces(any.cachedValue, a)
 	if err != nil {
@@ -128,5 +138,3 @@ func (a AminoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
 	}
 	return err
 }
-
-var _ AnyUnpacker = AminoJSONPacker{}

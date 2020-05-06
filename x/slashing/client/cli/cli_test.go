@@ -18,7 +18,7 @@ func TestCLISlashingGetParams(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	params := testutil.QuerySlashingParams(f)
 	require.Equal(t, int64(100), params.SignedBlocksWindow)

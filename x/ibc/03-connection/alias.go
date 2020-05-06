@@ -19,6 +19,7 @@ const (
 	RouterKey                        = types.RouterKey
 	QuerierRoute                     = types.QuerierRoute
 	QueryAllConnections              = types.QueryAllConnections
+	QueryAllClientConnections        = types.QueryAllClientConnections
 	QueryClientConnections           = types.QueryClientConnections
 )
 
@@ -27,7 +28,9 @@ var (
 	NewKeeper                        = keeper.NewKeeper
 	QuerierConnections               = keeper.QuerierConnections
 	QuerierClientConnections         = keeper.QuerierClientConnections
+	QuerierAllClientConnections      = keeper.QuerierAllClientConnections
 	RegisterCodec                    = types.RegisterCodec
+	RegisterInterfaces               = types.RegisterInterfaces
 	NewConnectionEnd                 = types.NewConnectionEnd
 	NewCounterparty                  = types.NewCounterparty
 	ErrConnectionExists              = types.ErrConnectionExists

@@ -3,11 +3,12 @@
 package cli_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 	"testing"
+
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"       	
 	cli "github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,7 +19,7 @@ func TestCLISlashingGetParams(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	params := testutil.QuerySlashingParams(f)
 	require.Equal(t, int64(100), params.SignedBlocksWindow)

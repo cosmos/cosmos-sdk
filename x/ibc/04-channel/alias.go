@@ -30,6 +30,7 @@ var (
 	NewCounterparty              = types.NewCounterparty
 	NewIdentifiedChannel         = types.NewIdentifiedChannel
 	RegisterCodec                = types.RegisterCodec
+	RegisterInterfaces           = types.RegisterInterfaces
 	ErrChannelExists             = types.ErrChannelExists
 	ErrChannelNotFound           = types.ErrChannelNotFound
 	ErrInvalidCounterparty       = types.ErrInvalidCounterparty

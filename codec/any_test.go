@@ -50,4 +50,5 @@ func TestMarshalAny(t *testing.T) {
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
 	err = UnmarshalAny(cdc, nil, bz)
+	require.Error(t, err)
 }

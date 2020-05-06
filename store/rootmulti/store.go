@@ -500,9 +500,8 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 //---------------------- Snapshotting ------------------
 
 // Snapshot implements snapshots.Snapshotter. The snapshot output for a given format must be
-// identical across nodes such that chunks from different sources fit together, and thus the format
-// must be stable and deterministic across versions and environments. If the output for a given
-// format changes (at the byte level), the snapshot format must be bumped - see
+// identical across nodes such that chunks from different sources fit together. If the output for a
+// given format changes (at the byte level), the snapshot format must be bumped - see
 // TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
 	if format != snapshots.CurrentFormat {

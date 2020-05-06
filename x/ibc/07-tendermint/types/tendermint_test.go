@@ -9,8 +9,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
@@ -24,18 +24,20 @@ const (
 type TendermintTestSuite struct {
 	suite.Suite
 
-	cdc     *codec.Codec
-	privVal tmtypes.PrivValidator
-	valSet  *tmtypes.ValidatorSet
-	header  ibctmtypes.Header
-	now     time.Time
+	aminoCdc *codec.Codec
+	cdc      codec.Marshaler
+	privVal  tmtypes.PrivValidator
+	valSet   *tmtypes.ValidatorSet
+	header   ibctmtypes.Header
+	now      time.Time
 }
 
 func (suite *TendermintTestSuite) SetupTest() {
-	suite.cdc = codec.New()
-	codec.RegisterCrypto(suite.cdc)
-	ibctmtypes.RegisterCodec(suite.cdc)
-	commitmenttypes.RegisterCodec(suite.cdc)
+	checkTx := false
+	app := simapp.Setup(checkTx)
+
+	suite.aminoCdc = app.Codec()
+	suite.cdc = app.AppCodec()
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()

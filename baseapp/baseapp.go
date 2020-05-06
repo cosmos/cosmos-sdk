@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	snapshotRetention           = 2
 	runTxModeCheck    runTxMode = iota // Check a transaction
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
@@ -64,9 +65,8 @@ type BaseApp struct { // nolint: maligned
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
-	snapshotManager   *snapshots.Manager
-	snapshotInterval  uint64 // interval (in blocks) between snapshots (0 to disable)
-	snapshotRetention uint32 // number of snapshots to keep (0 for all)
+	snapshotManager  *snapshots.Manager
+	snapshotInterval uint64 // block interval between snapshots - must be multiple of IAVL SnapshotEvery
 
 	// volatile states:
 	//

@@ -14,9 +14,17 @@ import (
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
 
-// SetPruning sets a pruning option on the multistore associated with the app
+// SetPruning sets a pruning option on the multistore associated with the app, and also
+// sets the snapshot interval.
 func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
-	return func(bap *BaseApp) { bap.cms.SetPruning(opts) }
+	return func(bap *BaseApp) {
+		if opts.SnapshotEvery > 1 {
+			bap.snapshotInterval = uint64(opts.SnapshotEvery)
+		} else {
+			bap.snapshotInterval = 0
+		}
+		bap.cms.SetPruning(opts)
+	}
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.

@@ -128,7 +128,10 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 	app := setupBaseApp(t, append(options,
 		SetSnapshotStore(snapshotStore),
-		SetSnapshotPolicy(1, 3),
+		SetPruning(sdk.PruningOptions{
+			KeepEvery:     1,
+			SnapshotEvery: 2,
+		}),
 		routerOpt)...)
 
 	app.InitChain(abci.RequestInitChain{})

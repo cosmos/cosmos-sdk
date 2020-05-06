@@ -305,9 +305,9 @@ func (app *BaseApp) snapshot(height int64) {
 	}
 	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)
 
-	if app.snapshotRetention > 0 {
+	if snapshotRetention > 0 {
 		app.logger.Debug("Pruning state snapshots")
-		pruned, err := app.snapshotManager.Prune(app.snapshotRetention)
+		pruned, err := app.snapshotManager.Prune(snapshotRetention)
 		if err != nil {
 			app.logger.Error("Failed to prune state snapshots", "err", err.Error())
 			return

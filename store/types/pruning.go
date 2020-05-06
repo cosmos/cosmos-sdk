@@ -28,6 +28,10 @@ var (
 // will use when committing state, where keepEvery determines which committed
 // heights are flushed to disk and snapshotEvery determines which of these heights
 // are kept after pruning.
+//
+// SnapshotEvery also determines the state sync snapshot policy. Setting it to 0 or
+// 1 disables state sync snapshots, while any other value will take state sync
+// snapshots at that interval.
 type PruningOptions struct {
 	KeepEvery     int64
 	SnapshotEvery int64

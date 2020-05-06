@@ -6,12 +6,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	tmclient "github.com/tendermint/tendermint/rpc/client"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 
@@ -29,7 +27,7 @@ func WaitForNextHeightTM(port string) {
 func WaitForNextNBlocksTM(n int64, port string) {
 	// get the latest block and wait for n more
 	url := fmt.Sprintf("http://localhost:%v", port)
-	cl, err := tmclient.NewHTTP(url, "/websocket")
+	cl, err := rpchttp.New(url, "/websocket")
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Tendermint HTTP client: %s", err))
 	}
@@ -56,7 +54,7 @@ func WaitForHeightTM(height int64, port string) {
 }
 
 func waitForHeightTM(height int64, url string) {
-	cl, err := tmclient.NewHTTP(url, "/websocket")
+	cl, err := rpchttp.New(url, "/websocket")
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Tendermint HTTP client: %s", err))
 	}
@@ -214,10 +212,15 @@ func ExtractPortFromAddress(listenAddress string) string {
 	return stringList[2]
 }
 
+type NamedTestingT interface {
+	require.TestingT
+	Name() string
+}
+
 // NewTestCaseDir creates a new temporary directory for a test case.
 // Returns the directory path and a cleanup function.
 // nolint: errcheck
-func NewTestCaseDir(t *testing.T) (string, func()) {
+func NewTestCaseDir(t NamedTestingT) (string, func()) {
 	dir, err := ioutil.TempDir("", t.Name()+"_")
 	require.NoError(t, err)
 	return dir, func() { os.RemoveAll(dir) }

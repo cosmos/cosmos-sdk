@@ -1,16 +1,17 @@
-package simulation
+package simulation_test
 
 import (
 	"fmt"
 	"testing"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -19,23 +20,29 @@ var (
 	delAddr1 = sdk.AccAddress(delPk1.Address())
 )
 
-func makeTestCodec() (cdc *codec.Codec) {
-	cdc = codec.New()
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	types.RegisterCodec(cdc)
-	return
-}
-
 func TestDecodeStore(t *testing.T) {
-	cdc := makeTestCodec()
+	cdc, _ := simapp.MakeCodecs()
 	acc := types.NewBaseAccountWithAddress(delAddr1)
-	globalAccNumber := uint64(10)
+	dec := simulation.NewDecodeStore(cdc)
+
+	accBz, err := cdc.MarshalAccount(acc)
+	require.NoError(t, err)
+
+	globalAccNumber := gogotypes.UInt64Value{Value: 10}
 
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(acc)},
-		tmkv.Pair{Key: types.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryBare(globalAccNumber)},
-		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+		tmkv.Pair{
+			Key:   types.AddressStoreKey(delAddr1),
+			Value: accBz,
+		},
+		tmkv.Pair{
+			Key:   types.GlobalAccountNumberKey,
+			Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
+		},
+		tmkv.Pair{
+			Key:   []byte{0x99},
+			Value: []byte{0x99},
+		},
 	}
 	tests := []struct {
 		name        string
@@ -51,9 +58,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { DecodeStore(cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, DecodeStore(cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

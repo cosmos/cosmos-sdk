@@ -23,26 +23,15 @@ func CommitAcknowledgement(data []byte) []byte {
 	return tmhash.Sum(data)
 }
 
-var _ exported.PacketI = Packet{}
+var _ exported.PacketI = (*Packet)(nil)
 
-// Packet defines a type that carries data across different chains through IBC
-type Packet struct {
-	Data []byte `json:"data" yaml:"data"` // Actual opaque bytes transferred directly to the application module
-
-	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
-	SourceChannel      string `json:"source_channel" yaml:"source_channel"`           // identifies the channel end on the sending chain.
-	DestinationPort    string `json:"destination_port" yaml:"destination_port"`       // identifies the port on the receiving chain.
-	DestinationChannel string `json:"destination_channel" yaml:"destination_channel"` // identifies the channel end on the receiving chain.
-	TimeoutHeight      uint64 `json:"timeout_height" yaml:"timeout_height"`           // block height after which the packet times out
-}
-
-// NewPacket creates a new Packet instance
+// NewPacket creates a new Packet instance. It panics if the provided
+// packet data interface is not registered.
 func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
-	timeoutHeight uint64,
+	timeoutHeight uint64, timeoutTimestamp uint64,
 ) Packet {
 	return Packet{
 		Data:               data,
@@ -52,6 +41,7 @@ func NewPacket(
 		DestinationPort:    destinationPort,
 		DestinationChannel: destinationChannel,
 		TimeoutHeight:      timeoutHeight,
+		TimeoutTimestamp:   timeoutTimestamp,
 	}
 }
 
@@ -75,6 +65,9 @@ func (p Packet) GetData() []byte { return p.Data }
 
 // GetTimeoutHeight implements PacketI interface
 func (p Packet) GetTimeoutHeight() uint64 { return p.TimeoutHeight }
+
+// GetTimeoutTimestamp implements PacketI interface
+func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -105,8 +98,8 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	if p.TimeoutHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
+	if p.TimeoutHeight == 0 && p.TimeoutTimestamp == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout height and packet timeout timestamp cannot both be 0")
 	}
 	if len(p.Data) == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet data bytes cannot be empty")

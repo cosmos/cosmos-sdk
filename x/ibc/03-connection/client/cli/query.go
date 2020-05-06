@@ -28,22 +28,24 @@ $ %s query ibc connection connections
 		`, version.ClientName),
 		),
 		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			connections, _, err := utils.QueryAllConnections(cliCtx, page, limit)
+			connections, height, err := utils.QueryAllConnections(cliCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(height)
 			return cliCtx.PrintOutput(connections)
 		},
 	}
 	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
 	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
 	return cmd
 }
 
@@ -70,6 +72,7 @@ $ %s query ibc connection end [connection-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(connRes.ProofHeight))
 			return cliCtx.PrintOutput(connRes)
 		},
 	}
@@ -78,18 +81,51 @@ $ %s query ibc connection end [connection-id]
 	return cmd
 }
 
+// GetCmdQueryAllClientConnections defines the command to query a all the client connection paths.
+func GetCmdQueryAllClientConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "paths",
+		Short: "Query all stored client connection paths",
+		Long: strings.TrimSpace(fmt.Sprintf(`Query all stored client connection paths
+		
+Example:
+$ %s query ibc connection paths
+		`, version.ClientName),
+		),
+		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
+
+			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(cliCtx, page, limit)
+			if err != nil {
+				return err
+			}
+
+			cliCtx = cliCtx.WithHeight(height)
+			return cliCtx.PrintOutput(connectionPaths)
+		},
+	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+
+	return cmd
+}
+
 // GetCmdQueryClientConnections defines the command to query a client connections
 func GetCmdQueryClientConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "client [client-id]",
+		Use:   "path [client-id]",
 		Short: "Query stored client connection paths",
 		Long: strings.TrimSpace(fmt.Sprintf(`Query stored client connection paths
 		
 Example:
-$ %s query ibc connection client [client-id]
+$ %s query ibc connection path [client-id]
 		`, version.ClientName),
 		),
-		Example: fmt.Sprintf("%s query ibc connection client [client-id]", version.ClientName),
+		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -101,6 +137,7 @@ $ %s query ibc connection client [client-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(connPathsRes.ProofHeight))
 			return cliCtx.PrintOutput(connPathsRes)
 		},
 	}

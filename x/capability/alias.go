@@ -26,7 +26,6 @@ var (
 	ErrOwnerClaimed          = types.ErrOwnerClaimed
 	ErrCapabilityNotOwned    = types.ErrCapabilityNotOwned
 	RegisterCodec            = types.RegisterCodec
-	ModuleCdc                = types.ModuleCdc
 	NewOwner                 = types.NewOwner
 	NewCapabilityOwners      = types.NewCapabilityOwners
 )
@@ -37,4 +36,6 @@ type (
 	ScopedKeeper     = keeper.ScopedKeeper
 	Capability       = types.Capability
 	CapabilityOwners = types.CapabilityOwners
+	GenesisState     = types.GenesisState
+	GenesisOwners    = types.GenesisOwners
 )

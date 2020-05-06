@@ -6,12 +6,13 @@ import (
 
 	gocontext "context"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -37,11 +38,13 @@ func (qrt *QueryRouter) AddRoute(path string, q sdk.Querier) sdk.QueryRouter {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
+
 	if qrt.routes[path] != nil {
 		panic(fmt.Sprintf("route %s has already been initialized", path))
 	}
 
 	qrt.routes[path] = q
+
 	return qrt
 }
 

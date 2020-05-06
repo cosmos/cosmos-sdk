@@ -19,6 +19,7 @@ const (
 	RouterKey                        = types.RouterKey
 	QuerierRoute                     = types.QuerierRoute
 	QueryAllConnections              = types.QueryAllConnections
+	QueryAllClientConnections        = types.QueryAllClientConnections
 	QueryClientConnections           = types.QueryClientConnections
 )
 
@@ -27,7 +28,9 @@ var (
 	NewKeeper                        = keeper.NewKeeper
 	QuerierConnections               = keeper.QuerierConnections
 	QuerierClientConnections         = keeper.QuerierClientConnections
+	QuerierAllClientConnections      = keeper.QuerierAllClientConnections
 	RegisterCodec                    = types.RegisterCodec
+	RegisterInterfaces               = types.RegisterInterfaces
 	NewConnectionEnd                 = types.NewConnectionEnd
 	NewCounterparty                  = types.NewCounterparty
 	ErrConnectionExists              = types.ErrConnectionExists
@@ -46,6 +49,9 @@ var (
 	GetCompatibleVersions            = types.GetCompatibleVersions
 	LatestVersion                    = types.LatestVersion
 	PickVersion                      = types.PickVersion
+	NewConnectionPaths               = types.NewConnectionPaths
+	DefaultGenesisState              = types.DefaultGenesisState
+	NewGenesisState                  = types.NewGenesisState
 
 	// variable aliases
 	SubModuleCdc                   = types.SubModuleCdc
@@ -69,4 +75,6 @@ type (
 	ConnectionResponse           = types.ConnectionResponse
 	ClientConnectionsResponse    = types.ClientConnectionsResponse
 	QueryClientConnectionsParams = types.QueryClientConnectionsParams
+	GenesisState                 = types.GenesisState
+	ConnectionPaths              = types.ConnectionPaths
 )

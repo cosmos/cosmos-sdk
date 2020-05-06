@@ -9,18 +9,14 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// Channel defines...
-type Channel struct {
-	State          exported.State `json:"state" yaml:"state"`
-	Ordering       exported.Order `json:"ordering" yaml:"ordering"`
-	Counterparty   Counterparty   `json:"counterparty" yaml:"counterparty"`
-	ConnectionHops []string       `json:"connection_hops" yaml:"connection_hops"`
-	Version        string         `json:"version" yaml:"version "`
-}
+var (
+	_ exported.ChannelI      = (*Channel)(nil)
+	_ exported.CounterpartyI = (*Counterparty)(nil)
+)
 
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state exported.State, ordering exported.Order, counterparty Counterparty,
+	state ibctypes.State, ordering ibctypes.Order, counterparty Counterparty,
 	hops []string, version string,
 ) Channel {
 	return Channel{
@@ -33,12 +29,12 @@ func NewChannel(
 }
 
 // GetState implements Channel interface.
-func (ch Channel) GetState() exported.State {
+func (ch Channel) GetState() ibctypes.State {
 	return ch.State
 }
 
 // GetOrdering implements Channel interface.
-func (ch Channel) GetOrdering() exported.Order {
+func (ch Channel) GetOrdering() ibctypes.Order {
 	return ch.Ordering
 }
 
@@ -62,8 +58,8 @@ func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
 		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}
-	if ch.Ordering.String() == "" {
-		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelOrdering.Error())
+	if !(ch.Ordering == ibctypes.ORDERED || ch.Ordering == ibctypes.UNORDERED) {
+		return sdkerrors.Wrap(ErrInvalidChannelOrdering, ch.Ordering.String())
 	}
 	if len(ch.ConnectionHops) != 1 {
 		return sdkerrors.Wrap(
@@ -84,12 +80,6 @@ func (ch Channel) ValidateBasic() error {
 		)
 	}
 	return ch.Counterparty.ValidateBasic()
-}
-
-// Counterparty defines the counterparty chain's channel and port identifiers
-type Counterparty struct {
-	PortID    string `json:"port_id" yaml:"port_id"`
-	ChannelID string `json:"channel_id" yaml:"channel_id"`
 }
 
 // NewCounterparty returns a new Counterparty instance
@@ -125,4 +115,41 @@ func (c Counterparty) ValidateBasic() error {
 		)
 	}
 	return nil
+}
+
+// IdentifiedChannel defines a channel with additional port and channel identifier
+// fields.
+type IdentifiedChannel struct {
+	ID             string         `json:"id" yaml:"id"`
+	PortID         string         `json:"port_id" yaml:"port_id"`
+	State          ibctypes.State `json:"state" yaml:"state"`
+	Ordering       ibctypes.Order `json:"ordering" yaml:"ordering"`
+	Counterparty   Counterparty   `json:"counterparty" yaml:"counterparty"`
+	ConnectionHops []string       `json:"connection_hops" yaml:"connection_hops"`
+	Version        string         `json:"version" yaml:"version "`
+}
+
+// NewIdentifiedChannel creates a new IdentifiedChannel instance
+func NewIdentifiedChannel(portID, channelID string, ch Channel) IdentifiedChannel {
+	return IdentifiedChannel{
+		ID:             channelID,
+		PortID:         portID,
+		State:          ch.State,
+		Ordering:       ch.Ordering,
+		Counterparty:   ch.Counterparty,
+		ConnectionHops: ch.ConnectionHops,
+		Version:        ch.Version,
+	}
+}
+
+// ValidateBasic performs a basic validation of the identifiers and channel fields.
+func (ic IdentifiedChannel) ValidateBasic() error {
+	if err := host.DefaultChannelIdentifierValidator(ic.ID); err != nil {
+		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
+	}
+	if err := host.DefaultPortIdentifierValidator(ic.PortID); err != nil {
+		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
+	}
+	channel := NewChannel(ic.State, ic.Ordering, ic.Counterparty, ic.ConnectionHops, ic.Version)
+	return channel.ValidateBasic()
 }

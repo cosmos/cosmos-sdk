@@ -34,7 +34,8 @@ func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newDBKeybase(db, opts...), nil
+
+	return newDBKeybase(db), nil
 }
 
 var _ LegacyKeybase = dbKeybase{}
@@ -49,7 +50,7 @@ type dbKeybase struct {
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB, opts ...KeybaseOption) dbKeybase {
+func newDBKeybase(db dbm.DB) dbKeybase {
 	return dbKeybase{
 		db: db,
 	}
@@ -202,7 +203,9 @@ func NewInfoImporter(
 	if err != nil {
 		return keyringMigrator{}, err
 	}
+
 	kr := keyring.(keystore)
+
 	return keyringMigrator{kr}, nil
 }
 

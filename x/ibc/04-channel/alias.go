@@ -28,7 +28,9 @@ var (
 	QuerierConnectionChannels    = keeper.QuerierConnectionChannels
 	NewChannel                   = types.NewChannel
 	NewCounterparty              = types.NewCounterparty
+	NewIdentifiedChannel         = types.NewIdentifiedChannel
 	RegisterCodec                = types.RegisterCodec
+	RegisterInterfaces           = types.RegisterInterfaces
 	ErrChannelExists             = types.ErrChannelExists
 	ErrChannelNotFound           = types.ErrChannelNotFound
 	ErrInvalidCounterparty       = types.ErrInvalidCounterparty
@@ -50,7 +52,11 @@ var (
 	NewMsgTimeout                = types.NewMsgTimeout
 	NewMsgAcknowledgement        = types.NewMsgAcknowledgement
 	NewPacket                    = types.NewPacket
+	NewPacketAckCommitment       = types.NewPacketAckCommitment
+	NewPacketSequence            = types.NewPacketSequence
 	NewChannelResponse           = types.NewChannelResponse
+	DefaultGenesisState          = types.DefaultGenesisState
+	NewGenesisState              = types.NewGenesisState
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc
@@ -68,6 +74,7 @@ type (
 	Keeper                 = keeper.Keeper
 	Channel                = types.Channel
 	Counterparty           = types.Counterparty
+	IdentifiedChannel      = types.IdentifiedChannel
 	ClientKeeper           = types.ClientKeeper
 	ConnectionKeeper       = types.ConnectionKeeper
 	PortKeeper             = types.PortKeeper
@@ -82,4 +89,7 @@ type (
 	MsgTimeout             = types.MsgTimeout
 	Packet                 = types.Packet
 	ChannelResponse        = types.ChannelResponse
+	PacketAckCommitment    = types.PacketAckCommitment
+	PacketSequence         = types.PacketSequence
+	GenesisState           = types.GenesisState
 )

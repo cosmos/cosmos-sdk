@@ -109,9 +109,8 @@ func PrintStats(db dbm.DB) {
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, cdc *codec.Codec, kvAs, kvBs []tmkv.Pair) (log string) {
+func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs []tmkv.Pair) (log string) {
 	for i := 0; i < len(kvAs); i++ {
-
 		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
 			// skip if the value doesn't have any bytes
 			continue
@@ -119,11 +118,11 @@ func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, cdc *codec
 
 		decoder, ok := sdr[storeName]
 		if ok {
-			log += decoder(cdc, kvAs[i], kvBs[i])
+			log += decoder(kvAs[i], kvBs[i])
 		} else {
 			log += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvAs[i].Key, kvAs[i].Value, kvBs[i].Key, kvBs[i].Value)
 		}
 	}
 
-	return
+	return log
 }

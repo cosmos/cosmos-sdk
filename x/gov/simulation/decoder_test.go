@@ -1,4 +1,4 @@
-package simulation
+package simulation_test
 
 import (
 	"encoding/binary"
@@ -11,8 +11,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -21,16 +22,9 @@ var (
 	delAddr1 = sdk.AccAddress(delPk1.Address())
 )
 
-func makeTestCodec() (cdc *codec.Codec) {
-	cdc = codec.New()
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	types.RegisterCodec(cdc)
-	return
-}
-
 func TestDecodeStore(t *testing.T) {
-	cdc := makeTestCodec()
+	cdc, _ := simapp.MakeCodecs()
+	dec := simulation.NewDecodeStore(cdc)
 
 	endTime := time.Now().UTC()
 
@@ -41,11 +35,14 @@ func TestDecodeStore(t *testing.T) {
 	deposit := types.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
 	vote := types.NewVote(1, delAddr1, types.OptionYes)
 
+	proposalBz, err := cdc.MarshalProposal(proposal)
+	require.NoError(t, err)
+
 	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.ProposalKey(1), Value: cdc.MustMarshalBinaryBare(proposal)},
+		tmkv.Pair{Key: types.ProposalKey(1), Value: proposalBz},
 		tmkv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
-		tmkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(deposit)},
-		tmkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(vote)},
+		tmkv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
+		tmkv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
 		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
@@ -65,9 +62,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { DecodeStore(cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, DecodeStore(cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

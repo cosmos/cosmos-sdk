@@ -64,10 +64,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 			return simtypes.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName), nil, err
-		}
+		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		if skip {
 			return simtypes.NoOpMsg(types.ModuleName), nil, nil
@@ -75,7 +72,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
-		err = sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
+		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -150,16 +147,13 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
 			// generate random input fields, ignore to address
-			simAccount, _, coins, skip, err := randomSendFields(r, ctx, accs, bk, ak)
+			simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 			// make sure account is fresh and not used in previous input
 			for usedAddrs[simAccount.Address.String()] {
-				simAccount, _, coins, skip, err = randomSendFields(r, ctx, accs, bk, ak)
+				simAccount, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
 			}
 
-			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName), nil, err
-			}
 			if skip {
 				return simtypes.NoOpMsg(types.ModuleName), nil, nil
 			}
@@ -275,7 +269,7 @@ func sendMsgMultiSend(
 // nolint: interfacer
 func randomSendFields(
 	r *rand.Rand, ctx sdk.Context, accs []simtypes.Account, bk keeper.Keeper, ak types.AccountKeeper,
-) (simtypes.Account, simtypes.Account, sdk.Coins, bool, error) {
+) (simtypes.Account, simtypes.Account, sdk.Coins, bool) {
 
 	simAccount, _ := simtypes.RandomAcc(r, accs)
 	toSimAcc, _ := simtypes.RandomAcc(r, accs)
@@ -287,15 +281,15 @@ func randomSendFields(
 
 	acc := ak.GetAccount(ctx, simAccount.Address)
 	if acc == nil {
-		return simAccount, toSimAcc, nil, true, nil // skip error
+		return simAccount, toSimAcc, nil, true
 	}
 
 	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
 	sendCoins := simtypes.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
-		return simAccount, toSimAcc, nil, true, nil // skip error
+		return simAccount, toSimAcc, nil, true
 	}
 
-	return simAccount, toSimAcc, sendCoins, false, nil
+	return simAccount, toSimAcc, sendCoins, false
 }

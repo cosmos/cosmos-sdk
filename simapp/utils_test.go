@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/std"
+
 	"github.com/stretchr/testify/require"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func TestGetSimulationLog(t *testing.T) {
-	cdc := codecstd.MakeCodec(ModuleBasics)
+	cdc := std.MakeCodec(ModuleBasics)
 
 	decoders := make(sdk.StoreDecoderRegistry)
-	decoders[auth.StoreKey] = func(cdc *codec.Codec, kvAs, kvBs tmkv.Pair) string { return "10" }
+	decoders[auth.StoreKey] = func(kvAs, kvBs tmkv.Pair) string { return "10" }
 
 	tests := []struct {
 		store       string
@@ -44,7 +44,7 @@ func TestGetSimulationLog(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.store, func(t *testing.T) {
-			require.Equal(t, tt.expectedLog, GetSimulationLog(tt.store, decoders, cdc, tt.kvPairs, tt.kvPairs), tt.store)
+			require.Equal(t, tt.expectedLog, GetSimulationLog(tt.store, decoders, tt.kvPairs, tt.kvPairs), tt.store)
 		})
 	}
 }

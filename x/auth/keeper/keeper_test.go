@@ -5,8 +5,23 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+const (
+	holder     = "holder"
+	multiPerm  = "multiple permissions account"
+	randomPerm = "random permission"
+)
+
+var (
+	multiPermAcc  = auth.NewEmptyModuleAccount(multiPerm, auth.Burner, auth.Minter, auth.Staking)
+	randomPermAcc = auth.NewEmptyModuleAccount(randomPerm, "random")
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -80,4 +95,33 @@ func TestGetSetParams(t *testing.T) {
 
 	actualParams := app.AccountKeeper.GetParams(ctx)
 	require.Equal(t, params, actualParams)
+}
+
+func TestSupply_ValidatePermissions(t *testing.T) {
+	app, _ := createTestApp(true)
+
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[types.Burner] = []string{types.Burner}
+	maccPerms[auth.Minter] = []string{types.Minter}
+	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	appCodec := std.NewAppCodec(app.Codec(), codectypes.NewInterfaceRegistry())
+	keeper := auth.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+		types.ProtoBaseAccount, maccPerms,
+	)
+
+	err := keeper.ValidatePermissions(multiPermAcc)
+	require.NoError(t, err)
+
+	err = keeper.ValidatePermissions(randomPermAcc)
+	require.NoError(t, err)
+
+	// unregistered permissions
+	otherAcc := types.NewEmptyModuleAccount("other", "other")
+	err = app.AccountKeeper.ValidatePermissions(otherAcc)
+	require.Error(t, err)
 }

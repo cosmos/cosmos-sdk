@@ -5,17 +5,11 @@ package types
 
 import (
 	bytes "bytes"
-	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	_ "google.golang.org/genproto/googleapis/api/annotations"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -252,24 +246,23 @@ func (m *MsgMultiSend) GetOutputs() []Output {
 	return nil
 }
 
-// QueryBalanceParams defines the params for querying an account balance.
-type QueryBalanceRequest struct {
-	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Denom   string                                        `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+// Supply represents a struct that passively keeps track of the total supply
+// amounts in the network.
+type Supply struct {
+	Total github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total"`
 }
 
-func (m *QueryBalanceRequest) Reset()         { *m = QueryBalanceRequest{} }
-func (m *QueryBalanceRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryBalanceRequest) ProtoMessage()    {}
-func (*QueryBalanceRequest) Descriptor() ([]byte, []int) {
+func (m *Supply) Reset()      { *m = Supply{} }
+func (*Supply) ProtoMessage() {}
+func (*Supply) Descriptor() ([]byte, []int) {
 	return fileDescriptor_934ff6b24d3432e2, []int{4}
 }
-func (m *QueryBalanceRequest) XXX_Unmarshal(b []byte) error {
+func (m *Supply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryBalanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Supply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryBalanceRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Supply.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -279,222 +272,59 @@ func (m *QueryBalanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *QueryBalanceRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryBalanceRequest.Merge(m, src)
+func (m *Supply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Supply.Merge(m, src)
 }
-func (m *QueryBalanceRequest) XXX_Size() int {
+func (m *Supply) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryBalanceRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryBalanceRequest.DiscardUnknown(m)
+func (m *Supply) XXX_DiscardUnknown() {
+	xxx_messageInfo_Supply.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryBalanceRequest proto.InternalMessageInfo
-
-func (m *QueryBalanceRequest) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Address
-	}
-	return nil
-}
-
-func (m *QueryBalanceRequest) GetDenom() string {
-	if m != nil {
-		return m.Denom
-	}
-	return ""
-}
-
-// QueryBalanceResponse is the response for the QueryBalance rpc method
-type QueryBalanceResponse struct {
-	Balance *types.Coin `protobuf:"bytes,1,opt,name=balance,proto3" json:"balance,omitempty"`
-}
-
-func (m *QueryBalanceResponse) Reset()         { *m = QueryBalanceResponse{} }
-func (m *QueryBalanceResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryBalanceResponse) ProtoMessage()    {}
-func (*QueryBalanceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_934ff6b24d3432e2, []int{5}
-}
-func (m *QueryBalanceResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryBalanceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryBalanceResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryBalanceResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryBalanceResponse.Merge(m, src)
-}
-func (m *QueryBalanceResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryBalanceResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryBalanceResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryBalanceResponse proto.InternalMessageInfo
-
-func (m *QueryBalanceResponse) GetBalance() *types.Coin {
-	if m != nil {
-		return m.Balance
-	}
-	return nil
-}
-
-// QueryAllBalancesParams defines the params for querying all account balances
-type QueryAllBalancesRequest struct {
-	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-}
-
-func (m *QueryAllBalancesRequest) Reset()         { *m = QueryAllBalancesRequest{} }
-func (m *QueryAllBalancesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryAllBalancesRequest) ProtoMessage()    {}
-func (*QueryAllBalancesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_934ff6b24d3432e2, []int{6}
-}
-func (m *QueryAllBalancesRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryAllBalancesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryAllBalancesRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryAllBalancesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllBalancesRequest.Merge(m, src)
-}
-func (m *QueryAllBalancesRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryAllBalancesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllBalancesRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryAllBalancesRequest proto.InternalMessageInfo
-
-func (m *QueryAllBalancesRequest) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Address
-	}
-	return nil
-}
-
-// QueryAllBalancesResponse is the response to the QueryAllBalances rpc method
-type QueryAllBalancesResponse struct {
-	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
-}
-
-func (m *QueryAllBalancesResponse) Reset()         { *m = QueryAllBalancesResponse{} }
-func (m *QueryAllBalancesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryAllBalancesResponse) ProtoMessage()    {}
-func (*QueryAllBalancesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_934ff6b24d3432e2, []int{7}
-}
-func (m *QueryAllBalancesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryAllBalancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryAllBalancesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryAllBalancesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllBalancesResponse.Merge(m, src)
-}
-func (m *QueryAllBalancesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryAllBalancesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllBalancesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryAllBalancesResponse proto.InternalMessageInfo
-
-func (m *QueryAllBalancesResponse) GetBalances() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Balances
-	}
-	return nil
-}
+var xxx_messageInfo_Supply proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgSend)(nil), "cosmos_sdk.x.bank.v1.MsgSend")
 	proto.RegisterType((*Input)(nil), "cosmos_sdk.x.bank.v1.Input")
 	proto.RegisterType((*Output)(nil), "cosmos_sdk.x.bank.v1.Output")
 	proto.RegisterType((*MsgMultiSend)(nil), "cosmos_sdk.x.bank.v1.MsgMultiSend")
-	proto.RegisterType((*QueryBalanceRequest)(nil), "cosmos_sdk.x.bank.v1.QueryBalanceRequest")
-	proto.RegisterType((*QueryBalanceResponse)(nil), "cosmos_sdk.x.bank.v1.QueryBalanceResponse")
-	proto.RegisterType((*QueryAllBalancesRequest)(nil), "cosmos_sdk.x.bank.v1.QueryAllBalancesRequest")
-	proto.RegisterType((*QueryAllBalancesResponse)(nil), "cosmos_sdk.x.bank.v1.QueryAllBalancesResponse")
+	proto.RegisterType((*Supply)(nil), "cosmos_sdk.x.bank.v1.Supply")
 }
 
 func init() { proto.RegisterFile("x/bank/types/types.proto", fileDescriptor_934ff6b24d3432e2) }
 
 var fileDescriptor_934ff6b24d3432e2 = []byte{
-	// 628 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0x4f, 0x6b, 0x13, 0x41,
-	0x18, 0xc6, 0xb3, 0x69, 0x9b, 0xd8, 0x69, 0x0e, 0x76, 0x5a, 0x30, 0x44, 0xd9, 0x2d, 0x7b, 0x90,
-	0xb4, 0x90, 0x99, 0xa6, 0x1e, 0xc4, 0xe2, 0xa5, 0x29, 0x8a, 0x22, 0x45, 0xdc, 0xde, 0x14, 0x29,
-	0x9b, 0xdd, 0xe9, 0x76, 0xe9, 0xee, 0xce, 0xba, 0x33, 0x1b, 0x1a, 0x4a, 0x2f, 0xde, 0x05, 0xc1,
-	0xbb, 0x08, 0xde, 0xfc, 0x02, 0x7a, 0xf6, 0xd4, 0x63, 0x41, 0x04, 0x4f, 0x51, 0x5a, 0x0f, 0x9e,
-	0x7b, 0xf4, 0x24, 0x3b, 0x3b, 0xdb, 0xb4, 0x66, 0x09, 0x51, 0xe2, 0xc1, 0x4b, 0xb2, 0x7f, 0xde,
-	0xe7, 0x7d, 0x7e, 0xf3, 0x3e, 0x3b, 0x0c, 0xa8, 0xee, 0xe1, 0xb6, 0x19, 0xec, 0x62, 0xde, 0x0d,
-	0x09, 0x4b, 0x7f, 0x51, 0x18, 0x51, 0x4e, 0xe1, 0xbc, 0x45, 0x99, 0x4f, 0xd9, 0x16, 0xb3, 0x77,
-	0xd1, 0x1e, 0x4a, 0x8a, 0x50, 0xa7, 0x59, 0xbb, 0xce, 0x77, 0xdc, 0xc8, 0xde, 0x0a, 0xcd, 0x88,
-	0x77, 0xb1, 0x28, 0xc4, 0x0e, 0x75, 0x68, 0xff, 0x2a, 0x55, 0xd7, 0x50, 0x5e, 0x1d, 0x75, 0x3c,
-	0x82, 0xcd, 0xd0, 0xc5, 0x66, 0x10, 0x50, 0x6e, 0x72, 0x97, 0x06, 0xd2, 0xad, 0x36, 0x3b, 0x00,
-	0xa0, 0x7f, 0x2c, 0x82, 0xf2, 0x06, 0x73, 0x36, 0x49, 0x60, 0xc3, 0x5d, 0x50, 0xd9, 0x8e, 0xa8,
-	0xbf, 0x65, 0xda, 0x76, 0x44, 0x18, 0xab, 0x2a, 0x0b, 0x4a, 0xbd, 0xd2, 0xba, 0x77, 0xda, 0xd3,
-	0xe6, 0xba, 0xa6, 0xef, 0xad, 0xea, 0xe7, 0xdf, 0xea, 0x3f, 0x7b, 0x5a, 0xc3, 0x71, 0xf9, 0x4e,
-	0xdc, 0x46, 0x16, 0xf5, 0x71, 0xba, 0x10, 0xf9, 0xd7, 0x60, 0xb6, 0x5c, 0x2d, 0x5a, 0xb3, 0xac,
-	0xb5, 0x54, 0x61, 0xcc, 0x24, 0x7a, 0x79, 0x03, 0x09, 0x00, 0x9c, 0x9e, 0x59, 0x15, 0x85, 0xd5,
-	0xdd, 0xd3, 0x9e, 0x36, 0x9b, 0x5a, 0xf5, 0xdf, 0xfd, 0x85, 0xd1, 0x34, 0xa7, 0x99, 0xcd, 0x53,
-	0x50, 0x32, 0x7d, 0x1a, 0x07, 0xbc, 0x3a, 0xb1, 0x30, 0x51, 0x9f, 0x59, 0x99, 0x43, 0xe7, 0x26,
-	0xde, 0x69, 0xa2, 0x75, 0xea, 0x06, 0xad, 0xe5, 0xc3, 0x9e, 0x56, 0x78, 0xf7, 0x55, 0xab, 0x8f,
-	0x60, 0x93, 0x08, 0x98, 0x21, 0x9b, 0xae, 0x4e, 0xfe, 0x78, 0xa3, 0x29, 0xfa, 0x7b, 0x05, 0x4c,
-	0xdd, 0x0f, 0xc2, 0x98, 0xc3, 0x07, 0xa0, 0x7c, 0x71, 0x7a, 0xcd, 0x3f, 0xa7, 0xcf, 0x3a, 0xc0,
-	0x27, 0x60, 0xca, 0x4a, 0xdc, 0xaa, 0xc5, 0x71, 0xa2, 0xa7, 0x3d, 0x25, 0xf9, 0x07, 0x05, 0x94,
-	0x1e, 0xc6, 0xfc, 0x7f, 0x44, 0x7f, 0xa1, 0x80, 0xca, 0x06, 0x73, 0x36, 0x62, 0x8f, 0xbb, 0xe2,
-	0xf3, 0xbd, 0x05, 0x4a, 0x6e, 0x12, 0x42, 0xc2, 0x9f, 0x98, 0x5e, 0x45, 0x79, 0x9b, 0x0b, 0x89,
-	0xa0, 0x5a, 0x93, 0x89, 0xb9, 0x21, 0x05, 0xf0, 0x36, 0x28, 0x53, 0x31, 0x85, 0x0c, 0xf8, 0x5a,
-	0xbe, 0x36, 0x1d, 0x95, 0x14, 0x67, 0x12, 0xc9, 0xb3, 0x07, 0xe6, 0x1e, 0xc5, 0x24, 0xea, 0xb6,
-	0x4c, 0xcf, 0x0c, 0x2c, 0x62, 0x90, 0x67, 0x31, 0x61, 0x63, 0x1e, 0xeb, 0x3c, 0x98, 0xb2, 0x49,
-	0x40, 0x7d, 0xb1, 0x5f, 0xa6, 0x8d, 0xf4, 0x46, 0xbf, 0x03, 0xe6, 0x2f, 0x3a, 0xb3, 0x90, 0x06,
-	0x8c, 0xc0, 0x06, 0x28, 0xb7, 0xd3, 0x47, 0xc2, 0x3a, 0x3f, 0x06, 0x23, 0xab, 0xd1, 0xb7, 0xc1,
-	0x15, 0xd1, 0x66, 0xcd, 0xf3, 0x64, 0x27, 0xf6, 0x2f, 0x16, 0xa1, 0x1f, 0x80, 0xea, 0xa0, 0x8f,
-	0x44, 0x36, 0xc1, 0x25, 0x89, 0x93, 0xa5, 0x38, 0xa6, 0x4f, 0xe7, 0xac, 0xed, 0xca, 0xe7, 0x22,
-	0xa8, 0x08, 0xff, 0x4d, 0x12, 0x75, 0x5c, 0x8b, 0xc0, 0xd7, 0x8a, 0x7c, 0x20, 0x69, 0xe0, 0x62,
-	0x7e, 0xf8, 0x39, 0xe9, 0xd6, 0x96, 0x46, 0x29, 0x4d, 0xd7, 0xa6, 0xdf, 0x7c, 0xfe, 0xe9, 0xfb,
-	0xab, 0x62, 0x13, 0x62, 0xdc, 0xd7, 0x60, 0x79, 0x32, 0x74, 0x9a, 0x58, 0x02, 0xe2, 0x7d, 0x39,
-	0xa7, 0x03, 0xbc, 0x2f, 0xe2, 0x3d, 0x80, 0x6f, 0x15, 0x70, 0xf9, 0xf7, 0x89, 0xc1, 0xc6, 0x10,
-	0xe7, 0xc1, 0x04, 0x6b, 0x68, 0xd4, 0x72, 0x09, 0xbb, 0x2c, 0x60, 0x97, 0x60, 0x7d, 0x28, 0x2c,
-	0xeb, 0xd3, 0xb6, 0xd6, 0x0f, 0x8f, 0x55, 0xe5, 0xe8, 0x58, 0x55, 0xbe, 0x1d, 0xab, 0xca, 0xcb,
-	0x13, 0xb5, 0x70, 0x74, 0xa2, 0x16, 0xbe, 0x9c, 0xa8, 0x85, 0xc7, 0x8b, 0x43, 0x53, 0x3a, 0x7f,
-	0x36, 0xb6, 0x4b, 0xe2, 0x54, 0xba, 0xf1, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x32, 0xa0, 0xe8, 0x78,
-	0x32, 0x07, 0x00, 0x00,
+	// 449 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xa8, 0xd0, 0x4f, 0x4a,
+	0xcc, 0xcb, 0xd6, 0x2f, 0xa9, 0x2c, 0x48, 0x2d, 0x86, 0x90, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9,
+	0x42, 0x22, 0xc9, 0xf9, 0xc5, 0xb9, 0xf9, 0xc5, 0xf1, 0xc5, 0x29, 0xd9, 0x7a, 0x15, 0x7a, 0x20,
+	0x45, 0x7a, 0x65, 0x86, 0x52, 0x6a, 0x25, 0x19, 0x99, 0x45, 0x29, 0xf1, 0x05, 0x89, 0x45, 0x25,
+	0x95, 0xfa, 0x60, 0x85, 0xfa, 0xe9, 0xf9, 0xe9, 0xf9, 0x08, 0x16, 0x44, 0xb7, 0x94, 0x20, 0x86,
+	0x81, 0x4a, 0x87, 0x98, 0xb8, 0xd8, 0x7d, 0x8b, 0xd3, 0x83, 0x53, 0xf3, 0x52, 0x84, 0xb2, 0xb9,
+	0x78, 0xd2, 0x8a, 0xf2, 0x73, 0xe3, 0x13, 0x53, 0x52, 0x8a, 0x52, 0x8b, 0x8b, 0x25, 0x18, 0x15,
+	0x18, 0x35, 0x78, 0x9c, 0x3c, 0x3e, 0xdd, 0x93, 0x17, 0xae, 0x4c, 0xcc, 0xcd, 0xb1, 0x52, 0x42,
+	0x96, 0x55, 0xfa, 0x75, 0x4f, 0x5e, 0x37, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f,
+	0x57, 0x1f, 0xe2, 0x30, 0x28, 0xa5, 0x5b, 0x9c, 0x02, 0x75, 0xbd, 0x9e, 0x63, 0x72, 0xb2, 0x23,
+	0x44, 0x47, 0x10, 0x37, 0x48, 0x3f, 0x94, 0x23, 0x94, 0xca, 0xc5, 0x55, 0x92, 0x0f, 0xb7, 0x8a,
+	0x09, 0x6c, 0x95, 0xdb, 0xa7, 0x7b, 0xf2, 0x82, 0x10, 0xab, 0x10, 0x72, 0x64, 0x58, 0xc4, 0x59,
+	0x92, 0x0f, 0xb3, 0x26, 0x96, 0x8b, 0x2d, 0x31, 0x37, 0xbf, 0x34, 0xaf, 0x44, 0x82, 0x59, 0x81,
+	0x59, 0x83, 0xdb, 0x48, 0x58, 0x0f, 0x29, 0x04, 0xcb, 0x0c, 0xf5, 0x9c, 0xf3, 0x33, 0xf3, 0x9c,
+	0x0c, 0x4e, 0xdc, 0x93, 0x67, 0x58, 0x75, 0x5f, 0x5e, 0x83, 0x08, 0x6b, 0x40, 0x1a, 0x8a, 0x83,
+	0xa0, 0x86, 0x5a, 0xb1, 0xbc, 0x58, 0x20, 0xcf, 0xa8, 0xb4, 0x9d, 0x91, 0x8b, 0xd5, 0x33, 0xaf,
+	0xa0, 0xb4, 0x44, 0xc8, 0x9b, 0x8b, 0x1d, 0x35, 0xf4, 0x0c, 0x49, 0x77, 0x3d, 0xcc, 0x04, 0xa1,
+	0x68, 0x2e, 0xd6, 0x64, 0x90, 0x6d, 0x12, 0x4c, 0xd4, 0x74, 0x3a, 0xc4, 0x4c, 0xa8, 0xcb, 0x77,
+	0x30, 0x72, 0xb1, 0xf9, 0x97, 0x96, 0x0c, 0x45, 0xa7, 0xf7, 0x32, 0x72, 0xf1, 0xf8, 0x16, 0xa7,
+	0xfb, 0x96, 0xe6, 0x94, 0x64, 0x82, 0x93, 0xaf, 0x25, 0x17, 0x5b, 0x26, 0x28, 0x12, 0x40, 0xee,
+	0x07, 0x59, 0x2a, 0xad, 0x87, 0x2d, 0xb3, 0xe8, 0x81, 0x23, 0xca, 0x89, 0x05, 0x64, 0x79, 0x10,
+	0x54, 0x83, 0x90, 0x0d, 0x17, 0x7b, 0x3e, 0x38, 0x14, 0x60, 0x0e, 0x96, 0xc1, 0xae, 0x17, 0x12,
+	0x54, 0x50, 0xcd, 0x30, 0x2d, 0x50, 0xf7, 0x14, 0x73, 0xb1, 0x05, 0x97, 0x16, 0x14, 0xe4, 0x54,
+	0x82, 0x3c, 0x5f, 0x92, 0x5f, 0x92, 0x98, 0x03, 0x75, 0x07, 0xb5, 0x3c, 0x0f, 0x36, 0xd3, 0x8a,
+	0xa7, 0x63, 0x81, 0x3c, 0xc3, 0x8c, 0x05, 0xf2, 0x0c, 0x20, 0x4b, 0x9d, 0x9c, 0x4f, 0x3c, 0x92,
+	0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c,
+	0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0x4a, 0x13, 0xaf, 0xc1, 0xc8, 0x05, 0x4c, 0x12, 0x1b,
+	0xb8, 0x28, 0x30, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x0e, 0x1e, 0x07, 0x77, 0x04, 0x00,
+	0x00,
 }
 
 func (this *MsgSend) Equal(that interface{}) bool {
@@ -633,127 +463,35 @@ func (this *MsgMultiSend) Equal(that interface{}) bool {
 	}
 	return true
 }
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// QueryServiceClient is the client API for QueryService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type QueryServiceClient interface {
-	// QueryBalance queries the balance of a single coin for a single account
-	QueryBalance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
-	// QueryBalance queries the balance of all coins for a single account
-	QueryAllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
-}
-
-type queryServiceClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewQueryServiceClient(cc grpc1.ClientConn) QueryServiceClient {
-	return &queryServiceClient{cc}
-}
-
-func (c *queryServiceClient) QueryBalance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error) {
-	out := new(QueryBalanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos_sdk.x.bank.v1.QueryService/QueryBalance", in, out, opts...)
-	if err != nil {
-		return nil, err
+func (this *Supply) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
 	}
-	return out, nil
-}
 
-func (c *queryServiceClient) QueryAllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error) {
-	out := new(QueryAllBalancesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos_sdk.x.bank.v1.QueryService/QueryAllBalances", in, out, opts...)
-	if err != nil {
-		return nil, err
+	that1, ok := that.(*Supply)
+	if !ok {
+		that2, ok := that.(Supply)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
-	return out, nil
-}
-
-// QueryServiceServer is the server API for QueryService service.
-type QueryServiceServer interface {
-	// QueryBalance queries the balance of a single coin for a single account
-	QueryBalance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
-	// QueryBalance queries the balance of all coins for a single account
-	QueryAllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
-}
-
-// UnimplementedQueryServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedQueryServiceServer struct {
-}
-
-func (*UnimplementedQueryServiceServer) QueryBalance(ctx context.Context, req *QueryBalanceRequest) (*QueryBalanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryBalance not implemented")
-}
-func (*UnimplementedQueryServiceServer) QueryAllBalances(ctx context.Context, req *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryAllBalances not implemented")
-}
-
-func RegisterQueryServiceServer(s grpc1.Server, srv QueryServiceServer) {
-	s.RegisterService(&_QueryService_serviceDesc, srv)
-}
-
-func _QueryService_QueryBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryBalanceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
 	}
-	if interceptor == nil {
-		return srv.(QueryServiceServer).QueryBalance(ctx, in)
+	if len(this.Total) != len(that1.Total) {
+		return false
 	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos_sdk.x.bank.v1.QueryService/QueryBalance",
+	for i := range this.Total {
+		if !this.Total[i].Equal(&that1.Total[i]) {
+			return false
+		}
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServiceServer).QueryBalance(ctx, req.(*QueryBalanceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return true
 }
-
-func _QueryService_QueryAllBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAllBalancesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServiceServer).QueryAllBalances(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos_sdk.x.bank.v1.QueryService/QueryAllBalances",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServiceServer).QueryAllBalances(ctx, req.(*QueryAllBalancesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _QueryService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos_sdk.x.bank.v1.QueryService",
-	HandlerType: (*QueryServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "QueryBalance",
-			Handler:    _QueryService_QueryBalance_Handler,
-		},
-		{
-			MethodName: "QueryAllBalances",
-			Handler:    _QueryService_QueryAllBalances_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "x/bank/types/types.proto",
-}
-
 func (m *MsgSend) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -944,7 +682,7 @@ func (m *MsgMultiSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryBalanceRequest) Marshal() (dAtA []byte, err error) {
+func (m *Supply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -954,122 +692,20 @@ func (m *QueryBalanceRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryBalanceRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *Supply) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryBalanceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Supply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryBalanceResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryBalanceResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryBalanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Balance != nil {
-		{
-			size, err := m.Balance.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTypes(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryAllBalancesRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryAllBalancesRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryAllBalancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryAllBalancesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryAllBalancesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryAllBalancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Balances) > 0 {
-		for iNdEx := len(m.Balances) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Total) > 0 {
+		for iNdEx := len(m.Total) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Balances[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Total[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1176,57 +812,14 @@ func (m *MsgMultiSend) Size() (n int) {
 	return n
 }
 
-func (m *QueryBalanceRequest) Size() (n int) {
+func (m *Supply) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryBalanceResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Balance != nil {
-		l = m.Balance.Size()
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryAllBalancesRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Address)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryAllBalancesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Balances) > 0 {
-		for _, e := range m.Balances {
+	if len(m.Total) > 0 {
+		for _, e := range m.Total {
 			l = e.Size()
 			n += 1 + l + sovTypes(uint64(l))
 		}
@@ -1758,7 +1351,7 @@ func (m *MsgMultiSend) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryBalanceRequest) Unmarshal(dAtA []byte) error {
+func (m *Supply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1781,134 +1374,15 @@ func (m *QueryBalanceRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryBalanceRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: Supply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryBalanceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Supply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
-			if m.Address == nil {
-				m.Address = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryBalanceResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryBalanceResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryBalanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Balance", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1935,184 +1409,8 @@ func (m *QueryBalanceResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Balance == nil {
-				m.Balance = &types.Coin{}
-			}
-			if err := m.Balance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryAllBalancesRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllBalancesRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllBalancesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
-			if m.Address == nil {
-				m.Address = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryAllBalancesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllBalancesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllBalancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Balances", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Balances = append(m.Balances, types.Coin{})
-			if err := m.Balances[len(m.Balances)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Total = append(m.Total, types.Coin{})
+			if err := m.Total[len(m.Total)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

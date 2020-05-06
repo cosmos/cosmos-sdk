@@ -82,6 +82,51 @@ func (s *Suite) TestAminoJSON() {
 	s.Require().Equal(s.spot, c.Animal.GetCachedValue())
 }
 
+func (s *Suite) TestNested() {
+	s.cdc.RegisterInterface((*testdata.HasAnimalI)(nil), nil)
+	s.cdc.RegisterInterface((*testdata.HasHasAnimalI)(nil), nil)
+	s.cdc.RegisterConcrete(&testdata.HasAnimal{}, "testdata/HasAnimal", nil)
+	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
+	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)
+
+	any, err := types.NewAnyWithValue(&s.b)
+	s.Require().NoError(err)
+	hha := testdata.HasHasAnimal{HasAnimal: any}
+	any2, err := types.NewAnyWithValue(&hha)
+	s.Require().NoError(err)
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any2}
+
+	// marshal
+	err = types.UnpackInterfaces(hhha, types.AminoPacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	bz, err := s.cdc.MarshalBinaryBare(hhha)
+	s.Require().NoError(err)
+
+	// unmarshal
+	var hhha2 testdata.HasHasHasAnimal
+	err = s.cdc.UnmarshalBinaryBare(bz, &hhha2)
+	s.Require().NoError(err)
+	err = types.UnpackInterfaces(hhha2, types.AminoUnpacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+
+	s.Require().Equal(s.spot, hhha2.TheHasHasAnimal().TheHasAnimal().TheAnimal())
+
+	// json marshal
+	err = types.UnpackInterfaces(hhha, types.AminoJSONPacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+	jsonBz, err := s.cdc.MarshalJSON(hhha)
+	s.Require().NoError(err)
+
+	// json unmarshal
+	var hhha3 testdata.HasHasHasAnimal
+	err = s.cdc.UnmarshalJSON(jsonBz, &hhha3)
+	s.Require().NoError(err)
+	err = types.UnpackInterfaces(hhha3, types.AminoJSONUnpacker{Cdc: s.cdc})
+	s.Require().NoError(err)
+
+	s.Require().Equal(s.spot, hhha3.TheHasHasAnimal().TheHasAnimal().TheAnimal())
+}
+
 func TestSuite(t *testing.T) {
 	suite.Run(t, &Suite{})
 }

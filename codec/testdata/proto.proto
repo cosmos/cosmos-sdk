@@ -19,3 +19,11 @@ message HasAnimal {
   google.protobuf.Any animal = 1;
   int64 x = 2;
 }
+
+message HasHasAnimal {
+  google.protobuf.Any has_animal = 1;
+}
+
+message HasHasHasAnimal {
+  google.protobuf.Any has_has_animal = 1;
+}

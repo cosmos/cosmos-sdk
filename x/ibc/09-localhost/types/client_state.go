@@ -14,7 +14,9 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -125,7 +127,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored locally.
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec,
+	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -143,12 +145,13 @@ func (cs ClientState) VerifyConnectionState(
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
 
-	var prevConnection connectionexported.ConnectionI
-	if err := cdc.UnmarshalBinaryBare(bz, &prevConnection); err != nil {
+	var prevConnection connectiontypes.ConnectionEnd
+	err = cdc.UnmarshalBinaryBare(bz, &prevConnection)
+	if err != nil {
 		return err
 	}
 
-	if connectionEnd != prevConnection {
+	if connectionEnd != &prevConnection {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedConnectionStateVerification,
 			"connection end ≠ previous stored connection: \n%v\n≠\n%v", connectionEnd, prevConnection,
@@ -161,7 +164,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the local machine.
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec,
+	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -180,11 +183,13 @@ func (cs ClientState) VerifyChannelState(
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
 
-	var prevChannel channelexported.ChannelI
-	if err := cdc.UnmarshalBinaryBare(bz, &prevChannel); err != nil {
+	var prevChannel channeltypes.Channel
+	err = cdc.UnmarshalBinaryBare(bz, &prevChannel)
+	if err != nil {
 		return err
 	}
-	if channel != prevChannel {
+
+	if channel != &prevChannel {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedChannelStateVerification,
 			"channel end ≠ previous stored channel: \n%v\n≠\n%v", channel, prevChannel,

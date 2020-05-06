@@ -23,15 +23,19 @@ func (msg MsgSend) ValidateBasic() error {
 	if msg.FromAddress.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
+
 	if msg.ToAddress.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
+
 	if !msg.Amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
+
 	if !msg.Amount.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
+
 	return nil
 }
 
@@ -65,6 +69,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 	if len(msg.Inputs) == 0 {
 		return ErrNoInputs
 	}
+
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs
 	}
@@ -83,6 +88,7 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
+
 	return addrs
 }
 
@@ -91,12 +97,15 @@ func (in Input) ValidateBasic() error {
 	if len(in.Address) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "input address missing")
 	}
+
 	if !in.Coins.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
+
 	if !in.Coins.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, in.Coins.String())
 	}
+
 	return nil
 }
 
@@ -113,12 +122,15 @@ func (out Output) ValidateBasic() error {
 	if len(out.Address) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "output address missing")
 	}
+
 	if !out.Coins.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
+
 	if !out.Coins.IsAllPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, out.Coins.String())
 	}
+
 	return nil
 }
 

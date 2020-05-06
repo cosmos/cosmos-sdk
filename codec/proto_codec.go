@@ -6,15 +6,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/jsonpb"
 )
 
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
 // encoding.
-type ProtoCodec struct{}
+type ProtoCodec struct {
+	anyUnpacker types.AnyUnpacker
+}
 
-func NewProtoCodec() Marshaler {
-	return &ProtoCodec{}
+func NewProtoCodec(anyUnpacker types.AnyUnpacker) Marshaler {
+	return &ProtoCodec{anyUnpacker: anyUnpacker}
 }
 
 func (pc *ProtoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
@@ -58,7 +62,15 @@ func (pc *ProtoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
 }
 
 func (pc *ProtoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
-	return ptr.Unmarshal(bz)
+	err := ptr.Unmarshal(bz)
+	if err != nil {
+		return err
+	}
+	err = types.UnpackInterfaces(ptr, pc.anyUnpacker)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (pc *ProtoCodec) MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) {
@@ -80,7 +92,7 @@ func (pc *ProtoCodec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshale
 	}
 
 	bz = bz[n:]
-	return ptr.Unmarshal(bz)
+	return pc.UnmarshalBinaryBare(bz, ptr)
 }
 
 func (pc *ProtoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
@@ -89,7 +101,7 @@ func (pc *ProtoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMars
 	}
 }
 
-func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) { // nolint: stdmethods
+func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) {
 	m, ok := o.(ProtoMarshaler)
 	if !ok {
 		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
@@ -107,7 +119,7 @@ func (pc *ProtoCodec) MustMarshalJSON(o interface{}) []byte {
 	return bz
 }
 
-func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error { // nolint: stdmethods
+func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	m, ok := ptr.(ProtoMarshaler)
 	if !ok {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
@@ -120,4 +132,8 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 	if err := pc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
+}
+
+func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
+	return pc.anyUnpacker.UnpackAny(any, iface)
 }

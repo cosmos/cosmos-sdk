@@ -26,10 +26,6 @@ const (
 
 var (
 	_ abci.Application = (*BaseApp)(nil)
-
-	// mainConsensusParamsKey defines a key to store the consensus params in the
-	// main store.
-	mainConsensusParamsKey = []byte("consensus_params")
 )
 
 type (
@@ -105,7 +101,6 @@ type BaseApp struct { // nolint: maligned
 func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
-
 	app := &BaseApp{
 		logger:         logger,
 		name:           name,
@@ -117,6 +112,7 @@ func NewBaseApp(
 		txDecoder:      txDecoder,
 		fauxMerkleMode: false,
 	}
+
 	for _, option := range options {
 		option(app)
 	}
@@ -280,6 +276,7 @@ func (app *BaseApp) Router() sdk.Router {
 		// any routes modified which would cause unexpected routing behavior.
 		panic("Router() on sealed BaseApp")
 	}
+
 	return app.router
 }
 
@@ -327,6 +324,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 
 	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
 		var bp abci.BlockParams
+
 		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
 		cp.Block = &bp
 	}
@@ -351,6 +349,7 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
+
 	if cp == nil {
 		return
 	}
@@ -370,6 +369,7 @@ func (app *BaseApp) getMaximumBlockGas(ctx sdk.Context) uint64 {
 	}
 
 	maxGas := cp.Block.MaxGas
+
 	switch {
 	case maxGas < -1:
 		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
@@ -432,6 +432,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 	if mode == runTxModeReCheck {
 		ctx = ctx.WithIsReCheckTx(true)
 	}
+
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
@@ -535,8 +536,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	}
 
 	if app.anteHandler != nil {
-		var anteCtx sdk.Context
-		var msCache sdk.CacheMultiStore
+		var (
+			anteCtx sdk.Context
+			msCache sdk.CacheMultiStore
+		)
 
 		// Cache wrap context before AnteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
@@ -546,8 +549,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
-
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the AnteHandler. We want the original multistore, not one
@@ -604,6 +607,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 		msgRoute := msg.Route()
 		handler := app.router.Route(ctx, msgRoute)
+
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 		}
@@ -623,6 +627,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
+
 		data = append(data, msgResult.Data...)
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
 	}

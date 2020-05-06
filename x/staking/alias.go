@@ -1,7 +1,5 @@
 package staking
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"

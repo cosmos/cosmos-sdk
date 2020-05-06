@@ -35,7 +35,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
-		cdc *codec.Codec,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -44,7 +44,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
-		cdc *codec.Codec,
+		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,

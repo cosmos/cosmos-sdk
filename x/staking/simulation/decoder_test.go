@@ -2,7 +2,6 @@ package simulation_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 	"time"
 
@@ -33,7 +32,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 }
 
 func TestDecodeStore(t *testing.T) {
-	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
+	cdc, _ := simapp.MakeCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	bondTime := time.Now().UTC()

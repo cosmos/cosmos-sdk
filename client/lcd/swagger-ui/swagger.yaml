@@ -533,7 +533,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or delegation request body
         401:
@@ -622,7 +622,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or unbonding delegation request body
         401:
@@ -1035,7 +1035,7 @@ paths:
         200:
           description: Tx was succesfully generated
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid validator address or base_req
         500:
@@ -1296,7 +1296,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid proposal id or deposit body
         401:
@@ -1395,7 +1395,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid proposal id or vote body
         401:
@@ -1579,7 +1579,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address
         401:
@@ -1638,7 +1638,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator address or delegation body
         401:
@@ -1691,7 +1691,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid delegator or withdraw address
         401:
@@ -1791,7 +1791,7 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/StdTx"
         400:
           description: Invalid validator address
         401:
@@ -2151,6 +2151,35 @@ paths:
           description: Invalid client id
         500:
           description: Internal Server Error
+  /ibc/connections:
+    get:
+      summary: Query all connections
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: page
+          description: Page number
+          type: integer
+          x-example: 1
+        - in: query
+          name: limit
+          description: Maximum number of items per page
+          type: integer
+          x-example: 1
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Connection"
+        400:
+          description: Bad Request
+        500:
+          description: Internal Server Error
   /ibc/connections/{connection-id}:
     get:
       summary: Query connection
@@ -2179,6 +2208,35 @@ paths:
           description: Invalid connection id
         500:
           description: Internal Server Error
+  /ibc/clients/connections:
+  get:
+    summary: Query all client connection paths
+    tags:
+      - IBC
+    produces:
+      - application/json
+    parameters:
+      - in: query
+        name: page
+        description: Page number
+        type: integer
+        x-example: 1
+      - in: query
+        name: limit
+        description: Maximum number of items per page
+        type: integer
+        x-example: 1
+    responses:
+      200:
+        description: OK
+        schema:
+          type: array
+          items:
+            $ref: "#/definitions/ConnectionPaths"
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
   /ibc/clients/{client-id}/connections:
     get:
       summary: Query connections of a client
@@ -2204,7 +2262,7 @@ paths:
           schema:
             $ref: "#/definitions/ClientConnectionsResponse"
         400:
-          description: Invalid client id
+          description: Invalid Client Id
         500:
           description: Internal Server Error
   /ibc/connections/open-init:
@@ -3616,16 +3674,22 @@ definitions:
   Connection:
     type: object
     properties:
+      id:
+        type: string
+        example: "connectionidone"
       state:
         type: string
+        example: "OPEN"
       client_id:
         type: string
+        example: "clientidone"
       counterparty:
         $ref: "#/definitions/ConnectionCounterparty"
       versions:
         type: array
         items:
           type: string
+          example: "1.0.0"
   ConnectionCounterparty:
     type: object
     properties:
@@ -3650,6 +3714,17 @@ definitions:
               type: string
             enc:
               type: integer
+  ConnectionPaths:
+    type: object
+    properties:
+      client-id:
+        type: string
+        example: "clientidone"
+      paths:
+        type: array
+        items:
+          type: string
+          example: "connectionidone"
   ClientConnectionsResponse:
     type: object
     properties:

@@ -88,6 +88,7 @@ func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	if app.addrPeerFilter != nil {
 		return app.addrPeerFilter(info)
 	}
+
 	return abci.ResponseQuery{}
 }
 
@@ -96,6 +97,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 	if app.idPeerFilter != nil {
 		return app.idPeerFilter(info)
 	}
+
 	return abci.ResponseQuery{}
 }
 
@@ -137,7 +139,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
-
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 	return res

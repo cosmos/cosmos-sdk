@@ -72,7 +72,7 @@ which accepts a path for the resulting pprof file.
 
 			ctx.Logger.Info("starting ABCI with Tendermint")
 
-			_, err := startInProcess(ctx, appCreator)
+			err := startInProcess(ctx, appCreator)
 			return err
 		},
 	}
@@ -143,26 +143,26 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
+func startInProcess(ctx *Context, appCreator AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
 	traceWriterFile := viper.GetString(flagTraceStore)
 	db, err := openDB(home)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// create & start tendermint node
@@ -177,11 +177,11 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		ctx.Logger.With("module", "node"),
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return nil, err
+		return err
 	}
 
 	var cpuProfileCleanup func()
@@ -189,12 +189,12 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 		if err := pprof.StartCPUProfile(f); err != nil {
-			return nil, err
+			return err
 		}
 
 		cpuProfileCleanup = func() {

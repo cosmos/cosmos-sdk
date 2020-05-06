@@ -14,7 +14,6 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mattn/go-isatty v0.0.12
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/otiai10/copy v1.1.1
 	github.com/pelletier/go-toml v1.7.0
 	github.com/pkg/errors v0.9.1
@@ -33,7 +32,7 @@ require (
 	github.com/tendermint/tendermint v0.33.4
 	github.com/tendermint/tm-db v0.5.1
 	google.golang.org/genproto v0.0.0-20200324203455-a04cca1dde73
-	google.golang.org/grpc v1.28.0
+	google.golang.org/grpc v1.28.1
 	gopkg.in/yaml.v2 v2.2.8
 )
 

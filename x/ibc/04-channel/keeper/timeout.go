@@ -219,7 +219,7 @@ func (k Keeper) TimeoutOnClose(
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
 		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
-		&expectedChannel,
+		expectedChannel,
 	); err != nil {
 		return nil, err
 	}

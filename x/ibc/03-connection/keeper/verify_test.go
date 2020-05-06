@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			connection := types.NewConnectionEnd(ibctypes.UNINITIALIZED, testConnectionIDA, testClientIDA, counterparty, []string{"1.0.0"})
 			// Ensure chain B can verify connection exists in chain A
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyConnectionState(
-				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, &expectedConnection,
+				suite.chainB.GetContext(), connection, proofHeight+1, proof, testConnectionIDA, expectedConnection,
 			)
 
 			if tc.expPass {
@@ -208,7 +208,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyChannelState(
 				suite.chainB.GetContext(), connection, proofHeight+1, proof, testPort1,
-				testChannel1, &channel,
+				testChannel1, channel,
 			)
 
 			if tc.expPass {

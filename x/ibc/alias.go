@@ -7,7 +7,6 @@ package ibc
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/types
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -21,13 +20,10 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper   = keeper.NewKeeper
-	NewQuerier  = keeper.NewQuerier
-	NewAnyCodec = clientexported.NewAnyCodec
+	NewKeeper  = keeper.NewKeeper
+	NewQuerier = keeper.NewQuerier
 )
 
 type (
-	Keeper   = keeper.Keeper
-	Codec    = clientexported.Codec
-	AnyCodec = clientexported.AnyCodec
+	Keeper = keeper.Keeper
 )

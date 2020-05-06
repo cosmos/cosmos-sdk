@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
@@ -26,7 +25,7 @@ type TendermintTestSuite struct {
 	suite.Suite
 
 	aminoCdc *codec.Codec
-	cdc      clientexported.Codec
+	cdc      codec.Marshaler
 	privVal  tmtypes.PrivValidator
 	valSet   *tmtypes.ValidatorSet
 	header   ibctmtypes.Header
@@ -38,7 +37,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	suite.aminoCdc = app.Codec()
-	suite.cdc = clientexported.NewAnyCodec(app.AppCodec())
+	suite.cdc = app.AppCodec()
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()

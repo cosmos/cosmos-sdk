@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 const (
@@ -22,7 +21,7 @@ type LocalhostTestSuite struct {
 	suite.Suite
 
 	aminoCdc *codec.Codec
-	cdc      clientexported.Codec
+	cdc      codec.Marshaler
 	store    *cachekv.Store
 }
 
@@ -31,7 +30,7 @@ func (suite *LocalhostTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	suite.aminoCdc = app.Codec()
-	suite.cdc = clientexported.NewAnyCodec(app.AppCodec())
+	suite.cdc = app.AppCodec()
 
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	suite.store = cachekv.NewStore(mem)

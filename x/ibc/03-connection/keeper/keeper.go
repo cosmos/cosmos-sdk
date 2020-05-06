@@ -20,13 +20,13 @@ import (
 // Keeper defines the IBC connection keeper
 type Keeper struct {
 	storeKey     sdk.StoreKey
-	aminoCdc     *codec.Codec         // amino codec. TODO: remove after clients have been migrated to proto
-	cdc          clientexported.Codec // hybrid codec
+	aminoCdc     *codec.Codec    // amino codec. TODO: remove after clients have been migrated to proto
+	cdc          codec.Marshaler // hybrid codec
 	clientKeeper types.ClientKeeper
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(aminoCdc *codec.Codec, cdc clientexported.Codec, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
+func NewKeeper(aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
 	return Keeper{
 		storeKey:     key,
 		aminoCdc:     aminoCdc,
@@ -54,28 +54,17 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 		return types.ConnectionEnd{}, false
 	}
 
-	connectionI, err := k.cdc.UnmarshalConnection(bz)
-	if err != nil {
-		panic(err)
-	}
+	var connection types.ConnectionEnd
+	k.cdc.MustUnmarshalBinaryBare(bz, &connection)
 
-	connection, ok := connectionI.(*types.ConnectionEnd)
-	if !ok {
-		panic(fmt.Sprintf("invalid type %T", connectionI))
-	}
-
-	return *connection, true
+	return connection, true
 }
 
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz, err := k.cdc.MarshalConnection(&connection)
-	if err != nil {
-		panic(err)
-	}
-
+	bz := k.cdc.MustMarshalBinaryBare(&connection)
 	store.Set(ibctypes.KeyConnection(connectionID), bz)
 }
 
@@ -146,17 +135,10 @@ func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		connectionI, err := k.cdc.UnmarshalConnection(iterator.Value())
-		if err != nil {
-			panic(err)
-		}
+		var connection types.ConnectionEnd
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &connection)
 
-		connection, ok := connectionI.(*types.ConnectionEnd)
-		if !ok {
-			panic(fmt.Sprintf("invalid type %T", connectionI))
-		}
-
-		if cb(*connection) {
+		if cb(connection) {
 			break
 		}
 	}

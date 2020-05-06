@@ -40,11 +40,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgAcknowledgement{},
 		&MsgTimeout{},
 	)
-	registry.RegisterInterface(
-		"cosmos_sdk.x.ibc.channel.v1.ChannelI",
-		(*exported.ChannelI)(nil),
-		&Channel{},
-	)
 }
 
 var (

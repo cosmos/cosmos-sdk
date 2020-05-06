@@ -235,7 +235,7 @@ func NewSimApp(
 	// TODO: remove amino codec dependency once Tendermint version is upgraded with
 	// protobuf changes
 	app.IBCKeeper = ibc.NewKeeper(
-		app.cdc, ibc.NewAnyCodec(appCodec), keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
+		app.cdc, appCodec, keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	// Create Transfer Keepers

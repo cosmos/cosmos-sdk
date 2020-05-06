@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
@@ -22,7 +21,7 @@ type Keeper struct {
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	cdc *codec.Codec, appCodec clientexported.Codec, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
+	cdc *codec.Codec, appCodec codec.Marshaler, key sdk.StoreKey, stakingKeeper client.StakingKeeper, scopedKeeper capability.ScopedKeeper,
 ) *Keeper {
 	clientKeeper := client.NewKeeper(cdc, key, stakingKeeper)
 	connectionKeeper := connection.NewKeeper(cdc, appCodec, key, clientKeeper)

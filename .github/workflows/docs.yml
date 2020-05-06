@@ -23,5 +23,5 @@ jobs:
       - name: Deploy 🚀
         uses: peaceiris/actions-gh-pages@v3
         env:
-          personal_token: ${{ secrets.PERSONAL_TOKEN }}
-          publish_dir: "docs/.vuepress/dist"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/.vuepress/dist

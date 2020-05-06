@@ -7,8 +7,9 @@ const (
 )
 
 var (
-	ErrUnknownFormat = types.ErrUnknownFormat
-	SnapshotFromABCI = types.SnapshotFromABCI
+	ErrChunkHashMismatch = types.ErrChunkHashMismatch
+	ErrUnknownFormat     = types.ErrUnknownFormat
+	SnapshotFromABCI     = types.SnapshotFromABCI
 )
 
 type (

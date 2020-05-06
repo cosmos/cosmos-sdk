@@ -20,11 +20,12 @@ const (
 	chunkBufferSize = 4
 )
 
+// operation represents a Manager operation. Only one operation can be in progress at a time.
 type operation string
 
 // Manager manages snapshot and restore operations for an app, making sure only a single
-// long-running operation can be in progress at any given time, and provides convenience methods
-// that mirror the ABCI interface.
+// long-running operation is in progress at any given time, and provides convenience methods
+// mirroring the ABCI interface.
 type Manager struct {
 	store  *Store
 	target Snapshotter
@@ -101,7 +102,7 @@ func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte,
 	return ioutil.ReadAll(reader)
 }
 
-// Take takes a snapshot, if no other operations are in progress, and returns it.
+// Take takes a snapshot and returns its metadata.
 func (m *Manager) Take(height uint64) (*Snapshot, error) {
 	if m == nil {
 		return nil, errors.New("no snapshot store configured")
@@ -171,7 +172,7 @@ func (m *Manager) Restore(snapshot Snapshot) error {
 		}
 		m.endLocked()
 		return err
-	case <-time.After(10 * time.Millisecond):
+	case <-time.After(20 * time.Millisecond):
 	}
 
 	m.chRestore = chChunks
@@ -182,7 +183,6 @@ func (m *Manager) Restore(snapshot Snapshot) error {
 
 // RestoreChunk adds a chunk to an active snapshot restoration, mirring ABCI ApplySnapshotChunk.
 // Chunks must be given until the restore is complete, returning true, or a chunk errors.
-// FIXME This needs to verify the chunk hash.
 func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
@@ -201,13 +201,10 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	default:
 	}
 
-	// Check the chunk hash. Tendermint should already have done this for us,
-	// but better safe than sorry.
+	// Verify the chunk hash.
 	hash := sha256.Sum256(chunk)
-	expect := m.restorePending[0]
-	if !bytes.Equal(hash[:], expect) {
-		m.endLocked()
-		return false, fmt.Errorf("invalid chunk hash, expected %x got %x", expect, hash)
+	if !bytes.Equal(hash[:], m.restorePending[0]) {
+		return false, ErrChunkHashMismatch
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.

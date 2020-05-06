@@ -295,7 +295,7 @@ func (app *BaseApp) halt() {
 	os.Exit(0)
 }
 
-// snapshot takes a snapshot of the current state and prunes any old snapshots
+// snapshot takes a snapshot of the current state and prunes any old snapshots.
 func (app *BaseApp) snapshot(height int64) {
 	app.logger.Info("Taking state snapshot", "height", height)
 	snapshot, err := app.snapshotManager.Take(uint64(height))
@@ -401,8 +401,8 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 	default:
 		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
 			"format", req.Snapshot.Format, "err", err.Error())
-		// FIXME We shouldn't abort, but instead reset the IAVL stores and try restoring
-		// a different snapshot.
+		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
+		// so we ask Tendermint to abort all snapshot restoration.
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}
 	}
 }
@@ -410,12 +410,21 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 // ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
-	if err != nil {
+	switch err {
+	case nil:
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_accept}
+	case snapshots.ErrChunkHashMismatch:
+		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
+			"chunk", req.Index, "sender", req.Sender)
+		return abci.ResponseApplySnapshotChunk{
+			Result:        abci.ResponseApplySnapshotChunk_retry,
+			RefetchChunks: []uint32{req.Index},
+			RejectSenders: []string{req.Sender},
+		}
+	default:
 		app.logger.Error("Failed to restore snapshot", "err", err.Error())
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_abort}
 	}
-	// FIXME This should handle verification failures and such as well.
-	return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_accept}
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

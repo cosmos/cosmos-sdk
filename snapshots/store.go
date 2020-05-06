@@ -275,7 +275,7 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 	index := uint32(0)
 	snapshotHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close()
+		defer chunkBody.Close() // nolint: staticcheck
 		chunkHasher := sha256.New()
 		dir := s.pathSnapshot(height, format)
 		err = os.MkdirAll(dir, 0755)
@@ -287,7 +287,7 @@ func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
 		}
-		defer file.Close()
+		defer file.Close() // nolint: staticcheck
 		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate snapshot chunk %v: %w", index, err)

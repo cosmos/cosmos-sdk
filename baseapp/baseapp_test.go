@@ -1671,6 +1671,18 @@ func TestApplySnapshotChunk(t *testing.T) {
 	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
 	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}, respOffer)
 
+	// We should be able to pass an invalid chunk and get a verify failure, before reapplying it.
+	respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+		Index:  0,
+		Chunk:  []byte{9},
+		Sender: "sender",
+	})
+	require.Equal(t, abci.ResponseApplySnapshotChunk{
+		Result:        abci.ResponseApplySnapshotChunk_retry,
+		RefetchChunks: []uint32{0},
+		RejectSenders: []string{"sender"},
+	}, respApply)
+
 	// Fetch each chunk from the source and apply it to the target
 	for index := uint32(0); index < snapshot.Chunks; index++ {
 		respChunk := source.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
@@ -1680,6 +1692,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 		})
 		require.NotNil(t, respChunk.Chunk)
 		respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+			Index: index,
 			Chunk: respChunk.Chunk,
 		})
 		require.Equal(t, abci.ResponseApplySnapshotChunk{

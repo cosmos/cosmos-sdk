@@ -30,6 +30,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 			switch path[1] {
 			case connection.QueryAllConnections:
 				res, err = connection.QuerierConnections(ctx, req, k.ConnectionKeeper)
+			case connection.QueryAllClientConnections:
+				res, err = connection.QuerierAllClientConnections(ctx, req, k.ConnectionKeeper)
 			case connection.QueryClientConnections:
 				res, err = connection.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
 			default:

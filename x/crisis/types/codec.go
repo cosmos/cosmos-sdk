@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // RegisterCodec registers the necessary x/crisis interfaces and concrete types
@@ -19,7 +20,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/crisis and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino)
+	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
 )
 
 func init() {

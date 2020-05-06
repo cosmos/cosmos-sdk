@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -18,19 +16,19 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
-	dec := simulation.NewDecodeStore(cdc)
+	app := simapp.Setup(false)
+	dec := simulation.NewDecodeStore(app.EvidenceKeeper)
 
 	delPk1 := ed25519.GenPrivKey().PubKey()
 
-	ev := types.Equivocation{
+	ev := &types.Equivocation{
 		Height:           10,
 		Time:             time.Now().UTC(),
 		Power:            1000,
 		ConsensusAddress: sdk.ConsAddress(delPk1.Address()),
 	}
 
-	evBz, err := cdc.MarshalEvidence(&ev)
+	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)
 	require.NoError(t, err)
 
 	kvPairs := tmkv.Pairs{

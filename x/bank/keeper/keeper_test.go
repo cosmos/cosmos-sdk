@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -92,7 +90,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec := app.AppCodec()
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
@@ -155,7 +153,7 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec := app.AppCodec()
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
@@ -209,7 +207,7 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec, _ := simapp.MakeCodecs()
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()

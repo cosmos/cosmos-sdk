@@ -20,7 +20,7 @@ func TestHybridCodec(t *testing.T) {
 	}{
 		{
 			"valid encoding and decoding",
-			codec.NewHybridCodec(createTestCodec()),
+			codec.NewHybridCodec(createTestCodec(), createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Dog{},
 			false,
@@ -28,7 +28,7 @@ func TestHybridCodec(t *testing.T) {
 		},
 		{
 			"invalid decode type",
-			codec.NewHybridCodec(createTestCodec()),
+			codec.NewHybridCodec(createTestCodec(), createTestInterfaceRegistry()),
 			&testdata.Dog{Name: "rufus"},
 			&testdata.Cat{},
 			false,

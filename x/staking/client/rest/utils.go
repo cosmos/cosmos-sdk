@@ -20,6 +20,7 @@ func contains(stringSlice []string, txType string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 

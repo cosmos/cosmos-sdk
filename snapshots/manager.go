@@ -142,10 +142,11 @@ func (m *Manager) Prune(retain uint32) (uint64, error) {
 // via RestoreChunk() until the restore is complete or a chunk fails.
 func (m *Manager) Restore(snapshot Snapshot) error {
 	if snapshot.Chunks == 0 {
-		return errors.New("snapshot has no chunks")
+		return fmt.Errorf("%w: no chunks", ErrInvalidMetadata)
 	}
 	if uint32(len(snapshot.Metadata.ChunkHashes)) != snapshot.Chunks {
-		return fmt.Errorf("snapshot only has %v chunk hashes, expected %v",
+		return fmt.Errorf("%w: snapshot has %v chunk hashes, but %v chunks",
+			ErrInvalidMetadata,
 			uint32(len(snapshot.Metadata.ChunkHashes)),
 			snapshot.Chunks)
 	}
@@ -204,7 +205,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	// Verify the chunk hash.
 	hash := sha256.Sum256(chunk)
 	if !bytes.Equal(hash[:], m.restorePending[0]) {
-		return false, ErrChunkHashMismatch
+		return false, fmt.Errorf("%w (expected %x, got %x)", ErrChunkHashMismatch, hash, m.restorePending[0])
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.

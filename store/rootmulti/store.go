@@ -505,7 +505,7 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 // TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
 	if format != snapshots.CurrentFormat {
-		return nil, snapshots.ErrUnknownFormat
+		return nil, fmt.Errorf("%w %v", snapshots.ErrUnknownFormat, format)
 	}
 	if height == 0 {
 		return nil, errors.New("cannot snapshot height 0")
@@ -621,13 +621,14 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 // Restore implements snapshots.Snapshotter.
 func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
 	if format != snapshots.CurrentFormat {
-		return snapshots.ErrUnknownFormat
+		return fmt.Errorf("%w %v", snapshots.ErrUnknownFormat, format)
 	}
 	if height == 0 {
-		return errors.New("cannot restore snapshot at height 0")
+		return fmt.Errorf("%w: cannot restore snapshot at height 0", snapshots.ErrInvalidMetadata)
 	}
 	if height > math.MaxInt64 {
-		return fmt.Errorf("snapshot height %v cannot exceed %v", height, math.MaxInt64)
+		return fmt.Errorf("%w: snapshot height %v cannot exceed %v", snapshots.ErrInvalidMetadata,
+			height, math.MaxInt64)
 	}
 
 	// Set up a restore stream pipeline

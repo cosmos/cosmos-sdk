@@ -7,6 +7,7 @@ const (
 )
 
 var (
+	ErrInvalidMetadata   = types.ErrInvalidMetadata
 	ErrChunkHashMismatch = types.ErrChunkHashMismatch
 	ErrUnknownFormat     = types.ErrUnknownFormat
 	SnapshotFromABCI     = types.SnapshotFromABCI

@@ -1561,9 +1561,8 @@ func TestListSnapshots(t *testing.T) {
 		s.Metadata = nil
 	}
 	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 5, Format: 1, Chunks: 3},
 		{Height: 4, Format: 1, Chunks: 2},
-		{Height: 3, Format: 1, Chunks: 2},
+		{Height: 2, Format: 1, Chunks: 1},
 	}}, resp)
 }
 
@@ -1602,46 +1601,49 @@ func TestLoadSnapshotChunk(t *testing.T) {
 	}
 }
 
-func TestOfferSnapshotChunk_Errors(t *testing.T) {
+func TestOfferSnapshot_Errors(t *testing.T) {
+	// Set up app before test cases, since it's fairly expensive.
 	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
 	defer teardown()
 
-	// Nil snapshot should error
-	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}, resp)
-
-	metadata := snapshots.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
-	metadataBytes, err := metadata.Marshal()
+	m := snapshots.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
+	metadata, err := m.Marshal()
 	require.NoError(t, err)
+	hash := []byte{1, 2, 3}
 
-	// Invalid snapshot format should error
-	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:   1,
-		Format:   9,
-		Chunks:   3,
-		Hash:     []byte{1, 2, 3},
-		Metadata: metadataBytes,
-	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject_format}, resp)
-
-	// Invalid chunk hashes should be aborted
-	// FIXME This should be reject
-	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
-		Height:   1,
-		Format:   9,
-		Chunks:   2,
-		Hash:     []byte{1, 2, 3},
-		Metadata: metadataBytes,
-	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}, resp)
+	testcases := map[string]struct {
+		snapshot *abci.Snapshot
+		result   abci.ResponseOfferSnapshot_Result
+	}{
+		"nil snapshot": {nil, abci.ResponseOfferSnapshot_reject},
+		"invalid format": {&abci.Snapshot{
+			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_reject_format},
+		"incorrect chunk count": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_reject},
+		"no chunks": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_reject},
+		"invalid metadata serialization": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+		}, abci.ResponseOfferSnapshot_reject},
+	}
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
+			assert.Equal(t, tc.result, resp.Result)
+		})
+	}
 
 	// Offering a snapshot after one has been accepted should error
-	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   1,
 		Format:   snapshots.CurrentFormat,
 		Chunks:   3,
 		Hash:     []byte{1, 2, 3},
-		Metadata: metadataBytes,
+		Metadata: metadata,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}, resp)
 
@@ -1650,13 +1652,13 @@ func TestOfferSnapshotChunk_Errors(t *testing.T) {
 		Format:   snapshots.CurrentFormat,
 		Chunks:   3,
 		Hash:     []byte{1, 2, 3},
-		Metadata: metadataBytes,
+		Metadata: metadata,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}, resp)
 }
 
 func TestApplySnapshotChunk(t *testing.T) {
-	source, teardown := setupBaseAppWithSnapshots(t, 3, 10)
+	source, teardown := setupBaseAppWithSnapshots(t, 4, 10)
 	defer teardown()
 
 	target, teardown := setupBaseAppWithSnapshots(t, 0, 0)

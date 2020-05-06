@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -393,11 +394,18 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
 	}
 	err = app.snapshotManager.Restore(snapshot)
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}
-	case snapshots.ErrUnknownFormat:
+
+	case errors.Is(err, snapshots.ErrUnknownFormat):
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject_format}
+
+	case errors.Is(err, snapshots.ErrInvalidMetadata):
+		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "err", err.Error())
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
+
 	default:
 		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
 			"format", req.Snapshot.Format, "err", err.Error())
@@ -410,17 +418,19 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 // ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_accept}
-	case snapshots.ErrChunkHashMismatch:
+
+	case errors.Is(err, snapshots.ErrChunkHashMismatch):
 		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
-			"chunk", req.Index, "sender", req.Sender)
+			"chunk", req.Index, "sender", req.Sender, "err", err)
 		return abci.ResponseApplySnapshotChunk{
 			Result:        abci.ResponseApplySnapshotChunk_retry,
 			RefetchChunks: []uint32{req.Index},
 			RejectSenders: []string{req.Sender},
 		}
+
 	default:
 		app.logger.Error("Failed to restore snapshot", "err", err.Error())
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_abort}

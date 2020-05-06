@@ -15,7 +15,7 @@ import (
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app, and also
-// sets the snapshot interval.
+// sets the state sync snapshot interval (unless SnapshotEvery is 1, which disables it).
 func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
 	return func(bap *BaseApp) {
 		if opts.SnapshotEvery > 1 {
@@ -56,11 +56,6 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 // SetSnapshotDB sets the snapshot store.
 func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
-}
-
-// SetSnapshotPolicy sets the snapshot policy.
-func SetSnapshotPolicy(interval uint64, retention uint32) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotPolicy(interval, retention) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -177,14 +172,4 @@ func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 		panic("SetSnapshotStore() on sealed BaseApp")
 	}
 	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms)
-}
-
-// SetSnapshotPolicy sets the snapshotting policy. 0 interval disables snapshotting, and 0 retention
-// keeps all snapshots.
-func (app *BaseApp) SetSnapshotPolicy(interval uint64, retention uint32) {
-	if app.sealed {
-		panic("SetSnapshotPolicy() on sealed BaseApp")
-	}
-	app.snapshotInterval = interval
-	app.snapshotRetention = retention
 }

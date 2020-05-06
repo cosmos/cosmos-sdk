@@ -51,15 +51,6 @@ func TestAminoCodec(t *testing.T) {
 			true,
 		},
 		{
-
-			"valid encoding and decoding",
-			codec.NewAminoCodec(createTestCodec()),
-			&testdata.Dog{Name: "rufus"},
-			&testdata.Dog{},
-			false,
-			false,
-		},
-		{
 			"any marshaling",
 			codec.NewAminoCodec(createTestCodec()),
 			&testdata.HasAnimal{Animal: any},

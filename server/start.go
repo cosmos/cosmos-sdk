@@ -32,8 +32,6 @@ const (
 	FlagHaltTime             = "halt-time"
 	FlagInterBlockCache      = "inter-block-cache"
 	FlagUnsafeSkipUpgrades   = "unsafe-skip-upgrades"
-	FlagSnapshotInterval     = "snapshot-interval"
-	FlagSnapshotRetention    = "snapshot-retention"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -85,7 +83,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything, custom")
 	cmd.Flags().Int64(flagPruningKeepEvery, 0, "Define the state number that will be kept. Ignored if pruning is not custom.")
-	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for pruning. Ignored if pruning is not custom.")
+	cmd.Flags().Int64(flagPruningSnapshotEvery, 0, "Defines the state that will be snapshot for state sync and pruning. Ignored if pruning is not custom.")
 	cmd.Flags().String(
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
@@ -94,8 +92,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
-	cmd.Flags().Uint64(FlagSnapshotInterval, 0, "Interval between state snapshots, in blocks (0 to disable)")
-	cmd.Flags().Uint32(FlagSnapshotRetention, 0, "Interval between state snapshots, in blocks (0 to disable)")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
 	viper.BindPFlag(flagPruning, cmd.Flags().Lookup(flagPruning))

@@ -34,11 +34,12 @@ $ %s query ibc connection connections
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			connections, _, err := utils.QueryAllConnections(cliCtx, page, limit)
+			connections, height, err := utils.QueryAllConnections(cliCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(height)
 			return cliCtx.PrintOutput(connections)
 		},
 	}
@@ -71,6 +72,7 @@ $ %s query ibc connection end [connection-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(connRes.ProofHeight))
 			return cliCtx.PrintOutput(connRes)
 		},
 	}
@@ -97,11 +99,12 @@ $ %s query ibc connection paths
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			connectionPaths, _, err := utils.QueryAllClientConnectionPaths(cliCtx, page, limit)
+			connectionPaths, height, err := utils.QueryAllClientConnectionPaths(cliCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(height)
 			return cliCtx.PrintOutput(connectionPaths)
 		},
 	}
@@ -134,6 +137,7 @@ $ %s query ibc connection path [client-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(connPathsRes.ProofHeight))
 			return cliCtx.PrintOutput(connPathsRes)
 		},
 	}

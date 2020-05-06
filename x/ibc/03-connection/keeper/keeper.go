@@ -63,7 +63,6 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
-
 	bz := k.cdc.MustMarshalBinaryBare(&connection)
 	store.Set(ibctypes.KeyConnection(connectionID), bz)
 }

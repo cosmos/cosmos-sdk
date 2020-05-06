@@ -57,7 +57,6 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 
 	var channel types.Channel
 	k.cdc.MustUnmarshalBinaryBare(bz, &channel)
-
 	return channel, true
 }
 

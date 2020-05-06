@@ -30,11 +30,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgConnectionOpenAck{},
 		&MsgConnectionOpenConfirm{},
 	)
-	registry.RegisterInterface(
-		"cosmos_sdk.x.ibc.connection.v1.Connection",
-		(*exported.ConnectionI)(nil),
-		&ConnectionEnd{},
-	)
 }
 
 var (

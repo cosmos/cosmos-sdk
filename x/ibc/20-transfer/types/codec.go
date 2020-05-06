@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // RegisterCodec registers the IBC transfer types
@@ -32,6 +34,7 @@ var (
 
 func init() {
 	RegisterCodec(amino)
-	codec.RegisterCrypto(amino)
+	channel.RegisterCodec(amino)
+	commitmenttypes.RegisterCodec(amino)
 	amino.Seal()
 }

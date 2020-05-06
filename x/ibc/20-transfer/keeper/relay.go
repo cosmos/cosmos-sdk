@@ -209,7 +209,7 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 	}
 
 	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
 	// decode the sender address
@@ -229,7 +229,7 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 		}
 
 		// unescrow tokens back to sender
-		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+		escrowAddress := types.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, coins)
 	}
 

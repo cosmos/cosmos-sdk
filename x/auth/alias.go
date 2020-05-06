@@ -68,7 +68,6 @@ var (
 	NewModuleAccount                  = types.NewModuleAccount
 
 	// variable aliases
-	ModuleCdc                 = types.ModuleCdc
 	AddressStoreKeyPrefix     = types.AddressStoreKeyPrefix
 	GlobalAccountNumberKey    = types.GlobalAccountNumberKey
 	KeyMaxMemoCharacters      = types.KeyMaxMemoCharacters

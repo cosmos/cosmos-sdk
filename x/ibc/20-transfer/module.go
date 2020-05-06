@@ -324,7 +324,7 @@ func (am AppModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 ) (*sdk.Result, error) {
 	var data FungibleTokenPacketData
-	if err := types.ModuleCdc.UnmarshalBinaryBare(packet.GetData(), &data); err != nil {
+	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 	// refund tokens

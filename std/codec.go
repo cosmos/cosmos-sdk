@@ -2,6 +2,7 @@ package std
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -9,16 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	eviexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
-	_ auth.Codec     = (*Codec)(nil)
-	_ bank.Codec     = (*Codec)(nil)
-	_ evidence.Codec = (*Codec)(nil)
-	_ gov.Codec      = (*Codec)(nil)
+	_ auth.Codec = (*Codec)(nil)
+	_ bank.Codec = (*Codec)(nil)
+	_ gov.Codec  = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -29,10 +27,12 @@ type Codec struct {
 	// Keep reference to the amino codec to allow backwards compatibility along
 	// with type, and interface registration.
 	amino *codec.Codec
+
+	anyUnpacker types.AnyUnpacker
 }
 
-func NewAppCodec(amino *codec.Codec) *Codec {
-	return &Codec{Marshaler: codec.NewHybridCodec(amino), amino: amino}
+func NewAppCodec(amino *codec.Codec, anyUnpacker types.AnyUnpacker) *Codec {
+	return &Codec{Marshaler: codec.NewHybridCodec(amino, anyUnpacker), amino: amino, anyUnpacker: anyUnpacker}
 }
 
 // MarshalAccount marshals an Account interface. If the given type implements
@@ -111,46 +111,6 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (bankexported.SupplyI, error) {
 	}
 
 	return supply.GetSupplyI(), nil
-}
-
-// MarshalEvidence marshals an Evidence interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
-	evidence := &Evidence{}
-	if err := evidence.SetEvidence(evidenceI); err != nil {
-		return nil, err
-	}
-
-	return c.Marshaler.MarshalBinaryBare(evidence)
-}
-
-// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
-// bytes of a Proto-based Evidence type. An error is returned upon decoding
-// failure.
-func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
-	evidence := &Evidence{}
-	if err := c.Marshaler.UnmarshalBinaryBare(bz, evidence); err != nil {
-		return nil, err
-	}
-
-	return evidence.GetEvidence(), nil
-}
-
-// MarshalEvidenceJSON JSON encodes an evidence object implementing the Evidence
-// interface.
-func (c *Codec) MarshalEvidenceJSON(evidence eviexported.Evidence) ([]byte, error) {
-	return c.Marshaler.MarshalJSON(evidence)
-}
-
-// UnmarshalEvidenceJSON returns an Evidence from JSON encoded bytes
-func (c *Codec) UnmarshalEvidenceJSON(bz []byte) (eviexported.Evidence, error) {
-	evidence := &Evidence{}
-	if err := c.Marshaler.UnmarshalJSON(bz, evidence); err != nil {
-		return nil, err
-	}
-
-	return evidence.GetEvidence(), nil
 }
 
 // MarshalProposal marshals a Proposal. It accepts a Proposal defined by the x/gov

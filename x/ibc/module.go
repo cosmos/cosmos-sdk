@@ -52,28 +52,18 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // module.
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
-	return nil
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the ibc module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+	var gs GenesisState
+	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+	}
 
-	// TODO: UNDO this when DefaultGenesis() is implemented
-	// This validation is breaking the state as it is trying to
-	// validate nil. DefaultGenesis is not implemented and it just returns nil
-	// This is a quick fix to make the cli-tests work and
-	// SHOULD BE reverted when #5948 is addressed
-	// To UNDO this, just uncomment the code below
-
-	// var gs GenesisState
-	// if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-	// 	return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
-	// }
-
-	// return gs.Validate()
-
-	return nil
+	return gs.Validate()
 }
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.

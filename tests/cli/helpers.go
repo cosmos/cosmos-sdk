@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 
@@ -19,6 +18,13 @@ import (
 )
 
 var (
+	TotalCoins = sdk.NewCoins(
+		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(2000000)),
+		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(2000000)),
+		sdk.NewCoin(FooDenom, sdk.TokensFromConsensusPower(2000)),
+		sdk.NewCoin(Denom, sdk.TokensFromConsensusPower(300).Add(sdk.NewInt(12))), // add coins from inflation
+	)
+
 	StartCoins = sdk.NewCoins(
 		sdk.NewCoin(Fee2Denom, sdk.TokensFromConsensusPower(1000000)),
 		sdk.NewCoin(FeeDenom, sdk.TokensFromConsensusPower(1000000)),
@@ -161,18 +167,6 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 
-// TxBroadcast is simcli tx broadcast
-func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-// TxEncode is simcli tx encode
-func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
 //utils
 
 func AddFlags(cmd string, flags []string) string {
@@ -182,7 +176,14 @@ func AddFlags(cmd string, flags []string) string {
 	return strings.TrimSpace(cmd)
 }
 
-func UnmarshalStdTx(t *testing.T, c *codec.Codec, s string) (stdTx auth.StdTx) {
+func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx auth.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
+}
+
+func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx auth.StdTx) []byte {
+	bz, err := c.MarshalBinaryBare(stdTx)
+	require.NoError(t, err)
+
+	return bz
 }

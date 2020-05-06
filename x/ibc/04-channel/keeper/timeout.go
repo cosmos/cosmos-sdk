@@ -77,11 +77,6 @@ func (k Keeper) TimeoutPacket(
 		return nil, sdkerrors.Wrap(types.ErrPacketTimeout, "packet timeout has not been reached for height or timestamp")
 	}
 
-	// check that packet has not been received
-	if nextSequenceRecv >= packet.GetSequence() {
-		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
-	}
-
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	// verify we sent the packet and haven't cleared it out yet
@@ -91,6 +86,11 @@ func (k Keeper) TimeoutPacket(
 
 	switch channel.Ordering {
 	case exported.ORDERED:
+		// check that packet has not been received
+		if nextSequenceRecv > packet.GetSequence() {
+			return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
+		}
+
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,

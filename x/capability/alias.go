@@ -26,7 +26,6 @@ var (
 	ErrOwnerClaimed          = types.ErrOwnerClaimed
 	ErrCapabilityNotOwned    = types.ErrCapabilityNotOwned
 	RegisterCodec            = types.RegisterCodec
-	ModuleCdc                = types.ModuleCdc
 	NewOwner                 = types.NewOwner
 	NewCapabilityOwners      = types.NewCapabilityOwners
 )

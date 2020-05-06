@@ -48,6 +48,7 @@ type BaseApp struct { // nolint: maligned
 	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
 	router      sdk.Router           // handle any kind of message
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
+	grpcRouter  GRPCRouter           // router for redirecting gRPC query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth

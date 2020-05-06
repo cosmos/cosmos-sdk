@@ -2,22 +2,14 @@ package baseapp
 
 import (
 	"fmt"
-	"strings"
 
-	gocontext "context"
-
-	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-var protoCodec = encoding.GetCodec(proto.Name)
 
 type QueryRouter struct {
 	routes map[string]sdk.Querier
@@ -75,47 +67,3 @@ func (qrt *QueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
 }
-
-// QueryServiceTestHelper provides a helper for making grpc query service
-// rpc calls in unit tests. It implements both the grpc Server and ClientConn
-// interfaces needed to register a query service server and create a query
-// service client.
-type QueryServiceTestHelper struct {
-	*QueryRouter
-	ctx sdk.Context
-}
-
-// NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
-// the provided sdk.Context
-func NewQueryServerTestHelper(ctx sdk.Context) *QueryServiceTestHelper {
-	return &QueryServiceTestHelper{QueryRouter: NewQueryRouter(), ctx: ctx}
-}
-
-// Invoke implements the grpc ClientConn.Invoke method
-func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
-	path := strings.Split(method, "/")
-	if len(path) != 3 {
-		return fmt.Errorf("unexpected method name %s", method)
-	}
-	querier := q.Route(path[1])
-	if querier == nil {
-		return fmt.Errorf("handler not found for %s", path[1])
-	}
-	reqBz, err := protoCodec.Marshal(args)
-	if err != nil {
-		return err
-	}
-	resBz, err := querier(q.ctx, path[2:], abci.RequestQuery{Data: reqBz})
-	if err != nil {
-		return err
-	}
-	return protoCodec.Unmarshal(resBz, reply)
-}
-
-// NewStream implements the grpc ClientConn.NewStream method
-func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-var _ gogogrpc.Server = &QueryServiceTestHelper{}
-var _ gogogrpc.ClientConn = &QueryServiceTestHelper{}

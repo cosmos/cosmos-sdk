@@ -211,7 +211,7 @@ func TestCLIQuerySupply(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	totalSupply := testutil.QueryTotalSupply(f)
 	totalSupplyOf := testutil.QueryTotalSupplyOf(f, cli.FooDenom)

@@ -167,18 +167,6 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
 }
 
-// TxBroadcast is simcli tx broadcast
-func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-// TxEncode is simcli tx encode
-func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
 //utils
 
 func AddFlags(cmd string, flags []string) string {

@@ -56,6 +56,12 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			"",
 		},
 		{
+			"connection - QuerierAllClientConnections",
+			[]string{connection.SubModuleName, connection.QueryAllClientConnections},
+			false,
+			"",
+		},
+		{
 			"connection - QuerierClientConnections",
 			[]string{connection.SubModuleName, connection.QueryClientConnections},
 			false,

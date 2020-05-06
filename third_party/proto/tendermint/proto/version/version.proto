@@ -17,8 +17,7 @@ message App {
 // including all blockchain data structures and the rules of the application's
 // state transition machine.
 message Consensus {
-  option (gogoproto.populate) = true;
-  option (gogoproto.equal)    = true;
+  option (gogoproto.equal) = true;
 
   uint64 block = 1;
   uint64 app   = 2;

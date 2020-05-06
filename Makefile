@@ -294,9 +294,8 @@ proto-update-deps:
 	@mkdir -p $(TM_ABCI_TYPES)
 	@curl -sSL $(TM_URL)/abci/types/types.proto > $(TM_ABCI_TYPES)/types.proto
 	@sed -i '' '8 s|crypto/merkle/merkle.proto|third_party/proto/tendermint/crypto/merkle/merkle.proto|g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '9 s|libs/kv/types.proto|third_party/proto/tendermint/libs/kv/types.proto|g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '10 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_ABCI_TYPES)/types.proto
-	@sed -i '' '11 s|proto/types/params.proto|third_party/proto/tendermint/proto/types/params.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '9 s|proto/types/types.proto|third_party/proto/tendermint/proto/types/types.proto|g' $(TM_ABCI_TYPES)/types.proto
+	@sed -i '' '10 s|proto/types/params.proto|third_party/proto/tendermint/proto/types/params.proto|g' $(TM_ABCI_TYPES)/types.proto
 
 	@mkdir -p $(TM_PROTO)/types
 	@curl -sSL $(TM_URL)/proto/types/params.proto > $(TM_PROTO)/types/params.proto

@@ -4,6 +4,8 @@ package cli_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCLISubmitProposal(t *testing.T) {

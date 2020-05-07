@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 				_, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight+1)
 				suite.Require().NoError(err)
 			} else {
-				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, common.InvalidProof{}, proofHeight)
+				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, invalidProof{}, proofHeight)
 				suite.Require().Error(err)
 			}
 		})
@@ -424,20 +424,10 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, common.InvalidProof{}, proofHeight+1, nextSeqRecv, ack)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, invalidProof{}, proofHeight+1, nextSeqRecv, ack)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}
 		})
 	}
 }
-
-type mockSuccessPacket struct{}
-
-// GetBytes returns the serialised packet data
-func (mp mockSuccessPacket) GetBytes() []byte { return []byte("THIS IS A SUCCESS PACKET") }
-
-type mockFailPacket struct{}
-
-// GetBytes returns the serialised packet data (without timeout)
-func (mp mockFailPacket) GetBytes() []byte { return []byte("THIS IS A FAILURE PACKET") }

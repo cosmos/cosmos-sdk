@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"testing"
@@ -437,46 +436,9 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 // Mocked types
 // TODO: fix tests and replace for real proofs
 
-var (
-	_ commitmentexported.Proof = validProof{nil, nil, nil}
-	_ commitmentexported.Proof = invalidProof{}
-)
+var _ commitmentexported.Proof = invalidProof{}
 
-type (
-	validProof struct {
-		root  commitmentexported.Root
-		path  commitmentexported.Path
-		value []byte
-	}
-	invalidProof struct{}
-)
-
-func (validProof) GetCommitmentType() commitmentexported.Type {
-	return commitmentexported.Merkle
-}
-
-func (proof validProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte,
-) error {
-	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
-		path.String() == proof.path.String() &&
-		bytes.Equal(value, proof.value) {
-		return nil
-	}
-	return errors.New("invalid proof")
-}
-
-func (validProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
-	return nil
-}
-
-func (validProof) ValidateBasic() error {
-	return nil
-}
-
-func (validProof) IsEmpty() bool {
-	return false
-}
+type invalidProof struct{}
 
 func (invalidProof) GetCommitmentType() commitmentexported.Type {
 	return commitmentexported.Merkle
@@ -498,3 +460,13 @@ func (invalidProof) ValidateBasic() error {
 func (invalidProof) IsEmpty() bool {
 	return true
 }
+
+type mockSuccessPacket struct{}
+
+// GetBytes returns the serialised packet data
+func (mp mockSuccessPacket) GetBytes() []byte { return []byte("THIS IS A SUCCESS PACKET") }
+
+type mockFailPacket struct{}
+
+// GetBytes returns the serialised packet data (without timeout)
+func (mp mockFailPacket) GetBytes() []byte { return []byte("THIS IS A FAILURE PACKET") }

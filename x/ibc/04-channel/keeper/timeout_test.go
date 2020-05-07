@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, common.InvalidProof{}, proofHeight+1, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, invalidProof{}, proofHeight+1, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

@@ -18,7 +18,6 @@ func NewMsgVerifyInvariant(sender sdk.AccAddress, invariantModuleName,
 	}
 }
 
-//nolint
 func (msg MsgVerifyInvariant) Route() string { return ModuleName }
 func (msg MsgVerifyInvariant) Type() string  { return "verify_invariant" }
 

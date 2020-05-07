@@ -53,7 +53,7 @@ var (
 	NewQueryAccountParams             = types.NewQueryAccountParams
 	NewStdTx                          = types.NewStdTx
 	CountSubKeys                      = types.CountSubKeys
-	NewStdFee                         = types.NewStdFee
+	NewStdFee                         = types.NewStdFee //nolint:staticcheck
 	StdSignBytes                      = types.StdSignBytes
 	DefaultTxDecoder                  = types.DefaultTxDecoder
 	DefaultTxEncoder                  = types.DefaultTxEncoder
@@ -88,9 +88,9 @@ type (
 	QueryAccountParams               = types.QueryAccountParams
 	StdSignMsg                       = types.StdSignMsg
 	StdTx                            = types.StdTx
-	StdFee                           = types.StdFee
+	StdFee                           = types.StdFee //nolint:staticcheck
 	StdSignDoc                       = types.StdSignDoc
-	StdSignature                     = types.StdSignature
+	StdSignature                     = types.StdSignature //nolint:staticcheck
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
 	Codec                            = types.Codec

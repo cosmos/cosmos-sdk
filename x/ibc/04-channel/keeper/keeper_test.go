@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -16,7 +15,6 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -434,32 +432,6 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 }
 
 // Mocked types
-// TODO: fix tests and replace for real proofs
-
-var _ commitmentexported.Proof = invalidProof{}
-
-type invalidProof struct{}
-
-func (invalidProof) GetCommitmentType() commitmentexported.Type {
-	return commitmentexported.Merkle
-}
-
-func (invalidProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) ValidateBasic() error {
-	return errors.New("invalid proof")
-}
-
-func (invalidProof) IsEmpty() bool {
-	return true
-}
 
 type mockSuccessPacket struct{}
 

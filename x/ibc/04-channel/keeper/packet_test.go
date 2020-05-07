@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 				_, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight+1)
 				suite.Require().NoError(err)
 			} else {
-				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, invalidProof{}, proofHeight)
+				packet, err = suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight)
 				suite.Require().Error(err)
 			}
 		})
@@ -424,7 +424,7 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, invalidProof{}, proofHeight+1, nextSeqRecv, ack)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.CleanupPacket(ctx, packet, proof, proofHeight, nextSeqRecv, ack)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

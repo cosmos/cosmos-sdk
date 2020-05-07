@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				_, err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 					suite.chainA.GetContext(), common.ORDERED, []string{testConnectionIDB},
 					testPort2, testChannel2, portCap, counterparty, testChannelVersion, testChannelVersion,
-					invalidProof{}, proofHeight,
+					proof, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			} else {
 				err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
 					suite.chainA.GetContext(), testPort1, testChannel1, channelCap, testChannelVersion,
-					invalidProof{}, proofHeight+1,
+					proof, proofHeight+1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -412,7 +412,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			} else {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 					suite.chainB.GetContext(), testPort1, testChannel1, channelCap,
-					invalidProof{}, proofHeight+1,
+					proof, proofHeight+1,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}
@@ -611,7 +611,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			} else {
 				err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 					suite.chainB.GetContext(), testPort2, testChannel2, channelCap,
-					invalidProof{}, proofHeight,
+					proof, proofHeight,
 				)
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 			}

@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, invalidProof{}, proofHeight+1, nextSeqRecv)
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutPacket(ctx, packet, proof, proofHeight, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}
@@ -226,7 +226,8 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, packet, invalidProof{}, invalidProof{}, proofHeight+1, nextSeqRecv)
+				// switch the proofs to invalidate them
+				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.TimeoutOnClose(ctx, packet, proofClosed, proofAckAbsence, proofHeight+1, nextSeqRecv)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

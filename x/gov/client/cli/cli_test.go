@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestSimCLISubmitProposal(t *testing.T) {
+func TestCLISubmitProposal(t *testing.T) {
 	t.Parallel()
 	f := cli.InitFixtures(t)
 

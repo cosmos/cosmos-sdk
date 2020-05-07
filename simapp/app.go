@@ -276,7 +276,7 @@ func NewSimApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		ibc.NewAppModule(app.IBCKeeper, true),
+		ibc.NewAppModule(app.IBCKeeper, true), // create localhost client on initialization by default
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 	)

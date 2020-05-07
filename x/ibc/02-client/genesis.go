@@ -23,12 +23,13 @@ func InitGenesis(ctx sdk.Context, k Keeper, createLocalhost bool, gs GenesisStat
 		return
 	}
 
-	// create localhost by default
+	// NOTE: return if the localhost client was already imported. The chain-id and
+	// block height will be overwriten to the correct values during BeginBlock.
 	if _, found := k.GetClientState(ctx, exported.ClientTypeLocalHost); found {
 		return
 	}
 
-	// msg client id is always "localhost"
+	// client id is always "localhost"
 	clientState := localhosttypes.NewClientState(
 		k.ClientStore(ctx, exported.ClientTypeLocalHost),
 		ctx.ChainID(),

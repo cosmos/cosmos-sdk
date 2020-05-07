@@ -1,4 +1,6 @@
-package cli
+// +build cli_test
+
+package cli_test
 
 import (
 	"fmt"

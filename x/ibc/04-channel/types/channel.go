@@ -6,7 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state ibctypes.State, ordering ibctypes.Order, counterparty Counterparty,
+	state common.State, ordering common.Order, counterparty Counterparty,
 	hops []string, version string,
 ) Channel {
 	return Channel{
@@ -29,12 +29,12 @@ func NewChannel(
 }
 
 // GetState implements Channel interface.
-func (ch Channel) GetState() ibctypes.State {
+func (ch Channel) GetState() common.State {
 	return ch.State
 }
 
 // GetOrdering implements Channel interface.
-func (ch Channel) GetOrdering() ibctypes.Order {
+func (ch Channel) GetOrdering() common.Order {
 	return ch.Ordering
 }
 
@@ -58,7 +58,7 @@ func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
 		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}
-	if !(ch.Ordering == ibctypes.ORDERED || ch.Ordering == ibctypes.UNORDERED) {
+	if !(ch.Ordering == common.ORDERED || ch.Ordering == common.UNORDERED) {
 		return sdkerrors.Wrap(ErrInvalidChannelOrdering, ch.Ordering.String())
 	}
 	if len(ch.ConnectionHops) != 1 {
@@ -76,7 +76,7 @@ func (ch Channel) ValidateBasic() error {
 	if strings.TrimSpace(ch.Version) == "" {
 		return sdkerrors.Wrap(
 			ErrInvalidChannel,
-			sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "channel version can't be blank").Error(),
+			sdkerrors.Wrap(common.ErrInvalidVersion, "channel version can't be blank").Error(),
 		)
 	}
 	return ch.Counterparty.ValidateBasic()
@@ -122,8 +122,8 @@ func (c Counterparty) ValidateBasic() error {
 type IdentifiedChannel struct {
 	ID             string         `json:"id" yaml:"id"`
 	PortID         string         `json:"port_id" yaml:"port_id"`
-	State          ibctypes.State `json:"state" yaml:"state"`
-	Ordering       ibctypes.Order `json:"ordering" yaml:"ordering"`
+	State          common.State `json:"state" yaml:"state"`
+	Ordering       common.Order `json:"ordering" yaml:"ordering"`
 	Counterparty   Counterparty   `json:"counterparty" yaml:"counterparty"`
 	ConnectionHops []string       `json:"connection_hops" yaml:"connection_hops"`
 	Version        string         `json:"version" yaml:"version "`

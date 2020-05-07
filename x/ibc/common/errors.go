@@ -1,4 +1,4 @@
-package types
+package common
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

@@ -20,7 +20,7 @@ import (
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -70,7 +70,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	handler := transfer.NewHandler(suite.chainA.App.TransferKeeper)
 
 	// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
-	capName := ibctypes.ChannelCapabilityPath(testPort1, testChannel1)
+	capName := common.ChannelCapabilityPath(testPort1, testChannel1)
 	cap, err := suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), capName)
 	suite.Require().Nil(err, "could not create capability")
 	err = suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), cap, capName)
@@ -84,8 +84,8 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	// Setup channel from A to B
 	suite.chainA.CreateClient(suite.chainB)
-	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, ibctypes.OPEN)
-	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, ibctypes.OPEN, ibctypes.ORDERED, testConnection)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
+	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnection)
 
 	res, err = handler(ctx, msg)
 	suite.Require().Error(err)
@@ -275,7 +275,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state ibctypes.State,
+	state common.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
@@ -292,7 +292,7 @@ func (chain *TestChain) createConnection(
 // nolint: unused
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state ibctypes.State, order ibctypes.Order, connectionID string,
+	state common.State, order common.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,

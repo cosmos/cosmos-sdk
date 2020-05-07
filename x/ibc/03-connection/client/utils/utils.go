@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // QueryAllConnections returns all the connections. It _does not_ return
@@ -45,7 +45,7 @@ func QueryConnection(
 ) (types.ConnectionResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyConnection(connectionID),
+		Data:  common.KeyConnection(connectionID),
 		Prove: prove,
 	}
 
@@ -94,7 +94,7 @@ func QueryClientConnections(
 ) (types.ClientConnectionsResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  ibctypes.KeyClientConnections(clientID),
+		Data:  common.KeyClientConnections(clientID),
 		Prove: prove,
 	}
 

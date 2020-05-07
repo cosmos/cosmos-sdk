@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types/types.proto";
-import "x/ibc/types/types.proto";
+import "x/ibc/common/types.proto";
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.

@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // IBCModule defines an interface that implements all the callbacks
@@ -13,7 +13,7 @@ import (
 type IBCModule interface {
 	OnChanOpenInit(
 		ctx sdk.Context,
-		order ibctypes.Order,
+		order common.Order,
 		connectionHops []string,
 		portID string,
 		channelID string,
@@ -24,7 +24,7 @@ type IBCModule interface {
 
 	OnChanOpenTry(
 		ctx sdk.Context,
-		order ibctypes.Order,
+		order common.Order,
 		connectionHops []string,
 		portID,
 		channelID string,

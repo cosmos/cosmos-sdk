@@ -17,7 +17,7 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -144,7 +144,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + common.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, common.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, common.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, common.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, common.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -309,7 +309,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, common.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -336,7 +336,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, common.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -364,7 +364,7 @@ func validateVerificationArgs(
 ) error {
 	if cs.GetLatestHeight() < height {
 		return sdkerrors.Wrap(
-			ibctypes.ErrInvalidHeight,
+			common.ErrInvalidHeight,
 			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
 		)
 	}

@@ -10,7 +10,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // Message types for the IBC client
@@ -54,7 +54,7 @@ func NewMsgCreateClient(
 
 // Route implements sdk.Msg
 func (msg MsgCreateClient) Route() string {
-	return ibctypes.RouterKey
+	return common.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -133,7 +133,7 @@ func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpda
 
 // Route implements sdk.Msg
 func (msg MsgUpdateClient) Route() string {
-	return ibctypes.RouterKey
+	return common.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -183,7 +183,7 @@ func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddres
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
-func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }
+func (msg MsgSubmitClientMisbehaviour) Route() string { return common.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
 func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }

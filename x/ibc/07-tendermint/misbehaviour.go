@@ -11,7 +11,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -67,7 +67,7 @@ func checkMisbehaviour(
 	// check if provided height matches the headers' height
 	if height > uint64(evidence.GetHeight()) {
 		return sdkerrors.Wrapf(
-			ibctypes.ErrInvalidHeight,
+			common.ErrInvalidHeight,
 			"height > evidence header height (%d > %d)", height, evidence.GetHeight(),
 		)
 	}

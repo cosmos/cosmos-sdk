@@ -5,11 +5,11 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
@@ -33,7 +33,7 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 // a module on another chain.
 func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
-	order ibctypes.Order,
+	order common.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -52,7 +52,7 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() == ibctypes.UNINITIALIZED {
+	if connectionEnd.GetState() == common.UNINITIALIZED {
 		return nil, sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection state cannot be UNINITIALIZED",
@@ -63,10 +63,10 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
-	channel := types.NewChannel(ibctypes.INIT, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(common.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	capKey, err := k.scopedKeeper.NewCapability(ctx, common.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
@@ -82,7 +82,7 @@ func (k Keeper) ChanOpenInit(
 // handshake initiated by a module on another chain.
 func (k Keeper) ChanOpenTry(
 	ctx sdk.Context,
-	order ibctypes.Order,
+	order common.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -95,7 +95,7 @@ func (k Keeper) ChanOpenTry(
 ) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
-	if found && !(previousChannel.State == ibctypes.INIT &&
+	if found && !(previousChannel.State == common.INIT &&
 		previousChannel.Ordering == order &&
 		previousChannel.Counterparty.PortID == counterparty.PortID &&
 		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
@@ -113,7 +113,7 @@ func (k Keeper) ChanOpenTry(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != common.OPEN {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -122,7 +122,7 @@ func (k Keeper) ChanOpenTry(
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(ibctypes.TRYOPEN, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(common.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
@@ -134,7 +134,7 @@ func (k Keeper) ChanOpenTry(
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.INIT, channel.Ordering, expectedCounterparty,
+		common.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
 
@@ -147,7 +147,7 @@ func (k Keeper) ChanOpenTry(
 
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	capKey, err := k.scopedKeeper.NewCapability(ctx, common.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
@@ -175,14 +175,14 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if !(channel.State == ibctypes.INIT || channel.State == ibctypes.TRYOPEN) {
+	if !(channel.State == common.INIT || channel.State == common.TRYOPEN) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state should be INIT or TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -191,7 +191,7 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != common.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -207,7 +207,7 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.TRYOPEN, channel.Ordering, expectedCounterparty,
+		common.TRYOPEN, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
 
@@ -219,7 +219,7 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
-	channel.State = ibctypes.OPEN
+	channel.State = common.OPEN
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
@@ -242,14 +242,14 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State != ibctypes.TRYOPEN {
+	if channel.State != common.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not TRYOPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -258,7 +258,7 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != common.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -273,7 +273,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.OPEN, channel.Ordering, counterparty,
+		common.OPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -285,7 +285,7 @@ func (k Keeper) ChanOpenConfirm(
 		return err
 	}
 
-	channel.State = ibctypes.OPEN
+	channel.State = common.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID)
@@ -305,7 +305,7 @@ func (k Keeper) ChanCloseInit(
 	channelID string,
 	chanCap *capability.Capability,
 ) error {
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -314,7 +314,7 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State == ibctypes.CLOSED {
+	if channel.State == common.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
@@ -323,7 +323,7 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != common.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -332,7 +332,7 @@ func (k Keeper) ChanCloseInit(
 
 	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State)
 
-	channel.State = ibctypes.CLOSED
+	channel.State = common.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil
@@ -348,7 +348,7 @@ func (k Keeper) ChanCloseConfirm(
 	proofInit commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -357,7 +357,7 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State == ibctypes.CLOSED {
+	if channel.State == common.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
@@ -366,7 +366,7 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != common.OPEN {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
@@ -381,7 +381,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		ibctypes.CLOSED, channel.Ordering, counterparty,
+		common.CLOSED, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -395,7 +395,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State)
 
-	channel.State = ibctypes.CLOSED
+	channel.State = common.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil

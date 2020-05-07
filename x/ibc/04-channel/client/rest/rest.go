@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 const (
@@ -27,7 +27,7 @@ type ChannelOpenInitReq struct {
 	PortID                string         `json:"port_id" yaml:"port_id"`
 	ChannelID             string         `json:"channel_id" yaml:"channel_id"`
 	Version               string         `json:"version" yaml:"version"`
-	ChannelOrder          ibctypes.Order `json:"channel_order" yaml:"channel_order"`
+	ChannelOrder          common.Order `json:"channel_order" yaml:"channel_order"`
 	ConnectionHops        []string       `json:"connection_hops" yaml:"connection_hops"`
 	CounterpartyPortID    string         `json:"counterparty_port_id" yaml:"counterparty_port_id"`
 	CounterpartyChannelID string         `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`
@@ -39,7 +39,7 @@ type ChannelOpenTryReq struct {
 	PortID                string                      `json:"port_id" yaml:"port_id"`
 	ChannelID             string                      `json:"channel_id" yaml:"channel_id"`
 	Version               string                      `json:"version" yaml:"version"`
-	ChannelOrder          ibctypes.Order              `json:"channel_order" yaml:"channel_order"`
+	ChannelOrder          common.Order              `json:"channel_order" yaml:"channel_order"`
 	ConnectionHops        []string                    `json:"connection_hops" yaml:"connection_hops"`
 	CounterpartyPortID    string                      `json:"counterparty_port_id" yaml:"counterparty_port_id"`
 	CounterpartyChannelID string                      `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`

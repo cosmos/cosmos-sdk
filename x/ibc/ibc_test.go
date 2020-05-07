@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 	channel1 = "firstchannel"
 	channel2 = "secondchannel"
 
-	channelOrder   = ibctypes.ORDERED
+	channelOrder   = common.ORDERED
 	channelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2

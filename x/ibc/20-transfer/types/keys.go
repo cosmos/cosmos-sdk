@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 const (
@@ -49,5 +49,5 @@ func GetDenomPrefix(portID, channelID string) string {
 
 // GetModuleAccountName returns the IBC transfer module account name for supply
 func GetModuleAccountName() string {
-	return fmt.Sprintf("%s/%s", ibctypes.ModuleName, ModuleName)
+	return fmt.Sprintf("%s/%s", common.ModuleName, ModuleName)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // QueryAllClientStates returns all the light client states. It _does not_ return
@@ -44,7 +44,7 @@ func QueryClientState(
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  prefixClientKey(clientID, ibctypes.KeyClientState()),
+		Data:  prefixClientKey(clientID, common.KeyClientState()),
 		Prove: prove,
 	}
 
@@ -72,7 +72,7 @@ func QueryConsensusState(
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  prefixClientKey(clientID, ibctypes.KeyConsensusState(height)),
+		Data:  prefixClientKey(clientID, common.KeyConsensusState(height)),
 		Prove: prove,
 	}
 

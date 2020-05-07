@@ -19,7 +19,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -39,7 +39,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = ibctypes.ORDERED
+	testChannelOrder   = common.ORDERED
 	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	channel := types.NewChannel(
-		ibctypes.INIT, testChannelOrder,
+		common.INIT, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
@@ -92,15 +92,15 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.NewChannel(
-		ibctypes.INIT, testChannelOrder,
+		common.INIT, testChannelOrder,
 		counterparty3, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel2 := types.NewChannel(
-		ibctypes.INIT, testChannelOrder,
+		common.INIT, testChannelOrder,
 		counterparty1, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel3 := types.NewChannel(
-		ibctypes.CLOSED, testChannelOrder,
+		common.CLOSED, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 
@@ -238,7 +238,7 @@ func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
 // nolint: unused
 func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Path:   fmt.Sprintf("store/%s/key", common.StoreKey),
 		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
@@ -402,7 +402,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state ibctypes.State,
+	state common.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
@@ -418,7 +418,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state ibctypes.State, order ibctypes.Order, connectionID string,
+	state common.State, order common.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := types.NewChannel(state, order, counterparty,

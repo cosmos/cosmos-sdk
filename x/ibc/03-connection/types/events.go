@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // IBC connection events
@@ -20,5 +20,5 @@ var (
 	EventTypeConnectionOpenAck     = MsgConnectionOpenAck{}.Type()
 	EventTypeConnectionOpenConfirm = MsgConnectionOpenConfirm{}.Type()
 
-	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
+	AttributeValueCategory = fmt.Sprintf("%s_%s", common.ModuleName, SubModuleName)
 )

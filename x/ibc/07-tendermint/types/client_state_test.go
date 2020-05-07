@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 const (
@@ -141,7 +141,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connection.NewConnectionEnd(ibctypes.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	conn := connection.NewConnectionEnd(common.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name           string
@@ -224,7 +224,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 
 func (suite *TendermintTestSuite) TestVerifyChannelState() {
 	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(ibctypes.OPEN, ibctypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	ch := channel.NewChannel(common.OPEN, common.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name           string

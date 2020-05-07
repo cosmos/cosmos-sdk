@@ -16,7 +16,7 @@ type aminoCompat struct {
 func (any Any) MarshalAmino() ([]byte, error) {
 	ac := any.aminoCompat
 	if ac == nil {
-		return nil, fmt.Errorf("can't amino unmarshal")
+		return nil, fmt.Errorf("can't amino unmarshal %+v", any)
 	}
 	return ac.bz, ac.err
 }
@@ -32,7 +32,7 @@ func (any *Any) UnmarshalAmino(bz []byte) error {
 func (any Any) MarshalJSON() ([]byte, error) {
 	ac := any.aminoCompat
 	if ac == nil {
-		return nil, fmt.Errorf("can't JSON marshal")
+		return nil, fmt.Errorf("can't JSON marshal %+v", any)
 	}
 	return ac.jsonBz, ac.err
 }

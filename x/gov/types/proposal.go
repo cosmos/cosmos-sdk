@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -90,6 +88,8 @@ func (m Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
+var _ types.UnpackInterfacesMessage = Proposals{}
+
 // Equal returns true if two slices (order-dependant) of proposals are equal.
 func (p Proposals) Equal(other Proposals) bool {
 	if len(p) != len(other) {
@@ -114,6 +114,16 @@ func (p Proposals) String() string {
 			prop.ProposalType(), prop.GetTitle())
 	}
 	return strings.TrimSpace(out)
+}
+
+func (p Proposals) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, x := range p {
+		err := x.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type (

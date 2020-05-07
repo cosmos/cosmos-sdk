@@ -63,6 +63,7 @@ const (
 	FlagMaxOpenConnections = "max-open"
 	FlagRPCReadTimeout     = "read-timeout"
 	FlagRPCWriteTimeout    = "write-timeout"
+	FlagRPCMaxBodyBytes    = "max-body-bytes"
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 	FlagProve              = "prove"
@@ -148,6 +149,7 @@ func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().Uint(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
 	cmd.Flags().Uint(FlagRPCReadTimeout, 10, "The RPC read timeout (in seconds)")
 	cmd.Flags().Uint(FlagRPCWriteTimeout, 10, "The RPC write timeout (in seconds)")
+	cmd.Flags().Uint(FlagRPCMaxBodyBytes, 1000000, "The RPC max body bytes (in MB)")
 	cmd.Flags().Bool(FlagUnsafeCORS, false, "Allows CORS requests from all domains. For development purposes only, use it at your own risk.")
 
 	return cmd

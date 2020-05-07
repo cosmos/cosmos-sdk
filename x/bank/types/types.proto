@@ -50,11 +50,34 @@ message MsgMultiSend {
 
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
+//message Supply {
+//  option (gogoproto.equal)            = true;
+//  option (gogoproto.goproto_getters)  = false;
+//  option (gogoproto.goproto_stringer) = false;
+//
+//  repeated cosmos_sdk.v1.Coin total = 1
+//      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+//}
+
+//
+//message Supply {
+//  option (gogoproto.equal)             = true;
+//  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";
+//
+//  // sum defines a set of all acceptable concrete Supply implementations.
+//  oneof sum {
+//    cosmos_sdk.x.bank.v1.Supply supply = 1;
+//  }
+//}
+
 message Supply {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  repeated cosmos_sdk.v1.Coin total = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos_sdk.v1.Coin total = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"total\""
+  ];
 }

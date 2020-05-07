@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,13 +41,13 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	cdc        types.Codec
+	cdc        codec.Marshaler
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
 
 func NewBaseKeeper(
-	cdc types.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
+	cdc codec.Marshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
 	blacklistedAddrs map[string]bool,
 ) BaseKeeper {
 

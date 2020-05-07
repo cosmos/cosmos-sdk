@@ -385,33 +385,33 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
 	if req.Snapshot == nil {
 		app.logger.Error("Received nil snapshot")
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
 
 	snapshot, err := snapshots.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
 		app.logger.Error("Failed to decode snapshot metadata", "err", err)
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
 	err = app.snapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}
 
 	case errors.Is(err, snapshots.ErrUnknownFormat):
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject_format}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
 
 	case errors.Is(err, snapshots.ErrInvalidMetadata):
 		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
 			"format", req.Snapshot.Format, "err", err.Error())
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_reject}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 
 	default:
 		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
 			"format", req.Snapshot.Format, "err", err.Error())
 		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
 		// so we ask Tendermint to abort all snapshot restoration.
-		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
 	}
 }
 
@@ -420,20 +420,20 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
-		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_accept}
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
 
 	case errors.Is(err, snapshots.ErrChunkHashMismatch):
 		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
 			"chunk", req.Index, "sender", req.Sender, "err", err)
 		return abci.ResponseApplySnapshotChunk{
-			Result:        abci.ResponseApplySnapshotChunk_retry,
+			Result:        abci.ResponseApplySnapshotChunk_RETRY,
 			RefetchChunks: []uint32{req.Index},
 			RejectSenders: []string{req.Sender},
 		}
 
 	default:
 		app.logger.Error("Failed to restore snapshot", "err", err.Error())
-		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_abort}
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
 	}
 }
 

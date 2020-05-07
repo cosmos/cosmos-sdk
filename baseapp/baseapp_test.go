@@ -1615,19 +1615,19 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 		snapshot *abci.Snapshot
 		result   abci.ResponseOfferSnapshot_Result
 	}{
-		"nil snapshot": {nil, abci.ResponseOfferSnapshot_reject},
+		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT},
 		"invalid format": {&abci.Snapshot{
 			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_reject_format},
+		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
 		"incorrect chunk count": {&abci.Snapshot{
 			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_reject},
+		}, abci.ResponseOfferSnapshot_REJECT},
 		"no chunks": {&abci.Snapshot{
 			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
-		}, abci.ResponseOfferSnapshot_reject},
+		}, abci.ResponseOfferSnapshot_REJECT},
 		"invalid metadata serialization": {&abci.Snapshot{
 			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
-		}, abci.ResponseOfferSnapshot_reject},
+		}, abci.ResponseOfferSnapshot_REJECT},
 	}
 	for name, tc := range testcases {
 		tc := tc
@@ -1645,7 +1645,7 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 		Hash:     []byte{1, 2, 3},
 		Metadata: metadata,
 	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
 
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   2,
@@ -1654,7 +1654,7 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 		Hash:     []byte{1, 2, 3},
 		Metadata: metadata,
 	}})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_abort}, resp)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
 }
 
 func TestApplySnapshotChunk(t *testing.T) {
@@ -1674,7 +1674,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 
 	// Begin a snapshot restoration in the target
 	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
-	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_accept}, respOffer)
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
 
 	// We should be able to pass an invalid chunk and get a verify failure, before reapplying it.
 	respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
@@ -1683,7 +1683,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 		Sender: "sender",
 	})
 	require.Equal(t, abci.ResponseApplySnapshotChunk{
-		Result:        abci.ResponseApplySnapshotChunk_retry,
+		Result:        abci.ResponseApplySnapshotChunk_RETRY,
 		RefetchChunks: []uint32{0},
 		RejectSenders: []string{"sender"},
 	}, respApply)
@@ -1701,7 +1701,7 @@ func TestApplySnapshotChunk(t *testing.T) {
 			Chunk: respChunk.Chunk,
 		})
 		require.Equal(t, abci.ResponseApplySnapshotChunk{
-			Result: abci.ResponseApplySnapshotChunk_accept,
+			Result: abci.ResponseApplySnapshotChunk_ACCEPT,
 		}, respApply)
 	}
 

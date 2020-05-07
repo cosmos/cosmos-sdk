@@ -101,8 +101,8 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 
 			cfg := rpcserver.DefaultConfig()
 			cfg.MaxOpenConnections = viper.GetInt(flags.FlagMaxOpenConnections)
-			cfg.ReadTimeout = time.Duration(viper.GetUint(flags.FlagRPCReadTimeout)) * time.Second
-			cfg.WriteTimeout = time.Duration(viper.GetUint(flags.FlagRPCWriteTimeout)) * time.Second
+			cfg.ReadTimeout = time.Duration(viper.GetInt64(flags.FlagRPCReadTimeout)) * time.Second
+			cfg.WriteTimeout = time.Duration(viper.GetInt64(flags.FlagRPCWriteTimeout)) * time.Second
 			cfg.MaxBodyBytes = viper.GetInt64(flags.FlagRPCMaxBodyBytes)
 
 			// start the rest server and return error if one exists

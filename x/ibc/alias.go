@@ -5,10 +5,12 @@ package ibc
 // aliases generated for the following subdirectories:
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/keeper
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/common
+// ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/types
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -20,10 +22,14 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper  = keeper.NewKeeper
-	NewQuerier = keeper.NewQuerier
+	NewKeeper           = keeper.NewKeeper
+	NewQuerier          = keeper.NewQuerier
+	RegisterCodec       = types.RegisterCodec
+	RegisterInterfaces  = types.RegisterInterfaces
+	DefaultGenesisState = types.DefaultGenesisState
 )
 
 type (
-	Keeper = keeper.Keeper
+	Keeper       = keeper.Keeper
+	GenesisState = types.GenesisState
 )

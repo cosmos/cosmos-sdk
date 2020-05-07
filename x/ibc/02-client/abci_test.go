@@ -9,9 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 type ClientTestSuite struct {
@@ -36,24 +34,19 @@ func TestClientTestSuite(t *testing.T) {
 }
 
 func (suite *ClientTestSuite) TestBeginBlocker() {
-	localHostClient := localhosttypes.NewClientState(
-		suite.app.IBCKeeper.ClientKeeper.ClientStore(suite.ctx, exported.ClientTypeLocalHost),
-		suite.ctx.ChainID(),
-		suite.ctx.BlockHeight(),
-	)
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, localHostClient, nil)
-	suite.Require().NoError(err)
-
-	// increase height
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
 
 	var prevHeight uint64
 	for i := 0; i < 10; i++ {
 		prevHeight = localHostClient.GetLatestHeight()
-		suite.Require().NotPanics(func() {
-			client.BeginBlocker(suite.ctx, suite.app.IBCKeeper.ClientKeeper)
-		}, "BeginBlocker shouldn't panic")
-		localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, localHostClient.GetID())
+		_ = suite.app.Commit()
+		res := suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.ctx.BlockHeight() + 1}})
+		suite.Require().NotNil(res)
+
+		suite.ctx = suite.ctx.WithBlockHeight(suite.app.LastBlockHeight() + 1)
+
+		localHostClient, found = suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, localHostClient.GetID())
 		suite.Require().True(found)
 		suite.Require().Equal(prevHeight+1, localHostClient.GetLatestHeight())
 	}

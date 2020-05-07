@@ -51,13 +51,6 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		return nil, err
 	}
 
-	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
-	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
-
-	for i, signer := range msg.GetSigners() {
-		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeCreateClient,
@@ -66,7 +59,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			attributes...,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 		),
 	})
 
@@ -82,24 +75,12 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClie
 		return nil, err
 	}
 
-	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
-	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
-
-	for i, signer := range msg.GetSigners() {
-		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
-	}
-
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", msg.GetClientID(), clientState.GetLatestHeight()))
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			EventTypeUpdateClient,
-			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
-			sdk.NewAttribute(AttrbuteKeyClientType, clientState.ClientType().String()),
-		),
-		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			attributes...,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 		),
 	})
 

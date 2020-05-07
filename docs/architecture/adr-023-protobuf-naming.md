@@ -134,6 +134,8 @@ registry should be created to reserve and index top-level package names used
 within the Cosmos ecosystem. Because the Cosmos SDK is intended to provide
 the top-level types for the Cosmos project, the top-level package name `cosmos`
 is recommended for usage within the Cosmos SDK instead of the longer `cosmos_sdk`.
+[ICS](https://github.com/cosmos/ics) specifications could consider a
+short top-level package like `ics23` based upon the standard number.
 
 #### Limit sub-package depth
 

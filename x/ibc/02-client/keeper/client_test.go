@@ -184,9 +184,6 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 		suite.ctx.BlockHeight(),
 	)
 
-	localhostClient, err := suite.keeper.CreateClient(suite.ctx, localhostClient, nil)
-	suite.Require().NoError(err, err)
-
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)

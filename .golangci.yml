@@ -34,8 +34,8 @@ linters:
     - unused
     - unparam
     - misspell
-    - wsl
-    - nolintlint
+    # - wsl
+    # - nolintlint
 
 issues:
   exclude-rules:

@@ -107,6 +107,21 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 	}
 
+	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
+
+	// Emit events in keeper so antehandler emits them as well
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUpdateClient,
+			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
 	return clientState, nil
 }
 

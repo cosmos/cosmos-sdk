@@ -282,8 +282,8 @@ func (m *MsgSubmitProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitProposal proto.InternalMessageInfo
 
-// Proposal defines the application-level concrete proposal type used in governance
-// proposals.
+// Proposal defines the application-level concrete proposal type used in
+// governance proposals.
 type Proposal struct {
 	types3.ProposalBase `protobuf:"bytes,1,opt,name=base,proto3,embedded=base" json:"base"`
 	Content             Content `protobuf:"bytes,2,opt,name=content,proto3" json:"content"`
@@ -332,7 +332,8 @@ func (m *Proposal) GetContent() Content {
 // Content defines the application-level allowed Content to be included in a
 // governance proposal.
 type Content struct {
-	// sum defines a set of all acceptable concrete governance proposal Content types.
+	// sum defines a set of all acceptable concrete governance proposal Content
+	// types.
 	//
 	// Types that are valid to be assigned to Sum:
 	//	*Content_Text

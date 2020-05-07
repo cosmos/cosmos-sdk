@@ -38,6 +38,7 @@ $ %s query ibc channel end [port-id] [channel-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(channelRes.ProofHeight))
 			return cliCtx.PrintOutput(channelRes)
 		},
 	}

@@ -53,7 +53,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 			root := types.NewMerkleRoot(tc.root)
 			path := types.NewMerklePath(tc.pathArr)
 
-			err := proof.VerifyMembership(root, path, tc.value)
+			err := proof.VerifyMembership(&root, path, tc.value)
 
 			if tc.shouldPass {
 				// nolint: scopelint
@@ -108,7 +108,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 			root := types.NewMerkleRoot(tc.root)
 			path := types.NewMerklePath(tc.pathArr)
 
-			err := proof.VerifyNonMembership(root, path)
+			err := proof.VerifyNonMembership(&root, path)
 
 			if tc.shouldPass {
 				// nolint: scopelint

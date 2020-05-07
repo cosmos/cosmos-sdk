@@ -92,12 +92,16 @@ func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 	keeper *Keeper
+
+	// create localhost by default
+	createLocalhost bool
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(k *Keeper) AppModule {
+func NewAppModule(k *Keeper, createLocalhost bool) AppModule {
 	return AppModule{
-		keeper: k,
+		keeper:          k,
+		createLocalhost: createLocalhost,
 	}
 }
 
@@ -139,7 +143,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
 	}
-	InitGenesis(ctx, *am.keeper, gs)
+	InitGenesis(ctx, *am.keeper, am.createLocalhost, gs)
 	return []abci.ValidatorUpdate{}
 }
 

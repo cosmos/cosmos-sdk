@@ -276,7 +276,7 @@ func NewSimApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		ibc.NewAppModule(app.IBCKeeper),
+		ibc.NewAppModule(app.IBCKeeper, true),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 	)

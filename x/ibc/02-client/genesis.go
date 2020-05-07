@@ -2,11 +2,13 @@ package client
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // InitGenesis initializes the ibc client submodule's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, createLocalhost bool, gs GenesisState) {
 	for _, client := range gs.Clients {
 		k.SetClientState(ctx, client)
 		k.SetClientType(ctx, client.GetID(), client.ClientType())
@@ -15,6 +17,27 @@ func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 		for _, consState := range cs.ConsensusStates {
 			k.SetClientConsensusState(ctx, cs.ClientID, consState.GetHeight(), consState)
 		}
+	}
+
+	if !createLocalhost {
+		return
+	}
+
+	// create localhost by default
+	if _, found := k.GetClientState(ctx, exported.ClientTypeLocalHost); found {
+		return
+	}
+
+	// msg client id is always "localhost"
+	clientState := localhosttypes.NewClientState(
+		k.ClientStore(ctx, exported.ClientTypeLocalHost),
+		ctx.ChainID(),
+		ctx.BlockHeight(),
+	)
+
+	_, err := k.CreateClient(ctx, clientState, nil)
+	if err != nil {
+		panic(err)
 	}
 }
 

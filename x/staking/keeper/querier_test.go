@@ -424,6 +424,53 @@ func TestQueryDelegation(t *testing.T) {
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 }
 
+func TestQueryValidatorDelegations_Pagination(t *testing.T) {
+	cdc, app, ctx := createTestInput()
+	//params := app.StakingKeeper.GetParams(ctx)
+	querier := staking.NewQuerier(app.StakingKeeper)
+
+	addrs := simapp.AddTestAddrs(app, ctx, 100, sdk.TokensFromConsensusPower(10000))
+	pubKeys := simapp.CreateTestPubKeys(1)
+
+	valAddress := sdk.ValAddress(addrs[0])
+
+	val1 := types.NewValidator(valAddress, pubKeys[0], types.Description{})
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+
+	// Create Validators and Delegation
+	for _, addr := range addrs {
+		delTokens := sdk.TokensFromConsensusPower(20)
+		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, sdk.Unbonded, val1, true)
+		require.NoError(t, err)
+	}
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// Query Delegator bonded validators
+	queryParams := types.NewQueryDelegatorParams(addrs[0])
+	bz, errRes := cdc.MarshalJSON(queryParams)
+	require.NoError(t, errRes)
+
+	// Query valAddress delegations
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, 0, 0))
+	require.NoError(t, errRes)
+
+	query := abci.RequestQuery{
+		Path: "custom/staking/validatorDelegations",
+		Data: bz,
+	}
+
+	res, err := querier(ctx, []string{types.QueryValidatorDelegations}, query)
+	require.NoError(t, err)
+
+	var delegationsRes types.DelegationResponses
+	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
+	require.NoError(t, errRes)
+	require.Len(t, delegationsRes, 100)
+}
+
 func TestQueryRedelegations(t *testing.T) {
 	cdc, app, ctx := createTestInput()
 	querier := staking.NewQuerier(app.StakingKeeper)

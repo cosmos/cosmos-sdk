@@ -285,3 +285,36 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 
 	return nil
 }
+
+// Account is an interface used to store coins at a given address within state.
+// It presumes a notion of sequence numbers for replay protection,
+// a notion of account numbers for replay protection for previously pruned accounts,
+// and a pubkey for authentication purposes.
+//
+// Many complex conditions can be used in the concrete struct which implements Account.
+type AccountI interface {
+	GetAddress() sdk.AccAddress
+	SetAddress(sdk.AccAddress) error // errors if already set.
+
+	GetPubKey() crypto.PubKey // can return nil.
+	SetPubKey(crypto.PubKey) error
+
+	GetAccountNumber() uint64
+	SetAccountNumber(uint64) error
+
+	GetSequence() uint64
+	SetSequence(uint64) error
+
+	// Ensure that account implements stringer
+	String() string
+}
+
+// ModuleAccountI defines an account interface for modules that hold tokens in
+// an escrow.
+type ModuleAccountI interface {
+	AccountI
+
+	GetName() string
+	GetPermissions() []string
+	HasPermission(string) bool
+}

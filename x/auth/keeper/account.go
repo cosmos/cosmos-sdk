@@ -52,7 +52,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc exported.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 
-	bz, err := ak.cdc.MarshalAccount(acc)
+	bz, err := ak.MarshalAccount(acc)
 	if err != nil {
 		panic(err)
 	}

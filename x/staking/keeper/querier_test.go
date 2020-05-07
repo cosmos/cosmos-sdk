@@ -469,6 +469,38 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.NoError(t, errRes)
 	require.Len(t, delegationsRes, 100)
+
+	// Query valAddress delegations with pagination
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, 1, 75))
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "custom/staking/validatorDelegations",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryValidatorDelegations}, query)
+	require.NoError(t, err)
+
+	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
+	require.NoError(t, errRes)
+	require.Len(t, delegationsRes, 75)
+
+	// Query valAddress delegations with pagination second page
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, 2, 75))
+	require.NoError(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "custom/staking/validatorDelegations",
+		Data: bz,
+	}
+
+	res, err = querier(ctx, []string{types.QueryValidatorDelegations}, query)
+	require.NoError(t, err)
+
+	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
+	require.NoError(t, errRes)
+	require.Len(t, delegationsRes, 25)
 }
 
 func TestQueryRedelegations(t *testing.T) {

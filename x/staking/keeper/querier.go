@@ -128,6 +128,15 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
 
+	if params.Limit > 0 || params.Page > 0 {
+		start, end := client.Paginate(len(delegations), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
+		if start < 0 || end < 0 {
+			delegations = []types.Delegation{}
+		} else {
+			delegations = delegations[start:end]
+		}
+	}
+
 	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
 	if err != nil {
 		return nil, err

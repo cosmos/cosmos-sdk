@@ -121,7 +121,7 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		params := types.NewQueryValidatorParams(validatorAddr)
+		params := types.NewQueryValidatorParams(validatorAddr, 0, 0)
 
 		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {

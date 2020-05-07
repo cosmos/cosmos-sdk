@@ -147,7 +147,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, 0, 0))
 			if err != nil {
 				return err
 			}
@@ -328,7 +328,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, 0, 0))
 			if err != nil {
 				return err
 			}

@@ -55,7 +55,7 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"parameters"}, query)
 	require.NoError(t, err)
 
-	queryValParams := types.NewQueryValidatorParams(addrVal1)
+	queryValParams := types.NewQueryValidatorParams(addrVal1, 0, 0)
 	bz, errRes := cdc.MarshalJSON(queryValParams)
 	require.NoError(t, errRes)
 
@@ -178,7 +178,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query each validator
 	for _, validator := range validators {
-		queryParams := types.NewQueryValidatorParams(validator.OperatorAddress)
+		queryParams := types.NewQueryValidatorParams(validator.OperatorAddress, 0, 0)
 		bz, err := cdc.MarshalJSON(queryParams)
 		require.NoError(t, err)
 
@@ -323,7 +323,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Query validator delegations
-	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1))
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1, 0, 0))
 	require.NoError(t, errRes)
 
 	query = abci.RequestQuery{
@@ -474,7 +474,7 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Len(t, redel.Entries, len(redelRes[0].Entries))
 
 	// validator redelegations
-	queryValidatorParams := types.NewQueryValidatorParams(val1.GetOperator())
+	queryValidatorParams := types.NewQueryValidatorParams(val1.GetOperator(), 0, 0)
 	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
 	require.NoError(t, errRes)
 

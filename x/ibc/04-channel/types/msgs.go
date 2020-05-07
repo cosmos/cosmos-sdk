@@ -109,7 +109,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
@@ -170,7 +170,7 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof try cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -227,7 +227,7 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -329,7 +329,7 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -374,7 +374,7 @@ func (msg MsgPacket) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -435,7 +435,7 @@ func (msg MsgTimeout) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -490,7 +490,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

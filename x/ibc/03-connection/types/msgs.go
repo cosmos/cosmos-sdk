@@ -103,11 +103,11 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
 	}
 	if len(msg.CounterpartyVersions) == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidVersion, "missing counterparty versions")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing counterparty versions")
 	}
 	for _, version := range msg.CounterpartyVersions {
 		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(common.ErrInvalidVersion, "version can't be blank")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
 	if msg.ProofInit.IsEmpty() || msg.ProofConsensus.IsEmpty() {
@@ -120,10 +120,10 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "consensus height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -176,7 +176,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if strings.TrimSpace(msg.Version) == "" {
-		return sdkerrors.Wrap(common.ErrInvalidVersion, "version can't be blank")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 	}
 	if msg.ProofTry.IsEmpty() || msg.ProofConsensus.IsEmpty() {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
@@ -188,10 +188,10 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "consensus height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -246,7 +246,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "proof height must be > 0")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

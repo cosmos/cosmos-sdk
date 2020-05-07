@@ -57,7 +57,7 @@ func (k Keeper) ConnOpenTry(
 	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
 ) error {
 	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "invalid consensus height")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
@@ -132,7 +132,7 @@ func (k Keeper) ConnOpenAck(
 ) error {
 	// Check that chainB client hasn't stored invalid height
 	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(common.ErrInvalidHeight, "invalid consensus height")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
 	}
 
 	// Retrieve connection
@@ -152,7 +152,7 @@ func (k Keeper) ConnOpenAck(
 	// Check that ChainB's proposed version is one of chainA's accepted versions
 	if types.LatestVersion(connection.Versions) != version {
 		return sdkerrors.Wrapf(
-			common.ErrInvalidVersion,
+			sdkerrors.ErrInvalidVersion,
 			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
 		)
 	}

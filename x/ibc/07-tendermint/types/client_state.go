@@ -364,7 +364,7 @@ func validateVerificationArgs(
 ) error {
 	if cs.GetLatestHeight() < height {
 		return sdkerrors.Wrap(
-			common.ErrInvalidHeight,
+			sdkerrors.ErrInvalidHeight,
 			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
 		)
 	}

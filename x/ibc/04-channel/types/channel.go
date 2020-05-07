@@ -76,7 +76,7 @@ func (ch Channel) ValidateBasic() error {
 	if strings.TrimSpace(ch.Version) == "" {
 		return sdkerrors.Wrap(
 			ErrInvalidChannel,
-			sdkerrors.Wrap(common.ErrInvalidVersion, "channel version can't be blank").Error(),
+			sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "channel version can't be blank").Error(),
 		)
 	}
 	return ch.Counterparty.ValidateBasic()

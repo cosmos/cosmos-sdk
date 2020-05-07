@@ -60,11 +60,11 @@ func (c ConnectionEnd) ValidateBasic() error {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}
 	if len(c.Versions) == 0 {
-		return sdkerrors.Wrap(common.ErrInvalidVersion, "missing connection versions")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing connection versions")
 	}
 	for _, version := range c.Versions {
 		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(common.ErrInvalidVersion, "version can't be blank")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
 	return c.Counterparty.ValidateBasic()

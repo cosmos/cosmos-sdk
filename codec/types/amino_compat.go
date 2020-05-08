@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gogo/protobuf/proto"
+
 	amino "github.com/tendermint/go-amino"
 )
 
@@ -67,7 +69,19 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
-	any.cachedValue = val
+	if m, ok := val.(proto.Message); ok {
+		err := any.Pack(m)
+		if err != nil {
+			return err
+		}
+	} else {
+		any.cachedValue = val
+	}
+
+	// this is necessary for tests that use reflect.DeepEqual and compare
+	// proto vs amino marshaled values
+	any.aminoCompat = nil
+
 	return nil
 }
 
@@ -114,7 +128,19 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
-	any.cachedValue = val
+	if m, ok := val.(proto.Message); ok {
+		err := any.Pack(m)
+		if err != nil {
+			return err
+		}
+	} else {
+		any.cachedValue = val
+	}
+
+	// this is necessary for tests that use reflect.DeepEqual and compare
+	// proto vs amino marshaled values
+	any.aminoCompat = nil
+
 	return nil
 }
 

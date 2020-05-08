@@ -112,6 +112,10 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 }
 
 func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
+	if len(any.Value) == 0 || any.TypeUrl == "" {
+		return nil
+	}
+
 	rv := reflect.ValueOf(iface)
 	if rv.Kind() != reflect.Ptr {
 		return fmt.Errorf("UnpackAny expects a pointer")

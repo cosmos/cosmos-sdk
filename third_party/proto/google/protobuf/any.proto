@@ -156,7 +156,6 @@ message Any {
   bytes value = 2;
 
   option (gogoproto.typedecl) = false;
-  option (gogoproto.equal) = false;
 }
 
 option (gogoproto.goproto_registration) = false;

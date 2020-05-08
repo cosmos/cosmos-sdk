@@ -31,7 +31,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 						localhosttypes.NewClientState(suite.store, "chaindID", 10),
 					},
-					[]client.ClientConsensusStates{
+					[]client.ConsensusStates{
 						client.NewClientConsensusStates(
 							clientID,
 							[]exported.ConsensusState{
@@ -43,10 +43,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					},
 				),
 				ConnectionGenesis: connection.NewGenesisState(
-					[]connection.ConnectionEnd{
+					[]connection.End{
 						connection.NewConnectionEnd(ibctypes.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
-					[]connection.ConnectionPaths{
+					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
 					},
 				),
@@ -94,10 +94,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
-					[]connection.ConnectionEnd{
+					[]connection.End{
 						connection.NewConnectionEnd(ibctypes.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
-					[]connection.ConnectionPaths{
+					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
 					},
 				),

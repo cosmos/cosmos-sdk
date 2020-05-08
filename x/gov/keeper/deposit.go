@@ -12,7 +12,7 @@ import (
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.DepositKey(proposalID, depositorAddr))
-	if bz == nil { //nolint:unparam
+	if bz == nil {
 		return deposit, false
 	}
 

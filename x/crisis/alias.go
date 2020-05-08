@@ -1,7 +1,5 @@
 package crisis
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"

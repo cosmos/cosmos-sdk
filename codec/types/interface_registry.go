@@ -84,7 +84,11 @@ func NewInterfaceRegistry() InterfaceRegistry {
 }
 
 func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
-	registry.interfaceNames[protoName] = reflect.TypeOf(iface)
+	typ := reflect.TypeOf(iface)
+	if typ.Elem().Kind() != reflect.Interface {
+		panic(fmt.Errorf("%T is not an interface type", iface))
+	}
+	registry.interfaceNames[protoName] = typ
 	registry.RegisterImplementations(iface, impls...)
 }
 
@@ -98,7 +102,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	for _, impl := range impls {
 		implType := reflect.TypeOf(impl)
 		if !implType.AssignableTo(ityp) {
-			panic(fmt.Errorf("type %T doesn't actually implement interface %T", implType, ityp))
+			panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
 		}
 
 		imap["/"+proto.MessageName(impl)] = implType
@@ -125,7 +129,7 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	imap, found := registry.interfaceImpls[rt]
 	if !found {
-		return fmt.Errorf("no registered implementations of interface type %T", iface)
+		return fmt.Errorf("no registered implementations of type %+v", rt)
 	}
 
 	typ, found := imap[any.TypeUrl]

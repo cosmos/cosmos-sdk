@@ -3,13 +3,13 @@
 package cli_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	cli "github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 )
 
 func TestCLISlashingGetParams(t *testing.T) {

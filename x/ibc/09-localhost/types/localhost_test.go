@@ -8,9 +8,9 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
@@ -20,14 +20,17 @@ const (
 type LocalhostTestSuite struct {
 	suite.Suite
 
-	cdc   *codec.Codec
-	store *cachekv.Store
+	aminoCdc *codec.Codec
+	cdc      codec.Marshaler
+	store    *cachekv.Store
 }
 
 func (suite *LocalhostTestSuite) SetupTest() {
-	suite.cdc = codec.New()
-	codec.RegisterCrypto(suite.cdc)
-	commitmenttypes.RegisterCodec(suite.cdc)
+	checkTx := false
+	app := simapp.Setup(checkTx)
+
+	suite.aminoCdc = app.Codec()
+	suite.cdc = app.AppCodec()
 
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	suite.store = cachekv.NewStore(mem)

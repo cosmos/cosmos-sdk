@@ -18,6 +18,14 @@ func NewTestInterfaceRegistry() types.InterfaceRegistry {
 		&testdata.Dog{},
 		&testdata.Cat{},
 	)
+	registry.RegisterImplementations(
+		(*testdata.HasAnimalI)(nil),
+		&testdata.HasAnimal{},
+	)
+	registry.RegisterImplementations(
+		(*testdata.HasHasAnimalI)(nil),
+		&testdata.HasHasAnimal{},
+	)
 	return registry
 }
 
@@ -47,35 +55,6 @@ func TestPackUnpack(t *testing.T) {
 	require.Equal(t, spot, animal)
 }
 
-func TestMarshalAny(t *testing.T) {
-	registry := types.NewInterfaceRegistry()
-
-	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := types.MarshalAny(kitty)
-	require.NoError(t, err)
-
-	var animal testdata.Animal
-
-	// empty registry should fail
-	err = types.UnmarshalAny(registry, &animal, bz)
-	require.Error(t, err)
-
-	// wrong type registration should fail
-	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = types.UnmarshalAny(registry, &animal, bz)
-	require.Error(t, err)
-
-	// should pass
-	registry = NewTestInterfaceRegistry()
-	err = types.UnmarshalAny(registry, &animal, bz)
-	require.NoError(t, err)
-	require.Equal(t, kitty, animal)
-
-	// nil should fail
-	registry = NewTestInterfaceRegistry()
-	err = types.UnmarshalAny(registry, nil, bz)
-}
-
 type TestI interface {
 	DoSomething()
 }
@@ -92,6 +71,9 @@ func TestRegister(t *testing.T) {
 	})
 	require.Panics(t, func() {
 		registry.RegisterImplementations((*TestI)(nil), nil)
+	})
+	require.Panics(t, func() {
+		registry.RegisterInterface("not_an_interface", (*testdata.Dog)(nil))
 	})
 }
 
@@ -117,4 +99,35 @@ func TestUnpackInterfaces(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, spot, hasAny2.Animal.GetCachedValue())
+}
+
+func TestNested(t *testing.T) {
+	registry := NewTestInterfaceRegistry()
+
+	spot := &testdata.Dog{Name: "Spot"}
+	any, err := types.NewAnyWithValue(spot)
+	require.NoError(t, err)
+
+	ha := &testdata.HasAnimal{Animal: any}
+	any2, err := types.NewAnyWithValue(ha)
+	require.NoError(t, err)
+
+	hha := &testdata.HasHasAnimal{HasAnimal: any2}
+	any3, err := types.NewAnyWithValue(hha)
+	require.NoError(t, err)
+
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any3}
+
+	// marshal
+	bz, err := hhha.Marshal()
+	require.NoError(t, err)
+
+	// unmarshal
+	var hhha2 testdata.HasHasHasAnimal
+	err = hhha2.Unmarshal(bz)
+	require.NoError(t, err)
+	err = types.UnpackInterfaces(hhha2, registry)
+	require.NoError(t, err)
+
+	require.Equal(t, spot, hhha2.TheHasHasAnimal().TheHasAnimal().TheAnimal())
 }

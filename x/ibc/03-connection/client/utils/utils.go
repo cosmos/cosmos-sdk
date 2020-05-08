@@ -64,6 +64,29 @@ func QueryConnection(
 	return connRes, nil
 }
 
+// QueryAllClientConnectionPaths returns all the client connections paths. It
+// _does not_ return any merkle proof.
+func QueryAllClientConnectionPaths(cliCtx context.CLIContext, page, limit int) ([]types.ConnectionPaths, int64, error) {
+	params := types.NewQueryAllConnectionsParams(page, limit)
+	bz, err := cliCtx.Codec.MarshalJSON(params)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+	}
+
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClientConnections)
+	res, height, err := cliCtx.QueryWithData(route, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var connectionPaths []types.ConnectionPaths
+	err = cliCtx.Codec.UnmarshalJSON(res, &connectionPaths)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to unmarshal client connection paths: %w", err)
+	}
+	return connectionPaths, height, nil
+}
+
 // QueryClientConnections queries the store to get the registered connection paths
 // registered for a particular client and a merkle proof.
 func QueryClientConnections(

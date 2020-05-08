@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cosmos_sdk.x.ibc.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/types";
+
+import "third_party/proto/gogoproto/gogo.proto";
+
+// Order defines if a channel is ORDERED or UNORDERED
+enum Order {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // zero-value for channel ordering
+  ORDER_NONE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "NONE"];
+  // packets can be delivered in any order, which may differ from the order in which they were sent.
+  ORDER_UNORDERED = 1 [(gogoproto.enumvalue_customname) = "UNORDERED"];
+  // packets are delivered exactly in the order which they were sent
+  ORDER_ORDERED = 2 [(gogoproto.enumvalue_customname) = "ORDERED"];
+}
+
+// State defines if a channel or connection is in one of the following states:
+// CLOSED, INIT, TRYOPEN, OPEN or UNINITIALIZED.
+enum State {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default State
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  // A channel or connection end has just started the opening handshake.
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
+  // A channel or connection end has acknowledged the handshake step on the counterparty chain.
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  // A channel or connection end has completed the handshake. Open channels are
+  // ready to send and receive packets.
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
+  // A channel end has been closed and can no longer be used to send or receive packets.
+  STATE_CLOSED = 4 [(gogoproto.enumvalue_customname) = "CLOSED"];
+}

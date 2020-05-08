@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 	testChannel1 = "firstchannel"
 	testChannel2 = "secondchannel"
 
-	testChannelOrder   = exported.ORDERED
+	testChannelOrder   = ibctypes.ORDERED
 	testChannelVersion = "1.0"
 )
 
@@ -39,12 +39,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]IdentifiedChannel{
 					NewIdentifiedChannel(
 						testPort1, testChannel1, NewChannel(
-							exported.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+							ibctypes.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 					NewIdentifiedChannel(
 						testPort2, testChannel2, NewChannel(
-							exported.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
+							ibctypes.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},
@@ -69,7 +69,7 @@ func TestValidateGenesis(t *testing.T) {
 				Channels: []IdentifiedChannel{
 					NewIdentifiedChannel(
 						testPort1, "testChannel1", NewChannel(
-							exported.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+							ibctypes.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},

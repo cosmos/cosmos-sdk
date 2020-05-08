@@ -517,13 +517,44 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	// apply TM updates
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	unbondingDelegations := types.UnbondingDelegations{}
-	res, err = querier(ctx, []string{types.QueryValidatorUnbondingDelegations}, query)
-	require.NoError(t, err)
+	// Query Unbonding delegations with pagination.
+	cases := []struct {
+		page                         int
+		limit                        int
+		expectedUnbondingDelegations int
+	}{
+		{
+			page:                         1,
+			limit:                        75,
+			expectedUnbondingDelegations: 75,
+		},
+		{
+			page:                         2,
+			limit:                        75,
+			expectedUnbondingDelegations: 25,
+		},
+		{
+			page:                         0,
+			limit:                        0,
+			expectedUnbondingDelegations: 100,
+		},
+	}
 
-	errRes = cdc.UnmarshalJSON(res, &unbondingDelegations)
-	require.NoError(t, errRes)
-	require.Len(t, unbondingDelegations, 100)
+	for _, c := range cases {
+		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		require.NoError(t, errRes)
+		query = abci.RequestQuery{
+			Data: bz,
+		}
+
+		unbondingDelegations := types.UnbondingDelegations{}
+		res, err = querier(ctx, []string{types.QueryValidatorUnbondingDelegations}, query)
+		require.NoError(t, err)
+
+		errRes = cdc.UnmarshalJSON(res, &unbondingDelegations)
+		require.NoError(t, errRes)
+		require.Len(t, unbondingDelegations, c.expectedUnbondingDelegations)
+	}
 }
 
 func TestQueryRedelegations(t *testing.T) {

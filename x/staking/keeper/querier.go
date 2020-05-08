@@ -167,6 +167,15 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 		unbonds = types.UnbondingDelegations{}
 	}
 
+	if params.Limit > 0 || params.Page > 0 {
+		start, end := client.Paginate(len(unbonds), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
+		if start < 0 || end < 0 {
+			unbonds = types.UnbondingDelegations{}
+		} else {
+			unbonds = unbonds[start:end]
+		}
+	}
+
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbonds)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())

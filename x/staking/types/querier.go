@@ -26,7 +26,6 @@ const (
 // defines the params for the following queries:
 // - 'custom/staking/delegatorDelegations'
 // - 'custom/staking/delegatorUnbondingDelegations'
-// - 'custom/staking/delegatorRedelegations'
 // - 'custom/staking/delegatorValidators'
 type QueryDelegatorParams struct {
 	DelegatorAddr sdk.AccAddress

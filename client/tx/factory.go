@@ -63,7 +63,6 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 	return f
 }
 
-// nolint
 func (f Factory) AccountNumber() uint64              { return f.accountNumber }
 func (f Factory) Sequence() uint64                   { return f.sequence }
 func (f Factory) Gas() uint64                        { return f.gas }

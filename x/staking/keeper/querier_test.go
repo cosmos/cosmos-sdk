@@ -448,7 +448,6 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	}
 
 	cdc, app, ctx := createTestInput()
-	//params := app.StakingKeeper.GetParams(ctx)
 	querier := staking.NewQuerier(app.StakingKeeper)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 100, sdk.TokensFromConsensusPower(10000))

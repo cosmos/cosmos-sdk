@@ -5,8 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-// nolint
-
 const (
 	ModuleName               = types.ModuleName
 	StoreKey                 = types.StoreKey

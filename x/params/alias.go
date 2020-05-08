@@ -1,7 +1,5 @@
 package params
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/types"

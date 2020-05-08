@@ -1,4 +1,3 @@
-// nolint noalias
 package types
 
 import (

@@ -65,7 +65,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// updateClientHandlerFn implements a update client handler
+// updateClientHandlerFn implements an update client handler
 //
 // @Summary update client
 // @Tags IBC

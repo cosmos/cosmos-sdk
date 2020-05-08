@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"gopkg.in/yaml.v2"
 
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,24 +50,24 @@ func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sd
 	return m, nil
 }
 
-func (msg *MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return msg.InitialDeposit }
+func (m *MsgSubmitProposal) GetInitialDeposit() sdk.Coins { return m.InitialDeposit }
 
-func (msg *MsgSubmitProposal) GetProposer() sdk.AccAddress { return msg.Proposer }
+func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress { return m.Proposer }
 
-func (msg *MsgSubmitProposal) GetContent() Content {
-	content, ok := msg.Content.GetCachedValue().(Content)
+func (m *MsgSubmitProposal) GetContent() Content {
+	content, ok := m.Content.GetCachedValue().(Content)
 	if !ok {
 		return nil
 	}
 	return content
 }
 
-func (msg *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
-	msg.InitialDeposit = coins
+func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
+	m.InitialDeposit = coins
 }
 
-func (msg *MsgSubmitProposal) SetProposer(address sdk.AccAddress) {
-	msg.Proposer = address
+func (m *MsgSubmitProposal) SetProposer(address sdk.AccAddress) {
+	m.Proposer = address
 }
 
 func (m *MsgSubmitProposal) SetContent(content Content) error {
@@ -85,24 +84,24 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 }
 
 // Route implements Msg
-func (msg MsgSubmitProposal) Route() string { return RouterKey }
+func (m MsgSubmitProposal) Route() string { return RouterKey }
 
 // Type implements Msg
-func (msg MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
+func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
 
 // ValidateBasic implements Msg
-func (msg MsgSubmitProposal) ValidateBasic() error {
-	if msg.Proposer.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
+func (m MsgSubmitProposal) ValidateBasic() error {
+	if m.Proposer.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Proposer.String())
 	}
-	if !msg.InitialDeposit.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
+	if !m.InitialDeposit.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
 	}
-	if msg.InitialDeposit.IsAnyNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
+	if m.InitialDeposit.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
 	}
 
-	content := msg.GetContent()
+	content := m.GetContent()
 	if content == nil {
 		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
 	}
@@ -117,19 +116,19 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 }
 
 // GetSignBytes implements Msg
-func (msg MsgSubmitProposal) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
+func (m MsgSubmitProposal) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(m)
 	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners implements Msg
-func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Proposer}
+func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{m.Proposer}
 }
 
 // String implements the Stringer interface
-func (msg MsgSubmitProposal) String() string {
-	out, _ := yaml.Marshal(msg)
+func (m MsgSubmitProposal) String() string {
+	out, _ := yaml.Marshal(m)
 	return string(out)
 }
 

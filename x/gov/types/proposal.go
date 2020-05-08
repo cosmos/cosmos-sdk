@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -50,41 +48,41 @@ func (p Proposal) String() string {
 	return string(out)
 }
 
-func (m Proposal) GetContent() Content {
-	content, ok := m.Content.GetCachedValue().(Content)
+func (p Proposal) GetContent() Content {
+	content, ok := p.Content.GetCachedValue().(Content)
 	if !ok {
 		return nil
 	}
 	return content
 }
 
-func (m Proposal) ProposalType() string {
-	content := m.GetContent()
+func (p Proposal) ProposalType() string {
+	content := p.GetContent()
 	if content == nil {
 		return ""
 	}
 	return content.ProposalType()
 }
 
-func (m Proposal) ProposalRoute() string {
-	content := m.GetContent()
+func (p Proposal) ProposalRoute() string {
+	content := p.GetContent()
 	if content == nil {
 		return ""
 	}
 	return content.ProposalRoute()
 }
 
-func (m Proposal) GetTitle() string {
-	content := m.GetContent()
+func (p Proposal) GetTitle() string {
+	content := p.GetContent()
 	if content == nil {
 		return ""
 	}
 	return content.GetTitle()
 }
 
-func (m Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var content Content
-	return unpacker.UnpackAny(m.Content, &content)
+	return unpacker.UnpackAny(p.Content, &content)
 }
 
 // Proposals is an array of proposal

@@ -440,8 +440,13 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 	// Create Validators and Delegation
 	for _, addr := range addrs {
+		validator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
+		if !found {
+			t.Error("expected validator not found")
+		}
+
 		delTokens := sdk.TokensFromConsensusPower(20)
-		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, sdk.Unbonded, val1, true)
+		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, sdk.Unbonded, validator, true)
 		require.NoError(t, err)
 	}
 
@@ -501,6 +506,24 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.NoError(t, errRes)
 	require.Len(t, delegationsRes, 25)
+
+	// Undelegate
+	for _, addr := range addrs {
+		delTokens := sdk.TokensFromConsensusPower(20)
+		_, err = app.StakingKeeper.Undelegate(ctx, addr, val1.GetOperator(), delTokens.ToDec())
+		require.NoError(t, err)
+	}
+
+	// apply TM updates
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	unbondingDelegations := types.UnbondingDelegations{}
+	res, err = querier(ctx, []string{types.QueryValidatorUnbondingDelegations}, query)
+	require.NoError(t, err)
+
+	errRes = cdc.UnmarshalJSON(res, &unbondingDelegations)
+	require.NoError(t, errRes)
+	require.Len(t, unbondingDelegations, 100)
 }
 
 func TestQueryRedelegations(t *testing.T) {

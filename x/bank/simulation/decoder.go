@@ -3,6 +3,7 @@ package simulation
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
@@ -11,16 +12,18 @@ import (
 
 // NewDecodeStore returns a function closure that unmarshals the KVPair's values
 // to the corresponding types.
-func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.SupplyKey):
-			supplyA, err := cdc.UnmarshalSupply(kvA.Value)
+			var supplyA types.Supply
+			err := cdc.UnmarshalBinaryBare(kvA.Value, &supplyA)
 			if err != nil {
 				panic(err)
 			}
 
-			supplyB, err := cdc.UnmarshalSupply(kvB.Value)
+			var supplyB types.Supply
+			err = cdc.UnmarshalBinaryBare(kvB.Value, &supplyB)
 			if err != nil {
 				panic(err)
 			}

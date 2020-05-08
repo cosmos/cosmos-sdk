@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos_sdk.x.bank.v1;
 
 import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/cosmos-proto/cosmos.proto";
 import "types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";

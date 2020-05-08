@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
@@ -25,6 +26,19 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&Supply{}, "cosmos-sdk/Supply", nil)
 	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
 	cdc.RegisterConcrete(MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&Supply{},
+		&MsgSend{},
+		&MsgMultiSend{},
+	)
+	//registry.RegisterInterface(
+	//	"cosmos_sdk.x.bank.v1",
+	//	(*Supply{})(nil),
+	//	&{},
+	//)
 }
 
 var (

@@ -54,33 +54,57 @@ package cosmos_sdk.v1;
 
 message Tx {
     TxBody body = 1;
-    repeated bytes signatures = 2;
+    AuthInfo auth_info = 2;
+    repeated bytes signatures = 3;
 }
 
 message TxBody {
     repeated google.protobuf.Any messages = 1;
-    repeated SignerInfo signer_info = 2;
-    Fee fee = 3;
-    string memo = 4;
-    int64 timeout_height = 5;
-    repeated google.protobuf.Any extension_options = 6;
+    string memo = 2;
+    int64 timeout_height = 3;
+    repeated google.protobuf.Any extension_options = 1023;
+}
+
+message AuthInfo {
+    // The provided SignerInfo's may occur in any order and may include signers
+    // that are not explicitly referenced in `TxBody.messages`. These other
+    // signers could simply be there to pay fees or could be utilized by
+    // message handlers that examine the full list of signers on the transaction
+    // context
+    repeated SignerInfo signer_infos = 1;
+    uint64 gas = 2;
 }
 
 message SignerInfo {
-    PublicKey pub_key = 1;
-    SignMode mode = 2;
+    oneof identity {
+        // public_key must be set the first time an account makes a transaction
+        PublicKey public_key = 1;
+        // address can be used for accounts that already have a public key in state 
+        bytes address = 2;
+    }
+    SignMode mode = 3;
+    // Each signer can specify a fee that they are paying separately. In the case
+    // that the chain supports refunds for unused gas, refunds will be distributed
+    // to the last signer first.
+    Fee fee = 4;
 }
 
 enum SignMode {
-    SIGN_MODE_DEFAULT = 0;
-    SIGN_MODE_LEGACY_AMINO = -1;
-    SIGN_MODE_EXTENDED = 1;
+    SIGN_MODE_UNSPECIFIED = 0;
+
+    SIGN_MODE_DIRECT = 1;
+    SIGN_MODE_DIRECT_AUX = 2;
+
+    SIGN_MODE_TEXTUAL = 3;
+    SIGN_MODE_TEXTUAL_AUX = 4;
+
+    SIGN_MODE_LEGACY_AMINO_JSON = 127;
 }
 ```
 
 As will be discussed below, in order to include as much of the `Tx` as possible
 in the `SignDoc`, `SignerInfo` is separated from signatures so that only the
-raw signatures themselves live outside of `TxBody`.
+raw signatures themselves live outside of what is signed over.
 
 Because we are aiming for be a flexible, extensible cross-chain transaction
 format, new transaction processing options should be added to `TxBody` as soon
@@ -93,22 +117,19 @@ attempt to upstream important improvements to `Tx`.
 
 ### Signing
 
-Signatures are structured using the `SignDoc` below which reuses `TxBody` and only
-adds the fields which are needed for signatures but not present on `TxBody`:
+All of the signing modes below aim to provide the following guarantees:
 
-```proto
-// types/types.proto
-message SignDoc {
-    TxBody body = 1;
-    string chain_id = 2;
-    uint64 account_number = 3;
-    uint64 account_sequence = 4;
-}
-```
+* **No Malleability**: given a `TxBody` and an `AuthInfo` there is one and only
+one valid `Tx` that can be generated
+* **Predictable Gas**: if I am signing a transaction where I am paying a fee,
+the final gas is fully dependent on what I am signing
 
-#### `SIGN_MODE_DEFAULT`
+These guarantees give the maximum amount confidence to message signers that
+manipulation of `Tx`s by intermediaries can't result in any meaningful changes.
 
-The default signing behavior is to sign the raw `TxBody` bytes as broadcast over
+#### `SIGN_MODE_DIRECT`
+
+The "direct" signing behavior is to sign the raw `TxBody` bytes as broadcast over
 the wire. This has the advantages of:
 
 * requiring the minimum additional client capabilities beyond a standard protocol
@@ -117,18 +138,47 @@ buffers implementation
 subtle differences between the signing and encoding formats which could 
 potentially be exploited by an attacker)
 
-In order to sign in the default mode, clients take the following steps:
-
-1. Encode `TxBody`
-2. Sign `SignDocRaw`
-
-The raw encoded `TxBody` bytes are encoded into `SignDocRaw` below so that the
-encoded body bytes exactly match the signed body bytes with no need for
-["canonicalization"](https://github.com/regen-network/canonical-proto3) of that
-message.
+Signatures are structured using the `SignDoc` below which reuses `TxBody` and
+`AuthInfo` and only adds the fields which are needed for signatures:
 
 ```proto
 // types/types.proto
+message SignDoc {
+    TxBody body = 1;
+    AuthInfo auth_info = 2;
+    string chain_id = 3;
+    uint64 account_number = 4;
+    // account_sequence starts at 1 rather than 0 to avoid the case where
+    // the default 0 value must be omitted in protobuf serialization
+    uint64 account_sequence = 5;
+}
+```
+
+In order to sign in the default mode, clients take the following steps:
+
+1. Encode `SignDoc`. (The only requirement of the underlying protobuf
+implementation is that fields are serialized in order).
+2. Sign the encoded `SignDoc` bytes
+3. Build and broadcast `Tx`. (The underlying protobuf implementation must encode
+`TxBody` and `AuthInfo` with the same binary representation as encoded in
+`SignDoc`. If this is a problem for clients, the "raw" types described under
+verification can be used for signing as well.)
+
+Signature verification is based on comparing the raw `TxBody` and `AuthInfo`
+bytes encoded in `Tx` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
+algorithm which creates added complexity for clients in addition to preventing
+some forms of upgradeability (to be addressed later in this document).
+
+Signature verifiers should use a special set of "raw" types to perform this
+binary signature verification rather than attempting to re-encode protobuf
+documents which could result in a different binary encoding:
+
+```proto
+message TxRaw {
+    bytes body_bytes = 1;
+    repeated bytes signatures = 2;
+}
+
 message SignDocRaw {
     bytes body_bytes = 1;
     string chain_id = 2;
@@ -137,41 +187,92 @@ message SignDocRaw {
 }
 ```
 
-The only requirements are that the client _must_ encode `SignDocRaw` itself canonically.
- This means that:
- 
-* all of the fields must be encoded in order
-* default values (i.e. empty/zero values) must be omitted 
+To verify signatures, follow these steps:
 
-If a protobuf implementation does not by default encode `SignDocRaw` canonically,
-the client _must_ manually encode `SignDocRaw` following the guidelines above.
+1. Decode `TxRaw`
+2. For each signature copy `body_bytes` from `TxRaw` to `SignDocRaw` and fill
+in the other fields for the given signer
+3. Encode `SignDocRaw` and verify signatures with these sign bytes
 
-Again, it does not matter if `TxBody` was encoded canonically or not.
 
-Note that in order to decode `SignDocRaw` for displaying contents to users,
-the regular `SignDoc` type should be used.
+#### `SIGN_MODE_DIRECT_AUX`
 
-3. Broadcast `TxRaw`
+`SIGN_MODE_DIRECT_AUX` is used to support scenarios where multiple signatures
+are being gathered into a single transaction but the message composer does not
+yet know which signatures will be included in the final transaction. For instance,
+I may have a 3/5 multisig wallet and want to send a `TxBody` to all 5
+signers to see who signs first. As soon as I have 3 signatures then I will go
+ahead and build the full transaction.
 
-In order to make sure that the signed body bytes exactly match the encoded body
-bytes, clients should encode and broadcast `TxRaw` with the same body bytes used
-in `SignDocRaw`.
+With `SIGN_MODE_DIRECT`, each signer needs
+to sign the full `AuthInfo` which includes the full list of all signers and
+their signing modes, making the above scenario very hard.
+
+`SIGN_MODE_DIRECT_AUX` allows "auxiliary" signers to create their signature
+using only `TxBody` and their own `PublicKey`. This allows the full list of
+signers in `AuthInfo` to be delayed until signatures have been collected.
+
+An "auxiliary" signer can be any signer who is not paying a fee. For signers
+paying fees, the full `AuthInfo` is actually needed to calculate gas and fees
+because that is dependent on how many signers and which key types and signing
+modes they are using. Auxiliary signers, however, do not need to worry about
+fees or gas and thus can just sign `TxBody`.
+
+To generate a signature in `SIGN_MODE_DIRECT_AUX` follow these steps:
+
+1. Encode `SignDocAux` (with the same requirement that fields must be serialized
+in order):
 
 ```proto
 // types/types.proto
-message TxRaw {
-    bytes body_bytes = 1;
-    repeated bytes signatures = 2;
+message SignDocAux {
+    TxBody body = 1;
+    // PublicKey is included in SignDocAux to guard against a scenario where
+    // configuration information is encoded in public keys such that two keys
+    // can generate the same signature but have different security properties.
+    // By including it here, the composer of AuthInfo cannot reference the
+    // wrong public key variant.
+    PublicKey public_key = 2;
+    string chain_id = 3;
+    uint64 account_number = 4;
+    // account_sequence starts at 1 rather than 0 to avoid the case where
+    // the default 0 value must be omitted in protobuf serialization
+    uint64 account_sequence = 5;
 }
 ```
 
-Signature verifiers should verify signatures by decoding `TxRaw` and then
-encoding `SignDocRaw` with the raw body bytes.
+2. Sign the encoded `SignDocAux` bytes
+3. Send their signature and `SignerInfo` to the tx composer(s) who will then
+sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and fees and
+gas added) once enough signatures have been collected
 
-The standard `Tx` type (which is byte compatible with `TxRaw`) can be used to
-decode transactions for all other use cases.
+For signature verification to succeed, the fee field for signers using
+`SIGN_MODE_DIRECT_AUX` must be empty.
 
-#### `SIGN_MODE_LEGACY_AMINO`
+#### `SIGN_MODE_TEXTUAL` and `SIGN_MODE_TEXTUAL_AUX`
+
+As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
+there is a desire for a human-readable signing encoding, especially for hardware
+wallets like the [Ledger](https://www.ledger.com) which display
+transaction contents to users before signing. JSON was an attempt at this but 
+falls short of the ideal.
+
+`SIGN_MODE_TEXTUAL` and its counterpart `SIGN_MODULE_TEXTAL_AUX` are
+intended as placeholders for a human-readable
+encoding which will replace Amino JSON. This new encoding should be even more
+focused on readability than JSON, possibly based on formatting strings like
+[MessageFormat](http://userguide.icu-project.org/formatparse/messages).
+
+In order to ensure that the new human-readable format does not suffer from
+transaction malleability issues, `SIGN_MODE_TEXTUAL` and `SIGN_MODE_TEXTUAL_AUX`
+require that the _human-readable bytes are concatenated with the raw `SignDoc`
+or `SignDocAux`_ to generate sign bytes.
+
+Multiple human-readable formats (maybe even localized messages) may be supported
+by `SIGN_MODE_TEXTUAL` when it is implemented.
+
+
+#### `SIGN_MODE_LEGACY_AMINO_JSON`
 
 In order to support legacy wallets and exchanges, Amino JSON will be emporarily
 supported transaction signing. Once wallets and exchanges have had a
@@ -182,27 +283,6 @@ too much breakage to be feasible.
 Legacy clients will be able to sign a transaction using the current Amino
 JSON format and have it encoded to protobuf using the REST `/tx/encode`
 endpoint before broadcasting.
-
-#### `SIGN_MODE_EXTENDED`
-
-As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
-there is a desire for a human-readable signing encoding, especially for hardware
-wallets like the [Ledger](https://www.ledger.com) which display
-transaction contents to users before signing. JSON was an attempt at this but 
-falls short of the ideal.
-
-`SIGN_MODE_EXTENDED` is intended as a placeholder for a human-readable
-encoding which will replace Amino JSON. This new encoding should be even more
-focused on readability than JSON, possibly based on formatting strings like
-[MessageFormat](http://userguide.icu-project.org/formatparse/messages).
-
-In order to ensure that the new human-readable format does not suffer from
-transaction malleability issues, `SIGN_MODE_EXTENDED`
-requires that the _human-readable bytes are concatenated with the raw `SignDoc`_
-to generate sign bytes.
-
-Multiple human-readable formats (maybe even localized messages) may be supported
-by `SIGN_MODE_EXTENDED` when it is implemented.
 
 ### CLI & REST
 

@@ -7,14 +7,12 @@ import (
 
 // DONTCOVER
 
-// nolint
 const (
 	ModuleName  = types.ModuleName
 	StoreKey    = types.StoreKey
 	MemStoreKey = types.MemStoreKey
 )
 
-// nolint
 var (
 	NewKeeper                = keeper.NewKeeper
 	NewCapability            = types.NewCapability
@@ -30,12 +28,11 @@ var (
 	NewCapabilityOwners      = types.NewCapabilityOwners
 )
 
-// nolint
 type (
-	Keeper           = keeper.Keeper
-	ScopedKeeper     = keeper.ScopedKeeper
-	Capability       = types.Capability
-	CapabilityOwners = types.CapabilityOwners
-	GenesisState     = types.GenesisState
-	GenesisOwners    = types.GenesisOwners
+	Keeper        = keeper.Keeper
+	ScopedKeeper  = keeper.ScopedKeeper
+	Capability    = types.Capability
+	Owners        = types.CapabilityOwners
+	GenesisState  = types.GenesisState
+	GenesisOwners = types.GenesisOwners
 )

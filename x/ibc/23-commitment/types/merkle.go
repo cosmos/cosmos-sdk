@@ -6,7 +6,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	ics23 "github.com/confio/ics23/go"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -145,7 +146,8 @@ var _ exported.Proof = MerkleProof{}
 // verifiable in conjunction with a known commitment root. Proofs should be
 // succinct.
 type MerkleProof struct {
-	Proof *merkle.Proof `json:"proof" yaml:"proof"`
+	Proof *ics23.CommitmentProof `json:"proof" yaml:"proof"`
+	Spec  *ics23.ProofSpec       `json:"spec" yaml:"spec"`
 }
 
 // GetCommitmentType implements ProofI
@@ -156,26 +158,31 @@ func (MerkleProof) GetCommitmentType() exported.Type {
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
 func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path, value []byte) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
-		return errors.New("empty params or proof")
+		return sdkerrors.Wrap(ErrInvalidProof, "empty params or proof")
 	}
 
-	runtime := rootmulti.DefaultProofRuntime()
-	return runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
+	if !ics23.VerifyMembership(proof.Spec, root.GetHash(), proof.Proof, []byte(path.String()), value) {
+		return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
+	}
+	return nil
 }
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
 func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.Path) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
-		return errors.New("empty params or proof")
+		return sdkerrors.Wrap(ErrInvalidProof, "empty params or proof")
 	}
 
-	runtime := rootmulti.DefaultProofRuntime()
-	return runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
+	if !ics23.VerifyNonMembership(proof.Spec, root.GetHash(), proof.Proof, []byte(path.String())) {
+		return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
+	}
+	return nil
+
 }
 
 // IsEmpty returns true if the root is empty
 func (proof MerkleProof) IsEmpty() bool {
-	return (proof == MerkleProof{}) || proof.Proof == nil
+	return proof.Proof == nil || proof.Spec == nil
 }
 
 // ValidateBasic checks if the proof is empty.

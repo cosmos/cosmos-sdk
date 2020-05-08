@@ -4,6 +4,7 @@ require (
 	github.com/99designs/keyring v1.1.5
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/confio/ics23/go v0.0.0-20200325200809-9f53dd0c4212
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gibson042/canonicaljson-go v1.0.3

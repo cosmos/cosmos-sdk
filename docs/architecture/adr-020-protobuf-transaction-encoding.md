@@ -227,11 +227,15 @@ in order):
 // types/types.proto
 message SignDocAux {
     TxBody body = 1;
-    // PublicKey is included in SignDocAux to guard against a scenario where
-    // configuration information is encoded in public keys such that two keys
-    // can generate the same signature but have different security properties.
+    // PublicKey is included in SignDocAux :
+    // 1. as a special case for multisig public keys to be described later
+    // in this document
+    // 2. to guard against scenario where configuration information is encoded
+    // in public keys (it has been proposed) such that two keys can generate
+    // the same signature but have different security properties
+    //
     // By including it here, the composer of AuthInfo cannot reference the
-    // wrong public key variant.
+    // a public key variant the signer did not intend to use
     PublicKey public_key = 2;
     string chain_id = 3;
     uint64 account_number = 4;

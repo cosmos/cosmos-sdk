@@ -120,13 +120,13 @@ func (c Counterparty) ValidateBasic() error {
 // IdentifiedChannel defines a channel with additional port and channel identifier
 // fields.
 type IdentifiedChannel struct {
-	ID             string         `json:"id" yaml:"id"`
-	PortID         string         `json:"port_id" yaml:"port_id"`
+	ID             string       `json:"id" yaml:"id"`
+	PortID         string       `json:"port_id" yaml:"port_id"`
 	State          common.State `json:"state" yaml:"state"`
 	Ordering       common.Order `json:"ordering" yaml:"ordering"`
-	Counterparty   Counterparty   `json:"counterparty" yaml:"counterparty"`
-	ConnectionHops []string       `json:"connection_hops" yaml:"connection_hops"`
-	Version        string         `json:"version" yaml:"version "`
+	Counterparty   Counterparty `json:"counterparty" yaml:"counterparty"`
+	ConnectionHops []string     `json:"connection_hops" yaml:"connection_hops"`
+	Version        string       `json:"version" yaml:"version "`
 }
 
 // NewIdentifiedChannel creates a new IdentifiedChannel instance

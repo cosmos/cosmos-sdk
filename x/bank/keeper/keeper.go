@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,7 +150,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
 		panic("stored supply should not have been nil")
 	}
 
-	supply, err := k.cdc.UnmarshalSupply(bz)
+	supply, err := k.UnmarshalSupply(bz)
 	if err != nil {
 		panic(err)
 	}
@@ -160,7 +161,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
 // SetSupply sets the Supply to store
 func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.MarshalSupply(supply)
+	bz, err := k.MarshalSupply(supply)
 	if err != nil {
 		panic(err)
 	}
@@ -338,4 +339,55 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	}
 
 	return nil
+}
+
+
+// MarshalSupply marshals a Supply interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
+	return codec.MarshalAny(k.cdc, supplyI)
+}
+
+// UnmarshalSupply returns a Supply interface from raw encoded supply
+// bytes of a Proto-based Supply type. An error is returned upon decoding
+// failure.
+func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
+	var evi exported.SupplyI
+	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
+		return nil, err
+	}
+
+	return evi, nil
+}
+
+// MarshalSupplyJSON JSON encodes a supply object implementing the Supply
+// interface.
+func (k BaseKeeper) MarshalSupplyJSON(supply exported.SupplyI) ([]byte, error) {
+	msg, ok := supply.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", supply)
+	}
+
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return k.cdc.MarshalJSON(any)
+}
+
+// UnmarshalSupplyJSON returns a Supply from JSON encoded bytes
+func (k BaseKeeper) UnmarshalSupplyJSON(bz []byte) (exported.SupplyI, error) {
+	var any codectypes.Any
+	if err := k.cdc.UnmarshalJSON(bz, &any); err != nil {
+		return nil, err
+	}
+
+	var supply exported.SupplyI
+	if err := k.cdc.UnpackAny(&any, &supply); err != nil {
+		return nil, err
+	}
+
+	return supply, nil
 }

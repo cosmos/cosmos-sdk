@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // GenesisState - all auth state that must be provided at genesis
@@ -27,7 +29,7 @@ func DefaultGenesisState() GenesisState {
 
 // GetGenesisStateFromAppState returns x/auth GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc Codec, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.Marshaler, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
@@ -84,7 +86,7 @@ type GenesisAccountIterator struct{}
 // appGenesis and invokes a callback on each genesis account. If any call
 // returns true, iteration stops.
 func (GenesisAccountIterator) IterateGenesisAccounts(
-	cdc Codec, appGenesis map[string]json.RawMessage, cb func(AccountI) (stop bool),
+	cdc codec.Marshaler, appGenesis map[string]json.RawMessage, cb func(AccountI) (stop bool),
 ) {
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
 		if cb(genAcc) {

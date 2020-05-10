@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (
@@ -74,6 +75,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	authtypes.RegisterInterfaces(registry)
+	vestingtypes.RegisterInterfaces(registry)
 }
 
 //____________________________________________________________________________

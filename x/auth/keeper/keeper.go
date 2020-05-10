@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,7 +19,7 @@ import (
 // encoding/decoding library.
 type AccountKeeper struct {
 	key           sdk.StoreKey
-	cdc           codec.Marshaler
+	Cdc           codec.Marshaler
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
@@ -46,7 +47,7 @@ func NewAccountKeeper(
 	return AccountKeeper{
 		key:           key,
 		proto:         proto,
-		cdc:           cdc,
+		Cdc:           cdc,
 		paramSubspace: paramstore,
 		permAddrs:     permAddrs,
 	}
@@ -90,7 +91,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	} else {
 		val := gogotypes.UInt64Value{}
 
-		err := ak.cdc.UnmarshalBinaryBare(bz, &val)
+		err := ak.Cdc.UnmarshalBinaryBare(bz, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -98,7 +99,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 		accNumber = val.GetValue()
 	}
 
-	bz = ak.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: accNumber + 1})
+	bz = ak.Cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: accNumber + 1})
 	store.Set(types.GlobalAccountNumberKey, bz)
 
 	return accNumber
@@ -187,17 +188,32 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) {
-	return codec.MarshalAny(ak.cdc, accountI)
+	return codec.MarshalAny(ak.Cdc, accountI)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
 // bytes of a Proto-based Evidence type. An error is returned upon decoding
 // failure.
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
-	var evi types.AccountI
-	if err := codec.UnmarshalAny(ak.cdc, &evi, bz); err != nil {
+	var acc types.AccountI
+	if err := codec.UnmarshalAny(ak.Cdc, &acc, bz); err != nil {
 		return nil, err
 	}
 
-	return evi, nil
+	return acc, nil
+}
+
+// UnmarshalAccountJSON returns an AccountI from JSON encoded bytes
+func (ak AccountKeeper) UnmarshalAccountJSON(bz []byte) (types.AccountI, error) {
+	var any codectypes.Any
+	if err := ak.Cdc.UnmarshalJSON(bz, &any); err != nil {
+		return nil, err
+	}
+
+	var acc types.AccountI
+	if err := ak.Cdc.UnpackAny(&any, &acc); err != nil {
+		return nil, err
+	}
+
+	return acc, nil
 }

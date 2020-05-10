@@ -3,6 +3,7 @@ package simulation
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -10,22 +11,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-type AccountUnmarshaler interface {
-	UnmarshalAccount([]byte) (types.AccountI, error)
-}
-
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding auth type.
-func NewDecodeStore(cdc AccountUnmarshaler) func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(ak keeper.AccountKeeper) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.AddressStoreKeyPrefix):
-			accA, err := cdc.UnmarshalAccount(kvA.Value)
+			accA, err := ak.UnmarshalAccount(kvA.Value)
 			if err != nil {
 				panic(err)
 			}
 
-			accB, err := cdc.UnmarshalAccount(kvB.Value)
+			accB, err := ak.UnmarshalAccount(kvB.Value)
 			if err != nil {
 				panic(err)
 			}
@@ -34,8 +31,8 @@ func NewDecodeStore(cdc AccountUnmarshaler) func(kvA, kvB tmkv.Pair) string {
 
 		case bytes.Equal(kvA.Key, types.GlobalAccountNumberKey):
 			var globalAccNumberA, globalAccNumberB gogotypes.UInt64Value
-			//cdc.MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
-			//cdc.MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
+			ak.Cdc.MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
+			ak.Cdc.MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
 
 			return fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumberA, globalAccNumberB)
 

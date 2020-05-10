@@ -673,16 +673,16 @@ func TestContinuousVestingAccountMarshal(t *testing.T) {
 	baseVesting := types.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	acc := types.NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
 
-	bz, err := appCodec.MarshalAccount(acc)
+	bz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.Nil(t, err)
 
-	acc2, err := appCodec.UnmarshalAccount(bz)
+	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
 	require.Nil(t, err)
 	require.IsType(t, &types.ContinuousVestingAccount{}, acc2)
 	require.Equal(t, acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = appCodec.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(t, err)
 }
 
@@ -715,16 +715,16 @@ func TestPeriodicVestingAccountMarshal(t *testing.T) {
 
 	acc := types.NewPeriodicVestingAccount(baseAcc, coins, time.Now().Unix(), types.Periods{types.Period{3600, coins}})
 
-	bz, err := appCodec.MarshalAccount(acc)
+	bz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.Nil(t, err)
 
-	acc2, err := appCodec.UnmarshalAccount(bz)
+	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
 	require.Nil(t, err)
 	require.IsType(t, &types.PeriodicVestingAccount{}, acc2)
 	require.Equal(t, acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = appCodec.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(t, err)
 }
 
@@ -756,16 +756,16 @@ func TestDelayedVestingAccountMarshal(t *testing.T) {
 
 	acc := types.NewDelayedVestingAccount(baseAcc, coins, time.Now().Unix())
 
-	bz, err := appCodec.MarshalAccount(acc)
+	bz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.Nil(t, err)
 
-	acc2, err := appCodec.UnmarshalAccount(bz)
+	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
 	require.Nil(t, err)
 	require.IsType(t, &types.DelayedVestingAccount{}, acc2)
 	require.Equal(t, acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = appCodec.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(t, err)
 }
 

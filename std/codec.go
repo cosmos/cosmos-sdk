@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -14,7 +13,6 @@ import (
 )
 
 var (
-	_ auth.Codec = (*Codec)(nil)
 	_ bank.Codec = (*Codec)(nil)
 	_ gov.Codec  = (*Codec)(nil)
 )
@@ -33,29 +31,6 @@ type Codec struct {
 
 func NewAppCodec(amino *codec.Codec, anyUnpacker types.AnyUnpacker) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino, anyUnpacker), amino: amino, anyUnpacker: anyUnpacker}
-}
-
-// MarshalAccount marshals an AccountI interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalAccount(accI authtypes.AccountI) ([]byte, error) {
-	acc := &Account{}
-	if err := acc.SetAccount(accI); err != nil {
-		return nil, err
-	}
-
-	return c.Marshaler.MarshalBinaryBare(acc)
-}
-
-// UnmarshalAccount returns an AccountI interface from raw encoded account bytes
-// of a Proto-based AccountI type. An error is returned upon decoding failure.
-func (c *Codec) UnmarshalAccount(bz []byte) (authtypes.AccountI, error) {
-	acc := &Account{}
-	if err := c.Marshaler.UnmarshalBinaryBare(bz, acc); err != nil {
-		return nil, err
-	}
-
-	return acc.GetAccount(), nil
 }
 
 // MarshalAccountJSON JSON encodes an account object implementing the AccountI

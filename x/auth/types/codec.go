@@ -5,18 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// Codec defines the interface needed to serialize x/auth state. It must be
-// aware of all concrete account types.
-type Codec interface {
-	codec.Marshaler
-
-	MarshalAccount(acc AccountI) ([]byte, error)
-	UnmarshalAccount(bz []byte) (AccountI, error)
-
-	MarshalAccountJSON(acc AccountI) ([]byte, error)
-	UnmarshalAccountJSON(bz []byte) (AccountI, error)
-}
-
 // RegisterCodec registers the account interfaces and concrete types on the
 // provided Amino codec.
 func RegisterCodec(cdc *codec.Codec) {
@@ -34,6 +22,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
+		//&vesting.DelayedVestingAccount{},
 	)
 }
 

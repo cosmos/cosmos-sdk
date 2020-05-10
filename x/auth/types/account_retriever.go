@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,12 +18,12 @@ type NodeQuerier interface {
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
-	codec   Codec
+	codec   codec.Marshaler
 	querier NodeQuerier
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(codec Codec, querier NodeQuerier) AccountRetriever {
+func NewAccountRetriever(codec codec.Marshaler, querier NodeQuerier) AccountRetriever {
 	return AccountRetriever{codec: codec, querier: querier}
 }
 

@@ -1,7 +1,5 @@
 package slashing
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"

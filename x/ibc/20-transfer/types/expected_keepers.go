@@ -41,7 +41,7 @@ type ClientKeeper interface {
 
 // ConnectionKeeper defines the expected IBC connection keeper
 type ConnectionKeeper interface {
-	GetConnection(ctx sdk.Context, connectionID string) (connection connection.ConnectionEnd, found bool)
+	GetConnection(ctx sdk.Context, connectionID string) (connection connection.End, found bool)
 }
 
 // PortKeeper defines the expected IBC port keeper

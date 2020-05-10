@@ -95,4 +95,6 @@ type (
 	GenesisAccountIterator           = types.GenesisAccountIterator
 	Codec                            = types.Codec
 	ModuleAccount                    = types.ModuleAccount
+	GenesisAccounts                  = types.GenesisAccounts
+	GenesisAccount                   = types.GenesisAccount
 )

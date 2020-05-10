@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // NodeQuerier is an interface that is satisfied by types that provide the QueryWithData method
@@ -29,7 +28,7 @@ func NewAccountRetriever(codec Codec, querier NodeQuerier) AccountRetriever {
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, error) {
+func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (AccountI, error) {
 	account, _, err := ar.GetAccountWithHeight(addr)
 	return account, err
 }
@@ -37,7 +36,7 @@ func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, er
 // GetAccountWithHeight queries for an account given an address. Returns the
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
-func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.Account, int64, error) {
+func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (AccountI, int64, error) {
 	bs, err := ar.codec.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err
@@ -48,7 +47,7 @@ func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.A
 		return nil, height, err
 	}
 
-	var account exported.Account
+	var account AccountI
 	if err := ar.codec.UnmarshalJSON(bz, &account); err != nil {
 		return nil, height, err
 	}

@@ -10,9 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+type AccountUnmarshaler interface {
+	UnmarshalAccount([]byte) (types.AccountI, error)
+}
+
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding auth type.
-func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(cdc AccountUnmarshaler) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.AddressStoreKeyPrefix):
@@ -30,8 +34,8 @@ func NewDecodeStore(cdc types.Codec) func(kvA, kvB tmkv.Pair) string {
 
 		case bytes.Equal(kvA.Key, types.GlobalAccountNumberKey):
 			var globalAccNumberA, globalAccNumberB gogotypes.UInt64Value
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
+			//cdc.MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
+			//cdc.MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
 
 			return fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumberA, globalAccNumberB)
 

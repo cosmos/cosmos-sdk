@@ -7,7 +7,6 @@ import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types9 "github.com/cosmos/cosmos-sdk/types"
-	github_com_cosmos_cosmos_sdk_x_auth_exported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	github_com_cosmos_cosmos_sdk_x_bank_exported "github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -39,9 +38,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Account defines the application-level Account type.
+// AccountI defines the application-level AccountI type.
 type Account struct {
-	// sum defines a list of all acceptable concrete Account implementations.
+	// sum defines a list of all acceptable concrete AccountI implementations.
 	//
 	// Types that are valid to be assigned to Sum:
 	//	*Account_BaseAccount
@@ -1040,7 +1039,7 @@ func (m *StdSignDocBase) GetFee() StdFee {
 }
 
 func init() {
-	proto.RegisterType((*Account)(nil), "cosmos_sdk.std.v1.Account")
+	proto.RegisterType((*Account)(nil), "cosmos_sdk.std.v1.AccountI")
 	proto.RegisterType((*Supply)(nil), "cosmos_sdk.std.v1.Supply")
 	proto.RegisterType((*MsgSubmitProposal)(nil), "cosmos_sdk.std.v1.MsgSubmitProposal")
 	proto.RegisterType((*Proposal)(nil), "cosmos_sdk.std.v1.Proposal")
@@ -1453,7 +1452,7 @@ func (this *StdFee) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *Account) GetAccount() github_com_cosmos_cosmos_sdk_x_auth_exported.Account {
+func (this *Account) GetAccount() types.AccountI {
 	if x := this.GetBaseAccount(); x != nil {
 		return x
 	}
@@ -1472,7 +1471,7 @@ func (this *Account) GetAccount() github_com_cosmos_cosmos_sdk_x_auth_exported.A
 	return nil
 }
 
-func (this *Account) SetAccount(value github_com_cosmos_cosmos_sdk_x_auth_exported.Account) error {
+func (this *Account) SetAccount(value types.AccountI) error {
 	if value == nil {
 		this.Sum = nil
 		return nil
@@ -1494,7 +1493,7 @@ func (this *Account) SetAccount(value github_com_cosmos_cosmos_sdk_x_auth_export
 		this.Sum = &Account_ModuleAccount{vt}
 		return nil
 	}
-	return fmt.Errorf("can't encode value of type %T as message Account", value)
+	return fmt.Errorf("can't encode value of type %T as message AccountI", value)
 }
 
 func (this *Supply) GetSupplyI() github_com_cosmos_cosmos_sdk_x_bank_exported.SupplyI {
@@ -3345,10 +3344,10 @@ func (m *Account) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Account: wiretype end group for non-group")
+			return fmt.Errorf("proto: AccountI: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Account: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AccountI: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

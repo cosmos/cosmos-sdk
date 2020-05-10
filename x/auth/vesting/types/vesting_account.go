@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
@@ -16,14 +15,14 @@ import (
 
 // Compile-time type assertions
 var (
-	_ authexported.Account        = (*BaseVestingAccount)(nil)
+	_ authtypes.AccountI          = (*BaseVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 )
 
 //-----------------------------------------------------------------------------
-// Base Vesting Account
+// Base Vesting AccountI
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
 // callers responsibility to ensure the base account has sufficient funds with
@@ -262,10 +261,10 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Continuous Vesting Account
+// Continuous Vesting AccountI
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
-var _ authexported.GenesisAccount = (*ContinuousVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*ContinuousVestingAccount)(nil)
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
 func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
@@ -422,10 +421,10 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Periodic Vesting Account
+// Periodic Vesting AccountI
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
-var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*PeriodicVestingAccount)(nil)
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
@@ -614,10 +613,10 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Delayed Vesting Account
+// Delayed Vesting AccountI
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
-var _ authexported.GenesisAccount = (*DelayedVestingAccount)(nil)
+var _ authtypes.GenesisAccount = (*DelayedVestingAccount)(nil)
 
 // NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
 func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {

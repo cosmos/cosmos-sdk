@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -35,10 +35,10 @@ func NewAppCodec(amino *codec.Codec, anyUnpacker types.AnyUnpacker) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino, anyUnpacker), amino: amino, anyUnpacker: anyUnpacker}
 }
 
-// MarshalAccount marshals an Account interface. If the given type implements
+// MarshalAccount marshals an AccountI interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
+func (c *Codec) MarshalAccount(accI authtypes.AccountI) ([]byte, error) {
 	acc := &Account{}
 	if err := acc.SetAccount(accI); err != nil {
 		return nil, err
@@ -47,9 +47,9 @@ func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
 	return c.Marshaler.MarshalBinaryBare(acc)
 }
 
-// UnmarshalAccount returns an Account interface from raw encoded account bytes
-// of a Proto-based Account type. An error is returned upon decoding failure.
-func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
+// UnmarshalAccount returns an AccountI interface from raw encoded account bytes
+// of a Proto-based AccountI type. An error is returned upon decoding failure.
+func (c *Codec) UnmarshalAccount(bz []byte) (authtypes.AccountI, error) {
 	acc := &Account{}
 	if err := c.Marshaler.UnmarshalBinaryBare(bz, acc); err != nil {
 		return nil, err
@@ -58,14 +58,14 @@ func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
 	return acc.GetAccount(), nil
 }
 
-// MarshalAccountJSON JSON encodes an account object implementing the Account
+// MarshalAccountJSON JSON encodes an account object implementing the AccountI
 // interface.
-func (c *Codec) MarshalAccountJSON(acc authexported.Account) ([]byte, error) {
+func (c *Codec) MarshalAccountJSON(acc authtypes.AccountI) ([]byte, error) {
 	return c.Marshaler.MarshalJSON(acc)
 }
 
-// UnmarshalAccountJSON returns an Account from JSON encoded bytes.
-func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
+// UnmarshalAccountJSON returns an AccountI from JSON encoded bytes.
+func (c *Codec) UnmarshalAccountJSON(bz []byte) (authtypes.AccountI, error) {
 	acc := &Account{}
 	if err := c.Marshaler.UnmarshalJSON(bz, acc); err != nil {
 		return nil, err

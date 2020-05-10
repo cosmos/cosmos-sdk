@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -16,7 +15,7 @@ func TestGenesisAccountsContains(t *testing.T) {
 	addr := sdk.AccAddress(pubkey.Address())
 	acc := authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
 
-	genAccounts := exported.GenesisAccounts{}
+	genAccounts := authtypes.GenesisAccounts{}
 	require.False(t, genAccounts.Contains(acc.GetAddress()))
 
 	genAccounts = append(genAccounts, acc)

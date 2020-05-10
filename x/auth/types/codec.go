@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // Codec defines the interface needed to serialize x/auth state. It must be
@@ -10,22 +10,31 @@ import (
 type Codec interface {
 	codec.Marshaler
 
-	MarshalAccount(acc exported.Account) ([]byte, error)
-	UnmarshalAccount(bz []byte) (exported.Account, error)
+	MarshalAccount(acc AccountI) ([]byte, error)
+	UnmarshalAccount(bz []byte) (AccountI, error)
 
-	MarshalAccountJSON(acc exported.Account) ([]byte, error)
-	UnmarshalAccountJSON(bz []byte) (exported.Account, error)
+	MarshalAccountJSON(acc AccountI) ([]byte, error)
+	UnmarshalAccountJSON(bz []byte) (AccountI, error)
 }
 
 // RegisterCodec registers the account interfaces and concrete types on the
 // provided Amino codec.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
-	cdc.RegisterInterface((*exported.GenesisAccount)(nil), nil)
-	cdc.RegisterInterface((*exported.Account)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)
+	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
+	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
+	cdc.RegisterInterface((*AccountI)(nil), nil)
+	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/AccountI", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterInterface(
+		"cosmos_sdk.auth.v1.auth",
+		(*AccountI)(nil),
+		&BaseAccount{},
+		&ModuleAccount{},
+	)
 }
 
 // RegisterKeyTypeCodec registers an external concrete type defined in
@@ -36,6 +45,8 @@ func RegisterKeyTypeCodec(o interface{}, name string) {
 
 var (
 	amino = codec.New()
+
+	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
 )
 
 func init() {

@@ -10,7 +10,6 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
@@ -587,7 +586,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 	baseVestingWithCoins := types.NewBaseVestingAccount(baseAcc, initialVesting, 100)
 	tests := []struct {
 		name   string
-		acc    authexported.GenesisAccount
+		acc    authtypes.GenesisAccount
 		expErr bool
 	}{
 		{

@@ -4,18 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params   Params                   `json:"params" yaml:"params"`
-	Accounts exported.GenesisAccounts `json:"accounts" yaml:"accounts"`
+	Params   Params          `json:"params" yaml:"params"`
+	Accounts GenesisAccounts `json:"accounts" yaml:"accounts"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params, accounts exported.GenesisAccounts) GenesisState {
+func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
 	return GenesisState{
 		Params:   params,
 		Accounts: accounts,
@@ -24,7 +22,7 @@ func NewGenesisState(params Params, accounts exported.GenesisAccounts) GenesisSt
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultParams(), exported.GenesisAccounts{})
+	return NewGenesisState(DefaultParams(), GenesisAccounts{})
 }
 
 // GetGenesisStateFromAppState returns x/auth GenesisState given raw application
@@ -50,7 +48,7 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // SanitizeGenesisAccounts sorts accounts and coin sets.
-func SanitizeGenesisAccounts(genAccs exported.GenesisAccounts) exported.GenesisAccounts {
+func SanitizeGenesisAccounts(genAccs GenesisAccounts) GenesisAccounts {
 	sort.Slice(genAccs, func(i, j int) bool {
 		return genAccs[i].GetAccountNumber() < genAccs[j].GetAccountNumber()
 	})
@@ -59,7 +57,7 @@ func SanitizeGenesisAccounts(genAccs exported.GenesisAccounts) exported.GenesisA
 }
 
 // ValidateGenAccounts validates an array of GenesisAccounts and checks for duplicates
-func ValidateGenAccounts(accounts exported.GenesisAccounts) error {
+func ValidateGenAccounts(accounts GenesisAccounts) error {
 	addrMap := make(map[string]bool, len(accounts))
 
 	for _, acc := range accounts {
@@ -86,7 +84,7 @@ type GenesisAccountIterator struct{}
 // appGenesis and invokes a callback on each genesis account. If any call
 // returns true, iteration stops.
 func (GenesisAccountIterator) IterateGenesisAccounts(
-	cdc Codec, appGenesis map[string]json.RawMessage, cb func(exported.Account) (stop bool),
+	cdc Codec, appGenesis map[string]json.RawMessage, cb func(AccountI) (stop bool),
 ) {
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
 		if cb(genAcc) {

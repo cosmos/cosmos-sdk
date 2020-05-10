@@ -1,15 +1,15 @@
 package exported
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
 type VestingAccount interface {
-	authexported.Account
+	types.AccountI
 
 	// LockedCoins returns the set of coins that are not spendable (i.e. locked).
 	//

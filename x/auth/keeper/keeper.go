@@ -10,7 +10,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -23,14 +22,14 @@ type AccountKeeper struct {
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
-	// The prototypical Account constructor.
-	proto func() exported.Account
+	// The prototypical AccountI constructor.
+	proto func() types.AccountI
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 func NewAccountKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() exported.Account,
+	cdc codec.Marshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
 	maccPerms map[string][]string,
 ) AccountKeeper {
 
@@ -107,7 +106,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 
 // ValidatePermissions validates that the module account has been granted
 // permissions within its set of allowed permissions.
-func (ak AccountKeeper) ValidatePermissions(macc exported.ModuleAccountI) error {
+func (ak AccountKeeper) ValidatePermissions(macc types.ModuleAccountI) error {
 	permAddr := ak.permAddrs[macc.GetName()]
 	for _, perm := range macc.GetPermissions() {
 		if !permAddr.HasPermission(perm) {
@@ -140,7 +139,7 @@ func (ak AccountKeeper) GetModuleAddressAndPermissions(moduleName string) (addr 
 
 // GetModuleAccountAndPermissions gets the module account from the auth account store and its
 // registered permissions
-func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (exported.ModuleAccountI, []string) {
+func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string) {
 	addr, perms := ak.GetModuleAddressAndPermissions(moduleName)
 	if addr == nil {
 		return nil, []string{}
@@ -148,7 +147,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleNa
 
 	acc := ak.GetAccount(ctx, addr)
 	if acc != nil {
-		macc, ok := acc.(exported.ModuleAccountI)
+		macc, ok := acc.(types.ModuleAccountI)
 		if !ok {
 			panic("account is not a module account")
 		}
@@ -157,7 +156,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleNa
 
 	// create a new module account
 	macc := types.NewEmptyModuleAccount(moduleName, perms...)
-	maccI := (ak.NewAccount(ctx, macc)).(exported.ModuleAccountI) // set the account number
+	maccI := (ak.NewAccount(ctx, macc)).(types.ModuleAccountI) // set the account number
 	ak.SetModuleAccount(ctx, maccI)
 
 	return maccI, perms
@@ -165,17 +164,17 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleNa
 
 // GetModuleAccount gets the module account from the auth account store, if the account does not
 // exist in the AccountKeeper, then it is created.
-func (ak AccountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) exported.ModuleAccountI {
+func (ak AccountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI {
 	acc, _ := ak.GetModuleAccountAndPermissions(ctx, moduleName)
 	return acc
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc exported.ModuleAccountI) { //nolint:interfacer
+func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) { //nolint:interfacer
 	ak.SetAccount(ctx, macc)
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) exported.Account {
+func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 	acc, err := ak.UnmarshalAccount(bz)
 	if err != nil {
 		panic(err)

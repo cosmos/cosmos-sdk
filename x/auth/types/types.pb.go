@@ -183,7 +183,7 @@ func (m *Params) GetSigVerifyCostSecp256k1() uint64 {
 	return 0
 }
 
-// Account defines the application-level Account type.
+// AccountI defines the application-level AccountI type.
 type Account struct {
 	Account *types.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 }
@@ -232,7 +232,7 @@ func init() {
 	proto.RegisterType((*BaseAccount)(nil), "cosmos_sdk.x.auth.v1.BaseAccount")
 	proto.RegisterType((*ModuleAccount)(nil), "cosmos_sdk.x.auth.v1.ModuleAccount")
 	proto.RegisterType((*Params)(nil), "cosmos_sdk.x.auth.v1.Params")
-	proto.RegisterType((*Account)(nil), "cosmos_sdk.x.auth.v1.Account")
+	proto.RegisterType((*Account)(nil), "cosmos_sdk.x.auth.v1.AccountI")
 }
 
 func init() { proto.RegisterFile("x/auth/types/types.proto", fileDescriptor_2d526fa662daab74) }
@@ -1110,15 +1110,15 @@ func (m *Account) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Account: wiretype end group for non-group")
+			return fmt.Errorf("proto: AccountI: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Account: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AccountI: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountI", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {

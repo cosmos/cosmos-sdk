@@ -1,8 +1,9 @@
 package exported
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

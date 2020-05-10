@@ -6,12 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// nolint - reexport
 type (
 	PruningOptions = types.PruningOptions
 )
 
-// nolint - reexport
 type (
 	Store                     = types.Store
 	Committer                 = types.Committer
@@ -57,7 +55,6 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []t
 	return types.DiffKVStores(a, b, prefixesToSkip)
 }
 
-// nolint - reexport
 type (
 	CacheKVStore  = types.CacheKVStore
 	CommitKVStore = types.CommitKVStore
@@ -66,10 +63,8 @@ type (
 	CommitID      = types.CommitID
 )
 
-// nolint - reexport
 type StoreType = types.StoreType
 
-// nolint - reexport
 const (
 	StoreTypeMulti     = types.StoreTypeMulti
 	StoreTypeDB        = types.StoreTypeDB
@@ -78,7 +73,6 @@ const (
 	StoreTypeMemory    = types.StoreTypeMemory
 )
 
-// nolint - reexport
 type (
 	StoreKey          = types.StoreKey
 	CapabilityKey     = types.CapabilityKey
@@ -158,25 +152,21 @@ type TraceContext = types.TraceContext
 
 // --------------------------------------
 
-// nolint - reexport
 type (
 	Gas       = types.Gas
 	GasMeter  = types.GasMeter
 	GasConfig = types.GasConfig
 )
 
-// nolint - reexport
 func NewGasMeter(limit Gas) GasMeter {
 	return types.NewGasMeter(limit)
 }
 
-// nolint - reexport
 type (
 	ErrorOutOfGas    = types.ErrorOutOfGas
 	ErrorGasOverflow = types.ErrorGasOverflow
 )
 
-// nolint - reexport
 func NewInfiniteGasMeter() GasMeter {
 	return types.NewInfiniteGasMeter()
 }

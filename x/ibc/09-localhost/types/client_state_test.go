@@ -100,7 +100,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	testCases := []struct {
 		name        string
 		clientState types.ClientState
-		connection  connection.ConnectionEnd
+		connection  connection.End
 		prefix      commitmenttypes.MerklePrefix
 		proof       commitmenttypes.MerkleProof
 		expPass     bool

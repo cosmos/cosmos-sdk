@@ -1,7 +1,5 @@
 package bank
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"

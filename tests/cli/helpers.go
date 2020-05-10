@@ -164,7 +164,7 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 // QueryTxs is simcli query txs
 func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsResult {
 	cmd := fmt.Sprintf("%s query txs --page=%d --limit=%d --events='%s' %v",
-		f.SimcliBinary, page, limit, strings.Join(events, "&"), f.Flags())
+		f.SimcliBinary, page, limit, buildEventsQueryString(events), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var result sdk.SearchTxsResult
 
@@ -194,6 +194,10 @@ func AddFlags(cmd string, flags []string) string {
 func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx auth.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
+}
+
+func buildEventsQueryString(events []string) string {
+	return strings.Join(events, "&")
 }
 
 func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx auth.StdTx) []byte {

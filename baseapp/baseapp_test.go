@@ -665,7 +665,8 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 
 func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		store := ctx.KVStore(capKey)
+		newCtx = ctx.WithEventManager(sdk.NewEventManager())
+		store := newCtx.KVStore(capKey)
 		txTest := tx.(txTest)
 
 		if txTest.FailOnAnte {
@@ -677,14 +678,18 @@ func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.A
 			return newCtx, err
 		}
 
+		newCtx.EventManager().EmitEvents(
+			counterEvent("ante_handler", txTest.Counter),
+		)
+
 		return newCtx, nil
 	}
 }
 
-func counterEvent(msgCount int64) sdk.Events {
+func counterEvent(evType string, msgCount int64) sdk.Events {
 	return sdk.Events{
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
+			evType,
 			sdk.NewAttribute("update_counter", fmt.Sprintf("%d", msgCount)),
 		),
 	}
@@ -708,7 +713,7 @@ func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk
 		}
 
 		ctx.EventManager().EmitEvents(
-			counterEvent(msgCount),
+			counterEvent(sdk.EventTypeMessage, msgCount),
 		)
 
 		res, err := incrementingCounter(t, store, deliverKey, msgCount)
@@ -842,8 +847,9 @@ func TestDeliverTx(t *testing.T) {
 			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			events := res.GetEvents()
-			require.Len(t, events, 2, "should contain message type and counter events")
-			require.Equal(t, counterEvent(counter).ToABCIEvents()[0], events[1], "update counter event")
+			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+			require.Equal(t, counterEvent("ante_handler", counter).ToABCIEvents()[0], events[0], "ante handler event")
+			require.Equal(t, counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents()[0], events[2], "msg handler update counter event")
 		}
 
 		app.EndBlock(abci.RequestEndBlock{})
@@ -1177,9 +1183,10 @@ func TestTxGasLimits(t *testing.T) {
 
 		// check for out of gas
 		if !tc.fail {
-			require.NotEmpty(t, result, fmt.Sprintf("%d: %v, %v", i, tc, err))
+			require.NotNil(t, result, fmt.Sprintf("%d: %v, %v", i, tc, err))
 		} else {
 			require.Error(t, err)
+			require.Nil(t, result)
 
 			space, code, _ := sdkerrors.ABCIInfo(err, false)
 			require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)

@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/viper"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -313,7 +312,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
 func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
 		Long: strings.TrimSpace(
@@ -334,7 +333,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, 0, 0))
+			bz, err := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddr, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit)))
 			if err != nil {
 				return err
 			}
@@ -353,6 +352,11 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 			return cliCtx.PrintOutput(resp)
 		},
 	}
+
+	cmd.Flags().Int(flags.FlagPage, 0, "pagination page of delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 0, "pagination limit of delegations to query for")
+
+	return cmd
 }
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single

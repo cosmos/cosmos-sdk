@@ -589,7 +589,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		msCache.Write()
 	}
 
-	if err == nil {
+	if err == nil && len(events) > 0 {
 		// append the events in the order of occurrence
 		result.Events = append(events.ToABCIEvents(), result.Events...)
 	}

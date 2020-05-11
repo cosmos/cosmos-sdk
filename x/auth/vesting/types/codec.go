@@ -17,6 +17,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 }
 
+// RegisterInterface associates protoName with AccountI and VestingAccount
+// Interfaces and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos_sdk.auth.v1.vesting",

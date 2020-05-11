@@ -113,7 +113,7 @@ func delegatorDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // HTTP request handler to query a delegator unbonding delegations
 func delegatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return queryDelegator(cliCtx, "custom/staking/delegatorUnbondingDelegations")
+	return queryDelegator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorUnbondingDelegations))
 }
 
 // HTTP request handler to query all staking txs (msgs) from a delegator
@@ -190,7 +190,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // HTTP request handler to query an unbonding-delegation
 func unbondingDelegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return queryBonds(cliCtx, "custom/staking/unbondingDelegation")
+	return queryBonds(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryUnbondingDelegation))
 }
 
 // HTTP request handler to query redelegations
@@ -239,7 +239,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData("custom/staking/redelegations", bz)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryRedelegations), bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -256,12 +256,12 @@ func delegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // HTTP request handler to query all delegator bonded validators
 func delegatorValidatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return queryDelegator(cliCtx, "custom/staking/delegatorValidators")
+	return queryDelegator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorValidators))
 }
 
 // HTTP request handler to get information from a currently bonded validator
 func delegatorValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return queryBonds(cliCtx, "custom/staking/delegatorValidator")
+	return queryBonds(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorValidator))
 }
 
 // HTTP request handler to query list of validators
@@ -303,7 +303,7 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // HTTP request handler to query the validator information from a given validator address
 func validatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return queryValidator(cliCtx, "custom/staking/validator")
+	return queryValidator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidator))
 }
 
 // HTTP request handler to query all unbonding delegations from a validator
@@ -313,7 +313,7 @@ func validatorDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // HTTP request handler to query all unbonding delegations from a validator
 func validatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return queryValidator(cliCtx, "custom/staking/validatorUnbondingDelegations")
+	return queryValidator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidatorUnbondingDelegations))
 }
 
 // HTTP request handler to query historical info at a given height
@@ -353,7 +353,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData("custom/staking/pool", nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryPool), nil)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -371,7 +371,7 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, height, err := cliCtx.QueryWithData("custom/staking/parameters", nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters), nil)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

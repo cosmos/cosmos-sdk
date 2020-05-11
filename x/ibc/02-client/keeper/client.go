@@ -89,7 +89,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		// override client state and update the block height
 		clientState = localhosttypes.NewClientState(
 			k.ClientStore(ctx, clientState.GetID()),
-			clientState.GetChainID(),
+			ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
 			ctx.BlockHeight(),
 		)
 	default:
@@ -110,17 +110,23 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
 
 	// Emit events in keeper so antehandler emits them as well
-	ctx.EventManager().EmitEvents(sdk.Events{
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
 		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	)
+
+	// localhost client is not updated though messages
+	if clientType != exported.Localhost {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			),
+		)
+	}
 
 	return clientState, nil
 }

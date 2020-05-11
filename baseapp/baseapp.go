@@ -536,6 +536,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		return sdk.GasInfo{}, nil, err
 	}
 
+	var events sdk.Events
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
@@ -563,6 +564,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 			ctx = newCtx.WithMultiStore(ms)
 		}
 
+		events = ctx.EventManager().Events()
+
 		// GasMeter expected to be set in AnteHandler
 		gasWanted = ctx.GasMeter().Limit()
 
@@ -584,6 +587,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		msCache.Write()
+
+		if len(events) > 0 {
+			// append the events in the order of occurrence
+			result.Events = append(events.ToABCIEvents(), result.Events...)
+		}
 	}
 
 	return gInfo, result, err

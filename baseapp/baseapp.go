@@ -570,11 +570,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			// emit events from AnteHandler execution
-			result = &sdk.Result{
-				Events: events.ToABCIEvents(),
-			}
-			return gInfo, result, err
+			return gInfo, nil, err
 		}
 
 		msCache.Write()

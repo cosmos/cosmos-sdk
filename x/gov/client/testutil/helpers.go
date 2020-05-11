@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/stretchr/testify/require"
+
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/stretchr/testify/require"
 )
 
 //___________________________________________________________________________________

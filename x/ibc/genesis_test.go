@@ -41,6 +41,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							},
 						),
 					},
+					true,
 				),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
@@ -84,6 +85,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						localhosttypes.NewClientState(suite.store, "chaindID", 0),
 					},
 					nil,
+					false,
 				),
 				ConnectionGenesis: connection.DefaultGenesisState(),
 			},

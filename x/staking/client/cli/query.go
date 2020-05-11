@@ -164,8 +164,8 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 0, "pagination page of unbonding delegations to query for")
-	cmd.Flags().Int(flags.FlagLimit, 0, "pagination limit of unbonding delegations to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of unbonding delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of unbonding delegations to query for")
 
 	return cmd
 }
@@ -353,8 +353,8 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		},
 	}
 
-	cmd.Flags().Int(flags.FlagPage, 0, "pagination page of delegations to query for")
-	cmd.Flags().Int(flags.FlagLimit, 0, "pagination limit of delegations to query for")
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of delegations to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of delegations to query for")
 
 	return cmd
 }

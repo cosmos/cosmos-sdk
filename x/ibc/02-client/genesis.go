@@ -8,7 +8,7 @@ import (
 
 // InitGenesis initializes the ibc client submodule's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k Keeper, createLocalhost bool, gs GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 	for _, client := range gs.Clients {
 		k.SetClientState(ctx, client)
 		k.SetClientType(ctx, client.GetID(), client.ClientType())
@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, createLocalhost bool, gs GenesisStat
 		}
 	}
 
-	if !createLocalhost {
+	if !gs.CreateLocalhost {
 		return
 	}
 
@@ -47,5 +47,6 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	return GenesisState{
 		Clients:          k.GetAllClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
+		CreateLocalhost:  true,
 	}
 }

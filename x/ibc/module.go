@@ -98,10 +98,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(k *Keeper, createLocalhost bool) AppModule {
+func NewAppModule(k *Keeper) AppModule {
 	return AppModule{
-		keeper:          k,
-		createLocalhost: createLocalhost,
+		keeper: k,
 	}
 }
 

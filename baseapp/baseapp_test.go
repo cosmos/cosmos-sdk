@@ -784,7 +784,7 @@ func TestCheckTx(t *testing.T) {
 		txBytes, err := codec.MarshalBinaryBare(tx)
 		require.NoError(t, err)
 		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
-		require.Empty(t, r.GetEvents(), "checkTx doesn't emit events")
+		require.Empty(t, r.GetEvents())
 		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 

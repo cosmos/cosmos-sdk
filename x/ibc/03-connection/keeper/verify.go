@@ -35,11 +35,12 @@ func (k Keeper) VerifyClientConsensusState(
 		k.aminoCdc, targetConsState.GetRoot(), height, connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the

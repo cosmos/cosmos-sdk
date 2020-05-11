@@ -3,9 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
 

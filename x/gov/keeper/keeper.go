@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"

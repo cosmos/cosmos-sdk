@@ -2,11 +2,12 @@ package types
 
 import (
 	"fmt"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
 
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

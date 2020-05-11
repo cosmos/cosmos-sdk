@@ -146,7 +146,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	testCases := []struct {
 		name           string
 		clientState    ibctmtypes.ClientState
-		connection     connection.ConnectionEnd
+		connection     connection.End
 		consensusState ibctmtypes.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          commitmenttypes.MerkleProof

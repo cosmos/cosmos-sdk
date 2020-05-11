@@ -569,7 +569,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			return gInfo, nil, err
+			// emit events from AnteHandler execution
+			result = &sdk.Result{
+				Events: events.ToABCIEvents(),
+			}
+			return gInfo, result, err
 		}
 
 		msCache.Write()
@@ -588,8 +592,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		msCache.Write()
 	}
 
-	// append the events in the order of occurence
-	result.Events = append(events.ToABCIEvents(), result.Events...)
+	if err == nil {
+		// append the events in the order of occurence
+		result.Events = append(events.ToABCIEvents(), result.Events...)
+	}
 
 	return gInfo, result, err
 }

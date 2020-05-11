@@ -564,7 +564,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 			ctx = newCtx.WithMultiStore(ms)
 		}
 
-		events = append(events, ctx.EventManager().Events()...)
+		events = ctx.EventManager().Events()
 
 		// GasMeter expected to be set in AnteHandler
 		gasWanted = ctx.GasMeter().Limit()

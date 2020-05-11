@@ -72,11 +72,12 @@ func (k Keeper) VerifyConnectionState(
 		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }
 
 // VerifyChannelState verifies a proof of the channel state of the specified
@@ -111,11 +112,12 @@ func (k Keeper) VerifyChannelState(
 		portID, channelID, channel, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
@@ -151,11 +153,12 @@ func (k Keeper) VerifyPacketCommitment(
 		sequence, commitmentBytes, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
@@ -191,11 +194,12 @@ func (k Keeper) VerifyPacketAcknowledgement(
 		sequence, acknowledgement, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }
 
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
@@ -231,11 +235,12 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		sequence, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
@@ -270,9 +275,10 @@ func (k Keeper) VerifyNextSequenceRecv(
 		nextSequenceRecv, consensusState,
 	)
 
-	if err == nil {
-		k.clientKeeper.SetClientState(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	return err
+	k.clientKeeper.SetClientState(ctx, clientState)
+	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -31,22 +30,6 @@ type Codec struct {
 
 func NewAppCodec(amino *codec.Codec, anyUnpacker types.AnyUnpacker) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino, anyUnpacker), amino: amino, anyUnpacker: anyUnpacker}
-}
-
-// MarshalAccountJSON JSON encodes an account object implementing the AccountI
-// interface.
-func (c *Codec) MarshalAccountJSON(acc authtypes.AccountI) ([]byte, error) {
-	return c.Marshaler.MarshalJSON(acc)
-}
-
-// UnmarshalAccountJSON returns an AccountI from JSON encoded bytes.
-func (c *Codec) UnmarshalAccountJSON(bz []byte) (authtypes.AccountI, error) {
-	acc := &Account{}
-	if err := c.Marshaler.UnmarshalJSON(bz, acc); err != nil {
-		return nil, err
-	}
-
-	return acc.GetAccount(), nil
 }
 
 // MarshalSupply marshals a SupplyI interface. If the given type implements

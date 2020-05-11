@@ -22,7 +22,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
-		//&vesting.DelayedVestingAccount{},
 	)
 }
 

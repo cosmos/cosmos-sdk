@@ -143,27 +143,27 @@ func (cs ClientState) VerifyClientConsensusState(
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	bz, err := cdc.MarshalBinaryBare(consensusState)
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the
@@ -176,31 +176,31 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
-		return fmt.Errorf("invalid connection type %T", connectionEnd)
+		return cs, fmt.Errorf("invalid connection type %T", connectionEnd)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&connection)
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // VerifyChannelState verifies a proof of the channel state of the specified
@@ -214,31 +214,31 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	channelEnd, ok := channel.(channeltypes.Channel)
 	if !ok {
-		return fmt.Errorf("invalid channel type %T", channel)
+		return cs, fmt.Errorf("invalid channel type %T", channel)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&channelEnd)
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
@@ -252,21 +252,21 @@ func (cs ClientState) VerifyPacketCommitment(
 	sequence uint64,
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
@@ -280,21 +280,21 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	sequence uint64,
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
@@ -308,21 +308,21 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	channelID string,
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
@@ -335,23 +335,23 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
-) error {
+) (clientexported.ClientState, error) {
 	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
-		return err
+		return cs, err
 	}
 
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
-		return err
+		return cs, err
 	}
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
 	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
+		return cs, sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 
-	return nil
+	return cs, nil
 }
 
 // validateVerificationArgs perfoms the basic checks on the arguments that are

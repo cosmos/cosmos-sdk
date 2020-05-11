@@ -19,7 +19,7 @@ func (k Keeper) VerifyClientConsensusState(
 	consensusHeight uint64,
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
-) error {
+) (err error) {
 	clientID := connection.GetClientID()
 	clientState, found := k.clientKeeper.GetClientState(ctx, clientID)
 	if !found {
@@ -31,9 +31,15 @@ func (k Keeper) VerifyClientConsensusState(
 		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
 	}
 
-	return clientState.VerifyClientConsensusState(
+	clientState, err = clientState.VerifyClientConsensusState(
 		k.aminoCdc, targetConsState.GetRoot(), height, connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the
@@ -45,7 +51,7 @@ func (k Keeper) VerifyConnectionState(
 	proof commitmentexported.Proof,
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
-) error {
+) (err error) {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
@@ -62,9 +68,15 @@ func (k Keeper) VerifyConnectionState(
 		)
 	}
 
-	return clientState.VerifyConnectionState(
+	clientState, err = clientState.VerifyConnectionState(
 		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }
 
 // VerifyChannelState verifies a proof of the channel state of the specified
@@ -77,7 +89,7 @@ func (k Keeper) VerifyChannelState(
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
-) error {
+) (err error) {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
@@ -94,10 +106,16 @@ func (k Keeper) VerifyChannelState(
 		)
 	}
 
-	return clientState.VerifyChannelState(
+	clientState, err = clientState.VerifyChannelState(
 		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof,
 		portID, channelID, channel, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
@@ -111,7 +129,7 @@ func (k Keeper) VerifyPacketCommitment(
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
-) error {
+) (err error) {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
@@ -128,10 +146,16 @@ func (k Keeper) VerifyPacketCommitment(
 		)
 	}
 
-	return clientState.VerifyPacketCommitment(
+	clientState, err = clientState.VerifyPacketCommitment(
 		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, commitmentBytes, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
@@ -145,7 +169,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-) error {
+) (err error) {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
@@ -162,10 +186,16 @@ func (k Keeper) VerifyPacketAcknowledgement(
 		)
 	}
 
-	return clientState.VerifyPacketAcknowledgement(
+	clientState, err = clientState.VerifyPacketAcknowledgement(
 		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, acknowledgement, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }
 
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
@@ -179,7 +209,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	portID,
 	channelID string,
 	sequence uint64,
-) error {
+) (err error) {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
@@ -196,10 +226,16 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		)
 	}
 
-	return clientState.VerifyPacketAcknowledgementAbsence(
+	clientState, err = clientState.VerifyPacketAcknowledgementAbsence(
 		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
@@ -212,7 +248,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-) error {
+) (err error) {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
@@ -229,8 +265,14 @@ func (k Keeper) VerifyNextSequenceRecv(
 		)
 	}
 
-	return clientState.VerifyNextSequenceRecv(
+	clientState, err = clientState.VerifyNextSequenceRecv(
 		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		nextSequenceRecv, consensusState,
 	)
+
+	if err == nil {
+		k.clientKeeper.SetClientState(ctx, clientState)
+	}
+
+	return err
 }

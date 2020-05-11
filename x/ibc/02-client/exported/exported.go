@@ -33,7 +33,7 @@ type ClientState interface {
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 	VerifyConnectionState(
 		cdc codec.Marshaler,
 		height uint64,
@@ -42,7 +42,7 @@ type ClientState interface {
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 	VerifyChannelState(
 		cdc codec.Marshaler,
 		height uint64,
@@ -52,7 +52,7 @@ type ClientState interface {
 		channelID string,
 		channel channelexported.ChannelI,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 	VerifyPacketCommitment(
 		height uint64,
 		prefix commitmentexported.Prefix,
@@ -62,7 +62,7 @@ type ClientState interface {
 		sequence uint64,
 		commitmentBytes []byte,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 	VerifyPacketAcknowledgement(
 		height uint64,
 		prefix commitmentexported.Prefix,
@@ -72,7 +72,7 @@ type ClientState interface {
 		sequence uint64,
 		acknowledgement []byte,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 	VerifyPacketAcknowledgementAbsence(
 		height uint64,
 		prefix commitmentexported.Prefix,
@@ -81,7 +81,7 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 	VerifyNextSequenceRecv(
 		height uint64,
 		prefix commitmentexported.Prefix,
@@ -90,7 +90,7 @@ type ClientState interface {
 		channelID string,
 		nextSequenceRecv uint64,
 		consensusState ConsensusState,
-	) error
+	) (ClientState, error)
 }
 
 // ConsensusState is the state of the consensus process

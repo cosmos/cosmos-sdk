@@ -79,7 +79,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyClientConsensusState(
+		_, err := tc.clientState.VerifyClientConsensusState(
 			suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
 
 			// suite.cdc, height, tc.prefix, tc.proof, nil,
@@ -125,7 +125,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyConnectionState(
+		_, err := tc.clientState.VerifyConnectionState(
 			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
 		)
 
@@ -176,7 +176,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyChannelState(
+		_, err := tc.clientState.VerifyChannelState(
 			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
 		)
 
@@ -231,7 +231,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketCommitment(
+		_, err := tc.clientState.VerifyPacketCommitment(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
 		)
 
@@ -286,7 +286,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketAcknowledgement(
+		_, err := tc.clientState.VerifyPacketAcknowledgement(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
 		)
 
@@ -317,7 +317,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
+		_, err := tc.clientState.VerifyPacketAcknowledgementAbsence(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
@@ -367,7 +367,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyNextSequenceRecv(
+		_, err := tc.clientState.VerifyNextSequenceRecv(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 

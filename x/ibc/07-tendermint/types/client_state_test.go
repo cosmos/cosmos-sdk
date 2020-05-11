@@ -127,7 +127,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyClientConsensusState(
+		_, err := tc.clientState.VerifyClientConsensusState(
 			suite.aminoCdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
@@ -210,7 +210,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyConnectionState(
+		_, err := tc.clientState.VerifyConnectionState(
 			suite.cdc, height, tc.prefix, tc.proof, testConnectionID, tc.connection, tc.consensusState,
 		)
 
@@ -293,7 +293,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyChannelState(
+		_, err := tc.clientState.VerifyChannelState(
 			suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, tc.consensusState,
 		)
 
@@ -373,7 +373,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketCommitment(
+		_, err := tc.clientState.VerifyPacketCommitment(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, tc.consensusState,
 		)
 
@@ -453,7 +453,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketAcknowledgement(
+		_, err := tc.clientState.VerifyPacketAcknowledgement(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, tc.consensusState,
 		)
 
@@ -528,7 +528,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
+		_, err := tc.clientState.VerifyPacketAcknowledgementAbsence(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
 		)
 
@@ -603,7 +603,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyNextSequenceRecv(
+		_, err := tc.clientState.VerifyNextSequenceRecv(
 			height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
 		)
 

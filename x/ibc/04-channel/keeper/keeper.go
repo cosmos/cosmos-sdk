@@ -251,13 +251,13 @@ func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.IdentifiedChan
 }
 
 // LookupModuleByChannel will return the IBCModule along with the capability associated with a given channel defined by its portID and channelID
-func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capability.Capability, bool) {
-	modules, cap, ok := k.scopedKeeper.LookupModules(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
-	if !ok {
-		return "", nil, false
+func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capability.Capability, error) {
+	modules, cap, err := k.scopedKeeper.LookupModules(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return "", nil, err
 	}
 
-	return ibctypes.GetModuleOwner(modules), cap, true
+	return ibctypes.GetModuleOwner(modules), cap, nil
 }
 
 // common functionality for IteratePacketCommitment and IteratePacketAcknowledgemen

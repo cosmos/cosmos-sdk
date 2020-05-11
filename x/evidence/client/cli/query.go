@@ -53,7 +53,7 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 			return err
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewContext().WithCodec(cdc)
 
 		if hash := args[0]; hash != "" {
 			return queryEvidence(cdc, cliCtx, hash)
@@ -63,7 +63,7 @@ func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 	}
 }
 
-func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) error {
+func queryEvidence(cdc *codec.Codec, cliCtx context.Context, hash string) error {
 	if _, err := hex.DecodeString(hash); err != nil {
 		return fmt.Errorf("invalid evidence hash: %w", err)
 	}
@@ -89,7 +89,7 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 	return cliCtx.PrintOutput(evidence)
 }
 
-func queryAllEvidence(cdc *codec.Codec, cliCtx context.CLIContext) error {
+func queryAllEvidence(cdc *codec.Codec, cliCtx context.Context) error {
 	params := types.NewQueryAllEvidenceParams(viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {

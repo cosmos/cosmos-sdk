@@ -40,7 +40,7 @@ func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.Accou
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			senderAddr := cliCtx.GetFromAddress()
@@ -90,7 +90,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			senderAddr := cliCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]

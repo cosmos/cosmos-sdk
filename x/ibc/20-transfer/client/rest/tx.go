@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/transfer", RestPortID, RestChannelID), transferHandlerFn(cliCtx)).Methods("POST")
 }
 
@@ -30,7 +30,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/transfer [post]
-func transferHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func transferHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]

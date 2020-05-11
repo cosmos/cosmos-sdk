@@ -33,7 +33,7 @@ $ %s tx ibc client localhost create --from node0 --home ../node0/<app>cli --chai
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			msg := types.NewMsgCreateClient(cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {

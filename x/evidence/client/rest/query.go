@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerQueryRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc(
 		fmt.Sprintf("/evidence/{%s}", RestParamEvidenceHash),
 		queryEvidenceHandler(cliCtx),
@@ -24,7 +24,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods(MethodGet)
 }
 
-func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func queryEvidenceHandler(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		evidenceHash := vars[RestParamEvidenceHash]
@@ -57,7 +57,7 @@ func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryAllEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func queryAllEvidenceHandler(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {

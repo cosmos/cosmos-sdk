@@ -14,7 +14,7 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/clients/tendermint", createClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/ibc/clients/{%s}/misbehaviour", submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
@@ -30,7 +30,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Success 200 {object} PostCreateClient "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/tendermint [post]
-func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func createClientHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -77,7 +77,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/update [post]
-func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func updateClientHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
@@ -125,7 +125,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/misbehaviour [post]
-func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func submitMisbehaviourHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req SubmitMisbehaviourReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {

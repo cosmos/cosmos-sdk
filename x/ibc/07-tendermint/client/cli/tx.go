@@ -38,7 +38,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
 
@@ -100,7 +100,7 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			clientID := args[0]
 
@@ -145,7 +145,7 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			var ev evidenceexported.Evidence
 			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {

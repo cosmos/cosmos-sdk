@@ -20,7 +20,7 @@ import (
 
 // nolint
 func newRegisterTxRoutes(
-	cliCtx context.CLIContext,
+	cliCtx context.Context,
 	txg tx.Generator,
 	newMsgFn func() gov.MsgSubmitProposalI,
 	r *mux.Router) {
@@ -28,7 +28,7 @@ func newRegisterTxRoutes(
 	r.HandleFunc("/upgrade/cancel", newCancelPlanHandler(cliCtx, txg, newMsgFn)).Methods("POST")
 }
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc("/upgrade/plan", postPlanHandler(cliCtx)).Methods("POST")
 	r.HandleFunc("/upgrade/cancel", cancelPlanHandler(cliCtx)).Methods("POST")
 }
@@ -53,7 +53,7 @@ type CancelRequest struct {
 	Deposit     sdk.Coins    `json:"deposit" yaml:"deposit"`
 }
 
-func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
+func ProposalRESTHandler(cliCtx context.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "upgrade",
 		Handler:  postPlanHandler(cliCtx),
@@ -61,7 +61,7 @@ func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler 
 }
 
 // nolint
-func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newPostPlanHandler(cliCtx context.Context, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
@@ -106,7 +106,7 @@ func newPostPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn fu
 }
 
 // nolint
-func newCancelPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
+func newCancelPlanHandler(cliCtx context.Context, txg tx.Generator, newMsgFn func() gov.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 
@@ -141,7 +141,7 @@ func newCancelPlanHandler(cliCtx context.CLIContext, txg tx.Generator, newMsgFn 
 	}
 }
 
-func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func postPlanHandler(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest
 
@@ -178,7 +178,7 @@ func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func cancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func cancelPlanHandler(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CancelRequest
 

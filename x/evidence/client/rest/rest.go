@@ -24,7 +24,7 @@ type EvidenceRESTHandler struct {
 
 // RegisterRoutes registers all Evidence submission handlers for the evidence module's
 // REST service handler.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, handlers []EvidenceRESTHandler) {
+func RegisterRoutes(cliCtx context.Context, r *mux.Router, handlers []EvidenceRESTHandler) {
 	registerQueryRoutes(cliCtx, r)
 	registerTxRoutes(cliCtx, r, handlers)
 }

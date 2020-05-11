@@ -10,7 +10,7 @@ import (
 
 // QueryDelegationRewards queries a delegation rewards between a delegator and a
 // validator.
-func QueryDelegationRewards(cliCtx context.CLIContext, queryRoute, delAddr, valAddr string) ([]byte, int64, error) {
+func QueryDelegationRewards(cliCtx context.Context, queryRoute, delAddr, valAddr string) ([]byte, int64, error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
 	if err != nil {
 		return nil, 0, err
@@ -33,7 +33,7 @@ func QueryDelegationRewards(cliCtx context.CLIContext, queryRoute, delAddr, valA
 
 // QueryDelegatorValidators returns delegator's list of validators
 // it submitted delegations to.
-func QueryDelegatorValidators(cliCtx context.CLIContext, queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
+func QueryDelegatorValidators(cliCtx context.Context, queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
 	res, _, err := cliCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorValidators),
 		cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
@@ -42,7 +42,7 @@ func QueryDelegatorValidators(cliCtx context.CLIContext, queryRoute string, dele
 }
 
 // QueryValidatorCommission returns a validator's commission.
-func QueryValidatorCommission(cliCtx context.CLIContext, queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
+func QueryValidatorCommission(cliCtx context.Context, queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
 	res, _, err := cliCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorCommission),
 		cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
@@ -52,7 +52,7 @@ func QueryValidatorCommission(cliCtx context.CLIContext, queryRoute string, vali
 
 // WithdrawAllDelegatorRewards builds a multi-message slice to be used
 // to withdraw all delegations rewards for the given delegator.
-func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, queryRoute string, delegatorAddr sdk.AccAddress) ([]sdk.Msg, error) {
+func WithdrawAllDelegatorRewards(cliCtx context.Context, queryRoute string, delegatorAddr sdk.AccAddress) ([]sdk.Msg, error) {
 	// retrieve the comprehensive list of all validators which the
 	// delegator had submitted delegations to
 	bz, err := QueryDelegatorValidators(cliCtx, queryRoute, delegatorAddr)

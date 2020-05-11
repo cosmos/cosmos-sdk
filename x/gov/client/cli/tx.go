@@ -117,7 +117,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(cdc)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			proposal, err := parseSubmitProposalFlags()
@@ -175,7 +175,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(cdc)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			// validate that the proposal id is a uint
@@ -223,7 +223,7 @@ $ %s tx gov vote 1 yes --from mykey
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(cdc)
 			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
 
 			// Get voting address
@@ -312,7 +312,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			proposal, err := parseSubmitProposalFlags()
 			if err != nil {
@@ -363,7 +363,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -411,7 +411,7 @@ $ %s tx gov vote 1 yes --from mykey
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			// Get voting address
 			from := cliCtx.GetFromAddress()

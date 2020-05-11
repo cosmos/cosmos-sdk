@@ -43,7 +43,7 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewContext().WithCodec(cdc)
 
 			result, err := GetValidators(cliCtx, height, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 			if err != nil {
@@ -119,7 +119,7 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 }
 
 // GetValidators from client
-func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (ResultValidatorsOutput, error) {
+func GetValidators(cliCtx context.Context, height *int64, page, limit int) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
@@ -160,7 +160,7 @@ func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (R
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func ValidatorSetRequestHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
 		if err != nil {
@@ -194,7 +194,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func LatestValidatorSetRequestHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
 		if err != nil {

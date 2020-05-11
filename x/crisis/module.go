@@ -53,7 +53,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 }
 
 // RegisterRESTRoutes registers no REST routes for the crisis module.
-func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
+func (AppModuleBasic) RegisterRESTRoutes(_ context.Context, _ *mux.Router) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {

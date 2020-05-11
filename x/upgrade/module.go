@@ -43,7 +43,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // RegisterRESTRoutes registers all REST query handlers
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) {
+func (AppModuleBasic) RegisterRESTRoutes(ctx context.Context, r *mux.Router) {
 	rest.RegisterRoutes(ctx, r)
 }
 

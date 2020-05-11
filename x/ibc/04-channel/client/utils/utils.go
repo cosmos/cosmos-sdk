@@ -10,7 +10,7 @@ import (
 
 // QueryPacket returns a packet from the store
 func QueryPacket(
-	ctx context.CLIContext, portID, channelID string,
+	ctx context.Context, portID, channelID string,
 	sequence, timeoutHeight, timeoutTimestamp uint64, prove bool,
 ) (types.PacketResponse, error) {
 	req := abci.RequestQuery{
@@ -49,7 +49,7 @@ func QueryPacket(
 
 // QueryChannel queries the store to get a channel and a merkle proof.
 func QueryChannel(
-	ctx context.CLIContext, portID, channelID string, prove bool,
+	ctx context.Context, portID, channelID string, prove bool,
 ) (types.ChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",

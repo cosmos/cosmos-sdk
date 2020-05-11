@@ -15,12 +15,12 @@ func TestCreateVerifier(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		ctx       context.CLIContext
+		ctx       context.Context
 		expectErr bool
 	}{
-		{"no chain ID", context.CLIContext{}, true},
-		{"no home directory", context.CLIContext{}.WithChainID("test"), true},
-		{"no client or RPC URI", context.CLIContext{HomeDir: tmpDir}.WithChainID("test"), true},
+		{"no chain ID", context.Context{}, true},
+		{"no home directory", context.Context{}.WithChainID("test"), true},
+		{"no client or RPC URI", context.Context{HomeDir: tmpDir}.WithChainID("test"), true},
 	}
 
 	for _, tc := range testCases {

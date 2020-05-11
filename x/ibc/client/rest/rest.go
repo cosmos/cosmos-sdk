@@ -12,7 +12,7 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
+func RegisterRoutes(cliCtx context.Context, r *mux.Router, queryRoute string) {
 	client.RegisterRESTRoutes(cliCtx, r, queryRoute)
 	tendermint.RegisterRESTRoutes(cliCtx, r, queryRoute)
 	localhost.RegisterRESTRoutes(cliCtx, r, queryRoute)

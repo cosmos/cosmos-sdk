@@ -33,7 +33,7 @@ func createFakeTxBuilder() auth.TxBuilder {
 }
 
 func Test_splitAndCall_NoMessages(t *testing.T) {
-	ctx := context.CLIContext{}
+	ctx := context.Context{}
 	txBldr := createFakeTxBuilder()
 
 	err := splitAndApply(nil, ctx, txBldr, nil, 10)
@@ -41,7 +41,7 @@ func Test_splitAndCall_NoMessages(t *testing.T) {
 }
 
 func Test_splitAndCall_Splitting(t *testing.T) {
-	ctx := context.CLIContext{}
+	ctx := context.Context{}
 	txBldr := createFakeTxBuilder()
 
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -60,7 +60,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	callCount := 0
 	err := splitAndApply(
-		func(ctx context.CLIContext, txBldr auth.TxBuilder, msgs []sdk.Msg) error {
+		func(ctx context.Context, txBldr auth.TxBuilder, msgs []sdk.Msg) error {
 			callCount++
 
 			assert.NotNil(t, ctx)

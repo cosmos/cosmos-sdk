@@ -67,7 +67,7 @@ func NewCreateValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRet
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			txf, msg, err := NewBuildCreateValidatorMsg(cliCtx, txf)
 			if err != nil {
@@ -103,7 +103,7 @@ func NewEditValidatorCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetri
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.NewDescription(
@@ -171,7 +171,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -219,7 +219,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -268,7 +268,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
 
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -293,7 +293,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewBuildCreateValidatorMsg(cliCtx context.CLIContext, txf tx.Factory) (tx.Factory, sdk.Msg, error) {
+func NewBuildCreateValidatorMsg(cliCtx context.Context, txf tx.Factory) (tx.Factory, sdk.Msg, error) {
 	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
 	if err != nil {
 		return txf, nil, err
@@ -471,7 +471,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			txBldr, msg, err := BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
@@ -508,7 +508,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.NewDescription(
@@ -575,7 +575,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -612,7 +612,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -654,7 +654,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -674,7 +674,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
+func BuildCreateValidatorMsg(cliCtx context.Context, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
 

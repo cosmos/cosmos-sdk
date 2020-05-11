@@ -12,7 +12,7 @@ import (
 
 // QueryGenesisTxs writes the genesis transactions to the response if no error
 // occurs.
-func QueryGenesisTxs(cliCtx context.CLIContext, w http.ResponseWriter) {
+func QueryGenesisTxs(cliCtx context.Context, w http.ResponseWriter) {
 	resultGenesis, err := cliCtx.Client.Genesis()
 	if err != nil {
 		rest.WriteErrorResponse(

@@ -25,7 +25,7 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 // queries staking txs
-func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
+func queryTxs(cliCtx context.Context, action string, delegatorAddr string) (*sdk.SearchTxsResult, error) {
 	page := 1
 	limit := 100
 	events := []string{
@@ -36,7 +36,7 @@ func queryTxs(cliCtx context.CLIContext, action string, delegatorAddr string) (*
 	return authclient.QueryTxsByEvents(cliCtx, events, page, limit, "")
 }
 
-func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
+func queryBonds(cliCtx context.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -74,7 +74,7 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 	}
 }
 
-func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
+func queryDelegator(cliCtx context.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -106,7 +106,7 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 	}
 }
 
-func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
+func queryValidator(cliCtx context.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["validatorAddr"]

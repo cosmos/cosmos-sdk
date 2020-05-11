@@ -32,7 +32,7 @@ type ProposalRESTHandler struct {
 }
 
 func RegisterHandlers(
-	cliCtx context.CLIContext,
+	cliCtx context.Context,
 	txg tx.Generator,
 	r *mux.Router,
 	newMsgFn func() types.MsgSubmitProposalI,
@@ -42,7 +42,7 @@ func RegisterHandlers(
 }
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, phs []ProposalRESTHandler) {
+func RegisterRoutes(cliCtx context.Context, r *mux.Router, phs []ProposalRESTHandler) {
 	registerQueryRoutes(cliCtx, r)
 	registerTxRoutes(cliCtx, r, phs)
 }

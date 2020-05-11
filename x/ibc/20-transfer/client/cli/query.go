@@ -28,7 +28,7 @@ $ %s query ibc channel next-recv [port-id] [channel-id]
 		Example: fmt.Sprintf("%s query ibc channel next-recv [port-id] [channel-id]", version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewContext().WithCodec(cdc)
 			portID := args[0]
 			channelID := args[1]
 			prove := viper.GetBool(flags.FlagProve)

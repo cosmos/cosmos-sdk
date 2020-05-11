@@ -47,7 +47,7 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			connectionID := args[0]
 			clientID := args[1]
@@ -96,7 +96,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).
+			cliCtx := context.NewContextWithInput(inBuf).
 				WithCodec(cdc).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
@@ -158,7 +158,7 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			connectionID := args[0]
 
@@ -208,7 +208,7 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).
+			cliCtx := context.NewContextWithInput(inBuf).
 				WithCodec(cdc).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
@@ -240,7 +240,7 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 }
 
 // lastHeight util function to get the consensus height from the node
-func lastHeight(cliCtx context.CLIContext) (uint64, error) {
+func lastHeight(cliCtx context.Context) (uint64, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return 0, err

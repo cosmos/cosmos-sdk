@@ -55,7 +55,7 @@ func makeValidateSignaturesCmd(cdc *codec.Codec) func(cmd *cobra.Command, args [
 // expected signers. In addition, if offline has not been supplied, the signature is
 // verified over the transaction sign bytes. Returns false if the validation fails.
 func printAndValidateSigs(
-	cmd *cobra.Command, cliCtx context.CLIContext, chainID string, stdTx types.StdTx, offline bool,
+	cmd *cobra.Command, cliCtx context.Context, chainID string, stdTx types.StdTx, offline bool,
 ) bool {
 	cmd.Println("Signers:")
 	signers := stdTx.GetSigners()
@@ -134,15 +134,15 @@ func printAndValidateSigs(
 }
 
 func readStdTxAndInitContexts(cdc *codec.Codec, cmd *cobra.Command, filename string) (
-	context.CLIContext, types.TxBuilder, types.StdTx, error,
+	context.Context, types.TxBuilder, types.StdTx, error,
 ) {
 	stdTx, err := client.ReadStdTxFromFile(cdc, filename)
 	if err != nil {
-		return context.CLIContext{}, types.TxBuilder{}, types.StdTx{}, err
+		return context.Context{}, types.TxBuilder{}, types.StdTx{}, err
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+	cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 	txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 	return cliCtx, txBldr, stdTx, nil

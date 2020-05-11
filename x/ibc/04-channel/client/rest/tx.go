@@ -14,7 +14,7 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/channels/open-init", channelOpenInitHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/ibc/channels/open-try", channelOpenTryHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-ack", RestPortID, RestChannelID), channelOpenAckHandlerFn(cliCtx)).Methods("POST")
@@ -34,7 +34,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Success 200 {object} PostChannelOpenInit "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-init [post]
-func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenInitHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenInitReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -83,7 +83,7 @@ func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} PostChannelOpenTry "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-try [post]
-func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenTryHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenTryReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -138,7 +138,7 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/open-ack [post]
-func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenAckHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
@@ -192,7 +192,7 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/open-confirm [post]
-func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelOpenConfirmHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
@@ -245,7 +245,7 @@ func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/close-init [post]
-func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelCloseInitHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
@@ -296,7 +296,7 @@ func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/ports/{port-id}/channels/{channel-id}/close-confirm [post]
-func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func channelCloseConfirmHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
@@ -346,7 +346,7 @@ func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} PostRecvPacket "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/packets/receive [post]
-func recvPacketHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func recvPacketHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RecvPacketReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {

@@ -14,7 +14,7 @@ import (
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	cdc := codec.New()
 	viper.Set(flags.FlagOffline, true)
-	ctx := context.NewCLIContext().WithCodec(cdc)
+	ctx := context.NewContext().WithCodec(cdc)
 	type args struct {
 		delAddr string
 		valAddr string

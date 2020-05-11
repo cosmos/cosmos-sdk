@@ -10,7 +10,7 @@ import (
 
 type (
 	// RESTHandlerFn defines a REST service handler for evidence submission
-	RESTHandlerFn func(context.CLIContext) rest.EvidenceRESTHandler
+	RESTHandlerFn func(context.Context) rest.EvidenceRESTHandler
 
 	// CLIHandlerFn defines a CLI command handler for evidence submission
 	CLIHandlerFn func(*codec.Codec) *cobra.Command

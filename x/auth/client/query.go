@@ -20,7 +20,7 @@ import (
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order txs by asc
-func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
+func QueryTxsByEvents(cliCtx context.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(events) == 0 {
 		return nil, errors.New("must declare at least one event to search")
 	}
@@ -74,7 +74,7 @@ func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit in
 
 // QueryTx queries for a single transaction by a hash string in hex format. An
 // error is returned if the transaction does not exist or cannot be queried.
-func QueryTx(cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
+func QueryTx(cliCtx context.Context, hashHexStr string) (sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return sdk.TxResponse{}, err
@@ -124,7 +124,7 @@ func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[
 }
 
 // ValidateTxResult performs transaction verification.
-func ValidateTxResult(cliCtx context.CLIContext, resTx *ctypes.ResultTx) error {
+func ValidateTxResult(cliCtx context.Context, resTx *ctypes.ResultTx) error {
 	if !cliCtx.TrustNode {
 		check, err := cliCtx.Verify(resTx.Height)
 		if err != nil {
@@ -138,7 +138,7 @@ func ValidateTxResult(cliCtx context.CLIContext, resTx *ctypes.ResultTx) error {
 	return nil
 }
 
-func getBlocksForTxResults(cliCtx context.CLIContext, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {
+func getBlocksForTxResults(cliCtx context.Context, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return nil, err

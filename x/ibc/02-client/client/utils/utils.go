@@ -16,7 +16,7 @@ import (
 
 // QueryAllClientStates returns all the light client states. It _does not_ return
 // any merkle proof.
-func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exported.ClientState, int64, error) {
+func QueryAllClientStates(cliCtx context.Context, page, limit int) ([]exported.ClientState, int64, error) {
 	params := types.NewQueryAllClientsParams(page, limit)
 	bz, err := cliCtx.Codec.MarshalJSON(params)
 	if err != nil {
@@ -40,7 +40,7 @@ func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exporte
 // QueryClientState queries the store to get the light client state and a merkle
 // proof.
 func QueryClientState(
-	cliCtx context.CLIContext, clientID string, prove bool,
+	cliCtx context.Context, clientID string, prove bool,
 ) (types.StateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -66,7 +66,7 @@ func QueryClientState(
 // QueryConsensusState queries the store to get the consensus state and a merkle
 // proof.
 func QueryConsensusState(
-	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
+	cliCtx context.Context, clientID string, height uint64, prove bool,
 ) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
@@ -91,7 +91,7 @@ func QueryConsensusState(
 
 // QueryTendermintHeader takes a client context and returns the appropriate
 // tendermint header
-func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64, error) {
+func QueryTendermintHeader(cliCtx context.Context) (ibctmtypes.Header, int64, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
@@ -124,7 +124,7 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (ibctmtypes.Header, int64,
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(cliCtx context.CLIContext) (ibctmtypes.ConsensusState, int64, error) {
+func QueryNodeConsensusState(cliCtx context.Context) (ibctmtypes.ConsensusState, int64, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return ibctmtypes.ConsensusState{}, 0, err

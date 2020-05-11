@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerQueryRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorPubKey}/signing_info",
 		signingInfoHandlerFn(cliCtx),
@@ -30,7 +30,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 // http request handler to query signing info
-func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func signingInfoHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, vars["validatorPubKey"])
@@ -62,7 +62,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // http request handler to query signing info
-func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
+func signingInfoHandlerListFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
@@ -91,7 +91,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryParamsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {

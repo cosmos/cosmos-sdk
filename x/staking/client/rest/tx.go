@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+func registerTxHandlers(cliCtx context.Context, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/delegations",
 		newPostDelegationsHandlerFn(cliCtx, m, txg),
@@ -57,7 +57,7 @@ type (
 	}
 )
 
-func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newPostDelegationsHandlerFn(cliCtx context.Context, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 
@@ -90,7 +90,7 @@ func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, t
 	}
 }
 
-func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newPostRedelegationsHandlerFn(cliCtx context.Context, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 
@@ -123,7 +123,7 @@ func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 	}
 }
 
-func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func newPostUnbondingDelegationsHandlerFn(cliCtx context.Context, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithMarshaler(m)
 
@@ -161,7 +161,7 @@ func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ---------------------------------------------------------------------------
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/delegations",
 		postDelegationsHandlerFn(cliCtx),
@@ -176,7 +176,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods("POST")
 }
 
-func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func postDelegationsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req DelegateRequest
 
@@ -208,7 +208,7 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func postRedelegationsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RedelegateRequest
 
@@ -240,7 +240,7 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func postUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func postUnbondingDelegationsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req UndelegateRequest
 

@@ -32,7 +32,7 @@ func StatusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
+func getNodeStatus(cliCtx context.Context) (*ctypes.ResultStatus, error) {
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
@@ -47,7 +47,7 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 	// No need to verify proof in getting node status
 	viper.Set(flags.FlagKeyringBackend, flags.DefaultKeyringBackend)
 
-	cliCtx := context.NewCLIContext()
+	cliCtx := context.NewContext()
 	status, err := getNodeStatus(cliCtx)
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ type NodeInfoResponse struct {
 }
 
 // REST handler for node info
-func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeInfoRequestHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if rest.CheckInternalServerError(w, err) {
@@ -97,7 +97,7 @@ type SyncingResponse struct {
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeSyncingRequestHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if rest.CheckInternalServerError(w, err) {

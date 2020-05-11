@@ -69,7 +69,7 @@ type (
 
 // GenerateOrBroadcastTx will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func GenerateOrBroadcastTx(ctx context.Context, txf Factory, msgs ...sdk.Msg) error {
 	if ctx.GenerateOnly {
 		return GenerateTx(ctx, txf, msgs...)
 	}
@@ -81,7 +81,7 @@ func GenerateOrBroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg)
 // specified by ctx.Output. If simulation was requested, the gas will be
 // simulated and also printed to the same writer before the transaction is
 // printed.
-func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func GenerateTx(ctx context.Context, txf Factory, msgs ...sdk.Msg) error {
 	if txf.SimulateAndExecute() {
 		if ctx.Offline {
 			return errors.New("cannot estimate gas in offline mode")
@@ -107,7 +107,7 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
+func BroadcastTx(ctx context.Context, txf Factory, msgs ...sdk.Msg) error {
 	txf, err := PrepareFactory(ctx, txf)
 	if err != nil {
 		return err
@@ -167,7 +167,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 func WriteGeneratedTxResponse(
-	ctx context.CLIContext, w http.ResponseWriter, txg Generator, br rest.BaseReq, msgs ...sdk.Msg,
+	ctx context.Context, w http.ResponseWriter, txg Generator, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -318,7 +318,7 @@ func CalculateGas(
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory. A new Factory with
 // the updated fields will be returned.
-func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
+func PrepareFactory(ctx context.Context, txf Factory) (Factory, error) {
 	from := ctx.GetFromAddress()
 
 	if err := txf.accountRetriever.EnsureExists(from); err != nil {

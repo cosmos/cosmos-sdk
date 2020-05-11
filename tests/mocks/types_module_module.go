@@ -94,7 +94,7 @@ func (mr *MockAppModuleBasicMockRecorder) ValidateGenesis(arg0, arg1 interface{}
 }
 
 // RegisterRESTRoutes mocks base method
-func (m *MockAppModuleBasic) RegisterRESTRoutes(arg0 context.CLIContext, arg1 *mux.Router) {
+func (m *MockAppModuleBasic) RegisterRESTRoutes(arg0 context.Context, arg1 *mux.Router) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
 }
@@ -211,7 +211,7 @@ func (mr *MockAppModuleGenesisMockRecorder) ValidateGenesis(arg0, arg1 interface
 }
 
 // RegisterRESTRoutes mocks base method
-func (m *MockAppModuleGenesis) RegisterRESTRoutes(arg0 context.CLIContext, arg1 *mux.Router) {
+func (m *MockAppModuleGenesis) RegisterRESTRoutes(arg0 context.Context, arg1 *mux.Router) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
 }
@@ -356,7 +356,7 @@ func (mr *MockAppModuleMockRecorder) ValidateGenesis(arg0, arg1 interface{}) *go
 }
 
 // RegisterRESTRoutes mocks base method
-func (m *MockAppModule) RegisterRESTRoutes(arg0 context.CLIContext, arg1 *mux.Router) {
+func (m *MockAppModule) RegisterRESTRoutes(arg0 context.Context, arg1 *mux.Router) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
 }

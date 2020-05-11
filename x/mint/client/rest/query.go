@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerQueryRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/minting/parameters",
 		queryParamsHandlerFn(cliCtx),
@@ -28,7 +28,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods("GET")
 }
 
-func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryParamsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
 
@@ -47,7 +47,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryInflationHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryInflation)
 
@@ -66,7 +66,7 @@ func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryAnnualProvisionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryAnnualProvisionsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
 

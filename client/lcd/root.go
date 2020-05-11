@@ -27,7 +27,7 @@ import (
 // RestServer represents the Light Client Rest server
 type RestServer struct {
 	Mux    *mux.Router
-	CliCtx context.CLIContext
+	CliCtx context.Context
 
 	log      log.Logger
 	listener net.Listener
@@ -36,7 +36,7 @@ type RestServer struct {
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext().WithCodec(cdc)
+	cliCtx := context.NewContext().WithCodec(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{

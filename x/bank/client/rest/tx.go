@@ -22,7 +22,7 @@ type SendReq struct {
 
 // NewSendRequestHandlerFn returns an HTTP REST handler for creating a MsgSend
 // transaction.
-func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func NewSendRequestHandlerFn(ctx context.Context, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx = ctx.WithMarshaler(m)
 
@@ -64,7 +64,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.G
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func SendRequestHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]

@@ -18,7 +18,7 @@ type BroadcastReq struct {
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
 // for broadcasting a valid and signed tx to a full node. The tx can be
 // broadcasted via a sync|async|block mechanism.
-func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
+func BroadcastTxRequest(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req BroadcastReq
 

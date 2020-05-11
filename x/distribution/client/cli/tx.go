@@ -56,11 +56,11 @@ func NewTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobr
 	return distTxCmd
 }
 
-type newGenerateOrBroadcastFunc func(ctx context.CLIContext, txf tx.Factory, msgs ...sdk.Msg) error
+type newGenerateOrBroadcastFunc func(ctx context.Context, txf tx.Factory, msgs ...sdk.Msg) error
 
 func newSplitAndApply(
 	newGenerateOrBroadcast newGenerateOrBroadcastFunc,
-	cliCtx context.CLIContext,
+	cliCtx context.Context,
 	txBldr tx.Factory,
 	msgs []sdk.Msg,
 	chunkSize int,
@@ -108,7 +108,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -153,7 +153,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
 
@@ -194,7 +194,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			delAddr := cliCtx.GetFromAddress()
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
@@ -243,7 +243,7 @@ Where proposal.json contains:
 			txf := tx.NewFactoryFromCLI(inBuf).
 				WithTxGenerator(txg).
 				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := context.NewContextWithInput(inBuf).WithMarshaler(m)
 
 			depositorAddr := cliCtx.GetFromAddress()
 			amount, err := sdk.ParseCoins(args[0])
@@ -287,11 +287,11 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return distTxCmd
 }
 
-type generateOrBroadcastFunc func(context.CLIContext, auth.TxBuilder, []sdk.Msg) error
+type generateOrBroadcastFunc func(context.Context, auth.TxBuilder, []sdk.Msg) error
 
 func splitAndApply(
 	generateOrBroadcast generateOrBroadcastFunc,
-	cliCtx context.CLIContext,
+	cliCtx context.Context,
 	txBldr auth.TxBuilder,
 	msgs []sdk.Msg,
 	chunkSize int,
@@ -339,7 +339,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -377,7 +377,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 
@@ -419,7 +419,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
@@ -462,7 +462,7 @@ Where proposal.json contains:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, args[0])
 			if err != nil {
@@ -512,7 +512,7 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			cliCtx := context.NewContextWithInput(inBuf).WithCodec(cdc)
 
 			depositorAddr := cliCtx.GetFromAddress()
 			amount, err := sdk.ParseCoins(args[0])

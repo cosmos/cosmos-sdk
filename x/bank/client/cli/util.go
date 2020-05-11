@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func queryTotalSupply(cliCtx context.CLIContext, cdc *codec.Codec) error {
+func queryTotalSupply(cliCtx context.Context, cdc *codec.Codec) error {
 	params := types.NewQueryTotalSupplyParams(1, 0) // no pagination
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
@@ -30,7 +30,7 @@ func queryTotalSupply(cliCtx context.CLIContext, cdc *codec.Codec) error {
 	return cliCtx.PrintOutput(totalSupply)
 }
 
-func querySupplyOf(cliCtx context.CLIContext, cdc *codec.Codec, denom string) error {
+func querySupplyOf(cliCtx context.Context, cdc *codec.Codec, denom string) error {
 	params := types.NewQuerySupplyOfParams(denom)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {

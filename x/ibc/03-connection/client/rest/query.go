@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
+func registerQueryRoutes(cliCtx context.Context, r *mux.Router, queryRoute string) {
 	r.HandleFunc("/ibc/connections", queryConnectionsHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc("/ibc/clients/connections", queryClientsConnectionsHandlerFn(cliCtx)).Methods("GET")
@@ -30,7 +30,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections [get]
-func queryClientsConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryClientsConnectionsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
@@ -64,7 +64,7 @@ func queryClientsConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFun
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/{connection-id} [get]
-func queryConnectionHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
+func queryConnectionHandlerFn(cliCtx context.Context, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		connectionID := vars[RestConnectionID]
@@ -97,7 +97,7 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerF
 // @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/connections [get]
-func queryConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryConnectionsHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
@@ -131,7 +131,7 @@ func queryConnectionsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/connections [get]
-func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, _ string) http.HandlerFunc {
+func queryClientConnectionsHandlerFn(cliCtx context.Context, _ string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]

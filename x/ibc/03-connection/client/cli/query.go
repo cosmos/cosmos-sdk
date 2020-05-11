@@ -30,7 +30,7 @@ $ %s query ibc connection connections
 		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -63,7 +63,7 @@ $ %s query ibc connection end [connection-id]
 		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewContext().WithCodec(cdc)
 			connectionID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 
@@ -95,7 +95,7 @@ $ %s query ibc connection paths
 		Example: fmt.Sprintf("%s query ibc connection paths", version.ClientName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewContext().WithCodec(cdc)
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
@@ -128,7 +128,7 @@ $ %s query ibc connection path [client-id]
 		Example: fmt.Sprintf("%s query ibc connection path [client-id]", version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewContext().WithCodec(cdc)
 			clientID := args[0]
 			prove := viper.GetBool(flags.FlagProve)
 

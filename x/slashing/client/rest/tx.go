@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func registerTxHandlers(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
+func registerTxHandlers(ctx context.Context, m codec.Marshaler, txg tx.Generator, r *mux.Router) {
 	r.HandleFunc("/slashing/validators/{validatorAddr}/unjail", NewUnjailRequestHandlerFn(ctx, m, txg)).Methods("POST")
 }
 
@@ -26,7 +26,7 @@ type UnjailReq struct {
 
 // NewUnjailRequestHandlerFn returns an HTTP REST handler for creating a MsgUnjail
 // transaction.
-func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
+func NewUnjailRequestHandlerFn(ctx context.Context, m codec.Marshaler, txg tx.Generator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx = ctx.WithMarshaler(m)
 		vars := mux.Vars(r)
@@ -71,14 +71,14 @@ func NewUnjailRequestHandlerFn(ctx context.CLIContext, m codec.Marshaler, txg tx
 // TODO: Remove once client-side Protobuf migration has been completed.
 // ---------------------------------------------------------------------------
 // ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func registerTxRoutes(cliCtx context.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorAddr}/unjail",
 		unjailRequestHandlerFn(cliCtx),
 	).Methods("POST")
 }
 
-func unjailRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func unjailRequestHandlerFn(cliCtx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 

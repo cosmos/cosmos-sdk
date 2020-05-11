@@ -323,7 +323,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Query validator delegations
-	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1, 0, 0))
+	bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(addrVal1, 1, 100))
 	require.NoError(t, errRes)
 
 	query = abci.RequestQuery{
@@ -441,8 +441,8 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 			expectedResults: 25,
 		},
 		{
-			page:            0,
-			limit:           0,
+			page:            1,
+			limit:           100,
 			expectedResults: 100,
 		},
 	}

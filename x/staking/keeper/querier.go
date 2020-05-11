@@ -128,13 +128,11 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 
 	delegations := k.GetValidatorDelegations(ctx, params.ValidatorAddr)
 
-	if params.Limit > 0 || params.Page > 0 {
-		start, end := client.Paginate(len(delegations), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
-		if start < 0 || end < 0 {
-			delegations = []types.Delegation{}
-		} else {
-			delegations = delegations[start:end]
-		}
+	start, end := client.Paginate(len(delegations), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
+	if start < 0 || end < 0 {
+		delegations = []types.Delegation{}
+	} else {
+		delegations = delegations[start:end]
 	}
 
 	delegationResps, err := delegationsToDelegationResponses(ctx, k, delegations)
@@ -167,13 +165,11 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 		unbonds = types.UnbondingDelegations{}
 	}
 
-	if params.Limit > 0 || params.Page > 0 {
-		start, end := client.Paginate(len(unbonds), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
-		if start < 0 || end < 0 {
-			unbonds = types.UnbondingDelegations{}
-		} else {
-			unbonds = unbonds[start:end]
-		}
+	start, end := client.Paginate(len(unbonds), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
+	if start < 0 || end < 0 {
+		unbonds = types.UnbondingDelegations{}
+	} else {
+		unbonds = unbonds[start:end]
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbonds)

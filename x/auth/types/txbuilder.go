@@ -1,4 +1,5 @@
 package types
+// TODO This utility doesn't belong in types, it should be its own module.
 
 import (
 	"errors"
@@ -175,6 +176,7 @@ func (bldr TxBuilder) WithAccountNumber(accnum uint64) TxBuilder {
 // BuildSignMsg builds a single message to be signed from a TxBuilder given a
 // set of messages. It returns an error if a fee is supplied but cannot be
 // parsed.
+// XXX This along with StdSignMsg are confusing, these aren't sdk.Msgs.
 func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 	if bldr.chainID == "" {
 		return StdSignMsg{}, fmt.Errorf("chain ID required but not specified")
@@ -209,6 +211,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
+// XXX TxBuilder depends on StdSignMsg (and not StdSignDoc)
 func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, error) {
 	sig, err := MakeSignature(bldr.keybase, name, passphrase, msg)
 	if err != nil {
@@ -221,7 +224,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 // BuildAndSign builds a single message to be signed, and signs a transaction
 // with the built message given a name, passphrase, and a set of messages.
 func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
-	msg, err := bldr.BuildSignMsg(msgs)
+	msg, err := bldr.BuildSignMsg(msgs) // XXX this line is especially confusing
 	if err != nil {
 		return nil, err
 	}
@@ -244,6 +247,9 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If append
 // is false, it replaces the signatures already attached with the new signature.
+// XXX When does appendSig ever need to change?
+// StdTx includes enough information for one to know one's signing order/index,
+// so what's the point of "appendSig"?
 func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig bool) (signedStdTx StdTx, err error) {
 	if bldr.chainID == "" {
 		return StdTx{}, fmt.Errorf("chain ID required but not specified")
@@ -272,6 +278,10 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 }
 
 // MakeSignature builds a StdSignature given keybase, key name, passphrase, and a StdSignMsg.
+// XXX This depends on viper and keyring.
+// This isn't secure, as these flags may be overridden by another line of code somewhere,
+// and thus the user's desired keyring service/backend may be replaced by something else malicious.
+// Pass them in explicitly insteaed.
 func MakeSignature(keybase keyring.Keyring, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 

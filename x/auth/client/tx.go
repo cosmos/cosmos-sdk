@@ -207,9 +207,16 @@ func SignStdTx(
 	return txBldr.SignStdTx(name, keys.DefaultKeyPass, stdTx, appendSig)
 }
 
-// SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
+// SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
+// XXX This function doesn't seem to make much sense.
+// It largely ignores the addr except populating info when online.
+// It appears to only be called for multisig signing.
+// What's the point of passing the address, if it isn't even going to be used?
+// We don't verify that the signing key (indiciated via name) is actually part
+// of addr.  Perhaps this is a thing left to do, in which case
+// we should document it as such.
 func SignStdTxWithSignerAddress(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext,
 	addr sdk.AccAddress, name string, stdTx authtypes.StdTx, offline bool,

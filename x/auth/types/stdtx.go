@@ -288,27 +288,29 @@ type StdSignDoc struct {
 	Sequence      uint64            `json:"sequence" yaml:"sequence"`
 }
 
+// Produces the canonical sign bytes, the purpose of this structure.
+func (ssd StdSignDoc) Bytes() []byte {
+        bz, err := codec.Cdc.MarshalJSON(ssd)
+        if err != nil {
+                panic(err)
+        }
+        return sdk.MustSortJSON(bz)
+}
+
 // StdSignBytes returns the bytes to sign for a transaction.
 func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-
-	bz, err := codec.Cdc.MarshalJSON(StdSignDoc{
+	return (StdSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),
 		Memo:          memo,
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(bz)
+	}).Bytes()
 }
 
 // Deprecated: StdSignature represents a sig

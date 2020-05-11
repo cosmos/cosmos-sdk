@@ -26,8 +26,8 @@ const (
 func GetSignCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
-		Short: "Sign transactions generated offline",
-		Long: `Sign transactions created with the --generate-only flag.
+		Short: "Sign a standard transaction generated offline",
+		Long: `Sign a standard transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
 
 If the flag --signature-only flag is set, it will output a JSON representation
@@ -41,6 +41,8 @@ the transaction to fail.
 The --multisig=<multisig_key> flag generates a signature on behalf of a multisig account
 key. It implies --signature-only. Full multisig signed transactions may eventually
 be generated via the 'multisign' command.
+
+To sign multiple transactions at once, see 'multisign'.
 `,
 		PreRun: preSignCmd,
 		RunE:   makeSignCmd(codec),

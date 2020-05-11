@@ -37,6 +37,8 @@ const (
 	flagKeyAlgo     = "algo"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
+	// XXX What is this?!
+	// It's being used for the signing cli!
 	DefaultKeyPass = "12345678"
 )
 

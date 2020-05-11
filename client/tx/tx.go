@@ -352,6 +352,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
+// XXX The passphrase isn't even being used...
 func Sign(txf Factory, name, passphrase string, tx ClientTx) ([]byte, error) {
 	if txf.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")

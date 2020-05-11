@@ -332,6 +332,7 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
+// XXX What does genOnly mean?  Why is it called that?
 func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil

@@ -156,6 +156,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			// sign the transaction and write it to the output file
+			// XXX Does the "appendSig" need to be true?  If not, we can dry the cleint.SignStdTx* code.
 			signedTx, err := authclient.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to sign std tx")

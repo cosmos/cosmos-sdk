@@ -3,11 +3,11 @@ package simulation
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

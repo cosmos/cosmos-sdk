@@ -72,7 +72,8 @@ message AuthInfo {
     // message handlers that examine the full list of signers on the transaction
     // context
     repeated SignerInfo signer_infos = 1;
-    uint64 gas = 2;
+    // The first signer is the primary signer and the one which pays the fee
+    Fee fee = 2;
 }
 
 message SignerInfo {
@@ -83,10 +84,6 @@ message SignerInfo {
         bytes address = 2;
     }
     SignMode mode = 3;
-    // Each signer can specify a fee that they are paying separately. In the case
-    // that the chain supports refunds for unused gas, refunds will be distributed
-    // to the last signer first.
-    Fee fee = 4;
 }
 
 enum SignMode {
@@ -119,8 +116,8 @@ attempt to upstream important improvements to `Tx`.
 
 All of the signing modes below aim to provide the following guarantees:
 
-* **No Malleability**: given a `TxBody` and an `AuthInfo` there is one and only
-one valid `Tx` that can be generated
+* **No Malleability**: `TxBody` and `AuthInfo` cannot change once the primary
+signer has signed
 * **Predictable Gas**: if I am signing a transaction where I am paying a fee,
 the final gas is fully dependent on what I am signing
 
@@ -212,8 +209,8 @@ their signing modes, making the above scenario very hard.
 using only `TxBody` and their own `PublicKey`. This allows the full list of
 signers in `AuthInfo` to be delayed until signatures have been collected.
 
-An "auxiliary" signer can be any signer who is not paying a fee. For signers
-paying fees, the full `AuthInfo` is actually needed to calculate gas and fees
+An "auxiliary" signer is any signer besides the primary signer who is paying
+the fee. For the primary signer, the full `AuthInfo` is actually needed to calculate gas and fees
 because that is dependent on how many signers and which key types and signing
 modes they are using. Auxiliary signers, however, do not need to worry about
 fees or gas and thus can just sign `TxBody`.
@@ -226,7 +223,7 @@ in order):
 ```proto
 // types/types.proto
 message SignDocAux {
-    TxBody body = 1;
+    bytes body_bytes = 1;
     // PublicKey is included in SignDocAux :
     // 1. as a special case for multisig public keys to be described later
     // in this document
@@ -246,9 +243,9 @@ message SignDocAux {
 ```
 
 2. Sign the encoded `SignDocAux` bytes
-3. Send their signature and `SignerInfo` to the tx composer(s) who will then
-sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and fees and
-gas added) once enough signatures have been collected
+3. Send their signature and `SignerInfo` to primary signer who will then
+sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and `Fee`
+added) once enough signatures have been collected
 
 For signature verification to succeed, the fee field for signers using
 `SIGN_MODE_DIRECT_AUX` must be empty.

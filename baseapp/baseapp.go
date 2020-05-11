@@ -593,7 +593,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	}
 
 	if err == nil {
-		// append the events in the order of occurence
+		// append the events in the order of occurrence
 		result.Events = append(events.ToABCIEvents(), result.Events...)
 	}
 

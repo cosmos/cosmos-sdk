@@ -277,7 +277,6 @@ func SignCheckDeliver(
 		require.NotNil(t, res)
 	} else {
 		require.Error(t, err)
-		require.Nil(t, res)
 	}
 
 	app.EndBlock(abci.RequestEndBlock{})

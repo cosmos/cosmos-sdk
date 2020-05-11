@@ -129,6 +129,11 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 		suite.keeper.SetClientState(suite.ctx, expClients[i])
 	}
 
+	// add localhost client
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expClients = append(expClients, localHostClient)
+
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)

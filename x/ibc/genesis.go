@@ -39,7 +39,7 @@ func (gs GenesisState) Validate() error {
 
 // InitGenesis initializes the ibc state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, createLocalhost bool, gs GenesisState) {
 	client.InitGenesis(ctx, k.ClientKeeper, gs.ClientGenesis)
 	connection.InitGenesis(ctx, k.ConnectionKeeper, gs.ConnectionGenesis)
 	channel.InitGenesis(ctx, k.ChannelKeeper, gs.ChannelGenesis)

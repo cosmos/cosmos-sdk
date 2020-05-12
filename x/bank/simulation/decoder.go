@@ -3,6 +3,7 @@ package simulation
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"

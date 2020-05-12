@@ -29,6 +29,7 @@ type (
 		GetVersioned(key []byte, version int64) (int64, []byte)
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
+		FlushVersion(version int64) error
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -53,6 +54,10 @@ func (it *immutableTree) SaveVersion() ([]byte, int64, error) {
 
 func (it *immutableTree) DeleteVersion(_ int64) error {
 	panic("cannot call 'DeleteVersion' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) FlushVersion(_ int64) error {
+	panic("cannot call 'FlushVersion' on an immutable IAVL tree")
 }
 
 func (it *immutableTree) VersionExists(version int64) bool {

@@ -119,6 +119,10 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 	}, nil
 }
 
+func (st *Store) FlushVersion(version int64) error {
+	return st.tree.FlushVersion(version)
+}
+
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.
 func (st *Store) Commit() types.CommitID {

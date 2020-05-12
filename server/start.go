@@ -18,6 +18,10 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 )
 
+type AppTrapSignalHandler interface {
+	FlushLatestVersion() int64
+}
+
 // Tendermint full-node start flags
 const (
 	flagWithTendermint       = "with-tendermint"
@@ -205,6 +209,12 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 	}
 
 	TrapSignal(func() {
+		tsHandler, ok := app.(AppTrapSignalHandler)
+		if ok {
+			v := tsHandler.FlushLatestVersion()
+			ctx.Logger.Info("flushed latest version", "version", v)
+		}
+
 		if tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}

@@ -230,6 +230,10 @@ func (app *BaseApp) LoadVersion(version int64) error {
 	return app.init()
 }
 
+func (app *BaseApp) FlushLatestVersion() int64 {
+	return app.cms.FlushLatestVersion()
+}
+
 // LastCommitID returns the last CommitID of the multistore.
 func (app *BaseApp) LastCommitID() sdk.CommitID {
 	return app.cms.LastCommitID()

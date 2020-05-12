@@ -99,6 +99,10 @@ func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
 
+func (ms multiStore) FlushLatestVersion() int64 {
+	panic("not implemented")
+}
+
 var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {

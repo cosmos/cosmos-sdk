@@ -291,8 +291,6 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
-
-	// Commit stores.
 	version := rs.lastCommitInfo.Version + 1
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
@@ -301,12 +299,29 @@ func (rs *Store) Commit() types.CommitID {
 		flushCommitInfo(rs.db, version, rs.lastCommitInfo)
 	}
 
-	// Prepare for next version.
+	// prepare for next version
 	commitID := types.CommitID{
 		Version: version,
 		Hash:    rs.lastCommitInfo.Hash(),
 	}
 	return commitID
+}
+
+func (rs *Store) FlushLatestVersion() int64 {
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			iavlStore := rs.GetCommitKVStore(key).(*iavl.Store)
+
+			fmt.Println("FLUSHING STORE:", key.String())
+			if err := iavlStore.FlushVersion(rs.lastCommitInfo.Version); err != nil {
+				panic(fmt.Errorf("failed to flush version %d for store %s: %w", rs.lastCommitInfo.Version, key, err))
+			}
+		}
+	}
+
+	return rs.lastCommitInfo.Version
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -643,6 +658,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
+		fmt.Println("COMMITTING STORE:", key.String())
 		commitID := store.Commit()
 
 		if store.GetStoreType() == types.StoreTypeTransient {

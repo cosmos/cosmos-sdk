@@ -11,8 +11,8 @@ func ConvertAndEncode(hrp string, data []byte) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "encoding bech32 failed")
 	}
-	return bech32.Encode(hrp, converted)
 
+	return bech32.Encode(hrp, converted)
 }
 
 //DecodeAndConvert decodes a bech32 encoded string and converts to base64 encoded bytes
@@ -21,9 +21,11 @@ func DecodeAndConvert(bech string) (string, []byte, error) {
 	if err != nil {
 		return "", nil, errors.Wrap(err, "decoding bech32 failed")
 	}
+
 	converted, err := bech32.ConvertBits(data, 5, 8, false)
 	if err != nil {
 		return "", nil, errors.Wrap(err, "decoding bech32 failed")
 	}
+
 	return hrp, converted, nil
 }

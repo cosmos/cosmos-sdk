@@ -29,7 +29,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
 						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState(suite.store, "chaindID", 10),
+						localhosttypes.NewClientState("chaindID", 10),
 					},
 					[]client.ConsensusStates{
 						client.NewClientConsensusStates(
@@ -82,7 +82,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
 						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState(suite.store, "chaindID", 0),
+						localhosttypes.NewClientState("chaindID", 0),
 					},
 					nil,
 					false,

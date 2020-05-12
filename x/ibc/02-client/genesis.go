@@ -30,11 +30,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 	}
 
 	// client id is always "localhost"
-	clientState := localhosttypes.NewClientState(
-		k.ClientStore(ctx, exported.ClientTypeLocalHost),
-		ctx.ChainID(),
-		ctx.BlockHeight(),
-	)
+	clientState := localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 
 	_, err := k.CreateClient(ctx, clientState, nil)
 	if err != nil {

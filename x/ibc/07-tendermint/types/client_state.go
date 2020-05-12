@@ -135,6 +135,7 @@ func (cs ClientState) Validate() error {
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
+	_ sdk.KVStore,
 	cdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
@@ -169,6 +170,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
+	_ sdk.KVStore,
 	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
@@ -206,6 +208,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
+	_ sdk.KVStore,
 	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
@@ -244,6 +247,7 @@ func (cs ClientState) VerifyChannelState(
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -272,6 +276,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -301,6 +306,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -328,6 +334,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,

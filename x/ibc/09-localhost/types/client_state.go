@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -39,6 +40,12 @@ func NewClientState(chainID string, height int64) ClientState {
 		ChainID: chainID,
 		Height:  height,
 	}
+}
+
+// retreives the Localhost client prefix store
+func (cs ClientState) store(ctx sdk.Context) sdk.KVStore {
+	clientPrefix := append([]byte("clients/"+cs.ID), '/')
+	return prefix.NewStore(ctx.KVStore(sdk.NewKVStoreKey(ibctypes.StoreKey)), clientPrefix)
 }
 
 // GetID returns the loop-back client state identifier.
@@ -97,7 +104,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := cs.store(ctx).Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
 	}
@@ -134,7 +141,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz := cs.store.Get([]byte(path.String()))
+	bz := cs.store(ctx).Get([]byte(path.String()))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
@@ -173,7 +180,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz := cs.store.Get([]byte(path.String()))
+	bz := cs.store(ctx).Get([]byte(path.String()))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
@@ -212,7 +219,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := cs.store(ctx).Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketCommitmentVerification, "not found for path %s", path)
 	}
@@ -245,7 +252,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := cs.store(ctx).Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketAckVerification, "not found for path %s", path)
 	}
@@ -278,7 +285,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := cs.store(ctx).Get([]byte(path.String()))
 	if data != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, "expected no ack absence")
 	}
@@ -303,7 +310,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	data := cs.store.Get([]byte(path.String()))
+	data := cs.store(ctx).Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, "not found for path %s", path)
 	}

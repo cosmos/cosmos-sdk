@@ -206,6 +206,7 @@ Buffers for state serialization instead of Amino.
 
 ### Improvements
 
+* (baseapp) [\#6186](https://github.com/cosmos/cosmos-sdk/issues/6186) Support emitting events during `AnteHandler` execution.
 * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
 * (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
@@ -231,7 +232,7 @@ functionality that requires an online connection.
 * (simulation) [\#6002](https://github.com/cosmos/cosmos-sdk/pull/6002) Add randomized consensus params into simulation.
 * (x/staking) [\#6059](https://github.com/cosmos/cosmos-sdk/pull/6059) Updated `HistoricalEntries` parameter default to 100.
 * (x/ibc) [\#5948](https://github.com/cosmos/cosmos-sdk/issues/5948) Add `InitGenesis` and `ExportGenesis` functions for `ibc` module.
-* (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add String() method to GasMeter
+* (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add `String()` method to `GasMeter`.
 
 ## [v0.38.3] - 2020-04-09
 

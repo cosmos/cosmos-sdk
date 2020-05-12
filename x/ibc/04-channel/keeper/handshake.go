@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -74,7 +76,7 @@ func (k Keeper) ChanOpenInit(
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
-	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID)
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID))
 	return capKey, nil
 }
 
@@ -155,7 +157,7 @@ func (k Keeper) ChanOpenTry(
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 
-	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, channelID)
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, channelID))
 	return capKey, nil
 }
 
@@ -223,7 +225,7 @@ func (k Keeper) ChanOpenAck(
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: INIT -> OPEN", portID, channelID)
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: INIT -> OPEN", portID, channelID))
 	return nil
 }
 
@@ -288,7 +290,7 @@ func (k Keeper) ChanOpenConfirm(
 	channel.State = ibctypes.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID)
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID))
 	return nil
 }
 
@@ -330,7 +332,7 @@ func (k Keeper) ChanCloseInit(
 		)
 	}
 
-	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State)
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
 
 	channel.State = ibctypes.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -393,7 +395,7 @@ func (k Keeper) ChanCloseConfirm(
 		return err
 	}
 
-	k.Logger(ctx).Info("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State)
+	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
 
 	channel.State = ibctypes.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)

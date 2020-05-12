@@ -36,11 +36,6 @@ func (suite *LocalhostTestSuite) TestValidate() {
 			clientState: types.NewClientState("chainID", 0),
 			expPass:     false,
 		},
-		{
-			name:        "invalid store",
-			clientState: types.NewClientState("chainID", 10),
-			expPass:     false,
-		},
 	}
 
 	for _, tc := range testCases {
@@ -80,7 +75,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.ctx, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
+			suite.store, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
 		)
 
 		if tc.expPass {
@@ -124,7 +119,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.ctx, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
 		)
 
 		if tc.expPass {
@@ -175,7 +170,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.ctx, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
 		)
 
 		if tc.expPass {
@@ -230,7 +225,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.ctx, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
+			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
 		)
 
 		if tc.expPass {
@@ -285,7 +280,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.ctx, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
+			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
 		)
 
 		if tc.expPass {
@@ -316,7 +311,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.ctx, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
 		if tc.expPass {
@@ -366,7 +361,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.ctx, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
 		)
 
 		if tc.expPass {

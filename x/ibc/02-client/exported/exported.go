@@ -25,7 +25,7 @@ type ClientState interface {
 	// State verification functions
 
 	VerifyClientConsensusState(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		cdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
@@ -36,7 +36,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
@@ -46,7 +46,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		cdc codec.Marshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
@@ -57,7 +57,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -68,7 +68,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -79,7 +79,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,
@@ -89,7 +89,7 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
-		ctx sdk.Context,
+		store sdk.KVStore,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof commitmentexported.Proof,

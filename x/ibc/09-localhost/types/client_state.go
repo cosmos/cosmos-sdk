@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -40,12 +39,6 @@ func NewClientState(chainID string, height int64) ClientState {
 		ChainID: chainID,
 		Height:  height,
 	}
-}
-
-// retreives the Localhost client prefix store
-func (cs ClientState) store(ctx sdk.Context) sdk.KVStore {
-	clientPrefix := append([]byte("clients/"+cs.ID), '/')
-	return prefix.NewStore(ctx.KVStore(sdk.NewKVStoreKey(ibctypes.StoreKey)), clientPrefix)
 }
 
 // GetID returns the loop-back client state identifier.
@@ -89,7 +82,7 @@ func (cs ClientState) Validate() error {
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	cdc *codec.Codec,
 	_ commitmentexported.Root,
 	height uint64,
@@ -104,7 +97,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	data := cs.store(ctx).Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
 	}
@@ -127,7 +120,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored locally.
 func (cs ClientState) VerifyConnectionState(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
@@ -141,7 +134,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	bz := cs.store(ctx).Get([]byte(path.String()))
+	bz := store.Get([]byte(path.String()))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
@@ -165,7 +158,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the local machine.
 func (cs ClientState) VerifyChannelState(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
@@ -180,7 +173,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	bz := cs.store(ctx).Get([]byte(path.String()))
+	bz := store.Get([]byte(path.String()))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
@@ -204,7 +197,7 @@ func (cs ClientState) VerifyChannelState(
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -219,7 +212,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	data := cs.store(ctx).Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketCommitmentVerification, "not found for path %s", path)
 	}
@@ -237,7 +230,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -252,7 +245,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	data := cs.store(ctx).Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketAckVerification, "not found for path %s", path)
 	}
@@ -271,7 +264,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -285,7 +278,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	data := cs.store(ctx).Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if data != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, "expected no ack absence")
 	}
@@ -296,7 +289,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
-	ctx sdk.Context,
+	store sdk.KVStore,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -310,7 +303,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	data := cs.store(ctx).Get([]byte(path.String()))
+	data := store.Get([]byte(path.String()))
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, "not found for path %s", path)
 	}

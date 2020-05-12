@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/bech32"
+
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 func TestEncodeAndDecode(t *testing.T) {

@@ -83,8 +83,26 @@ message SignerInfo {
         // address can be used for accounts that already have a public key in state 
         bytes address = 2;
     }
-    SignMode mode = 3;
+
+    ModeInfo mode_info = 3;
 }
+
+message ModeInfo {
+    oneof sum {
+        Single single = 1;
+        Multi multi = 2;
+    }   
+
+    message Single {
+        SignMode mode = 1;
+    }
+
+    message Multi {
+        CompactBitArray bitarray = 1;
+        repeated ModeInfo mode_infos = 2;
+        
+    }
+}    
 
 enum SignMode {
     SIGN_MODE_UNSPECIFIED = 0;
@@ -225,8 +243,11 @@ in order):
 message SignDocAux {
     bytes body_bytes = 1;
     // PublicKey is included in SignDocAux :
-    // 1. as a special case for multisig public keys to be described later
-    // in this document
+    // 1. as a special case for multisig public keys. For multisig public keys,
+    // the signer should use the top-level multisig public key they are signing
+    // against, not their own public key. This is to prevent against a form
+    // of malleability where a signature could be taken out of context of the
+    // multisig key that was intended to be signed for
     // 2. to guard against scenario where configuration information is encoded
     // in public keys (it has been proposed) such that two keys can generate
     // the same signature but have different security properties

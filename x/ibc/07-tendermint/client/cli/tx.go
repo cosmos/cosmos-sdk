@@ -187,8 +187,8 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 
 func parseFraction(fraction string) (tmmath.Fraction, error) {
 	fr := strings.Split(fraction, "/")
-	if len(fr) == 0 || len(fr) > 2 || fr[0] == fraction {
-		return tmmath.Fraction{}, fmt.Errorf("fraction must have format 'num/denom' got %s", fraction)
+	if len(fr) != 2 || fr[0] == fraction {
+		return tmmath.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
 	}
 
 	num, err := strconv.ParseInt(fr[0], 10, 64)

@@ -31,17 +31,6 @@ message Account {
   }
 }
 
-// Supply defines the application-level Supply type.
-message Supply {
-  option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";
-
-  // sum defines a set of all acceptable concrete Supply implementations.
-  oneof sum {
-    cosmos_sdk.x.bank.v1.Supply supply = 1;
-  }
-}
-
 // MsgSubmitProposal defines the application-level message type for handling
 // governance proposals.
 message MsgSubmitProposal {

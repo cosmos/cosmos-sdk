@@ -236,6 +236,7 @@ functionality that requires an online connection.
 * (x/staking) [\#6163](https://github.com/cosmos/cosmos-sdk/pull/6163) CLI and REST call to unbonding delegations and delegations now accept
 pagination.
 * (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add `String()` method to `GasMeter`.
+* (types) [\#6195](https://github.com/cosmos/cosmos-sdk/pull/6195) Add codespace to broadcast(sync/async) response.
 
 ## [v0.38.3] - 2020-04-09
 

@@ -2,12 +2,15 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
+VERSION := $(shell echo $(shell git describe --tags --always) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
+BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
+HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
+DOCKER_BUF := docker run -v $(shell pwd):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
 
@@ -24,13 +27,9 @@ build: go.sum
 	@go build -mod=readonly ./...
 
 build-sim: go.sum
-ifeq ($(OS),Windows_NT)
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simd.exe ./simapp/cmd/simd
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli.exe ./simapp/cmd/simcli
-else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simd ./simapp/cmd/simd
-	go build -mod=readonly $(BUILD_FLAGS) -o build/simcli ./simapp/cmd/simcli
-endif
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simcli
 
 .PHONY: \
  build \
@@ -124,6 +123,9 @@ test-unit:
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
+test-integration: build-sim
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags=-tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
+
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 
 test-sim-nondeterminism:
@@ -172,7 +174,8 @@ test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
 test-sim-multi-seed-long \
-test-sim-benchmark-invariants
+test-sim-benchmark-invariants \
+test-integration
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -191,7 +194,7 @@ test-sim-profile:
 .PHONY: test-sim-profile test-sim-benchmark
 
 test-cover:
-	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
 
 benchmark:
@@ -203,9 +206,8 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run
+	golangci-lint run --out-format=tab --issues-exit-code=0
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
-	go mod verify
 .PHONY: lint
 
 format:
@@ -244,16 +246,28 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-gen proto-lint proto-check-breaking
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking
 
 proto-gen:
 	@./scripts/protocgen.sh
+
+# This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
+proto-gen-any:
+	@./scripts/protocgen-any.sh
 
 proto-lint:
 	@buf check lint --error-format=json
 
 proto-check-breaking:
 	@buf check breaking --against-input '.git#branch=master'
+
+proto-lint-docker:
+	@$(DOCKER_BUF) check lint --error-format=json
+.PHONY: proto-lint
+
+proto-check-breaking-docker:
+	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+.PHONY: proto-check-breaking-ci
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.33.1
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos

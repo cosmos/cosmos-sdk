@@ -36,6 +36,7 @@ func (proof ValidProof) VerifyMembership(
 		bytes.Equal(value, proof.value) {
 		return nil
 	}
+
 	return errors.New("invalid proof")
 }
 

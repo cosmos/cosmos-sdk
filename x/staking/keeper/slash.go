@@ -44,6 +44,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		logger.Error(fmt.Sprintf(
 			"WARNING: Ignored attempt to slash a nonexistent validator with address %s, we recommend you investigate immediately",
 			consAddr))
+
 		return
 	}
 
@@ -64,21 +65,18 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	switch {
 	case infractionHeight > ctx.BlockHeight():
-
 		// Can't slash infractions in the future
 		panic(fmt.Sprintf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
 			infractionHeight, ctx.BlockHeight()))
 
 	case infractionHeight == ctx.BlockHeight():
-
 		// Special-case slash at current height for efficiency - we don't need to look through unbonding delegations or redelegations
 		logger.Info(fmt.Sprintf(
 			"slashing at current height %d, not scanning unbonding delegations & redelegations",
 			infractionHeight))
 
 	case infractionHeight < ctx.BlockHeight():
-
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		for _, unbondingDelegation := range unbondingDelegations {
@@ -86,6 +84,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			if amountSlashed.IsZero() {
 				continue
 			}
+
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 		}
 
@@ -96,6 +95,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			if amountSlashed.IsZero() {
 				continue
 			}
+
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 		}
 	}
@@ -136,7 +136,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	logger.Info(fmt.Sprintf(
 		"validator %s slashed by slash factor of %s; burned %v tokens",
 		validator.GetOperator(), slashFactor.String(), tokensToBurn))
-
 }
 
 // jail a validator
@@ -162,14 +161,12 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // insufficient stake remaining)
 func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
-
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
 	burnedAmount := sdk.ZeroInt()
 
 	// perform slashing on all entries within the unbonding delegation
 	for i, entry := range unbondingDelegation.Entries {
-
 		// If unbonding started before this height, stake didn't contribute to infraction
 		if entry.CreationHeight < infractionHeight {
 			continue
@@ -217,14 +214,12 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // NOTE this is only slashing for prior infractions from the source validator
 func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
-
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
 	for _, entry := range redelegation.Entries {
-
 		// If redelegation started before this height, stake didn't contribute to infraction
 		if entry.CreationHeight < infractionHeight {
 			continue
@@ -245,11 +240,13 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 		if sharesToUnbond.IsZero() {
 			continue
 		}
+
 		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddress, redelegation.ValidatorDstAddress)
 		if !found {
 			// If deleted, delegation has zero shares, and we can't unbond any more
 			continue
 		}
+
 		if sharesToUnbond.GT(delegation.Shares) {
 			sharesToUnbond = delegation.Shares
 		}

@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -31,13 +33,14 @@ type (
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
 		JSONMarshaler
+		types.AnyUnpacker
 	}
 
 	JSONMarshaler interface {
-		MarshalJSON(o interface{}) ([]byte, error) // nolint: stdmethods
+		MarshalJSON(o interface{}) ([]byte, error)
 		MustMarshalJSON(o interface{}) []byte
 
-		UnmarshalJSON(bz []byte, ptr interface{}) error // nolint: stdmethods
+		UnmarshalJSON(bz []byte, ptr interface{}) error
 		MustUnmarshalJSON(bz []byte, ptr interface{})
 	}
 

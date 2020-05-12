@@ -43,7 +43,6 @@ type StakingMsgBuildingHelpers interface {
 // nolint: errcheck
 func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, smbh StakingMsgBuildingHelpers,
 	genBalIterator types.GenesisBalancesIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
-
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, flagNodeID, flagPubKey, flagAmount, defaultsDesc := smbh.CreateValidatorMsgHelpers(ipDefault)
 
@@ -138,7 +137,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			if key.GetType() == keyring.TypeOffline || key.GetType() == keyring.TypeMulti {
-				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
+				cmd.PrintErrln("Offline key passed in. Use `tx sign` command to sign.")
 				return authclient.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
@@ -175,7 +174,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to write signed gen tx")
 			}
 
-			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
+			cmd.PrintErrf("Genesis transaction written to %q\n", outputDocument)
 			return nil
 
 		},
@@ -191,6 +190,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
 
 	cmd.MarkFlagRequired(flags.FlagName)
+
 	return cmd
 }
 
@@ -199,16 +199,20 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	if err := tmos.EnsureDir(writePath, 0700); err != nil {
 		return "", err
 	}
+
 	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }
 
 func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 	var stdTx auth.StdTx
+
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return stdTx, err
 	}
+
 	err = cdc.UnmarshalJSON(bytes, &stdTx)
+
 	return stdTx, err
 }
 
@@ -218,11 +222,14 @@ func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) er
 		return err
 	}
 	defer outputFile.Close()
+
 	json, err := cdc.MarshalJSON(tx)
 	if err != nil {
 		return err
 	}
+
 	_, err = fmt.Fprintf(outputFile, "%s\n", json)
+
 	return err
 }
 

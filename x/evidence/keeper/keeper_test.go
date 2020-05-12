@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -57,7 +56,7 @@ func testEquivocationHandler(k interface{}) types.Handler {
 			return err
 		}
 
-		ee, ok := e.(types.Equivocation)
+		ee, ok := e.(*types.Equivocation)
 		if !ok {
 			return fmt.Errorf("unexpected evidence type: %T", e)
 		}
@@ -83,8 +82,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		codecstd.NewAppCodec(app.Codec()), app.GetKey(evidence.StoreKey),
-		app.StakingKeeper, app.SlashingKeeper,
+		app.AppCodec(), app.GetKey(evidence.StoreKey), app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))
@@ -108,7 +106,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 	for i := 0; i < numEvidence; i++ {
 		pk := ed25519.GenPrivKey()
 
-		evidence[i] = types.Equivocation{
+		evidence[i] = &types.Equivocation{
 			Height:           11,
 			Power:            100,
 			Time:             time.Now().UTC(),
@@ -137,7 +135,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
 
-	e := types.Equivocation{
+	e := &types.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
@@ -148,14 +146,14 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 
 	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.True(ok)
-	suite.Equal(&e, res)
+	suite.Equal(e, res)
 }
 
 func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
 
-	e := types.Equivocation{
+	e := &types.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
@@ -167,13 +165,13 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 
 	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.True(ok)
-	suite.Equal(&e, res)
+	suite.Equal(e, res)
 }
 
 func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
-	e := types.Equivocation{
+	e := &types.Equivocation{
 		Height:           0,
 		Power:            100,
 		Time:             time.Now().UTC(),
@@ -197,7 +195,7 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {
-	handler, err := suite.app.EvidenceKeeper.GetEvidenceHandler(types.Equivocation{}.Route())
+	handler, err := suite.app.EvidenceKeeper.GetEvidenceHandler((&types.Equivocation{}).Route())
 	suite.NoError(err)
 	suite.NotNil(handler)
 

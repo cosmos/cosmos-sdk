@@ -16,12 +16,12 @@ import (
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
 
-func defaultIdentifierValidator(id string, min, max int) error {
+func defaultIdentifierValidator(id string, min, max int) error { //nolint:unparam
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)
 	}
-	// valid id must be between 10 and 20 characters
+	// valid id must be between 9 and 20 characters
 	if len(id) < min || len(id) > max {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}
@@ -33,10 +33,10 @@ func defaultIdentifierValidator(id string, min, max int) error {
 }
 
 // DefaultClientIdentifierValidator is the default validator function for Client identifiers
-// A valid Identifier must be between 10-20 characters and only contain lowercase
+// A valid Identifier must be between 9-20 characters and only contain lowercase
 // alphabetic characters,
 func DefaultClientIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, 20)
+	return defaultIdentifierValidator(id, 9, 20)
 }
 
 // DefaultConnectionIdentifierValidator is the default validator function for Connection identifiers

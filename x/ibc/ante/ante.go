@@ -39,9 +39,23 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			_, err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
 		}
 
+		attributes := make([]sdk.Attribute, len(msg.GetSigners()))
+
+		for i, signer := range msg.GetSigners() {
+			attributes[i] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
+		}
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				attributes...,
+			),
+		})
+
 		if err != nil {
 			return ctx, err
 		}
+
 	}
 
 	return next(ctx, tx, simulate)

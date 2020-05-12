@@ -20,14 +20,15 @@ const (
 	EventTypeCleanupPacket     = "cleanup_packet"
 	EventTypeTimeoutPacket     = "timeout_packet"
 
-	AttributeKeyData       = "packet_data"
-	AttributeKeyAck        = "packet_ack"
-	AttributeKeyTimeout    = "packet_timeout"
-	AttributeKeySequence   = "packet_sequence"
-	AttributeKeySrcPort    = "packet_src_port"
-	AttributeKeySrcChannel = "packet_src_channel"
-	AttributeKeyDstPort    = "packet_dst_port"
-	AttributeKeyDstChannel = "packet_dst_channel"
+	AttributeKeyData             = "packet_data"
+	AttributeKeyAck              = "packet_ack"
+	AttributeKeyTimeoutHeight    = "packet_timeout_height"
+	AttributeKeyTimeoutTimestamp = "packet_timeout_timestamp"
+	AttributeKeySequence         = "packet_sequence"
+	AttributeKeySrcPort          = "packet_src_port"
+	AttributeKeySrcChannel       = "packet_src_channel"
+	AttributeKeyDstPort          = "packet_dst_port"
+	AttributeKeyDstChannel       = "packet_dst_channel"
 )
 
 // IBC channel events vars

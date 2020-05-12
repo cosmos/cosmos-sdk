@@ -85,8 +85,11 @@ func checkValidity(
 	}
 
 	// Verify next header with the last header's validatorset as trusted validatorset
-	err := lite.Verify(clientState.GetChainID(), &clientState.LastHeader.SignedHeader, clientState.LastHeader.ValidatorSet,
-		&header.SignedHeader, header.ValidatorSet, clientState.TrustingPeriod, currentTimestamp, lite.DefaultTrustLevel)
+	err := lite.Verify(
+		clientState.GetChainID(), &clientState.LastHeader.SignedHeader,
+		clientState.LastHeader.ValidatorSet, &header.SignedHeader, header.ValidatorSet,
+		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, lite.DefaultTrustLevel,
+	)
 	if err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
 	}

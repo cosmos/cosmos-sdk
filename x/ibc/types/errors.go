@@ -6,6 +6,6 @@ import (
 
 // ibc module common sentinel errors
 var (
-	ErrInvalidHeight  = sdkerrors.Register(ModuleName, 1, "invalid height")
-	ErrInvalidVersion = sdkerrors.Register(ModuleName, 2, "invalid version")
+	ErrInvalidHeight  = sdkerrors.Register(ModuleName, 2, "invalid height")
+	ErrInvalidVersion = sdkerrors.Register(ModuleName, 3, "invalid version")
 )

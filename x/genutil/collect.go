@@ -86,6 +86,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 	}
 
 	balancesMap := make(map[string]bankexported.GenesisBalance)
+
 	genBalIterator.IterateGenesisBalances(
 		cdc, appState,
 		func(balance bankexported.GenesisBalance) (stop bool) {
@@ -105,6 +106,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 
 		// get the genStdTx
 		var jsonRawTx []byte
+
 		if jsonRawTx, err = ioutil.ReadFile(filename); err != nil {
 			return appGenTxs, persistentPeers, err
 		}

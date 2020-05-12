@@ -19,6 +19,19 @@ type ConsensusState struct {
 	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
 }
 
+// NewConsensusState creates a new ConsensusState instance.
+func NewConsensusState(
+	timestamp time.Time, root commitmentexported.Root, height uint64,
+	valset *tmtypes.ValidatorSet,
+) ConsensusState {
+	return ConsensusState{
+		Timestamp:    timestamp,
+		Root:         root,
+		Height:       height,
+		ValidatorSet: valset,
+	}
+}
+
 // ClientType returns Tendermint
 func (ConsensusState) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
@@ -34,9 +47,9 @@ func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Height
 }
 
-// GetTimestamp returns block time at which the consensus state was stored
-func (cs ConsensusState) GetTimestamp() time.Time {
-	return cs.Timestamp
+// GetTimestamp returns block time in nanoseconds at which the consensus state was stored
+func (cs ConsensusState) GetTimestamp() uint64 {
+	return uint64(cs.Timestamp.UnixNano())
 }
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.
@@ -52,6 +65,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")
+	}
+	if cs.Timestamp.UnixNano() < 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be negative Unix time")
 	}
 	return nil
 }

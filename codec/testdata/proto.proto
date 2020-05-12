@@ -1,6 +1,8 @@
 syntax = "proto3";
 package cosmos_sdk.codec.v1;
 
+import "google/protobuf/any.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/codec/testdata";
 
 message Dog {
@@ -9,6 +11,19 @@ message Dog {
 }
 
 message Cat {
-  string moniker = 1; 
-  int32 lives = 2;
+  string moniker = 1;
+  int32  lives   = 2;
+}
+
+message HasAnimal {
+  google.protobuf.Any animal = 1;
+  int64 x = 2;
+}
+
+message HasHasAnimal {
+  google.protobuf.Any has_animal = 1;
+}
+
+message HasHasHasAnimal {
+  google.protobuf.Any has_has_animal = 1;
 }

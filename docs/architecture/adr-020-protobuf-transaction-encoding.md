@@ -92,15 +92,21 @@ message ModeInfo {
         Single single = 1;
         Multi multi = 2;
     }   
-
+   
+    // Single is the mode info for a single signer
     message Single {
         SignMode mode = 1;
+        // locale may be used in the future with TEXTUAL signing modes
+        string locale = 2;
     }
-
+   
+    // Multi is the mode info for a multisig public key
     message Multi {
+        // bitarray specifies which keys within the multisig are signing
         CompactBitArray bitarray = 1;
+        // mode_infos is the corresponding modes of the signers of the multisig
+        // which could include nested multisig public keys
         repeated ModeInfo mode_infos = 2;
-        
     }
 }    
 

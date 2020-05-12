@@ -178,11 +178,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
-	var localhostClient exported.ClientState = localhosttypes.NewClientState(
-		suite.keeper.ClientStore(suite.ctx, exported.ClientTypeLocalHost),
-		suite.header.ChainID,
-		suite.ctx.BlockHeight(),
-	)
+	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.ChainID, suite.ctx.BlockHeight())
 
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 

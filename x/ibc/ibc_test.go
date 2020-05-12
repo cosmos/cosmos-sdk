@@ -8,12 +8,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -45,7 +42,6 @@ type IBCTestSuite struct {
 	cdc    *codec.Codec
 	ctx    sdk.Context
 	app    *simapp.SimApp
-	store  sdk.KVStore
 	header ibctmtypes.Header
 }
 
@@ -62,8 +58,6 @@ func (suite *IBCTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	suite.store = cachekv.NewStore(mem)
 	suite.header = ibctmtypes.CreateTestHeader("chainID", 10, now, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.cdc = suite.app.Codec()

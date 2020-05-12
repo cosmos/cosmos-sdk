@@ -1,15 +1,20 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -66,9 +71,18 @@ func (cs ClientState) IsFrozen() bool {
 	return cs.Frozen
 }
 
+// Validate performs basic validation of the client state fields.
+func (cs ClientState) Validate() error {
+	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+		return err
+	}
+	return cs.ConsensusState.ValidateBasic()
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Solo Machine client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
+	store sdk.KVStore,
 	cdc *codec.Codec,
 	root commitmentexported.Root,
 	height uint64,
@@ -91,7 +105,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof", proof)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(consensusState)
@@ -108,14 +122,16 @@ func (cs ClientState) VerifyClientConsensusState(
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "failed to verify proof against current public key, sequence, and consensus state")
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec,
+	store sdk.KVStore,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -135,10 +151,15 @@ func (cs ClientState) VerifyConnectionState(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof", proof)
 	}
 
-	bz, err := cdc.MarshalBinaryBare(connectionEnd)
+	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
+	if !ok {
+		return fmt.Errorf("invalid connection type %T", connectionEnd)
+	}
+
+	bz, err := cdc.MarshalBinaryBare(&connection)
 	if err != nil {
 		return err
 	}
@@ -155,15 +176,16 @@ func (cs ClientState) VerifyConnectionState(
 		)
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
-
 }
 
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec,
+	store sdk.KVStore,
+	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -184,10 +206,15 @@ func (cs ClientState) VerifyChannelState(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof", proof)
 	}
 
-	bz, err := cdc.MarshalBinaryBare(channel)
+	channelEnd, ok := channel.(channeltypes.Channel)
+	if !ok {
+		return fmt.Errorf("invalid channel type %T", channel)
+	}
+
+	bz, err := cdc.MarshalBinaryBare(&channelEnd)
 	if err != nil {
 		return err
 	}
@@ -204,13 +231,15 @@ func (cs ClientState) VerifyChannelState(
 		)
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
 }
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
+	store sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -232,7 +261,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof", proof)
 	}
 
 	// value = sequence + path + commitment bytes
@@ -247,7 +276,8 @@ func (cs ClientState) VerifyPacketCommitment(
 		)
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
 
 }
@@ -255,6 +285,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
+	store sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -276,7 +307,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof")
 	}
 
 	// value = sequence + path + acknowledgement
@@ -291,7 +322,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		)
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
 
 }
@@ -300,6 +332,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+	store sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -320,7 +353,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof", proof)
 	}
 
 	// value = sequence + path
@@ -333,7 +366,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		)
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
 
 }
@@ -341,6 +375,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
+	store sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -361,7 +396,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof is not a signature proof")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof")
 	}
 
 	// value = sequence + path + nextSequenceRecv
@@ -377,7 +412,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		)
 	}
 
-	//cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence += 1
+	setClientState(store, cs)
 	return nil
 }
 
@@ -387,4 +423,10 @@ func combineSequenceAndPath(sequence uint64, path commitmenttypes.MerklePath) []
 		sdk.Uint64ToBigEndian(sequence),
 		[]byte(path.String())...,
 	)
+}
+
+// sets the client state to the store
+func setClientState(store sdk.KVStore, clientState clientexported.ClientState) {
+	bz := SubModuleCdc.MustMarshalBinaryBare(clientState)
+	store.Set(ibctypes.KeyClientState(), bz)
 }

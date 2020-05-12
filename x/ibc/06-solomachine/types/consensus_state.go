@@ -28,6 +28,11 @@ func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Sequence
 }
 
+// GetTimestamp returns zero.
+func (cs ConsensusState) GetTimestamp() uint64 {
+	return 0
+}
+
 // GetRoot returns nil as solo machines do not have roots
 func (cs ConsensusState) GetRoot() commitmentexported.Root {
 	return nil

@@ -14,14 +14,10 @@ func TestEncodeAndDecode(t *testing.T) {
 	ss := "shasum"
 
 	bech, err := bech32.ConvertAndEncode(ss, sum[:])
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	hrp, data, err := bech32.DecodeAndConvert(bech)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	require.Equal(t, hrp, ss, "Invalid hrp")
 	require.True(t, bytes.Equal(data, sum[:]), "Invalid decode")

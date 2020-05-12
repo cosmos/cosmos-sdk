@@ -96,8 +96,6 @@ message ModeInfo {
     // Single is the mode info for a single signer
     message Single {
         SignMode mode = 1;
-        // locale may be used in the future with TEXTUAL signing modes
-        string locale = 2;
     }
    
     // Multi is the mode info for a multisig public key

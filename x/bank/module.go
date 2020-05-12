@@ -71,6 +71,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(cdc)
 }
 
+// RegisterInterfaceTypes registers interfaces and implementations of the bank module.
 func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }

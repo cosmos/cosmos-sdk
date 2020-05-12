@@ -27,16 +27,14 @@ var _ clientexported.ClientState = ClientState{}
 
 // ClientState requires (read-only) access to keys outside the client prefix.
 type ClientState struct {
-	store   sdk.KVStore
 	ID      string `json:"id" yaml:"id"`
 	ChainID string `json:"chain_id" yaml:"chain_id"`
 	Height  int64  `json:"height" yaml:"height"`
 }
 
 // NewClientState creates a new ClientState instance
-func NewClientState(store sdk.KVStore, chainID string, height int64) ClientState {
+func NewClientState(chainID string, height int64) ClientState {
 	return ClientState{
-		store:   store,
 		ID:      clientexported.Localhost.String(),
 		ChainID: chainID,
 		Height:  height,
@@ -70,19 +68,13 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
-		return err
-	}
 	if strings.TrimSpace(cs.ChainID) == "" {
 		return errors.New("chain id cannot be blank")
 	}
 	if cs.Height <= 0 {
 		return fmt.Errorf("height must be positive: %d", cs.Height)
 	}
-	if cs.store == nil {
-		return errors.New("KVStore cannot be nil")
-	}
-	return nil
+	return host.DefaultClientIdentifierValidator(cs.ID)
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus
@@ -90,6 +82,7 @@ func (cs ClientState) Validate() error {
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
+	ctx sdk.Context,
 	cdc *codec.Codec,
 	_ commitmentexported.Root,
 	height uint64,
@@ -127,6 +120,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored locally.
 func (cs ClientState) VerifyConnectionState(
+	ctx sdk.Context,
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
@@ -164,6 +158,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the local machine.
 func (cs ClientState) VerifyChannelState(
+	ctx sdk.Context,
 	cdc codec.Marshaler,
 	_ uint64,
 	prefix commitmentexported.Prefix,
@@ -202,6 +197,7 @@ func (cs ClientState) VerifyChannelState(
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
+	ctx sdk.Context,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -234,6 +230,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
+	ctx sdk.Context,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -267,6 +264,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+	ctx sdk.Context,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,
@@ -291,6 +289,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
+	ctx sdk.Context,
 	_ uint64,
 	prefix commitmentexported.Prefix,
 	_ commitmentexported.Proof,

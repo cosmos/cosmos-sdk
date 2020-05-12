@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	dbm "github.com/tendermint/tm-db"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -22,18 +21,16 @@ type LocalhostTestSuite struct {
 
 	aminoCdc *codec.Codec
 	cdc      codec.Marshaler
-	store    *cachekv.Store
+	ctx      sdk.Context
 }
 
 func (suite *LocalhostTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(checkTx)
+	isCheckTx := false
+	app := simapp.Setup(isCheckTx)
 
 	suite.aminoCdc = app.Codec()
 	suite.cdc = app.AppCodec()
-
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	suite.store = cachekv.NewStore(mem)
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 1})
 }
 
 func TestLocalhostTestSuite(t *testing.T) {

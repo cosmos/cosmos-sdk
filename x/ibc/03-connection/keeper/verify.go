@@ -32,7 +32,7 @@ func (k Keeper) VerifyClientConsensusState(
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.aminoCdc, targetConsState.GetRoot(), height, connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
+		ctx, k.aminoCdc, targetConsState.GetRoot(), height, connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	)
 }
 
@@ -63,7 +63,7 @@ func (k Keeper) VerifyConnectionState(
 	}
 
 	return clientState.VerifyConnectionState(
-		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
+		ctx, k.cdc, height, connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
 	)
 }
 
@@ -95,7 +95,7 @@ func (k Keeper) VerifyChannelState(
 	}
 
 	return clientState.VerifyChannelState(
-		k.cdc, height, connection.GetCounterparty().GetPrefix(), proof,
+		ctx, k.cdc, height, connection.GetCounterparty().GetPrefix(), proof,
 		portID, channelID, channel, consensusState,
 	)
 }
@@ -129,7 +129,7 @@ func (k Keeper) VerifyPacketCommitment(
 	}
 
 	return clientState.VerifyPacketCommitment(
-		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		ctx, height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, commitmentBytes, consensusState,
 	)
 }
@@ -163,7 +163,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
-		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		ctx, height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, acknowledgement, consensusState,
 	)
 }
@@ -197,7 +197,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
-		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		ctx, height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, consensusState,
 	)
 }
@@ -230,7 +230,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	}
 
 	return clientState.VerifyNextSequenceRecv(
-		height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
+		ctx, height, connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		nextSequenceRecv, consensusState,
 	)
 }

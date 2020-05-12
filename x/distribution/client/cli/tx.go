@@ -213,7 +213,8 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewFundCommunityPoolCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+// TODO: Wire this to proposal handler in client/proposal_handler.go
+func NewSubmitProposalCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -234,6 +235,56 @@ Where proposal.json contains:
   "amount": "1000stake",
   "deposit": "1000stake"
 }
+`,
+				version.ClientName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txf := tx.NewFactoryFromCLI(inBuf).
+				WithTxGenerator(txg).
+				WithAccountRetriever(ar)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+
+			proposal, err := NewParseCommunityPoolSpendProposalJSON(m, args[0])
+			if err != nil {
+				return err
+			}
+
+			from := cliCtx.GetFromAddress()
+
+			amount, err := sdk.ParseCoins(proposal.Amount)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+
+			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			if err != nil {
+				return err
+			}
+			msg := gov.NewMsgSubmitProposal(content, deposit, from)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+
+		},
+	}
+	return flags.PostCommands(cmd)[0]
+}
+
+func NewFundCommunityPoolCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fund-community-pool [amount]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Funds the community pool with the specified amount",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Funds the community pool with the specified amount
+
+Example:
+$ %s tx distribution fund-community-pool 100uatom --from mykey
 `,
 				version.ClientName,
 			),

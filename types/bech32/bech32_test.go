@@ -5,27 +5,24 @@ import (
 	"crypto/sha256"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
 func TestEncodeAndDecode(t *testing.T) {
 	sum := sha256.Sum256([]byte("hello world\n"))
+	ss := "shasum"
 
-	bech, err := bech32.ConvertAndEncode("shasum", sum[:])
+	bech, err := bech32.ConvertAndEncode(ss, sum[:])
 	if err != nil {
-		t.Error(err)
+		require.NoError(t, err)
 	}
 
 	hrp, data, err := bech32.DecodeAndConvert(bech)
 	if err != nil {
-		t.Error(err)
+		require.NoError(t, err)
 	}
 
-	if hrp != "shasum" {
-		t.Error("Invalid hrp")
-	}
-
-	if !bytes.Equal(data, sum[:]) {
-		t.Error("Invalid decode")
-	}
+	require.Equal(t, hrp, ss, "Invalid hrp")
+	require.True(t, bytes.Equal(data, sum[:]), "Invalid decode")
 }

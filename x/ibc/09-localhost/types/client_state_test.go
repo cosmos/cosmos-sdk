@@ -3,7 +3,6 @@ package types_test
 import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
@@ -133,7 +132,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 
 func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(common.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name        string

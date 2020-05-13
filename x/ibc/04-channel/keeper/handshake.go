@@ -66,7 +66,7 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(porttypes.ErrInvalidPort, "caller does not own port capability")
 	}
 
-	channel := types.NewChannel(common.INIT, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
@@ -98,7 +98,7 @@ func (k Keeper) ChanOpenTry(
 ) (*capability.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
-	if found && !(previousChannel.State == common.INIT &&
+	if found && !(previousChannel.State == types.INIT &&
 		previousChannel.Ordering == order &&
 		previousChannel.Counterparty.PortID == counterparty.PortID &&
 		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
@@ -125,7 +125,7 @@ func (k Keeper) ChanOpenTry(
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(common.TRYOPEN, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(types.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
@@ -137,7 +137,7 @@ func (k Keeper) ChanOpenTry(
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		common.INIT, channel.Ordering, expectedCounterparty,
+		types.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
 
@@ -178,7 +178,7 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if !(channel.State == common.INIT || channel.State == common.TRYOPEN) {
+	if !(channel.State == types.INIT || channel.State == types.TRYOPEN) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state should be INIT or TRYOPEN (got %s)", channel.State.String(),
@@ -210,7 +210,7 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		common.TRYOPEN, channel.Ordering, expectedCounterparty,
+		types.TRYOPEN, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
 	)
 
@@ -222,7 +222,7 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
-	channel.State = common.OPEN
+	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
 	k.SetChannel(ctx, portID, channelID, channel)
 
@@ -245,7 +245,7 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State != common.TRYOPEN {
+	if channel.State != types.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not TRYOPEN (got %s)", channel.State.String(),
@@ -276,7 +276,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		common.OPEN, channel.Ordering, counterparty,
+		types.OPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -288,7 +288,7 @@ func (k Keeper) ChanOpenConfirm(
 		return err
 	}
 
-	channel.State = common.OPEN
+	channel.State = types.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID))
@@ -317,7 +317,7 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State == common.CLOSED {
+	if channel.State == types.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
@@ -335,7 +335,7 @@ func (k Keeper) ChanCloseInit(
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
 
-	channel.State = common.CLOSED
+	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil
@@ -360,7 +360,7 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State == common.CLOSED {
+	if channel.State == types.CLOSED {
 		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
@@ -384,7 +384,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		common.CLOSED, channel.Ordering, counterparty,
+		types.CLOSED, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -398,7 +398,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
 
-	channel.State = common.CLOSED
+	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil

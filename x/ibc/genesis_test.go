@@ -58,7 +58,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channel.IdentifiedChannel{
 						channel.NewIdentifiedChannel(
 							port1, channel1, channel.NewChannel(
-								common.INIT, channelOrder,
+								channel.INIT, channelOrder,
 								channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
 							),
 						),

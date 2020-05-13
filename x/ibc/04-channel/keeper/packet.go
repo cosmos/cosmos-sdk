@@ -34,7 +34,7 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State == common.CLOSED {
+	if channel.State == types.CLOSED {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel is CLOSED (got %s)", channel.State.String(),
@@ -147,7 +147,7 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
 
-	if channel.State != common.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -226,7 +226,7 @@ func (k Keeper) PacketExecuted(
 	}
 
 	// sanity check
-	if channel.State != common.OPEN {
+	if channel.State != types.OPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -302,7 +302,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State != common.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -396,7 +396,7 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State != common.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),

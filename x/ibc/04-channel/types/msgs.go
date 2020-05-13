@@ -8,7 +8,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var _ sdk.Msg = MsgChannelOpenInit{}
@@ -19,7 +18,7 @@ func NewMsgChannelOpenInit(
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(common.INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
@@ -69,7 +68,7 @@ func NewMsgChannelOpenTry(
 	proofInit commitmenttypes.MerkleProof, proofHeight uint64, signer sdk.AccAddress,
 ) MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(common.INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,

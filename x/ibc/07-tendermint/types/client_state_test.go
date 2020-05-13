@@ -233,7 +233,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 
 func (suite *TendermintTestSuite) TestVerifyChannelState() {
 	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(common.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	ch := channel.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name           string

@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 const (
@@ -39,12 +37,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]IdentifiedChannel{
 					NewIdentifiedChannel(
 						testPort1, testChannel1, NewChannel(
-							common.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+							INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 					NewIdentifiedChannel(
 						testPort2, testChannel2, NewChannel(
-							common.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
+							INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},
@@ -69,7 +67,7 @@ func TestValidateGenesis(t *testing.T) {
 				Channels: []IdentifiedChannel{
 					NewIdentifiedChannel(
 						testPort1, "testChannel1", NewChannel(
-							common.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+							INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},

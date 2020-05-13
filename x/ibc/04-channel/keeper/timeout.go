@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -35,7 +34,7 @@ func (k Keeper) TimeoutPacket(
 		)
 	}
 
-	if channel.State != common.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -144,7 +143,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability,
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	if channel.Ordering == types.ORDERED {
-		channel.State = common.CLOSED
+		channel.State = types.CLOSED
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
@@ -213,7 +212,7 @@ func (k Keeper) TimeoutOnClose(
 
 	counterparty := types.NewCounterparty(packet.GetSourcePort(), packet.GetSourceChannel())
 	expectedChannel := types.NewChannel(
-		common.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
+		types.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
 	)
 
 	// check that the opposing channel end has closed

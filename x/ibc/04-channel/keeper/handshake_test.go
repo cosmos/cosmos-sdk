@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 		}, true},
 		{"channel already exists", func() {
 			suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.INIT,
+				testPort1, testChannel1, testPort2, testChannel2, types.INIT,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -91,11 +91,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			)
 			suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.INIT, types.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.INIT, types.ORDERED, testConnectionIDA)
 		}, true},
 		{"previous channel with invalid state", func() {
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.UNINITIALIZED,
+				testPort2, testChannel2, testPort1, testChannel1, types.UNINITIALIZED,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			)
 			suite.chainB.createConnection(
 				testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.INIT, types.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.INIT, types.ORDERED, testConnectionIDA)
 			portCap = capability.NewCapability(3)
 		}, false},
 	}
@@ -192,24 +192,24 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.INIT,
+				testPort1, testChannel1, testPort2, testChannel2, types.INIT,
 				types.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not INIT or TRYOPEN", func() {
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.UNINITIALIZED,
+				testPort1, testChannel1, testPort2, testChannel2, types.UNINITIALIZED,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.TRYOPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -219,7 +219,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				common.TRYOPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.TRYOPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				common.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.TRYOPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				common.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.TRYOPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -256,11 +256,11 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.INIT,
+				testPort1, testChannel1, testPort2, testChannel2, types.INIT,
 				types.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 			channelCap = capability.NewCapability(3)
@@ -317,22 +317,22 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 			_ = suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-				common.TRYOPEN, types.ORDERED, testConnectionIDA)
+				types.TRYOPEN, types.ORDERED, testConnectionIDA)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not TRYOPEN", func() {
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.UNINITIALIZED,
+				testPort1, testChannel1, testPort2, testChannel2, types.UNINITIALIZED,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -342,7 +342,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				common.TRYOPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -363,7 +363,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.TRYOPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.TRYOPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -379,11 +379,11 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2,
-				common.TRYOPEN, types.ORDERED, testConnectionIDA)
+				types.TRYOPEN, types.ORDERED, testConnectionIDA)
 			channelCap = capability.NewCapability(3)
 		}, false},
 	}
@@ -431,20 +431,20 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.OPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.OPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is CLOSED", func() {
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.CLOSED,
+				testPort1, testChannel1, testPort2, testChannel2, types.CLOSED,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.OPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.OPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -454,7 +454,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 				common.TRYOPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.UNINITIALIZED,
+				testPort1, testChannel1, testPort2, testChannel2, types.UNINITIALIZED,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -465,7 +465,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 				common.OPEN,
 			)
 			_ = suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.OPEN,
+				testPort1, testChannel1, testPort2, testChannel2, types.OPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 			channelCap = capability.NewCapability(3)
@@ -513,24 +513,24 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 			suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.CLOSED,
+				testPort1, testChannel1, testPort2, testChannel2, types.CLOSED,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, true},
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is CLOSED", func() {
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.CLOSED,
+				testPort2, testChannel2, testPort1, testChannel1, types.CLOSED,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
 		{"connection not found", func() {
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},
@@ -540,7 +540,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 				common.TRYOPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -550,7 +550,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -561,7 +561,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 		}, false},
@@ -577,11 +577,11 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 				common.OPEN,
 			)
 			_ = suite.chainB.createChannel(
-				testPort2, testChannel2, testPort1, testChannel1, common.OPEN,
+				testPort2, testChannel2, testPort1, testChannel1, types.OPEN,
 				types.ORDERED, testConnectionIDB,
 			)
 			suite.chainA.createChannel(
-				testPort1, testChannel1, testPort2, testChannel2, common.CLOSED,
+				testPort1, testChannel1, testPort2, testChannel2, types.CLOSED,
 				types.ORDERED, testConnectionIDA,
 			)
 		}, false},

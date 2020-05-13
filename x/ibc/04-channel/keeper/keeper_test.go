@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	channel := types.NewChannel(
-		common.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
@@ -91,15 +91,15 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.NewChannel(
-		common.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty3, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel2 := types.NewChannel(
-		common.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty1, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel3 := types.NewChannel(
-		common.CLOSED, testChannelOrder,
+		types.CLOSED, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 
@@ -417,7 +417,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state common.State, order types.Order, connectionID string,
+	state types.State, order types.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := types.NewChannel(state, order, counterparty,

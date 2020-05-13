@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
 				suite.chainA.CreateClient(suite.chainB)
 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, true, true},
 		{"successful transfer from external chain", prefixCoins,
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				suite.Require().NoError(err)
 				suite.chainA.CreateClient(suite.chainB)
 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, false, true},
 		{"source channel not found", testCoins,
@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			func() {
 				suite.chainA.CreateClient(suite.chainB)
 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 			}, true, false},
 		// createOutgoingPacket tests
 		// - source chain
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			func() {
 				suite.chainA.CreateClient(suite.chainB)
 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, true, false},
 		// - receiving chain
@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			func() {
 				suite.chainA.CreateClient(suite.chainB)
 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 			}, false, false},
 		{"channel capability not found", testCoins,
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), testAddr1, testCoins)
 				suite.chainA.CreateClient(suite.chainB)
 				suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
+				suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort1, testChannel1, 1)
 				// Release channel capability
 				cap, _ := suite.chainA.App.ScopedTransferKeeper.GetCapability(suite.chainA.GetContext(), capName)

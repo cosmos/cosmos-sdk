@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			// Create and store channel on chain A
 			channel := suite.chainA.createChannel(
 				testPort1, testChannel1, testPort2, testChannel2,
-				common.OPEN, channeltypes.ORDERED, testConnectionIDA,
+				channeltypes.OPEN, channeltypes.ORDERED, testConnectionIDA,
 			)
 
 			// Update chainA client on chainB

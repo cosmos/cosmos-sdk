@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var (
@@ -16,7 +15,7 @@ var (
 
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state common.State, ordering Order, counterparty Counterparty,
+	state State, ordering Order, counterparty Counterparty,
 	hops []string, version string,
 ) Channel {
 	return Channel{
@@ -122,8 +121,8 @@ func (c Counterparty) ValidateBasic() error {
 type IdentifiedChannel struct {
 	ID             string       `json:"id" yaml:"id"`
 	PortID         string       `json:"port_id" yaml:"port_id"`
-	State          common.State `json:"state" yaml:"state"`
-	Ordering       Order `json:"ordering" yaml:"ordering"`
+	State          State        `json:"state" yaml:"state"`
+	Ordering       Order        `json:"ordering" yaml:"ordering"`
 	Counterparty   Counterparty `json:"counterparty" yaml:"counterparty"`
 	ConnectionHops []string     `json:"connection_hops" yaml:"connection_hops"`
 	Version        string       `json:"version" yaml:"version "`

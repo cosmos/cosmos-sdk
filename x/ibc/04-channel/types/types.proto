@@ -5,7 +5,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "x/ibc/23-commitment/types/types.proto";
-import "x/ibc/common/types.proto";
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
 // called by a relayer on Chain A.
@@ -104,7 +103,7 @@ message Channel {
   option (gogoproto.goproto_getters) = false;
 
   // current state of the channel end
-  cosmos_sdk.x.ibc.v1.State state = 1;
+  State state = 1;
   // whether the channel is ordered or unordered
   Order ordering = 2;
   // counterparty channel end
@@ -114,6 +113,24 @@ message Channel {
   repeated string connection_hops = 4 [(gogoproto.moretags) = "yaml:\"connection_hops\""];
   // opaque channel version, which is agreed upon during the handshake
   string version = 5;
+}
+
+// State defines if a channel is in one of the following states:
+// CLOSED, INIT, TRYOPEN, OPEN or UNINITIALIZED.
+enum State {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default State
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  // A channel has just started the opening handshake.
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
+  // A channel has acknowledged the handshake step on the counterparty chain.
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  // A channel has completed the handshake. Open channels are
+  // ready to send and receive packets.
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
+  // A channel has been closed and can no longer be used to send or receive packets.
+  STATE_CLOSED = 4 [(gogoproto.enumvalue_customname) = "CLOSED"];
 }
 
 // Order defines if a channel is ORDERED or UNORDERED

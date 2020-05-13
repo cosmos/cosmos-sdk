@@ -73,8 +73,29 @@ message AuthInfo {
 
 message SignerInfo {
     PublicKey pub_key = 1;
-    SignMode mode = 2;
+    ModeInfo mode_info = 2;
 }
+
+message ModeInfo {
+    oneof sum {
+        Single single = 1;
+        Multi multi = 2;
+    }   
+   
+    // Single is the mode info for a single signer
+    message Single {
+        SignMode mode = 1;
+    }
+   
+    // Multi is the mode info for a multisig public key
+    message Multi {
+        // bitarray specifies which keys within the multisig are signing
+        CompactBitArray bitarray = 1;
+        // mode_infos is the corresponding modes of the signers of the multisig
+        // which could include nested multisig public keys
+        repeated ModeInfo mode_infos = 2;
+    }
+}    
 
 enum SignMode {
     SIGN_MODE_UNSPECIFIED = 0;
@@ -256,6 +277,8 @@ can gracefully transition away from Amino JSON.
 
 ### `SIGN_MODE_DIRECT_AUX`
 
+(*Documented as option (3) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933)
+
 We could add a mode `SIGN_MODE_DIRECT_AUX`
 to support scenarios where multiple signatures
 are being gathered into a single transaction but the message composer does not
@@ -288,8 +311,11 @@ in order):
 message SignDocAux {
     bytes body_bytes = 1;
     // PublicKey is included in SignDocAux :
-    // 1. as a special case for multisig public keys to be described later
-    // in this document
+    // 1. as a special case for multisig public keys. For multisig public keys,
+    // the signer should use the top-level multisig public key they are signing
+    // against, not their own public key. This is to prevent against a form
+    // of malleability where a signature could be taken out of context of the
+    // multisig key that was intended to be signed for
     // 2. to guard against scenario where configuration information is encoded
     // in public keys (it has been proposed) such that two keys can generate
     // the same signature but have different security properties
@@ -309,6 +335,16 @@ message SignDocAux {
 3. Send their signature and `SignerInfo` to primary signer who will then
 sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and `AuthInfo`
 added) once enough signatures have been collected
+
+### `SIGN_MODE_DIRECT_RELAXED`
+
+(*Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933*)
+
+This is a variation of `SIGN_MODE_DIRECT` where multiple signers wouldn't need to
+coordinate public keys and signing modes in advance. It would involve an alternate
+`SignDoc` similar to `SignDocAux` above with fee. This could be added in the future
+if client developers found the burden of collecting public keys and modes in advance
+too burdensome.
 
 ## Consequences
 

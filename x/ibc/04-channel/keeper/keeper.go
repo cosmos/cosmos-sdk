@@ -19,7 +19,7 @@ import (
 // Keeper defines the IBC channel keeper
 type Keeper struct {
 	storeKey         sdk.StoreKey
-	cdc              *codec.Codec
+	cdc              codec.Marshaler
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
@@ -28,7 +28,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey,
+	cdc codec.Marshaler, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
 	portKeeper types.PortKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {
@@ -63,7 +63,7 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(channel)
+	bz := k.cdc.MustMarshalBinaryBare(&channel)
 	store.Set(ibctypes.KeyChannel(portID, channelID), bz)
 }
 
@@ -251,18 +251,19 @@ func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.IdentifiedChan
 }
 
 // LookupModuleByChannel will return the IBCModule along with the capability associated with a given channel defined by its portID and channelID
-func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capability.Capability, bool) {
-	modules, cap, ok := k.scopedKeeper.LookupModules(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
-	if !ok {
-		return "", nil, false
+func (k Keeper) LookupModuleByChannel(ctx sdk.Context, portID, channelID string) (string, *capability.Capability, error) {
+	modules, cap, err := k.scopedKeeper.LookupModules(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return "", nil, err
 	}
 
-	return ibctypes.GetModuleOwner(modules), cap, true
+	return ibctypes.GetModuleOwner(modules), cap, nil
 }
 
 // common functionality for IteratePacketCommitment and IteratePacketAcknowledgemen
-func (k Keeper) iterateHashes(ctx sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
+func (k Keeper) iterateHashes(_ sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64, hash []byte) bool) {
 	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		keySplit := strings.Split(string(iterator.Key()), "/")
 		portID := keySplit[2]

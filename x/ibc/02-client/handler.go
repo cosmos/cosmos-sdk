@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -16,27 +14,24 @@ import (
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
 	clientType := exported.ClientTypeFromString(msg.GetClientType())
+
 	var clientState exported.ClientState
+
 	switch clientType {
-	case 0:
-		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	case exported.Tendermint:
 		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
 		if !ok {
 			return nil, sdkerrors.Wrap(ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
 		}
 		var err error
+
 		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
 		if err != nil {
 			return nil, err
 		}
 	case exported.Localhost:
 		// msg client id is always "localhost"
-		clientState = localhosttypes.NewClientState(
-			k.ClientStore(ctx, msg.GetClientID()),
-			ctx.ChainID(),
-			ctx.BlockHeight(),
-		)
+		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 	default:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	}
@@ -48,12 +43,6 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		return nil, err
 	}
 
-	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
-	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
-	for i, signer := range msg.GetSigners() {
-		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			EventTypeCreateClient,
@@ -62,7 +51,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			attributes...,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 		),
 	})
 
@@ -73,30 +62,10 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
 func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg exported.MsgUpdateClient) (*sdk.Result, error) {
-	clientState, err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
+	_, err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
 	if err != nil {
 		return nil, err
 	}
-
-	attributes := make([]sdk.Attribute, len(msg.GetSigners())+1)
-	attributes[0] = sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory)
-	for i, signer := range msg.GetSigners() {
-		attributes[i+1] = sdk.NewAttribute(sdk.AttributeKeySender, signer.String())
-	}
-
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", msg.GetClientID(), clientState.GetLatestHeight()))
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			EventTypeUpdateClient,
-			sdk.NewAttribute(AttributeKeyClientID, msg.GetClientID()),
-			sdk.NewAttribute(AttrbuteKeyClientType, clientState.ClientType().String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			attributes...,
-		),
-	})
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

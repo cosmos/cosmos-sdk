@@ -2,7 +2,6 @@ package simulation_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,12 +14,12 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := std.NewAppCodec(std.MakeCodec(simapp.ModuleBasics))
-	dec := simulation.NewDecodeStore(cdc)
+	app := simapp.Setup(false)
+	dec := simulation.NewDecodeStore(app.BankKeeper)
 
 	totalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
 
-	supplyBz, err := cdc.MarshalSupply(totalSupply)
+	supplyBz, err := app.BankKeeper.MarshalSupply(totalSupply)
 	require.NoError(t, err)
 
 	kvPairs := tmkv.Pairs{

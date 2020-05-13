@@ -55,3 +55,28 @@ func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 
 	return bz, nil
 }
+
+// QuerierAllClientConnections defines the sdk.Querier to query the connections paths for clients.
+func QuerierAllClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+	var params types.QueryAllConnectionsParams
+
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	clientsConnectionPaths := k.GetAllClientConnectionPaths(ctx)
+
+	start, end := client.Paginate(len(clientsConnectionPaths), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		clientsConnectionPaths = []types.ConnectionPaths{}
+	} else {
+		clientsConnectionPaths = clientsConnectionPaths[start:end]
+	}
+
+	res, err := codec.MarshalJSONIndent(k.cdc, clientsConnectionPaths)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}

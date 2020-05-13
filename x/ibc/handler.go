@@ -39,10 +39,11 @@ func NewHandler(k Keeper) sdk.Handler {
 		// IBC channel msgs
 		case channel.MsgChannelOpenInit:
 			// Lookup module by port capability
-			module, portCap, ok := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
-			if !ok {
-				return nil, sdkerrors.Wrap(port.ErrInvalidPort, "could not retrieve module from portID")
+			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
+
 			res, cap, err := channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, portCap, msg)
 			if err != nil {
 				return nil, err
@@ -61,9 +62,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgChannelOpenTry:
 			// Lookup module by port capability
-			module, portCap, ok := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
-			if !ok {
-				return nil, sdkerrors.Wrap(port.ErrInvalidPort, "could not retrieve module from portID")
+			module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortID)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 			res, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
 			if err != nil {
@@ -83,16 +84,17 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgChannelOpenAck:
 			// Lookup module by channel capability
-			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
 			if !ok {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
-			err := cbs.OnChanOpenAck(ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion)
+
+			err = cbs.OnChanOpenAck(ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion)
 			if err != nil {
 				return nil, err
 			}
@@ -100,9 +102,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgChannelOpenConfirm:
 			// Lookup module by channel capability
-			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
@@ -110,7 +112,7 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
-			err := cbs.OnChanOpenConfirm(ctx, msg.PortID, msg.ChannelID)
+			err = cbs.OnChanOpenConfirm(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
 				return nil, err
 			}
@@ -118,9 +120,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgChannelCloseInit:
 			// Lookup module by channel capability
-			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
@@ -128,7 +130,7 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
-			err := cbs.OnChanCloseInit(ctx, msg.PortID, msg.ChannelID)
+			err = cbs.OnChanCloseInit(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
 				return nil, err
 			}
@@ -136,9 +138,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgChannelCloseConfirm:
 			// Lookup module by channel capability
-			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortID, msg.ChannelID)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 			// Retrieve callbacks from router
 			cbs, ok := k.Router.GetRoute(module)
@@ -146,7 +148,7 @@ func NewHandler(k Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(port.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
-			err := cbs.OnChanCloseConfirm(ctx, msg.PortID, msg.ChannelID)
+			err = cbs.OnChanCloseConfirm(ctx, msg.PortID, msg.ChannelID)
 			if err != nil {
 				return nil, err
 			}
@@ -155,9 +157,9 @@ func NewHandler(k Keeper) sdk.Handler {
 		// IBC packet msgs get routed to the appropriate module callback
 		case channel.MsgPacket:
 			// Lookup module by channel capability
-			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, _, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.DestinationPort, msg.Packet.DestinationChannel)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 
 			// Retrieve callbacks from router
@@ -169,9 +171,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgAcknowledgement:
 			// Lookup module by channel capability
-			module, _, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, _, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 
 			// Retrieve callbacks from router
@@ -183,9 +185,9 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgTimeout:
 			// Lookup module by channel capability
-			module, cap, ok := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
-			if !ok {
-				return nil, sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "could not retrieve module from channel capability")
+			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 			}
 
 			// Retrieve callbacks from router

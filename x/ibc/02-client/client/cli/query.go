@@ -36,11 +36,12 @@ $ %s query ibc client states
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 
-			clientStates, _, err := utils.QueryAllClientStates(cliCtx, page, limit)
+			clientStates, height, err := utils.QueryAllClientStates(cliCtx, page, limit)
 			if err != nil {
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(height)
 			return cliCtx.PrintOutput(clientStates)
 		},
 	}
@@ -77,6 +78,7 @@ $ %s query ibc client state [client-id]
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(clientStateRes.ProofHeight))
 			return cliCtx.PrintOutput(clientStateRes)
 		},
 	}
@@ -112,6 +114,7 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
 			return cliCtx.PrintOutput(csRes)
 		},
 	}
@@ -129,11 +132,12 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			header, _, err := utils.QueryTendermintHeader(cliCtx)
+			header, height, err := utils.QueryTendermintHeader(cliCtx)
 			if err != nil {
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(height)
 			return cliCtx.PrintOutput(header)
 		},
 	}
@@ -156,11 +160,12 @@ $ %s query ibc client node-state
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			state, _, err := utils.QueryNodeConsensusState(cliCtx)
+			state, height, err := utils.QueryNodeConsensusState(cliCtx)
 			if err != nil {
 				return err
 			}
 
+			cliCtx = cliCtx.WithHeight(height)
 			return cliCtx.PrintOutput(state)
 		},
 	}

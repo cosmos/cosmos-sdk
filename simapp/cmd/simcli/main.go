@@ -5,8 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
@@ -26,8 +24,7 @@ import (
 )
 
 var (
-	cdc      = std.MakeCodec(simapp.ModuleBasics)
-	appCodec = std.NewAppCodec(cdc)
+	appCodec, cdc = simapp.MakeCodecs()
 )
 
 func init() {
@@ -124,6 +121,7 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 		flags.LineBreak,
 		authcmd.GetSignCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
+		authcmd.GetValidateSignaturesCommand(cdc),
 		flags.LineBreak,
 		authcmd.GetBroadcastCommand(cdc),
 		authcmd.GetEncodeCommand(cdc),

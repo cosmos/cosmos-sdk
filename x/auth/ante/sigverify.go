@@ -41,7 +41,7 @@ type SigVerifiableTx interface {
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignBytes(ctx sdk.Context, acc exported.Account) []byte
+	GetSignBytes(ctx sdk.Context, acc exported.Account) ([]byte, error)
 }
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
@@ -198,7 +198,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simu
 		}
 
 		// retrieve signBytes of tx
-		signBytes := sigTx.GetSignBytes(ctx, signerAccs[i])
+		signBytes, _ := sigTx.GetSignBytes(ctx, signerAccs[i])
 
 		// retrieve pubkey
 		pubKey := signerAccs[i].GetPubKey()

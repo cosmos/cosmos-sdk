@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package cosmos_sdk.v1.signing;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/ante";
+
+// TxRaw is using for transaction decoding and verification
+message TxRaw {
+    bytes body_bytes = 1;
+
+    bytes auth_info_bytes = 2;
+
+    repeated bytes signatures = 3;
+}
+
+// SignDocRaw is used for verifying signatures with SIGN_MODE_DIRECT
+message SignDocRaw {
+    bytes body_bytes = 1;
+
+    bytes auth_info_bytes = 2;
+
+    string chain_id = 3;
+
+    uint64 account_number = 4;
+
+    uint64 account_sequence = 5;
+}

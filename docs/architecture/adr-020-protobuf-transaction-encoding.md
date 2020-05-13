@@ -54,16 +54,21 @@ package cosmos_sdk.v1;
 
 message Tx {
     TxBody body = 1;
-    repeated bytes signatures = 2;
+    AuthInfo auth_info = 2;
+    repeated bytes signatures = 3;
 }
 
 message TxBody {
     repeated google.protobuf.Any messages = 1;
-    repeated SignerInfo signer_info = 2;
-    Fee fee = 3;
-    string memo = 4;
-    int64 timeout_height = 5;
-    repeated google.protobuf.Any extension_options = 6;
+    string memo = 2;
+    int64 timeout_height = 3;
+    repeated google.protobuf.Any extension_options = 1023;
+}
+
+message AuthInfo {
+    repeated SignerInfo signer_infos = 1;
+    // The first signer is the primary signer and the one which pays the fee
+    Fee fee = 2;
 }
 
 message SignerInfo {
@@ -72,15 +77,19 @@ message SignerInfo {
 }
 
 enum SignMode {
-    SIGN_MODE_DEFAULT = 0;
-    SIGN_MODE_LEGACY_AMINO = -1;
-    SIGN_MODE_EXTENDED = 1;
+    SIGN_MODE_UNSPECIFIED = 0;
+
+    SIGN_MODE_DIRECT = 1;
+
+    SIGN_MODE_TEXTUAL = 2;
+    
+    SIGN_MODE_LEGACY_AMINO_JSON = 127;
 }
 ```
 
 As will be discussed below, in order to include as much of the `Tx` as possible
 in the `SignDoc`, `SignerInfo` is separated from signatures so that only the
-raw signatures themselves live outside of `TxBody`.
+raw signatures themselves live outside of what is signed over.
 
 Because we are aiming for be a flexible, extensible cross-chain transaction
 format, new transaction processing options should be added to `TxBody` as soon
@@ -93,22 +102,19 @@ attempt to upstream important improvements to `Tx`.
 
 ### Signing
 
-Signatures are structured using the `SignDoc` below which reuses `TxBody` and only
-adds the fields which are needed for signatures but not present on `TxBody`:
+All of the signing modes below aim to provide the following guarantees:
 
-```proto
-// types/types.proto
-message SignDoc {
-    TxBody body = 1;
-    string chain_id = 2;
-    uint64 account_number = 3;
-    uint64 account_sequence = 4;
-}
-```
+* **No Malleability**: `TxBody` and `AuthInfo` cannot change once the transaction
+is signed
+* **Predictable Gas**: if I am signing a transaction where I am paying a fee,
+the final gas is fully dependent on what I am signing
 
-#### `SIGN_MODE_DEFAULT`
+These guarantees give the maximum amount confidence to message signers that
+manipulation of `Tx`s by intermediaries can't result in any meaningful changes.
 
-The default signing behavior is to sign the raw `TxBody` bytes as broadcast over
+#### `SIGN_MODE_DIRECT`
+
+The "direct" signing behavior is to sign the raw `TxBody` bytes as broadcast over
 the wire. This has the advantages of:
 
 * requiring the minimum additional client capabilities beyond a standard protocol
@@ -117,18 +123,47 @@ buffers implementation
 subtle differences between the signing and encoding formats which could 
 potentially be exploited by an attacker)
 
-In order to sign in the default mode, clients take the following steps:
-
-1. Encode `TxBody`
-2. Sign `SignDocRaw`
-
-The raw encoded `TxBody` bytes are encoded into `SignDocRaw` below so that the
-encoded body bytes exactly match the signed body bytes with no need for
-["canonicalization"](https://github.com/regen-network/canonical-proto3) of that
-message.
+Signatures are structured using the `SignDoc` below which reuses `TxBody` and
+`AuthInfo` and only adds the fields which are needed for signatures:
 
 ```proto
 // types/types.proto
+message SignDoc {
+    TxBody body = 1;
+    AuthInfo auth_info = 2;
+    string chain_id = 3;
+    uint64 account_number = 4;
+    // account_sequence starts at 1 rather than 0 to avoid the case where
+    // the default 0 value must be omitted in protobuf serialization
+    uint64 account_sequence = 5;
+}
+```
+
+In order to sign in the default mode, clients take the following steps:
+
+1. Encode `SignDoc`. (The only requirement of the underlying protobuf
+implementation is that fields are serialized in order).
+2. Sign the encoded `SignDoc` bytes
+3. Build and broadcast `Tx`. (The underlying protobuf implementation must encode
+`TxBody` and `AuthInfo` with the same binary representation as encoded in
+`SignDoc`. If this is a problem for clients, the "raw" types described under
+verification can be used for signing as well.)
+
+Signature verification is based on comparing the raw `TxBody` and `AuthInfo`
+bytes encoded in `Tx` not based on any ["canonicalization"](https://github.com/regen-network/canonical-proto3)
+algorithm which creates added complexity for clients in addition to preventing
+some forms of upgradeability (to be addressed later in this document).
+
+Signature verifiers should use a special set of "raw" types to perform this
+binary signature verification rather than attempting to re-encode protobuf
+documents which could result in a different binary encoding:
+
+```proto
+message TxRaw {
+    bytes body_bytes = 1;
+    repeated bytes signatures = 2;
+}
+
 message SignDocRaw {
     bytes body_bytes = 1;
     string chain_id = 2;
@@ -136,40 +171,6 @@ message SignDocRaw {
     uint64 account_sequence = 4;
 }
 ```
-
-The only requirements are that the client _must_ encode `SignDocRaw` itself canonically.
- This means that:
- 
-* all of the fields must be encoded in order
-* default values (i.e. empty/zero values) must be omitted 
-
-If a protobuf implementation does not by default encode `SignDocRaw` canonically,
-the client _must_ manually encode `SignDocRaw` following the guidelines above.
-
-Again, it does not matter if `TxBody` was encoded canonically or not.
-
-Note that in order to decode `SignDocRaw` for displaying contents to users,
-the regular `SignDoc` type should be used.
-
-3. Broadcast `TxRaw`
-
-In order to make sure that the signed body bytes exactly match the encoded body
-bytes, clients should encode and broadcast `TxRaw` with the same body bytes used
-in `SignDocRaw`.
-
-```proto
-// types/types.proto
-message TxRaw {
-    bytes body_bytes = 1;
-    repeated bytes signatures = 2;
-}
-```
-
-Signature verifiers should verify signatures by decoding `TxRaw` and then
-encoding `SignDocRaw` with the raw body bytes.
-
-The standard `Tx` type (which is byte compatible with `TxRaw`) can be used to
-decode transactions for all other use cases.
 
 #### `SIGN_MODE_LEGACY_AMINO`
 
@@ -183,7 +184,7 @@ Legacy clients will be able to sign a transaction using the current Amino
 JSON format and have it encoded to protobuf using the REST `/tx/encode`
 endpoint before broadcasting.
 
-#### `SIGN_MODE_EXTENDED`
+#### `SIGN_MODE_TEXTUAL`
 
 As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
 there is a desire for a human-readable signing encoding, especially for hardware
@@ -191,18 +192,18 @@ wallets like the [Ledger](https://www.ledger.com) which display
 transaction contents to users before signing. JSON was an attempt at this but 
 falls short of the ideal.
 
-`SIGN_MODE_EXTENDED` is intended as a placeholder for a human-readable
+`SIGN_MODE_TEXTUAL` is intended as a placeholder for a human-readable
 encoding which will replace Amino JSON. This new encoding should be even more
 focused on readability than JSON, possibly based on formatting strings like
 [MessageFormat](http://userguide.icu-project.org/formatparse/messages).
 
 In order to ensure that the new human-readable format does not suffer from
-transaction malleability issues, `SIGN_MODE_EXTENDED`
+transaction malleability issues, `SIGN_MODE_TEXTUAL`
 requires that the _human-readable bytes are concatenated with the raw `SignDoc`_
 to generate sign bytes.
 
 Multiple human-readable formats (maybe even localized messages) may be supported
-by `SIGN_MODE_EXTENDED` when it is implemented.
+by `SIGN_MODE_TEXTUAL` when it is implemented.
 
 ### CLI & REST
 
@@ -245,11 +246,69 @@ Then, each module's client handler will at the minimum accept a `Marshaler` inst
 of a concrete Amino codec and a `Generator` along with an `AccountRetriever` so
 that account fields can be retrieved for signing.
 
-
 ## Future Improvements
 
-A concrete implementation of `SIGN_MODE_EXTENDED` is intended as a near-term
-future improvement.
+### `SIGN_MODE_TEXTUAL` specification
+
+A concrete specification and implementation of `SIGN_MODE_TEXTUAL` is intended
+as a near-term future improvement so that the ledger app and other wallets
+can gracefully transition away from Amino JSON.
+
+### `SIGN_MODE_DIRECT_AUX`
+
+We could add a mode `SIGN_MODE_DIRECT_AUX`
+to support scenarios where multiple signatures
+are being gathered into a single transaction but the message composer does not
+yet know which signatures will be included in the final transaction. For instance,
+I may have a 3/5 multisig wallet and want to send a `TxBody` to all 5
+signers to see who signs first. As soon as I have 3 signatures then I will go
+ahead and build the full transaction.
+
+With `SIGN_MODE_DIRECT`, each signer needs
+to sign the full `AuthInfo` which includes the full list of all signers and
+their signing modes, making the above scenario very hard.
+
+`SIGN_MODE_DIRECT_AUX` would allow "auxiliary" signers to create their signature
+using only `TxBody` and their own `PublicKey`. This allows the full list of
+signers in `AuthInfo` to be delayed until signatures have been collected.
+
+An "auxiliary" signer is any signer besides the primary signer who is paying
+the fee. For the primary signer, the full `AuthInfo` is actually needed to calculate gas and fees
+because that is dependent on how many signers and which key types and signing
+modes they are using. Auxiliary signers, however, do not need to worry about
+fees or gas and thus can just sign `TxBody`.
+
+To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
+
+1. Encode `SignDocAux` (with the same requirement that fields must be serialized
+in order):
+
+```proto
+// types/types.proto
+message SignDocAux {
+    bytes body_bytes = 1;
+    // PublicKey is included in SignDocAux :
+    // 1. as a special case for multisig public keys to be described later
+    // in this document
+    // 2. to guard against scenario where configuration information is encoded
+    // in public keys (it has been proposed) such that two keys can generate
+    // the same signature but have different security properties
+    //
+    // By including it here, the composer of AuthInfo cannot reference the
+    // a public key variant the signer did not intend to use
+    PublicKey public_key = 2;
+    string chain_id = 3;
+    uint64 account_number = 4;
+    // account_sequence starts at 1 rather than 0 to avoid the case where
+    // the default 0 value must be omitted in protobuf serialization
+    uint64 account_sequence = 5;
+}
+```
+
+2. Sign the encoded `SignDocAux` bytes
+3. Send their signature and `SignerInfo` to primary signer who will then
+sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and `AuthInfo`
+added) once enough signatures have been collected
 
 ## Consequences
 

@@ -159,24 +159,27 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 }
 
 //___________________________________________________________________________________
+// simcli query txs
+
+// QueryTxs is simcli query txs
+func (f *Fixtures) QueryTxs(page, limit int, events ...string) *sdk.SearchTxsResult {
+	cmd := fmt.Sprintf("%s query txs --page=%d --limit=%d --events='%s' %v",
+		f.SimcliBinary, page, limit, buildEventsQueryString(events), f.Flags())
+	out, _ := tests.ExecuteT(f.T, cmd, "")
+	var result sdk.SearchTxsResult
+
+	err := f.Cdc.UnmarshalJSON([]byte(out), &result)
+	require.NoError(f.T, err, "out %v\n, err %v", out, err)
+	return &result
+}
+
+//___________________________________________________________________________________
 // simcli config
 
 // CLIConfig is simcli config
 func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	cmd := fmt.Sprintf("%s config --home=%s %s %s", f.SimcliBinary, f.SimcliHome, key, value)
 	ExecuteWriteCheckErr(f.T, AddFlags(cmd, flags))
-}
-
-// TxBroadcast is simcli tx broadcast
-func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
-}
-
-// TxEncode is simcli tx encode
-func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
-	return ExecuteWriteRetStdStreams(f.T, AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
 //utils
@@ -191,6 +194,10 @@ func AddFlags(cmd string, flags []string) string {
 func UnmarshalStdTx(t require.TestingT, c *codec.Codec, s string) (stdTx auth.StdTx) {
 	require.Nil(t, c.UnmarshalJSON([]byte(s), &stdTx))
 	return
+}
+
+func buildEventsQueryString(events []string) string {
+	return strings.Join(events, "&")
 }
 
 func MarshalStdTx(t require.TestingT, c *codec.Codec, stdTx auth.StdTx) []byte {

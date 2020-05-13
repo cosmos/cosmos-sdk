@@ -42,7 +42,6 @@ func (msg MsgSubmitProposal) ValidateBasic() error {
 	return nil
 }
 
-// nolint
 func (msg *MsgSubmitProposal) GetContent() gov.Content { return msg.Content.GetContent() }
 func (msg *MsgSubmitProposal) SetContent(content gov.Content) error {
 	stdContent := &Content{}

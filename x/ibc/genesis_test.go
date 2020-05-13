@@ -5,13 +5,12 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	lite "github.com/tendermint/tendermint/lite2"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
@@ -30,10 +29,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState(suite.store, "chaindID", 10),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState("chaindID", 10),
 					},
-					[]client.ClientConsensusStates{
+					[]client.ConsensusStates{
 						client.NewClientConsensusStates(
 							clientID,
 							[]exported.ConsensusState{
@@ -43,12 +42,13 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							},
 						),
 					},
+					true,
 				),
 				ConnectionGenesis: connection.NewGenesisState(
-					[]connection.ConnectionEnd{
-						connection.NewConnectionEnd(connectionexported.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+					[]connection.End{
+						connection.NewConnectionEnd(ibctypes.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
-					[]connection.ConnectionPaths{
+					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
 					},
 				),
@@ -56,7 +56,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channel.IdentifiedChannel{
 						channel.NewIdentifiedChannel(
 							port1, channel1, channel.NewChannel(
-								channelexported.INIT, channelOrder,
+								ibctypes.INIT, channelOrder,
 								channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
 							),
 						),
@@ -82,10 +82,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState(suite.store, "chaindID", 0),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState("chaindID", 0),
 					},
 					nil,
+					false,
 				),
 				ConnectionGenesis: connection.DefaultGenesisState(),
 			},
@@ -96,10 +97,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
-					[]connection.ConnectionEnd{
-						connection.NewConnectionEnd(connectionexported.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+					[]connection.End{
+						connection.NewConnectionEnd(ibctypes.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
-					[]connection.ConnectionPaths{
+					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
 					},
 				),

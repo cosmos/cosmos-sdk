@@ -7,4 +7,10 @@ option go_package = "github.com/regen-network/cosmos-proto";
 
 extend google.protobuf.MessageOptions {
     string interface_type = 93001;
+
+    string implements_interface = 93002;
+}
+
+extend google.protobuf.FieldOptions {
+    string accepts_interface = 93001;
 }

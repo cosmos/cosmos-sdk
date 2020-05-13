@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
@@ -81,10 +82,19 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(QuerierRoute, cdc)
 }
 
+// RegisterInterfaceTypes registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+	connection.RegisterInterfaces(registry)
+	channel.RegisterInterfaces(registry)
+}
+
 // AppModule implements an application module for the ibc module.
 type AppModule struct {
 	AppModuleBasic
 	keeper *Keeper
+
+	// create localhost by default
+	createLocalhost bool
 }
 
 // NewAppModule creates a new AppModule object
@@ -132,7 +142,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
 	}
-	InitGenesis(ctx, *am.keeper, gs)
+	InitGenesis(ctx, *am.keeper, am.createLocalhost, gs)
 	return []abci.ValidatorUpdate{}
 }
 

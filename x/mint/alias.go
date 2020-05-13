@@ -1,7 +1,5 @@
 package mint
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"

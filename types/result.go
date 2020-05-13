@@ -182,11 +182,12 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
 	parsedLogs, _ := ParseABCILogs(res.Log)
 
 	return TxResponse{
-		Code:   res.Code,
-		Data:   res.Data.String(),
-		RawLog: res.Log,
-		Logs:   parsedLogs,
-		TxHash: res.Hash.String(),
+		Code:      res.Code,
+		Codespace: res.Codespace,
+		Data:      res.Data.String(),
+		RawLog:    res.Log,
+		Logs:      parsedLogs,
+		TxHash:    res.Hash.String(),
 	}
 }
 

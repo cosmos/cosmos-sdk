@@ -21,7 +21,7 @@ func TestCLICreateValidator(t *testing.T) {
 
 	// start simd server
 	proc := f.SDStart()
-	defer proc.Stop(false)
+	t.Cleanup(func() { proc.Stop(false) })
 
 	barAddr := f.KeyAddress(cli.KeyBar)
 	barVal := sdk.ValAddress(barAddr)

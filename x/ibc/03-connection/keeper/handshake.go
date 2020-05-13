@@ -141,8 +141,8 @@ func (k Keeper) ConnOpenAck(
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
-	// Check connection on ChainA is on correct state: INIT
-	if connection.State != ibctypes.INIT {
+	// Check connection on ChainA is on correct state: INIT or TRYOPEN
+	if connection.State != ibctypes.INIT && connection.State != ibctypes.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not INIT (got %s)", connection.State.String(),

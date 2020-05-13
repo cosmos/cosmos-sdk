@@ -227,6 +227,34 @@ to generate sign bytes.
 Multiple human-readable formats (maybe even localized messages) may be supported
 by `SIGN_MODE_TEXTUAL` when it is implemented.
 
+### Unknown Field Filtering
+
+Unknown fields in protobuf messages should generally be rejected by transaction
+processors because:
+
+* important data may be present in the unknown fields, that if ignored, will
+cause unexpected behavior for clients
+* they present a malleability vulnerability where attackers can bloat tx size
+by adding random uninterpreted data to unsigned content (i.e. the master `Tx`,
+not `TxBody`)
+
+There are also scenarios where we may choose to safely ignore unknown fields
+(https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188) to
+provide graceful forwards compatibility with newer clients.
+
+We propose that field numbers with bit 11 set (for most use cases this is
+the range of 1024-2047) be considered non-critical fields that can safely be
+ignored if unknown.
+
+To handle this we will need a unknown field filter that:
+* always rejects unknown fields in unsigned content (i.e. top-level `Tx` and
+unsigned parts of `AuthInfo` if present based on the signing mode)
+* rejects unknown fields in all messages (including nested `Any`s) other than
+fields with bit 11 set
+
+This will likely need to be a custom protobuf parser pass that takes message bytes
+and `FileDescriptor`s and returns a boolean result.
+
 ### CLI & REST
 
 Currently, the REST and CLI handlers encode and decode types and txs via Amino
@@ -354,6 +382,7 @@ too burdensome.
 - Significant performance gains.
 - Supports backward and forward type compatibility.
 - Better support for cross-language clients.
+- Multiple signing modes allow for greater protocol evolution
 
 ### Negative
 

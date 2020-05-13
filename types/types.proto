@@ -157,6 +157,7 @@ message AuthInfo {
   Fee fee = 2;
 }
 
+// SignerInfo describes the public key and signing mode of a single top-level signer
 message SignerInfo {
   option (gogoproto.stringer) = true;
 
@@ -169,12 +170,16 @@ message SignerInfo {
   ModeInfo mode_info = 2;
 }
 
+// ModeInfo describes the signing mode of a single or nested multisig signer
 message ModeInfo {
   option (gogoproto.stringer) = true;
 
+  // sum is the oneof that specifies whether this represents a single or nested
+  // multisig signer
   oneof sum {
-    // single is a
+    // single represents a single signer
     Single single = 1;
+    // multi represents a nested multisig signer
     Multi multi = 2;
   }
 

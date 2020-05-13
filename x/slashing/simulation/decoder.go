@@ -16,19 +16,19 @@ import (
 func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.ValidatorSigningInfoKey):
+		case bytes.Equal(kvA.Key[:1], types.ValidatorSigningInfoKeyPrefix):
 			var infoA, infoB types.ValidatorSigningInfo
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &infoA)
 			cdc.MustUnmarshalBinaryBare(kvB.Value, &infoB)
 			return fmt.Sprintf("%v\n%v", infoA, infoB)
 
-		case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKey):
+		case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKeyPrefix):
 			var missedA, missedB gogotypes.BoolValue
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &missedA)
 			cdc.MustUnmarshalBinaryBare(kvB.Value, &missedB)
 			return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA.Value, missedB.Value)
 
-		case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKey):
+		case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKeyPrefix):
 			var pubKeyA, pubKeyB gogotypes.StringValue
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &pubKeyA)
 			cdc.MustUnmarshalBinaryBare(kvB.Value, &pubKeyB)

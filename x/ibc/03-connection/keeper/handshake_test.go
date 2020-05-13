@@ -156,6 +156,15 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.chainA.updateClient(suite.chainB)
 			return suite.chainB.Header.GetHeight()
 		}, true},
+		{"success from tryopen", version, func() uint64 {
+			suite.chainA.CreateClient(suite.chainB)
+			suite.chainB.CreateClient(suite.chainA)
+			suite.chainB.createConnection(testConnectionIDB, testConnectionIDA, testClientIDA, testClientIDB, ibctypes.TRYOPEN)
+			suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.TRYOPEN)
+			suite.chainB.updateClient(suite.chainA)
+			suite.chainA.updateClient(suite.chainB)
+			return suite.chainB.Header.GetHeight()
+		}, true},
 		{"consensus height > latest height", version, func() uint64 {
 			return 10
 		}, false},

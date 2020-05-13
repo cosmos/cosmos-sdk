@@ -72,7 +72,10 @@ message AuthInfo {
 }
 
 message SignerInfo {
-    PublicKey pub_key = 1;
+    // PublicKey key is optional for accounts that already exist in state
+    PublicKey public_key = 1;
+    // ModeInfo describes the signing mode of the signer and is a nested
+    // structure to support nested multisig pubkey's
     ModeInfo mode_info = 2;
 }
 
@@ -82,7 +85,8 @@ message ModeInfo {
         Multi multi = 2;
     }   
    
-    // Single is the mode info for a single signer
+    // Single is the mode info for a single signer. It is structured as a message
+    // to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the future
     message Single {
         SignMode mode = 1;
     }

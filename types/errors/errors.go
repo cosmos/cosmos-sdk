@@ -94,6 +94,12 @@ var (
 	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
 	ErrorInvalidGasAdjustment = Register(RootCodespace, 25, "invalid gas adjustment")
 
+	// ErrInvalidHeight defines an error for an invalid height
+	ErrInvalidHeight = Register(RootCodespace, 26, "invalid height")
+
+	// ErrInvalidVersion defines a general error for an invalid version
+	ErrInvalidVersion = Register(RootCodespace, 27, "invalid version")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

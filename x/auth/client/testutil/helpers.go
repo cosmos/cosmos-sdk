@@ -2,10 +2,10 @@ package testutil
 
 import (
 	"fmt"
+	"strings"
 
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TxSign is simcli sign
@@ -15,10 +15,15 @@ func TxSign(f *cli.Fixtures, signer, fileName string, flags ...string) (bool, st
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
-// TxSend is simcli tx send
-func TxSend(f *cli.Fixtures, from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx send --keyring-backend=test %s %s %s %v", f.SimcliBinary, from, to, amount, f.Flags())
+// TxBroadcast is simcli tx broadcast
+func TxBroadcast(f *cli.Fixtures, fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx broadcast %v %v", f.SimcliBinary, f.Flags(), fileName)
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
 
+// TxEncode is simcli tx encode
+func TxEncode(f *cli.Fixtures, fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx encode %v %v", f.SimcliBinary, f.Flags(), fileName)
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }
 
@@ -28,4 +33,14 @@ func TxValidateSignatures(f *cli.Fixtures, fileName string, flags ...string) (bo
 		f.Flags(), fileName)
 
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
+}
+
+// TxMultisign is simcli tx multisign
+func TxMultisign(f *cli.Fixtures, fileName, name string, signaturesFiles []string,
+	flags ...string) (bool, string, string) {
+
+	cmd := fmt.Sprintf("%s tx multisign --keyring-backend=test %v %s %s %s", f.SimcliBinary, f.Flags(),
+		fileName, name, strings.Join(signaturesFiles, " "),
+	)
+	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags))
 }

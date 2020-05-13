@@ -74,7 +74,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
-	if err != nil { //nolint:unparam
+	if err != nil {
 		return appGenTxs, persistentPeers, err
 	}
 

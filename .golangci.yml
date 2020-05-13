@@ -34,7 +34,7 @@ linters:
     - unused
     - unparam
     - misspell
-    - wsl
+    # - wsl
     - nolintlint
 
 issues:

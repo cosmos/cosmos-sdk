@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -30,7 +29,7 @@ const (
 // Keeper defines the IBC transfer keeper
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      *codec.Codec
+	cdc      codec.Marshaler
 
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
@@ -41,7 +40,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey,
+	cdc codec.Marshaler, key sdk.StoreKey,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capability.ScopedKeeper,
 ) Keeper {
@@ -96,7 +95,7 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 
 // IsBound checks if the transfer module is already bound to the desired port
 func (k Keeper) IsBound(ctx sdk.Context, portID string) bool {
-	_, ok := k.scopedKeeper.GetCapability(ctx, porttypes.PortPath(portID))
+	_, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.PortPath(portID))
 	return ok
 }
 
@@ -108,7 +107,7 @@ func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
 	store.Set([]byte(types.PortKey), []byte(portID))
 
 	cap := k.portKeeper.BindPort(ctx, portID)
-	return k.ClaimCapability(ctx, cap, porttypes.PortPath(portID))
+	return k.ClaimCapability(ctx, cap, ibctypes.PortPath(portID))
 }
 
 // GetPort returns the portID for the transfer module. Used in ExportGenesis

@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -148,7 +146,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec := app.AppCodec()
 
 	querier := keeper.NewQuerier(app.GovKeeper)
 
@@ -296,7 +294,7 @@ func TestQueries(t *testing.T) {
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := std.NewAppCodec(app.Codec())
+	appCodec := app.AppCodec()
 
 	proposal := types.Proposal{
 		ProposalBase: types.ProposalBase{

@@ -34,7 +34,7 @@ func (k Keeper) TimeoutPacket(
 		)
 	}
 
-	if channel.State != exported.OPEN {
+	if channel.State != ibctypes.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -77,11 +77,6 @@ func (k Keeper) TimeoutPacket(
 		return nil, sdkerrors.Wrap(types.ErrPacketTimeout, "packet timeout has not been reached for height or timestamp")
 	}
 
-	// check that packet has not been received
-	if nextSequenceRecv >= packet.GetSequence() {
-		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
-	}
-
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	// verify we sent the packet and haven't cleared it out yet
@@ -90,13 +85,18 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	switch channel.Ordering {
-	case exported.ORDERED:
+	case ibctypes.ORDERED:
+		// check that packet has not been received
+		if nextSequenceRecv > packet.GetSequence() {
+			return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
+		}
+
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
-	case exported.UNORDERED:
+	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
@@ -142,8 +142,8 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability,
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	if channel.Ordering == exported.ORDERED {
-		channel.State = exported.CLOSED
+	if channel.Ordering == ibctypes.ORDERED {
+		channel.State = ibctypes.CLOSED
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
@@ -212,7 +212,7 @@ func (k Keeper) TimeoutOnClose(
 
 	counterparty := types.NewCounterparty(packet.GetSourcePort(), packet.GetSourceChannel())
 	expectedChannel := types.NewChannel(
-		exported.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
+		ibctypes.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
 	)
 
 	// check that the opposing channel end has closed
@@ -226,13 +226,13 @@ func (k Keeper) TimeoutOnClose(
 
 	var err error
 	switch channel.Ordering {
-	case exported.ORDERED:
+	case ibctypes.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
-	case exported.UNORDERED:
+	case ibctypes.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),

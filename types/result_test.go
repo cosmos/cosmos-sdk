@@ -113,17 +113,19 @@ func TestResponseResultTx(t *testing.T) {
 	require.False(t, want.Empty())
 
 	resultBroadcastTx := &ctypes.ResultBroadcastTx{
-		Code: 1,
-		Data: []byte("data"),
-		Log:  `[]`,
-		Hash: bytes.HexBytes([]byte("test")),
+		Code:      1,
+		Codespace: "codespace",
+		Data:      []byte("data"),
+		Log:       `[]`,
+		Hash:      bytes.HexBytes([]byte("test")),
 	}
 	require.Equal(t, sdk.TxResponse{
-		Code:   1,
-		Data:   "64617461",
-		RawLog: `[]`,
-		Logs:   logs,
-		TxHash: "74657374",
+		Code:      1,
+		Codespace: "codespace",
+		Data:      "64617461",
+		RawLog:    `[]`,
+		Logs:      logs,
+		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
 	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTx(nil))
 }

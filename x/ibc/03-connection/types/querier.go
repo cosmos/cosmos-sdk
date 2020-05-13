@@ -11,8 +11,9 @@ import (
 
 // query routes supported by the IBC connection Querier
 const (
-	QueryAllConnections    = "connections"
-	QueryClientConnections = "client_connections"
+	QueryAllConnections       = "connections"
+	QueryClientConnections    = "client_connections"
+	QueryAllClientConnections = "all_client_connections"
 )
 
 // ConnectionResponse defines the client query response for a connection which

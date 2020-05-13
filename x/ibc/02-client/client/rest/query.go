@@ -29,6 +29,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Param page query int false "The page number to query" default(1)
 // @Param limit query int false "The number of results per page" default(100)
 // @Success 200 {object} QueryClientState "OK"
+// @Failure 400 {object} rest.ErrorResponse "Bad Request"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients [get]
 func queryAllClientStatesFn(cliCtx context.CLIContext) http.HandlerFunc {

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -31,16 +31,16 @@ func (k Keeper) SendTransfer(
 ) error {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return sdkerrors.Wrap(channel.ErrChannelNotFound, sourceChannel)
+		return sdkerrors.Wrap(channeltypes.ErrChannelNotFound, sourceChannel)
 	}
 
-	destinationPort := sourceChannelEnd.Counterparty.PortID
-	destinationChannel := sourceChannelEnd.Counterparty.ChannelID
+	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
+	destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
 
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channel.ErrSequenceSendNotFound
+		return channeltypes.ErrSequenceSendNotFound
 	}
 
 	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver)
@@ -59,7 +59,7 @@ func (k Keeper) createOutgoingPacket(
 ) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
-		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 	// NOTE:
 	// - Coins transferred from the destination chain should have their denomination
@@ -127,7 +127,7 @@ func (k Keeper) createOutgoingPacket(
 		amount, sender.String(), receiver,
 	)
 
-	packet := channel.NewPacket(
+	packet := channeltypes.NewPacket(
 		packetData.GetBytes(),
 		seq,
 		sourcePort,
@@ -141,7 +141,7 @@ func (k Keeper) createOutgoingPacket(
 	return k.channelKeeper.SendPacket(ctx, channelCap, packet)
 }
 
-func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	if len(data.Amount) != 1 {
@@ -190,18 +190,18 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channel.Packet, data types.
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, coins)
 }
 
-func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
+func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
 	if !ack.Success {
 		return k.refundPacketAmount(ctx, packet, data)
 	}
 	return nil
 }
 
-func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	return k.refundPacketAmount(ctx, packet, data)
 }
 
-func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data types.FungibleTokenPacketData) error {
+func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
 	if len(data.Amount) != 1 {
@@ -209,7 +209,7 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 	}
 
 	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+	prefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 	source := strings.HasPrefix(data.Amount[0].Denom, prefix)
 
 	// decode the sender address
@@ -229,7 +229,7 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channel.Packet, data 
 		}
 
 		// unescrow tokens back to sender
-		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+		escrowAddress := types.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, coins)
 	}
 

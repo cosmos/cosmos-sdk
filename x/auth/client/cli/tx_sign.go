@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,26 +26,26 @@ const (
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign [file]",
+		Use:   "sign [[file]...]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-It will read a transaction from [file], sign it, and print its JSON encoding.
+Read a transactions from file, sign them and print their JSON encoding to STDOUT.
 
-If the flag --signature-only flag is set, it will output a JSON representation
-of the generated signature only.
+If the flag --signature-only flag is set, the command will outputs a JSON
+representation of the generated signatures only.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and sequence number queries will not be performed and
-it is required to set such parameters manually. Note, invalid values will cause
-the transaction to fail.
+it is required to set such parameters manually. Note that invalid values will
+cause the transaction to fail when they are broadcast eventually.
 
-The --multisig=<multisig_key> flag generates a signature on behalf of a multisig account
+The --multisig=<multisig_key> flag generates signatures on behalf of a multisig account
 key. It implies --signature-only. Full multisig signed transactions may eventually
 be generated via the 'multisign' command.
 `,
 		PreRun: preSignCmd,
 		RunE:   makeSignCmd(codec),
-		Args:   cobra.ExactArgs(1),
+		Args:   cobra.MinimumNArgs(1),
 	}
 
 	cmd.Flags().String(
@@ -73,55 +75,64 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		cliCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
-		if err != nil {
-			return err
-		}
+		var (
+			err     error
+			newTx   types.StdTx
+			outfile *os.File
+		)
 
-		// if --signature-only is on, then override --append
-		var newTx types.StdTx
-		generateSignatureOnly := viper.GetBool(flagSigOnly)
+		inBuf := bufio.NewReader(cmd.InOrStdin())
+		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+		txBldr := types.NewTxBuilderFromCLI(inBuf)
+		generateSignatureOnly := viper.GetBool(flagSigOnly) // if --signature-only is on, then override --append
 		multisigAddrStr := viper.GetString(flagMultisig)
+		outfileName := viper.GetString(flagOutfile)
 
-		if multisigAddrStr != "" {
-			var multisigAddr sdk.AccAddress
-
-			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
+		if outfileName != "" {
+			outfile, err = os.OpenFile(outfileName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 			if err != nil {
 				return err
 			}
-			newTx, err = client.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
-			)
-			generateSignatureOnly = true
-		} else {
-			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, cliCtx.Offline)
+			defer outfile.Close()
 		}
 
-		if err != nil {
-			return err
-		}
+		for _, filename := range args {
+			stdTx, err := client.ReadStdTxFromFile(cdc, filename)
+			if err != nil {
+				return fmt.Errorf("couldn't read %s: %v", filename, err)
+			}
 
-		json, err := getSignatureJSON(cdc, newTx, cliCtx.Indent, generateSignatureOnly)
-		if err != nil {
-			return err
-		}
+			if multisigAddrStr != "" {
+				var multisigAddr sdk.AccAddress
+				multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
+				if err != nil {
+					return err
+				}
+				newTx, err = client.SignStdTxWithSignerAddress(
+					txBldr, cliCtx, multisigAddr, cliCtx.GetFromName(), stdTx, cliCtx.Offline,
+				)
+				generateSignatureOnly = true
+			} else {
+				appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
+				newTx, err = client.SignStdTx(txBldr, cliCtx, cliCtx.GetFromName(), stdTx, appendSig, cliCtx.Offline)
+			}
 
-		if viper.GetString(flagOutfile) == "" {
+			if err != nil {
+				return err
+			}
+
+			json, err := getSignatureJSON(cdc, newTx, cliCtx.Indent, generateSignatureOnly)
+			if err != nil {
+				return err
+			}
+
+			if outfileName != "" {
+				fmt.Fprintf(outfile, "%s\n", json)
+				continue
+			}
+
 			fmt.Printf("%s\n", json)
-			return nil
 		}
-
-		fp, err := os.OpenFile(
-			viper.GetString(flagOutfile), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
-		)
-		if err != nil {
-			return err
-		}
-
-		defer fp.Close()
-		fmt.Fprintf(fp, "%s\n", json)
 
 		return nil
 	}

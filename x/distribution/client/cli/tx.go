@@ -246,7 +246,7 @@ Where proposal.json contains:
 				WithAccountRetriever(ar)
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
 
-			proposal, err := NewParseCommunityPoolSpendProposalJSON(m, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalJSON(m, args[0])
 			if err != nil {
 				return err
 			}

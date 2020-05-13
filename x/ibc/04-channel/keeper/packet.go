@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -40,7 +41,7 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, common.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -232,7 +233,7 @@ func (k Keeper) PacketExecuted(
 		)
 	}
 
-	capName := common.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
+	capName := host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
 		return sdkerrors.Wrap(types.ErrInvalidChannelCapability, "channel capability failed authentication")
 	}

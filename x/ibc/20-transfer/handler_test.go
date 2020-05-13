@@ -21,6 +21,7 @@ import (
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -71,7 +72,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	handler := transfer.NewHandler(suite.chainA.App.TransferKeeper)
 
 	// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
-	capName := common.ChannelCapabilityPath(testPort1, testChannel1)
+	capName := host.ChannelCapabilityPath(testPort1, testChannel1)
 	cap, err := suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), capName)
 	suite.Require().Nil(err, "could not create capability")
 	err = suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), cap, capName)

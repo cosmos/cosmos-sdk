@@ -5,6 +5,7 @@ import (
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -115,10 +116,10 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 			consensusHeight := tc.malleate()
 
-			connectionKey := common.KeyConnection(testConnectionIDA)
+			connectionKey := host.KeyConnection(testConnectionIDA)
 			proofInit, proofHeight := queryProof(suite.chainA, connectionKey)
 
-			consensusKey := prefixedClientKey(testClientIDB, common.KeyConsensusState(consensusHeight))
+			consensusKey := prefixedClientKey(testClientIDB, host.KeyConsensusState(consensusHeight))
 			proofConsensus, _ := queryProof(suite.chainA, consensusKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
@@ -215,10 +216,10 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			consensusHeight := tc.malleate()
 
-			connectionKey := common.KeyConnection(testConnectionIDB)
+			connectionKey := host.KeyConnection(testConnectionIDB)
 			proofTry, proofHeight := queryProof(suite.chainB, connectionKey)
 
-			consensusKey := prefixedClientKey(testClientIDA, common.KeyConsensusState(consensusHeight))
+			consensusKey := prefixedClientKey(testClientIDA, host.KeyConsensusState(consensusHeight))
 			proofConsensus, _ := queryProof(suite.chainB, consensusKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
@@ -270,7 +271,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 			tc.malleate()
 
-			connectionKey := common.KeyConnection(testConnectionIDA)
+			connectionKey := host.KeyConnection(testConnectionIDA)
 			proofAck, proofHeight := queryProof(suite.chainA, connectionKey)
 
 			if tc.expPass {

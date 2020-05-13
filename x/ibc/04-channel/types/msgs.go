@@ -30,7 +30,7 @@ func NewMsgChannelOpenInit(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenInit) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -83,7 +83,7 @@ func NewMsgChannelOpenTry(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenTry) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -144,7 +144,7 @@ func NewMsgChannelOpenAck(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenAck) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -204,7 +204,7 @@ func NewMsgChannelOpenConfirm(
 
 // Route implements sdk.Msg
 func (msg MsgChannelOpenConfirm) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -258,7 +258,7 @@ func NewMsgChannelCloseInit(
 
 // Route implements sdk.Msg
 func (msg MsgChannelCloseInit) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -306,7 +306,7 @@ func NewMsgChannelCloseConfirm(
 
 // Route implements sdk.Msg
 func (msg MsgChannelCloseConfirm) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -362,7 +362,7 @@ func NewMsgPacket(
 
 // Route implements sdk.Msg
 func (msg MsgPacket) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -423,7 +423,7 @@ func NewMsgTimeout(
 
 // Route implements sdk.Msg
 func (msg MsgTimeout) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
@@ -475,7 +475,7 @@ func NewMsgAcknowledgement(
 
 // Route implements sdk.Msg
 func (msg MsgAcknowledgement) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg

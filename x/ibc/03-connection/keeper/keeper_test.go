@@ -19,12 +19,13 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
-	storeKey = common.StoreKey
+	storeKey = host.StoreKey
 
 	testClientIDA     = "testclientida" // chainid for chainA also chainB's clientID for A's liteclient
 	testConnectionIDA = "connectionidatob"
@@ -139,8 +140,8 @@ func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
 	}
 
 	expPaths := []types.ConnectionPaths{
-		types.NewConnectionPaths(testClientIDA, []string{common.ConnectionPath(testConnectionIDA)}),
-		types.NewConnectionPaths(testClientIDB, []string{common.ConnectionPath(testConnectionIDB), common.ConnectionPath(testConnectionID3)}),
+		types.NewConnectionPaths(testClientIDA, []string{host.ConnectionPath(testConnectionIDA)}),
+		types.NewConnectionPaths(testClientIDB, []string{host.ConnectionPath(testConnectionIDB), host.ConnectionPath(testConnectionID3)}),
 	}
 
 	for i := range expPaths {

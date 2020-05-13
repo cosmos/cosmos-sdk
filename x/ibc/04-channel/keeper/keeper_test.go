@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -236,7 +237,7 @@ func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
 // nolint: unused
 func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", common.StoreKey),
+		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,

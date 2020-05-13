@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // QueryPacket returns a packet from the store
@@ -15,7 +15,7 @@ func QueryPacket(
 ) (types.PacketResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  common.KeyPacketCommitment(portID, channelID, sequence),
+		Data:  host.KeyPacketCommitment(portID, channelID, sequence),
 		Prove: prove,
 	}
 
@@ -53,7 +53,7 @@ func QueryChannel(
 ) (types.ChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  common.KeyChannel(portID, channelID),
+		Data:  host.KeyChannel(portID, channelID),
 		Prove: prove,
 	}
 

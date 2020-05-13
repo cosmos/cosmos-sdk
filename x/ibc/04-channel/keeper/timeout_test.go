@@ -5,12 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 func (suite *KeeperTestSuite) TestTimeoutPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
-	packetKey := common.KeyPacketAcknowledgement(testPort2, testChannel2, 2)
+	packetKey := host.KeyPacketAcknowledgement(testPort2, testChannel2, 2)
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64
@@ -127,7 +128,7 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 
 			var err error
 			chanCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
-				suite.chainA.GetContext(), common.ChannelCapabilityPath(testPort1, testChannel1),
+				suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1),
 			)
 			suite.Require().NoError(err, "could not create capability")
 
@@ -145,8 +146,8 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 }
 
 func (suite *KeeperTestSuite) TestTimeoutOnClose() {
-	channelKey := common.KeyChannel(testPort2, testChannel2)
-	packetKey := common.KeyPacketAcknowledgement(testPort1, testChannel1, 2)
+	channelKey := host.KeyChannel(testPort2, testChannel2)
+	packetKey := host.KeyPacketAcknowledgement(testPort1, testChannel1, 2)
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var (
 		packet      types.Packet

@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var _ sdk.Msg = MsgConnectionOpenInit{}
@@ -29,7 +28,7 @@ func NewMsgConnectionOpenInit(
 
 // Route implements sdk.Msg
 func (msg MsgConnectionOpenInit) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -86,7 +85,7 @@ func NewMsgConnectionOpenTry(
 
 // Route implements sdk.Msg
 func (msg MsgConnectionOpenTry) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -162,7 +161,7 @@ func NewMsgConnectionOpenAck(
 
 // Route implements sdk.Msg
 func (msg MsgConnectionOpenAck) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -226,7 +225,7 @@ func NewMsgConnectionOpenConfirm(
 
 // Route implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) Route() string {
-	return common.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg

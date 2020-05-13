@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -49,7 +50,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 			var err error
 			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(
-				suite.chainA.GetContext(), common.PortPath(testPort1),
+				suite.chainA.GetContext(), host.PortPath(testPort1),
 			)
 			suite.Require().NoError(err, "could not create capability")
 
@@ -64,7 +65,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 				suite.Require().NotNil(cap)
 				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
 					suite.chainA.GetContext(),
-					common.ChannelCapabilityPath(testPort1, testChannel1),
+					host.ChannelCapabilityPath(testPort1, testChannel1),
 				)
 				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
 				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
@@ -77,7 +78,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
-	channelKey := common.KeyChannel(testPort1, testChannel1)
+	channelKey := host.KeyChannel(testPort1, testChannel1)
 
 	var portCap *capability.Capability
 	testCases := []testCase{
@@ -139,7 +140,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.SetupTest() // reset
 
 			var err error
-			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), common.PortPath(testPort2))
+			portCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), host.PortPath(testPort2))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
@@ -158,7 +159,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				suite.Require().NotNil(cap)
 				chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
 					suite.chainA.GetContext(),
-					common.ChannelCapabilityPath(testPort2, testChannel2),
+					host.ChannelCapabilityPath(testPort2, testChannel2),
 				)
 				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenInit")
 				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")
@@ -175,7 +176,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
-	channelKey := common.KeyChannel(testPort2, testChannel2)
+	channelKey := host.KeyChannel(testPort2, testChannel2)
 
 	var channelCap *capability.Capability
 	testCases := []testCase{
@@ -273,7 +274,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 			suite.SetupTest() // reset
 
 			var err error
-			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), common.ChannelCapabilityPath(testPort1, testChannel1))
+			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
@@ -300,7 +301,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
-	channelKey := common.KeyChannel(testPort2, testChannel2)
+	channelKey := host.KeyChannel(testPort2, testChannel2)
 
 	var channelCap *capability.Capability
 	testCases := []testCase{
@@ -394,7 +395,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			suite.SetupTest() // reset
 
 			var err error
-			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), common.ChannelCapabilityPath(testPort1, testChannel1))
+			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
@@ -478,7 +479,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 			suite.SetupTest() // reset
 
 			var err error
-			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), common.ChannelCapabilityPath(testPort1, testChannel1))
+			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
@@ -496,7 +497,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 }
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
-	channelKey := common.KeyChannel(testPort1, testChannel1)
+	channelKey := host.KeyChannel(testPort1, testChannel1)
 
 	var channelCap *capability.Capability
 	testCases := []testCase{
@@ -593,7 +594,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			suite.SetupTest() // reset
 
 			var err error
-			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), common.ChannelCapabilityPath(testPort2, testChannel2))
+			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), host.ChannelCapabilityPath(testPort2, testChannel2))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()

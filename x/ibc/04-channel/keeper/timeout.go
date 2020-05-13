@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -136,7 +137,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability,
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 

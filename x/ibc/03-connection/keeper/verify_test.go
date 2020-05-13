@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -66,7 +67,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 			// TODO: is this the right consensus height
 			consensusHeight := suite.chainA.Header.GetHeight()
-			consensusKey := prefixedClientKey(testClientIDA, common.KeyConsensusState(consensusHeight))
+			consensusKey := prefixedClientKey(testClientIDA, host.KeyConsensusState(consensusHeight))
 
 			// get proof that chainB stored chainA' consensus state
 			proof, proofHeight := queryProof(suite.chainB, consensusKey)
@@ -85,7 +86,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *KeeperTestSuite) TestVerifyConnectionState() {
-	connectionKey := common.KeyConnection(testConnectionIDA)
+	connectionKey := host.KeyConnection(testConnectionIDA)
 	var invalidProofHeight uint64
 	cases := []struct {
 		msg      string
@@ -150,7 +151,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *KeeperTestSuite) TestVerifyChannelState() {
-	channelKey := common.KeyChannel(testPort1, testChannel1)
+	channelKey := host.KeyChannel(testPort1, testChannel1)
 
 	// create connection of chainB to pass into verify function
 	counterparty := types.NewCounterparty(
@@ -221,7 +222,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 }
 
 func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
-	commitmentKey := common.KeyPacketCommitment(testPort1, testChannel1, 1)
+	commitmentKey := host.KeyPacketCommitment(testPort1, testChannel1, 1)
 	commitmentBz := []byte("commitment")
 
 	cases := []struct {
@@ -278,7 +279,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 }
 
 func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
-	packetAckKey := common.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
+	packetAckKey := host.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
 	ack := []byte("acknowledgement")
 
 	cases := []struct {
@@ -329,7 +330,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 }
 
 func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	packetAckKey := common.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
+	packetAckKey := host.KeyPacketAcknowledgement(testPort1, testChannel1, 1)
 
 	cases := []struct {
 		msg         string
@@ -377,7 +378,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 }
 
 func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
-	nextSeqRcvKey := common.KeyNextSequenceRecv(testPort1, testChannel1)
+	nextSeqRcvKey := host.KeyNextSequenceRecv(testPort1, testChannel1)
 
 	cases := []struct {
 		msg         string

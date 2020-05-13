@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -68,7 +69,7 @@ func (k Keeper) ChanOpenInit(
 	channel := types.NewChannel(common.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, common.ChannelCapabilityPath(portID, channelID))
+	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
@@ -149,7 +150,7 @@ func (k Keeper) ChanOpenTry(
 
 	k.SetChannel(ctx, portID, channelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, common.ChannelCapabilityPath(portID, channelID))
+	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannelCapability, err.Error())
 	}
@@ -184,7 +185,7 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -251,7 +252,7 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -307,7 +308,7 @@ func (k Keeper) ChanCloseInit(
 	channelID string,
 	chanCap *capability.Capability,
 ) error {
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -350,7 +351,7 @@ func (k Keeper) ChanCloseConfirm(
 	proofInit commitmentexported.Proof,
 	proofHeight uint64,
 ) error {
-	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 

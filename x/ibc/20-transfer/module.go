@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -164,7 +165,7 @@ func (am AppModule) OnChanOpenInit(
 	}
 
 	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)); err != nil {
+	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
 	}
 
@@ -200,7 +201,7 @@ func (am AppModule) OnChanOpenTry(
 	}
 
 	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, common.ChannelCapabilityPath(portID, channelID)); err != nil {
+	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
 	}
 

@@ -18,6 +18,7 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
@@ -61,7 +62,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
 	res := chain.App.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", common.StoreKey),
+		Path:  fmt.Sprintf("store/%s/key", host.StoreKey),
 		Data:  []byte(key),
 		Prove: true,
 	})
@@ -99,7 +100,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, common.OPEN, common.ORDERED, testConnection)
 	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, common.OPEN, common.ORDERED, testConnection)
 	ctx = suite.chainA.GetContext()
-	packetCommitmentPath := common.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
+	packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 	_, err = handler(cctx, suite.newTx(msg), false)
@@ -120,7 +121,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 		_, err := handler(cctx, suite.newTx(msg), false)
 		if err == nil {
 			// retrieve channelCapability from scopedIBCKeeper and pass into PacketExecuted
-			chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, common.ChannelCapabilityPath(
+			chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, host.ChannelCapabilityPath(
 				packet.GetDestPort(), packet.GetDestChannel()),
 			)
 			suite.Require().True(ok, "could not retrieve capability")
@@ -158,7 +159,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 	for i := 10; i >= 0; i-- {
 		cctx, write := suite.chainA.GetContext().CacheContext()
 		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
-		packetCommitmentPath := common.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
+		packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
 		proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
 		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 		_, err := handler(cctx, suite.newTx(msg), false)
@@ -350,7 +351,7 @@ func (chain *TestChain) createChannel(
 	)
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
-	chain.App.ScopedIBCKeeper.NewCapability(ctx, common.ChannelCapabilityPath(portID, channelID))
+	chain.App.ScopedIBCKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	return channel
 }
 

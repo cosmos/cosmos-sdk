@@ -7,12 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	testCoins2 := sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
-	capName := common.ChannelCapabilityPath(testPort1, testChannel1)
+	capName := host.ChannelCapabilityPath(testPort1, testChannel1)
 
 	testCases := []struct {
 		msg           string

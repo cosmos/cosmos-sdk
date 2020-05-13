@@ -11,6 +11,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
@@ -50,7 +51,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						connection.NewConnectionEnd(common.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					[]connection.Paths{
-						connection.NewConnectionPaths(clientID, []string{common.ConnectionPath(connectionID)}),
+						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
 				ChannelGenesis: channel.NewGenesisState(
@@ -102,7 +103,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						connection.NewConnectionEnd(common.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					[]connection.Paths{
-						connection.NewConnectionPaths(clientID, []string{common.ConnectionPath(connectionID)}),
+						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
 			},

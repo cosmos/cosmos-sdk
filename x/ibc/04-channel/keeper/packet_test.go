@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 
 	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
@@ -99,7 +100,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			suite.SetupTest() // reset
 
 			var err error
-			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), common.ChannelCapabilityPath(testPort1, testChannel1))
+			channelCap, err = suite.chainB.App.ScopedIBCKeeper.NewCapability(suite.chainB.GetContext(), host.ChannelCapabilityPath(testPort1, testChannel1))
 			suite.Require().Nil(err, "could not create capability")
 
 			tc.malleate()
@@ -118,7 +119,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 
 func (suite *KeeperTestSuite) TestRecvPacket() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
-	packetKey := common.KeyPacketCommitment(testPort2, testChannel2, 1)
+	packetKey := host.KeyPacketCommitment(testPort2, testChannel2, 1)
 
 	var packet exported.PacketI
 
@@ -239,7 +240,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 			suite.SetupTest() // reset
 
 			var err error
-			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), common.ChannelCapabilityPath(testPort2, testChannel2))
+			channelCap, err = suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(testPort2, testChannel2))
 			suite.Require().NoError(err, "could not create capability")
 
 			tc.malleate()
@@ -258,7 +259,7 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 	var packet types.Packet
-	packetKey := common.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
+	packetKey := host.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
 
 	ack := transfertypes.FungibleTokenPacketAcknowledgement{
 		Success: true,
@@ -337,7 +338,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 
 func (suite *KeeperTestSuite) TestCleanupPacket() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
-	packetKey := common.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
+	packetKey := host.KeyPacketAcknowledgement(testPort2, testChannel2, 1)
 	var (
 		packet      types.Packet
 		nextSeqRecv uint64

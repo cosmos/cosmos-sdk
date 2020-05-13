@@ -15,9 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // TODO: AppModuleSimulation
@@ -33,7 +33,7 @@ var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Name returns the ibc module's name.
 func (AppModuleBasic) Name() string {
-	return common.ModuleName
+	return host.ModuleName
 }
 
 // RegisterCodec registers the ibc module's types for the given codec.

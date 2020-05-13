@@ -112,7 +112,7 @@ As will be discussed below, in order to include as much of the `Tx` as possible
 in the `SignDoc`, `SignerInfo` is separated from signatures so that only the
 raw signatures themselves live outside of what is signed over.
 
-Because we are aiming for be a flexible, extensible cross-chain transaction
+Because we are aiming for a flexible, extensible cross-chain transaction
 format, new transaction processing options should be added to `TxBody` as soon
 those use cases are discovered, even if they can't be implemented yet.
 

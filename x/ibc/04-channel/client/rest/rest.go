@@ -26,7 +26,7 @@ type ChannelOpenInitReq struct {
 	PortID                string       `json:"port_id" yaml:"port_id"`
 	ChannelID             string       `json:"channel_id" yaml:"channel_id"`
 	Version               string       `json:"version" yaml:"version"`
-	ChannelOrder          types.Order `json:"channel_order" yaml:"channel_order"`
+	ChannelOrder          types.Order  `json:"channel_order" yaml:"channel_order"`
 	ConnectionHops        []string     `json:"connection_hops" yaml:"connection_hops"`
 	CounterpartyPortID    string       `json:"counterparty_port_id" yaml:"counterparty_port_id"`
 	CounterpartyChannelID string       `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`
@@ -38,7 +38,7 @@ type ChannelOpenTryReq struct {
 	PortID                string                      `json:"port_id" yaml:"port_id"`
 	ChannelID             string                      `json:"channel_id" yaml:"channel_id"`
 	Version               string                      `json:"version" yaml:"version"`
-	ChannelOrder          types.Order                `json:"channel_order" yaml:"channel_order"`
+	ChannelOrder          types.Order                 `json:"channel_order" yaml:"channel_order"`
 	ConnectionHops        []string                    `json:"connection_hops" yaml:"connection_hops"`
 	CounterpartyPortID    string                      `json:"counterparty_port_id" yaml:"counterparty_port_id"`
 	CounterpartyChannelID string                      `json:"counterparty_channel_id" yaml:"counterparty_channel_id"`

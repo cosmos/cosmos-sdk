@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
@@ -26,14 +27,16 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
+const flagTrustLevel = "trust-level"
+
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [client-id] [path/to/consensus_state.json] [trust_level] [trusting_period] [unbonding_period] [max_clock_drift]",
+		Use:     "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
 		Short:   "create new tendermint client",
 		Long:    "create new tendermint client. Trust level can be a fraction (eg: '1/3') or 'default'",
-		Example: fmt.Sprintf("%s tx ibc client create [client-id] [path/to/consensus_state.json] default [trusting_period] [unbonding_period] [max_clock_drift] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
+		Example: fmt.Sprintf("%s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
 		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -59,7 +62,9 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				err        error
 			)
 
-			if args[2] == "default" {
+			lvl := viper.GetString(flagTrustLevel)
+
+			if lvl == "default" {
 				trustLevel = lite.DefaultTrustLevel
 			} else {
 				trustLevel, err = parseFraction(args[2])
@@ -94,7 +99,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
+	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	return cmd
 }
 
@@ -191,18 +196,18 @@ func parseFraction(fraction string) (tmmath.Fraction, error) {
 		return tmmath.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
 	}
 
-	num, err := strconv.ParseInt(fr[0], 10, 64)
+	numerator, err := strconv.ParseInt(fr[0], 10, 64)
 	if err != nil {
-		return tmmath.Fraction{}, err
+		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
 	}
 
-	denom, err := strconv.ParseInt(fr[1], 10, 64)
+	denominator, err := strconv.ParseInt(fr[1], 10, 64)
 	if err != nil {
-		return tmmath.Fraction{}, err
+		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
 	}
 
 	return tmmath.Fraction{
-		Numerator:   num,
-		Denominator: denom,
+		Numerator:   numerator,
+		Denominator: denominator,
 	}, nil
 }

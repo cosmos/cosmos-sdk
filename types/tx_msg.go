@@ -31,9 +31,9 @@ type (
 		GetSigners() []AccAddress
 	}
 
-	// Fee defines an interface for an application application-defined concrete
+	// FeeI defines an interface for an application application-defined concrete
 	// transaction type to be able to set and return the transaction fee.
-	Fee interface {
+	FeeI interface {
 		GetGas() uint64
 		GetAmount() Coins
 	}
@@ -46,7 +46,7 @@ type (
 	}
 
 	// Tx defines the interface a transaction must fulfill.
-	Tx interface {
+	TxI interface {
 		// Gets the all the transaction's messages.
 		GetMsgs() []Msg
 
@@ -57,10 +57,10 @@ type (
 )
 
 // TxDecoder unmarshals transaction bytes
-type TxDecoder func(txBytes []byte) (Tx, error)
+type TxDecoder func(txBytes []byte) (TxI, error)
 
 // TxEncoder marshals transaction to bytes
-type TxEncoder func(tx Tx) ([]byte, error)
+type TxEncoder func(tx TxI) ([]byte, error)
 
 //__________________________________________________________
 

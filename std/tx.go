@@ -1,7 +1,7 @@
 package std
 
 import (
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 
 	clientx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	_ sdk.Tx                  = (*Transaction)(nil)
+	_ sdk.TxI                 = (*Transaction)(nil)
 	_ clientx.ClientTx        = (*Transaction)(nil)
 	_ clientx.Generator       = TxGenerator{}
 	_ clientx.ClientFee       = &StdFee{}
@@ -147,7 +147,7 @@ func (tx *Transaction) SetSignatures(sdkSigs ...clientx.ClientSignature) error {
 }
 
 // GetFee returns the transaction's fee.
-func (tx Transaction) GetFee() sdk.Fee {
+func (tx Transaction) GetFee() sdk.FeeI {
 	return tx.Fee
 }
 

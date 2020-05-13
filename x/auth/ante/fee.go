@@ -15,7 +15,7 @@ var (
 
 // FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
 type FeeTx interface {
-	sdk.Tx
+	sdk.TxI
 	GetGas() uint64
 	GetFee() sdk.Coins
 	FeePayer() sdk.AccAddress
@@ -33,7 +33,7 @@ func NewMempoolFeeDecorator() MempoolFeeDecorator {
 	return MempoolFeeDecorator{}
 }
 
-func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -82,7 +82,7 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper) DeductFeeDecor
 	}
 }
 
-func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")

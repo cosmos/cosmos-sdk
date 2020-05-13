@@ -15,7 +15,7 @@ func TestChainAnteDecorators(t *testing.T) {
 	// test panic
 	require.Nil(t, sdk.ChainAnteDecorators([]sdk.AnteDecorator{}...))
 
-	ctx, tx := sdk.Context{}, sdk.Tx(nil)
+	ctx, tx := sdk.Context{}, sdk.TxI(nil)
 	mockCtrl := gomock.NewController(t)
 	mockAnteDecorator1 := mocks.NewMockAnteDecorator(mockCtrl)
 	mockAnteDecorator1.EXPECT().AnteHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Any()).Times(1)

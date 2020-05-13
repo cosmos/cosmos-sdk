@@ -10,15 +10,15 @@ import (
 
 var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
-func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) Check(tx sdk.TxI) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeCheck, nil, tx)
 }
 
-func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) Simulate(txBytes []byte, tx sdk.TxI) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeSimulate, txBytes, tx)
 }
 
-func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) Deliver(tx sdk.TxI) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 

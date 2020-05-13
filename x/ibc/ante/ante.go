@@ -25,7 +25,7 @@ func NewProofVerificationDecorator(clientKeeper client.Keeper, channelKeeper cha
 
 // AnteHandle executes MsgUpdateClient, MsgPacket, MsgAcknowledgement, MsgTimeout.
 // The packet execution messages are then passed to the respective application handlers.
-func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	for _, msg := range tx.GetMsgs() {
 		var err error
 		switch msg := msg.(type) {

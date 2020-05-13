@@ -24,9 +24,9 @@ func TestConfig_SetTxEncoder(t *testing.T) {
 	mockErr := errors.New("test")
 	config := sdk.NewConfig()
 	require.Nil(t, config.GetTxEncoder())
-	encFunc := sdk.TxEncoder(func(tx sdk.Tx) ([]byte, error) { return nil, nil })
+	encFunc := sdk.TxEncoder(func(tx sdk.TxI) ([]byte, error) { return nil, nil })
 	config.SetTxEncoder(encFunc)
-	_, err := config.GetTxEncoder()(sdk.Tx(nil))
+	_, err := config.GetTxEncoder()(sdk.TxI(nil))
 	require.Error(t, mockErr, err)
 
 	config.Seal()

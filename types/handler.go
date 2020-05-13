@@ -5,11 +5,11 @@ type Handler func(ctx Context, msg Msg) (*Result, error)
 
 // AnteHandler authenticates transactions, before their internal messages are handled.
 // If newCtx.IsZero(), ctx is used instead.
-type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
+type AnteHandler func(ctx Context, tx TxI, simulate bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre- and post-processing.
 type AnteDecorator interface {
-	AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error)
+	AnteHandle(ctx Context, tx TxI, simulate bool, next AnteHandler) (newCtx Context, err error)
 }
 
 // ChainDecorator chains AnteDecorators together with each AnteDecorator
@@ -36,7 +36,7 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 		chain = append(chain, Terminator{})
 	}
 
-	return func(ctx Context, tx Tx, simulate bool) (Context, error) {
+	return func(ctx Context, tx TxI, simulate bool) (Context, error) {
 		return chain[0].AnteHandle(ctx, tx, simulate, ChainAnteDecorators(chain[1:]...))
 	}
 }
@@ -61,6 +61,6 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 type Terminator struct{}
 
 // Simply return provided Context and nil error
-func (t Terminator) AnteHandle(ctx Context, _ Tx, _ bool, _ AnteHandler) (Context, error) {
+func (t Terminator) AnteHandle(ctx Context, _ TxI, _ bool, _ AnteHandler) (Context, error) {
 	return ctx, nil
 }

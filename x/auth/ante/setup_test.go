@@ -80,7 +80,7 @@ func TestRecoverPanic(t *testing.T) {
 type OutOfGasDecorator struct{}
 
 // AnteDecorator that will throw OutOfGas panic
-func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	overLimit := ctx.GasMeter().Limit() + 1
 
 	// Should panic with outofgas error
@@ -92,6 +92,6 @@ func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 
 type PanicDecorator struct{}
 
-func (pd PanicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (pd PanicDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	panic("random error")
 }

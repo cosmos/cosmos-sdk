@@ -32,7 +32,7 @@ func QueryGenesisTxs(cliCtx context.CLIContext, w http.ResponseWriter) {
 	}
 
 	genState := types.GetGenesisStateFromAppState(cliCtx.Codec, appState)
-	genTxs := make([]sdk.Tx, len(genState.GenTxs))
+	genTxs := make([]sdk.TxI, len(genState.GenTxs))
 	for i, tx := range genState.GenTxs {
 		err := cliCtx.Codec.UnmarshalJSON(tx, &genTxs[i])
 		if err != nil {

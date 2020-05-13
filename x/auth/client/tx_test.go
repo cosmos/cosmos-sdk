@@ -103,7 +103,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 func TestConfiguredTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 
-	customEncoder := func(tx sdk.Tx) ([]byte, error) {
+	customEncoder := func(tx sdk.TxI) ([]byte, error) {
 		return json.Marshal(tx)
 	}
 

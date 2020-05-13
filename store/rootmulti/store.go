@@ -318,6 +318,7 @@ func (rs *Store) FlushLatestVersion() int64 {
 			if err := iavlStore.FlushVersion(rs.lastCommitInfo.Version); err != nil {
 				panic(fmt.Errorf("failed to flush version %d for store %s: %w", rs.lastCommitInfo.Version, key, err))
 			}
+			flushCommitInfo(rs.db, rs.lastCommitInfo.Version, rs.lastCommitInfo)
 		}
 	}
 

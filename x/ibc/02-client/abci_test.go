@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 type ClientTestSuite struct {
@@ -27,7 +26,7 @@ func (suite *ClientTestSuite) SetupTest() {
 
 	suite.app = simapp.Setup(isCheckTx)
 	suite.cdc = suite.app.Codec()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 1, ChainID: "localhost_chain"})
+	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 0, ChainID: "localhost_chain"})
 
 }
 
@@ -36,25 +35,23 @@ func TestClientTestSuite(t *testing.T) {
 }
 
 func (suite *ClientTestSuite) TestBeginBlocker() {
-	localHostClient := localhosttypes.NewClientState(
-		suite.app.IBCKeeper.ClientKeeper.ClientStore(suite.ctx, exported.ClientTypeLocalHost),
-		suite.ctx.ChainID(),
-		suite.ctx.BlockHeight(),
-	)
-	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, localHostClient, nil)
-	suite.Require().NoError(err)
+	prevHeight := suite.ctx.BlockHeight()
 
-	// increase height
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	suite.Require().Equal(prevHeight, int64(localHostClient.GetLatestHeight()))
 
-	var prevHeight uint64
 	for i := 0; i < 10; i++ {
-		prevHeight = localHostClient.GetLatestHeight()
+		// increment height
+		suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+
 		suite.Require().NotPanics(func() {
 			client.BeginBlocker(suite.ctx, suite.app.IBCKeeper.ClientKeeper)
 		}, "BeginBlocker shouldn't panic")
-		localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, localHostClient.GetID())
+
+		localHostClient, found = suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
 		suite.Require().True(found)
-		suite.Require().Equal(prevHeight+1, localHostClient.GetLatestHeight())
+		suite.Require().Equal(prevHeight+1, int64(localHostClient.GetLatestHeight()))
+		prevHeight = int64(localHostClient.GetLatestHeight())
 	}
 }

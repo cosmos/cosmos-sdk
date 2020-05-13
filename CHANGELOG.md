@@ -116,6 +116,7 @@ information on how to implement the new `Keyring` interface.
 
 ### Bug Fixes
 
+* (x/distribution) [\#6210](https://github.com/cosmos/cosmos-sdk/pull/6210) Register `MsgFundCommunityPool` in distribution amino codec.
 * (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to
 falling below their minimum self-delegation and never having been bonded. The validator may immediately unjail once they've met their minimum self-delegation.
 * (types) [\#5741](https://github.com/cosmos/cosmos-sdk/issues/5741) Prevent ChainAnteDecorators() from panicking when empty AnteDecorator slice is supplied.

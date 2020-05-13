@@ -62,6 +62,7 @@ func TestBroadcastError(t *testing.T) {
 			resp, returnedErr := ctx.BroadcastTx(txBytes)
 			require.NoError(t, returnedErr)
 			require.Equal(t, code, resp.Code)
+			require.NotEmpty(t, resp.Codespace)
 			require.Equal(t, txHash, resp.TxHash)
 		}
 	}

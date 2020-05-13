@@ -3,6 +3,9 @@ package types
 import (
 	"time"
 
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	lite "github.com/tendermint/tendermint/lite2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -28,23 +31,25 @@ var (
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID        string         `json:"client_id" yaml:"client_id"`
-	Header          Header         `json:"header" yaml:"header"`
-	TrustingPeriod  time.Duration  `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration  `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration  `json:"max_clock_drift" yaml:"max_clock_drift"`
-	Signer          sdk.AccAddress `json:"address" yaml:"address"`
+	ClientID        string          `json:"client_id" yaml:"client_id"`
+	Header          Header          `json:"header" yaml:"header"`
+	TrustLevel      tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod  time.Duration   `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod time.Duration   `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift   time.Duration   `json:"max_clock_drift" yaml:"max_clock_drift"`
+	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, header Header,
+	id string, header Header, trustLevel tmmath.Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration, signer sdk.AccAddress,
 ) MsgCreateClient {
 
 	return MsgCreateClient{
 		ClientID:        id,
 		Header:          header,
+		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: unbondingPeriod,
 		MaxClockDrift:   maxClockDrift,
@@ -66,6 +71,9 @@ func (msg MsgCreateClient) Type() string {
 func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.TrustingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
+	}
+	if err := lite.ValidateTrustLevel(msg.TrustLevel); err != nil {
+		return err
 	}
 	if msg.UnbondingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "duration cannot be 0")

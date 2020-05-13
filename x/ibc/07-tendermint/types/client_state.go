@@ -18,6 +18,8 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	lite "github.com/tendermint/tendermint/lite2"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -27,6 +29,8 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
+
+	TrustLevel tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
 
 	// Duration of the period since the LastestTimestamp during which the
 	// submitted headers are valid for upgrade
@@ -49,31 +53,37 @@ type ClientState struct {
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 	return Initialize(
-		msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift, msg.Header,
+		msg.GetClientID(), msg.TrustLevel,
+		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
+		msg.Header,
 	)
 }
 
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
+	id string, trustLevel tmmath.Fraction,
+	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
+	header Header,
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
 
-	clientState := NewClientState(id, trustingPeriod, ubdPeriod, maxClockDrift, header)
+	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header)
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
+	id string, trustLevel tmmath.Fraction,
+	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
+	header Header,
 ) ClientState {
-
 	return ClientState{
 		ID:              id,
+		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
@@ -118,6 +128,9 @@ func (cs ClientState) IsFrozen() bool {
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+		return err
+	}
+	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {

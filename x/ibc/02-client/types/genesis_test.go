@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -49,7 +50,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
@@ -70,7 +71,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState("chaindID", 0),
 				},
 				nil,
@@ -82,7 +83,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
@@ -103,7 +104,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
 					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{

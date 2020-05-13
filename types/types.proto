@@ -178,6 +178,7 @@ message ModeInfo {
   // multisig signer
   oneof sum {
     // single represents a single signer
+
     Single single = 1;
     // multi represents a nested multisig signer
     Multi multi = 2;

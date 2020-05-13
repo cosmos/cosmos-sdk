@@ -195,11 +195,12 @@ message SignDocRaw {
 
 #### `SIGN_MODE_LEGACY_AMINO`
 
-In order to support legacy wallets and exchanges, Amino JSON will be emporarily
+In order to support legacy wallets and exchanges, Amino JSON will be temporarily
 supported transaction signing. Once wallets and exchanges have had a
 chance to upgrade to protobuf based signing, this option will be disabled. In
 the meantime, it is foreseen that disabling the current Amino signing would cause
-too much breakage to be feasible.
+too much breakage to be feasible. Note that this is mainly a requirement of the
+Cosmos Hub and other chains may choose to disable Amino signing immediately.
 
 Legacy clients will be able to sign a transaction using the current Amino
 JSON format and have it encoded to protobuf using the REST `/tx/encode`

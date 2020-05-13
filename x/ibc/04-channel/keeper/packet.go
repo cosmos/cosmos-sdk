@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel
@@ -65,7 +64,7 @@ func (k Keeper) SendPacket(
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == int32(common.UNINITIALIZED) {
+	if connectionEnd.GetState() == int32(connection.UNINITIALIZED) {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection is UNINITIALIZED",
@@ -177,10 +176,10 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -332,10 +331,10 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 

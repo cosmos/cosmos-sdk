@@ -8,13 +8,12 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state common.State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		ID:           connectionID,
 		ClientID:     clientID,

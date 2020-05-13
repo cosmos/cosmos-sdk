@@ -7,12 +7,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
-
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
@@ -55,7 +53,7 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() == int32(common.UNINITIALIZED) {
+	if connectionEnd.GetState() == int32(connection.UNINITIALIZED) {
 		return nil, sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection state cannot be UNINITIALIZED",
@@ -116,10 +114,10 @@ func (k Keeper) ChanOpenTry(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -194,10 +192,10 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -261,10 +259,10 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -326,10 +324,10 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -369,10 +367,10 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != int32(common.OPEN) {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 

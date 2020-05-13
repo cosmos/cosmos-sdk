@@ -19,7 +19,7 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -56,8 +56,8 @@ func (suite *HandlerTestSuite) SetupTest() {
 	// create client and connection during setups
 	suite.chainA.CreateClient(suite.chainB)
 	suite.chainB.CreateClient(suite.chainA)
-	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, common.OPEN)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectiontypes.OPEN)
+	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectiontypes.OPEN)
 }
 
 func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
@@ -327,7 +327,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state common.State,
+	state connectiontypes.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{

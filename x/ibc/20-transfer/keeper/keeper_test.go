@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -253,7 +253,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state common.State,
+	state connectiontypes.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{

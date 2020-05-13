@@ -65,10 +65,10 @@ func (k Keeper) SendPacket(
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == common.UNINITIALIZED {
+	if connectionEnd.GetState() == int32(common.UNINITIALIZED) {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
-			"connection is closed (i.e NONE)",
+			"connection is UNINITIALIZED",
 		)
 	}
 
@@ -177,10 +177,10 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -238,14 +238,14 @@ func (k Keeper) PacketExecuted(
 		return sdkerrors.Wrap(types.ErrInvalidChannelCapability, "channel capability failed authentication")
 	}
 
-	if acknowledgement != nil || channel.Ordering == common.UNORDERED {
+	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 
-	if channel.Ordering == common.ORDERED {
+	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return types.ErrSequenceReceiveNotFound
@@ -332,10 +332,10 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -447,13 +447,13 @@ func (k Keeper) CleanupPacket(
 
 	var err error
 	switch channel.Ordering {
-	case common.ORDERED:
+	case types.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
-	case common.UNORDERED:
+	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgement(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),

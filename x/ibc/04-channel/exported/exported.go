@@ -1,11 +1,9 @@
 package exported
 
-import "github.com/cosmos/cosmos-sdk/x/ibc/common"
-
 // ChannelI defines the standard interface for a channel end.
 type ChannelI interface {
-	GetState() common.State
-	GetOrdering() common.Order
+	GetState() int32
+	GetOrdering() int32
 	GetCounterparty() CounterpartyI
 	GetConnectionHops() []string
 	GetVersion() string

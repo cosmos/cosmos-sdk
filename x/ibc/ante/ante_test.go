@@ -97,8 +97,8 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
 
-	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, common.OPEN, common.ORDERED, testConnection)
-	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, common.OPEN, common.ORDERED, testConnection)
+	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, common.OPEN, channeltypes.ORDERED, testConnection)
+	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, common.OPEN, channeltypes.ORDERED, testConnection)
 	ctx = suite.chainA.GetContext()
 	packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
@@ -152,7 +152,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(10))
 
-	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, common.OPEN, common.UNORDERED, testConnection)
+	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, common.OPEN, channeltypes.UNORDERED, testConnection)
 
 	suite.chainA.updateClient(suite.chainB)
 
@@ -343,7 +343,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state common.State, order common.Order, connectionID string,
+	state common.State, order channeltypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,

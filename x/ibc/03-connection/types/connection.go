@@ -25,8 +25,8 @@ func NewConnectionEnd(state common.State, connectionID, clientID string, counter
 }
 
 // GetState implements the Connection interface
-func (c ConnectionEnd) GetState() common.State {
-	return c.State
+func (c ConnectionEnd) GetState() int32 {
+	return int32(c.State)
 }
 
 // GetID implements the Connection interface

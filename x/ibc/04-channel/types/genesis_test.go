@@ -16,7 +16,7 @@ const (
 	testChannel1 = "firstchannel"
 	testChannel2 = "secondchannel"
 
-	testChannelOrder   = common.ORDERED
+	testChannelOrder   = ORDERED
 	testChannelVersion = "1.0"
 )
 

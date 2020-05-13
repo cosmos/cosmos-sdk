@@ -86,7 +86,7 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	switch channel.Ordering {
-	case common.ORDERED:
+	case types.ORDERED:
 		// check that packet has not been received
 		if nextSequenceRecv > packet.GetSequence() {
 			return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
@@ -97,7 +97,7 @@ func (k Keeper) TimeoutPacket(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
-	case common.UNORDERED:
+	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
@@ -143,7 +143,7 @@ func (k Keeper) TimeoutExecuted(ctx sdk.Context, chanCap *capability.Capability,
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	if channel.Ordering == common.ORDERED {
+	if channel.Ordering == types.ORDERED {
 		channel.State = common.CLOSED
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
@@ -227,13 +227,13 @@ func (k Keeper) TimeoutOnClose(
 
 	var err error
 	switch channel.Ordering {
-	case common.ORDERED:
+	case types.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
-	case common.UNORDERED:
+	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),

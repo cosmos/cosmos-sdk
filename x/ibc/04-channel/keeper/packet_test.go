@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 1)
 		}, true},
 		{"packet basic validation failed", func() {
@@ -33,62 +33,62 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 		}, false},
 		{"channel closed", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.CLOSED, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.CLOSED, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet dest port ≠ channel counterparty port", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, testPort3, counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet dest channel ID ≠ channel counterparty channel ID", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), testChannel3, timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection is UNINITIALIZED", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.UNINITIALIZED)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"client state not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"timeout height passed", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			commitNBlocks(suite.chainB, 10)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"timeout timestamp passed", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), disabledTimeoutHeight, timeoutTimestamp)
 			commitBlockWithNewTimestamp(suite.chainB, timeoutTimestamp)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"next sequence send not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"next sequence wrong", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 5)
 		}, false},
 		{"channel capability not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainB.GetContext(), testPort1, testChannel1, 1)
 			channelCap = capability.NewCapability(3)
 		}, false},
@@ -129,8 +129,8 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
 			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDB)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDB)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), testPort2, testChannel2, 1)
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort2, testChannel2, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitPacket(packet))
@@ -139,35 +139,35 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.INIT, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.INIT, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet source port ≠ channel counterparty port", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort3, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort3, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet source channel ID ≠ channel counterparty channel ID", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel3, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel3, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not OPEN", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.INIT)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"timeout height passed", func() {
 			commitNBlocks(suite.chainB, 10)
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"validation failed", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 	}
 
@@ -204,31 +204,31 @@ func (suite *KeeperTestSuite) TestPacketExecuted() {
 	testCases := []testCase{
 		{"success: UNORDERED", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.UNORDERED, testConnectionIDA)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
 		}, true},
 		{"success: ORDERED", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not OPEN", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.CLOSED, common.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.CLOSED, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"next sequence receive not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet sequence ≠ next sequence receive", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 5)
 		}, false},
 		{"capability not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.UNORDERED, testConnectionIDA)
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), testPort2, testChannel2, 1)
 			channelCap = capability.NewCapability(3)
 		}, false},
@@ -272,42 +272,42 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.chainA.CreateClient(suite.chainB)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
 			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.ORDERED, testConnectionIDB)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.ORDERED, testConnectionIDB)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.CLOSED, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.CLOSED, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet source port ≠ channel counterparty port", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort3, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort3, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet source channel ID ≠ channel counterparty channel ID", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel3, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel3, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not OPEN", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.INIT)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet hasn't been sent", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet ack verification failed", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 		}, false},
 	}
@@ -354,56 +354,56 @@ func (suite *KeeperTestSuite) TestCleanupPacket() {
 			suite.chainB.CreateClient(suite.chainA)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
 			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.UNORDERED, testConnectionIDA)
-			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, common.UNORDERED, testConnectionIDB)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.UNORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, common.OPEN, types.UNORDERED, testConnectionIDB)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.CLOSED, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.CLOSED, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet source port ≠ channel counterparty port", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort3, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort3, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet source channel ID ≠ channel counterparty channel ID", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel3, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel3, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not found", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"connection not OPEN", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.INIT)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet already received ", func() {
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 10, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"packet hasn't been sent", func() {
 			nextSeqRecv = 10
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 		}, false},
 		{"next seq receive verification failed", func() {
 			nextSeqRecv = 10
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 		}, false},
 		{"packet ack verification failed", func() {
 			nextSeqRecv = 10
 			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
 			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, common.OPEN)
-			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.UNORDERED, testConnectionIDA)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, types.UNORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 		}, false},
 	}

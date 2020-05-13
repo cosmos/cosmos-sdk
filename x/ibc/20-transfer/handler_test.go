@@ -87,7 +87,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	// Setup channel from A to B
 	suite.chainA.CreateClient(suite.chainB)
 	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, common.OPEN)
-	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, common.ORDERED, testConnection)
+	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, common.OPEN, channeltypes.ORDERED, testConnection)
 
 	res, err = handler(ctx, msg)
 	suite.Require().Error(err)
@@ -294,7 +294,7 @@ func (chain *TestChain) createConnection(
 // nolint: unused
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state common.State, order common.Order, connectionID string,
+	state common.State, order channeltypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,

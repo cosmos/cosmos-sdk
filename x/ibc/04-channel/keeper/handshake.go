@@ -36,7 +36,7 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 // a module on another chain.
 func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
-	order common.Order,
+	order types.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -55,7 +55,7 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() == common.UNINITIALIZED {
+	if connectionEnd.GetState() == int32(common.UNINITIALIZED) {
 		return nil, sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
 			"connection state cannot be UNINITIALIZED",
@@ -85,7 +85,7 @@ func (k Keeper) ChanOpenInit(
 // handshake initiated by a module on another chain.
 func (k Keeper) ChanOpenTry(
 	ctx sdk.Context,
-	order common.Order,
+	order types.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -116,10 +116,10 @@ func (k Keeper) ChanOpenTry(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -194,10 +194,10 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -261,10 +261,10 @@ func (k Keeper) ChanOpenConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -326,10 +326,10 @@ func (k Keeper) ChanCloseInit(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -369,10 +369,10 @@ func (k Keeper) ChanCloseConfirm(
 		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != common.OPEN {
+	if connectionEnd.GetState() != int32(common.OPEN) {
 		return sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", common.State(connectionEnd.GetState()).String(),
 		)
 	}
 

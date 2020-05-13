@@ -16,7 +16,7 @@ var (
 
 // NewChannel creates a new Channel instance
 func NewChannel(
-	state common.State, ordering common.Order, counterparty Counterparty,
+	state common.State, ordering Order, counterparty Counterparty,
 	hops []string, version string,
 ) Channel {
 	return Channel{
@@ -29,13 +29,13 @@ func NewChannel(
 }
 
 // GetState implements Channel interface.
-func (ch Channel) GetState() common.State {
-	return ch.State
+func (ch Channel) GetState() int32 {
+	return int32(ch.State)
 }
 
 // GetOrdering implements Channel interface.
-func (ch Channel) GetOrdering() common.Order {
-	return ch.Ordering
+func (ch Channel) GetOrdering() int32 {
+	return int32(ch.Ordering)
 }
 
 // GetCounterparty implements Channel interface.
@@ -58,7 +58,7 @@ func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
 		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}
-	if !(ch.Ordering == common.ORDERED || ch.Ordering == common.UNORDERED) {
+	if !(ch.Ordering == ORDERED || ch.Ordering == UNORDERED) {
 		return sdkerrors.Wrap(ErrInvalidChannelOrdering, ch.Ordering.String())
 	}
 	if len(ch.ConnectionHops) != 1 {
@@ -123,7 +123,7 @@ type IdentifiedChannel struct {
 	ID             string       `json:"id" yaml:"id"`
 	PortID         string       `json:"port_id" yaml:"port_id"`
 	State          common.State `json:"state" yaml:"state"`
-	Ordering       common.Order `json:"ordering" yaml:"ordering"`
+	Ordering       Order `json:"ordering" yaml:"ordering"`
 	Counterparty   Counterparty `json:"counterparty" yaml:"counterparty"`
 	ConnectionHops []string     `json:"connection_hops" yaml:"connection_hops"`
 	Version        string       `json:"version" yaml:"version "`

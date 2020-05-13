@@ -38,7 +38,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = common.ORDERED
+	testChannelOrder   = types.ORDERED
 	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
@@ -417,7 +417,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state common.State, order common.Order, connectionID string,
+	state common.State, order types.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := types.NewChannel(state, order, counterparty,

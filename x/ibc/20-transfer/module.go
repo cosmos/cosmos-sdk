@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/common"
 )
 
 var (
@@ -144,7 +143,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 // Implement IBCModule callbacks
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
-	order common.Order,
+	order channeltypes.Order,
 	connectionHops []string,
 	portID string,
 	channelID string,
@@ -175,7 +174,7 @@ func (am AppModule) OnChanOpenInit(
 
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
-	order common.Order,
+	order channeltypes.Order,
 	connectionHops []string,
 	portID,
 	channelID string,

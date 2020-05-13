@@ -5,6 +5,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	tmmath "github.com/tendermint/tendermint/libs/math"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -27,7 +29,8 @@ type CreateClientReq struct {
 	BaseReq         rest.BaseReq      `json:"base_req" yaml:"base_req"`
 	ClientID        string            `json:"client_id" yaml:"client_id"`
 	ChainID         string            `json:"chain_id" yaml:"chain_id"`
-	Header          ibctmtypes.Header `json:"consensus_state" yaml:"consensus_state"`
+	Header          ibctmtypes.Header `json:"header" yaml:"header"`
+	TrustLevel      tmmath.Fraction   `json:"trust_level" yaml:"trust_level"`
 	TrustingPeriod  time.Duration     `json:"trusting_period" yaml:"trusting_period"`
 	UnbondingPeriod time.Duration     `json:"unbonding_period" yaml:"unbonding_period"`
 	MaxClockDrift   time.Duration     `json:"max_clock_drift" yaml:"max_clock_drift"`

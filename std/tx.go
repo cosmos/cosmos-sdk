@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	_ sdk.TxI                 = (*Transaction)(nil)
+	_ sdk.Tx                  = (*Transaction)(nil)
 	_ clientx.ClientTx        = (*Transaction)(nil)
 	_ clientx.Generator       = TxGenerator{}
 	_ clientx.ClientFee       = &StdFee{}
@@ -147,7 +147,7 @@ func (tx *Transaction) SetSignatures(sdkSigs ...clientx.ClientSignature) error {
 }
 
 // GetFee returns the transaction's fee.
-func (tx Transaction) GetFee() sdk.FeeI {
+func (tx Transaction) GetFee() sdk.Fee {
 	return tx.Fee
 }
 

@@ -11,7 +11,7 @@ import (
 // Register the sdk message type
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Msg)(nil), nil)
-	cdc.RegisterInterface((*TxI)(nil), nil)
+	cdc.RegisterInterface((*Tx)(nil), nil)
 }
 
 // Register the sdk message type

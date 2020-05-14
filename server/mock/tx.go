@@ -16,7 +16,7 @@ type kvstoreTx struct {
 	bytes []byte
 }
 
-var _ sdk.TxI = kvstoreTx{}
+var _ sdk.Tx = kvstoreTx{}
 
 func NewTx(key, value string) kvstoreTx {
 	bytes := fmt.Sprintf("%s=%s", key, value)
@@ -58,8 +58,8 @@ func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
 // all the signatures and can be used to authenticate.
-func decodeTx(txBytes []byte) (sdk.TxI, error) {
-	var tx sdk.TxI
+func decodeTx(txBytes []byte) (sdk.Tx, error) {
+	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
 	if len(split) == 1 {

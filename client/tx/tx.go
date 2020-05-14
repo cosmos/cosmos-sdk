@@ -32,7 +32,7 @@ type (
 	}
 
 	ClientFee interface {
-		sdk.FeeI
+		sdk.Fee
 		SetGas(uint64)
 		SetAmount(sdk.Coins)
 	}
@@ -48,13 +48,13 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	ClientTx interface {
-		sdk.TxI
+		sdk.Tx
 		codec.ProtoMarshaler
 
 		SetMsgs(...sdk.Msg) error
 		GetSignatures() []sdk.Signature
 		SetSignatures(...ClientSignature) error
-		GetFee() sdk.FeeI
+		GetFee() sdk.Fee
 		SetFee(ClientFee) error
 		GetMemo() string
 		SetMemo(string)

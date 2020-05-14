@@ -140,9 +140,9 @@ func CountSubKeys(pub crypto.PubKey) int {
 // DEPRECATED
 // ---------------------------------------------------------------------------
 
-var _ sdk.TxI = (*StdTx)(nil)
+var _ sdk.Tx = (*StdTx)(nil)
 
-// StdTx is a standard way to wrap a Msg with FeeI and Signatures.
+// StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
@@ -319,7 +319,7 @@ type StdSignature struct {
 
 // DefaultTxDecoder logic for standard transaction decoding
 func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.TxI, error) {
+	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx = StdTx{}
 
 		if len(txBytes) == 0 {
@@ -339,7 +339,7 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
-	return func(tx sdk.TxI) ([]byte, error) {
+	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
 }

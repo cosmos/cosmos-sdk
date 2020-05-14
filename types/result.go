@@ -79,12 +79,12 @@ type TxResponse struct {
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
 	GasUsed   int64           `json:"gas_used,omitempty"`
-	Tx        TxI             `json:"tx,omitempty"`
+	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, tx TxI, timestamp string) TxResponse {
+func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxResponse {
 	if res == nil {
 		return TxResponse{}
 	}

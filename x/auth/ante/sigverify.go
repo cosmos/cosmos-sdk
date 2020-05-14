@@ -37,7 +37,7 @@ type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pub
 
 // SigVerifiableTx defines a Tx interface for all signature verification decorators
 type SigVerifiableTx interface {
-	sdk.TxI
+	sdk.Tx
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
@@ -57,7 +57,7 @@ func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
 	}
 }
 
-func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -114,7 +114,7 @@ func NewSigGasConsumeDecorator(ak AccountKeeper, sigGasConsumer SignatureVerific
 	}
 }
 
-func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -167,7 +167,7 @@ func NewSigVerificationDecorator(ak AccountKeeper) SigVerificationDecorator {
 	}
 }
 
-func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// no need to verify signatures on recheck tx
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
@@ -234,7 +234,7 @@ func NewIncrementSequenceDecorator(ak AccountKeeper) IncrementSequenceDecorator 
 	}
 }
 
-func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// no need to increment sequence on RecheckTx
 	if ctx.IsReCheckTx() && !simulate {
 		return next(ctx, tx, simulate)
@@ -272,7 +272,7 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.TxI, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")

@@ -31,7 +31,7 @@ const (
 	// AddrLen defines a valid address length
 	AddrLen = 20
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32MainPrefix = "cosmos"
+	Bech32MainPrefix = "kira"
 
 	// Atom in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 	CoinType = 118

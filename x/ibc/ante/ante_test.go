@@ -7,23 +7,23 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/ante"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // define constants used for testing
@@ -56,13 +56,13 @@ func (suite *HandlerTestSuite) SetupTest() {
 	// create client and connection during setups
 	suite.chainA.CreateClient(suite.chainB)
 	suite.chainB.CreateClient(suite.chainA)
-	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectionexported.OPEN)
-	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectionexported.OPEN)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectiontypes.OPEN)
+	suite.chainB.createConnection(testConnection, testConnection, testClientIDA, testClientIDB, connectiontypes.OPEN)
 }
 
 func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof, height int64) {
 	res := chain.App.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Path:  fmt.Sprintf("store/%s/key", host.StoreKey),
 		Data:  []byte(key),
 		Prove: true,
 	})
@@ -93,14 +93,14 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	cctx, _ := ctx.CacheContext()
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet))
-	msg := channel.NewMsgPacket(packet, nil, 0, addr1)
+	msg := channel.NewMsgPacket(packet, commitmenttypes.MerkleProof{}, 0, addr1)
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
 
-	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channelexported.OPEN, channelexported.ORDERED, testConnection)
-	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, channelexported.OPEN, channelexported.ORDERED, testConnection)
+	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
+	suite.chainB.createChannel(portid, chanid, cpportid, cpchanid, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
 	ctx = suite.chainA.GetContext()
-	packetCommitmentPath := ibctypes.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
+	packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
 	msg = channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 	_, err = handler(cctx, suite.newTx(msg), false)
@@ -121,7 +121,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 		_, err := handler(cctx, suite.newTx(msg), false)
 		if err == nil {
 			// retrieve channelCapability from scopedIBCKeeper and pass into PacketExecuted
-			chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, ibctypes.ChannelCapabilityPath(
+			chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(cctx, host.ChannelCapabilityPath(
 				packet.GetDestPort(), packet.GetDestChannel()),
 			)
 			suite.Require().True(ok, "could not retrieve capability")
@@ -152,14 +152,14 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 
 	// suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), packet.SourcePort, packet.SourceChannel, uint64(10))
 
-	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channelexported.OPEN, channelexported.UNORDERED, testConnection)
+	suite.chainA.createChannel(cpportid, cpchanid, portid, chanid, channeltypes.OPEN, channeltypes.UNORDERED, testConnection)
 
 	suite.chainA.updateClient(suite.chainB)
 
 	for i := 10; i >= 0; i-- {
 		cctx, write := suite.chainA.GetContext().CacheContext()
 		packet = channel.NewPacket(newPacket(uint64(i)).GetData(), uint64(i), portid, chanid, cpportid, cpchanid, 100, 0)
-		packetCommitmentPath := ibctypes.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
+		packetCommitmentPath := host.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
 		proof, proofHeight := queryProof(suite.chainB, packetCommitmentPath)
 		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
 		_, err := handler(cctx, suite.newTx(msg), false)
@@ -241,7 +241,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
 	if err != nil {
 		return err
 	}
@@ -309,7 +309,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		ctxTarget, client.ClientID, uint64(client.Header.Height-1), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -327,9 +327,9 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state connectionexported.State,
+	state connectiontypes.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,
@@ -343,7 +343,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state channelexported.State, order channelexported.Order, connectionID string,
+	state channeltypes.State, order channeltypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty,
@@ -351,7 +351,7 @@ func (chain *TestChain) createChannel(
 	)
 	ctx := chain.GetContext()
 	chain.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channel)
-	chain.App.ScopedIBCKeeper.NewCapability(ctx, ibctypes.ChannelCapabilityPath(portID, channelID))
+	chain.App.ScopedIBCKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	return channel
 }
 

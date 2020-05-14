@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // IBC client events
@@ -18,5 +18,5 @@ var (
 	EventTypeUpdateClient       = "update_client"
 	EventTypeSubmitMisbehaviour = "client_misbehaviour"
 
-	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
+	AttributeValueCategory = fmt.Sprintf("%s_%s", host.ModuleName, SubModuleName)
 )

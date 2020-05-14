@@ -1,27 +1,24 @@
 package keeper_test
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -41,7 +38,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = exported.ORDERED
+	testChannelOrder   = types.ORDERED
 	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
@@ -77,7 +74,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	channel := types.NewChannel(
-		exported.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
@@ -94,15 +91,15 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.NewChannel(
-		exported.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty3, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel2 := types.NewChannel(
-		exported.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty1, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel3 := types.NewChannel(
-		exported.CLOSED, testChannelOrder,
+		types.CLOSED, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 
@@ -240,7 +237,7 @@ func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
 // nolint: unused
 func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
@@ -287,7 +284,7 @@ func NewTestChain(clientID string) *TestChain {
 
 // Creates simple context for testing purposes
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.ChainID, Height: chain.Header.Height})
+	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: int64(chain.Header.GetHeight())})
 }
 
 // createClient will create a client for clientChain on targetChain
@@ -296,7 +293,7 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 	// Commit and create a new block on appTarget to get a fresh CommitID
 	client.App.Commit()
 	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -312,13 +309,13 @@ func (chain *TestChain) CreateClient(client *TestChain) error {
 		},
 		Valset: validators,
 	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, int64(client.Header.GetHeight()), histInfo)
 
 	// Create target ctx
 	ctxTarget := chain.GetContext()
 
 	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
+	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header)
 	if err != nil {
 		return err
 	}
@@ -357,7 +354,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	commitID := client.App.LastCommitID()
 
 	client.Header = nextHeader(client)
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.Height, Time: client.Header.Time}})
+	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: int64(client.Header.GetHeight()), Time: client.Header.Time}})
 
 	// Set HistoricalInfo on client chain after Commit
 	ctxClient := client.GetContext()
@@ -373,20 +370,20 @@ func (chain *TestChain) updateClient(client *TestChain) {
 		},
 		Valset: validators,
 	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.Height, histInfo)
+	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, int64(client.Header.GetHeight()), histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       uint64(client.Header.Height),
+		Height:       client.Header.GetHeight(),
 		Timestamp:    client.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, client.ClientID, uint64(client.Header.Height), consensusState,
+		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
-		ctxTarget, ibctmtypes.NewClientState(client.ClientID, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
+		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
 	)
 
 	// _, _, err := simapp.SignCheckDeliver(
@@ -404,9 +401,9 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state connectionexported.State,
+	state connectiontypes.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,
@@ -420,7 +417,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state exported.State, order exported.Order, connectionID string,
+	state types.State, order types.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := types.NewChannel(state, order, counterparty,
@@ -432,71 +429,18 @@ func (chain *TestChain) createChannel(
 }
 
 func nextHeader(chain *TestChain) ibctmtypes.Header {
-	return ibctmtypes.CreateTestHeader(chain.Header.ChainID, chain.Header.Height+1,
+	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, int64(chain.Header.GetHeight())+1,
 		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }
 
 // Mocked types
-// TODO: fix tests and replace for real proofs
 
-var (
-	_ commitmentexported.Proof = validProof{nil, nil, nil}
-	_ commitmentexported.Proof = invalidProof{}
-)
+type mockSuccessPacket struct{}
 
-type (
-	validProof struct {
-		root  commitmentexported.Root
-		path  commitmentexported.Path
-		value []byte
-	}
-	invalidProof struct{}
-)
+// GetBytes returns the serialised packet data
+func (mp mockSuccessPacket) GetBytes() []byte { return []byte("THIS IS A SUCCESS PACKET") }
 
-func (validProof) GetCommitmentType() commitmentexported.Type {
-	return commitmentexported.Merkle
-}
+type mockFailPacket struct{}
 
-func (proof validProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte,
-) error {
-	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
-		path.String() == proof.path.String() &&
-		bytes.Equal(value, proof.value) {
-		return nil
-	}
-	return errors.New("invalid proof")
-}
-
-func (validProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
-	return nil
-}
-
-func (validProof) ValidateBasic() error {
-	return nil
-}
-
-func (validProof) IsEmpty() bool {
-	return false
-}
-
-func (invalidProof) GetCommitmentType() commitmentexported.Type {
-	return commitmentexported.Merkle
-}
-
-func (invalidProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) ValidateBasic() error {
-	return errors.New("invalid proof")
-}
-
-func (invalidProof) IsEmpty() bool {
-	return true
-}
+// GetBytes returns the serialised packet data (without timeout)
+func (mp mockFailPacket) GetBytes() []byte { return []byte("THIS IS A FAILURE PACKET") }

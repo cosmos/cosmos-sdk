@@ -30,6 +30,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber,
 	}
 
 	acc.SetPubKey(pubKey)
+
 	return acc
 }
 
@@ -219,6 +220,7 @@ func (ma ModuleAccount) Validate() error {
 	if strings.TrimSpace(ma.Name) == "" {
 		return errors.New("module account name cannot be blank")
 	}
+
 	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}

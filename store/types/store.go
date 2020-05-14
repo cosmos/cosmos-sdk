@@ -9,7 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-type Store interface { //nolint
+type Store interface {
 	GetStoreType() StoreType
 	CacheWrapper
 }
@@ -87,7 +87,7 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 
 }
 
-type MultiStore interface { //nolint
+type MultiStore interface {
 	Store
 
 	// Cache wrap MultiStore.
@@ -236,7 +236,7 @@ type CacheWrap interface {
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
-type CacheWrapper interface { //nolint
+type CacheWrapper interface {
 	// CacheWrap cache wraps.
 	CacheWrap() CacheWrap
 
@@ -253,7 +253,7 @@ type CommitID struct {
 	Hash    []byte
 }
 
-func (cid CommitID) IsZero() bool { //nolint
+func (cid CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
 }
 
@@ -268,7 +268,6 @@ func (cid CommitID) String() string {
 type StoreType int
 
 const (
-	//nolint
 	StoreTypeMulti StoreType = iota
 	StoreTypeDB
 	StoreTypeIAVL

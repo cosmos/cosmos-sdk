@@ -155,7 +155,9 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
+
 	cdc.MustUnmarshalJSON(data, &genesisState)
+
 	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, genesisState)
 }
 

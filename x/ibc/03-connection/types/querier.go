@@ -6,13 +6,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // query routes supported by the IBC connection Querier
 const (
-	QueryAllConnections    = "connections"
-	QueryClientConnections = "client_connections"
+	QueryAllConnections       = "connections"
+	QueryClientConnections    = "client_connections"
+	QueryAllClientConnections = "all_client_connections"
 )
 
 // ConnectionResponse defines the client query response for a connection which
@@ -31,7 +32,7 @@ func NewConnectionResponse(
 	return ConnectionResponse{
 		Connection:  connection,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -68,7 +69,7 @@ func NewClientConnectionsResponse(
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
 		Proof:           commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(ibctypes.ClientConnectionsPath(clientID), "/")),
+		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(host.ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}
 }

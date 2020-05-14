@@ -22,7 +22,7 @@ func TestGenesisStateValidate_Valid(t *testing.T) {
 
 	evidence := make([]exported.Evidence, 100)
 	for i := 0; i < 100; i++ {
-		evidence[i] = types.Equivocation{
+		evidence[i] = &types.Equivocation{
 			Height:           int64(i) + 1,
 			Power:            100,
 			Time:             time.Now().UTC(),
@@ -39,7 +39,7 @@ func TestGenesisStateValidate_Invalid(t *testing.T) {
 
 	evidence := make([]exported.Evidence, 100)
 	for i := 0; i < 100; i++ {
-		evidence[i] = types.Equivocation{
+		evidence[i] = &types.Equivocation{
 			Height:           int64(i),
 			Power:            100,
 			Time:             time.Now().UTC(),

@@ -7,14 +7,12 @@ import (
 
 // DONTCOVER
 
-// nolint
 const (
 	ModuleName  = types.ModuleName
 	StoreKey    = types.StoreKey
 	MemStoreKey = types.MemStoreKey
 )
 
-// nolint
 var (
 	NewKeeper                = keeper.NewKeeper
 	NewCapability            = types.NewCapability
@@ -26,15 +24,15 @@ var (
 	ErrOwnerClaimed          = types.ErrOwnerClaimed
 	ErrCapabilityNotOwned    = types.ErrCapabilityNotOwned
 	RegisterCodec            = types.RegisterCodec
-	ModuleCdc                = types.ModuleCdc
 	NewOwner                 = types.NewOwner
 	NewCapabilityOwners      = types.NewCapabilityOwners
 )
 
-// nolint
 type (
-	Keeper           = keeper.Keeper
-	ScopedKeeper     = keeper.ScopedKeeper
-	Capability       = types.Capability
-	CapabilityOwners = types.CapabilityOwners
+	Keeper        = keeper.Keeper
+	ScopedKeeper  = keeper.ScopedKeeper
+	Capability    = types.Capability
+	Owners        = types.CapabilityOwners
+	GenesisState  = types.GenesisState
+	GenesisOwners = types.GenesisOwners
 )

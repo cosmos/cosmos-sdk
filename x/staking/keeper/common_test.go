@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -24,7 +23,7 @@ func createTestInput() (*codec.Codec, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
-	appCodec := std.NewAppCodec(codec.New())
+	appCodec := app.AppCodec()
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,

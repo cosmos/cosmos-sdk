@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
@@ -28,7 +27,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(ibctypes.INIT, connectionID, clientID, counterparty, types.GetCompatibleVersions())
+	connection := types.NewConnectionEnd(types.INIT, connectionID, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -57,7 +56,7 @@ func (k Keeper) ConnOpenTry(
 	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
 ) error {
 	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
@@ -69,14 +68,14 @@ func (k Keeper) ConnOpenTry(
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(ibctypes.INIT, counterparty.ConnectionID, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ConnectionID, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
 	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(ibctypes.UNINITIALIZED, connectionID, clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(types.UNINITIALIZED, connectionID, clientID, counterparty, []string{version})
 
 	// Check that ChainA committed expectedConnectionEnd to its state
 	if err := k.VerifyConnectionState(
@@ -97,7 +96,7 @@ func (k Keeper) ConnOpenTry(
 	// is chainA and connection is on INIT stage
 	// Check that existing connection version is on desired version of current handshake
 	previousConnection, found := k.GetConnection(ctx, connectionID)
-	if found && !(previousConnection.State == ibctypes.INIT &&
+	if found && !(previousConnection.State == types.INIT &&
 		previousConnection.Counterparty.ConnectionID == counterparty.ConnectionID &&
 		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 		previousConnection.ClientID == clientID &&
@@ -107,7 +106,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// Set connection state to TRYOPEN and store in chainB state
-	connection.State = ibctypes.TRYOPEN
+	connection.State = types.TRYOPEN
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
@@ -132,7 +131,7 @@ func (k Keeper) ConnOpenAck(
 ) error {
 	// Check that chainB client hasn't stored invalid height
 	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "invalid consensus height")
 	}
 
 	// Retrieve connection
@@ -142,7 +141,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Check connection on ChainA is on correct state: INIT or TRYOPEN
-	if connection.State != ibctypes.INIT && connection.State != ibctypes.TRYOPEN {
+	if connection.State != types.INIT && connection.State != types.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not INIT (got %s)", connection.State.String(),
@@ -152,7 +151,7 @@ func (k Keeper) ConnOpenAck(
 	// Check that ChainB's proposed version is one of chainA's accepted versions
 	if types.LatestVersion(connection.Versions) != version {
 		return sdkerrors.Wrapf(
-			ibctypes.ErrInvalidVersion,
+			sdkerrors.ErrInvalidVersion,
 			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
 		)
 	}
@@ -165,7 +164,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(ibctypes.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
@@ -183,7 +182,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// Update connection state to Open
-	connection.State = ibctypes.OPEN
+	connection.State = types.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
@@ -207,7 +206,7 @@ func (k Keeper) ConnOpenConfirm(
 	}
 
 	// Check that connection state on ChainB is on state: TRYOPEN
-	if connection.State != ibctypes.TRYOPEN {
+	if connection.State != types.TRYOPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not TRYOPEN (got %s)", connection.State.String(),
@@ -216,7 +215,7 @@ func (k Keeper) ConnOpenConfirm(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(ibctypes.OPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
+	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ConnectionID, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	// Check that connection on ChainA is open
 	if err := k.VerifyConnectionState(
@@ -227,7 +226,7 @@ func (k Keeper) ConnOpenConfirm(
 	}
 
 	// Update ChainB's connection to Open
-	connection.State = ibctypes.OPEN
+	connection.State = types.OPEN
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
 	return nil

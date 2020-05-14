@@ -6,11 +6,11 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 // QueryBalancesRequestHandlerFn returns a REST handler that queries for all
@@ -38,7 +38,7 @@ func QueryBalancesRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 		)
 
 		// TODO: Remove once client-side Protobuf migration has been completed.
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+		// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 		var marshaler codec.JSONMarshaler
 
 		if ctx.Marshaler != nil {

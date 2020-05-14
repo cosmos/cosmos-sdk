@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/ante"
+	"github.com/KiraCore/cosmos-sdk/x/auth/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // DONTCOVER

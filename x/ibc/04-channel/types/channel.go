@@ -3,9 +3,9 @@ package types
 import (
 	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 var (

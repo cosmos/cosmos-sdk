@@ -10,7 +10,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset

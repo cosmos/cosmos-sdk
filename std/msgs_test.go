@@ -3,12 +3,12 @@ package std_test
 import (
 	"testing"
 
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	gov "github.com/KiraCore/cosmos-sdk/x/gov/types"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/std"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 type invalidProposal struct {

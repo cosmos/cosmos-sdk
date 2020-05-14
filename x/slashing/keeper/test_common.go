@@ -5,9 +5,9 @@ package keeper
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/types"
+	"github.com/KiraCore/cosmos-sdk/x/staking"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)

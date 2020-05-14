@@ -14,9 +14,9 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 const (
@@ -261,7 +261,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx context.CLIContext, body
 	)
 
 	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+	// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 	var marshaler codec.JSONMarshaler
 
 	if ctx.Marshaler != nil {
@@ -305,7 +305,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx context.CLIContext, resp int
 	}
 
 	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+	// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 	var marshaler codec.JSONMarshaler
 
 	if ctx.Marshaler != nil {

@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/tests"
 )
 
-// For https://github.com/cosmos/cosmos-sdk/issues/3899
+// For https://github.com/KiraCore/cosmos-sdk/issues/3899
 func Test_runConfigCmdTwiceWithShorterNodeValue(t *testing.T) {
 	// Prepare environment
 	configHome, cleanup := tests.NewTestCaseDir(t)

@@ -3,13 +3,13 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	tendermint "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint"
+	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus

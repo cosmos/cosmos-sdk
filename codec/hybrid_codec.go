@@ -1,6 +1,6 @@
 package codec
 
-import "github.com/cosmos/cosmos-sdk/codec/types"
+import "github.com/KiraCore/cosmos-sdk/codec/types"
 
 // HybridCodec defines a codec that utilizes Protobuf for binary encoding
 // and Amino for JSON encoding.

@@ -24,7 +24,7 @@ parts:
         echo "Installing files from $GOBIN ..."
 
         # Use the following instructions to build a package from a release.
-        # wget https://github.com/cosmos/cosmos-sdk/archive/v@VERSION@.tar.gz
+        # wget https://github.com/KiraCore/cosmos-sdk/archive/v@VERSION@.tar.gz
         # tar xvf v@VERSION@.tar.gz
         # rm v@VERSION@.tar.gz
 

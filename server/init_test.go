@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/hd"
+	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
+	"github.com/KiraCore/cosmos-sdk/server"
+	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/types"
 )
 
 func TestGenerateCoinKey(t *testing.T) {

@@ -1,10 +1,10 @@
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
 )
 
 // ProofVerificationDecorator handles messages that contains application specific packet types,

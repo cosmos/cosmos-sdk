@@ -1,9 +1,9 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	cdctypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // RegisterCodec registers the necessary x/ibc/23-commitment interfaces and concrete types

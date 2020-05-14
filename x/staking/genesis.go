@@ -6,9 +6,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/staking/exported"
+	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -99,7 +99,7 @@ func InitGenesis(
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
 	}
 
-	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+	// TODO remove with genesis 2-phases refactor https://github.com/KiraCore/cosmos-sdk/issues/2862
 	// add coins if not provided on genesis
 	if bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()).IsZero() {
 		if err := bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins); err != nil {

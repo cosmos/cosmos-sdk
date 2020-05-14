@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	std "github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	std "github.com/KiraCore/cosmos-sdk/std"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank"
 )
 
 func TestTransaction(t *testing.T) {

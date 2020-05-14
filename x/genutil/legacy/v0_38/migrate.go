@@ -1,15 +1,15 @@
 package v038
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
-	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
-	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
-	v038distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_38"
-	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
-	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_38"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	v036auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_36"
+	v038auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_38"
+	v036distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_36"
+	v038distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_38"
+	v036genaccounts "github.com/KiraCore/cosmos-sdk/x/genaccounts/legacy/v0_36"
+	"github.com/KiraCore/cosmos-sdk/x/genutil"
+	v036staking "github.com/KiraCore/cosmos-sdk/x/staking/legacy/v0_36"
+	v038staking "github.com/KiraCore/cosmos-sdk/x/staking/legacy/v0_38"
 )
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.

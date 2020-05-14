@@ -1,14 +1,14 @@
 package client
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/x/evidence"
+	evidenceexported "github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient

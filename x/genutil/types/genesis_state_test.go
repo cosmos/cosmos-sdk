@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 
 func TestNetGenesisState(t *testing.T) {
 	gen := NewGenesisState(nil)
-	assert.NotNil(t, gen.GenTxs) // https://github.com/cosmos/cosmos-sdk/issues/5086
+	assert.NotNil(t, gen.GenTxs) // https://github.com/KiraCore/cosmos-sdk/issues/5086
 
 	gen = NewGenesisState(
 		[]json.RawMessage{

@@ -5,8 +5,8 @@ import (
 
 	"github.com/otiai10/copy"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/tests"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

@@ -15,13 +15,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/server"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
+	_ "github.com/KiraCore/cosmos-sdk/client/lcd/statik"
 )
 
 // RestServer represents the Light Client Rest server

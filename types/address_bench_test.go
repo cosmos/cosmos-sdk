@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )

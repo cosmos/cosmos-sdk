@@ -1,7 +1,7 @@
 package connection
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the ibc connection submodule's state from a provided genesis

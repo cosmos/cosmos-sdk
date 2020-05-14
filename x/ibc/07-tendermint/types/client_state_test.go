@@ -4,11 +4,11 @@ import (
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
+	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (

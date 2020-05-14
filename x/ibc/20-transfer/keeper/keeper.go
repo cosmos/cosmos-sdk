@@ -5,15 +5,15 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
+	channelexported "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/20-transfer/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 const (

@@ -1,13 +1,13 @@
 package ibc
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
+	port "github.com/KiraCore/cosmos-sdk/x/ibc/05-port"
 )
 
 // NewHandler defines the IBC handler

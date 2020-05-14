@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/module"
+	"github.com/KiraCore/cosmos-sdk/x/distribution/types"
 )
 
 // Simulation parameter constants

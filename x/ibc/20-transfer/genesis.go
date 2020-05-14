@@ -3,8 +3,8 @@ package transfer
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
 // InitGenesis binds to portid from genesis state

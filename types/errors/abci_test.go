@@ -135,7 +135,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 		},
 	}
 
-	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.TestABCIInfoStacktrace"
+	const thisTestSrc = "github.com/KiraCore/cosmos-sdk/types/errors.TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
 		tc := tc

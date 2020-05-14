@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/store/rootmulti"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 )

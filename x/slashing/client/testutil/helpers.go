@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/tests/cli"
+	"github.com/KiraCore/cosmos-sdk/x/slashing"
 )
 
 // QuerySigningInfo returns the signing info for a validator

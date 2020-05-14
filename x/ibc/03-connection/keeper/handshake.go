@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.

@@ -8,12 +8,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutils "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/tests/cli"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	banktestutils "github.com/KiraCore/cosmos-sdk/x/bank/client/testutil"
+	"github.com/KiraCore/cosmos-sdk/x/gov"
+	"github.com/KiraCore/cosmos-sdk/x/gov/client/testutil"
 )
 
 func TestCLISubmitProposal(t *testing.T) {

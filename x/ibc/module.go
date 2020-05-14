@@ -9,15 +9,15 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	cdctypes "github.com/KiraCore/cosmos-sdk/codec/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/module"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/client/cli"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/client/rest"
 )
 
 // TODO: AppModuleSimulation

@@ -6,8 +6,8 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -28,8 +28,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 type MsgSetWithdrawAddress struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
 }
 
 func (m *MsgSetWithdrawAddress) Reset()         { *m = MsgSetWithdrawAddress{} }
@@ -81,8 +81,8 @@ func (m *MsgSetWithdrawAddress) GetWithdrawAddress() github_com_cosmos_cosmos_sd
 
 // msg struct for delegation withdraw from a single validator
 type MsgWithdrawDelegatorReward struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 }
 
 func (m *MsgWithdrawDelegatorReward) Reset()         { *m = MsgWithdrawDelegatorReward{} }
@@ -134,7 +134,7 @@ func (m *MsgWithdrawDelegatorReward) GetValidatorAddress() github_com_cosmos_cos
 
 // msg struct for validator withdraw
 type MsgWithdrawValidatorCommission struct {
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 }
 
 func (m *MsgWithdrawValidatorCommission) Reset()         { *m = MsgWithdrawValidatorCommission{} }
@@ -180,8 +180,8 @@ func (m *MsgWithdrawValidatorCommission) GetValidatorAddress() github_com_cosmos
 // MsgFundCommunityPool defines a Msg type that allows an account to directly
 // fund the community pool.
 type MsgFundCommunityPool struct {
-	Amount    github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
+	Amount    github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
+	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
 }
 
 func (m *MsgFundCommunityPool) Reset()         { *m = MsgFundCommunityPool{} }
@@ -233,9 +233,9 @@ func (m *MsgFundCommunityPool) GetDepositor() github_com_cosmos_cosmos_sdk_types
 
 // Params defines the set of distribution parameters.
 type Params struct {
-	CommunityTax        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_tax" yaml:"community_tax"`
-	BaseProposerReward  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_proposer_reward" yaml:"base_proposer_reward"`
-	BonusProposerReward github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"bonus_proposer_reward" yaml:"bonus_proposer_reward"`
+	CommunityTax        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"community_tax" yaml:"community_tax"`
+	BaseProposerReward  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"base_proposer_reward" yaml:"base_proposer_reward"`
+	BonusProposerReward github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"bonus_proposer_reward" yaml:"bonus_proposer_reward"`
 	WithdrawAddrEnabled bool                                   `protobuf:"varint,4,opt,name=withdraw_addr_enabled,json=withdrawAddrEnabled,proto3" json:"withdraw_addr_enabled,omitempty" yaml:"withdraw_addr_enabled"`
 }
 
@@ -291,7 +291,7 @@ func (m *Params) GetWithdrawAddrEnabled() bool {
 //  + number of slashes which ended the associated period (and might need to read that record)
 //  + one per validator for the zeroeth period, set on initialization
 type ValidatorHistoricalRewards struct {
-	CumulativeRewardRatio github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=cumulative_reward_ratio,json=cumulativeRewardRatio,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"cumulative_reward_ratio" yaml:"cumulative_reward_ratio"`
+	CumulativeRewardRatio github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=cumulative_reward_ratio,json=cumulativeRewardRatio,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.DecCoins" json:"cumulative_reward_ratio" yaml:"cumulative_reward_ratio"`
 	ReferenceCount        uint32                                      `protobuf:"varint,2,opt,name=reference_count,json=referenceCount,proto3" json:"reference_count,omitempty" yaml:"reference_count"`
 }
 
@@ -346,7 +346,7 @@ func (m *ValidatorHistoricalRewards) GetReferenceCount() uint32 {
 // kept as a running counter and incremented each block
 // as long as the validator's tokens remain constant
 type ValidatorCurrentRewards struct {
-	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.DecCoins" json:"rewards"`
 	Period  uint64                                      `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
 }
 
@@ -400,7 +400,7 @@ func (m *ValidatorCurrentRewards) GetPeriod() uint64 {
 // accumulated commission for a validator
 // kept as a running counter, can be withdrawn at any time
 type ValidatorAccumulatedCommission struct {
-	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=commission,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"commission"`
+	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=commission,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.DecCoins" json:"commission"`
 }
 
 func (m *ValidatorAccumulatedCommission) Reset()         { *m = ValidatorAccumulatedCommission{} }
@@ -446,7 +446,7 @@ func (m *ValidatorAccumulatedCommission) GetCommission() github_com_cosmos_cosmo
 // outstanding (un-withdrawn) rewards for a validator
 // inexpensive to track, allows simple sanity checks
 type ValidatorOutstandingRewards struct {
-	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards" yaml:"rewards"`
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.DecCoins" json:"rewards" yaml:"rewards"`
 }
 
 func (m *ValidatorOutstandingRewards) Reset()         { *m = ValidatorOutstandingRewards{} }
@@ -495,7 +495,7 @@ func (m *ValidatorOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_
 // for delegations which withdraw after a slash has occurred
 type ValidatorSlashEvent struct {
 	ValidatorPeriod uint64                                 `protobuf:"varint,1,opt,name=validator_period,json=validatorPeriod,proto3" json:"validator_period,omitempty" yaml:"validator_period"`
-	Fraction        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fraction"`
+	Fraction        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"fraction"`
 }
 
 func (m *ValidatorSlashEvent) Reset()         { *m = ValidatorSlashEvent{} }
@@ -584,7 +584,7 @@ func (m *ValidatorSlashEvents) GetValidatorSlashEvents() []ValidatorSlashEvent {
 
 // global fee pool for distribution
 type FeePool struct {
-	CommunityPool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"community_pool" yaml:"community_pool"`
+	CommunityPool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.DecCoins" json:"community_pool" yaml:"community_pool"`
 }
 
 func (m *FeePool) Reset()         { *m = FeePool{} }
@@ -631,8 +631,8 @@ func (m *FeePool) GetCommunityPool() github_com_cosmos_cosmos_sdk_types.DecCoins
 type CommunityPoolSpendProposal struct {
 	Title       string                                        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string                                        `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Recipient   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=recipient,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"recipient,omitempty"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Recipient   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=recipient,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"recipient,omitempty"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *CommunityPoolSpendProposal) Reset()      { *m = CommunityPoolSpendProposal{} }
@@ -676,7 +676,7 @@ var xxx_messageInfo_CommunityPoolSpendProposal proto.InternalMessageInfo
 // thus sdk.Dec is used
 type DelegatorStartingInfo struct {
 	PreviousPeriod uint64                                 `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty" yaml:"previous_period"`
-	Stake          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"stake" yaml:"stake"`
+	Stake          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"stake" yaml:"stake"`
 	Height         uint64                                 `protobuf:"varint,3,opt,name=height,proto3" json:"creation_height" yaml:"creation_height"`
 }
 

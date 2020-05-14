@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/store/rootmulti"
+	"github.com/KiraCore/cosmos-sdk/store/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 func TestPrefixEndBytes(t *testing.T) {

@@ -1,9 +1,9 @@
 package types
 
 import (
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
 )
 
 // GenesisState defines the ibc module's genesis state.

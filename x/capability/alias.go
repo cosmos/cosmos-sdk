@@ -1,8 +1,8 @@
 package capability
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	"github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/KiraCore/cosmos-sdk/x/capability/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/capability/types"
 )
 
 // DONTCOVER

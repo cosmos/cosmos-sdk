@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel

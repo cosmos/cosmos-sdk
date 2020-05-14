@@ -1,8 +1,8 @@
 package slashing
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/types"
 )
 
 const (

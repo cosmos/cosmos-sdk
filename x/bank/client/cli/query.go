@@ -7,13 +7,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/version"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -29,7 +29,7 @@ const (
 // GetQueryCmd returns the parent querying command for the bank module.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -51,7 +51,7 @@ func GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // single or all account balances by address.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "balances [address]",
@@ -116,7 +116,7 @@ func GetBalancesCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func GetCmdQueryTotalSupply(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total [denom]",

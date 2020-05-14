@@ -1,8 +1,8 @@
 package params
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/KiraCore/cosmos-sdk/x/params/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
 const (

@@ -3,7 +3,7 @@ package cosmos_sdk.x.auth.v1;
 
 import "third_party/proto/gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/auth/types";
 
 // BaseAccount defines a base account type. It contains all the necessary fields
 // for basic account functionality. Any custom account type should extend this
@@ -12,7 +12,7 @@ message BaseAccount {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes  address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes  address = 1 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
   bytes  pub_key = 2 [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
   uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
   uint64 sequence       = 4;

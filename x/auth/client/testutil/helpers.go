@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
+	clientkeys "github.com/KiraCore/cosmos-sdk/client/keys"
+	"github.com/KiraCore/cosmos-sdk/tests/cli"
 )
 
 // TxSign is simcli sign

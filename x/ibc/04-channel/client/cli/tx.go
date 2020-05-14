@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	connectionutils "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/client/utils"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // IBC Channel flags

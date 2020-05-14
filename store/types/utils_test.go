@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/KiraCore/cosmos-sdk/store/rootmulti"
+	"github.com/KiraCore/cosmos-sdk/store/types"
 )
 
 func initTestStores(t *testing.T) (types.KVStore, types.KVStore) {

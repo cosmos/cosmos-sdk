@@ -1,14 +1,14 @@
 package std
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/module"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	"github.com/KiraCore/cosmos-sdk/x/auth/vesting"
+	gov "github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
 
 var (

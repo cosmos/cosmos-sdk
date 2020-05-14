@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 func TestValidateGenesis(t *testing.T) {

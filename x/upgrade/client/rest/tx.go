@@ -4,18 +4,18 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/KiraCore/cosmos-sdk/client/tx"
 
 	"github.com/gorilla/mux"
 
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	govrest "github.com/KiraCore/cosmos-sdk/x/gov/client/rest"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	gov "github.com/KiraCore/cosmos-sdk/x/gov/types"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 )
 
 // nolint

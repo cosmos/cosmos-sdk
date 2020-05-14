@@ -8,11 +8,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/evidence"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
 )
 
 type GenesisTestSuite struct {

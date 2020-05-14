@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	cryptokeyring "github.com/KiraCore/cosmos-sdk/crypto/keyring"
 )
 
 // available output formats.

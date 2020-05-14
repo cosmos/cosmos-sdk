@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/tests/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/KiraCore/cosmos-sdk/tests/cli"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/distribution/client/testutil"
+	"github.com/KiraCore/cosmos-sdk/x/mint"
 )
 
 func TestCLIWithdrawRewards(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/hd"
+	"github.com/KiraCore/cosmos-sdk/types"
 )
 
 // Info is the publicly exposed information about a keypair

@@ -3,11 +3,11 @@ package keeper
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
 )
 
 // NewQuerier creates a querier for the IBC module

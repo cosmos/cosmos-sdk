@@ -4,7 +4,7 @@ package v039
 // nolint
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 const (

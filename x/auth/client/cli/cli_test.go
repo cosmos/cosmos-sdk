@@ -10,13 +10,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/tests/cli"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	"github.com/KiraCore/cosmos-sdk/x/auth/client/testutil"
+	bankcli "github.com/KiraCore/cosmos-sdk/x/bank/client/testutil"
 )
 
 func TestCLIValidateSignatures(t *testing.T) {

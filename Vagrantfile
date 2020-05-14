@@ -40,12 +40,12 @@ Vagrant.configure("2") do |config|
 
     mkdir -p /home/vagrant/go/bin
     mkdir -p /home/vagrant/go/src/github.com/cosmos
-    ln -s /vagrant /home/vagrant/go/src/github.com/cosmos/cosmos-sdk
+    ln -s /vagrant /home/vagrant/go/src/github.com/KiraCore/cosmos-sdk
 
     chown -R vagrant:vagrant /home/vagrant/go
     chown vagrant:vagrant /home/vagrant/.bash_profile
 
     su - vagrant -c 'source /home/vagrant/.bash_profile'
-    su - vagrant -c 'cd /home/vagrant/go/src/github.com/cosmos/cosmos-sdk && make tools'
+    su - vagrant -c 'cd /home/vagrant/go/src/github.com/KiraCore/cosmos-sdk && make tools'
   SHELL
 end

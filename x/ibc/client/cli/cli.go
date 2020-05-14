@@ -3,15 +3,15 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/client/cli"
-	localhost "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	ibcclient "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
+	tmclient "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/client/cli"
+	localhost "github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // GetTxCmd returns the transaction commands for this module

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/KiraCore/cosmos-sdk/store"
 )
 
 // GetPruningOptionsFromFlags parses start command flags and returns the correct PruningOptions.

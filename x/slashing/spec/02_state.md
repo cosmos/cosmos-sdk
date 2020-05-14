@@ -12,7 +12,7 @@ long as it contains precommits from +2/3 of total voting power.
 
 Proposers are incentivized to include precommits from all validators in the `LastCommitInfo`
 by receiving additional fees proportional to the difference between the voting
-power included in the `LastCommitInfo` and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)).
+power included in the `LastCommitInfo` and +2/3 (see [TODO](https://github.com/KiraCore/cosmos-sdk/issues/967)).
 
 Validators are penalized for failing to be included in the `LastCommitInfo` for some
 number of blocks by being automatically jailed, potentially slashed, and unbonded.

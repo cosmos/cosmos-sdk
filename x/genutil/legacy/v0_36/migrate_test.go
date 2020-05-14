@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/KiraCore/cosmos-sdk/x/genutil"
 )
 
 var basic034Gov = []byte(`

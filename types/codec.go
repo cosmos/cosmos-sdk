@@ -3,9 +3,9 @@ package types
 import (
 	jsonc "github.com/gibson042/canonicaljson-go"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 )
 
 // Register the sdk message type

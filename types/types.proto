@@ -4,7 +4,7 @@ package cosmos_sdk.v1;
 import "third_party/proto/gogoproto/gogo.proto";
 import "third_party/proto/tendermint/abci/types/types.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/types";
+option go_package                       = "github.com/KiraCore/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 

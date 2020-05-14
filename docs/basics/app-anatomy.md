@@ -58,7 +58,7 @@ See an example of application type definition from [`gaia`](https://github.com/c
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/constructors.go#L20
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/constructors.go#L20
 
 Here are the main actions performed by this function:
 
@@ -84,7 +84,7 @@ See an example of application constructor from [`gaia`](https://github.com/cosmo
 
 ### InitChainer
 
-The `InitChainer` is a function that initializes the state of the application from a genesis file (i.e. token balances of genesis accounts). It is called when the application receives the `InitChain` message from the Tendermint engine, which happens when the node is started at `appBlockHeight == 0` (i.e. on genesis). The application must set the `InitChainer` in its [constructor](#constructor-function) via the [`SetInitChainer`](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetInitChainer) method. 
+The `InitChainer` is a function that initializes the state of the application from a genesis file (i.e. token balances of genesis accounts). It is called when the application receives the `InitChain` message from the Tendermint engine, which happens when the node is started at `appBlockHeight == 0` (i.e. on genesis). The application must set the `InitChainer` in its [constructor](#constructor-function) via the [`SetInitChainer`](https://godoc.org/github.com/KiraCore/cosmos-sdk/baseapp#BaseApp.SetInitChainer) method. 
 
 In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn will call the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../building-modules/module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#application-constructor), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
 
@@ -94,7 +94,7 @@ See an example of an `InitChainer` from [`gaia`](https://github.com/cosmos/gaia)
 
 ### BeginBlocker and EndBlocker
 
-The SDK offers developers the possibility to implement automatic execution of code as part of their application. This is implemented through two function called `BeginBlocker` and `EndBlocker`. They are called when the application receives respectively the `BeginBlock` and `EndBlock` messages from the Tendermint engine, which happens at the beginning and at the end of each block. The application must set the `BeginBlocker` and `EndBlocker` in its [constructor](#constructor-function) via the [`SetBeginBlocker`](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetBeginBlocker) and [`SetEndBlocker`](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetEndBlocker) methods.
+The SDK offers developers the possibility to implement automatic execution of code as part of their application. This is implemented through two function called `BeginBlocker` and `EndBlocker`. They are called when the application receives respectively the `BeginBlock` and `EndBlock` messages from the Tendermint engine, which happens at the beginning and at the end of each block. The application must set the `BeginBlocker` and `EndBlocker` in its [constructor](#constructor-function) via the [`SetBeginBlocker`](https://godoc.org/github.com/KiraCore/cosmos-sdk/baseapp#BaseApp.SetBeginBlocker) and [`SetEndBlocker`](https://godoc.org/github.com/KiraCore/cosmos-sdk/baseapp#BaseApp.SetEndBlocker) methods.
 
 In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the [`BeginBlock` and `EndBlock`](../building-modules/beginblock-endblock.md) functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn will call the `BeginBLock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BegingBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlock` and `SetOrderEndBlock` methods respectively. This is done via the [module manager](../building-modules/module-manager.md) in the [application's constructor](#application-constructor), and the `SetOrderBeginBlock` and `SetOrderEndBlock` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
 
@@ -139,7 +139,7 @@ For a more detailed look at a transaction lifecycle, click [here](./tx-lifecycle
 
 Module developers create custom message types when they build their own module. The general practice is to prefix the type declaration of the message with `Msg`. For example, the message type `MsgSend` allows users to transfer tokens:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/bank/internal/types/msgs.go#L10-L15
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/bank/internal/types/msgs.go#L10-L15
 
 It is processed by the `handler` of the `bank` module, which ultimately calls the `keeper` of the `auth` module in order to update the state.
 
@@ -155,13 +155,13 @@ The `handler` of a module is generally defined in a file called `handler.go` and
 
 Handler functions return a result of type `sdk.Result`, which informs the application on whether the message was successfully processed:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
 
 ### Querier 
 
 [`Queriers`](../building-modules/querier.md) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#interfaces) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/abci.go#L395-L453
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/abci.go#L395-L453
 
 The `Querier` of a module is defined in a file called `querier.go`, and consists of:
 
@@ -201,7 +201,7 @@ The [module's REST interface](../building-modules/module-interfaces.md#rest) let
 
 - A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
 - Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:
-    +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/rest/rest.go#L47-L60
+    +++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/rest/rest.go#L47-L60
 - One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
 
 ## Application Interface

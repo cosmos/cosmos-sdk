@@ -7,10 +7,10 @@ import (
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	evidenceexported "github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // REST client flags

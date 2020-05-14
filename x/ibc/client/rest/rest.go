@@ -3,12 +3,12 @@ package rest
 import (
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	localhost "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	client "github.com/KiraCore/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel"
+	tendermint "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint"
+	localhost "github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

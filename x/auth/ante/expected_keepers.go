@@ -1,9 +1,9 @@
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

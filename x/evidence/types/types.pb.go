@@ -6,8 +6,8 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/codec/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
@@ -33,7 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
 // Evidence.
 type MsgSubmitEvidence struct {
-	Submitter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=submitter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"submitter,omitempty"`
+	Submitter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=submitter,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"submitter,omitempty"`
 	Evidence  *types.Any                                    `protobuf:"bytes,2,opt,name=evidence,proto3" json:"evidence,omitempty"`
 }
 
@@ -76,7 +76,7 @@ type Equivocation struct {
 	Height           int64                                          `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
 	Time             time.Time                                      `protobuf:"bytes,2,opt,name=time,proto3,stdtime" json:"time"`
 	Power            int64                                          `protobuf:"varint,3,opt,name=power,proto3" json:"power,omitempty"`
-	ConsensusAddress github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"consensus_address,omitempty" yaml:"consensus_address"`
+	ConsensusAddress github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ConsAddress" json:"consensus_address,omitempty" yaml:"consensus_address"`
 }
 
 func (m *Equivocation) Reset()      { *m = Equivocation{} }

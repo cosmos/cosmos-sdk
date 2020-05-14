@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	transfertypes "github.com/KiraCore/cosmos-sdk/x/ibc/20-transfer/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 func (suite *KeeperTestSuite) TestSendPacket() {

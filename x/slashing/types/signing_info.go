@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // NewValidatorSigningInfo creates a new ValidatorSigningInfo instance

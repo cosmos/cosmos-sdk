@@ -1,13 +1,13 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/exported"
+	channelexported "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the

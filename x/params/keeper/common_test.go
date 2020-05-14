@@ -5,11 +5,11 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/store"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	paramskeeper "github.com/KiraCore/cosmos-sdk/x/params/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/params/types/proposal"
 )
 
 func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, paramskeeper.Keeper) {

@@ -3,10 +3,10 @@ package types
 import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // CommitPacket return the hash of commitment bytes

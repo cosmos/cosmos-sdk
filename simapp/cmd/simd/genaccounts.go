@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/KiraCore/cosmos-sdk/std"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -13,15 +13,15 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
+	"github.com/KiraCore/cosmos-sdk/server"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	authvesting "github.com/KiraCore/cosmos-sdk/x/auth/vesting"
+	"github.com/KiraCore/cosmos-sdk/x/bank"
+	"github.com/KiraCore/cosmos-sdk/x/genutil"
 )
 
 const (

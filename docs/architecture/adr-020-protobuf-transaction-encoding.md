@@ -25,8 +25,8 @@ With this in mind, we will tackle the migration path via two main areas, txs and
 querying. However, this ADR solely focuses on transactions. Querying should be
 addressed in a future ADR, but it should build off of these proposals.
 
-Based on detailed discussions ([\#6030](https://github.com/cosmos/cosmos-sdk/issues/6030)
-and [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078)), the original 
+Based on detailed discussions ([\#6030](https://github.com/KiraCore/cosmos-sdk/issues/6030)
+and [\#6078](https://github.com/KiraCore/cosmos-sdk/issues/6078)), the original 
 design for transactions was changed substantially from an `oneof` /JSON-signing
 approach to the approach described below.
 
@@ -212,7 +212,7 @@ endpoint before broadcasting.
 
 #### `SIGN_MODE_TEXTUAL`
 
-As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
+As was discussed extensively in [\#6078](https://github.com/KiraCore/cosmos-sdk/issues/6078),
 there is a desire for a human-readable signing encoding, especially for hardware
 wallets like the [Ledger](https://www.ledger.com) which display
 transaction contents to users before signing. JSON was an attempt at this but 
@@ -243,7 +243,7 @@ by adding random uninterpreted data to unsigned content (i.e. the master `Tx`,
 not `TxBody`)
 
 There are also scenarios where we may choose to safely ignore unknown fields
-(https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188) to
+(https://github.com/KiraCore/cosmos-sdk/issues/6078#issuecomment-624400188) to
 provide graceful forwards compatibility with newer clients.
 
 We propose that field numbers with bit 11 set (for most use cases this is
@@ -310,7 +310,7 @@ can gracefully transition away from Amino JSON.
 
 ### `SIGN_MODE_DIRECT_AUX`
 
-(*Documented as option (3) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933)
+(*Documented as option (3) in https://github.com/KiraCore/cosmos-sdk/issues/6078#issuecomment-628026933)
 
 We could add a mode `SIGN_MODE_DIRECT_AUX`
 to support scenarios where multiple signatures
@@ -371,7 +371,7 @@ added) once enough signatures have been collected
 
 ### `SIGN_MODE_DIRECT_RELAXED`
 
-(*Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933*)
+(*Documented as option (1)(a) in https://github.com/KiraCore/cosmos-sdk/issues/6078#issuecomment-628026933*)
 
 This is a variation of `SIGN_MODE_DIRECT` where multiple signers wouldn't need to
 coordinate public keys and signing modes in advance. It would involve an alternate

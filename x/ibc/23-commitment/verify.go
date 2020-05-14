@@ -1,9 +1,9 @@
 package commitment
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // CalculateRoot returns the application Hash at the curretn block height as a commitment

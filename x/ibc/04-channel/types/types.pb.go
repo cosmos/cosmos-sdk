@@ -5,8 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -105,7 +105,7 @@ type MsgChannelOpenInit struct {
 	PortID    string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
 	Channel   Channel                                       `protobuf:"bytes,3,opt,name=channel,proto3" json:"channel"`
-	Signer    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgChannelOpenInit) Reset()         { *m = MsgChannelOpenInit{} }
@@ -178,7 +178,7 @@ type MsgChannelOpenTry struct {
 	CounterpartyVersion string                                        `protobuf:"bytes,4,opt,name=counterparty_version,json=counterpartyVersion,proto3" json:"counterparty_version,omitempty" yaml:"counterparty_version"`
 	ProofInit           types.MerkleProof                             `protobuf:"bytes,5,opt,name=proof_init,json=proofInit,proto3" json:"proof_init" yaml:"proof_init"`
 	ProofHeight         uint64                                        `protobuf:"varint,6,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer              github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer              github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgChannelOpenTry) Reset()         { *m = MsgChannelOpenTry{} }
@@ -271,7 +271,7 @@ type MsgChannelOpenAck struct {
 	CounterpartyVersion string                                        `protobuf:"bytes,3,opt,name=counterparty_version,json=counterpartyVersion,proto3" json:"counterparty_version,omitempty" yaml:"counterparty_version"`
 	ProofTry            types.MerkleProof                             `protobuf:"bytes,4,opt,name=proof_try,json=proofTry,proto3" json:"proof_try" yaml:"proof_try"`
 	ProofHeight         uint64                                        `protobuf:"varint,5,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer              github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,6,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer              github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,6,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgChannelOpenAck) Reset()         { *m = MsgChannelOpenAck{} }
@@ -356,7 +356,7 @@ type MsgChannelOpenConfirm struct {
 	ChannelID   string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
 	ProofAck    types.MerkleProof                             `protobuf:"bytes,3,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack" yaml:"proof_ack"`
 	ProofHeight uint64                                        `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgChannelOpenConfirm) Reset()         { *m = MsgChannelOpenConfirm{} }
@@ -432,7 +432,7 @@ func (m *MsgChannelOpenConfirm) GetSigner() github_com_cosmos_cosmos_sdk_types.A
 type MsgChannelCloseInit struct {
 	PortID    string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelID string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
-	Signer    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgChannelCloseInit) Reset()         { *m = MsgChannelCloseInit{} }
@@ -496,7 +496,7 @@ type MsgChannelCloseConfirm struct {
 	ChannelID   string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
 	ProofInit   types.MerkleProof                             `protobuf:"bytes,3,opt,name=proof_init,json=proofInit,proto3" json:"proof_init" yaml:"proof_init"`
 	ProofHeight uint64                                        `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgChannelCloseConfirm) Reset()         { *m = MsgChannelCloseConfirm{} }
@@ -572,7 +572,7 @@ type MsgPacket struct {
 	Packet      Packet                                        `protobuf:"bytes,1,opt,name=packet,proto3" json:"packet"`
 	Proof       types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof"`
 	ProofHeight uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgPacket) Reset()         { *m = MsgPacket{} }
@@ -642,7 +642,7 @@ type MsgTimeout struct {
 	Proof            types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof"`
 	ProofHeight      uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
 	NextSequenceRecv uint64                                        `protobuf:"varint,4,opt,name=next_sequence_recv,json=nextSequenceRecv,proto3" json:"next_sequence_recv,omitempty" yaml:"next_sequence_recv"`
-	Signer           github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer           github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgTimeout) Reset()         { *m = MsgTimeout{} }
@@ -719,7 +719,7 @@ type MsgAcknowledgement struct {
 	Acknowledgement []byte                                        `protobuf:"bytes,2,opt,name=acknowledgement,proto3" json:"acknowledgement,omitempty"`
 	Proof           types.MerkleProof                             `protobuf:"bytes,3,opt,name=proof,proto3" json:"proof"`
 	ProofHeight     uint64                                        `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgAcknowledgement) Reset()         { *m = MsgAcknowledgement{} }

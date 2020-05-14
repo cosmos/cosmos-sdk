@@ -3,8 +3,8 @@
 package v0_36
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	v034distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_34"
 )
 
 // ----------------------------------------------------------------------------

@@ -20,16 +20,16 @@ When users want to interact with an application and make state changes (e.g. sen
 
 Transaction objects are SDK types that implement the `Tx` interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L34-L41
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L34-L41
 
 It contains the following methods:
 
 * **GetMsgs:** unwraps the transaction and returns a list of its message(s) - one transaction may have one or multiple [messages](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
-* **ValidateBasic:** includes lightweight, [*stateless*](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for *`messages`*, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+* **ValidateBasic:** includes lightweight, [*stateless*](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/KiraCore/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for *`messages`*, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/KiraCore/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 * **TxEncoder:** Nodes running the consensus engine (e.g. Tendermint Core) are responsible for gossiping transactions and ordering them into blocks, but only handle them in the generic `[]byte` form. Transactions are always [marshaled](./encoding.md) (encoded) before they are relayed to nodes, which compacts them to facilitate gossiping and helps maintain the consensus engine's separation from from application logic. The Cosmos SDK allows developers to specify any deterministic encoding format for their applications; the default is Amino.
 * **TxDecoder:** [ABCI](https://tendermint.com/docs/spec/abci/) calls from the consensus engine to the application, such as `CheckTx` and `DeliverTx`, are used to process transaction data to determine validity and state changes. Since transactions are passed in as `txBytes []byte`, they need to first be unmarshaled (decoded) using `TxDecoder` before any logic is applied.
 
-The most used implementation of the `Tx` interface is  [`StdTx` from the `auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go). As a developer, using `StdTx` as your transaction format is as simple as importing the `auth` module in your application (which can be done in the [constructor of the application](../basics/app-anatomy.md#constructor-function)) 
+The most used implementation of the `Tx` interface is  [`StdTx` from the `auth` module](https://github.com/KiraCore/cosmos-sdk/blob/master/x/auth/types/stdtx.go). As a developer, using `StdTx` as your transaction format is as simple as importing the `auth` module in your application (which can be done in the [constructor of the application](../basics/app-anatomy.md#constructor-function)) 
 
 ## Transaction Process
 
@@ -47,7 +47,7 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 **`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
 
 `Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
 
@@ -65,7 +65,7 @@ Transactions are first created by end-users through an `appcli tx` command throu
 
 The `TxBuilder` contains data closely related with the processing of transactions.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/txbuilder.go#L18-L31
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/txbuilder.go#L18-L31
 
 - `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
 - `Keybase` that manages the user's keys and is used to perform signing operations.
@@ -81,7 +81,7 @@ The `TxBuilder` contains data closely related with the processing of transaction
 
 The `CLIContext` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `CLIContext` [here](../interfaces/query-lifecycle.md#clicontext).
 
-Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `CLIContext` is used to broadcast transactions.
+Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/KiraCore/cosmos-sdk/tree/master/x/auth/spec) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `CLIContext` is used to broadcast transactions.
 
 ### Handlers
 

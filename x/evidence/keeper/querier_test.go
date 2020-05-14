@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"strings"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/KiraCore/cosmos-sdk/codec/types"
 
-	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/KiraCore/cosmos-sdk/std"
 
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

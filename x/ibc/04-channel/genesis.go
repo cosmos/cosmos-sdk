@@ -1,7 +1,7 @@
 package channel
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the ibc channel submodule's state from a provided genesis

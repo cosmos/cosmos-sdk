@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/exported"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
 )
 
 type EvidenceUnmarshaler interface {

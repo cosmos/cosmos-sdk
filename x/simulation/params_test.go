@@ -9,8 +9,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	simtypes "github.com/KiraCore/cosmos-sdk/types/simulation"
 )
 
 func TestParamChange(t *testing.T) {

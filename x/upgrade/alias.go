@@ -1,8 +1,8 @@
 package upgrade
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/crypto/hd"
+	"github.com/KiraCore/cosmos-sdk/types"
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/assert"

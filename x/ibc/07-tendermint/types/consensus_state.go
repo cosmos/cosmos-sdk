@@ -5,10 +5,10 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ConsensusState defines a Tendermint consensus state

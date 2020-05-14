@@ -4,12 +4,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/codec"
 )
 
 // GetPlanCmd returns the query upgrade plan command

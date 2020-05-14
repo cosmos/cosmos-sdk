@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	"github.com/cosmos/cosmos-sdk/x/capability/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	"github.com/KiraCore/cosmos-sdk/x/capability/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/capability/types"
+	"github.com/KiraCore/cosmos-sdk/x/staking"
 )
 
 type KeeperTestSuite struct {

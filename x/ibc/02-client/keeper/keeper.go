@@ -7,15 +7,15 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/store/prefix"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client

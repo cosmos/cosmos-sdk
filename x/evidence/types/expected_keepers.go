@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	stakingexported "github.com/KiraCore/cosmos-sdk/x/staking/exported"
 )
 
 type (

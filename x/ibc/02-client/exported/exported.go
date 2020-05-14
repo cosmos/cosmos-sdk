@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	evidenceexported "github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	connectionexported "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/exported"
+	channelexported "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientState defines the required common functions for light clients.

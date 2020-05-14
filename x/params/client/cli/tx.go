@@ -7,16 +7,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/tx"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/version"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	govtypes "github.com/KiraCore/cosmos-sdk/x/gov/types"
+	paramscutils "github.com/KiraCore/cosmos-sdk/x/params/client/utils"
+	paramproposal "github.com/KiraCore/cosmos-sdk/x/params/types/proposal"
 )
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
@@ -102,7 +102,7 @@ Where proposal.json contains:
 // change proposal transaction.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param-change [proposal-file]",

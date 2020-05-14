@@ -5,9 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // query routes supported by the IBC client Querier

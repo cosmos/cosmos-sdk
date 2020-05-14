@@ -3,7 +3,7 @@ package keyring
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/KiraCore/cosmos-sdk/crypto/hd"
 )
 
 // Language is a language to create the BIP 39 mnemonic in.

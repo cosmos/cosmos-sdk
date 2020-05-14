@@ -14,7 +14,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/KiraCore/cosmos-sdk/crypto/hd"
 )
 
 type addrData struct {

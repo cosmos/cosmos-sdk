@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 const (

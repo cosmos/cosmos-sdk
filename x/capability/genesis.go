@@ -1,7 +1,7 @@
 package capability
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

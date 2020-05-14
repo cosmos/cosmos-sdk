@@ -18,7 +18,7 @@ of errors is handled via the `types/errors` package.
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.38.1/x/distribution/types/errors.go#L1-L21
++++ https://github.com/KiraCore/cosmos-sdk/blob/v0.38.1/x/distribution/types/errors.go#L1-L21
 
 Each custom module error must provide the codespace, which is typically the module name
 (e.g. "distribution") and is unique per module, and a uint32 code. Together, the codespace and code
@@ -38,7 +38,7 @@ execution.
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.38.1/x/distribution/keeper/querier.go#L62-L80
++++ https://github.com/KiraCore/cosmos-sdk/blob/v0.38.1/x/distribution/keeper/querier.go#L62-L80
 
 Regardless if an error is wrapped or not, the SDK's `errors` package provides an API to determine if
 an error is of a particular kind via `Is`.

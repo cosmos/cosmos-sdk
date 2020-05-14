@@ -6,8 +6,8 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
@@ -36,9 +36,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MsgCreateValidator struct {
 	Description       Description                                   `protobuf:"bytes,1,opt,name=description,proto3" json:"description"`
 	Commission        CommissionRates                               `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission"`
-	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int        `protobuf:"bytes,3,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
-	DelegatorAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress  github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,5,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int        `protobuf:"bytes,3,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
+	DelegatorAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress  github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,5,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Pubkey            string                                        `protobuf:"bytes,6,opt,name=pubkey,proto3" json:"pubkey,omitempty"`
 	Value             types.Coin                                    `protobuf:"bytes,7,opt,name=value,proto3" json:"value"`
 }
@@ -121,14 +121,14 @@ func (m *MsgCreateValidator) GetValue() types.Coin {
 // MsgEditValidator defines an SDK message for editing an existing validator.
 type MsgEditValidator struct {
 	Description      Description                                   `protobuf:"bytes,1,opt,name=description,proto3" json:"description"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"address"`
 	// We pass a reference to the new commission rate and min self delegation as
 	// it's not mandatory to update. If not updated, the deserialized rate will be
 	// zero with no way to distinguish if an update was intended.
 	//
 	// REF: #2373
-	CommissionRate    *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=commission_rate,json=commissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"commission_rate,omitempty" yaml:"commission_rate"`
-	MinSelfDelegation *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation,omitempty" yaml:"min_self_delegation"`
+	CommissionRate    *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=commission_rate,json=commissionRate,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"commission_rate,omitempty" yaml:"commission_rate"`
+	MinSelfDelegation *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"min_self_delegation,omitempty" yaml:"min_self_delegation"`
 }
 
 func (m *MsgEditValidator) Reset()         { *m = MsgEditValidator{} }
@@ -181,8 +181,8 @@ func (m *MsgEditValidator) GetValidatorAddress() github_com_cosmos_cosmos_sdk_ty
 // MsgDelegate defines an SDK message for performing a delegation from a
 // delegate to a validator.
 type MsgDelegate struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Amount           types.Coin                                    `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
@@ -243,9 +243,9 @@ func (m *MsgDelegate) GetAmount() types.Coin {
 // MsgBeginRedelegate defines an SDK message for performing a redelegation from
 // a delegate and source validator to a destination validator.
 type MsgBeginRedelegate struct {
-	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`
-	ValidatorDstAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=validator_dst_address,json=validatorDstAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_dst_address,omitempty" yaml:"validator_dst_address"`
+	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`
+	ValidatorDstAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=validator_dst_address,json=validatorDstAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_dst_address,omitempty" yaml:"validator_dst_address"`
 	Amount              types.Coin                                    `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount"`
 }
 
@@ -313,8 +313,8 @@ func (m *MsgBeginRedelegate) GetAmount() types.Coin {
 // MsgUndelegate defines an SDK message for performing an undelegation from a
 // delegate and a validator.
 type MsgUndelegate struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Amount           types.Coin                                    `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
@@ -429,9 +429,9 @@ func (m *HistoricalInfo) GetValset() []Validator {
 // CommissionRates defines the initial commission rates to be used for creating
 // a validator.
 type CommissionRates struct {
-	Rate          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate"`
-	MaxRate       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_rate" yaml:"max_rate"`
-	MaxChangeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_change_rate" yaml:"max_change_rate"`
+	Rate          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"rate"`
+	MaxRate       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"max_rate" yaml:"max_rate"`
+	MaxChangeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"max_change_rate" yaml:"max_change_rate"`
 }
 
 func (m *CommissionRates) Reset()      { *m = CommissionRates{} }
@@ -595,17 +595,17 @@ func (m *Description) GetDetails() string {
 // delegated divided by the current exchange rate. Voting power can be
 // calculated as total bonded shares multiplied by exchange rate.
 type Validator struct {
-	OperatorAddress   github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"operator_address,omitempty" yaml:"operator_address"`
+	OperatorAddress   github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"operator_address,omitempty" yaml:"operator_address"`
 	ConsensusPubkey   string                                        `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty" yaml:"consensus_pubkey"`
 	Jailed            bool                                          `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
-	Status            github_com_cosmos_cosmos_sdk_types.BondStatus `protobuf:"varint,4,opt,name=status,proto3,casttype=github.com/cosmos/cosmos-sdk/types.BondStatus" json:"status,omitempty"`
-	Tokens            github_com_cosmos_cosmos_sdk_types.Int        `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokens"`
-	DelegatorShares   github_com_cosmos_cosmos_sdk_types.Dec        `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"delegator_shares" yaml:"delegator_shares"`
+	Status            github_com_cosmos_cosmos_sdk_types.BondStatus `protobuf:"varint,4,opt,name=status,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.BondStatus" json:"status,omitempty"`
+	Tokens            github_com_cosmos_cosmos_sdk_types.Int        `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"tokens"`
+	DelegatorShares   github_com_cosmos_cosmos_sdk_types.Dec        `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"delegator_shares" yaml:"delegator_shares"`
 	Description       Description                                   `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
 	UnbondingHeight   int64                                         `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty" yaml:"unbonding_height"`
 	UnbondingTime     time.Time                                     `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time" yaml:"unbonding_time"`
 	Commission        Commission                                    `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
-	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int        `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
+	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int        `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
 }
 
 func (m *Validator) Reset()      { *m = Validator{} }
@@ -644,8 +644,8 @@ var xxx_messageInfo_Validator proto.InternalMessageInfo
 // It is intended to be used as a marshalable pointer. For example, a DVPair can
 // be used to construct the key to getting an UnbondingDelegation from state.
 type DVPair struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 }
 
 func (m *DVPair) Reset()      { *m = DVPair{} }
@@ -744,9 +744,9 @@ func (m *DVPairs) GetPairs() []DVPair {
 // example, a DVVTriplet can be used to construct the key to getting a
 // Redelegation from state.
 type DVVTriplet struct {
-	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`
-	ValidatorDstAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=validator_dst_address,json=validatorDstAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_dst_address,omitempty" yaml:"validator_dst_address"`
+	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`
+	ValidatorDstAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=validator_dst_address,json=validatorDstAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_dst_address,omitempty" yaml:"validator_dst_address"`
 }
 
 func (m *DVVTriplet) Reset()      { *m = DVVTriplet{} }
@@ -851,9 +851,9 @@ func (m *DVVTriplets) GetTriplets() []DVVTriplet {
 // owned by one delegator, and is associated with the voting power of one
 // validator.
 type Delegation struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	Shares           github_com_cosmos_cosmos_sdk_types.Dec        `protobuf:"bytes,3,opt,name=shares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	Shares           github_com_cosmos_cosmos_sdk_types.Dec        `protobuf:"bytes,3,opt,name=shares,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"shares"`
 }
 
 func (m *Delegation) Reset()      { *m = Delegation{} }
@@ -905,8 +905,8 @@ func (m *Delegation) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.Va
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
 // for a single validator in an time-ordered list
 type UnbondingDelegation struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Entries          []UnbondingDelegationEntry                    `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries"`
 }
 
@@ -967,8 +967,8 @@ func (m *UnbondingDelegation) GetEntries() []UnbondingDelegationEntry {
 type UnbondingDelegationEntry struct {
 	CreationHeight int64                                  `protobuf:"varint,1,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty" yaml:"creation_height"`
 	CompletionTime time.Time                              `protobuf:"bytes,2,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time" yaml:"completion_time"`
-	InitialBalance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
-	Balance        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=balance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"balance"`
+	InitialBalance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
+	Balance        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=balance,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"balance"`
 }
 
 func (m *UnbondingDelegationEntry) Reset()      { *m = UnbondingDelegationEntry{} }
@@ -1021,8 +1021,8 @@ func (m *UnbondingDelegationEntry) GetCompletionTime() time.Time {
 type RedelegationEntry struct {
 	CreationHeight int64                                  `protobuf:"varint,1,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty" yaml:"creation_height"`
 	CompletionTime time.Time                              `protobuf:"bytes,2,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time" yaml:"completion_time"`
-	InitialBalance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
-	SharesDst      github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=shares_dst,json=sharesDst,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares_dst"`
+	InitialBalance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
+	SharesDst      github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=shares_dst,json=sharesDst,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Dec" json:"shares_dst"`
 }
 
 func (m *RedelegationEntry) Reset()      { *m = RedelegationEntry{} }
@@ -1074,9 +1074,9 @@ func (m *RedelegationEntry) GetCompletionTime() time.Time {
 // Redelegation contains the list of a particular delegator's redelegating bonds
 // from a particular source validator to a particular destination validator.
 type Redelegation struct {
-	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`
-	ValidatorDstAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=validator_dst_address,json=validatorDstAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_dst_address,omitempty" yaml:"validator_dst_address"`
+	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`
+	ValidatorDstAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=validator_dst_address,json=validatorDstAddress,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"validator_dst_address,omitempty" yaml:"validator_dst_address"`
 	Entries             []RedelegationEntry                           `protobuf:"bytes,4,rep,name=entries,proto3" json:"entries"`
 }
 

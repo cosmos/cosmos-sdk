@@ -1,8 +1,8 @@
 package bank
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 const (

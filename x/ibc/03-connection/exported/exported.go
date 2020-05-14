@@ -1,7 +1,7 @@
 package exported
 
 import (
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ConnectionI describes the required methods for a connection.

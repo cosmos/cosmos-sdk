@@ -7,9 +7,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	"github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 )
 
 // RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.

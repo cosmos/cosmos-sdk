@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.x.distribution.v1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option go_package            = "github.com/KiraCore/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "third_party/proto/gogoproto/gogo.proto";
@@ -10,11 +10,11 @@ import "types/types.proto";
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 message MsgSetWithdrawAddress {
   bytes delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   bytes withdraw_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"withdraw_address\""
   ];
 }
@@ -22,11 +22,11 @@ message MsgSetWithdrawAddress {
 // msg struct for delegation withdraw from a single validator
 message MsgWithdrawDelegatorReward {
   bytes delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   bytes validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }
@@ -34,7 +34,7 @@ message MsgWithdrawDelegatorReward {
 // msg struct for validator withdraw
 message MsgWithdrawValidatorCommission {
   bytes validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }
@@ -44,9 +44,9 @@ message MsgWithdrawValidatorCommission {
 message MsgFundCommunityPool {
   repeated cosmos_sdk.v1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"
   ];
-  bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes depositor = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // Params defines the set of distribution parameters.
@@ -54,17 +54,17 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
   string community_tax                = 1 [
     (gogoproto.moretags)   = "yaml:\"community_tax\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   string base_proposer_reward = 2 [
     (gogoproto.moretags)   = "yaml:\"base_proposer_reward\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   string bonus_proposer_reward = 3 [
     (gogoproto.moretags)   = "yaml:\"bonus_proposer_reward\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
@@ -85,7 +85,7 @@ message Params {
 message ValidatorHistoricalRewards {
   repeated cosmos_sdk.v1.DecCoin cumulative_reward_ratio = 1 [
     (gogoproto.moretags)     = "yaml:\"cumulative_reward_ratio\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
   uint32 reference_count = 2 [(gogoproto.moretags) = "yaml:\"reference_count\""];
@@ -96,7 +96,7 @@ message ValidatorHistoricalRewards {
 // as long as the validator's tokens remain constant
 message ValidatorCurrentRewards {
   repeated cosmos_sdk.v1.DecCoin rewards = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
   uint64 period = 2;
@@ -106,7 +106,7 @@ message ValidatorCurrentRewards {
 // kept as a running counter, can be withdrawn at any time
 message ValidatorAccumulatedCommission {
   repeated cosmos_sdk.v1.DecCoin commission = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
 }
@@ -116,7 +116,7 @@ message ValidatorAccumulatedCommission {
 message ValidatorOutstandingRewards {
   repeated cosmos_sdk.v1.DecCoin rewards = 1 [
     (gogoproto.moretags)     = "yaml:\"rewards\"",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
 }
@@ -128,7 +128,7 @@ message ValidatorOutstandingRewards {
 message ValidatorSlashEvent {
   uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\""];
   string fraction         = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -144,7 +144,7 @@ message ValidatorSlashEvents {
 message FeePool {
   repeated cosmos_sdk.v1.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.DecCoins",
     (gogoproto.moretags)     = "yaml:\"community_pool\""
   ];
 }
@@ -155,10 +155,10 @@ message CommunityPoolSpendProposal {
   option (gogoproto.goproto_getters)  = false;
   string   title                      = 1;
   string   description                = 2;
-  bytes    recipient = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes    recipient = 3 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin amount = 4 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"
   ];
 }
 
@@ -173,7 +173,7 @@ message DelegatorStartingInfo {
   uint64 previous_period = 1 [(gogoproto.moretags) = "yaml:\"previous_period\""];
   string stake           = 2 [
     (gogoproto.moretags)   = "yaml:\"stake\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   uint64 height = 3

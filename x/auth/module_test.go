@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

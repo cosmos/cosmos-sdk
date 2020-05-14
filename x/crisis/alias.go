@@ -1,8 +1,8 @@
 package crisis
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/KiraCore/cosmos-sdk/x/crisis/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/crisis/types"
 )
 
 const (

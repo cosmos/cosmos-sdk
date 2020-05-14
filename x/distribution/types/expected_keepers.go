@@ -1,10 +1,10 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	"github.com/KiraCore/cosmos-sdk/x/staking"
+	stakingexported "github.com/KiraCore/cosmos-sdk/x/staking/exported"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -14,7 +14,7 @@ type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) authexported.ModuleAccountI
 
-	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+	// TODO remove with genesis 2-phases refactor https://github.com/KiraCore/cosmos-sdk/issues/2862
 	SetModuleAccount(sdk.Context, authexported.ModuleAccountI)
 }
 

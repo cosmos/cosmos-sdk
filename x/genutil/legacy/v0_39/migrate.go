@@ -1,12 +1,12 @@
 package v039
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
-	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
-	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
-	v039bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_39"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	v038auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_38"
+	v039auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_39"
+	v038bank "github.com/KiraCore/cosmos-sdk/x/bank/legacy/v0_38"
+	v039bank "github.com/KiraCore/cosmos-sdk/x/bank/legacy/v0_39"
+	"github.com/KiraCore/cosmos-sdk/x/genutil"
 )
 
 func Migrate(appState genutil.AppMap) genutil.AppMap {

@@ -3,7 +3,7 @@
 package v0_36
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 const ModuleName = "supply"

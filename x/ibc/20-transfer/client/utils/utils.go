@@ -5,9 +5,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	channeltypes "github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // QueryNextSequenceRecv queries the store to get the next receive sequence and

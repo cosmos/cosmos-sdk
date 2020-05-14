@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/KiraCore/cosmos-sdk/tests/mocks"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 var errFoo = errors.New("dummy")

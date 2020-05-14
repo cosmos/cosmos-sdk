@@ -79,11 +79,11 @@ other peers. Since the underlying consensus engine is agnostic to the applicatio
 it only accepts transactions in the form of raw bytes. The encoding is done by an
 object called `TxEncoder` and the decoding by an object called `TxDecoder`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L45-L49
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L45-L49
 
-A standard implementation of both these objects can be found in the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth):
+A standard implementation of both these objects can be found in the [`auth` module](https://github.com/KiraCore/cosmos-sdk/blob/master/x/auth):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L241-L266
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L241-L266
 
 ### Gogoproto
 

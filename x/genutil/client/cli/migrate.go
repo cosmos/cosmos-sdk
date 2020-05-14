@@ -9,14 +9,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
-	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
-	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
-	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/server"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/version"
+	extypes "github.com/KiraCore/cosmos-sdk/x/genutil"
+	v036 "github.com/KiraCore/cosmos-sdk/x/genutil/legacy/v0_36"
+	v038 "github.com/KiraCore/cosmos-sdk/x/genutil/legacy/v0_38"
+	v039 "github.com/KiraCore/cosmos-sdk/x/genutil/legacy/v0_39"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 
 // Allow applications to extend and modify the migration process.
 //
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
+// Ref: https://github.com/KiraCore/cosmos-sdk/issues/5041
 var migrationMap = extypes.MigrationMap{
 	"v0.36": v036.Migrate,
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible

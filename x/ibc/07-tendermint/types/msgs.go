@@ -6,13 +6,13 @@ import (
 	tmmath "github.com/tendermint/tendermint/libs/math"
 	lite "github.com/tendermint/tendermint/lite2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	evidenceexported "github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	evidencetypes "github.com/KiraCore/cosmos-sdk/x/evidence/types"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // Message types for the IBC client

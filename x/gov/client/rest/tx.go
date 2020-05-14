@@ -6,13 +6,13 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/tx"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	gcutils "github.com/KiraCore/cosmos-sdk/x/gov/client/utils"
+	"github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
 
 func registerTxHandlers(cliCtx context.CLIContext, txg tx.Generator, r *mux.Router, newMsgFn func() types.MsgSubmitProposalI, phs []ProposalRESTHandler) {

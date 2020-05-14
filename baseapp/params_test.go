@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/KiraCore/cosmos-sdk/baseapp"
 )
 
 func TestValidateBlockParams(t *testing.T) {

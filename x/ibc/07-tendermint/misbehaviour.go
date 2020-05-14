@@ -7,10 +7,10 @@ import (
 
 	lite "github.com/tendermint/tendermint/lite2"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting

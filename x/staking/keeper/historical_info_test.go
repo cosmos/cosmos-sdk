@@ -4,11 +4,11 @@ import (
 	"sort"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/KiraCore/cosmos-sdk/simapp"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

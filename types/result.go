@@ -9,7 +9,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/codec"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )

@@ -39,7 +39,7 @@ This getter function creates the command for the Buy Name transaction. It does t
 
 Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `auth` `GetTxCmd()` function, which adds the `Sign` and `MultiSign` commands. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/67f6b021180c7ef0bcf25b6597a629aca27766b8/x/auth/client/cli/tx.go#L11-L25
++++ https://github.com/KiraCore/cosmos-sdk/blob/67f6b021180c7ef0bcf25b6597a629aca27766b8/x/auth/client/cli/tx.go#L11-L25
 
 An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
 
@@ -74,7 +74,7 @@ For full details on flags, visit the [Cobra Documentation](https://github.com/sp
 
 For example, the SDK `./client/flags` package includes a `PostCommands()` function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/flags/flags.go#L85-L116
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/flags/flags.go#L85-L116
 
 Here is an example of how to add a flag using the `from` flag from this function.
 

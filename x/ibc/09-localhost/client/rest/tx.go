@@ -5,11 +5,11 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/rest"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

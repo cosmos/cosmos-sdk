@@ -6,9 +6,9 @@ package mocks
 
 import (
 	json "encoding/json"
-	context "github.com/cosmos/cosmos-sdk/client/context"
-	codec "github.com/cosmos/cosmos-sdk/codec"
-	types "github.com/cosmos/cosmos-sdk/types"
+	context "github.com/KiraCore/cosmos-sdk/client/context"
+	codec "github.com/KiraCore/cosmos-sdk/codec"
+	types "github.com/KiraCore/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 	mux "github.com/gorilla/mux"
 	cobra "github.com/spf13/cobra"

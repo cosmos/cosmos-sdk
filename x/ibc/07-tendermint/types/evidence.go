@@ -9,11 +9,11 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	evidenceexported "github.com/KiraCore/cosmos-sdk/x/evidence/exported"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 var (

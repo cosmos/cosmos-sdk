@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"fmt"
 
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // TestConnOpenInit - Chain A (ID #1) initializes (INIT state) a connection with

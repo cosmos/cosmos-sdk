@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 var (

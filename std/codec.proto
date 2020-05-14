@@ -15,11 +15,11 @@ import "x/staking/types/types.proto";
 import "x/params/types/proposal/types.proto";
 import "x/upgrade/types/types.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/std";
+option go_package = "github.com/KiraCore/cosmos-sdk/std";
 
 // Account defines the application-level Account type.
 message Account {
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/auth/exported.Account";
+  option (cosmos_proto.interface_type) = "*github.com/KiraCore/cosmos-sdk/x/auth/exported.Account";
 
   // sum defines a list of all acceptable concrete Account implementations.
   oneof sum {
@@ -54,7 +54,7 @@ message Proposal {
 // governance proposal.
 message Content {
   option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/gov/types.Content";
+  option (cosmos_proto.interface_type) = "*github.com/KiraCore/cosmos-sdk/x/gov/types.Content";
 
   // sum defines a set of all acceptable concrete governance proposal Content
   // types.
@@ -80,7 +80,7 @@ message Transaction {
 // Message defines the set of valid concrete message types that can be used to
 // construct a transaction.
 message Message {
-  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
+  option (cosmos_proto.interface_type) = "github.com/KiraCore/cosmos-sdk/types.Msg";
 
   // sum defines the set of all allowed valid messages defined in modules.
   oneof sum {
@@ -118,7 +118,7 @@ message StdFee {
   option (gogoproto.equal)           = true;
 
   repeated cosmos_sdk.v1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"];
   uint64 gas = 2;
 }
 

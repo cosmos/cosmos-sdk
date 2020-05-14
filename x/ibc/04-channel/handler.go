@@ -1,10 +1,10 @@
 package channel
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit

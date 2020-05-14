@@ -47,7 +47,7 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L54-L108
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L54-L108
 
 Let us go through the most important components.
 
@@ -69,7 +69,7 @@ the interface between the application and the underlying consensus engine.
 - [Query Router](#query-routing): The `query router` facilitates the routing of queries to the
 appropriate module for it to be processed. These `queries` are not ABCI messages themselves, but they
 are relayed to the application from the underlying consensus engine via the ABCI message [`Query`](#query).
-- [`TxDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
+- [`TxDecoder`](https://godoc.org/github.com/KiraCore/cosmos-sdk/types#TxDecoder): It is used to decode
 raw transaction bytes relayed by the underlying Tendermint engine.
 - [`ParamStore`](#paramstore): The parameter store used to get and set application consensus parameters.
 - [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,
@@ -114,7 +114,7 @@ func NewBaseApp(
 ```
 
 The `BaseApp` constructor function is pretty straightforward. The only thing worth noting is the
-possibility to provide additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/options.go)
+possibility to provide additional [`options`](https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/options.go)
 to the `BaseApp`, which will execute them in order. The `options` are generally `setter` functions
 for important parameters, like `SetPruning()` to set pruning options or `SetMinGasPrices()` to set
 the node's `min-gas-prices`.
@@ -194,7 +194,7 @@ When messages and queries are received by the application, they must be routed t
 
 [`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a `router` which maps `paths` (`string`) to the appropriate module [`handler`](../building-modules/handler.md) using the `.Route(ctx sdk.Context, path string)` function. Usually, the `path` is the name of the module.
 
-The [default router included in baseapp](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) is stateless.  However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes.  For this reason, the `sdk.Context` is also passed into the `Route` function of the [Router interface](https://github.com/cosmos/cosmos-sdk/blob/master/types/router.go#L12).  For a stateless router that doesn't want to make use of this, can just ignore the ctx.
+The [default router included in baseapp](https://github.com/KiraCore/cosmos-sdk/blob/master/baseapp/router.go) is stateless.  However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes.  For this reason, the `sdk.Context` is also passed into the `Route` function of the [Router interface](https://github.com/KiraCore/cosmos-sdk/blob/master/types/router.go#L12).  For a stateless router that doesn't want to make use of this, can just ignore the ctx.
 
 The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
 
@@ -263,7 +263,7 @@ The response contains:
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
 - `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction. Next is an example:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/ante/basic.go#L104
+  +++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/ante/basic.go#L104
 - `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
@@ -289,7 +289,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/types/gas.go#L142-L150
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/types/gas.go#L142-L150
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails. 
 
@@ -316,7 +316,7 @@ After that, `RunTx()` calls `ValidateBasic()` on each `message`in the `Tx`, whic
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L587
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L587
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK. 
 
@@ -326,7 +326,7 @@ Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `messages
 
 The `AnteHandler` is a special handler that implements the `anteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/handler.go#L8
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/handler.go#L8
 
 The `AnteHandler` is theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
 
@@ -334,7 +334,7 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 - Perform preliminary *stateful* validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees. 
 - Play a role in the incentivisation of stakeholders via the collection of transaction fees. 
 
-`baseapp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/ante.go).
+`baseapp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/KiraCore/cosmos-sdk/blob/master/x/auth/ante/ante.go).
 
 Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`. 
 
@@ -361,7 +361,7 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls th
 The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 - Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function. 
-  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L387-L397
+  +++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L387-L397
 This function also resets the [main gas meter](../basics/gas-fees.md#main-gas-meter).
 - Initialize the [block gas meter](../basics/gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters. 
 - Run the application's [`beginBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.

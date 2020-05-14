@@ -5,20 +5,20 @@ package std
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types9 "github.com/cosmos/cosmos-sdk/types"
-	github_com_cosmos_cosmos_sdk_x_auth_exported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	types "github.com/cosmos/cosmos-sdk/x/auth/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	types5 "github.com/cosmos/cosmos-sdk/x/bank/types"
-	types6 "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	types4 "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	github_com_cosmos_cosmos_sdk_x_gov_types "github.com/cosmos/cosmos-sdk/x/gov/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/gov/types"
-	proposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	types7 "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	types8 "github.com/cosmos/cosmos-sdk/x/staking/types"
-	types3 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types9 "github.com/KiraCore/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_x_auth_exported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	types "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	types1 "github.com/KiraCore/cosmos-sdk/x/auth/vesting/types"
+	types5 "github.com/KiraCore/cosmos-sdk/x/bank/types"
+	types6 "github.com/KiraCore/cosmos-sdk/x/crisis/types"
+	types4 "github.com/KiraCore/cosmos-sdk/x/distribution/types"
+	github_com_cosmos_cosmos_sdk_x_gov_types "github.com/KiraCore/cosmos-sdk/x/gov/types"
+	types2 "github.com/KiraCore/cosmos-sdk/x/gov/types"
+	proposal "github.com/KiraCore/cosmos-sdk/x/params/types/proposal"
+	types7 "github.com/KiraCore/cosmos-sdk/x/slashing/types"
+	types8 "github.com/KiraCore/cosmos-sdk/x/staking/types"
+	types3 "github.com/KiraCore/cosmos-sdk/x/upgrade/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/regen-network/cosmos-proto"
@@ -745,7 +745,7 @@ func (m *SignDoc) GetMsgs() []Message {
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
 	Gas    uint64                                   `protobuf:"varint,2,opt,name=gas,proto3" json:"gas,omitempty"`
 }
 

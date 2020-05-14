@@ -1,8 +1,8 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 // ClientKeeper expected account IBC client keeper

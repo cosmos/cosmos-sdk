@@ -1,8 +1,8 @@
 package evidence
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/evidence/types"
 )
 
 const (

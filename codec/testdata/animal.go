@@ -6,7 +6,7 @@ package testdata
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 )
 
 type Animal interface {

@@ -6,7 +6,7 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
@@ -31,7 +31,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgUnjail - struct for unjailing jailed validator
 type MsgUnjail struct {
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"address" yaml:"address"`
+	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ValAddress" json:"address" yaml:"address"`
 }
 
 func (m *MsgUnjail) Reset()         { *m = MsgUnjail{} }
@@ -76,7 +76,7 @@ func (m *MsgUnjail) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAdd
 
 // ValidatorSigningInfo defines the signing info for a validator
 type ValidatorSigningInfo struct {
-	Address github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"address,omitempty"`
+	Address github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.ConsAddress" json:"address,omitempty"`
 	// height at which validator was first a candidate OR was unjailed
 	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty" yaml:"start_height"`
 	// index offset into signed block bit array

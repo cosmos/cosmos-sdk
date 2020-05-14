@@ -1,8 +1,8 @@
 package v039
 
 import (
-	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
-	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_38"
+	v038auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_38"
+	v038bank "github.com/KiraCore/cosmos-sdk/x/bank/legacy/v0_38"
 )
 
 // Migrate accepts exported x/auth and x/bank genesis state from v0.38 and migrates

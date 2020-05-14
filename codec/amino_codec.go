@@ -3,7 +3,7 @@ package codec
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 )
 
 // AminoCodec defines a codec that utilizes Amino for both binary and JSON

@@ -1,8 +1,8 @@
 package types_test
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	ibctmtypes "github.com/KiraCore/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {

@@ -5,15 +5,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/client/tx"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 // NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
@@ -73,7 +73,7 @@ func NewSendTxCmd(m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever) *
 // GetTxCmd returns the transaction commands for this module
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -91,7 +91,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // SendTxCmd will create a send tx and sign it with the given key.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",

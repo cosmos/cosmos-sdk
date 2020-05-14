@@ -10,16 +10,16 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types/module"
+	simtypes "github.com/KiraCore/cosmos-sdk/types/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/client/cli"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/client/rest"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/simulation"
+	"github.com/KiraCore/cosmos-sdk/x/slashing/types"
+	stakingkeeper "github.com/KiraCore/cosmos-sdk/x/staking/keeper"
 )
 
 var (

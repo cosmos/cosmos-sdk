@@ -3,11 +3,11 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/KiraCore/cosmos-sdk/codec/types"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/KiraCore/cosmos-sdk/codec/testdata"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {

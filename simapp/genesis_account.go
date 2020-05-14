@@ -3,10 +3,10 @@ package simapp
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
 )
 
 var _ authexported.GenesisAccount = (*SimGenesisAccount)(nil)

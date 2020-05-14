@@ -3,8 +3,8 @@ package types
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	stakingtypes "github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 // StakingKeeper expected staking keeper

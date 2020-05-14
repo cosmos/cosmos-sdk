@@ -3,7 +3,7 @@
 package v0_36
 
 import (
-	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
+	v034auth "github.com/KiraCore/cosmos-sdk/x/auth/legacy/v0_34"
 )
 
 // Migrate accepts exported genesis state from v0.34 and migrates it to v0.36

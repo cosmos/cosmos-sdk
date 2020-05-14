@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.x.ibc.transfer.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types";
+option go_package = "github.com/KiraCore/cosmos-sdk/x/ibc/20-transfer/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";
@@ -24,11 +24,11 @@ message MsgTransfer {
   // the tokens to be transferred
   repeated cosmos_sdk.v1.Coin amount = 4 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"
   ];
   // the sender address
   bytes sender = 5 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+    (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"
   ];
   // the recipient address on the destination chain
   string receiver = 6;
@@ -40,7 +40,7 @@ message FungibleTokenPacketData {
   // the tokens to be transferred
   repeated cosmos_sdk.v1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"
   ];
   // the sender address
   string sender = 2;

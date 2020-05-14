@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/types"
-	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
+	"github.com/KiraCore/cosmos-sdk/types"
+	v034distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_34"
 
 	"github.com/stretchr/testify/require"
 )

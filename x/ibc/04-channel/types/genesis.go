@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // PacketAckCommitment defines the genesis type necessary to retrieve and store

@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/context"
 )
 
 func TestCreateVerifier(t *testing.T) {

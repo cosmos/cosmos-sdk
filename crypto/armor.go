@@ -11,7 +11,7 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
 )
 
 const (

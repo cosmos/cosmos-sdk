@@ -15,7 +15,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/types"
 )
 
 var invalidStrs = []string{

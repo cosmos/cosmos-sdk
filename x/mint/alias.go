@@ -1,8 +1,8 @@
 package mint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/KiraCore/cosmos-sdk/x/mint/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/mint/types"
 )
 
 const (

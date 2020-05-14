@@ -3,7 +3,7 @@ package evidence
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the evidence module's state from a provided genesis

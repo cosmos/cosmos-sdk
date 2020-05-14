@@ -1,10 +1,10 @@
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibcante "github.com/cosmos/cosmos-sdk/x/ibc/ante"
-	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/types"
+	ibcante "github.com/KiraCore/cosmos-sdk/x/ibc/ante"
+	ibckeeper "github.com/KiraCore/cosmos-sdk/x/ibc/keeper"
 )
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

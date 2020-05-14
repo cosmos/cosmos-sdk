@@ -13,10 +13,10 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	"github.com/KiraCore/cosmos-sdk/crypto/keyring"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // CLIContext implements a typical CLI context created in SDK modules for
@@ -302,7 +302,7 @@ func (ctx CLIContext) Println(toPrint interface{}) error {
 // because this function will panic on marshaling errors.
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 	var (
 		out []byte

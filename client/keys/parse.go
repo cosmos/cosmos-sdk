@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/KiraCore/cosmos-sdk/types/bech32"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 func bech32Prefixes(config *sdk.Config) []string {

@@ -15,7 +15,7 @@ A `Querier` designates a function that processes [`queries`](./messages-and-quer
 
 The `querier` type defined in the Cosmos SDK specifies the typical structure of a `querier` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/queryable.go#L6
++++ https://github.com/KiraCore/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/queryable.go#L6
 
 Let us break it down:
 

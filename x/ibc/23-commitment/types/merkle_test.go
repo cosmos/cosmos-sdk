@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

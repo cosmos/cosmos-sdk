@@ -7,6 +7,6 @@ for dir in $proto_dirs; do
   protoc \
   -I. \
   --gocosmos_out=plugins=interfacetype,paths=source_relative,\
-Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
+Mgoogle/protobuf/any.proto=github.com/KiraCore/cosmos-sdk/codec/types:. \
   $(find "${dir}" -name '*.proto')
 done

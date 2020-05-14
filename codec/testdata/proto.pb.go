@@ -5,7 +5,7 @@ package testdata
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types "github.com/KiraCore/cosmos-sdk/codec/types"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"

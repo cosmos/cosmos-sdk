@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // ClientConsensusStates defines all the stored consensus states for a given client.

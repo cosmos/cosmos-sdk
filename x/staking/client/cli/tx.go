@@ -13,16 +13,16 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/client/tx"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/version"
+	"github.com/KiraCore/cosmos-sdk/x/auth"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 //__________________________________________________________
@@ -441,7 +441,7 @@ func PrepareFlagsForTxCreateValidator(
 // GetTxCmd returns the transaction commands for this module
 //
 // TODO: Remove once client-side Protobuf migration has been completed.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+// ref: https://github.com/KiraCore/cosmos-sdk/issues/5864
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	stakingTxCmd := &cobra.Command{

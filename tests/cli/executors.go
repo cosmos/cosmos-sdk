@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/KiraCore/cosmos-sdk/tests"
 )
 
 func ExecuteWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {

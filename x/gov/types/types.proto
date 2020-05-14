@@ -5,7 +5,7 @@ import "types/types.proto";
 import "third_party/proto/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package                       = "github.com/KiraCore/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 option (gogoproto.goproto_getters_all)  = false;
@@ -22,10 +22,10 @@ message MsgSubmitProposalBase {
 
   repeated cosmos_sdk.v1.Coin initial_deposit = 1 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
-  bytes proposer = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes proposer = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgVote defines a message to cast a vote
@@ -37,7 +37,7 @@ message MsgVote {
     (gogoproto.moretags)   = "yaml:\"proposal_id\"",
     (gogoproto.jsontag)    = "proposal_id"
   ];
-  bytes      voter  = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes      voter  = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
   VoteOption option = 3;
 }
 
@@ -50,9 +50,9 @@ message MsgDeposit {
     (gogoproto.moretags)   = "yaml:\"proposal_id\"",
     (gogoproto.jsontag)    = "proposal_id"
   ];
-  bytes    depositor                 = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes    depositor                 = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"];
 }
 
 // VoteOption defines a vote option
@@ -87,9 +87,9 @@ message Deposit {
   option (gogoproto.equal) = true;
 
   uint64   proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins"];
 }
 
 // ProposalBase defines the core field members of a governance proposal. It includes
@@ -111,7 +111,7 @@ message ProposalBase {
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"deposit_end_time\""];
   repeated cosmos_sdk.v1.Coin total_deposit = 6 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.castrepeated) = "github.com/KiraCore/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"total_deposit\""
   ];
   google.protobuf.Timestamp voting_start_time = 7
@@ -144,11 +144,11 @@ enum ProposalStatus {
 message TallyResult {
   option (gogoproto.equal) = true;
 
-  string yes     = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string abstain = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string no      = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string yes     = 1 [(gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string abstain = 2 [(gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string no      = 3 [(gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string no_with_veto = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/KiraCore/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"no_with_veto\""
   ];
@@ -160,6 +160,6 @@ message Vote {
   option (gogoproto.equal) = true;
 
   uint64     proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes      voter       = 2 [(gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"];
   VoteOption option      = 3;
 }

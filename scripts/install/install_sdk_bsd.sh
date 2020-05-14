@@ -14,7 +14,7 @@
 
 # change this to a specific release or branch
 set BRANCH=master
-set REPO=github.com/cosmos/cosmos-sdk
+set REPO=github.com/KiraCore/cosmos-sdk
 
 set GO_VERSION=1.12.5
 

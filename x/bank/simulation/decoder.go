@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
+	"github.com/KiraCore/cosmos-sdk/x/bank/exported"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank/types"
 )
 
 type SupplyUnmarshaller interface {

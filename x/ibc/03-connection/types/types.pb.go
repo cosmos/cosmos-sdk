@@ -5,8 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -68,7 +68,7 @@ type MsgConnectionOpenInit struct {
 	ClientID     string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	ConnectionID string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 	Counterparty Counterparty                                  `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenInit) Reset()         { *m = MsgConnectionOpenInit{} }
@@ -145,7 +145,7 @@ type MsgConnectionOpenTry struct {
 	// proof of client consensus state
 	ProofConsensus  types.MerkleProof                             `protobuf:"bytes,7,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus" yaml:"proof_consensus"`
 	ConsensusHeight uint64                                        `protobuf:"varint,8,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty" yaml:"consensus_height"`
-	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,9,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,9,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenTry) Reset()         { *m = MsgConnectionOpenTry{} }
@@ -255,7 +255,7 @@ type MsgConnectionOpenAck struct {
 	// proof of client consensus state
 	ProofConsensus  types.MerkleProof                             `protobuf:"bytes,5,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus" yaml:"proof_consensus"`
 	ConsensusHeight uint64                                        `protobuf:"varint,6,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty" yaml:"consensus_height"`
-	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenAck) Reset()         { *m = MsgConnectionOpenAck{} }
@@ -347,7 +347,7 @@ type MsgConnectionOpenConfirm struct {
 	// proof for the change of the connection state on Chain A: `INIT -> OPEN`
 	ProofAck    types.MerkleProof                             `protobuf:"bytes,2,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack" yaml:"proof_ack"`
 	ProofHeight uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenConfirm) Reset()         { *m = MsgConnectionOpenConfirm{} }

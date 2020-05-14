@@ -6,8 +6,8 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 	proto "github.com/gogo/protobuf/proto"
@@ -115,8 +115,8 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 // assuming it fulfills the Content interface, it must be defined at the
 // application-level and extend MsgSubmitProposalBase.
 type MsgSubmitProposalBase struct {
-	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_deposit" yaml:"initial_deposit"`
-	Proposer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=proposer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"proposer,omitempty"`
+	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"initial_deposit" yaml:"initial_deposit"`
+	Proposer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=proposer,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"proposer,omitempty"`
 }
 
 func (m *MsgSubmitProposalBase) Reset()      { *m = MsgSubmitProposalBase{} }
@@ -154,7 +154,7 @@ var xxx_messageInfo_MsgSubmitProposalBase proto.InternalMessageInfo
 // MsgVote defines a message to cast a vote
 type MsgVote struct {
 	ProposalID uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id" yaml:"proposal_id"`
-	Voter      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
+	Voter      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
 	Option     VoteOption                                    `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos_sdk.x.gov.v1.VoteOption" json:"option,omitempty"`
 }
 
@@ -193,8 +193,8 @@ var xxx_messageInfo_MsgVote proto.InternalMessageInfo
 // MsgDeposit defines a message to submit a deposit to an existing proposal
 type MsgDeposit struct {
 	ProposalID uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id" yaml:"proposal_id"`
-	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *MsgDeposit) Reset()      { *m = MsgDeposit{} }
@@ -271,8 +271,8 @@ var xxx_messageInfo_TextProposal proto.InternalMessageInfo
 // Deposit defines an amount deposited by an account address to an active proposal
 type Deposit struct {
 	ProposalID uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
-	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
+	Amount     github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *Deposit) Reset()      { *m = Deposit{} }
@@ -316,7 +316,7 @@ type ProposalBase struct {
 	FinalTallyResult TallyResult                              `protobuf:"bytes,3,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result" yaml:"final_tally_result"`
 	SubmitTime       time.Time                                `protobuf:"bytes,4,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time" yaml:"submit_time"`
 	DepositEndTime   time.Time                                `protobuf:"bytes,5,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time" yaml:"deposit_end_time"`
-	TotalDeposit     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_deposit" yaml:"total_deposit"`
+	TotalDeposit     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"total_deposit" yaml:"total_deposit"`
 	VotingStartTime  time.Time                                `protobuf:"bytes,7,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time" yaml:"voting_start_time"`
 	VotingEndTime    time.Time                                `protobuf:"bytes,8,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time" yaml:"voting_end_time"`
 }
@@ -356,10 +356,10 @@ var xxx_messageInfo_ProposalBase proto.InternalMessageInfo
 
 // TallyResult defines a standard tally for a proposal
 type TallyResult struct {
-	Yes        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"yes"`
-	Abstain    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"abstain"`
-	No         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no"`
-	NoWithVeto github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no_with_veto" yaml:"no_with_veto"`
+	Yes        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"yes"`
+	Abstain    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"abstain"`
+	No         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"no"`
+	NoWithVeto github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3,customtype=github.com/KiraCore/cosmos-sdk/types.Int" json:"no_with_veto" yaml:"no_with_veto"`
 }
 
 func (m *TallyResult) Reset()      { *m = TallyResult{} }
@@ -398,7 +398,7 @@ var xxx_messageInfo_TallyResult proto.InternalMessageInfo
 // ID, the voter, and the vote option.
 type Vote struct {
 	ProposalID uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
-	Voter      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
+	Voter      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
 	Option     VoteOption                                    `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos_sdk.x.gov.v1.VoteOption" json:"option,omitempty"`
 }
 

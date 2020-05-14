@@ -4,7 +4,7 @@ package v0_38
 // nolint
 
 import (
-	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
+	v036distr "github.com/KiraCore/cosmos-sdk/x/distribution/legacy/v0_36"
 )
 
 // Migrate accepts exported genesis state from v0.36 or v0.37 and migrates it to

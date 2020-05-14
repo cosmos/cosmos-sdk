@@ -77,7 +77,7 @@ aside: false
 
 - **[Module Directory](../x/)**: Module implementations and their respective documentation.
 - **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
-- **[SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
+- **[SDK API Reference](https://godoc.org/github.com/KiraCore/cosmos-sdk)**: Godocs of the Cosmos SDK.
 - **[REST API spec](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node through REST.
 
 ## Cosmos Hub
@@ -92,5 +92,5 @@ Contact us for information about funding an implementation in another language.
 
 ## Contribute
 
-See [this file](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
+See [this file](https://github.com/KiraCore/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
 considerations when making changes.

@@ -4,7 +4,7 @@ package vesting
 // nolint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/KiraCore/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (

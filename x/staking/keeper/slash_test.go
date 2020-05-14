@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/bank"
+	"github.com/KiraCore/cosmos-sdk/x/staking/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/staking/types"
 )
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
@@ -336,7 +336,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// slash validator again
 	// all originally bonded stake has been slashed, so this will have no effect
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
-	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
+	// this may not be the desirable behaviour, ref https://github.com/KiraCore/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
 	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
 
@@ -362,7 +362,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// slash validator again
 	// all originally bonded stake has been slashed, so this will have no effect
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
-	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
+	// this may not be the desirable behaviour, ref https://github.com/KiraCore/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
 	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
 

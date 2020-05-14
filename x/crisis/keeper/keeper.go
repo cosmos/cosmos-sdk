@@ -6,9 +6,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/crisis/types"
+	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
 // Keeper - crisis keeper

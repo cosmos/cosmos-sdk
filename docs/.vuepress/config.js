@@ -27,8 +27,8 @@ module.exports = {
   },
   base: process.env.VUEPRESS_BASE || "/",
   themeConfig: {
-    repo: "cosmos/cosmos-sdk",
-    docsRepo: "cosmos/cosmos-sdk",
+    repo: "KiraCore/cosmos-sdk",
+    docsRepo: "KiraCore/cosmos-sdk",
     docsDir: "docs",
     editLinks: true,
     label: "sdk",
@@ -57,7 +57,7 @@ module.exports = {
           },
           {
             title: "SDK API Reference",
-            path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+            path: "https://godoc.org/github.com/KiraCore/cosmos-sdk"
           },
           {
             title: "REST API Spec",
@@ -163,11 +163,11 @@ module.exports = {
             {
               title: "Contributing to the docs",
               url:
-                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md"
+                "https://github.com/KiraCore/cosmos-sdk/blob/master/docs/DOCS_README.md"
             },
             {
               title: "Source code on GitHub",
-              url: "https://github.com/cosmos/cosmos-sdk/"
+              url: "https://github.com/KiraCore/cosmos-sdk/"
             }
           ]
         }

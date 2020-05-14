@@ -115,7 +115,7 @@ type Codec interface {
 
 In general, module-level .proto files should define messages which encode interfaces
 using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto).
-After [extension discussion](https://github.com/cosmos/cosmos-sdk/issues/6030),
+After [extension discussion](https://github.com/KiraCore/cosmos-sdk/issues/6030),
 this was chosen as the preferred alternative to application-level `oneof`s
 as in our original protobuf design. The arguments in favor of `Any` can be
 summarized as follows:
@@ -216,7 +216,7 @@ The SDK will provide support methods `MarshalAny` and `UnmarshalAny` to allow
 easy encoding of state to `Any` in `Codec` implementations. Ex:
 
 ```go
-import "github.com/cosmos/cosmos-sdk/codec"
+import "github.com/KiraCore/cosmos-sdk/codec"
 
 func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
 	return codec.MarshalAny(evidenceI)
@@ -244,7 +244,7 @@ an interface:
 message MsgSubmitEvidence {
   bytes submitter = 1
     [
-      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+      (gogoproto.casttype) = "github.com/KiraCore/cosmos-sdk/types.AccAddress"
     ];
   google.protobuf.Any evidence = 2;
 }
@@ -348,5 +348,5 @@ by a compression layer in the future
 
 ## References
 
-1. https://github.com/cosmos/cosmos-sdk/issues/4977
-2. https://github.com/cosmos/cosmos-sdk/issues/5444
+1. https://github.com/KiraCore/cosmos-sdk/issues/4977
+2. https://github.com/KiraCore/cosmos-sdk/issues/5444

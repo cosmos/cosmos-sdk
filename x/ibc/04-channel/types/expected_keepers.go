@@ -1,13 +1,13 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	connectionexported "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/exported"
+	connectiontypes "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection/types"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/exported"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientKeeper expected account IBC client keeper

@@ -3,8 +3,8 @@
 The Cosmos SDK offers a full fledged simulation framework to fuzz test every
 message defined by a module.
 
-On the SDK, this functionality is provided by the[`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go), which is a
-`Baseapp` application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/tree/master/x/simulation) module.
+On the SDK, this functionality is provided by the[`SimApp`](https://github.com/KiraCore/cosmos-sdk/blob/master/simapp/app.go), which is a
+`Baseapp` application that is used for running the [`simulation`](https://github.com/KiraCore/cosmos-sdk/tree/master/x/simulation) module.
 This module defines all the simulation logic as well as the operations for
 randomized parameters like accounts, balances etc.
 
@@ -37,7 +37,7 @@ differences between the values that are on the store and the passive tracker. Eg
 
 Each simulation must receive a set of inputs (_i.e_ flags) such as the number of
 blocks that the simulation is run, seed, block size, etc.
-Check the full list of flags [here](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/simapp/sim_test.go#L34-L50).
+Check the full list of flags [here](https://github.com/KiraCore/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/simapp/sim_test.go#L34-L50).
 
 ## Simulator Modes
 
@@ -49,7 +49,7 @@ parameters are **pseudo-randomly generated**.
 This mode is helpful for running simulations on a known state such as a live network export where a new (mostly likely breaking) version of the application needs to be tested.
 3. From a `params.json` file where the initial state is pseudo-randomly generated but the module and simulation parameters can be provided manually.
 This allows for a more controlled and deterministic simulation setup while allowing the state space to still be pseudo-randomly simulated. 
-The list of available parameters are listed [here](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/simulation/params.go#L170-L178).
+The list of available parameters are listed [here](https://github.com/KiraCore/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/simulation/params.go#L170-L178).
 
 ::: tip
 These modes are not mutually exclusive. So you can for example run a randomly
@@ -59,10 +59,10 @@ generated genesis state (`1`) with manually generated simulation params (`3`).
 ## Usage
 
 This is a general example of how simulations are run. For more specific examples
-check the SDK [Makefile](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/Makefile#L88-L123).
+check the SDK [Makefile](https://github.com/KiraCore/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/Makefile#L88-L123).
 
 ```bash
- $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ $ go test -mod=readonly github.com/KiraCore/cosmos-sdk/simapp \
   -run=TestApp<simulation_command> \
   ...<flags>
   -v -timeout 24h
@@ -86,7 +86,7 @@ failure?
 * Run invariants on every operation with `-SimulateEveryOperation`. _Note_: this
 will slow down your simulation **a lot**.
 * Try adding logs to operations that are not logged. You will have to define a
-[Logger](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/staking/keeper/keeper.go#L65:17) on your `Keeper`.
+[Logger](https://github.com/KiraCore/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/staking/keeper/keeper.go#L65:17) on your `Keeper`.
 
 ## Use simulation in your SDK-based application
 

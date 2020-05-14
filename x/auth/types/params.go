@@ -5,7 +5,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace

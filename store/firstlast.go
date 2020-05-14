@@ -5,7 +5,7 @@ import (
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
 )
 
 // Gets the first item.

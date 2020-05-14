@@ -3,8 +3,8 @@ package std
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/KiraCore/cosmos-sdk/baseapp"
+	"github.com/KiraCore/cosmos-sdk/x/params"
 )
 
 // ConsensusParamsKeyTable returns an x/params module keyTable to be used in

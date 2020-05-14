@@ -1,8 +1,8 @@
 package gov
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/KiraCore/cosmos-sdk/x/gov/keeper"
+	"github.com/KiraCore/cosmos-sdk/x/gov/types"
 )
 
 const (

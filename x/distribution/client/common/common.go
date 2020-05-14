@@ -3,9 +3,9 @@ package common
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/KiraCore/cosmos-sdk/client/context"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/distribution/types"
 )
 
 // QueryDelegationRewards queries a delegation rewards between a delegator and a

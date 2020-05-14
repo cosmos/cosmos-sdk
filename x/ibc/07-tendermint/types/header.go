@@ -6,10 +6,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	clientexported "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/KiraCore/cosmos-sdk/x/ibc/02-client/types"
+	commitmenttypes "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 var _ clientexported.Header = Header{}

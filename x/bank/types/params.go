@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramtypes "github.com/KiraCore/cosmos-sdk/x/params/types"
 )
 
 const (

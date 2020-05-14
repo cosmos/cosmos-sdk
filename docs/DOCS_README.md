@@ -1,6 +1,6 @@
 # Updating the docs
 
-If you want to open a PR on the Cosmos SDK to update the documentation, please follow the guidelines in the [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md#updating-documentation)
+If you want to open a PR on the Cosmos SDK to update the documentation, please follow the guidelines in the [`CONTRIBUTING.md`](https://github.com/KiraCore/cosmos-sdk/tree/master/CONTRIBUTING.md#updating-documentation)
 
 ## Translating
 
@@ -14,7 +14,7 @@ If you want to open a PR on the Cosmos SDK to update the documentation, please f
 The documentation for the Cosmos SDK is hosted at https://cosmos.network/docs/
 
 built from the files in this (`/docs`) directory for
-[master](https://github.com/cosmos/cosmos-sdk/tree/master/docs).
+[master](https://github.com/KiraCore/cosmos-sdk/tree/master/docs).
 
 ### How It Works
 
@@ -92,7 +92,7 @@ To build documentation as a static website run `npm run build`. You will find th
 
 First, run `make tools` from the root of repo, to install the swagger-ui tool.
 
-Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml)
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/KiraCore/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml)
 
 Finally, run `make update_gaia_lite_docs` from the root of the repo.
 

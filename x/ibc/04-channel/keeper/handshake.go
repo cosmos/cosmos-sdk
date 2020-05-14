@@ -3,14 +3,14 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	sdkerrors "github.com/KiraCore/cosmos-sdk/types/errors"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	connection "github.com/KiraCore/cosmos-sdk/x/ibc/03-connection"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	porttypes "github.com/KiraCore/cosmos-sdk/x/ibc/05-port/types"
+	commitmentexported "github.com/KiraCore/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.

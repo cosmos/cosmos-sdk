@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // ConnectionPaths define all the connection paths for a given client state.

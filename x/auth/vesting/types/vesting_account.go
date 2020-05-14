@@ -4,11 +4,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	authexported "github.com/KiraCore/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/KiraCore/cosmos-sdk/x/auth/types"
+	vestexported "github.com/KiraCore/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"

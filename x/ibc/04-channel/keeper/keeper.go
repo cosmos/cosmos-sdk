@@ -9,12 +9,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/KiraCore/cosmos-sdk/codec"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	"github.com/KiraCore/cosmos-sdk/x/capability"
+	"github.com/KiraCore/cosmos-sdk/x/ibc/04-channel/types"
+	porttypes "github.com/KiraCore/cosmos-sdk/x/ibc/05-port/types"
+	host "github.com/KiraCore/cosmos-sdk/x/ibc/24-host"
 )
 
 // Keeper defines the IBC channel keeper

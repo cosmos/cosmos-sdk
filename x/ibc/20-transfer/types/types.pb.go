@@ -5,8 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/KiraCore/cosmos-sdk/types"
+	types "github.com/KiraCore/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -35,9 +35,9 @@ type MsgTransfer struct {
 	// the current height of the destination chain
 	DestinationHeight uint64 `protobuf:"varint,3,opt,name=destination_height,json=destinationHeight,proto3" json:"destination_height,omitempty" yaml:"destination_height"`
 	// the tokens to be transferred
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
 	// the sender address
-	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
+	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,5,opt,name=sender,proto3,casttype=github.com/KiraCore/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
 	// the recipient address on the destination chain
 	Receiver string `protobuf:"bytes,6,opt,name=receiver,proto3" json:"receiver,omitempty"`
 }
@@ -121,7 +121,7 @@ func (m *MsgTransfer) GetReceiver() string {
 // See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type FungibleTokenPacketData struct {
 	// the tokens to be transferred
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/KiraCore/cosmos-sdk/types.Coins" json:"amount"`
 	// the sender address
 	Sender string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
 	// the recipient address on the destination chain

@@ -10,17 +10,17 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	"github.com/KiraCore/cosmos-sdk/client"
+	"github.com/KiraCore/cosmos-sdk/client/flags"
+	"github.com/KiraCore/cosmos-sdk/client/keys"
+	"github.com/KiraCore/cosmos-sdk/client/lcd"
+	"github.com/KiraCore/cosmos-sdk/client/rpc"
+	"github.com/KiraCore/cosmos-sdk/simapp"
+	sdk "github.com/KiraCore/cosmos-sdk/types"
+	authclient "github.com/KiraCore/cosmos-sdk/x/auth/client"
+	authcmd "github.com/KiraCore/cosmos-sdk/x/auth/client/cli"
+	authrest "github.com/KiraCore/cosmos-sdk/x/auth/client/rest"
+	bankcmd "github.com/KiraCore/cosmos-sdk/x/bank/client/cli"
 )
 
 var (

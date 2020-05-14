@@ -202,3 +202,7 @@ func (cdc *Codec) RegisterInterface(ptr interface{}, iopts *amino.InterfaceOptio
 func (cdc *Codec) RegisterConcrete(o interface{}, name string, copts *amino.ConcreteOptions) {
 	cdc.Amino.RegisterConcrete(o, name, copts)
 }
+
+func (cdc *Codec) MarshalJSONIndent(o interface{}, prefix, indent string) ([]byte, error) {
+	return cdc.Amino.MarshalJSONIndent(o, prefix, indent)
+}

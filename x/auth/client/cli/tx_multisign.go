@@ -81,7 +81,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(cdc)
+		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if !cliCtx.Offline {
@@ -113,22 +113,18 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			}
 		}
 
-		bz, err := cdc.AminoMarshalBinaryBare(multisigSig)
-		if err != nil {
-			panic(err)
-		}
-		newStdSig := types.StdSignature{Signature: bz, PubKey: multisigPub.Bytes()}                           //nolint:staticcheck
-		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo()) //nolint:staticcheck
+		newStdSig := types.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub.Bytes()} //nolint:staticcheck
+		newTx := types.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, []types.StdSignature{newStdSig}, stdTx.GetMemo())           //nolint:staticcheck
 
 		sigOnly := viper.GetBool(flagSigOnly)
 		var json []byte
 		switch {
 		case sigOnly && cliCtx.Indent:
-			json, err = codec.MarshalJSONIndent(cdc, newTx.Signatures[0])
+			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
 		case sigOnly && !cliCtx.Indent:
 			json, err = cdc.MarshalJSON(newTx.Signatures[0])
 		case !sigOnly && cliCtx.Indent:
-			json, err = codec.MarshalJSONIndent(cdc, newTx)
+			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
 		default:
 			json, err = cdc.MarshalJSON(newTx)
 		}
@@ -155,7 +151,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 	}
 }
 
-func readAndUnmarshalStdSignature(cdc codec.JSONMarshaler, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
+func readAndUnmarshalStdSignature(cdc *codec.Codec, filename string) (stdSig types.StdSignature, err error) { //nolint:staticcheck
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return

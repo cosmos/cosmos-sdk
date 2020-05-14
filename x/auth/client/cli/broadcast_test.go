@@ -5,17 +5,18 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
-	codec := amino.NewCodec()
-	cmd := GetBroadcastCommand(codec)
+	cdc := codec.New()
+	cmd := GetBroadcastCommand(cdc)
 
 	viper.Set(flags.FlagOffline, true)
 
@@ -24,8 +25,8 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 }
 
 func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
-	codec := amino.NewCodec()
-	cmd := GetBroadcastCommand(codec)
+	cdc := codec.New()
+	cmd := GetBroadcastCommand(cdc)
 
 	viper.Set(flags.FlagOffline, false)
 

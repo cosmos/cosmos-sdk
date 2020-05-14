@@ -17,10 +17,9 @@ const port = "port_id"
 // RandomizedGenState generates a random GenesisState for transfer.
 func RandomizedGenState(simState *module.SimulationState) {
 	var portID string
-
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, port, &portID, simState.Rand,
-		func(r *rand.Rand) { portID = strings.ToLower(simtypes.RandStringOfLength(simState.Rand, 20)) },
+		func(r *rand.Rand) { portID = strings.ToLower(simtypes.RandStringOfLength(r, 20)) },
 	)
 
 	transferGenesis := types.GenesisState{

@@ -109,7 +109,7 @@ func (mp MerklePath) IsEmpty() bool {
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
 func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
-	err := host.DefaultPathValidator(path)
+	err := host.PathValidator(path)
 	if err != nil {
 		return MerklePath{}, err
 	}

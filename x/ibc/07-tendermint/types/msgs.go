@@ -87,7 +87,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -153,7 +153,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg

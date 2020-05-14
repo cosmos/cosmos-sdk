@@ -109,13 +109,13 @@ func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
 // GetPort returns the portID for the transfer module. Used in ExportGenesis
 func (k Keeper) GetPort(ctx sdk.Context) string {
 	store := ctx.KVStore(k.storeKey)
-	return string(store.Get([]byte(types.PortKey)))
+	return string(store.Get(types.PortKey))
 }
 
 // SetPort sets the portID for the transfer module. Used in InitGenesis
 func (k Keeper) SetPort(ctx sdk.Context, portID string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(types.PortKey), []byte(portID))
+	store.Set(types.PortKey, []byte(portID))
 }
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module

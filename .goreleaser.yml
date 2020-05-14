@@ -1,5 +1,5 @@
 ---
-project_name: relayer
+project_name: cosmos-sdk
 
 release:
   github:

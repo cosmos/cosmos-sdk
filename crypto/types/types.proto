@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos_sdk.v1.crypto;
+package cosmos_sdk.crypto.v1;
 
 //import "third_party/proto/gogoproto/gogo.proto";
 

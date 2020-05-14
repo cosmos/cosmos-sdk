@@ -10,6 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/types";
 // space after proto encoding.
 // This is not thread safe, and is not intended for concurrent usage.
 message CompactBitArray {
+    //  TODO: re-enable these when the actual implementation is added
     //  option (gogoproto.sizer)            = false;
     //  option (gogoproto.goproto_stringer) = false;
 

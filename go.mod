@@ -37,6 +37,6 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
-replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200506091506-760bc5f1d611
+replace github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.2-0.20200514115136-80f052b98df2
 
 go 1.14

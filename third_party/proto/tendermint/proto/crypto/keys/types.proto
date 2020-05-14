@@ -3,7 +3,12 @@ package tendermint.proto.crypto.keys;
 
 option go_package = "github.com/tendermint/tendermint/proto/crypto/keys";
 
+import "third_party/proto/gogoproto/gogo.proto";
+
 message PublicKey {
+  option (gogoproto.compare) = true;
+  option (gogoproto.equal) = true;
+  
   oneof sum {
     bytes ed25519 = 1;
   }

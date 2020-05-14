@@ -12,7 +12,7 @@ import (
 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/libs/bech32"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 const (

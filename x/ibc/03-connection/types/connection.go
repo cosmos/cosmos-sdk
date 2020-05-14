@@ -8,13 +8,12 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state ibctypes.State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state State, connectionID, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
 		ID:           connectionID,
 		ClientID:     clientID,
@@ -25,8 +24,8 @@ func NewConnectionEnd(state ibctypes.State, connectionID, clientID string, count
 }
 
 // GetState implements the Connection interface
-func (c ConnectionEnd) GetState() ibctypes.State {
-	return c.State
+func (c ConnectionEnd) GetState() int32 {
+	return int32(c.State)
 }
 
 // GetID implements the Connection interface
@@ -60,11 +59,11 @@ func (c ConnectionEnd) ValidateBasic() error {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}
 	if len(c.Versions) == 0 {
-		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "missing connection versions")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "missing connection versions")
 	}
 	for _, version := range c.Versions {
 		if strings.TrimSpace(version) == "" {
-			return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "version can't be blank")
 		}
 	}
 	return c.Counterparty.ValidateBasic()

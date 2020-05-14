@@ -207,7 +207,7 @@ func readUnsignedGenTxFile(cdc *codec.Codec, r io.Reader) (auth.StdTx, error) {
 	var stdTx auth.StdTx
 
 	bytes, err := ioutil.ReadAll(r)
-	if err != nil { // nolint:unparam
+	if err != nil {
 		return stdTx, err
 	}
 
@@ -224,7 +224,7 @@ func writeSignedGenTx(cdc *codec.Codec, outputDocument string, tx auth.StdTx) er
 	defer outputFile.Close()
 
 	json, err := cdc.MarshalJSON(tx)
-	if err != nil { //nolint:unparam
+	if err != nil {
 		return err
 	}
 

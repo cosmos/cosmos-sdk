@@ -17,7 +17,7 @@ import (
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/ibc/clients/tendermint", createClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/clients/{%s}/misbehaviour", submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }
 
 // createClientHandlerFn implements a create client handler
@@ -50,8 +50,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// create the message
 		msg := ibctmtypes.NewMsgCreateClient(
-			req.ClientID,
-			req.Header,
+			req.ClientID, req.Header, req.TrustLevel,
 			req.TrustingPeriod, req.UnbondingPeriod, req.MaxClockDrift,
 			fromAddr,
 		)

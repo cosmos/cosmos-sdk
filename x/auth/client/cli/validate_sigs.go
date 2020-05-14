@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func GetValidateSignaturesCommand(amino *codec.Codec) *cobra.Command {
+func GetValidateSignaturesCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate-signatures [file]",
 		Short: "Validate transactions signatures",
@@ -29,14 +29,14 @@ given transaction. If the --offline flag is also set, signature validation over 
 transaction will be not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeValidateSignaturesCmd(codec.NewAminoCodec(amino)),
+		RunE:   makeValidateSignaturesCmd(codec),
 		Args:   cobra.ExactArgs(1),
 	}
 
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeValidateSignaturesCmd(cdc *codec.AminoCodec) func(cmd *cobra.Command, args []string) error {
+func makeValidateSignaturesCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		cliCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
 		if err != nil {
@@ -133,7 +133,7 @@ func printAndValidateSigs(
 	return success
 }
 
-func readStdTxAndInitContexts(cdc *codec.AminoCodec, cmd *cobra.Command, filename string) (
+func readStdTxAndInitContexts(cdc *codec.Codec, cmd *cobra.Command, filename string) (
 	context.CLIContext, types.TxBuilder, types.StdTx, error,
 ) {
 	stdTx, err := client.ReadStdTxFromFile(cdc, filename)
@@ -142,7 +142,7 @@ func readStdTxAndInitContexts(cdc *codec.AminoCodec, cmd *cobra.Command, filenam
 	}
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc.Amino()).WithMarshaler(cdc)
+	cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 	txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 	return cliCtx, txBldr, stdTx, nil

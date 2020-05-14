@@ -31,7 +31,7 @@ If you supply a dash (-) argument in place of an input filename, the command rea
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Marshaler, args[0])
+			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return
 			}

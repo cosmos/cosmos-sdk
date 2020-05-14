@@ -46,7 +46,7 @@ recommended to set such parameters manually.
 				version.ClientName,
 			),
 		),
-		RunE: makeMultiSignCmd(codec.NewAminoCodec(cdc)),
+		RunE: makeMultiSignCmd(cdc),
 		Args: cobra.MinimumNArgs(3),
 	}
 
@@ -57,7 +57,7 @@ recommended to set such parameters manually.
 	return flags.PostCommands(cmd)[0]
 }
 
-func makeMultiSignCmd(cdc *codec.AminoCodec) func(cmd *cobra.Command, args []string) error {
+func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
 		stdTx, err := client.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {

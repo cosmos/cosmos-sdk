@@ -22,8 +22,7 @@ const (
 )
 
 // GetSignCommand returns the transaction sign command.
-func GetSignCommand(amino *codec.Codec) *cobra.Command {
-	cdc := codec.NewAminoCodec(amino)
+func GetSignCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
@@ -43,7 +42,7 @@ key. It implies --signature-only. Full multisig signed transactions may eventual
 be generated via the 'multisign' command.
 `,
 		PreRun: preSignCmd,
-		RunE:   makeSignCmd(cdc),
+		RunE:   makeSignCmd(codec),
 		Args:   cobra.ExactArgs(1),
 	}
 
@@ -72,7 +71,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func makeSignCmd(cdc *codec.AminoCodec) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		cliCtx, txBldr, stdTx, err := readStdTxAndInitContexts(cdc, cmd, args[0])
 		if err != nil {
@@ -128,12 +127,12 @@ func makeSignCmd(cdc *codec.AminoCodec) func(cmd *cobra.Command, args []string) 
 	}
 }
 
-func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
+func getSignatureJSON(cdc *codec.Codec, newTx types.StdTx, indent, generateSignatureOnly bool) ([]byte, error) {
 	switch generateSignatureOnly {
 	case true:
 		switch indent {
 		case true:
-			return codec.MarshalJSONIndent(cdc, newTx.Signatures[0])
+			return cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
 
 		default:
 			return cdc.MarshalJSON(newTx.Signatures[0])
@@ -141,7 +140,7 @@ func getSignatureJSON(cdc codec.JSONMarshaler, newTx types.StdTx, indent, genera
 	default:
 		switch indent {
 		case true:
-			return codec.MarshalJSONIndent(cdc, newTx)
+			return cdc.MarshalJSONIndent(newTx, "", "  ")
 
 		default:
 			return cdc.MarshalJSON(newTx)

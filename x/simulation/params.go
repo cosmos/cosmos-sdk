@@ -7,7 +7,6 @@ import (
 
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/tendermint/go-amino"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -156,7 +155,7 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
-	cdc := amino.NewCodec()
+	cdc := codec.New()
 
 	var genesisState map[string]json.RawMessage
 

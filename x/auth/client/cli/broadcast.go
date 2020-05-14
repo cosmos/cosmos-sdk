@@ -32,7 +32,7 @@ $ <appcli> tx broadcast ./mytxn.json
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := client.ReadStdTxFromFile(cliCtx.Marshaler, args[0])
+			stdTx, err := client.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}

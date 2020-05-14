@@ -148,7 +148,7 @@ are known to be used infrequently should have deep sub-package depths.
 For the Cosmos SDK, it is recommended that that we simply write `cosmos.bank`,
 `cosmos.gov`, etc. rather than `cosmos.x.bank`. In practice, most non-module
 types can go straight in the `cosmos` package or we can introduce a
-`cosmos.libs` package if needed. Note that this naming _will not_ change
+`cosmos.base` package if needed. Note that this naming _will not_ change
 go package names, i.e. the `cosmos.bank` protobuf package will still live in
 `x/bank`.
 
@@ -226,13 +226,13 @@ throughout the SDK
 
 ### Negative
 
-* some legacy go struct names will change (ex. `MsgSend` vs `Send`). Note that
-legacy Amino type names will not change
+* some legacy go struct names will change (ex. `MsgSend` vs `Send`), but we can
+make it effectively non-API breaking with aliases (i.e. `type MsgSend = Send`).
+Note also that legacy Amino type names will not change
 
 ### Neutral
 
 * `.proto`  files will need to be reorganized and refactored
-* go code will need refactored where type names change
 * some modules may need to be marked as alpha or beta
 
 ## References

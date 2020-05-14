@@ -24,6 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// PublicKey specifies a public key
 type PublicKey struct {
 	// Types that are valid to be assigned to Sum:
 	//	*PublicKey_Secp256K1
@@ -161,6 +162,8 @@ func (*PublicKey) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// PubKeyMultisigThreshold specifies a public key type which nests multiple public
+// keys and a threshold
 type PubKeyMultisigThreshold struct {
 	K       uint32       `protobuf:"varint,1,opt,name=threshold,proto3" json:"threshold,omitempty" yaml:"threshold"`
 	PubKeys []*PublicKey `protobuf:"bytes,2,rep,name=pubkeys,proto3" json:"pubkeys,omitempty" yaml:"pubkeys"`
@@ -213,6 +216,9 @@ func (m *PubKeyMultisigThreshold) GetPubKeys() []*PublicKey {
 	return nil
 }
 
+// Multisignature wraps the signatures from a PubKeyMultisigThreshold.
+// See cosmos_sdk.tx.v1.ModeInfo.Multi for how to specify which signers signed
+// and with which modes
 type Multisignature struct {
 	Sigs [][]byte `protobuf:"bytes,1,rep,name=sigs,proto3" json:"sigs,omitempty"`
 }

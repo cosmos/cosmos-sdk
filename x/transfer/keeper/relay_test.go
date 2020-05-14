@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/transfer/types"
 )
 
 func (suite *KeeperTestSuite) TestSendTransfer() {

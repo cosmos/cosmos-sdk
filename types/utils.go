@@ -12,7 +12,14 @@ import (
 var (
 	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
 	DBBackend = ""
+	backend   = dbm.GoLevelDBBackend
 )
+
+func init() {
+	if len(DBBackend) != 0 {
+		backend = dbm.BackendType(DBBackend)
+	}
+}
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.
@@ -69,10 +76,6 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 
 // NewLevelDB instantiate a new LevelDB instance according to DBBackend.
 func NewLevelDB(name, dir string) (db dbm.DB, err error) {
-	backend := dbm.GoLevelDBBackend
-	if DBBackend == string(dbm.CLevelDBBackend) {
-		backend = dbm.CLevelDBBackend
-	}
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("couldn't create db: %v", r)

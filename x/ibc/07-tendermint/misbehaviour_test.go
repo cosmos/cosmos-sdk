@@ -25,9 +25,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	pk2, err := suite.privVal.GetPubKey()
-	suite.Require().NoError(err)
-
 	// Create signer array and ensure it is in same order as bothValSet
 	var bothSigners []tmtypes.PrivValidator
 

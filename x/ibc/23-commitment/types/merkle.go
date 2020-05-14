@@ -7,8 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -149,7 +147,7 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 
 // IsEmpty returns true if the root is empty
 func (proof MerkleProof) IsEmpty() bool {
-	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
+	return proof.Proof == nil || proof.Equal(MerkleProof{})
 }
 
 // ValidateBasic checks if the proof is empty.

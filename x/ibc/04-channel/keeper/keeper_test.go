@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/types"
 	lite "github.com/tendermint/tendermint/lite2"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -232,7 +232,7 @@ func commitNBlocks(chain *TestChain, n int) {
 // commit current block and start the next block with the provided time
 func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
 	chain.App.Commit()
-	chain.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: chain.App.LastBlockHeight() + 1, Time: time.Unix(timestamp, 0)}})
+	chain.App.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: chain.App.LastBlockHeight() + 1, Time: time.Unix(timestamp, 0)}})
 }
 
 // nolint: unused

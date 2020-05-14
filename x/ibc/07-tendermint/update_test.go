@@ -31,8 +31,6 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 	// Create alternative validator set with only altVal, invalid update (too much change in valSet)
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	signers := []tmtypes.PrivValidator{suite.privVal}
-
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 

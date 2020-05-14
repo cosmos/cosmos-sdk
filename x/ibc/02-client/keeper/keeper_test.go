@@ -7,9 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 	lite "github.com/tendermint/tendermint/lite2"
+	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"

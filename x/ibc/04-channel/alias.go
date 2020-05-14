@@ -18,6 +18,14 @@ const (
 	QueryAllChannels        = types.QueryAllChannels
 	QueryConnectionChannels = types.QueryConnectionChannels
 	QueryChannel            = types.QueryChannel
+	UNINITIALIZED           = types.UNINITIALIZED
+	INIT                    = types.INIT
+	TRYOPEN                 = types.TRYOPEN
+	OPEN                    = types.OPEN
+	CLOSED                  = types.CLOSED
+	NONE                    = types.NONE
+	UNORDERED               = types.UNORDERED
+	ORDERED                 = types.ORDERED
 )
 
 var (
@@ -73,6 +81,8 @@ type (
 	Keeper                 = keeper.Keeper
 	Channel                = types.Channel
 	Counterparty           = types.Counterparty
+	State                  = types.State
+	Order                  = types.Order
 	IdentifiedChannel      = types.IdentifiedChannel
 	ClientKeeper           = types.ClientKeeper
 	ConnectionKeeper       = types.ConnectionKeeper

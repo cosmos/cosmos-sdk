@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var (
@@ -24,32 +23,32 @@ func TestConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			ConnectionEnd{connectionID, clientID, []string{"1.0.0"}, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{connectionID, clientID, []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			true,
 		},
 		{
 			"invalid connection id",
-			ConnectionEnd{"connectionIDONE", clientID, []string{"1.0.0"}, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"connectionIDONE", clientID, []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid client id",
-			ConnectionEnd{connectionID, "clientID1", []string{"1.0.0"}, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{connectionID, "clientID1", []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"empty versions",
-			ConnectionEnd{connectionID, clientID, nil, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{connectionID, clientID, nil, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid version",
-			ConnectionEnd{connectionID, clientID, []string{""}, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{connectionID, clientID, []string{""}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid counterparty",
-			ConnectionEnd{connectionID, clientID, []string{"1.0.0"}, ibctypes.INIT, Counterparty{clientID2, connectionID2, emptyPrefix}},
+			ConnectionEnd{connectionID, clientID, []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, emptyPrefix}},
 			false,
 		},
 	}

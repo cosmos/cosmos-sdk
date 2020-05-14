@@ -88,7 +88,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	case exported.Localhost:
 		// override client state and update the block height
 		clientState = localhosttypes.NewClientState(
-			k.ClientStore(ctx, clientState.GetID()),
 			ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
 			ctx.BlockHeight(),
 		)

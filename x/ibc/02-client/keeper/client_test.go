@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -37,12 +38,12 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 		i := i
 		if tc.expPanic {
 			suite.Require().Panics(func() {
-				clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+				clientState, err := ibctmtypes.Initialize(tc.clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				suite.Require().NoError(err, "err on client state initialization")
 				suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
-			clientState, err := ibctmtypes.Initialize(tc.clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+			clientState, err := ibctmtypes.Initialize(tc.clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 			if tc.expPass {
 				suite.Require().NoError(err, "errored on initialization")
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
@@ -79,7 +80,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+			clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 			if err != nil {
 				return err
 			}
@@ -113,7 +114,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, false},
 		{"invalid header", func() error {
-			clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+			clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 			if err != nil {
 				return err
 			}
@@ -178,11 +179,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
-	var localhostClient exported.ClientState = localhosttypes.NewClientState(
-		suite.keeper.ClientStore(suite.ctx, exported.ClientTypeLocalHost),
-		suite.header.ChainID,
-		suite.ctx.BlockHeight(),
-	)
+	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.ChainID, suite.ctx.BlockHeight())
 
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
@@ -232,7 +229,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+				clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				if err != nil {
 					return err
 				}
@@ -252,7 +249,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			func() error {
 				suite.consensusState.ValidatorSet = bothValSet
-				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+				clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				if err != nil {
 					return err
 				}
@@ -307,7 +304,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientID: testClientID,
 			},
 			func() error {
-				clientState, err := ibctmtypes.Initialize(testClientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
+				clientState, err := ibctmtypes.Initialize(testClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header)
 				if err != nil {
 					return err
 				}

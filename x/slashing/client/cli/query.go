@@ -56,7 +56,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			}
 
 			consAddr := sdk.ConsAddress(pk.Address())
-			key := types.GetValidatorSigningInfoKey(consAddr)
+			key := types.ValidatorSigningInfoKey(consAddr)
 
 			res, _, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {

@@ -1,10 +1,36 @@
 syntax = "proto3";
 package cosmos_sdk.crypto.v1;
 
-//import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/types";
 
+
+message PublicKey {
+    oneof sum {
+        bytes secp256k1 = 1;
+        bytes ed25519 = 2;
+        bytes sr25519 = 3;
+        PubKeyMultisigThreshold multisig = 4;
+        bytes secp256r1 = 5;
+
+        // any_pubkey can be used for any pubkey that an app may use which is
+        // not explicitly defined in the oneof
+        google.protobuf.Any any_pubkey = 15;
+    }
+}
+
+message PubKeyMultisigThreshold {
+    uint32 threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
+    repeated PublicKey pubkeys = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
+}
+
+message Multisignature {
+    //    option (gogoproto.goproto_stringer) = true;
+
+    repeated bytes sigs = 1;
+}
 // CompactBitArray is an implementation of a space efficient bit array.
 // This is used to ensure that the encoded data takes up a minimal amount of
 // space after proto encoding.
@@ -14,5 +40,5 @@ message CompactBitArray {
     //  option (gogoproto.goproto_stringer) = false;
 
     uint32 extra_bits_stored = 1;
-    bytes  elems             = 2;
+    bytes elems = 2;
 }

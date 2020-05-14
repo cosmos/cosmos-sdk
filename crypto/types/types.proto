@@ -34,8 +34,6 @@ message PubKeyMultisigThreshold {
 // See cosmos_sdk.tx.v1.ModeInfo.Multi for how to specify which signers signed
 // and with which modes
 message MultiSignature {
-    //    option (gogoproto.goproto_stringer) = true;
-
     repeated bytes sigs = 1;
 }
 

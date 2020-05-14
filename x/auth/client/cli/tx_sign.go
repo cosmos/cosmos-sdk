@@ -29,7 +29,7 @@ func GetSignCommand(codec *codec.Codec) *cobra.Command {
 		Use:   "sign [[file]...]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read transactions from file, sign them and print their JSON encoding to STDOUT.
+Read transactions from file(s), sign them and print their JSON encoding to STDOUT.
 
 If the flag --signature-only flag is set, the command will outputs a JSON
 representation of the generated signatures only.

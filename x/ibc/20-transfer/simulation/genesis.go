@@ -3,6 +3,7 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -19,7 +20,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, port, &portID, simState.Rand,
-		func(r *rand.Rand) { portID = simtypes.RandStringOfLength(simState.Rand, 20) },
+		func(r *rand.Rand) { portID = strings.ToLower(simtypes.RandStringOfLength(simState.Rand, 20)) },
 	)
 
 	transferGenesis := types.GenesisState{

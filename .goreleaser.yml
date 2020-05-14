@@ -7,7 +7,7 @@ release:
     name: cosmos-sdk
 
 builds:
-  skip: true
+  - skip: true
 
 archives:
   - format: tar.gz

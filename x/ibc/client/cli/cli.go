@@ -11,13 +11,13 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/client/cli"
 	localhost "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        host.ModuleName,
 		Short:                      "IBC transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -37,7 +37,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	// Group ibc queries under a subcommand
 	ibcQueryCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        host.ModuleName,
 		Short:                      "Querying commands for the IBC module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

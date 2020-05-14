@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel
@@ -33,14 +33,14 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State == ibctypes.CLOSED {
+	if channel.State == types.CLOSED {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel is CLOSED (got %s)", channel.State.String(),
 		)
 	}
 
-	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, ibctypes.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
+	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
 	}
 
@@ -64,10 +64,10 @@ func (k Keeper) SendPacket(
 	}
 
 	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == ibctypes.UNINITIALIZED {
+	if connectionEnd.GetState() == int32(connection.UNINITIALIZED) {
 		return sdkerrors.Wrap(
 			connection.ErrInvalidConnectionState,
-			"connection is closed (i.e NONE)",
+			"connection is UNINITIALIZED",
 		)
 	}
 
@@ -146,7 +146,7 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
 
-	if channel.State != ibctypes.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -176,10 +176,10 @@ func (k Keeper) RecvPacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -225,26 +225,26 @@ func (k Keeper) PacketExecuted(
 	}
 
 	// sanity check
-	if channel.State != ibctypes.OPEN {
+	if channel.State != types.OPEN {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
-	capName := ibctypes.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
+	capName := host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
 		return sdkerrors.Wrap(types.ErrInvalidChannelCapability, "channel capability failed authentication")
 	}
 
-	if acknowledgement != nil || channel.Ordering == ibctypes.UNORDERED {
+	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 
-	if channel.Ordering == ibctypes.ORDERED {
+	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return types.ErrSequenceReceiveNotFound
@@ -301,7 +301,7 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State != ibctypes.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -331,10 +331,10 @@ func (k Keeper) AcknowledgePacket(
 		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.GetState() != ibctypes.OPEN {
+	if connectionEnd.GetState() != int32(connection.OPEN) {
 		return nil, sdkerrors.Wrapf(
 			connection.ErrInvalidConnectionState,
-			"connection state is not OPEN (got %s)", connectionEnd.GetState().String(),
+			"connection state is not OPEN (got %s)", connection.State(connectionEnd.GetState()).String(),
 		)
 	}
 
@@ -395,7 +395,7 @@ func (k Keeper) CleanupPacket(
 		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
 	}
 
-	if channel.State != ibctypes.OPEN {
+	if channel.State != types.OPEN {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state is not OPEN (got %s)", channel.State.String(),
@@ -446,13 +446,13 @@ func (k Keeper) CleanupPacket(
 
 	var err error
 	switch channel.Ordering {
-	case ibctypes.ORDERED:
+	case types.ORDERED:
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
-	case ibctypes.UNORDERED:
+	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketAcknowledgement(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),

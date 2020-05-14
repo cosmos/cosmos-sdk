@@ -19,12 +19,13 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
-	storeKey = ibctypes.StoreKey
+	storeKey = host.StoreKey
 
 	testClientIDA     = "testclientida" // chainid for chainA also chainB's clientID for A's liteclient
 	testConnectionIDA = "connectionidatob"
@@ -89,7 +90,7 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 	suite.Require().False(existed)
 
 	counterparty := types.NewCounterparty(testClientIDA, testConnectionIDA, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
-	expConn := types.NewConnectionEnd(ibctypes.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
+	expConn := types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty, types.GetCompatibleVersions())
 	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), testConnectionIDA, expConn)
 	conn, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), testConnectionIDA)
 	suite.Require().True(existed)
@@ -112,9 +113,9 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	counterparty2 := types.NewCounterparty(testClientIDB, testConnectionIDB, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, commitmenttypes.NewMerklePrefix(suite.chainA.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 
-	conn1 := types.NewConnectionEnd(ibctypes.INIT, testConnectionIDA, testClientIDA, counterparty3, types.GetCompatibleVersions())
-	conn2 := types.NewConnectionEnd(ibctypes.INIT, testConnectionIDB, testClientIDB, counterparty1, types.GetCompatibleVersions())
-	conn3 := types.NewConnectionEnd(ibctypes.UNINITIALIZED, testConnectionID3, testClientID3, counterparty2, types.GetCompatibleVersions())
+	conn1 := types.NewConnectionEnd(types.INIT, testConnectionIDA, testClientIDA, counterparty3, types.GetCompatibleVersions())
+	conn2 := types.NewConnectionEnd(types.INIT, testConnectionIDB, testClientIDB, counterparty1, types.GetCompatibleVersions())
+	conn3 := types.NewConnectionEnd(types.UNINITIALIZED, testConnectionID3, testClientID3, counterparty2, types.GetCompatibleVersions())
 
 	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
 
@@ -139,8 +140,8 @@ func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
 	}
 
 	expPaths := []types.ConnectionPaths{
-		types.NewConnectionPaths(testClientIDA, []string{ibctypes.ConnectionPath(testConnectionIDA)}),
-		types.NewConnectionPaths(testClientIDB, []string{ibctypes.ConnectionPath(testConnectionIDB), ibctypes.ConnectionPath(testConnectionID3)}),
+		types.NewConnectionPaths(testClientIDA, []string{host.ConnectionPath(testConnectionIDA)}),
+		types.NewConnectionPaths(testClientIDB, []string{host.ConnectionPath(testConnectionIDB), host.ConnectionPath(testConnectionID3)}),
 	}
 
 	for i := range expPaths {
@@ -172,7 +173,7 @@ func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
 
 			tc.malleate()
 			// create and store a connection to chainB on chainA
-			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, ibctypes.OPEN)
+			connection := suite.chainA.createConnection(testConnectionIDA, testConnectionIDB, testClientIDB, testClientIDA, types.OPEN)
 
 			actualTimestamp, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetTimestampAtHeight(
 				suite.chainA.GetContext(), connection, uint64(suite.chainB.Header.Height),
@@ -355,7 +356,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state ibctypes.State,
+	state types.State,
 ) types.ConnectionEnd {
 	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := types.ConnectionEnd{
@@ -372,7 +373,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state ibctypes.State, order ibctypes.Order, connectionID string,
+	state channeltypes.State, order channeltypes.Order, connectionID string,
 ) channeltypes.Channel {
 	counterparty := channeltypes.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := channeltypes.NewChannel(state, order, counterparty, []string{connectionID}, "1.0")

@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -18,9 +16,9 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -40,7 +38,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = ibctypes.ORDERED
+	testChannelOrder   = types.ORDERED
 	testChannelVersion = "1.0"
 
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
@@ -76,7 +74,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
 	channel := types.NewChannel(
-		ibctypes.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(ctx, testPort1, testChannel1, channel)
@@ -93,15 +91,15 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.NewChannel(
-		ibctypes.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty3, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel2 := types.NewChannel(
-		ibctypes.INIT, testChannelOrder,
+		types.INIT, testChannelOrder,
 		counterparty1, []string{testConnectionIDA}, testChannelVersion,
 	)
 	channel3 := types.NewChannel(
-		ibctypes.CLOSED, testChannelOrder,
+		types.CLOSED, testChannelOrder,
 		counterparty2, []string{testConnectionIDA}, testChannelVersion,
 	)
 
@@ -239,7 +237,7 @@ func commitBlockWithNewTimestamp(chain *TestChain, timestamp int64) {
 // nolint: unused
 func queryProof(chain *TestChain, key []byte) (commitmenttypes.MerkleProof, uint64) {
 	res := chain.App.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight(),
 		Data:   key,
 		Prove:  true,
@@ -403,7 +401,7 @@ func (chain *TestChain) updateClient(client *TestChain) {
 
 func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
-	state ibctypes.State,
+	state connectiontypes.State,
 ) connectiontypes.ConnectionEnd {
 	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
 	connection := connectiontypes.ConnectionEnd{
@@ -419,7 +417,7 @@ func (chain *TestChain) createConnection(
 
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
-	state ibctypes.State, order ibctypes.Order, connectionID string,
+	state types.State, order types.Order, connectionID string,
 ) types.Channel {
 	counterparty := types.NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := types.NewChannel(state, order, counterparty,
@@ -436,66 +434,13 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 }
 
 // Mocked types
-// TODO: fix tests and replace for real proofs
 
-var (
-	_ commitmentexported.Proof = validProof{nil, nil, nil}
-	_ commitmentexported.Proof = invalidProof{}
-)
+type mockSuccessPacket struct{}
 
-type (
-	validProof struct {
-		root  commitmentexported.Root
-		path  commitmentexported.Path
-		value []byte
-	}
-	invalidProof struct{}
-)
+// GetBytes returns the serialised packet data
+func (mp mockSuccessPacket) GetBytes() []byte { return []byte("THIS IS A SUCCESS PACKET") }
 
-func (validProof) GetCommitmentType() commitmentexported.Type {
-	return commitmentexported.Merkle
-}
+type mockFailPacket struct{}
 
-func (proof validProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte,
-) error {
-	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
-		path.String() == proof.path.String() &&
-		bytes.Equal(value, proof.value) {
-		return nil
-	}
-	return errors.New("invalid proof")
-}
-
-func (validProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
-	return nil
-}
-
-func (validProof) ValidateBasic() error {
-	return nil
-}
-
-func (validProof) IsEmpty() bool {
-	return false
-}
-
-func (invalidProof) GetCommitmentType() commitmentexported.Type {
-	return commitmentexported.Merkle
-}
-
-func (invalidProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
-	return errors.New("proof failed")
-}
-
-func (invalidProof) ValidateBasic() error {
-	return errors.New("invalid proof")
-}
-
-func (invalidProof) IsEmpty() bool {
-	return true
-}
+// GetBytes returns the serialised packet data (without timeout)
+func (mp mockFailPacket) GetBytes() []byte { return []byte("THIS IS A FAILURE PACKET") }

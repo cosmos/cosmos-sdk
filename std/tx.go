@@ -1,7 +1,7 @@
 package std
 
 import (
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 
 	clientx "github.com/cosmos/cosmos-sdk/client/tx"

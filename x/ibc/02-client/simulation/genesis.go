@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
-// GenClientGenesis returns a randomized client genesis state.
+// GenClientGenesis returns the default client genesis state.
 func GenClientGenesis(_ *rand.Rand, _ []simtypes.Account) types.GenesisState {
 	return types.DefaultGenesisState()
 }

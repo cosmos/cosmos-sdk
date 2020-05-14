@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// GenChannelGenesis returns a randomized channel genesis state.
+// GenChannelGenesis returns the default channel genesis state.
 func GenChannelGenesis(_ *rand.Rand, _ []simtypes.Account) types.GenesisState {
 	return types.DefaultGenesisState()
 }

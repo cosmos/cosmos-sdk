@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-// GenConnectionGenesis returns a randomized connection genesis state.
+// GenConnectionGenesis returns the default connection genesis state.
 func GenConnectionGenesis(_ *rand.Rand, _ []simtypes.Account) types.GenesisState {
 	return types.DefaultGenesisState()
 }

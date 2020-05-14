@@ -9,14 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	clientsims "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionsims "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelsims "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Simulation parameter constants
@@ -49,12 +49,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { channelGenesisState = channelsims.GenChannelGenesis(r, simState.Accounts) },
 	)
 
-	ibcGenesis := ibc.GenesisState{
+	ibcGenesis := types.GenesisState{
 		ClientGenesis:     clientGenesisState,
 		ConnectionGenesis: connectionGenesisState,
 		ChannelGenesis:    channelGenesisState,
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", ibctypes.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, ibcGenesis))
-	simState.GenState[ibctypes.ModuleName] = simState.Cdc.MustMarshalJSON(ibcGenesis)
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", host.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, ibcGenesis))
+	simState.GenState[host.ModuleName] = simState.Cdc.MustMarshalJSON(ibcGenesis)
 }

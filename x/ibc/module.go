@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
 )
 
-// TODO: AppModuleSimulation
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}

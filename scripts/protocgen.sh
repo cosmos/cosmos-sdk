@@ -8,5 +8,5 @@ for dir in $proto_dirs; do
   -I. \
   --gocosmos_out=plugins=interfacetype,paths=source_relative,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
-  $(find "${dir}" -name '*.proto')
+  $(find "${dir}" -depth 1 -name '*.proto')
 done

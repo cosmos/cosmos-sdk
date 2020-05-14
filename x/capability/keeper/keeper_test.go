@@ -177,12 +177,12 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
-		mods, cap, mok := sk.LookupModules(suite.ctx, "transfer")
+		mods, cap, err := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
 
-		suite.Require().True(mok, "could not retrieve modules")
+		suite.Require().NoError(err, "could not retrieve modules")
 		suite.Require().NotNil(cap, "capability is nil")
 		suite.Require().NotNil(mods, "modules is nil")
 
@@ -205,12 +205,12 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
-		mods, cap, mok := sk.LookupModules(suite.ctx, "transfer")
+		mods, cap, err := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
 
-		suite.Require().True(mok, "could not retrieve modules")
+		suite.Require().NoError(err, "could not retrieve modules")
 		suite.Require().NotNil(cap, "capability is nil")
 		suite.Require().NotNil(mods, "modules is nil")
 

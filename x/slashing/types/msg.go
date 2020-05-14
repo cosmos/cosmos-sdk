@@ -14,7 +14,6 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 	}
 }
 
-//nolint
 func (msg MsgUnjail) Route() string { return RouterKey }
 func (msg MsgUnjail) Type() string  { return "unjail" }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {

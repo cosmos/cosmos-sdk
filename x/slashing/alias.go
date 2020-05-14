@@ -1,7 +1,5 @@
 package slashing
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -34,46 +32,46 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper                                = keeper.NewKeeper
-	NewQuerier                               = keeper.NewQuerier
-	RegisterCodec                            = types.RegisterCodec
-	ErrNoValidatorForAddress                 = types.ErrNoValidatorForAddress
-	ErrBadValidatorAddr                      = types.ErrBadValidatorAddr
-	ErrValidatorJailed                       = types.ErrValidatorJailed
-	ErrValidatorNotJailed                    = types.ErrValidatorNotJailed
-	ErrMissingSelfDelegation                 = types.ErrMissingSelfDelegation
-	ErrSelfDelegationTooLowToUnjail          = types.ErrSelfDelegationTooLowToUnjail
-	ErrNoSigningInfoFound                    = types.ErrNoSigningInfoFound
-	NewGenesisState                          = types.NewGenesisState
-	NewMissedBlock                           = types.NewMissedBlock
-	DefaultGenesisState                      = types.DefaultGenesisState
-	ValidateGenesis                          = types.ValidateGenesis
-	GetValidatorSigningInfoKey               = types.GetValidatorSigningInfoKey
-	GetValidatorSigningInfoAddress           = types.GetValidatorSigningInfoAddress
-	GetValidatorMissedBlockBitArrayPrefixKey = types.GetValidatorMissedBlockBitArrayPrefixKey
-	GetValidatorMissedBlockBitArrayKey       = types.GetValidatorMissedBlockBitArrayKey
-	GetAddrPubkeyRelationKey                 = types.GetAddrPubkeyRelationKey
-	NewMsgUnjail                             = types.NewMsgUnjail
-	ParamKeyTable                            = types.ParamKeyTable
-	NewParams                                = types.NewParams
-	DefaultParams                            = types.DefaultParams
-	NewQuerySigningInfoParams                = types.NewQuerySigningInfoParams
-	NewQuerySigningInfosParams               = types.NewQuerySigningInfosParams
-	NewValidatorSigningInfo                  = types.NewValidatorSigningInfo
+	NewKeeper                             = keeper.NewKeeper
+	NewQuerier                            = keeper.NewQuerier
+	RegisterCodec                         = types.RegisterCodec
+	ErrNoValidatorForAddress              = types.ErrNoValidatorForAddress
+	ErrBadValidatorAddr                   = types.ErrBadValidatorAddr
+	ErrValidatorJailed                    = types.ErrValidatorJailed
+	ErrValidatorNotJailed                 = types.ErrValidatorNotJailed
+	ErrMissingSelfDelegation              = types.ErrMissingSelfDelegation
+	ErrSelfDelegationTooLowToUnjail       = types.ErrSelfDelegationTooLowToUnjail
+	ErrNoSigningInfoFound                 = types.ErrNoSigningInfoFound
+	NewGenesisState                       = types.NewGenesisState
+	NewMissedBlock                        = types.NewMissedBlock
+	DefaultGenesisState                   = types.DefaultGenesisState
+	ValidateGenesis                       = types.ValidateGenesis
+	ValidatorSigningInfoKey               = types.ValidatorSigningInfoKey
+	ValidatorSigningInfoAddress           = types.ValidatorSigningInfoAddress
+	ValidatorMissedBlockBitArrayPrefixKey = types.ValidatorMissedBlockBitArrayPrefixKey
+	ValidatorMissedBlockBitArrayKey       = types.ValidatorMissedBlockBitArrayKey
+	AddrPubkeyRelationKey                 = types.AddrPubkeyRelationKey
+	NewMsgUnjail                          = types.NewMsgUnjail
+	ParamKeyTable                         = types.ParamKeyTable
+	NewParams                             = types.NewParams
+	DefaultParams                         = types.DefaultParams
+	NewQuerySigningInfoParams             = types.NewQuerySigningInfoParams
+	NewQuerySigningInfosParams            = types.NewQuerySigningInfosParams
+	NewValidatorSigningInfo               = types.NewValidatorSigningInfo
 
 	// variable aliases
-	ModuleCdc                       = types.ModuleCdc
-	ValidatorSigningInfoKey         = types.ValidatorSigningInfoKey
-	ValidatorMissedBlockBitArrayKey = types.ValidatorMissedBlockBitArrayKey
-	AddrPubkeyRelationKey           = types.AddrPubkeyRelationKey
-	DefaultMinSignedPerWindow       = types.DefaultMinSignedPerWindow
-	DefaultSlashFractionDoubleSign  = types.DefaultSlashFractionDoubleSign
-	DefaultSlashFractionDowntime    = types.DefaultSlashFractionDowntime
-	KeySignedBlocksWindow           = types.KeySignedBlocksWindow
-	KeyMinSignedPerWindow           = types.KeyMinSignedPerWindow
-	KeyDowntimeJailDuration         = types.KeyDowntimeJailDuration
-	KeySlashFractionDoubleSign      = types.KeySlashFractionDoubleSign
-	KeySlashFractionDowntime        = types.KeySlashFractionDowntime
+	ModuleCdc                             = types.ModuleCdc
+	ValidatorSigningInfoKeyPrefix         = types.ValidatorSigningInfoKeyPrefix
+	ValidatorMissedBlockBitArrayKeyPrefix = types.ValidatorMissedBlockBitArrayKeyPrefix
+	AddrPubkeyRelationKeyPrefix           = types.AddrPubkeyRelationKeyPrefix
+	DefaultMinSignedPerWindow             = types.DefaultMinSignedPerWindow
+	DefaultSlashFractionDoubleSign        = types.DefaultSlashFractionDoubleSign
+	DefaultSlashFractionDowntime          = types.DefaultSlashFractionDowntime
+	KeySignedBlocksWindow                 = types.KeySignedBlocksWindow
+	KeyMinSignedPerWindow                 = types.KeyMinSignedPerWindow
+	KeyDowntimeJailDuration               = types.KeyDowntimeJailDuration
+	KeySlashFractionDoubleSign            = types.KeySlashFractionDoubleSign
+	KeySlashFractionDowntime              = types.KeySlashFractionDowntime
 )
 
 type (

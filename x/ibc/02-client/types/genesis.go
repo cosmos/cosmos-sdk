@@ -25,15 +25,17 @@ func NewClientConsensusStates(id string, states []exported.ConsensusState) Clien
 type GenesisState struct {
 	Clients          []exported.ClientState  `json:"clients" yaml:"clients"`
 	ClientsConsensus []ClientConsensusStates `json:"clients_consensus" yaml:"clients_consensus"`
+	CreateLocalhost  bool                    `json:"create_localhost" yaml:"create_localhost"`
 }
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []exported.ClientState, clientsConsensus []ClientConsensusStates,
+	clients []exported.ClientState, clientsConsensus []ClientConsensusStates, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
 		ClientsConsensus: clientsConsensus,
+		CreateLocalhost:  createLocalhost,
 	}
 }
 
@@ -42,6 +44,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Clients:          []exported.ClientState{},
 		ClientsConsensus: []ClientConsensusStates{},
+		CreateLocalhost:  true,
 	}
 }
 

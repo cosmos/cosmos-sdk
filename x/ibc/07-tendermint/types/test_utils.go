@@ -1,13 +1,14 @@
 package types
 
 import (
-	"math"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+const maxInt = int(^uint(0) >> 1)
 
 // Copied unimported test functions from tmtypes to use them here
 func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
@@ -28,7 +29,7 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxInt32, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), maxInt, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,

@@ -1,13 +1,9 @@
 package exported
 
-import (
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-)
-
 // ChannelI defines the standard interface for a channel end.
 type ChannelI interface {
-	GetState() ibctypes.State
-	GetOrdering() ibctypes.Order
+	GetState() int32
+	GetOrdering() int32
 	GetCounterparty() CounterpartyI
 	GetConnectionHops() []string
 	GetVersion() string

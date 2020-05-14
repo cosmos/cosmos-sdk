@@ -48,6 +48,5 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 // Commit performs a no-op as entries are persistent between commitments.
 func (s *Store) Commit() (id types.CommitID) { return }
 
-// nolint
 func (s *Store) SetPruning(pruning types.PruningOptions) {}
 func (s Store) LastCommitID() (id types.CommitID)        { return }

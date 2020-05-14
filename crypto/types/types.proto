@@ -18,7 +18,7 @@ message PublicKey {
 
         // any_pubkey can be used for any pubkey that an app may use which is
         // not explicitly defined in the oneof
-        google.protobuf.Any any_pubkey = 15;
+        google.protobuf.Any any_pubkey = 15; // 15 is largest field that occupies one byte
     }
 }
 
@@ -49,6 +49,5 @@ message CompactBitArray {
     //  option (gogoproto.goproto_stringer) = false;
 
     uint32 extra_bits_stored = 1;
-    bytes elems = 2;
     bytes  elems             = 2;
 }

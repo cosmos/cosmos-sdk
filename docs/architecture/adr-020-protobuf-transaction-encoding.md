@@ -6,6 +6,7 @@
 - 2020 March 12: API Updates
 - 2020 April 13: Added details on interface `oneof` handling
 - 2020 April 30: Switch to `Any`
+- 2020 May 14: Describe public key encoding
 
 ## Status
 

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 	yaml "gopkg.in/yaml.v2"
@@ -318,7 +320,8 @@ type StdSignature struct {
 }
 
 // DefaultTxDecoder logic for standard transaction decoding
-func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func DefaultTxDecoder(amino *codec.Codec) sdk.TxDecoder {
+	cdc := codec.NewAminoCodec(amino)
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx = StdTx{}
 
@@ -328,7 +331,7 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 
 		// StdTx.Msg is an interface. The concrete types
 		// are registered by MakeTxCodec
-		err := cdc.UnmarshalBinaryBare(txBytes, &tx)
+		err := cdc.AminoUnmarshalBinaryBare(txBytes, &tx)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -338,8 +341,21 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 }
 
 // DefaultTxEncoder logic for standard transaction encoding
-func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
+func DefaultTxEncoder(amino *codec.Codec) sdk.TxEncoder {
+	cdc := codec.NewAminoCodec(amino)
 	return func(tx sdk.Tx) ([]byte, error) {
-		return cdc.MarshalBinaryBare(tx)
+		return cdc.AminoMarshalBinaryBare(tx)
 	}
+}
+
+var _ types.UnpackInterfacesMessage = StdTx{}
+
+func (tx StdTx) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, m := range tx.Msgs {
+		err := types.UnpackInterfaces(m, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

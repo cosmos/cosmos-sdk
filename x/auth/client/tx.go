@@ -87,12 +87,12 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 
 		var json []byte
 		if viper.GetBool(flags.FlagIndentResponse) {
-			json, err = cliCtx.Codec.MarshalJSONIndent(stdSignMsg, "", "  ")
+			json, err = codec.MarshalJSONIndent(cliCtx.Marshaler, stdSignMsg)
 			if err != nil {
 				panic(err)
 			}
 		} else {
-			json = cliCtx.Codec.MustMarshalJSON(stdSignMsg)
+			json = cliCtx.Marshaler.MustMarshalJSON(stdSignMsg)
 		}
 
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
@@ -163,9 +163,9 @@ func PrintUnsignedStdTx(txBldr authtypes.TxBuilder, cliCtx context.CLIContext, m
 
 	var json []byte
 	if viper.GetBool(flags.FlagIndentResponse) {
-		json, err = cliCtx.Codec.MarshalJSONIndent(stdTx, "", "  ")
+		json, err = codec.MarshalJSONIndent(cliCtx.Marshaler, stdTx)
 	} else {
-		json, err = cliCtx.Codec.MarshalJSON(stdTx)
+		json, err = cliCtx.Marshaler.MarshalJSON(stdTx)
 	}
 	if err != nil {
 		return err
@@ -231,7 +231,7 @@ func SignStdTxWithSignerAddress(
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
-func ReadStdTxFromFile(cdc *codec.Codec, filename string) (stdTx authtypes.StdTx, err error) {
+func ReadStdTxFromFile(cdc codec.Marshaler, filename string) (stdTx authtypes.StdTx, err error) {
 	var bytes []byte
 
 	if filename == "-" {

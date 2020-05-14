@@ -12,15 +12,17 @@ type AminoCodec struct {
 	amino *Codec
 }
 
-func NewAminoCodec(amino *Codec) Marshaler {
+var _ Marshaler = &AminoCodec{}
+
+func NewAminoCodec(amino *Codec) *AminoCodec {
 	return &AminoCodec{amino}
 }
 
-func (ac *AminoCodec) marshalAnys(o ProtoMarshaler) error {
+func (ac *AminoCodec) marshalAnys(o interface{}) error {
 	return types.UnpackInterfaces(o, types.AminoPacker{Cdc: ac.amino})
 }
 
-func (ac *AminoCodec) unmarshalAnys(o ProtoMarshaler) error {
+func (ac *AminoCodec) unmarshalAnys(o interface{}) error {
 	return types.UnpackInterfaces(o, types.AminoUnpacker{Cdc: ac.amino})
 }
 
@@ -32,12 +34,16 @@ func (ac *AminoCodec) jsonUnmarshalAnys(o interface{}) error {
 	return types.UnpackInterfaces(o, types.AminoJSONUnpacker{Cdc: ac.amino})
 }
 
-func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
+func (ac *AminoCodec) AminoMarshalBinaryBare(o interface{}) ([]byte, error) {
 	err := ac.marshalAnys(o)
 	if err != nil {
 		return nil, err
 	}
 	return ac.amino.MarshalBinaryBare(o)
+}
+
+func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
+	return ac.AminoMarshalBinaryBare(o)
 }
 
 func (ac *AminoCodec) MustMarshalBinaryBare(o ProtoMarshaler) []byte {
@@ -64,12 +70,16 @@ func (ac *AminoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
 	return ac.amino.MustMarshalBinaryLengthPrefixed(o)
 }
 
-func (ac *AminoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
+func (ac *AminoCodec) AminoUnmarshalBinaryBare(bz []byte, ptr interface{}) error {
 	err := ac.amino.UnmarshalBinaryBare(bz, ptr)
 	if err != nil {
 		return err
 	}
 	return ac.unmarshalAnys(ptr)
+}
+
+func (ac *AminoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
+	return ac.AminoUnmarshalBinaryBare(bz, ptr)
 }
 
 func (ac *AminoCodec) MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) {
@@ -130,4 +140,8 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 
 func (*AminoCodec) UnpackAny(*types.Any, interface{}) error {
 	return fmt.Errorf("AminoCodec can't handle unpack protobuf Any's")
+}
+
+func (ac *AminoCodec) Amino() *Codec {
+	return ac.amino
 }

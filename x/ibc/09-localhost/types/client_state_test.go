@@ -5,7 +5,6 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -88,7 +87,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connection.NewConnectionEnd(ibctypes.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {
 		name        string
@@ -132,7 +131,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 
 func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(ibctypes.OPEN, ibctypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	testCases := []struct {
 		name        string

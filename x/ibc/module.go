@@ -15,14 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // TODO: AppModuleSimulation
@@ -38,17 +33,12 @@ var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Name returns the ibc module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return host.ModuleName
 }
 
 // RegisterCodec registers the ibc module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	client.RegisterCodec(cdc)
-	connection.RegisterCodec(cdc)
-	channel.RegisterCodec(cdc)
-	ibctmtypes.RegisterCodec(cdc)
-	localhosttypes.RegisterCodec(cdc)
-	commitmenttypes.RegisterCodec(cdc)
+	RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
@@ -84,8 +74,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.
 func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
-	connection.RegisterInterfaces(registry)
-	channel.RegisterInterfaces(registry)
+	RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the ibc module.

@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
@@ -143,7 +143,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 // Implement IBCModule callbacks
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
-	order ibctypes.Order,
+	order channeltypes.Order,
 	connectionHops []string,
 	portID string,
 	channelID string,
@@ -164,7 +164,7 @@ func (am AppModule) OnChanOpenInit(
 	}
 
 	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)); err != nil {
+	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
 	}
 
@@ -174,7 +174,7 @@ func (am AppModule) OnChanOpenInit(
 
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
-	order ibctypes.Order,
+	order channeltypes.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -200,7 +200,7 @@ func (am AppModule) OnChanOpenTry(
 	}
 
 	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)); err != nil {
+	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
 	}
 

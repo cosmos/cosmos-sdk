@@ -9,7 +9,7 @@ type AminoCodec struct {
 var _ Marshaler = &AminoCodec{}
 
 func NewAminoCodec(Codec *Codec) *AminoCodec {
-	return &AminoCodec{Codec}
+	return &AminoCodec{Codec: Codec}
 }
 
 func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {

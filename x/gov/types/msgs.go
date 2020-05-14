@@ -24,7 +24,7 @@ var _ MsgSubmitProposalI = &MsgSubmitProposal{}
 var _ types.UnpackInterfacesMessage = MsgSubmitProposal{}
 
 // MsgSubmitProposalI defines the specific interface a concrete message must
-// implement in order to process governance proposals. The concrete MsgSubmitProposalLegacy
+// implement in order to process governance proposals. The concrete MsgSubmitProposal
 // must be defined at the application-level.
 type MsgSubmitProposalI interface {
 	sdk.Msg

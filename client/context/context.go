@@ -169,10 +169,6 @@ func (ctx CLIContext) WithMarshaler(m codec.Marshaler) CLIContext {
 // TODO: Deprecated (remove).
 func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
-	// Marshaler is set here for backwards compatibility with amino-only code
-	if ctx.Marshaler == nil {
-		ctx.Marshaler = codec.NewAminoCodec(cdc)
-	}
 	return ctx
 }
 

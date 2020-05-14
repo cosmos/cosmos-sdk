@@ -49,7 +49,7 @@ func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
 // TotalSupply checks that the total supply reflects all the coins held in accounts
 func TotalSupply(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var expectedTotal sdk.Coins = []sdk.Coin{}
+		expectedTotal := []sdk.Coin{}
 		supply := k.GetSupply(ctx)
 
 		k.IterateAllBalances(ctx, func(_ sdk.AccAddress, balance sdk.Coin) bool {

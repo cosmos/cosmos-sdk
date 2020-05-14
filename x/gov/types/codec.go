@@ -30,7 +30,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 // RegisterProposalTypeCodec registers an external proposal content type defined
-// in another module for the internal ModuleCdc. This allows the MsgSubmitProposalLegacy
+// in another module for the internal ModuleCdc. This allows the MsgSubmitProposal
 // to be correctly Amino encoded and decoded.
 //
 // NOTE: This should only be used for applications that are still using a concrete

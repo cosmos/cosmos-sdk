@@ -3,8 +3,7 @@ package types
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
+	"runtime/debug"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -19,10 +18,15 @@ type aminoCompat struct {
 
 const errorExplaination = ", this is likely because UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members"
 
+func aminoCompatError(errType string, x interface{}) error {
+	debug.PrintStack()
+	return fmt.Errorf("amino marshaling error: %s %+v"+errorExplaination, errType, x)
+}
+
 func (any Any) MarshalAmino() ([]byte, error) {
 	ac := any.aminoCompat
 	if ac == nil {
-		return nil, errors.WithStack(fmt.Errorf("can't amino unmarshal %+v"+errorExplaination, any))
+		return nil, aminoCompatError("binary unmarshal", any)
 	}
 	return ac.bz, ac.err
 }
@@ -38,7 +42,7 @@ func (any *Any) UnmarshalAmino(bz []byte) error {
 func (any Any) MarshalJSON() ([]byte, error) {
 	ac := any.aminoCompat
 	if ac == nil {
-		return nil, errors.WithStack(fmt.Errorf("can't JSON marshal %+v"+errorExplaination, any))
+		return nil, aminoCompatError("JSON marshal", any)
 	}
 	return ac.jsonBz, ac.err
 }
@@ -62,7 +66,7 @@ var _ AnyUnpacker = AminoUnpacker{}
 func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	ac := any.aminoCompat
 	if ac == nil {
-		return errors.WithStack(fmt.Errorf("can't amino unmarshal %T"+errorExplaination, iface))
+		return aminoCompatError("binary unmarshal", reflect.TypeOf(iface))
 	}
 	err := a.Cdc.UnmarshalBinaryBare(ac.bz, iface)
 	if err != nil {
@@ -121,7 +125,7 @@ var _ AnyUnpacker = AminoJSONUnpacker{}
 func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	ac := any.aminoCompat
 	if ac == nil {
-		return errors.WithStack(fmt.Errorf("can't amino unmarshal %T"+errorExplaination, iface))
+		return aminoCompatError("JSON unmarshal", reflect.TypeOf(iface))
 	}
 	err := a.Cdc.UnmarshalJSON(ac.jsonBz, iface)
 	if err != nil {

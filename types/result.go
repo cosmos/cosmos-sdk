@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -263,4 +265,21 @@ func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) Se
 func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	err = json.Unmarshal([]byte(logs), &res)
 	return res, err
+}
+
+var _ types.UnpackInterfacesMessage = SearchTxsResult{}
+var _ types.UnpackInterfacesMessage = TxResponse{}
+
+func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, tx := range s.Txs {
+		err := types.UnpackInterfaces(tx, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	return types.UnpackInterfaces(r.Tx, unpacker)
 }

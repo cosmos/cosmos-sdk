@@ -34,7 +34,11 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 	}
 	// valid id must contain only lower alphabetic characters
 	if !IsValidID(id) {
-		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s must contain only lowercase alphabetic characters", id)
+		return sdkerrors.Wrapf(
+			ErrInvalidID,
+			"identifier %s must contain only lowercase alphabetic or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'",
+			id,
+		)
 	}
 	return nil
 }
@@ -74,7 +78,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	return func(path string) error {
 		pathArr := strings.Split(path, "/")
 		for _, p := range pathArr {
-			// Each path element must either be valid identifier
+			// Each path element must either be a valid identifier
 			err := idValidator(p)
 			if err != nil && !IsValidID(p) {
 				return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains invalid identifier or non-alphanumeric path element: %s", path, p)
@@ -93,7 +97,7 @@ func PathValidator(path string) error {
 	}
 
 	for _, p := range pathArr {
-		// Each path element must be alphanumeric and non-blank
+		// Each path element must be a valid identifier
 		if strings.TrimSpace(p) == "" || !IsValidID(p) {
 			return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains an invalid non-alphanumeric character: '%s'", path, p)
 		}

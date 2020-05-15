@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -24,6 +25,9 @@ var IsValidID = regexp.MustCompile(`[a-z\.\_\+\-\#\[\]\<\>]+$`).MatchString
 type ValidateFn func(string) error
 
 func defaultIdentifierValidator(id string, min, max int) error { //nolint:unparam
+	if strings.TrimSpace(id) == "" {
+		return sdkerrors.Wrap(ErrInvalidID, "identifier cannot be blank")
+	}
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)
@@ -77,11 +81,22 @@ func PortIdentifierValidator(id string) error {
 func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	return func(path string) error {
 		pathArr := strings.Split(path, "/")
+		if len(pathArr) > 0 && pathArr[0] == path {
+			return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
+		}
+
 		for _, p := range pathArr {
-			// Each path element must either be a valid identifier
-			err := idValidator(p)
-			if err != nil && !IsValidID(p) {
-				return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains invalid identifier or non-alphanumeric path element: %s", path, p)
+			// NOTE: for some reason an empty string is added after Split
+			if p == "" {
+				continue
+			}
+			if err := idValidator(p); err != nil {
+				return err
+			}
+			// Each path element must either be a valid identifier or constant number
+			err := defaultIdentifierValidator(p, 2, 20)
+			if !sdk.IsNumeric(p) && err != nil {
+				return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 			}
 		}
 		return nil
@@ -92,14 +107,19 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 // This is optimized by simply checking that all path elements are alphanumeric.
 func PathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
-	if pathArr[0] == path {
+	if len(pathArr) > 0 && pathArr[0] == path {
 		return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
 	}
 
 	for _, p := range pathArr {
-		// Each path element must be a valid identifier
-		if strings.TrimSpace(p) == "" || !IsValidID(p) {
-			return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains an invalid non-alphanumeric character: '%s'", path, p)
+		// NOTE: for some reason an empty string is added after Split
+		if p == "" {
+			continue
+		}
+		// Each path element must be a valid identifier or constant number
+		err := defaultIdentifierValidator(p, 2, 20)
+		if !sdk.IsNumeric(p) && err != nil {
+			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 		}
 	}
 	return nil

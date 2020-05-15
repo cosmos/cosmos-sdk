@@ -7,6 +7,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	lite "github.com/tendermint/tendermint/lite2"
 )
 
 const (
@@ -30,7 +31,12 @@ func (suite *TendermintTestSuite) TestValidate() {
 		},
 		{
 			name:        "invalid client id",
-			clientState: ibctmtypes.NewClientState("testClientID", trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			clientState: ibctmtypes.NewClientState("(testClientID)", lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			expPass:     false,
+		},
+		{
+			name:        "invalid trust level",
+			clientState: ibctmtypes.NewClientState(testClientID, tmmath.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			expPass:     false,
 		},
 		{

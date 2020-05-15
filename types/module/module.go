@@ -139,8 +139,7 @@ type AppModule interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 
 	// routes
-	Route() string
-	NewHandler() sdk.Handler
+	NewRoute() sdk.Route
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
@@ -247,8 +246,9 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range m.Modules {
-		if module.Route() != "" {
-			router.AddRoute(module.Route(), module.NewHandler())
+		handler := module.NewRoute()
+		if handler != nil {
+			router.AddRoute(handler)
 		}
 		if module.QuerierRoute() != "" {
 			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())

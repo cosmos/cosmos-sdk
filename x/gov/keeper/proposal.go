@@ -61,7 +61,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 	}
 
 	var proposal types.Proposal
-	err := keeper.cdc.UnmarshalBinaryBare(bz, &proposal)
+	err := keeper.UnmarshalProposal(bz, &proposal)
 	if err != nil {
 		panic(err)
 	}
@@ -73,10 +73,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz, err := keeper.cdc.MarshalBinaryBare(&proposal)
-	if err != nil {
-		panic(err)
-	}
+	bz := keeper.MarshalProposal(proposal)
 
 	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }
@@ -102,7 +99,7 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 
 	for ; iterator.Valid(); iterator.Next() {
 		var proposal types.Proposal
-		err := keeper.cdc.UnmarshalBinaryBare(iterator.Value(), &proposal)
+		err := keeper.UnmarshalProposal(iterator.Value(), &proposal)
 		if err != nil {
 			panic(err)
 		}
@@ -195,4 +192,20 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
 	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
+}
+
+func (keeper Keeper) MarshalProposal(proposal types.Proposal) []byte {
+	bz, err := keeper.cdc.MarshalBinaryBare(&proposal)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
+	err := keeper.cdc.UnmarshalBinaryBare(bz, proposal)
+	if err != nil {
+		return err
+	}
+	return nil
 }

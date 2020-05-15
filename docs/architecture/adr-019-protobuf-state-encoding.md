@@ -6,7 +6,7 @@
 - 2020 Feb 24: Updates to handle messages with interface fields
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
-- 2020 May 15: Describe amino compatibility
+- 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
 
 ## Status
 

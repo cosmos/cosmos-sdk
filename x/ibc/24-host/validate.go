@@ -9,7 +9,7 @@ import (
 
 // IsValidID defines regular expression to check if the string consist of
 // characters in one of the following categories only:
-// 	- Alphanumeric
+// - Alphanumeric
 // - `.`, `_`, `+`, `-`, `#`
 // - `[`, `]`, `<`, `>`
 var IsValidID = regexp.MustCompile(`[a-z\.\_\+\-\#\[\]\<\>]+$`).MatchString

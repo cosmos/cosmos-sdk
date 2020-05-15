@@ -27,9 +27,7 @@ service QueryService {
 
 // QueryBalanceParams defines the params for querying an account balance.
 message QueryBalanceRequest {
-    bytes address = 1 [
-                      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-                      ];
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     string denom = 2;
 }
 
@@ -40,17 +38,12 @@ message QueryBalanceResponse {
 
 // QueryAllBalancesParams defines the params for querying all account balances
 message QueryAllBalancesRequest {
-    bytes address = 1 [
-                      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-                      ];
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     cosmos_sdk.query.v1.PageRequest page = 2;
 }
 
 // QueryAllBalancesResponse is the response to the QueryAllBalances rpc method
 message QueryAllBalancesResponse {
-    repeated cosmos_sdk.v1.Coin balances = 1 [
-                                             (gogoproto.nullable)     = false,
-                                             (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-                                             ];
+    repeated cosmos_sdk.v1.Coin balances = 1 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
     cosmos_sdk.query.v1.PageResponse page = 2;
 }

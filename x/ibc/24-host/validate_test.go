@@ -51,19 +51,24 @@ func TestDefaultIdentifierValidator(t *testing.T) {
 
 func TestPathValidator(t *testing.T) {
 	testCases := []testCase{
-		{"valid lowercase", "/lowercaseid", true},
-		{"numeric path", "/239123", true},
-		{"valid id special chars", "/._+-#[]<>._+-#[]<>", true},
+		{"valid lowercase", "p/lowercaseid", true},
+		{"numeric path", "p/239123", true},
+		{"valid id special chars", "p/._+-#[]<>._+-#[]<>", true},
 		{"valid id lower and special chars", "lower/._+-#[]<>", true},
-		{"id length out of range", "/l", true},
-		{"uppercase id", "/NOTLOWERCASE", true},
+		{"id length out of range", "p/l", true},
+		{"uppercase id", "p/NOTLOWERCASE", true},
 		{"invalid path", "lowercaseid", false},
-		{"blank id", "/               ", false},
-		{"id length out of range", "/123456789012345678901", false},
-		{"invalid id", "/(clientid)", false},
+		{"blank id", "p/               ", false},
+		{"id length out of range", "p/123456789012345678901", false},
+		{"invalid id", "p/(clientid)", false},
 		{"empty string", "", false},
 		{"separators only", "////", false},
 		{"just separator", "/", false},
+		{"begins with separator", "/id", false},
+		{"blank before separator", "    /id", false},
+		{"ends with separator", "id/", false},
+		{"blank after separator", "id/       ", false},
+		{"blanks with separator", "  /  ", false},
 	}
 
 	for _, tc := range testCases {
@@ -87,12 +92,14 @@ func TestCustomPathValidator(t *testing.T) {
 	})
 
 	testCases := []testCase{
-		{"valid custom path", "/id_client/id_one", true},
+		{"valid custom path", "id_client/id_one", true},
 		{"invalid path", "client", false},
-		{"invalid custom path", "/client", false},
-		{"invalid identifier", "/id_client/id_123456789012345678901", false},
+		{"invalid custom path", "id_one/client", false},
+		{"invalid identifier", "id_client/id_123456789012345678901", false},
 		{"separators only", "////", false},
 		{"just separator", "/", false},
+		{"ends with separator", "id_client/id_one/", false},
+		{"beings with separator", "/id_client/id_one", false},
 	}
 
 	for _, tc := range testCases {

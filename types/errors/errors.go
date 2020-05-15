@@ -94,11 +94,17 @@ var (
 	// ErrorInvalidGasAdjustment defines an error for an invalid gas adjustment
 	ErrorInvalidGasAdjustment = Register(RootCodespace, 25, "invalid gas adjustment")
 
+	// ErrInvalidHeight defines an error for an invalid height
+	ErrInvalidHeight = Register(RootCodespace, 26, "invalid height")
+
+	// ErrInvalidVersion defines a general error for an invalid version
+	ErrInvalidVersion = Register(RootCodespace, 27, "invalid version")
+
 	// ErrProtoarshal defines an ABCI typed protobuf marshalling error
-	ErrProtoMarshal = Register(RootCodespace, 26, "failed to marshal proto bytes")
+	ErrProtoMarshal = Register(RootCodespace, 27, "failed to marshal proto bytes")
 
 	// ErrProtoUnmarshal defines an ABCI typed protobuf unmarshalling error
-	ErrProtoUnmarshal = Register(RootCodespace, 27, "failed to unmarshal proto bytes")
+	ErrProtoUnmarshal = Register(RootCodespace, 28, "failed to unmarshal proto bytes")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info

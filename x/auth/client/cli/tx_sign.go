@@ -15,11 +15,10 @@ import (
 )
 
 const (
-	flagMultisig     = "multisig"
-	flagAppend       = "append"
-	flagValidateSigs = "validate-signatures"
-	flagSigOnly      = "signature-only"
-	flagOutfile      = "output-document"
+	flagMultisig = "multisig"
+	flagAppend   = "append"
+	flagSigOnly  = "signature-only"
+	flagOutfile  = "output-document"
 )
 
 // GetSignCommand returns the transaction sign command.

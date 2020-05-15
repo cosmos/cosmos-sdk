@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	lite "github.com/tendermint/tendermint/lite2"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,7 +20,6 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -27,6 +29,8 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
+
+	TrustLevel tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
 
 	// Duration of the period since the LastestTimestamp during which the
 	// submitted headers are valid for upgrade
@@ -49,31 +53,37 @@ type ClientState struct {
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 	return Initialize(
-		msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift, msg.Header,
+		msg.GetClientID(), msg.TrustLevel,
+		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
+		msg.Header,
 	)
 }
 
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
+	id string, trustLevel tmmath.Fraction,
+	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
+	header Header,
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
 
-	clientState := NewClientState(id, trustingPeriod, ubdPeriod, maxClockDrift, header)
+	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header)
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
+	id string, trustLevel tmmath.Fraction,
+	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
+	header Header,
 ) ClientState {
-
 	return ClientState{
 		ID:              id,
+		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
@@ -117,7 +127,10 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
+		return err
+	}
+	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {
@@ -135,6 +148,7 @@ func (cs ClientState) Validate() error {
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
+	_ sdk.KVStore,
 	cdc *codec.Codec,
 	provingRoot commitmentexported.Root,
 	height uint64,
@@ -144,7 +158,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof commitmentexported.Proof,
 	consensusState clientexported.ConsensusState,
 ) error {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -169,6 +183,7 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
+	_ sdk.KVStore,
 	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
@@ -177,7 +192,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
 		return err
 	}
@@ -206,6 +221,7 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
+	_ sdk.KVStore,
 	cdc codec.Marshaler,
 	height uint64,
 	prefix commitmentexported.Prefix,
@@ -215,7 +231,7 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -244,6 +260,7 @@ func (cs ClientState) VerifyChannelState(
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -253,7 +270,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -272,6 +289,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -281,7 +299,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -301,6 +319,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -309,7 +328,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}
@@ -328,6 +347,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
+	_ sdk.KVStore,
 	height uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
@@ -336,7 +356,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -364,7 +384,7 @@ func validateVerificationArgs(
 ) error {
 	if cs.GetLatestHeight() < height {
 		return sdkerrors.Wrap(
-			ibctypes.ErrInvalidHeight,
+			sdkerrors.ErrInvalidHeight,
 			fmt.Sprintf("client state (%s) height < proof height (%d < %d)", cs.ID, cs.GetLatestHeight(), height),
 		)
 	}

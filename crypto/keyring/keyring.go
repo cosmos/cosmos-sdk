@@ -424,7 +424,7 @@ func (ks keystore) List() ([]Info, error) {
 	var res []Info
 
 	keys, err := ks.db.Keys()
-	if err != nil { //nolint:unparam
+	if err != nil {
 		return nil, err
 	}
 
@@ -527,7 +527,7 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err
 		return nil, nil, errors.New("not a ledger object")
 	}
 
-	path, err := info.GetPath() //nolint:unparam
+	path, err := info.GetPath()
 	if err != nil {
 		return
 	}
@@ -629,7 +629,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 			buf := bufio.NewReader(buf)
 			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
-			if err != nil { //nolint:unparam
+			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
@@ -656,7 +656,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 			saltBytes := tmcrypto.CRandBytes(16)
 			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
-			if err != nil { //nolint:unparam
+			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}

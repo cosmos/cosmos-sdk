@@ -1,7 +1,5 @@
 package bank
 
-// nolint
-
 import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -74,5 +72,4 @@ type (
 	Keeper                  = keeper.Keeper
 	GenesisState            = types.GenesisState
 	Supply                  = types.Supply
-	Codec                   = types.Codec
 )

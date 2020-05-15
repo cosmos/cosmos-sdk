@@ -59,7 +59,7 @@ func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
 
 // InitCmd returns a command that initializes all files needed for Tendermint
 // and the respective application.
-func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManager, defaultNodeHome string) *cobra.Command { // nolint: golint
+func InitCmd(ctx *server.Context, cdc codec.JSONMarshaler, mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",

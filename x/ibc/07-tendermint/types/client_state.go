@@ -127,7 +127,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.DefaultClientIdentifierValidator(cs.ID); err != nil {
+	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
 		return err
 	}
 	if err := lite.ValidateTrustLevel(cs.TrustLevel); err != nil {

@@ -4,12 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	tmmath "github.com/tendermint/tendermint/libs/math"
+	lite "github.com/tendermint/tendermint/lite2"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,19 +27,17 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
+const flagTrustLevel = "trust-level"
+
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
-		Short: "create new client with a consensus state",
-		Long: strings.TrimSpace(fmt.Sprintf(`create new client with a specified identifier and consensus state:
-
-Example:
-$ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --from node0 --home ../node0/<app>cli --chain-id $CID
-		`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(5),
+		Use:     "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
+		Short:   "create new tendermint client",
+		Long:    "create new tendermint client. Trust level can be a fraction (eg: '1/3') or 'default'",
+		Example: fmt.Sprintf("%s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
+		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -54,23 +57,39 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 				}
 			}
 
-			trustingPeriod, err := time.ParseDuration(args[2])
+			var (
+				trustLevel tmmath.Fraction
+				err        error
+			)
+
+			lvl := viper.GetString(flagTrustLevel)
+
+			if lvl == "default" {
+				trustLevel = lite.DefaultTrustLevel
+			} else {
+				trustLevel, err = parseFraction(args[2])
+				if err != nil {
+					return err
+				}
+			}
+
+			trustingPeriod, err := time.ParseDuration(args[3])
 			if err != nil {
 				return err
 			}
 
-			ubdPeriod, err := time.ParseDuration(args[3])
+			ubdPeriod, err := time.ParseDuration(args[4])
 			if err != nil {
 				return err
 			}
 
-			maxClockDrift, err := time.ParseDuration(args[4])
+			maxClockDrift, err := time.ParseDuration(args[5])
 			if err != nil {
 				return err
 			}
 
 			msg := ibctmtypes.NewMsgCreateClient(
-				clientID, header, trustingPeriod, ubdPeriod, maxClockDrift, cliCtx.GetFromAddress(),
+				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, cliCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -80,7 +99,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_p
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
+	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	return cmd
 }
 
@@ -169,4 +188,26 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 	}
 
 	return cmd
+}
+
+func parseFraction(fraction string) (tmmath.Fraction, error) {
+	fr := strings.Split(fraction, "/")
+	if len(fr) != 2 || fr[0] == fraction {
+		return tmmath.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
+	}
+
+	numerator, err := strconv.ParseInt(fr[0], 10, 64)
+	if err != nil {
+		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
+	}
+
+	denominator, err := strconv.ParseInt(fr[1], 10, 64)
+	if err != nil {
+		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
+	}
+
+	return tmmath.Fraction{
+		Numerator:   numerator,
+		Denominator: denominator,
+	}, nil
 }

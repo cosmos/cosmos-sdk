@@ -20,6 +20,10 @@ const (
 	QueryAllConnections              = types.QueryAllConnections
 	QueryAllClientConnections        = types.QueryAllClientConnections
 	QueryClientConnections           = types.QueryClientConnections
+	UNINITIALIZED                    = types.UNINITIALIZED
+	INIT                             = types.INIT
+	TRYOPEN                          = types.TRYOPEN
+	OPEN                             = types.OPEN
 )
 
 var (
@@ -64,6 +68,7 @@ var (
 type (
 	Keeper                       = keeper.Keeper
 	End                          = types.ConnectionEnd
+	State                        = types.State
 	Counterparty                 = types.Counterparty
 	ClientKeeper                 = types.ClientKeeper
 	MsgConnectionOpenInit        = types.MsgConnectionOpenInit

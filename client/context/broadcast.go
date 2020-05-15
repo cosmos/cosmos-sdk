@@ -53,20 +53,23 @@ func CheckTendermintError(err error, txBytes []byte) *sdk.TxResponse {
 	switch {
 	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
 		return &sdk.TxResponse{
-			Code:   sdkerrors.ErrTxInMempoolCache.ABCICode(),
-			TxHash: txHash,
+			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
+			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),
+			TxHash:    txHash,
 		}
 
 	case strings.Contains(errStr, "mempool is full"):
 		return &sdk.TxResponse{
-			Code:   sdkerrors.ErrMempoolIsFull.ABCICode(),
-			TxHash: txHash,
+			Code:      sdkerrors.ErrMempoolIsFull.ABCICode(),
+			Codespace: sdkerrors.ErrMempoolIsFull.Codespace(),
+			TxHash:    txHash,
 		}
 
 	case strings.Contains(errStr, "tx too large"):
 		return &sdk.TxResponse{
-			Code:   sdkerrors.ErrTxTooLarge.ABCICode(),
-			TxHash: txHash,
+			Code:      sdkerrors.ErrTxTooLarge.ABCICode(),
+			Codespace: sdkerrors.ErrTxTooLarge.Codespace(),
+			TxHash:    txHash,
 		}
 
 	default:

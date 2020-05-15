@@ -18,8 +18,6 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 	var clientState exported.ClientState
 
 	switch clientType {
-	case 0:
-		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	case exported.Tendermint:
 		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
 		if !ok {
@@ -33,11 +31,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg exported.MsgCreateClie
 		}
 	case exported.Localhost:
 		// msg client id is always "localhost"
-		clientState = localhosttypes.NewClientState(
-			k.ClientStore(ctx, msg.GetClientID()),
-			ctx.ChainID(),
-			ctx.BlockHeight(),
-		)
+		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 	default:
 		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.GetClientType())
 	}

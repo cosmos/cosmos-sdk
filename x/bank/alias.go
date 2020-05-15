@@ -73,5 +73,4 @@ type (
 	Keeper                  = keeper.Keeper
 	GenesisState            = types.GenesisState
 	Supply                  = types.Supply
-	Codec                   = types.Codec
 )

@@ -245,13 +245,11 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range m.Modules {
-		route := module.NewRoute()
-		if route != nil {
+		if route := module.NewRoute(); route != nil {
 			router.AddRoute(route)
 		}
 
-		queryRoute := module.NewQueryRoute()
-		if queryRoute != nil {
+		if queryRoute := module.NewQueryRoute(); queryRoute != nil {
 			queryRouter.AddRoute(queryRoute)
 		}
 	}

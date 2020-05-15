@@ -1,11 +1,19 @@
 package host
 
 import (
+	"regexp"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// IsValidID defines regular expression to check if the string consist of
+// characters in one of the following categories only:
+// 	- Alphanumeric
+// - `.`, `_`, `+`, `-`, `#`
+// - `[`, `]`, `<`, `>`
+var IsValidID = regexp.MustCompile(`[a-z\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
 // ICS 024 Identifier and Path Validation Implementation
 //

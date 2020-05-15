@@ -37,7 +37,7 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid connection",
 			genState: NewGenesisState(
 				[]ConnectionEnd{
-					NewConnectionEnd(INIT, connectionID, "CLIENTIDONE", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
+					NewConnectionEnd(INIT, connectionID, "(CLIENTIDONE)", Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
 					{clientID, []string{host.ConnectionPath(connectionID)}},
@@ -52,7 +52,7 @@ func TestValidateGenesis(t *testing.T) {
 					NewConnectionEnd(INIT, connectionID, clientID, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []string{"1.0.0"}),
 				},
 				[]ConnectionPaths{
-					{"CLIENTIDONE", []string{host.ConnectionPath(connectionID)}},
+					{"(CLIENTIDONE)", []string{host.ConnectionPath(connectionID)}},
 				},
 			),
 			expPass: false,

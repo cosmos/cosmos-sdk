@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -13,7 +12,7 @@ import (
 // - Alphanumeric
 // - `.`, `_`, `+`, `-`, `#`
 // - `[`, `]`, `<`, `>`
-var IsValidID = regexp.MustCompile(`[a-z\.\_\+\-\#\[\]\<\>]+$`).MatchString
+var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
 // ICS 024 Identifier and Path Validation Implementation
 //
@@ -40,7 +39,7 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 	if !IsValidID(id) {
 		return sdkerrors.Wrapf(
 			ErrInvalidID,
-			"identifier %s must contain only lowercase alphabetic or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'",
+			"identifier %s must contain only alphanumeric or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'",
 			id,
 		)
 	}
@@ -94,8 +93,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 				return err
 			}
 			// Each path element must either be a valid identifier or constant number
-			err := defaultIdentifierValidator(p, 2, 20)
-			if !sdk.IsNumeric(p) && err != nil {
+			if err := defaultIdentifierValidator(p, 1, 20); err != nil {
 				return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 			}
 		}
@@ -117,8 +115,7 @@ func PathValidator(path string) error {
 			continue
 		}
 		// Each path element must be a valid identifier or constant number
-		err := defaultIdentifierValidator(p, 2, 20)
-		if !sdk.IsNumeric(p) && err != nil {
+		if err := defaultIdentifierValidator(p, 1, 20); err != nil {
 			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 		}
 	}

@@ -19,10 +19,11 @@ func TestDefaultIdentifierValidatar(t *testing.T) {
 		{"valid lowercase", "lowercaseid", true},
 		{"valid id special chars", "._+-#[]<>._+-#[]<>", true},
 		{"valid id lower and special chars", "lower._+-#[]<>", true},
+		{"numeric id", "1234567890", true},
+		{"uppercase id", "NOTLOWERCASE", true},
+		{"numeric id", "1234567890", true},
 		{"blank id", "               ", false},
-		{"id length out of range", "l", false},
-		{"uppercase id", "NOTLOWERCASE", false},
-		{"numeric id", "1234567890", false},
+		{"id length out of range", "1", false},
 		{"path-like id", "lower/case/id", false},
 	}
 
@@ -49,13 +50,14 @@ func TestDefaultIdentifierValidatar(t *testing.T) {
 func TestPathValidatar(t *testing.T) {
 	testCases := []testCase{
 		{"valid lowercase", "/lowercaseid", true},
-		{"numeric path", "/1", true},
+		{"numeric path", "/239123", true},
 		{"valid id special chars", "/._+-#[]<>/._+-#[]<>", true},
 		{"valid id lower and special chars", "lower/._+-#[]<>", true},
+		{"id length out of range", "/l", true},
+		{"uppercase id", "/NOTLOWERCASE", true},
 		{"invalid path", "lowercaseid", false},
 		{"blank id", "/               ", false},
-		{"id length out of range", "/l", false},
-		{"uppercase id", "/NOTLOWERCASE", false},
+		{"id length out of range", "/123456789012345678901", false},
 	}
 
 	for _, tc := range testCases {
@@ -81,7 +83,7 @@ func TestCustomPathValidatar(t *testing.T) {
 		{"valid custom path", "/id_client/id_one", true},
 		{"invalid path", "client", false},
 		{"invalid custom path", "/client", false},
-		{"invalid identifier", "/id_client/id_1", false},
+		{"invalid identifier", "/id_client/id_123456789012345678901", false},
 	}
 
 	for _, tc := range testCases {

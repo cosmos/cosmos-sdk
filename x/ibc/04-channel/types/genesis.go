@@ -129,10 +129,10 @@ func (gs GenesisState) Validate() error {
 }
 
 func validateGenFields(portID, channelID string, sequence uint64) error {
-	if err := host.DefaultPortIdentifierValidator(portID); err != nil {
+	if err := host.PortIdentifierValidator(portID); err != nil {
 		return err
 	}
-	if err := host.DefaultChannelIdentifierValidator(channelID); err != nil {
+	if err := host.ChannelIdentifierValidator(channelID); err != nil {
 		return err
 	}
 	if sequence == 0 {

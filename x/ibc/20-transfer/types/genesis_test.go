@@ -29,7 +29,7 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			"invalid client",
 			types.GenesisState{
-				PortID: "INVALIDPORT",
+				PortID: "(INVALIDPORT)",
 			},
 			false,
 		},

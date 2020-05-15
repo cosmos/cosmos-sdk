@@ -1,11 +1,19 @@
 package host
 
 import (
+	"fmt"
+	"regexp"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// IsValidID defines regular expression to check if the string consist of
+// characters in one of the following categories only:
+// - Alphanumeric
+// - `.`, `_`, `+`, `-`, `#`
+// - `[`, `]`, `<`, `>`
+var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchString
 
 // ICS 024 Identifier and Path Validation Implementation
 //
@@ -17,6 +25,9 @@ import (
 type ValidateFn func(string) error
 
 func defaultIdentifierValidator(id string, min, max int) error { //nolint:unparam
+	if strings.TrimSpace(id) == "" {
+		return sdkerrors.Wrap(ErrInvalidID, "identifier cannot be blank")
+	}
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)
@@ -26,8 +37,12 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}
 	// valid id must contain only lower alphabetic characters
-	if !sdk.IsAlphaLower(id) {
-		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s must contain only lowercase alphabetic characters", id)
+	if !IsValidID(id) {
+		return sdkerrors.Wrapf(
+			ErrInvalidID,
+			"identifier %s must contain only alphanumeric or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'",
+			id,
+		)
 	}
 	return nil
 }
@@ -66,30 +81,61 @@ func PortIdentifierValidator(id string) error {
 func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	return func(path string) error {
 		pathArr := strings.Split(path, "/")
+		if len(pathArr) > 0 && pathArr[0] == path {
+			return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
+		}
+
+		allEmptyItems := true
 		for _, p := range pathArr {
-			// Each path element must either be valid identifier or alphanumeric
-			err := idValidator(p)
-			if err != nil && !sdk.IsAlphaNumeric(p) {
-				return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains invalid identifier or non-alphanumeric path element: %s", path, p)
+			// NOTE: for some reason an empty string is added after Split
+			if p == "" {
+				continue
+			}
+
+			allEmptyItems = false
+
+			if err := idValidator(p); err != nil {
+				return err
+			}
+			// Each path element must either be a valid identifier or constant number
+			if err := defaultIdentifierValidator(p, 1, 20); err != nil {
+				return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 			}
 		}
+
+		if allEmptyItems {
+			return fmt.Errorf("path %s must contain at least one identifier", path)
+		}
+
 		return nil
 	}
 }
 
-// PathValidator takes in path string and validateswith def ault identifier rules.
+// PathValidator takes in path string and validates with default identifier rules.
 // This is optimized by simply checking that all path elements are alphanumeric.
 func PathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
-	if pathArr[0] == path {
+	if len(pathArr) > 0 && pathArr[0] == path {
 		return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
 	}
 
+	allEmptyItems := true
 	for _, p := range pathArr {
-		// Each path element must be alphanumeric and non-blank
-		if strings.TrimSpace(p) == "" || !sdk.IsAlphaNumeric(p) {
-			return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains an invalid non-alphanumeric character: '%s'", path, p)
+		// NOTE: for some reason an empty string is added after Split
+		if p == "" {
+			continue
 		}
+
+		allEmptyItems = false
+
+		// Each path element must be a valid identifier or constant number
+		if err := defaultIdentifierValidator(p, 1, 20); err != nil {
+			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
+		}
+	}
+
+	if allEmptyItems {
+		return fmt.Errorf("path %s must contain at least one identifier", path)
 	}
 	return nil
 }

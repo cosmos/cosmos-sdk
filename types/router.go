@@ -37,6 +37,11 @@ type Route interface {
 
 // QueryRouter provides queryables for each query path.
 type QueryRouter interface {
-	AddRoute(r string, h Querier) QueryRouter
+	AddRoute(route QueryRoute) QueryRouter
 	Route(path string) Querier
+}
+
+type QueryRoute interface {
+	Name() string
+	Handler() Querier
 }

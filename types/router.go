@@ -43,5 +43,5 @@ type QueryRouter interface {
 
 type QueryRoute interface {
 	Name() string
-	Handler() Querier
+	Querier() Querier
 }

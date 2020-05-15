@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	transfertypes "github.com/cosmos/cosmos-sdk/x/transfer/types"
 )
 
 func (suite *KeeperTestSuite) TestSendPacket() {

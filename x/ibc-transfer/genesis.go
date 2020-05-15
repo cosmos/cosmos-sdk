@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
 // InitGenesis binds to portid from genesis state

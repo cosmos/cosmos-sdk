@@ -169,7 +169,7 @@ func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.R
 	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.TxI, error) {
+func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx types.StdTx
 
 	err := cdc.UnmarshalBinaryBare(txBytes, &tx)

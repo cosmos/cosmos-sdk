@@ -21,13 +21,13 @@ import (
 )
 
 // run the tx through the anteHandler and ensure its valid
-func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.TxI, simulate bool) {
+func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
 	_, err := anteHandler(ctx, tx, simulate)
 	require.Nil(t, err)
 }
 
 // run the tx through the anteHandler and ensure it fails with the given code
-func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.TxI, simulate bool, expErr error) {
+func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, expErr error) {
 	_, err := anteHandler(ctx, tx, simulate)
 	require.NotNil(t, err)
 	require.True(t, errors.Is(expErr, err))
@@ -63,7 +63,7 @@ func TestSimulateGasCost(t *testing.T) {
 	require.NoError(t, err)
 
 	// set up msgs and fee
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg1 := types.NewTestMsg(addr1, addr2)
 	msg2 := types.NewTestMsg(addr3, addr1)
 	msg3 := types.NewTestMsg(addr2, addr3)
@@ -100,7 +100,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	priv3, _, addr3 := types.KeyTestPubAddr()
 
 	// msg and signatures
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg1 := types.NewTestMsg(addr1, addr2)
 	msg2 := types.NewTestMsg(addr1, addr3)
 	fee := types.NewTestStdFee()
@@ -161,7 +161,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	require.NoError(t, err)
 
 	// msg and signatures
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
@@ -219,7 +219,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	require.NoError(t, err)
 
 	// msg and signatures
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
@@ -281,7 +281,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr3, types.NewTestCoins())
 
 	// msg and signatures
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	fee := types.NewTestStdFee()
 
@@ -345,7 +345,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 
 	// msg and signatures
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewTestStdFee()
@@ -388,7 +388,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 
 	// msg and signatures
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewStdFee(0, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
@@ -439,7 +439,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr3, types.NewTestCoins())
 
 	// set up msgs and fee
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg1 := types.NewTestMsg(addr1, addr2)
 	msg2 := types.NewTestMsg(addr3, addr1)
 	msg3 := types.NewTestMsg(addr2, addr3)
@@ -483,7 +483,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc2)
 	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	msgs := []sdk.Msg{msg}
 	fee := types.NewTestStdFee()
@@ -560,7 +560,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc2)
 	app.BankKeeper.SetBalances(ctx, addr2, types.NewTestCoins())
 
-	var tx sdk.TxI
+	var tx sdk.Tx
 
 	// test good tx and set public key
 	msg := types.NewTestMsg(addr1)
@@ -685,7 +685,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 		app.BankKeeper.SetBalances(ctx, addr, types.NewTestCoins())
 	}
 
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
 	msgs := []sdk.Msg{msg}
 	fee := types.NewTestStdFee()
@@ -719,7 +719,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 
-	var tx sdk.TxI
+	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	fee := types.NewTestStdFee()

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	_ sdk.TxI                 = (*Transaction)(nil)
+	_ sdk.Tx                  = (*Transaction)(nil)
 	_ clientx.ClientTx        = (*Transaction)(nil)
 	_ clientx.Generator       = TxGenerator{}
 	_ clientx.ClientFee       = &StdFee{}

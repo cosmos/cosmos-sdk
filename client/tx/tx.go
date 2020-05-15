@@ -48,7 +48,7 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	ClientTx interface {
-		sdk.TxI
+		sdk.Tx
 		codec.ProtoMarshaler
 
 		SetMsgs(...sdk.Msg) error

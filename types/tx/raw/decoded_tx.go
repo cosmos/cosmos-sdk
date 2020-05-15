@@ -1,7 +1,9 @@
-package ante
+package raw
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -20,12 +22,12 @@ type DecodedTx struct {
 	SignerInfoMap map[string]*sdk.SignerInfo
 }
 
-var _ sdk.TxI = DecodedTx{}
-var _ SigVerifiableTx = DecodedTx{}
-var _ FeeTx = DecodedTx{}
-var _ TxWithMemo = DecodedTx{}
+var _ sdk.Tx = DecodedTx{}
+var _ ante.SigVerifiableTx = DecodedTx{}
+var _ ante.FeeTx = DecodedTx{}
+var _ ante.TxWithMemo = DecodedTx{}
 
-var DefaultTxDecoder sdk.TxDecoder = func(txBytes []byte) (sdk.TxI, error) {
+var DefaultTxDecoder sdk.TxDecoder = func(txBytes []byte) (sdk.Tx, error) {
 	var raw TxRaw
 	err := raw.Unmarshal(txBytes)
 	if err != nil {

@@ -75,7 +75,7 @@ func queryProof(chain *TestChain, key string) (proof commitmenttypes.MerkleProof
 	return
 }
 
-func (suite *HandlerTestSuite) newTx(msg sdk.Msg) sdk.TxI {
+func (suite *HandlerTestSuite) newTx(msg sdk.Msg) sdk.Tx {
 	return authtypes.StdTx{
 		Msgs: []sdk.Msg{msg},
 	}

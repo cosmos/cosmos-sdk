@@ -46,7 +46,7 @@ type (
 	}
 
 	// Tx defines the interface a transaction must fulfill.
-	TxI interface {
+	Tx interface {
 		// Gets the all the transaction's messages.
 		GetMsgs() []Msg
 
@@ -57,10 +57,10 @@ type (
 )
 
 // TxDecoder unmarshals transaction bytes
-type TxDecoder func(txBytes []byte) (TxI, error)
+type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
-type TxEncoder func(tx TxI) ([]byte, error)
+type TxEncoder func(tx Tx) ([]byte, error)
 
 //__________________________________________________________
 

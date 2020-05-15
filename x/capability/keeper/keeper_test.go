@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -28,7 +27,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
-	cdc := codec.NewHybridCodec(app.Codec())
+	cdc := app.AppCodec()
 
 	// create new keeper so we can define custom scoping before init and seal
 	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey))
@@ -178,12 +177,12 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
-		mods, cap, mok := sk.LookupModules(suite.ctx, "transfer")
+		mods, cap, err := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
 
-		suite.Require().True(mok, "could not retrieve modules")
+		suite.Require().NoError(err, "could not retrieve modules")
 		suite.Require().NotNil(cap, "capability is nil")
 		suite.Require().NotNil(mods, "modules is nil")
 
@@ -206,12 +205,12 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
-		mods, cap, mok := sk.LookupModules(suite.ctx, "transfer")
+		mods, cap, err := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
 
-		suite.Require().True(mok, "could not retrieve modules")
+		suite.Require().NoError(err, "could not retrieve modules")
 		suite.Require().NotNil(cap, "capability is nil")
 		suite.Require().NotNil(mods, "modules is nil")
 

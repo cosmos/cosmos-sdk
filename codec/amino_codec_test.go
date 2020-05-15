@@ -3,6 +3,8 @@ package codec_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/stretchr/testify/require"
 	amino "github.com/tendermint/go-amino"
 
@@ -21,6 +23,9 @@ func createTestCodec() *amino.Codec {
 }
 
 func TestAminoCodec(t *testing.T) {
+	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
+	require.NoError(t, err)
+
 	testCases := []struct {
 		name         string
 		codec        codec.Marshaler
@@ -44,6 +49,14 @@ func TestAminoCodec(t *testing.T) {
 			&testdata.Cat{},
 			false,
 			true,
+		},
+		{
+			"any marshaling",
+			codec.NewAminoCodec(createTestCodec()),
+			&testdata.HasAnimal{Animal: any},
+			&testdata.HasAnimal{Animal: any},
+			false,
+			false,
 		},
 	}
 

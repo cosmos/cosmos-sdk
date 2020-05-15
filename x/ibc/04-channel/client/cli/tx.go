@@ -14,7 +14,6 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -243,9 +242,9 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 	}
 }
 
-func channelOrder() exported.Order {
+func channelOrder() types.Order {
 	if viper.GetBool(FlagOrdered) {
-		return exported.ORDERED
+		return types.ORDERED
 	}
-	return exported.UNORDERED
+	return types.UNORDERED
 }

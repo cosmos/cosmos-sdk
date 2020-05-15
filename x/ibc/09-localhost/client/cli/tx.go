@@ -23,10 +23,9 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "create new localhost client",
-		Long: strings.TrimSpace(fmt.Sprintf(`create new localhost (loopback) client:
-
-Example:
-$ %s tx ibc client localhost create --from node0 --home ../node0/<app>cli --chain-id $CID
+		Long: strings.TrimSpace(fmt.Sprintf(`create new localhost (loopback) client:	
+Example:	
+$ %s tx ibc client localhost create --from node0 --home ../node0/<app>cli --chain-id $CID	
 `, version.ClientName),
 		),
 		Args: cobra.ExactArgs(0),

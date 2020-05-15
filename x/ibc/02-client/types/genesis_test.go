@@ -6,11 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -36,8 +34,6 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	store := cachekv.NewStore(mem)
 	header := ibctmtypes.CreateTestHeader("chainID", 10, now, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
@@ -54,8 +50,8 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
-					localhosttypes.NewClientState(store, "chaindID", 10),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
 					{
@@ -67,6 +63,7 @@ func TestValidateGenesis(t *testing.T) {
 						},
 					},
 				},
+				true,
 			),
 			expPass: true,
 		},
@@ -74,10 +71,11 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
-					localhosttypes.NewClientState(store, "chaindID", 0),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					localhosttypes.NewClientState("chaindID", 0),
 				},
 				nil,
+				true,
 			),
 			expPass: false,
 		},
@@ -85,8 +83,8 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
-					localhosttypes.NewClientState(store, "chaindID", 10),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
 					{
@@ -98,6 +96,7 @@ func TestValidateGenesis(t *testing.T) {
 						},
 					},
 				},
+				true,
 			),
 			expPass: false,
 		},
@@ -105,8 +104,8 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid consensus state",
 			genState: types.NewGenesisState(
 				[]exported.ClientState{
-					ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, header),
-					localhosttypes.NewClientState(store, "chaindID", 10),
+					ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header),
+					localhosttypes.NewClientState("chaindID", 10),
 				},
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
@@ -118,6 +117,7 @@ func TestValidateGenesis(t *testing.T) {
 						},
 					),
 				},
+				true,
 			),
 			expPass: false,
 		},

@@ -46,35 +46,44 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 	}
 }
 
-// Start starts the rest server
-func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint, cors bool) (err error) {
+// StartWithConfig starts the REST server that listens on the provided listenAddr.
+// It will use the provided RPC configuration.
+func (rs *RestServer) StartWithConfig(listenAddr string, cors bool, cfg *rpcserver.Config) error {
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	cfg := rpcserver.DefaultConfig()
-	cfg.MaxOpenConnections = maxOpen
-	cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
-	cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
-
-	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
+	listener, err := rpcserver.Listen(listenAddr, cfg)
 	if err != nil {
-		return
+		return err
 	}
+
+	rs.listener = listener
+
 	rs.log.Info(
-		fmt.Sprintf(
-			"Starting application REST service (chain-id: %q)...",
-			viper.GetString(flags.FlagChainID),
-		),
+		fmt.Sprintf("Starting application REST service (chain-id: %q)...", viper.GetString(flags.FlagChainID)),
 	)
 
 	var h http.Handler = rs.Mux
+
 	if cors {
 		return rpcserver.StartHTTPServer(rs.listener, handlers.CORS()(h), rs.log, cfg)
 	}
 
 	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
+}
+
+// Start starts the REST server that listens on the provided listenAddr. The REST
+// service will use Tendermint's default RPC configuration, where the R/W timeout
+// and max open connections are overridden.
+func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTimeout uint, cors bool) error {
+	cfg := rpcserver.DefaultConfig()
+	cfg.MaxOpenConnections = maxOpen
+	cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
+	cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
+
+	return rs.StartWithConfig(listenAddr, cors, cfg)
 }
 
 // ServeCommand will start the application REST service as a blocking process. It
@@ -90,16 +99,18 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			registerRoutesFn(rs)
 			rs.registerSwaggerUI()
 
-			// Start the rest server and return error if one exists
-			err = rs.Start(
-				viper.GetString(flags.FlagListenAddr),
-				viper.GetInt(flags.FlagMaxOpenConnections),
-				uint(viper.GetInt(flags.FlagRPCReadTimeout)),
-				uint(viper.GetInt(flags.FlagRPCWriteTimeout)),
-				viper.GetBool(flags.FlagUnsafeCORS),
-			)
+			cfg := rpcserver.DefaultConfig()
+			cfg.MaxOpenConnections = viper.GetInt(flags.FlagMaxOpenConnections)
+			cfg.ReadTimeout = time.Duration(viper.GetInt64(flags.FlagRPCReadTimeout)) * time.Second
+			cfg.WriteTimeout = time.Duration(viper.GetInt64(flags.FlagRPCWriteTimeout)) * time.Second
+			cfg.MaxBodyBytes = viper.GetInt64(flags.FlagRPCMaxBodyBytes)
 
-			return err
+			// start the rest server and return error if one exists
+			return rs.StartWithConfig(
+				viper.GetString(flags.FlagListenAddr),
+				viper.GetBool(flags.FlagUnsafeCORS),
+				cfg,
+			)
 		},
 	}
 
@@ -111,6 +122,7 @@ func (rs *RestServer) registerSwaggerUI() {
 	if err != nil {
 		panic(err)
 	}
+
 	staticServer := http.FileServer(statikFS)
 	rs.Mux.PathPrefix("/").Handler(staticServer)
 }

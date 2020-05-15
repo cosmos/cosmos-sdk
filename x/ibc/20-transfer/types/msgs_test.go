@@ -12,12 +12,12 @@ import (
 // define constants used for testing
 const (
 	validPort        = "testportid"
-	invalidPort      = "invalidport1"
+	invalidPort      = "(invalidport1)"
 	invalidShortPort = "p"
 	invalidLongPort  = "invalidlongportinvalidlongport"
 
 	validChannel        = "testchannel"
-	invalidChannel      = "invalidchannel1"
+	invalidChannel      = "(invalidchannel1)"
 	invalidShortChannel = "invalidch"
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
 )
@@ -96,7 +96,7 @@ func TestMsgTransferGetSignBytes(t *testing.T) {
 	msg := NewMsgTransfer(validPort, validChannel, 10, coins, addr1, addr2)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"ibc/transfer/MsgTransfer","value":{"amount":[{"amount":"100","denom":"atom"}],"dest_height":"10","receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"cosmos1w3jhxarpv3j8yvg4ufs4x","source_channel":"testchannel","source_port":"testportid"}}`
+	expected := `{"type":"ibc/transfer/MsgTransfer","value":{"amount":[{"amount":"100","denom":"atom"}],"destination_height":"10","receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"cosmos1w3jhxarpv3j8yvg4ufs4x","source_channel":"testchannel","source_port":"testportid"}}`
 	require.Equal(t, expected, string(res))
 }
 

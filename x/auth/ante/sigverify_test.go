@@ -175,7 +175,7 @@ func TestSigIntegration(t *testing.T) {
 	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
+func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
 	// setup
 	app, ctx := createTestApp(true)
 	// Make block-height non-zero to include accNum in SignBytes

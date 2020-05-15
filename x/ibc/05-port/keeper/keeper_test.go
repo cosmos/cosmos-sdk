@@ -8,7 +8,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/keeper"
@@ -16,13 +15,12 @@ import (
 
 var (
 	validPort   = "validportid"
-	invalidPort = "invalidPortID"
+	invalidPort = "(invalidPortID)"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
 	ctx    sdk.Context
 	keeper *keeper.Keeper
 }
@@ -31,7 +29,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
 
-	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.keeper = &app.IBCKeeper.PortKeeper
 }

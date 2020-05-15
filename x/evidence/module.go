@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +26,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // ----------------------------------------------------------------------------
@@ -32,7 +35,6 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the evidence module.
 type AppModuleBasic struct {
-	cdc              Codec
 	evidenceHandlers []client.EvidenceHandler // client evidence submission handlers
 }
 
@@ -95,6 +97,10 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
 
+func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
+	RegisterInterfaces(registry)
+}
+
 // ----------------------------------------------------------------------------
 // AppModule
 // ----------------------------------------------------------------------------
@@ -106,9 +112,9 @@ type AppModule struct {
 	keeper Keeper
 }
 
-func NewAppModule(cdc Codec, keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	}
 }
@@ -192,7 +198,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

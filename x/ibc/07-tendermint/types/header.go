@@ -16,8 +16,8 @@ var _ clientexported.Header = Header{}
 
 // Header defines the Tendermint consensus Header
 type Header struct {
-	tmtypes.SignedHeader                       // contains the commitment root
-	ValidatorSet         *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
+	tmtypes.SignedHeader `json:"signed_header" yaml:"signed_header"` // contains the commitment root
+	ValidatorSet         *tmtypes.ValidatorSet                       `json:"validator_set" yaml:"validator_set"`
 }
 
 // ClientType defines that the Header is a Tendermint consensus algorithm

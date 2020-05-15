@@ -19,9 +19,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/capability"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -158,6 +161,9 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
 		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 		{app.keys[evidence.StoreKey], newApp.keys[evidence.StoreKey], [][]byte{}},
+		{app.keys[capability.StoreKey], newApp.keys[capability.StoreKey], [][]byte{}},
+		{app.keys[ibc.StoreKey], newApp.keys[ibc.StoreKey], [][]byte{}},
+		{app.keys[transfer.StoreKey], newApp.keys[transfer.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
@@ -268,7 +274,6 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-
 			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, interBlockCacheOpt())
 
 			fmt.Printf(
@@ -292,7 +297,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			if j != 0 {
 				require.Equal(
-					t, appHashList[0], appHashList[j],
+					t, string(appHashList[0]), string(appHashList[j]),
 					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 				)
 			}

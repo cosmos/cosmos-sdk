@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // query routes supported by the IBC channel Querier
@@ -15,12 +15,6 @@ const (
 	QueryChannel            = "channel"
 	QueryConnectionChannels = "connection-channels"
 )
-
-type IdentifiedChannel struct {
-	Channel           Channel `json:"channel_end" yaml:"channel_end"`
-	PortIdentifier    string  `json:"port_identifier" yaml:"port_identifier"`
-	ChannelIdentifier string  `json:"channel_identifier" yaml:"channel_identifier"`
-}
 
 // ChannelResponse defines the client query response for a channel which also
 // includes a proof,its path and the height from which the proof was retrieved.
@@ -36,9 +30,10 @@ func NewChannelResponse(
 	portID, channelID string, channel Channel, proof *merkle.Proof, height int64,
 ) ChannelResponse {
 	return ChannelResponse{
-		Channel:     IdentifiedChannel{Channel: channel, PortIdentifier: portID, ChannelIdentifier: channelID},
+
+		Channel:     NewIdentifiedChannel(portID, channelID, channel),
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(portID, channelID), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -91,7 +86,7 @@ func NewPacketResponse(
 	return PacketResponse{
 		Packet:      packet,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.PacketCommitmentPath(portID, channelID, sequence), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.PacketCommitmentPath(portID, channelID, sequence), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -113,7 +108,7 @@ func NewRecvResponse(
 	return RecvResponse{
 		NextSequenceRecv: sequenceRecv,
 		Proof:            commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(ibctypes.NextSequenceRecvPath(portID, channelID), "/")),
+		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(host.NextSequenceRecvPath(portID, channelID), "/")),
 		ProofHeight:      uint64(height),
 	}
 }

@@ -9,11 +9,11 @@ import (
 func (k Keeper) GetDelegatorValidators(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
 ) []types.Validator {
-
 	validators := make([]types.Validator, maxRetrieve)
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
+
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
 
@@ -37,7 +37,6 @@ func (k Keeper) GetDelegatorValidators(
 func (k Keeper) GetDelegatorValidator(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
-
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
 		return validator, types.ErrNoDelegation
@@ -59,10 +58,12 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	defer iterator.Close()
 
 	i := 0
+
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 		delegations = append(delegations, delegation)
@@ -78,6 +79,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetUBDsKey(delegator)
+
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
 
@@ -94,9 +96,9 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 func (k Keeper) GetAllRedelegations(
 	ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) []types.Redelegation {
-
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
+
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
 
@@ -110,6 +112,7 @@ func (k Keeper) GetAllRedelegations(
 		if srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddress)) {
 			continue
 		}
+
 		if dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddress)) {
 			continue
 		}

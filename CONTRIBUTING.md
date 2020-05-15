@@ -222,6 +222,7 @@ only pull requests targeted directly against master.
 - After simulation has successfully completed, create the release branch
   (`release/vX.XX.X`) from the `RC` branch
 - Create a PR to `master` to incorporate the `CHANGELOG.md` updates
+- Tag the release (use `git tag -a`) and create a release in Github
 - Delete the `RC` branches
 
 ### Point Release Procedure
@@ -230,17 +231,17 @@ At the moment, only a single major release will be supported, so all point
 releases will be based off of that release.
 
 - start on `vX.XX.X`
-- checkout a new branch `pre-rc/vX.X.X`
+- checkout a new branch `rcN/vX.X.X`
 - cherry pick the desired changes from `master`
   - these changes should be small and NON-BREAKING (both API and state machine)
 - add entries to CHANGELOG.md and remove corresponding pending log entries
-- checkout a new branch `rc/vX.X.X` based off of `vX.XX.X`
-- create a PR merging `pre-rc/vX.X.X` into `rc/vX.X.X`
+- checkout a new branch `release/vX.X.X` based off of the previous release
+- create a PR merging `rcN/vX.X.X` into `release/vX.X.X`
 - run tests and simulations (noted in [Release Procedure](#release-procedure))
-- after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
-- delete the `pre-rc/vX.X.X` and `RC` branches
+- after tests and simulation have successfully completed, merge the `RC` branch into `release/vX.X.X`
+  - Make sure to delete the `RC` branch
 - create a PR into `master` containing ONLY the CHANGELOG.md updates
-- tag and release `release/vX.XX.X`
+- tag (use `git tag -a`) then push the tags (`git push --tags`)
 
 ## Code Owner Membership
 

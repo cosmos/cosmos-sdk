@@ -11,7 +11,6 @@ import (
 
 // RegisterInvariants registers all staking invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
-
 	ir.RegisterRoute(types.ModuleName, "module-accounts",
 		ModuleAccountInvariants(k))
 	ir.RegisterRoute(types.ModuleName, "nonnegative-power",
@@ -24,7 +23,6 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 
 // AllInvariants runs all invariants of the staking module.
 func AllInvariants(k Keeper) sdk.Invariant {
-
 	return func(ctx sdk.Context) (string, bool) {
 		res, stop := ModuleAccountInvariants(k)(ctx)
 		if stop {
@@ -96,11 +94,12 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 // NonNegativePowerInvariant checks that all stored validators have >= 0 power.
 func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var msg string
-		var broken bool
+		var (
+			msg    string
+			broken bool
+		)
 
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
-
 		for ; iterator.Valid(); iterator.Next() {
 			validator, found := k.GetValidator(ctx, iterator.Value())
 			if !found {
@@ -122,6 +121,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			}
 		}
 		iterator.Close()
+
 		return sdk.FormatInvariant(types.ModuleName, "nonnegative power", fmt.Sprintf("found invalid validator powers\n%s", msg)), broken
 	}
 }
@@ -129,20 +129,26 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 // PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
 func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var msg string
-		var count int
+		var (
+			msg   string
+			count int
+		)
 
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
 			if delegation.Shares.IsNegative() {
 				count++
+
 				msg += fmt.Sprintf("\tdelegation with negative shares: %+v\n", delegation)
 			}
+
 			if delegation.Shares.IsZero() {
 				count++
+
 				msg += fmt.Sprintf("\tdelegation with zero shares: %+v\n", delegation)
 			}
 		}
+
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "positive delegations", fmt.Sprintf(
@@ -155,15 +161,16 @@ func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 // amount stored in each validator.
 func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var msg string
-		var broken bool
+		var (
+			msg    string
+			broken bool
+		)
 
 		validators := k.GetAllValidators(ctx)
 		for _, validator := range validators {
-
 			valTotalDelShares := validator.GetDelegatorShares()
-
 			totalDelShares := sdk.ZeroDec()
+
 			delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
 			for _, delegation := range delegations {
 				totalDelShares = totalDelShares.Add(delegation.Shares)
@@ -176,6 +183,7 @@ func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 					"\tsum of Delegator.Shares: %v\n", valTotalDelShares, totalDelShares)
 			}
 		}
+
 		return sdk.FormatInvariant(types.ModuleName, "delegator shares", msg), broken
 	}
 }

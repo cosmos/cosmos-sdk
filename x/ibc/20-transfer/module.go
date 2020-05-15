@@ -3,6 +3,7 @@ package transfer
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -11,19 +12,21 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
@@ -48,12 +51,17 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // transfer module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the ibc transfer module.
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ json.RawMessage) error {
-	return nil
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+	var gs types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+	}
+
+	return gs.Validate()
 }
 
 // RegisterRESTRoutes implements AppModuleBasic interface
@@ -69,6 +77,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(cdc, QuerierRoute)
+}
+
+// RegisterInterfaceTypes registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+	RegisterInterfaces(registry)
 }
 
 // AppModule represents the AppModule for this module
@@ -127,7 +140,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 
 // BeginBlock implements the AppModule interface
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-
 }
 
 // EndBlock implements the AppModule interface
@@ -135,10 +147,40 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 	return []abci.ValidatorUpdate{}
 }
 
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the transfer module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams returns nil.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for transfer module's types
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the transfer module operations with their respective weights.
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}
+
+//____________________________________________________________________________
+
 // Implement IBCModule callbacks
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
-	order channelexported.Order,
+	order channeltypes.Order,
 	connectionHops []string,
 	portID string,
 	channelID string,
@@ -159,7 +201,7 @@ func (am AppModule) OnChanOpenInit(
 	}
 
 	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)); err != nil {
+	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
 	}
 
@@ -169,7 +211,7 @@ func (am AppModule) OnChanOpenInit(
 
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
-	order channelexported.Order,
+	order channeltypes.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -195,7 +237,7 @@ func (am AppModule) OnChanOpenTry(
 	}
 
 	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, ibctypes.ChannelCapabilityPath(portID, channelID)); err != nil {
+	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, err.Error())
 	}
 
@@ -324,7 +366,7 @@ func (am AppModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 ) (*sdk.Result, error) {
 	var data FungibleTokenPacketData
-	if err := types.ModuleCdc.UnmarshalBinaryBare(packet.GetData(), &data); err != nil {
+	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 	// refund tokens

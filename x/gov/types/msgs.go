@@ -225,7 +225,6 @@ func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// nolint
 func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Proposer} }
 func (msg MsgSubmitProposal) Route() string                { return RouterKey }
 func (msg MsgSubmitProposal) Type() string                 { return TypeMsgSubmitProposal }

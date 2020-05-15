@@ -25,6 +25,7 @@ func GenEvidences(_ *rand.Rand, _ []simtypes.Account) []exported.Evidence {
 // RandomizedGenState generates a random GenesisState for evidence
 func RandomizedGenState(simState *module.SimulationState) {
 	var ev []exported.Evidence
+
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, evidence, &ev, simState.Rand,
 		func(r *rand.Rand) { ev = GenEvidences(r, simState.Accounts) },

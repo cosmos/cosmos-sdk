@@ -3,10 +3,9 @@ package tx
 import (
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,17 +56,16 @@ func NewFactoryFromCLI(input io.Reader) Factory {
 	return f
 }
 
-// nolint
-func (f Factory) AccountNumber() uint64                      { return f.accountNumber }
-func (f Factory) Sequence() uint64                           { return f.sequence }
-func (f Factory) Gas() uint64                                { return f.gas }
-func (f Factory) GasAdjustment() float64                     { return f.gasAdjustment }
-func (f Factory) Keybase() keyring.Keyring                   { return f.keybase }
-func (f Factory) ChainID() string                            { return f.chainID }
-func (f Factory) Memo() string                               { return f.memo }
-func (f Factory) Fees() sdk.Coins                            { return f.fees }
-func (f Factory) GasPrices() sdk.DecCoins                    { return f.gasPrices }
-func (f Factory) AccountRetriever() context.AccountRetriever { return f.accountRetriever }
+func (f Factory) AccountNumber() uint64              { return f.accountNumber }
+func (f Factory) Sequence() uint64                   { return f.sequence }
+func (f Factory) Gas() uint64                        { return f.gas }
+func (f Factory) GasAdjustment() float64             { return f.gasAdjustment }
+func (f Factory) Keybase() keyring.Keyring           { return f.keybase }
+func (f Factory) ChainID() string                    { return f.chainID }
+func (f Factory) Memo() string                       { return f.memo }
+func (f Factory) Fees() sdk.Coins                    { return f.fees }
+func (f Factory) GasPrices() sdk.DecCoins            { return f.gasPrices }
+func (f Factory) AccountRetriever() AccountRetriever { return f.accountRetriever }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results

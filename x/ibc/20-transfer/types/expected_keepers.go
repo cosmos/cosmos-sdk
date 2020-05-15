@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -27,7 +27,7 @@ type BankKeeper interface {
 
 // ChannelKeeper defines the expected IBC channel keeper
 type ChannelKeeper interface {
-	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channel.Channel, found bool)
+	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
 	SendPacket(ctx sdk.Context, channelCap *capability.Capability, packet channelexported.PacketI) error
 	PacketExecuted(ctx sdk.Context, chanCap *capability.Capability, packet channelexported.PacketI, acknowledgement []byte) error
@@ -41,7 +41,7 @@ type ClientKeeper interface {
 
 // ConnectionKeeper defines the expected IBC connection keeper
 type ConnectionKeeper interface {
-	GetConnection(ctx sdk.Context, connectionID string) (connection connection.ConnectionEnd, found bool)
+	GetConnection(ctx sdk.Context, connectionID string) (connection connection.End, found bool)
 }
 
 // PortKeeper defines the expected IBC port keeper

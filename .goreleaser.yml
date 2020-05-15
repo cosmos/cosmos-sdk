@@ -3,7 +3,7 @@ project_name: cosmos-sdk
 
 release:
   github:
-    owner: marbar3778
+    owner: cosmos
     name: cosmos-sdk
 
 builds:
@@ -22,9 +22,6 @@ archives:
 
 snapshot:
   name_template: SNAPSHOT-{{ .Commit }}
-
-checksum:
-  name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 
 changelog:
   skip: true

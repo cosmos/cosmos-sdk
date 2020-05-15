@@ -6,23 +6,28 @@ package ibc
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/types
 
 import (
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
-	ModuleName   = types.ModuleName
-	StoreKey     = types.StoreKey
-	QuerierRoute = types.QuerierRoute
-	RouterKey    = types.RouterKey
+	ModuleName   = host.ModuleName
+	StoreKey     = host.StoreKey
+	QuerierRoute = host.QuerierRoute
+	RouterKey    = host.RouterKey
 )
 
 var (
 	// functions aliases
-	NewKeeper  = keeper.NewKeeper
-	NewQuerier = keeper.NewQuerier
+	NewKeeper           = keeper.NewKeeper
+	NewQuerier          = keeper.NewQuerier
+	RegisterCodec       = types.RegisterCodec
+	RegisterInterfaces  = types.RegisterInterfaces
+	DefaultGenesisState = types.DefaultGenesisState
 )
 
 type (
-	Keeper = keeper.Keeper
+	Keeper       = keeper.Keeper
+	GenesisState = types.GenesisState
 )

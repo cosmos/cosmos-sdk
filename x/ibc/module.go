@@ -3,6 +3,7 @@ package ibc
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -14,21 +15,18 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
 )
 
-// TODO: AppModuleSimulation
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the ibc module.
@@ -38,17 +36,12 @@ var _ module.AppModuleBasic = AppModuleBasic{}
 
 // Name returns the ibc module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return host.ModuleName
 }
 
 // RegisterCodec registers the ibc module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	client.RegisterCodec(cdc)
-	connection.RegisterCodec(cdc)
-	channel.RegisterCodec(cdc)
-	ibctmtypes.RegisterCodec(cdc)
-	localhosttypes.RegisterCodec(cdc)
-	commitmenttypes.RegisterCodec(cdc)
+	RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
@@ -84,14 +77,16 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 // RegisterInterfaceTypes registers module concrete types into protobuf Any.
 func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
-	connection.RegisterInterfaces(registry)
-	channel.RegisterInterfaces(registry)
+	RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the ibc module.
 type AppModule struct {
 	AppModuleBasic
 	keeper *Keeper
+
+	// create localhost by default
+	createLocalhost bool
 }
 
 // NewAppModule creates a new AppModule object
@@ -139,7 +134,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
 	}
-	InitGenesis(ctx, *am.keeper, gs)
+	InitGenesis(ctx, *am.keeper, am.createLocalhost, gs)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -158,4 +153,34 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the ibc module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams returns nil since IBC doesn't register parameter changes.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for ibc module's types
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+	// TODO: in a following PR
+	// sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+// WeightedOperations returns the all the ibc module operations with their respective weights.
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
 }

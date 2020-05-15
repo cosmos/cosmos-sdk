@@ -4,6 +4,7 @@ require (
 	github.com/99designs/keyring v1.1.5
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gibson042/canonicaljson-go v1.0.3
@@ -31,7 +32,7 @@ require (
 	github.com/tendermint/iavl v0.13.3
 	github.com/tendermint/tendermint v0.33.4
 	github.com/tendermint/tm-db v0.5.1
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1

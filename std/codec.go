@@ -6,14 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
-	_ bank.Codec = (*Codec)(nil)
-	_ gov.Codec  = (*Codec)(nil)
+	_ gov.Codec = (*Codec)(nil)
 )
 
 // Codec defines the application-level codec. This codec contains all the
@@ -69,6 +66,45 @@ func (c *Codec) UnmarshalSupplyJSON(bz []byte) (bankexported.SupplyI, error) {
 	}
 
 	return supply.GetSupplyI(), nil
+}
+
+// MarshalAccount marshals an Account interface. If the given type implements
+// the Marshaler interface, it is treated as a Proto-defined message and
+// serialized that way. Otherwise, it falls back on the internal Amino codec.
+func (c *Codec) MarshalAccount(accI authexported.Account) ([]byte, error) {
+	acc := &Account{}
+	if err := acc.SetAccount(accI); err != nil {
+		return nil, err
+	}
+
+	return c.Marshaler.MarshalBinaryBare(acc)
+}
+
+// UnmarshalAccount returns an Account interface from raw encoded account bytes
+// of a Proto-based Account type. An error is returned upon decoding failure.
+func (c *Codec) UnmarshalAccount(bz []byte) (authexported.Account, error) {
+	acc := &Account{}
+	if err := c.Marshaler.UnmarshalBinaryBare(bz, acc); err != nil {
+		return nil, err
+	}
+
+	return acc.GetAccount(), nil
+}
+
+// MarshalAccountJSON JSON encodes an account object implementing the Account
+// interface.
+func (c *Codec) MarshalAccountJSON(acc authexported.Account) ([]byte, error) {
+	return c.Marshaler.MarshalJSON(acc)
+}
+
+// UnmarshalAccountJSON returns an Account from JSON encoded bytes.
+func (c *Codec) UnmarshalAccountJSON(bz []byte) (authexported.Account, error) {
+	acc := &Account{}
+	if err := c.Marshaler.UnmarshalJSON(bz, acc); err != nil {
+		return nil, err
+	}
+
+	return acc.GetAccount(), nil
 }
 
 // MarshalProposal marshals a Proposal. It accepts a Proposal defined by the x/gov

@@ -13,7 +13,7 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 const (
@@ -63,7 +63,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.ModuleName))
 }
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
@@ -75,7 +75,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 // in order to expose it to the ICS20 transfer handler.
 // Keeper retreives channel capability and passes it into channel keeper for authentication
 func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
-	chanCap, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel()))
+	chanCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel()))
 	if !ok {
 		return sdkerrors.Wrap(channel.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}
@@ -85,7 +85,7 @@ func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, 
 // ChanCloseInit defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 trasfer handler.
 func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
-	capName := ibctypes.ChannelCapabilityPath(portID, channelID)
+	capName := host.ChannelCapabilityPath(portID, channelID)
 	chanCap, ok := k.scopedKeeper.GetCapability(ctx, capName)
 	if !ok {
 		return sdkerrors.Wrapf(channel.ErrChannelCapabilityNotFound, "could not retrieve channel capability at: %s", capName)
@@ -95,25 +95,27 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 
 // IsBound checks if the transfer module is already bound to the desired port
 func (k Keeper) IsBound(ctx sdk.Context, portID string) bool {
-	_, ok := k.scopedKeeper.GetCapability(ctx, ibctypes.PortPath(portID))
+	_, ok := k.scopedKeeper.GetCapability(ctx, host.PortPath(portID))
 	return ok
 }
 
 // BindPort defines a wrapper function for the ort Keeper's function in
 // order to expose it to module's InitGenesis function
 func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
-	// Set the portID into our store so we can retrieve it later
-	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(types.PortKey), []byte(portID))
-
 	cap := k.portKeeper.BindPort(ctx, portID)
-	return k.ClaimCapability(ctx, cap, ibctypes.PortPath(portID))
+	return k.ClaimCapability(ctx, cap, host.PortPath(portID))
 }
 
 // GetPort returns the portID for the transfer module. Used in ExportGenesis
 func (k Keeper) GetPort(ctx sdk.Context) string {
 	store := ctx.KVStore(k.storeKey)
-	return string(store.Get([]byte(types.PortKey)))
+	return string(store.Get(types.PortKey))
+}
+
+// SetPort sets the portID for the transfer module. Used in InitGenesis
+func (k Keeper) SetPort(ctx sdk.Context, portID string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.PortKey, []byte(portID))
 }
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module

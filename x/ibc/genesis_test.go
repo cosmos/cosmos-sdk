@@ -1,6 +1,8 @@
 package ibc_test
 
 import (
+	lite "github.com/tendermint/tendermint/lite2"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -9,7 +11,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
@@ -28,8 +30,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState(suite.store, "chaindID", 10),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState("chaindID", 10),
 					},
 					[]client.ConsensusStates{
 						client.NewClientConsensusStates(
@@ -41,20 +43,21 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							},
 						),
 					},
+					true,
 				),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
-						connection.NewConnectionEnd(ibctypes.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connection.NewConnectionEnd(connection.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					[]connection.Paths{
-						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
+						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
 				ChannelGenesis: channel.NewGenesisState(
 					[]channel.IdentifiedChannel{
 						channel.NewIdentifiedChannel(
 							port1, channel1, channel.NewChannel(
-								ibctypes.INIT, channelOrder,
+								channel.INIT, channelOrder,
 								channel.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
 							),
 						),
@@ -80,10 +83,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState(suite.store, "chaindID", 0),
+						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState("chaindID", 0),
 					},
 					nil,
+					false,
 				),
 				ConnectionGenesis: connection.DefaultGenesisState(),
 			},
@@ -95,10 +99,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
-						connection.NewConnectionEnd(ibctypes.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connection.NewConnectionEnd(connection.INIT, connectionID, "CLIENTIDONE", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					[]connection.Paths{
-						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),
+						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
 					},
 				),
 			},

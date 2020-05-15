@@ -3,17 +3,21 @@ package keeper
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/types/query"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type Querier struct {
-	Keeper
+	BaseKeeper
 }
 
 var _ types.QueryServiceServer = Querier{}
@@ -23,9 +27,29 @@ func (q Querier) QueryBalance(ctx context.Context, req *types.QueryBalanceReques
 	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
 
-func (q Querier) QueryAllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
-	balances := q.GetAllBalances(sdk.UnwrapSDKContext(ctx), req.Address)
-	return &types.QueryAllBalancesResponse{Balances: balances}, nil
+func (q Querier) QueryAllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(q.storeKey)
+
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, req.Address.Bytes())
+
+	balances := sdk.Coins{}
+
+	pageRes, err := query.Paginate(accountStore, req.Page, func(key []byte, value []byte) error {
+		var balance sdk.Coin
+		err := q.cdc.UnmarshalBinaryBare(value, &balance)
+		balances = balances.Add(balance)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAllBalancesResponse{Balances: balances, Page: pageRes}, nil
 }
 
 // NewQuerier returns a new sdk.Keeper instance.

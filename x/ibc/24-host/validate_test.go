@@ -56,7 +56,7 @@ func TestPathValidator(t *testing.T) {
 		{"valid id special chars", "p/._+-#[]<>._+-#[]<>", true},
 		{"valid id lower and special chars", "lower/._+-#[]<>", true},
 		{"id length out of range", "p/l", true},
-		{"uppercase id", "NOT/LOWERCASE", true},
+		{"uppercase id", "p/NOTLOWERCASE", true},
 		{"invalid path", "lowercaseid", false},
 		{"blank id", "p/               ", false},
 		{"id length out of range", "p/123456789012345678901", false},

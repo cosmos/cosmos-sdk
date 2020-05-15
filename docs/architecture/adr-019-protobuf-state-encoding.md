@@ -5,6 +5,8 @@
 - 2020 Feb 15: Initial Draft
 - 2020 Feb 24: Updates to handle messages with interface fields
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
+- 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
+- 2020 May 15: Describe amino compatibility
 
 ## Status
 
@@ -298,6 +300,22 @@ func (msg MsgSubmitEvidence) GetEvidence() eviexported.Evidence {
   return msg.Evidence.GetCachedValue().(eviexported.Evidence)
 }
 ```
+
+### Amino Compatibility
+
+Our custom implementation of `Any` can be used transparently with Amino if used
+with the proper codec instance. What this means is that interfaces packed within
+`Any`s will be amino marshaled like regular Amino interfaces (assuming they
+have been registered properly with Amino).
+
+In order for this functionality to work:
+* **all legacy code must use `*codec.Codec` instead of `*amino.Codec` which is
+now a wrapper which properly handles `Any`**
+* **all new code should use `Marshaler` which is compatible with both amino and
+protobuf
+
+Also, before v0.39, `codec.Codec` will be renamed to `codec.LegacyAmino`.
+
 
 ### Why Wasn't X Chosen Instead
 

@@ -1,4 +1,4 @@
-name: RELEASE - release built binary
+name: RELEASE
 on:
   push:
     # Sequence of patterns matched against refs/tags
@@ -8,8 +8,6 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GOLANGCI_LINT_TOKEN }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Go

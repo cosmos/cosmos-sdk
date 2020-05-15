@@ -248,7 +248,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return tx.Marshal()
+	return txf.txGenerator.MarshalTx(tx)
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
@@ -338,7 +338,7 @@ func Sign(txf Factory, name, passphrase string, tx context.ClientTx) ([]byte, er
 		return nil, err
 	}
 
-	return tx.Marshal()
+	return txf.txGenerator.MarshalTx(tx)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

@@ -3,7 +3,6 @@ package context
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,6 +22,7 @@ type (
 		NewTx() ClientTx
 		NewFee() ClientFee
 		NewSignature() ClientSignature
+		MarshalTx(tx ClientTx) ([]byte, error)
 	}
 
 	ClientFee interface {
@@ -43,7 +43,6 @@ type (
 	// also know how to encode itself.
 	ClientTx interface {
 		types.Tx
-		codec.ProtoMarshaler
 
 		SetMsgs(...types.Msg) error
 		GetSignatures() []types.Signature

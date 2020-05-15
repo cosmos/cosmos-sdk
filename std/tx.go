@@ -1,7 +1,7 @@
 package std
 
 import (
-	"github.com/tendermint/go-amino"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -22,6 +22,11 @@ var (
 // TxGenerator defines a transaction generator that allows clients to construct
 // transactions.
 type TxGenerator struct{}
+
+func (g TxGenerator) MarshalTx(tx context.ClientTx) ([]byte, error) {
+	stdTx := tx.(*Transaction)
+	return stdTx.Marshal()
+}
 
 func (g TxGenerator) NewFee() context.ClientFee {
 	return &StdFee{}

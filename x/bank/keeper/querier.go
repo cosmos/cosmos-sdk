@@ -38,11 +38,14 @@ func (q Querier) QueryAllBalances(c context.Context, req *types.QueryAllBalances
 
 	pageRes, err := query.Paginate(accountStore, req.Page, func(key []byte, value []byte) error {
 		var balance sdk.Coin
+
 		err := q.cdc.UnmarshalBinaryBare(value, &balance)
-		balances = balances.Add(balance)
 		if err != nil {
 			return err
 		}
+
+		balances = balances.Add(balance)
+
 		return nil
 	})
 	if err != nil {

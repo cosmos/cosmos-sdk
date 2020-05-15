@@ -12,12 +12,12 @@ import (
 // define constants used for testing
 const (
 	validPort        = "testportid"
-	invalidPort      = "invalidport1"
+	invalidPort      = "(invalidport1)"
 	invalidShortPort = "p"
 	invalidLongPort  = "invalidlongportinvalidlongport"
 
 	validChannel        = "testchannel"
-	invalidChannel      = "invalidchannel1"
+	invalidChannel      = "(invalidchannel1)"
 	invalidShortChannel = "invalidch"
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
 )

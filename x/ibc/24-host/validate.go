@@ -32,31 +32,31 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 	return nil
 }
 
-// DefaultClientIdentifierValidator is the default validator function for Client identifiers
+// ClientIdentifierValidator is the default validator function for Client identifiers.
 // A valid Identifier must be between 9-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultClientIdentifierValidator(id string) error {
+func ClientIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 9, 20)
 }
 
-// DefaultConnectionIdentifierValidator is the default validator function for Connection identifiers
+// ConnectionIdentifierValidator is the default validator function for Connection identifiers.
 // A valid Identifier must be between 10-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultConnectionIdentifierValidator(id string) error {
+func ConnectionIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 10, 20)
 }
 
-// DefaultChannelIdentifierValidator is the default validator function for Channel identifiers
+// ChannelIdentifierValidator is the default validator function for Channel identifiers.
 // A valid Identifier must be between 10-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultChannelIdentifierValidator(id string) error {
+func ChannelIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 10, 20)
 }
 
-// DefaultPortIdentifierValidator is the default validator function for Port identifiers
+// PortIdentifierValidator is the default validator function for Port identifiers.
 // A valid Identifier must be between 2-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultPortIdentifierValidator(id string) error {
+func PortIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 2, 20)
 }
 
@@ -77,10 +77,9 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	}
 }
 
-// DefaultPathValidator takes in path string and validates
-// with default identifier rules. This is optimized by simply
-// checking that all path elements are alphanumeric
-func DefaultPathValidator(path string) error {
+// PathValidator takes in path string and validateswith def ault identifier rules.
+// This is optimized by simply checking that all path elements are alphanumeric.
+func PathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
 	if pathArr[0] == path {
 		return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)

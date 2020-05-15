@@ -37,10 +37,10 @@ func (MsgTransfer) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTransfer) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(msg.SourcePort); err != nil {
+	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.SourceChannel); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
 	if !msg.Amount.IsAllPositive() {

@@ -38,10 +38,10 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
 	}
-	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
 	}
 	if msg.Signer.Empty() {
@@ -95,10 +95,10 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
 	}
-	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
 	}
 	if len(msg.CounterpartyVersions) == 0 {
@@ -171,7 +171,7 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if strings.TrimSpace(msg.Version) == "" {
@@ -235,7 +235,7 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if msg.ProofAck.IsEmpty() {

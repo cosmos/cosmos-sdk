@@ -115,7 +115,7 @@ func MakeCodec(bm module.BasicManager) *codec.Codec {
 	return cdc
 }
 
-// RegisterInterfaces registers Interfaces from sdk and vesting
+// RegisterInterfaces registers Interfaces from sdk/types and vesting
 func RegisterInterfaces(interfaceRegistry types.InterfaceRegistry) {
 	sdk.RegisterInterfaces(interfaceRegistry)
 	vesting.RegisterInterfaces(interfaceRegistry)

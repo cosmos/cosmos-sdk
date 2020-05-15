@@ -1,6 +1,7 @@
 package host
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -84,11 +85,15 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 			return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
 		}
 
+		allEmptyItems := true
 		for _, p := range pathArr {
 			// NOTE: for some reason an empty string is added after Split
 			if p == "" {
 				continue
 			}
+
+			allEmptyItems = false
+
 			if err := idValidator(p); err != nil {
 				return err
 			}
@@ -97,11 +102,16 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 				return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 			}
 		}
+
+		if allEmptyItems {
+			return fmt.Errorf("path %s must contain at least one identifier", path)
+		}
+
 		return nil
 	}
 }
 
-// PathValidator takes in path string and validateswith def ault identifier rules.
+// PathValidator takes in path string and validates with default identifier rules.
 // This is optimized by simply checking that all path elements are alphanumeric.
 func PathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
@@ -109,15 +119,23 @@ func PathValidator(path string) error {
 		return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
 	}
 
+	allEmptyItems := true
 	for _, p := range pathArr {
 		// NOTE: for some reason an empty string is added after Split
 		if p == "" {
 			continue
 		}
+
+		allEmptyItems = false
+
 		// Each path element must be a valid identifier or constant number
 		if err := defaultIdentifierValidator(p, 1, 20); err != nil {
 			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 		}
+	}
+
+	if allEmptyItems {
+		return fmt.Errorf("path %s must contain at least one identifier", path)
 	}
 	return nil
 }

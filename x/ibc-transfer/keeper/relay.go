@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -107,14 +107,14 @@ func (k Keeper) createOutgoingPacket(
 
 		// transfer the coins to the module account and burn them
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(
-			ctx, sender, types.GetModuleAccountName(), amount,
+			ctx, sender, types.ModuleName, amount,
 		); err != nil {
 			return err
 		}
 
 		// burn vouchers from the sender's balance if the source is from another chain
 		if err := k.bankKeeper.BurnCoins(
-			ctx, types.GetModuleAccountName(), amount,
+			ctx, types.ModuleName, amount,
 		); err != nil {
 			// NOTE: should not happen as the module account was
 			// retrieved on the step above and it has enough balace
@@ -161,14 +161,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 		// mint new tokens if the source of the transfer is the same chain
 		if err := k.bankKeeper.MintCoins(
-			ctx, types.GetModuleAccountName(), data.Amount,
+			ctx, types.ModuleName, data.Amount,
 		); err != nil {
 			return err
 		}
 
 		// send to receiver
 		return k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.GetModuleAccountName(), receiver, data.Amount,
+			ctx, types.ModuleName, receiver, data.Amount,
 		)
 	}
 
@@ -235,10 +235,10 @@ func (k Keeper) refundPacketAmount(ctx sdk.Context, packet channeltypes.Packet, 
 
 	// mint vouchers back to sender
 	if err := k.bankKeeper.MintCoins(
-		ctx, types.GetModuleAccountName(), data.Amount,
+		ctx, types.ModuleName, data.Amount,
 	); err != nil {
 		return err
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), sender, data.Amount)
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, data.Amount)
 }

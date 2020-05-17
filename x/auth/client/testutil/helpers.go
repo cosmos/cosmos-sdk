@@ -9,8 +9,8 @@ import (
 )
 
 // TxSign is simcli sign
-func TxSign(f *cli.Fixtures, signer, fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("%s tx sign %v --keyring-backend=test --from=%s %v", f.SimcliBinary, f.Flags(), signer, fileName)
+func TxSign(f *cli.Fixtures, signer string, fileNames []string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("%s tx sign %v --keyring-backend=test --from=%s %v", f.SimcliBinary, f.Flags(), signer, strings.Join(fileNames, " "))
 
 	return cli.ExecuteWriteRetStdStreams(f.T, cli.AddFlags(cmd, flags), clientkeys.DefaultKeyPass)
 }

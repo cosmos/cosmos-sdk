@@ -42,7 +42,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// validate we can successfully sign
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile.Name()})
 	require.True(t, success)
 
 	stdTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
@@ -113,27 +113,42 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, len(msg.Msgs), 1)
 
 	// Write the output to disk
-	unsignedTxFile, cleanup := tests.WriteToNewTempFile(t, stdout)
+	unsignedTxFile1, cleanup := tests.WriteToNewTempFile(t, stdout)
+	t.Cleanup(cleanup)
+
+	// Test generate sendTx, estimate gas
+	success, stdout, stderr = bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
+	require.True(t, success)
+	require.Empty(t, stderr)
+	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
+	require.True(t, msg.Fee.Gas > 0)
+	require.Equal(t, len(msg.Msgs), 1)
+
+	// Write the output to disk
+	unsignedTxFile2, cleanup := tests.WriteToNewTempFile(t, stdout)
 	t.Cleanup(cleanup)
 
 	// Test validate-signatures
-	success, stdout, _ = testutil.TxValidateSignatures(f, unsignedTxFile.Name())
+	success, stdout, _ = testutil.TxValidateSignatures(f, unsignedTxFile1.Name())
+	require.False(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
+	success, stdout, _ = testutil.TxValidateSignatures(f, unsignedTxFile2.Name())
 	require.False(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
 	// Test sign
 
 	// Does not work in offline mode
-	success, stdout, stderr = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--offline")
+	success, stdout, stderr = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile1.Name()}, "--offline")
 	require.Contains(t, stderr, "required flag(s) \"account-number\", \"sequence\" not set")
 	require.False(t, success)
 
 	// But works offline if we set account number and sequence
-	success, _, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
+	success, _, _ = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile1.Name(), unsignedTxFile2.Name()}, "--offline", "--account-number", "1", "--sequence", "1")
 	require.True(t, success)
 
-	// Sign transaction
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
+	// Sign transactions
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile1.Name()})
 	require.True(t, success)
 	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
 	require.Equal(t, len(msg.Msgs), 1)
@@ -198,7 +213,7 @@ func TestCLIMultisignInsufficientCosigners(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Sign with foo's key
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile.Name()}, "--multisig", fooBarBazAddr.String(), "-y")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -290,7 +305,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Sign with foo's key
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile.Name()}, "--multisig", fooBarBazAddr.String())
 	require.True(t, success)
 
 	// Write the output to disk
@@ -298,7 +313,7 @@ func TestCLIMultisignSortSignatures(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Sign with baz's key
-	success, stdout, _ = testutil.TxSign(f, cli.KeyBaz, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	success, stdout, _ = testutil.TxSign(f, cli.KeyBaz, []string{unsignedTxFile.Name()}, "--multisig", fooBarBazAddr.String())
 	require.True(t, success)
 
 	// Write the output to disk
@@ -355,7 +370,7 @@ func TestCLIMultisign(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Sign with foo's key
-	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, []string{unsignedTxFile.Name()}, "--multisig", fooBarBazAddr.String(), "-y")
 	require.True(t, success)
 
 	// Write the output to disk
@@ -363,7 +378,7 @@ func TestCLIMultisign(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	// Sign with bar's key
-	success, stdout, _ = testutil.TxSign(f, cli.KeyBar, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String(), "-y")
+	success, stdout, _ = testutil.TxSign(f, cli.KeyBar, []string{unsignedTxFile.Name()}, "--multisig", fooBarBazAddr.String(), "-y")
 	require.True(t, success)
 
 	// Write the output to disk

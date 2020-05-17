@@ -1,4 +1,4 @@
-package keeper_test
+package transfer_test
 
 import (
 	"fmt"
@@ -6,18 +6,20 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	lite "github.com/tendermint/tendermint/lite2"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
@@ -26,10 +28,10 @@ import (
 
 // define constants used for testing
 const (
-	testClientIDA = "testclientIDA"
-	testClientIDB = "testClientIDb"
+	testClientIDA = "testclientida"
+	testClientIDB = "testclientidb"
 
-	testConnection = "testconnectionatob"
+	testConnection = "testconnection"
 	testPort1      = "bank"
 	testPort2      = "testportid"
 	testChannel1   = "firstchannel"
@@ -42,15 +44,15 @@ const (
 
 // define variables used for testing
 var (
-	testAddr1, _ = sdk.AccAddressFromBech32("cosmos1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrudl")
-	testAddr2, _ = sdk.AccAddressFromBech32("cosmos1scqhwpgsmr6vmztaa7suurfl52my6nd2kmrujl")
+	testAddr1 = sdk.AccAddress([]byte("testaddr1"))
+	testAddr2 = sdk.AccAddress([]byte("testaddr2"))
 
-	testCoins, _ = sdk.ParseCoins("100atom")
-	prefixCoins  = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
-	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+	testCoins, _          = sdk.ParseCoins("100atom")
+	testPrefixedCoins1, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort1, testChannel1)))
+	testPrefixedCoins2, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort2, testChannel2)))
 )
 
-type KeeperTestSuite struct {
+type HandlerTestSuite struct {
 	suite.Suite
 
 	cdc *codec.Codec
@@ -59,46 +61,68 @@ type KeeperTestSuite struct {
 	chainB *TestChain
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (suite *HandlerTestSuite) SetupTest() {
 	suite.chainA = NewTestChain(testClientIDA)
 	suite.chainB = NewTestChain(testClientIDB)
-
-	// reset prefixCoins at each setup
-	prefixCoins = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
-	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
 
 	suite.cdc = suite.chainA.App.Codec()
 }
 
-// nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitmenttypes.MerkleProof, height int64) {
-	res := suite.chainA.App.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", host.StoreKey),
-		Data:  key,
-		Prove: true,
-	})
+func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
+	handler := transfer.NewHandler(suite.chainA.App.TransferKeeper)
 
-	height = res.Height
-	proof = commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
+	// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
+	capName := host.ChannelCapabilityPath(testPort1, testChannel1)
+	cap, err := suite.chainA.App.ScopedIBCKeeper.NewCapability(suite.chainA.GetContext(), capName)
+	suite.Require().Nil(err, "could not create capability")
+	err = suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), cap, capName)
+	suite.Require().Nil(err, "transfer module could not claim capability")
 
-	return
+	ctx := suite.chainA.GetContext()
+	msg := transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2.String())
+	res, err := handler(ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // channel does not exist
+
+	// Setup channel from A to B
+	suite.chainA.CreateClient(suite.chainB)
+	suite.chainA.createConnection(testConnection, testConnection, testClientIDB, testClientIDA, connectiontypes.OPEN)
+	suite.chainA.createChannel(testPort1, testChannel1, testPort2, testChannel2, channeltypes.OPEN, channeltypes.ORDERED, testConnection)
+
+	res, err = handler(ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // next send sequence not found
+
+	nextSeqSend := uint64(1)
+	suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, testPort1, testChannel1, nextSeqSend)
+	res, err = handler(ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // sender has insufficient coins
+
+	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testCoins)
+	res, err = handler(ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res, "%+v", res) // successfully executed
+
+	// test when the source is false
+	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins2, testAddr1, testAddr2.String())
+	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testPrefixedCoins2)
+
+	res, err = handler(ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // incorrect denom prefix
+
+	msg = transfer.NewMsgTransfer(testPort1, testChannel1, 10, testPrefixedCoins1, testAddr1, testAddr2.String())
+	suite.chainA.App.BankKeeper.SetSupply(ctx, bank.NewSupply(testPrefixedCoins1))
+	_ = suite.chainA.App.BankKeeper.SetBalances(ctx, testAddr1, testPrefixedCoins1)
+
+	res, err = handler(ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res, "%+v", res) // successfully executed
 }
 
-func (suite *KeeperTestSuite) TestGetTransferAccount() {
-	expectedMaccName := types.GetModuleAccountName()
-	expectedMaccAddr := sdk.AccAddress(crypto.AddressHash([]byte(expectedMaccName)))
-
-	macc := suite.chainA.App.TransferKeeper.GetTransferAccount(suite.chainA.GetContext())
-
-	suite.NotNil(macc)
-	suite.Equal(expectedMaccName, macc.GetName())
-	suite.Equal(expectedMaccAddr, macc.GetAddress())
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func TestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerTestSuite))
 }
 
 type TestChain struct {
@@ -225,14 +249,14 @@ func (chain *TestChain) updateClient(client *TestChain) {
 	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
 
 	consensusState := ibctmtypes.ConsensusState{
-		Height:       client.Header.GetHeight(),
+		Height:       uint64(client.Header.SignedHeader.Header.Height),
 		Timestamp:    client.Header.Time,
 		Root:         commitmenttypes.NewMerkleRoot(commitID.Hash),
 		ValidatorSet: client.Vals,
 	}
 
 	chain.App.IBCKeeper.ClientKeeper.SetClientConsensusState(
-		ctxTarget, client.ClientID, client.Header.GetHeight(), consensusState,
+		ctxTarget, client.ClientID, uint64(client.Header.SignedHeader.Header.Height), consensusState,
 	)
 	chain.App.IBCKeeper.ClientKeeper.SetClientState(
 		ctxTarget, ibctmtypes.NewClientState(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header),
@@ -267,6 +291,7 @@ func (chain *TestChain) createConnection(
 	return connection
 }
 
+// nolint: unused
 func (chain *TestChain) createChannel(
 	portID, channelID, counterpartyPortID, counterpartyChannelID string,
 	state channeltypes.State, order channeltypes.Order, connectionID string,

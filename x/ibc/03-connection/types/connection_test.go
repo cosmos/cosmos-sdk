@@ -28,12 +28,12 @@ func TestConnectionValidateBasic(t *testing.T) {
 		},
 		{
 			"invalid connection id",
-			ConnectionEnd{"connectionIDONE", clientID, []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"(connectionIDONE)", clientID, []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid client id",
-			ConnectionEnd{connectionID, "clientID1", []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{connectionID, "(clientID1)", []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
@@ -72,8 +72,8 @@ func TestCounterpartyValidateBasic(t *testing.T) {
 		expPass      bool
 	}{
 		{"valid counterparty", Counterparty{clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, true},
-		{"invalid client id", Counterparty{"InvalidClient", "channelidone", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, false},
-		{"invalid connection id", Counterparty{clientID, "InvalidConnection", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, false},
+		{"invalid client id", Counterparty{"(InvalidClient)", connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, false},
+		{"invalid connection id", Counterparty{clientID, "(InvalidConnection)", commitmenttypes.NewMerklePrefix([]byte("prefix"))}, false},
 		{"invalid prefix", Counterparty{clientID, connectionID2, emptyPrefix}, false},
 	}
 

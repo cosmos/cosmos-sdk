@@ -2,7 +2,6 @@ package host
 
 import (
 	"fmt"
-	"strings"
 )
 
 const (
@@ -182,19 +181,6 @@ func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte 
 
 func channelPath(portID, channelID string) string {
 	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
-}
-
-func MustParseChannelPath(path string) (string, string) {
-	split := strings.Split(path, "/")
-	if len(split) != 5 {
-		panic("cannot parse channel path")
-	}
-
-	if split[1] != "ports" || split[3] != "channels" {
-		panic("cannot parse channel path")
-	}
-
-	return split[2], split[4]
 }
 
 // ICS05

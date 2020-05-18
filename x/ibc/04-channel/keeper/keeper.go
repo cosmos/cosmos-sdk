@@ -162,9 +162,11 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 func (k Keeper) IteratePacketSequence(ctx sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64) bool) {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		keySplit := strings.Split(string(iterator.Key()), "/")
-		portID := keySplit[2]
-		channelID := keySplit[4]
+		portID, channelID, err := host.ParseChannelPath(string(iterator.Key()))
+		if err != nil {
+			// return if the key is not a channel key
+			return
+		}
 
 		sequence := sdk.BigEndianToUint64(iterator.Value())
 

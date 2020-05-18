@@ -1,2 +1,0 @@
-package types_test
-

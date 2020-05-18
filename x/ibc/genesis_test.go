@@ -74,6 +74,9 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channel.PacketSequence{
 						channel.NewPacketSequence(port2, channel2, 1),
 					},
+					[]channel.PacketSequence{
+						channel.NewPacketSequence(port2, channel2, 1),
+					},
 				),
 			},
 			expPass: true,

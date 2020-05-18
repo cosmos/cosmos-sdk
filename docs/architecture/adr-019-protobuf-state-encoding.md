@@ -323,7 +323,6 @@ protobuf
 
 Also, before v0.39, `codec.Codec` will be renamed to `codec.LegacyAmino`.
 
-
 ### Why Wasn't X Chosen Instead
 
 For a more complete comparison to alternative protocols, see [here](https://codeburst.io/json-vs-protocol-buffers-vs-flatbuffers-a4247f8bda6f).

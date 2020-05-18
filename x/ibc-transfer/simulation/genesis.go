@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
 // Simulation parameter constants

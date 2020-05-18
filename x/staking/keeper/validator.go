@@ -196,10 +196,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 		panic("attempting to remove a validator which still contains tokens")
 	}
 
-	if validator.Tokens.IsPositive() {
-		panic("validator being removed should never have positive tokens")
-	}
-
 	valConsAddr := validator.GetConsAddr()
 
 	// delete the old validator record

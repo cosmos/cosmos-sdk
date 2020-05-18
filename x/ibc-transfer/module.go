@@ -18,14 +18,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 

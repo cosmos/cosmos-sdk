@@ -58,6 +58,9 @@ func TestValidateGenesis(t *testing.T) {
 				[]PacketSequence{
 					NewPacketSequence(testPort2, testChannel2, 1),
 				},
+				[]PacketSequence{
+					NewPacketSequence(testPort2, testChannel2, 1),
+				},
 			),
 			expPass: true,
 		},
@@ -115,6 +118,15 @@ func TestValidateGenesis(t *testing.T) {
 			genState: GenesisState{
 				RecvSequences: []PacketSequence{
 					NewPacketSequence("(testPort1)", testChannel1, 1),
+				},
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid ack seq",
+			genState: GenesisState{
+				AckSequences: []PacketSequence{
+					NewPacketSequence(testPort1, "(testChannel1)", 1),
 				},
 			},
 			expPass: false,

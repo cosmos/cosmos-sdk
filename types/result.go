@@ -268,6 +268,7 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 
 var _, _ types.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, tx := range s.Txs {
 		err := types.UnpackInterfaces(tx, unpacker)
@@ -278,6 +279,7 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return nil
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return types.UnpackInterfaces(r.Tx, unpacker)
 }

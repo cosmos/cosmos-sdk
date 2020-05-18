@@ -42,7 +42,7 @@ func (k Keeper) SendTransfer(
 	if !found {
 		return sdkerrors.Wrapf(
 			channeltypes.ErrSequenceSendNotFound,
-			"source port %s, source channel %s", sourcePort, sourceChannel,
+			"source port: %s, source channel: %s", sourcePort, sourceChannel,
 		)
 
 	}

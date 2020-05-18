@@ -101,7 +101,7 @@ func (k Keeper) SendPacket(
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrSequenceSendNotFound,
-			"source port %s, source channel %s", packet.GetSourcePort(), packet.GetSourceChannel(),
+			"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
@@ -252,7 +252,7 @@ func (k Keeper) PacketExecuted(
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceReceiveNotFound,
-				"destination port %s, destination channel %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
 			)
 		}
 
@@ -363,7 +363,7 @@ func (k Keeper) AcknowledgePacket(
 		if !found {
 			return nil, sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port %s, destination channel %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
 			)
 		}
 

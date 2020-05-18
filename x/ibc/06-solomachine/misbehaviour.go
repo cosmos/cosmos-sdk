@@ -41,7 +41,7 @@ func CheckMisbehaviourAndUpdateState(
 // checkMisbehaviour checks if the currently registered public key has signed
 // over two different messages at the same sequence.
 func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
-	pubKey := clientState.ConsensusState.PublicKey
+	pubKey := clientState.ConsensusState.PubKey
 
 	// assert that provided signature data are different
 	if bytes.Equal(evidence.SignatureOne.Data, evidence.SignatureTwo.Data) {

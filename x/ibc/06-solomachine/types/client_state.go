@@ -118,11 +118,11 @@ func (cs ClientState) VerifyClientConsensusState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "failed to verify proof against current public key, sequence, and consensus state")
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 }
@@ -169,14 +169,14 @@ func (cs ClientState) VerifyConnectionState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedConnectionStateVerification,
 			"failed to verify proof against current public key, sequence, and connection state",
 		)
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 }
@@ -224,14 +224,14 @@ func (cs ClientState) VerifyChannelState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedChannelStateVerification,
 			"failed to verify proof against current public key, sequence, and channel state",
 		)
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 }
@@ -269,14 +269,14 @@ func (cs ClientState) VerifyPacketCommitment(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		commitmentBytes...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketCommitmentVerification,
 			"failed to verify proof against current public key, sequence, and packet commitment",
 		)
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 
@@ -315,14 +315,14 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		acknowledgement...,
 	)
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketAckVerification,
 			"failed to verify proof against current public key, sequence, and acknowledgement",
 		)
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 
@@ -359,14 +359,14 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	// value = sequence + path
 	value := combineSequenceAndPath(cs.ConsensusState.Sequence, path)
 
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketAckAbsenceVerification,
 			"failed to verify proof against current public key, sequence, and an absent acknowledgement",
 		)
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 
@@ -405,14 +405,14 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		sdk.Uint64ToBigEndian(nextSequenceRecv)...,
 	)
 
-	if cs.ConsensusState.PublicKey.VerifyBytes(value, signatureProof.Signature) {
+	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedNextSeqRecvVerification,
 			"failed to verify proof against current public key, sequence, and the next sequence number to be received",
 		)
 	}
 
-	cs.ConsensusState.Sequence += 1
+	cs.ConsensusState.Sequence++
 	setClientState(store, cs)
 	return nil
 }

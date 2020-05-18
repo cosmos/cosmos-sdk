@@ -57,7 +57,7 @@ func (msg MsgCreateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.ConsensusState.PublicKey.Address())}
+	return []sdk.AccAddress{sdk.AccAddress(msg.ConsensusState.PubKey.Address())}
 }
 
 // GetClientID implements clientexported.MsgCreateClient
@@ -114,7 +114,7 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.Header.NewPublicKey.Address())}
+	return []sdk.AccAddress{sdk.AccAddress(msg.Header.NewPubKey.Address())}
 }
 
 // GetClientID implements clientexported.MsgUpdateClient

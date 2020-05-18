@@ -12,9 +12,9 @@ var _ clientexported.Header = Header{}
 
 // Header defines the Solo Machine consensus Header
 type Header struct {
-	Sequence     uint64        `json:"sequence" yaml:"sequence"`
-	Signature    []byte        `json:"signature" yaml:"signature"`
-	NewPublicKey crypto.PubKey `json:"new_public_key" yaml:"new_public_key"`
+	Sequence  uint64        `json:"sequence" yaml:"sequence"`
+	Signature []byte        `json:"signature" yaml:"signature"`
+	NewPubKey crypto.PubKey `json:"new_pubkey" yaml:"new_pubkey"`
 }
 
 // ClientType defines that the Header is a Solo Machine verficiation algorithm.
@@ -38,7 +38,7 @@ func (h Header) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "signature cannot be empty")
 	}
 
-	if h.NewPublicKey == nil {
+	if h.NewPubKey == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "new public key is nil")
 	}
 

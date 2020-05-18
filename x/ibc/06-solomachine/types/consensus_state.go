@@ -15,7 +15,7 @@ var _ clientexported.ConsensusState = ConsensusState{}
 type ConsensusState struct {
 	Sequence uint64 `json:"sequence" yaml:"sequence"`
 
-	PublicKey crypto.PubKey `json:"public_key" yaml: "public_key"`
+	PubKey crypto.PubKey `json:"pubkey" yaml: "pubkey"`
 }
 
 // ClientType returns Solo Machine type
@@ -44,7 +44,7 @@ func (cs ConsensusState) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "sequence cannot be 0")
 	}
 
-	if cs.PublicKey == nil {
+	if cs.PubKey == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")
 	}
 

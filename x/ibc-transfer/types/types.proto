@@ -1,7 +1,7 @@
 syntax = "proto3";
-package cosmos_sdk.x.ibc.transfer.v1;
+package cosmos_sdk.x.transfer.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
 import "types/types.proto";

@@ -32,7 +32,7 @@ func (suite *TendermintTestSuite) TestValidate() {
 		},
 		{
 			name:        "invalid client id",
-			clientState: ibctmtypes.NewClientState("testClientID", lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+			clientState: ibctmtypes.NewClientState("(testClientID)", lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
 			expPass:     false,
 		},
 		{

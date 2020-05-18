@@ -63,3 +63,10 @@ func (suite *SoloMachineTestSuite) CreateHeader() ibcsmtypes.Header {
 		NewPubKey: suite.privKey.PubKey(),
 	}
 }
+
+func (suite *SoloMachineTestSuite) ConsensusState() ibcsmtypes.ConsensusState {
+	return ibcsmtypes.ConsensusState{
+		Sequence: suite.sequence,
+		PubKey:   suite.privKey.PubKey(),
+	}
+}

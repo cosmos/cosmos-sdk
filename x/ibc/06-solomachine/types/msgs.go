@@ -148,7 +148,7 @@ func (msg MsgSubmitClientMisbehaviour) Type() string {
 	return clientexported.TypeMsgSubmitClientMisbehaviour
 }
 
-// ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
+// ValidateBasic performs basic (non-state-dependent) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 	if msg.Evidence == nil {
 		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")

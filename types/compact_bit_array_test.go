@@ -200,15 +200,3 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 		}
 	}
 }
-
-// CompactBitArray is an implementation of a space efficient bit array.
-// This is used to ensure that the encoded data takes up a minimal amount of
-// space after proto encoding.
-// This is not thread safe, and is not intended for concurrent usage.
-message CompactBitArray {
-  option (gogoproto.sizer)            = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  uint32 extra_bits_stored = 1;
-  bytes  elems             = 2;
-}

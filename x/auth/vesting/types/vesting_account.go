@@ -22,7 +22,7 @@ var (
 )
 
 //-----------------------------------------------------------------------------
-// Base Vesting AccountI
+// Base Vesting Account
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
 // callers responsibility to ensure the base account has sufficient funds with
@@ -261,7 +261,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Continuous Vesting AccountI
+// Continuous Vesting Account
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 var _ authtypes.GenesisAccount = (*ContinuousVestingAccount)(nil)
@@ -421,7 +421,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Periodic Vesting AccountI
+// Periodic Vesting Account
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 var _ authtypes.GenesisAccount = (*PeriodicVestingAccount)(nil)
@@ -613,7 +613,7 @@ func (pva *PeriodicVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Delayed Vesting AccountI
+// Delayed Vesting Account
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 var _ authtypes.GenesisAccount = (*DelayedVestingAccount)(nil)

@@ -72,6 +72,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(cdc)
 }
 
+// RegisterInterfaceTypes registers interfaces and implementations of the auth module.
 func (AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	authtypes.RegisterInterfaces(registry)
 }
@@ -169,10 +170,4 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations doesn't return any auth module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
-}
-
-// InterfaceModule is an interface that modules can implement in order to
-// register their interfaces and implementations in an InterfaceRegistry
-type InterfaceModule interface {
-	RegisterInterfaceTypes(registry types.InterfaceRegistry)
 }

@@ -217,3 +217,5 @@ func (ak AccountKeeper) UnmarshalAccountJSON(bz []byte) (types.AccountI, error) 
 
 	return acc, nil
 }
+
+func (ak AccountKeeper) GetCodec() codec.Marshaler { return ak.Cdc }

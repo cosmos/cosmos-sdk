@@ -3,17 +3,22 @@ package simulation
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+type AuthUnmarshaler interface {
+	UnmarshalAccount([]byte) (types.AccountI, error)
+	GetCodec() codec.Marshaler
+}
+
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding auth type.
-func NewDecodeStore(ak keeper.AccountKeeper) func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(ak AuthUnmarshaler) func(kvA, kvB tmkv.Pair) string {
 	return func(kvA, kvB tmkv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.AddressStoreKeyPrefix):
@@ -31,8 +36,8 @@ func NewDecodeStore(ak keeper.AccountKeeper) func(kvA, kvB tmkv.Pair) string {
 
 		case bytes.Equal(kvA.Key, types.GlobalAccountNumberKey):
 			var globalAccNumberA, globalAccNumberB gogotypes.UInt64Value
-			ak.Cdc.MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
-			ak.Cdc.MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
+			ak.GetCodec().MustUnmarshalBinaryBare(kvA.Value, &globalAccNumberA)
+			ak.GetCodec().MustUnmarshalBinaryBare(kvB.Value, &globalAccNumberB)
 
 			return fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumberA, globalAccNumberB)
 

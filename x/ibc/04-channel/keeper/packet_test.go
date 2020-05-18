@@ -322,12 +322,11 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			proof, proofHeight := queryProof(suite.chainA, packetKey)
 
 			ctx := suite.chainB.GetContext()
+			packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

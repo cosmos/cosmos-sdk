@@ -31,6 +31,7 @@ const (
 	KeyChannelCapabilityPrefix = "capabilities"
 	KeyNextSeqSendPrefix       = "seqSends"
 	KeyNextSeqRecvPrefix       = "seqRecvs"
+	KeyNextSeqAckPrefix        = "seqAcks"
 	KeyPacketCommitmentPrefix  = "commitments"
 	KeyPacketAckPrefix         = "acks"
 )
@@ -129,6 +130,11 @@ func NextSequenceRecvPath(portID, channelID string) string {
 	return fmt.Sprintf("%s/", KeyNextSeqRecvPrefix) + channelPath(portID, channelID) + "/nextSequenceRecv"
 }
 
+// NextSequenceAckPath defines the next acknowledgement sequence counter store path
+func NextSequenceAckPath(portID, channelID string) string {
+	return fmt.Sprintf("%s/", KeyNextSeqAckPrefix) + channelPath(portID, channelID) + "/nextSequenceAck"
+}
+
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/", KeyPacketCommitmentPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
@@ -154,6 +160,12 @@ func KeyNextSequenceSend(portID, channelID string) []byte {
 // channel binded to a specific port
 func KeyNextSequenceRecv(portID, channelID string) []byte {
 	return []byte(NextSequenceRecvPath(portID, channelID))
+}
+
+// KeyNextSequenceAck returns the store key for the acknowledgement sequence of
+// a particular channel binded to a specific port.
+func KeyNextSequenceAck(portID, channelID string) []byte {
+	return []byte(NextSequenceAckPath(portID, channelID))
 }
 
 // KeyPacketCommitment returns the store key of under which a packet commitment

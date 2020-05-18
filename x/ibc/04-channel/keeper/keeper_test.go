@@ -175,9 +175,13 @@ func (suite *KeeperTestSuite) TestSetSequence() {
 	_, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(ctx, testPort1, testChannel1)
 	suite.False(found)
 
-	nextSeqSend, nextSeqRecv := uint64(10), uint64(10)
+	_, found = suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(ctx, testPort1, testChannel1)
+	suite.False(found)
+
+	nextSeqSend, nextSeqRecv, nextSeqAck := uint64(10), uint64(10), uint64(10)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, testPort1, testChannel1, nextSeqSend)
 	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctx, testPort1, testChannel1, nextSeqRecv)
+	suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(ctx, testPort1, testChannel1, nextSeqAck)
 
 	storedNextSeqSend, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
 	suite.True(found)
@@ -186,6 +190,10 @@ func (suite *KeeperTestSuite) TestSetSequence() {
 	storedNextSeqRecv, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceSend(ctx, testPort1, testChannel1)
 	suite.True(found)
 	suite.Equal(nextSeqRecv, storedNextSeqRecv)
+
+	storedNextSeqAck, found := suite.chainB.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(ctx, testPort1, testChannel1)
+	suite.True(found)
+	suite.Equal(nextSeqAck, storedNextSeqAck)
 }
 
 func (suite *KeeperTestSuite) TestPackageCommitment() {

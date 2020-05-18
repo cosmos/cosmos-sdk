@@ -38,8 +38,7 @@ func NewSendTxCmd(cliCtx context.CLIContext) *cobra.Command {
 		Short: "Create and/or sign and broadcast a MsgSend transaction",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx.InitWithInputAndFrom(inBuf, args[0])
+			cliCtx.InitWithInputAndFrom(cmd.InOrStdin(), args[0])
 
 			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {

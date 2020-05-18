@@ -1,13 +1,15 @@
 package context
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -58,55 +60,9 @@ type CLIContext struct {
 // a CLIContext in tests or any non CLI-based environment, the verifier will not be created
 // and will be set as nil because FlagTrustNode must be set.
 func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
-	var nodeURI string
-	var rpc rpcclient.Client
-	var err error
-
-	offline := viper.GetBool(flags.FlagOffline)
-	if !offline {
-		nodeURI = viper.GetString(flags.FlagNode)
-		if nodeURI != "" {
-			rpc, err = rpchttp.New(nodeURI, "/websocket")
-			if err != nil {
-				fmt.Printf("failted to get client: %v\n", err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	trustNode := viper.GetBool(flags.FlagTrustNode)
-	ctx := CLIContext{
-		Client:        rpc,
-		ChainID:       viper.GetString(flags.FlagChainID),
-		Input:         input,
-		Output:        os.Stdout,
-		NodeURI:       nodeURI,
-		From:          viper.GetString(flags.FlagFrom),
-		OutputFormat:  viper.GetString(cli.OutputFlag),
-		Height:        viper.GetInt64(flags.FlagHeight),
-		TrustNode:     trustNode,
-		UseLedger:     viper.GetBool(flags.FlagUseLedger),
-		BroadcastMode: viper.GetString(flags.FlagBroadcastMode),
-		Simulate:      viper.GetBool(flags.FlagDryRun),
-		Offline:       offline,
-		Indent:        viper.GetBool(flags.FlagIndentResponse),
-		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
-	}
-
+	ctx := CLIContext{}
 	ctx.InitWithInputAndFrom(input, from)
-
-	if offline {
-		return ctx
-	}
-
-	// create a verifier for the specific chain ID and RPC client
-	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && !trustNode {
-		fmt.Printf("failed to create verifier: %s\n", err)
-		os.Exit(1)
-	}
-
-	return ctx.WithVerifier(verifier)
+	return ctx
 }
 
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
@@ -130,7 +86,43 @@ func NewCLIContextWithInput(input io.Reader) CLIContext {
 }
 
 // InitWithInputAndFrom re-initializes an existing CLI with a new io.Reader and from parameter
-func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLIContext {
+func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) {
+	input = bufio.NewReader(input)
+
+	var nodeURI string
+	var rpc rpcclient.Client
+	var err error
+
+	offline := viper.GetBool(flags.FlagOffline)
+	if !offline {
+		nodeURI = viper.GetString(flags.FlagNode)
+		if nodeURI != "" {
+			rpc, err = rpchttp.New(nodeURI, "/websocket")
+			if err != nil {
+				fmt.Printf("failted to get client: %v\n", err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	trustNode := viper.GetBool(flags.FlagTrustNode)
+
+	ctx.Client = rpc
+	ctx.ChainID = viper.GetString(flags.FlagChainID)
+	ctx.Input = input
+	ctx.Output = os.Stdout
+	ctx.NodeURI = nodeURI
+	ctx.From = viper.GetString(flags.FlagFrom)
+	ctx.OutputFormat = viper.GetString(cli.OutputFlag)
+	ctx.Height = viper.GetInt64(flags.FlagHeight)
+	ctx.TrustNode = trustNode
+	ctx.UseLedger = viper.GetBool(flags.FlagUseLedger)
+	ctx.BroadcastMode = viper.GetString(flags.FlagBroadcastMode)
+	ctx.Simulate = viper.GetBool(flags.FlagDryRun)
+	ctx.Offline = offline
+	ctx.Indent = viper.GetBool(flags.FlagIndentResponse)
+	ctx.SkipConfirm = viper.GetBool(flags.FlagSkipConfirmation)
+
 	homedir := viper.GetString(flags.FlagHome)
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
 	backend := viper.GetString(flags.FlagKeyringBackend)
@@ -151,22 +143,33 @@ func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLICon
 
 	ctx.HomeDir = homedir
 
-	return ctx.
-		WithKeyring(kr).
-		WithFromAddress(fromAddress).
-		WithFromName(fromName).
-		WithGenerateOnly(genOnly)
+	ctx.Keyring = kr
+	ctx.FromAddress = fromAddress
+	ctx.FromName = fromName
+	ctx.GenerateOnly = genOnly
 
+	if offline {
+		return
+	}
+
+	// create a verifier for the specific chain ID and RPC client
+	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
+	if err != nil && !trustNode {
+		fmt.Printf("failed to create verifier: %s\n", err)
+		os.Exit(1)
+	}
+
+	ctx.Verifier = verifier
 }
 
 // InitWithInputAndFrom re-initializes an existing CLI with a new io.Reader
-func (ctx *CLIContext) InitWithInput(input io.Reader) CLIContext {
-	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+func (ctx *CLIContext) InitWithInput(input io.Reader) {
+	ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
 // InitWithInputAndFrom re-initializes an existing CLI with a new from parameter
-func (ctx *CLIContext) InitWithFrom(from string) CLIContext {
-	return ctx.InitWithInputAndFrom(os.Stdin, from)
+func (ctx *CLIContext) InitWithFrom(from string) {
+	ctx.InitWithInputAndFrom(os.Stdin, from)
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.

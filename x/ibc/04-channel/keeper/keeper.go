@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -76,7 +75,7 @@ func (k Keeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (
 		return 0, false
 	}
 
-	return binary.BigEndian.Uint64(bz), true
+	return sdk.BigEndianToUint64(bz), true
 }
 
 // SetNextSequenceSend sets a channel's next send sequence to the store
@@ -94,7 +93,7 @@ func (k Keeper) GetNextSequenceRecv(ctx sdk.Context, portID, channelID string) (
 		return 0, false
 	}
 
-	return binary.BigEndian.Uint64(bz), true
+	return sdk.BigEndianToUint64(bz), true
 }
 
 // SetNextSequenceRecv sets a channel's next receive sequence to the store
@@ -112,7 +111,7 @@ func (k Keeper) GetNextSequenceAck(ctx sdk.Context, portID, channelID string) (u
 		return 0, false
 	}
 
-	return binary.BigEndian.Uint64(bz), true
+	return sdk.BigEndianToUint64(bz), true
 }
 
 // SetNextSequenceAck sets a channel's next ack sequence to the store

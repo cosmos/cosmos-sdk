@@ -30,6 +30,12 @@ type Router interface {
 	Route(ctx Context, path string) Handler
 }
 
+// Route represents a Route used by the Router.
+type Route interface {
+	Route() string
+	Handler() Handler
+}
+
 // QueryRouter provides queryables for each query path.
 type QueryRouter interface {
 	AddRoute(r string, h Querier) QueryRouter

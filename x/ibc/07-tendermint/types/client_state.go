@@ -17,6 +17,8 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+
+	ics23 "github.com/confio/ics23/go"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -38,6 +40,9 @@ type ClientState struct {
 	// the future.
 	MaxClockDrift time.Duration
 
+	// ProofSpecs determines the proof format this client will verify against
+	ProofSpecs []*ics23.ProofSpecs
+
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 
@@ -48,27 +53,27 @@ type ClientState struct {
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 	return Initialize(
-		msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift, msg.Header,
+		msg.GetClientID(), msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift, msg.Header, msg.ProofSpecs,
 	)
 }
 
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
+	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header, specs []*ics23.ProofSpecs,
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
 
-	clientState := NewClientState(id, trustingPeriod, ubdPeriod, maxClockDrift, header)
+	clientState := NewClientState(id, trustingPeriod, ubdPeriod, maxClockDrift, header, specs)
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header,
+	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header, specs []*ics23.ProofSpecs,
 ) ClientState {
 
 	return ClientState{
@@ -77,6 +82,7 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LastHeader:      header,
+		ProofSpecs:      specs,
 		FrozenHeight:    0,
 	}
 }
@@ -109,6 +115,11 @@ func (cs ClientState) GetLatestTimestamp() time.Time {
 	return cs.LastHeader.Time
 }
 
+// GetProofSpecs returns proof specs
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return cs.ProofSpecs
+}
+
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
@@ -127,6 +138,9 @@ func (cs ClientState) Validate() error {
 	}
 	if cs.MaxClockDrift == 0 {
 		return errors.New("max clock drift cannot be zero")
+	}
+	if cs.ProofSpecs == nil {
+		return errors.New("proof spec cannot be nil")
 	}
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }
@@ -157,6 +171,8 @@ func (cs ClientState) VerifyClientConsensusState(
 	if err != nil {
 		return err
 	}
+
+	// TODO: Inject proof specs of clientstate into proof or modify verify membership function to take proof specs
 
 	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())

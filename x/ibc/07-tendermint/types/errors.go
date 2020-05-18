@@ -13,4 +13,5 @@ var (
 	ErrInvalidTrustingPeriod  = sdkerrors.Register(SubModuleName, 2, "invalid trusting period")
 	ErrInvalidUnbondingPeriod = sdkerrors.Register(SubModuleName, 3, "invalid unbonding period")
 	ErrInvalidHeader          = sdkerrors.Register(SubModuleName, 4, "invalid header")
+	ErrInvalidProofSpecs      = sdkerrors.Register(SubModuleName, 5, "invalid proof specs")
 )

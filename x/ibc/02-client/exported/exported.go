@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
@@ -21,6 +22,7 @@ type ClientState interface {
 	GetLatestHeight() uint64
 	IsFrozen() bool
 	Validate() error
+	GetProofSpecs() []*ics23.ProofSpec
 
 	// State verification functions
 

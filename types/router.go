@@ -26,22 +26,12 @@ var (
 
 // Router provides handlers for each transaction type.
 type Router interface {
-	AddRoute(r Route) Router
+	AddRoute(r string, h Handler) Router
 	Route(ctx Context, path string) Handler
-}
-
-type Route interface {
-	Name() string
-	Handler() Handler
 }
 
 // QueryRouter provides queryables for each query path.
 type QueryRouter interface {
-	AddRoute(route QueryRoute) QueryRouter
+	AddRoute(r string, h Querier) QueryRouter
 	Route(path string) Querier
-}
-
-type QueryRoute interface {
-	Name() string
-	Querier() Querier
 }

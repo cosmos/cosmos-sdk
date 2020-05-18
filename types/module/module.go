@@ -139,8 +139,10 @@ type AppModule interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 
 	// routes
-	NewRoute() sdk.Route
-	NewQueryRoute() sdk.QueryRoute
+	Route() string
+	NewHandler() sdk.Handler
+	QuerierRoute() string
+	NewQuerierHandler() sdk.Querier
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -245,12 +247,11 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range m.Modules {
-		if route := module.NewRoute(); route != nil {
-			router.AddRoute(route)
+		if module.Route() != "" {
+			router.AddRoute(module.Route(), module.NewHandler())
 		}
-
-		if queryRoute := module.NewQueryRoute(); queryRoute != nil {
-			queryRouter.AddRoute(queryRoute)
+		if module.QuerierRoute() != "" {
+			queryRouter.AddRoute(module.QuerierRoute(), module.NewQuerierHandler())
 		}
 	}
 }

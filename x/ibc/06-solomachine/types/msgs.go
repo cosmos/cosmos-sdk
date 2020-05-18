@@ -8,7 +8,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 var (
@@ -33,7 +32,7 @@ func NewMsgCreateClient(id string, consensusState ConsensusState) MsgCreateClien
 
 // Route implements sdk.Msg
 func (msg MsgCreateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -47,7 +46,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state failed validatebasic: %v", err)
 	}
 
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -91,7 +90,7 @@ func NewMsgUpdateClient(id string, header Header) MsgUpdateClient {
 
 // Route implements sdk.Msg
 func (msg MsgUpdateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -104,7 +103,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header validatebasic failed: %v", err)
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -141,7 +140,7 @@ func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddres
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
-func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }
+func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
 func (msg MsgSubmitClientMisbehaviour) Type() string {

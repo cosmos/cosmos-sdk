@@ -71,12 +71,20 @@ func (ev Evidence) GetHeight() int64 {
 
 // ValidateBasic implements Evidence interface.
 func (ev Evidence) ValidateBasic() error {
-	if err := host.DefaultClientIdentifierValidator(ev.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
 	if ev.Sequence == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "sequence cannot be 0")
+	}
+
+	if err := ev.SignatureOne.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+	}
+
+	if err := ev.SignatureTwo.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
 	// evidence signatures cannot be identical
@@ -96,4 +104,16 @@ func (ev Evidence) ValidateBasic() error {
 type SignatureAndData struct {
 	Signature []byte `json:"signature" yaml:"signature"`
 	Data      []byte `json:"data" yaml:"data"`
+}
+
+// ValidateBasic ensures that the signature and data fields are non-empty.
+func (sd SignatureAndData) ValidateBasic() error {
+	if len(sd.Signature) == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "signature cannot be empty")
+	}
+	if len(sd.Data) == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data for signature cannot be emtpy")
+	}
+
+	return nil
 }

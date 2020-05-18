@@ -34,7 +34,8 @@ type Codec struct {
 var _ JSONMarshaler = &Codec{}
 
 func (cdc *Codec) Seal() *Codec {
-	return &Codec{cdc.Amino.Seal()}
+	cdc.Amino.Seal()
+	return cdc
 }
 
 func New() *Codec {

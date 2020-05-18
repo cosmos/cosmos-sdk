@@ -77,6 +77,7 @@ func ValidateGenesis(data GenesisState) error {
 
 var _ types.UnpackInterfacesMessage = GenesisState{}
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, p := range data.Proposals {
 		err := p.UnpackInterfaces(unpacker)

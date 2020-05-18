@@ -16,11 +16,12 @@ type aminoCompat struct {
 	err    error
 }
 
-const errorExplaination = ", this is likely because UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members"
-
 func aminoCompatError(errType string, x interface{}) error {
 	debug.PrintStack()
-	return fmt.Errorf("amino marshaling error: %s %+v"+errorExplaination, errType, x)
+	return fmt.Errorf(
+		"amino %s Any marshaling error for %+v, this is likely because amino is being used directly (instead of codec.Codec which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members",
+		errType, x,
+	)
 }
 
 func (any Any) MarshalAmino() ([]byte, error) {

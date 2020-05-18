@@ -209,3 +209,17 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) erro
 	}
 	return nil
 }
+
+func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) {
+	err := keeper.MarshalProposal(proposal)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (keeper Keeper) MustUnmarshalProposal(bz []byte, proposal *types.Proposal) {
+	err := keeper.UnmarshalProposal(bz, proposal)
+	if err != nil {
+		panic(err)
+	}
+}

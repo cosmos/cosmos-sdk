@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -134,6 +132,7 @@ func (m MsgSubmitProposal) String() string {
 	return string(out)
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(m.Content, &content)

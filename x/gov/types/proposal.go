@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -31,7 +29,7 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 
 	msg, ok := content.(proto.Message)
 	if !ok {
-		return Proposal{}, fmt.Errorf("can't proto marshal %T", content)
+		return Proposal{}, fmt.Errorf("%T does not implement proto.Message", content)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
@@ -82,6 +80,7 @@ func (p Proposal) GetTitle() string {
 	return content.GetTitle()
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (p Proposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(p.Content, &content)
@@ -118,6 +117,7 @@ func (p Proposals) String() string {
 	return strings.TrimSpace(out)
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (p Proposals) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range p {
 		err := x.UnpackInterfaces(unpacker)

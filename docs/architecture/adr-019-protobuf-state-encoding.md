@@ -319,7 +319,7 @@ In order for this functionality to work:
 * **all legacy code must use `*codec.Codec` instead of `*amino.Codec` which is
 now a wrapper which properly handles `Any`**
 * **all new code should use `Marshaler` which is compatible with both amino and
-protobuf
+protobuf**
 
 Also, before v0.39, `codec.Codec` will be renamed to `codec.LegacyAmino`.
 

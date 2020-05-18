@@ -1,23 +1,19 @@
 package types_test
 
 import (
-	ibcsmtypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine"
-)
-
-const (
-	clientID = "testclient"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine"
 )
 
 func (suite *SoloMachineTestSuite) TestMsgCreateClientValidateBasic() {
 	cases := []struct {
 		name    string
-		msg     ibcsmtypes.MsgCreateClient
+		msg     solomachinetypes.MsgCreateClient
 		expPass bool
 	}{
-		{"valid msg", ibcsmtypes.NewMsgCreateClient(clientID, suite.ConsensusState()), true},
-		{"invalid client id", ibcsmtypes.NewMsgCreateClient("(BADCLIENTID)", suite.ConsensusState()), false},
-		{"invalid consensus state with zero sequence", ibcsmtypes.NewMsgCreateClient(clientID, ibcsmtypes.ConsensusState{0, suite.privKey.PubKey()}), false},
-		{"invalid consensus state with nil pubkey", ibcsmtypes.NewMsgCreateClient(clientID, ibcsmtypes.ConsensusState{suite.sequence, nil}), false},
+		{"valid msg", solomachinetypes.NewMsgCreateClient(suite.clientID, suite.ConsensusState()), true},
+		{"invalid client id", solomachinetypes.NewMsgCreateClient("(BADCLIENTID)", suite.ConsensusState()), false},
+		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{0, suite.privKey.PubKey()}), false},
+		{"invalid consensus state with nil pubkey", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{suite.sequence, nil}), false},
 	}
 
 	for i, tc := range cases {
@@ -35,14 +31,14 @@ func (suite *SoloMachineTestSuite) TestMsgUpdateClientValidateBasic() {
 
 	cases := []struct {
 		name    string
-		msg     ibcsmtypes.MsgUpdateClient
+		msg     solomachinetypes.MsgUpdateClient
 		expPass bool
 	}{
-		{"valid msg", ibcsmtypes.NewMsgUpdateClient(clientID, header), true},
-		{"invalid client id", ibcsmtypes.NewMsgUpdateClient("(BADCLIENTID)", header), false},
-		{"invalid header - sequence is zero", ibcsmtypes.NewMsgUpdateClient(clientID, ibcsmtypes.Header{0, header.Signature, header.NewPubKey}), false},
-		{"invalid header - signature is empty", ibcsmtypes.NewMsgUpdateClient(clientID, ibcsmtypes.Header{header.Sequence, []byte{}, header.NewPubKey}), false},
-		{"invalid header - pubkey is empty", ibcsmtypes.NewMsgUpdateClient(clientID, ibcsmtypes.Header{header.Sequence, header.Signature, nil}), false},
+		{"valid msg", solomachinetypes.NewMsgUpdateClient(suite.clientID, header), true},
+		{"invalid client id", solomachinetypes.NewMsgUpdateClient("(BADCLIENTID)", header), false},
+		{"invalid header - sequence is zero", solomachinetypes.NewMsgUpdateClient(suite.clientID, solomachinetypes.Header{0, header.Signature, header.NewPubKey}), false},
+		{"invalid header - signature is empty", solomachinetypes.NewMsgUpdateClient(suite.clientID, solomachinetypes.Header{header.Sequence, []byte{}, header.NewPubKey}), false},
+		{"invalid header - pubkey is empty", solomachinetypes.NewMsgUpdateClient(suite.clientID, solomachinetypes.Header{header.Sequence, header.Signature, nil}), false},
 	}
 
 	for i, tc := range cases {
@@ -56,10 +52,11 @@ func (suite *SoloMachineTestSuite) TestMsgUpdateClientValidateBasic() {
 
 }
 
+// TODO
 func (suite *SoloMachineTestSuite) TestMsgSubmitClientMisbehaviourValidateBasic() {
 	cases := []struct {
 		name    string
-		msg     ibcsmtypes.MsgSubmitClientMisbehaviour
+		msg     solomachinetypes.MsgSubmitClientMisbehaviour
 		expPass bool
 	}{}
 

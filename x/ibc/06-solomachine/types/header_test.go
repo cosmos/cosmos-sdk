@@ -2,7 +2,7 @@ package types_test
 
 import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	ibcsmtypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
@@ -10,13 +10,13 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 
 	cases := []struct {
 		name    string
-		header  ibcsmtypes.Header
+		header  solomachinetypes.Header
 		expPass bool
 	}{
 		{"valid header", header, true},
-		{"sequence is zero", ibcsmtypes.Header{zero, header.Signature, header.NewPubKey}, false},
-		{"signature is empty", ibcsmtypes.Header{header.Sequence, []byte{}, header.NewPubKey}, false},
-		{"public key is nil", ibcsmtypes.Header{header.Sequence, header.Signature, nil}, false},
+		{"sequence is zero", solomachinetypes.Header{zero, header.Signature, header.NewPubKey}, false},
+		{"signature is empty", solomachinetypes.Header{header.Sequence, []byte{}, header.NewPubKey}, false},
+		{"public key is nil", solomachinetypes.Header{header.Sequence, header.Signature, nil}, false},
 	}
 
 	suite.Require().Equal(clientexported.SoloMachine, header.ClientType())

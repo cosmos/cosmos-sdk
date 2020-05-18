@@ -131,15 +131,19 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 	for _, seq := range expSeqs {
 		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
 		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
+		suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(ctx, seq.PortID, seq.ChannelID, seq.Sequence)
 	}
 
 	sendSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketSendSeqs(ctx)
 	recvSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketRecvSeqs(ctx)
+	ackSeqs := suite.chainB.App.IBCKeeper.ChannelKeeper.GetAllPacketAckSeqs(ctx)
 	suite.Require().Len(sendSeqs, 2)
 	suite.Require().Len(recvSeqs, 2)
+	suite.Require().Len(ackSeqs, 2)
 
 	suite.Require().Equal(expSeqs, sendSeqs)
 	suite.Require().Equal(expSeqs, recvSeqs)
+	suite.Require().Equal(expSeqs, ackSeqs)
 }
 
 func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {

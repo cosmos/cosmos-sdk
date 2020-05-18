@@ -68,7 +68,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
 func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
+	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function

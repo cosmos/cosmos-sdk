@@ -1,0 +1,14 @@
+syntax = "proto3";
+package cosmos_sdk.crypto.multisig.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/multisig";
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "types/types.proto";
+
+// Multisignature is used to represent the signature object used in the multisigs.
+// Sigs is a list of signatures, sorted by corresponding index.message PrivKeyEd25519 {
+message Multisignature {
+  cosmos_sdk.v1.CompactBitArray bitarray = 1 [(gogoproto.customname) = "BitArray"];
+  repeated bytes                sigs     = 2;
+}

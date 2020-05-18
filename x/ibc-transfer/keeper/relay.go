@@ -28,6 +28,8 @@ func (k Keeper) SendTransfer(
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver string,
+	timeoutHeight,
+	timeoutTimestamp uint64,
 ) error {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
@@ -44,10 +46,12 @@ func (k Keeper) SendTransfer(
 			channeltypes.ErrSequenceSendNotFound,
 			"source port: %s, source channel: %s", sourcePort, sourceChannel,
 		)
-
 	}
 
-	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, destHeight, amount, sender, receiver)
+	return k.createOutgoingPacket(
+		ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel,
+		destHeight, amount, sender, receiver, timeoutHeight, timeoutTimestamp,
+	)
 }
 
 // See spec for this function: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
@@ -60,6 +64,7 @@ func (k Keeper) createOutgoingPacket(
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver string,
+	timeoutHeight, timeoutTimestamp uint64,
 ) error {
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
@@ -138,8 +143,8 @@ func (k Keeper) createOutgoingPacket(
 		sourceChannel,
 		destinationPort,
 		destinationChannel,
-		destHeight+DefaultPacketTimeoutHeight,
-		DefaultPacketTimeoutTimestamp,
+		destHeight+timeoutHeight,
+		timeoutTimestamp,
 	)
 
 	return k.channelKeeper.SendPacket(ctx, channelCap, packet)

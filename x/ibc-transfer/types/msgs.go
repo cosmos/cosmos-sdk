@@ -13,7 +13,9 @@ const (
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
-	sourcePort, sourceChannel string, destHeight uint64, amount sdk.Coins, sender sdk.AccAddress, receiver string,
+	sourcePort, sourceChannel string, destHeight uint64,
+	amount sdk.Coins, sender sdk.AccAddress, receiver string,
+	timeoutHeight, timeoutTimestamp uint64,
 ) MsgTransfer {
 	return MsgTransfer{
 		SourcePort:        sourcePort,
@@ -22,6 +24,8 @@ func NewMsgTransfer(
 		Amount:            amount,
 		Sender:            sender,
 		Receiver:          receiver,
+		TimeoutHeight:     timeoutHeight,
+		TimeoutTimestamp:  timeoutTimestamp,
 	}
 }
 
@@ -54,6 +58,12 @@ func (msg MsgTransfer) ValidateBasic() error {
 	}
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
+	}
+	if msg.TimeoutHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacketTimeout, "timeout height cannot be 0")
+	}
+	if msg.TimeoutTimestamp == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacketTimeout, "timeout time cannot be 0")
 	}
 	return nil
 }

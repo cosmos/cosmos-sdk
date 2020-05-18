@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -28,10 +29,10 @@ var (
 
 // GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "transfer [src-port] [src-channel] [dest-height] [receiver] [amount]",
+	return &cobra.Command{
+		Use:   "transfer [src-port] [src-channel] [dest-height] [receiver] [amount] [timeout-height] [timeout-timestamp]",
 		Short: "Transfer fungible token through IBC",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -40,10 +41,13 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			sender := cliCtx.GetFromAddress()
 			srcPort := args[0]
 			srcChannel := args[1]
-			destHeight, err := strconv.Atoi(args[2])
+
+			destHeight, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid destination height: %w", err)
 			}
+
+			receiver := args[3]
 
 			// parse coin trying to be sent
 			coins, err := sdk.ParseCoins(args[4])
@@ -51,7 +55,20 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgTransfer(srcPort, srcChannel, uint64(destHeight), coins, sender, args[3])
+			timeoutHeight, err := strconv.ParseUint(args[5], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid timeout height: %w", err)
+			}
+
+			timeoutTimestamp, err := strconv.ParseUint(args[6], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid timeout timestamp: %w", err)
+			}
+
+			msg := types.NewMsgTransfer(
+				srcPort, srcChannel, destHeight, coins, sender, receiver,
+				timeoutHeight, timeoutTimestamp,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -59,5 +76,4 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	return cmd
 }

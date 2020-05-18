@@ -36,6 +36,23 @@ type Route interface {
 	Handler() Handler
 }
 
+type route struct {
+	route   string
+	handler Handler
+}
+
+func NewRouter(r string, h Handler) Route {
+	return &route{route: r, handler: h}
+}
+
+func (r route) Route() string {
+	return r.route
+}
+
+func (r route) Handler() Handler {
+	return r.handler
+}
+
 // QueryRouter provides queryables for each query path.
 type QueryRouter interface {
 	AddRoute(r string, h Querier) QueryRouter

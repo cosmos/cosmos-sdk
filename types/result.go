@@ -10,6 +10,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
@@ -263,4 +264,25 @@ func NewSearchTxsResult(totalCount, count, page, limit int, txs []TxResponse) Se
 func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	err = json.Unmarshal([]byte(logs), &res)
 	return res, err
+}
+
+var _, _ types.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+//
+// types.UnpackInterfaces needs to be called for each nested Tx because
+// there are generally interfaces to unpack in Tx's
+func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, tx := range s.Txs {
+		err := types.UnpackInterfaces(tx, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	return types.UnpackInterfaces(r.Tx, unpacker)
 }

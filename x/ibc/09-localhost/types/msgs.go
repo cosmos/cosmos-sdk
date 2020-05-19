@@ -13,13 +13,8 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient = MsgCreateClient{}
+	_ clientexported.MsgCreateClient = (*MsgCreateClient)(nil)
 )
-
-// MsgCreateClient defines a message to create an IBC client
-type MsgCreateClient struct {
-	Signer sdk.AccAddress `json:"address" yaml:"address"`
-}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(signer sdk.AccAddress) MsgCreateClient {

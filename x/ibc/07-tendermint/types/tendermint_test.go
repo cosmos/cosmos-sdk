@@ -26,13 +26,12 @@ const (
 type TendermintTestSuite struct {
 	suite.Suite
 
-	ctx      sdk.Context
-	aminoCdc *codec.Codec
-	cdc      codec.Marshaler
-	privVal  tmtypes.PrivValidator
-	valSet   *tmtypes.ValidatorSet
-	header   ibctmtypes.Header
-	now      time.Time
+	ctx     sdk.Context
+	cdc     codec.Marshaler
+	privVal tmtypes.PrivValidator
+	valSet  *tmtypes.ValidatorSet
+	header  ibctmtypes.Header
+	now     time.Time
 }
 
 func (suite *TendermintTestSuite) SetupTest() {
@@ -40,7 +39,6 @@ func (suite *TendermintTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	suite.aminoCdc = app.Codec()
-	suite.cdc = app.AppCodec()
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privVal = tmtypes.NewMockPV()

@@ -21,14 +21,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
-
-// ClientState requires (read-only) access to keys outside the client prefix.
-type ClientState struct {
-	ID      string `json:"id" yaml:"id"`
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-	Height  int64  `json:"height" yaml:"height"`
-}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
 func NewClientState(chainID string, height int64) ClientState {
@@ -75,44 +68,23 @@ func (cs ClientState) Validate() error {
 	return host.ClientIdentifierValidator(cs.ID)
 }
 
-// VerifyClientConsensusState verifies a proof of the consensus
-// state of the loop-back client.
-// VerifyClientConsensusState verifies a proof of the consensus state of the
-// Tendermint client stored on the target machine.
+// VerifyClientConsensusState always returns an error as the loopback client doesn't
+// store consensus states.
 func (cs ClientState) VerifyClientConsensusState(
-	store sdk.KVStore,
-	cdc *codec.Codec,
+	_ sdk.KVStore,
+	_ codec.Marshaler,
 	_ commitmentexported.Root,
-	height uint64,
+	_ uint64,
 	_ string,
-	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
+	_ uint64,
+	_ commitmentexported.Prefix,
 	_ commitmentexported.Proof,
-	consensusState clientexported.ConsensusState,
+	_ clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, consensusStatePath(cs.GetID()))
-	if err != nil {
-		return err
-	}
-
-	data := store.Get([]byte(path.String()))
-	if len(data) == 0 {
-		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
-	}
-
-	var prevConsensusState clientexported.ConsensusState
-	if err := cdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
-		return err
-	}
-
-	if consensusState != prevConsensusState {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrFailedClientConsensusStateVerification,
-			"consensus state ≠ previous stored consensus state: \n%v\n≠\n%v", consensusState, prevConsensusState,
-		)
-	}
-
-	return nil
+	return sdkerrors.Wrap(
+		clienttypes.ErrFailedClientConsensusStateVerification,
+		"localhost client doesn't store consensus states",
+	)
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the

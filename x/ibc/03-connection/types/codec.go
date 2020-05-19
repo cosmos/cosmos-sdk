@@ -35,7 +35,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 var (
 	amino = codec.New()
 
-	// SubModuleCdc references the global x/ibc/03-connectionl module codec. Note, the codec should
+	// SubModuleCdc references the global x/ibc/03-connection module codec. Note, the codec should
 	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
 	// still used for that purpose.
 	//

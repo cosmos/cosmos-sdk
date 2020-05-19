@@ -48,41 +48,13 @@ func (suite *LocalhostTestSuite) TestValidate() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
-	testCases := []struct {
-		name        string
-		clientState types.ClientState
-		prefix      commitmenttypes.MerklePrefix
-		proof       commitmenttypes.MerkleProof
-		expPass     bool
-	}{
-		{
-			name:        "ApplyPrefix failed",
-			clientState: types.NewClientState("chainID", 10),
-			prefix:      commitmenttypes.MerklePrefix{},
-			expPass:     false,
-		},
-		{
-			name:        "proof verification failed",
-			clientState: types.NewClientState("chainID", 10),
-			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:       commitmenttypes.MerkleProof{},
-			expPass:     false,
-		},
-	}
+	clientState := types.NewClientState("chainID", 10)
+	err := clientState.VerifyClientConsensusState(
+		nil, suite.cdc, nil, 0, "chainA", 0, nil, nil, nil,
+	)
 
-	for i, tc := range testCases {
-		tc := tc
+	suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 
-		err := tc.clientState.VerifyClientConsensusState(
-			suite.store, suite.aminoCdc, nil, height, "chainA", 0, tc.prefix, tc.proof, nil,
-		)
-
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
-	}
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {

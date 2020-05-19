@@ -37,7 +37,7 @@ const (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc            *codec.Codec
+	cdc            codec.Marshaler
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
 	consensusState ibctmtypes.ConsensusState
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	now2 := suite.now.Add(time.Hour)
 	app := simapp.Setup(isCheckTx)
 
-	suite.cdc = app.Codec()
+	suite.cdc = app.AppCodec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{Height: testClientHeight, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 	suite.privVal = tmtypes.NewMockPV()

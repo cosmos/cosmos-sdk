@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient     = MsgCreateClient{}
-	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
-	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
+	_ clientexported.MsgCreateClient     = (*MsgCreateClient)(nil)
+	_ clientexported.MsgUpdateClient     = (*MsgUpdateClient)(nil)
+	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance

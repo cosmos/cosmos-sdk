@@ -275,6 +275,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.ORDERED, testConnectionIDB)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(suite.chainB.GetContext(), counterparty.GetPortID(), counterparty.GetChannelID(), 1)
 		}, true},
 		{"channel not found", func() {}, false},
 		{"channel not open", func() {
@@ -309,6 +310,29 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
 		}, false},
+		{"next ack sequence not found", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainB.CreateClient(suite.chainA)
+			suite.chainA.CreateClient(suite.chainB)
+			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connection.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.ORDERED, testConnectionIDB)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
+		}, false},
+		{"next ack sequence mismatch", func() {
+			packet = types.NewPacket(mockSuccessPacket{}.GetBytes(), 1, testPort1, testChannel1, counterparty.GetPortID(), counterparty.GetChannelID(), timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainB.CreateClient(suite.chainA)
+			suite.chainA.CreateClient(suite.chainB)
+			suite.chainB.createConnection(testConnectionIDA, testConnectionIDB, testClientIDA, testClientIDB, connection.OPEN)
+			suite.chainA.createConnection(testConnectionIDB, testConnectionIDA, testClientIDB, testClientIDA, connection.OPEN)
+			suite.chainB.createChannel(testPort1, testChannel1, testPort2, testChannel2, types.OPEN, types.ORDERED, testConnectionIDA)
+			suite.chainA.createChannel(testPort2, testChannel2, testPort1, testChannel1, types.OPEN, types.ORDERED, testConnectionIDB)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainB.GetContext(), testPort1, testChannel1, 1, types.CommitPacket(packet))
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), testPort2, testChannel2, 1, types.CommitAcknowledgement(ack))
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(suite.chainB.GetContext(), counterparty.GetPortID(), counterparty.GetChannelID(), 10)
+		}, false},
 	}
 
 	for i, tc := range testCases {
@@ -322,12 +346,11 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			proof, proofHeight := queryProof(suite.chainA, packetKey)
 
 			ctx := suite.chainB.GetContext()
+			packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 			if tc.expPass {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(packetOut)
 			} else {
-				packetOut, err := suite.chainB.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(ctx, packet, ack, proof, proofHeight+1)
 				suite.Require().Error(err)
 				suite.Require().Nil(packetOut)
 			}

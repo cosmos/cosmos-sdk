@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// module codec
 var ModuleCdc = codec.New()
 
 // RegisterCodec registers all the necessary types and interfaces for

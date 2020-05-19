@@ -425,7 +425,7 @@ func TestKeygenOverride(t *testing.T) {
 	overrideCalled := false
 	dummyFunc := func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error) {
 		overrideCalled = true
-		return testPriv(bz[:]), nil
+		return testPriv(bz), nil
 	}
 
 	kb := New("keybasename", dir, WithKeygenFunc(dummyFunc))

@@ -93,7 +93,7 @@ func WeightedOperations(
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
 // nolint: funlen
-func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation { // nolint:interfacer
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -171,7 +171,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
 // nolint: funlen
-func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation { // nolint:interfacer
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -236,7 +236,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
 // nolint: funlen
-func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation { // nolint:interfacer
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -303,7 +303,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
 // nolint: funlen
-func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation { // nolint:interfacer
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -383,7 +383,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
 // nolint: funlen
-func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation { // nolint:interfacer
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {

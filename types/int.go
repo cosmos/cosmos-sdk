@@ -53,7 +53,7 @@ func max(i *big.Int, i2 *big.Int) *big.Int {
 }
 
 // MarshalAmino for custom encoding scheme
-func marshalAmino(i *big.Int) (string, error) {
+func marshalAmino(i *big.Int) (string, error) { // nolint:interfacer
 	bz, err := i.MarshalText()
 	return string(bz), err
 }
@@ -77,7 +77,7 @@ func unmarshalAmino(i *big.Int, text string) (err error) {
 
 // MarshalJSON for custom encoding scheme
 // Must be encoded as a string for JSON precision
-func marshalJSON(i *big.Int) ([]byte, error) {
+func marshalJSON(i *big.Int) ([]byte, error) { // nolint:interfacer
 	text, err := i.MarshalText()
 	if err != nil {
 		return nil, err

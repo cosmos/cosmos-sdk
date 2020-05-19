@@ -43,7 +43,7 @@ func WeightedOperations(
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 // nolint: funlen
-func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation { // nolint:interfacer
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string,

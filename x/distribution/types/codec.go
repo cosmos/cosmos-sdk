@@ -12,7 +12,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
 }
 
-// generic sealed codec to be used throughout module
+// ModuleCdc is a generic sealed codec to be used throughout module
 var ModuleCdc *codec.Codec
 
 func init() {

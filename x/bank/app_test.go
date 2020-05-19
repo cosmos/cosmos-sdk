@@ -49,7 +49,6 @@ var (
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
-	sendMsg2 = types.NewMsgSend(addr1, moduleAccAddr, coins)
 
 	multiSendMsg1 = types.MsgMultiSend{
 		Inputs:  []types.Input{types.NewInput(addr1, coins)},

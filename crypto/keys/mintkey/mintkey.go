@@ -27,7 +27,7 @@ const (
 	headerType    = "type"
 )
 
-// Make bcrypt security parameter var, so it can be changed within the lcd test
+// BcryptSecurityParameter is a var so it can be changed within the lcd test
 // Making the bcrypt security parameter a var shouldn't be a security issue:
 // One can't verify an invalid key by maliciously changing the bcrypt
 // parameter during a runtime vulnerability. The main security

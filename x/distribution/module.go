@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.InterfaceModule     = AppModuleBasic{}
 	_ module.ClientModule        = AppModuleBasic{}
 )
 
@@ -72,6 +74,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetQueryCmd returns the root query command for the distribution module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
+}
+
+// RegisterInterfaceTypes implements InterfaceModule
+func (b AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 func (b AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {

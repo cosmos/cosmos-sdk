@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -17,7 +17,7 @@ const flagHex = "hex"
 
 // GetDecodeCommand returns the decode command to take Amino-serialized bytes
 // and turn it into a JSONified transaction.
-func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
+func GetDecodeCommand(codec *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decode [amino-byte-string]",
 		Short: "Decode an amino-encoded transaction string.",
@@ -29,7 +29,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 	return flags.PostCommands(cmd)[0]
 }
 
-func runDecodeTxString(codec *amino.Codec) func(cmd *cobra.Command, args []string) (err error) {
+func runDecodeTxString(codec *codec.Codec) func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
 		cliCtx := context.NewCLIContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
 		var txBytes []byte

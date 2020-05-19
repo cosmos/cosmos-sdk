@@ -9,6 +9,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
@@ -342,4 +343,16 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
+}
+
+var _ codectypes.UnpackInterfacesMessage = StdTx{}
+
+func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, m := range tx.Msgs {
+		err := codectypes.UnpackInterfaces(m, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

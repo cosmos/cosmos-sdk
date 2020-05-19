@@ -297,10 +297,8 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	appCodec := app.AppCodec()
 
 	proposal := types.Proposal{
-		ProposalBase: types.ProposalBase{
-			ProposalID: 100,
-			Status:     types.StatusVotingPeriod,
-		},
+		ProposalID: 100,
+		Status:     types.StatusVotingPeriod,
 	}
 
 	app.GovKeeper.SetProposal(ctx, proposal)

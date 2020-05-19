@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"

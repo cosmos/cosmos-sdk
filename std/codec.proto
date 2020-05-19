@@ -12,8 +12,6 @@ import "x/distribution/types/types.proto";
 import "x/gov/types/types.proto";
 import "x/slashing/types/types.proto";
 import "x/staking/types/types.proto";
-import "x/params/types/proposal/types.proto";
-import "x/upgrade/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/std";
 
@@ -31,41 +29,6 @@ message Account {
   }
 }
 
-// MsgSubmitProposal defines the application-level message type for handling
-// governance proposals.
-message MsgSubmitProposal {
-  option (gogoproto.equal)           = true;
-  option (gogoproto.goproto_getters) = false;
-
-  cosmos_sdk.x.gov.v1.MsgSubmitProposalBase base    = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-  Content                                   content = 2;
-}
-
-// Proposal defines the application-level concrete proposal type used in
-// governance proposals.
-message Proposal {
-  option (gogoproto.equal) = true;
-
-  cosmos_sdk.x.gov.v1.ProposalBase base    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
-  Content                          content = 2 [(gogoproto.nullable) = false];
-}
-
-// Content defines the application-level allowed Content to be included in a
-// governance proposal.
-message Content {
-  option (gogoproto.equal)             = true;
-  option (cosmos_proto.interface_type) = "*github.com/cosmos/cosmos-sdk/x/gov/types.Content";
-
-  // sum defines a set of all acceptable concrete governance proposal Content
-  // types.
-  oneof sum {
-    cosmos_sdk.x.gov.v1.TextProposal                        text                    = 1;
-    cosmos_sdk.x.params.v1.ParameterChangeProposal          parameter_change        = 2;
-    cosmos_sdk.x.upgrade.v1.SoftwareUpgradeProposal         software_upgrade        = 3;
-    cosmos_sdk.x.upgrade.v1.CancelSoftwareUpgradeProposal   cancel_software_upgrade = 4;
-    cosmos_sdk.x.distribution.v1.CommunityPoolSpendProposal community_pool_spend    = 5;
-  }
-}
 
 // Transaction defines the application-level transaction that can be signed and
 // processed by the state-machine. It contains a base of common fields and
@@ -91,7 +54,6 @@ message Message {
     cosmos_sdk.x.distribution.v1.MsgWithdrawDelegatorReward     msg_withdraw_delegator_reward     = 5;
     cosmos_sdk.x.distribution.v1.MsgWithdrawValidatorCommission msg_withdraw_validator_commission = 6;
     cosmos_sdk.x.distribution.v1.MsgFundCommunityPool           msg_fund_community_pool           = 7;
-    MsgSubmitProposal                                           msg_submit_proposal               = 9;
     cosmos_sdk.x.gov.v1.MsgVote                                 msg_vote                          = 10;
     cosmos_sdk.x.gov.v1.MsgDeposit                              msg_deposit                       = 11;
     cosmos_sdk.x.slashing.v1.MsgUnjail                          msg_unjail                        = 12;

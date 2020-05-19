@@ -85,8 +85,13 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
-	if msg.ProofSpecs != nil {
-		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tendermint client")
+	if len(msg.ProofSpecs) == 0 {
+		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be empty for tendermint client")
+	}
+	for i, ps := range msg.ProofSpecs {
+		if ps == nil {
+			return fmt.Errorf("proof spec %d cannot be nil", i)
+		}
 	}
 	return host.DefaultClientIdentifierValidator(msg.ClientID)
 }

@@ -13,7 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 const (
@@ -26,6 +28,7 @@ type SoloMachineTestSuite struct {
 	ctx      sdk.Context
 	aminoCdc *codec.Codec
 	cdc      codec.Marshaler
+	store    sdk.KVStore
 	privKey  crypto.PrivKey
 	sequence uint64
 	clientID string
@@ -45,6 +48,10 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.sequence = 1
 	suite.clientID = "solomachineclient"
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: suite.now})
+	suite.store = app.IBCKeeper.ClientKeeper.ClientStore(suite.ctx, clientexported.ClientTypeSoloMachine)
+
+	bz := suite.aminoCdc.MustMarshalBinaryBare(suite.ClientState())
+	suite.store.Set(host.KeyClientState(), bz)
 }
 
 func TestSoloMachineTestSuite(t *testing.T) {
@@ -64,6 +71,10 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 		Signature: signature,
 		NewPubKey: suite.privKey.PubKey(),
 	}
+}
+
+func (suite *SoloMachineTestSuite) ClientState() solomachinetypes.ClientState {
+	return solomachinetypes.NewClientState(suite.clientID, suite.ConsensusState())
 }
 
 func (suite *SoloMachineTestSuite) ConsensusState() solomachinetypes.ConsensusState {
@@ -99,4 +110,13 @@ func (suite *SoloMachineTestSuite) Evidence() solomachinetypes.Evidence {
 		SignatureOne: signatureOne,
 		SignatureTwo: signatureTwo,
 	}
+}
+
+func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
+	bz := suite.store.Get(host.KeyClientState())
+	suite.Require().NotNil(bz)
+
+	var clientState solomachinetypes.ClientState
+	suite.aminoCdc.MustUnmarshalBinaryBare(bz, &clientState)
+	return clientState.ConsensusState.Sequence
 }

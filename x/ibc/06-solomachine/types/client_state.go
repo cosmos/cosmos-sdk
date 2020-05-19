@@ -45,6 +45,15 @@ func Initialize(id string, consensusState ConsensusState) (ClientState, error) {
 	}, nil
 }
 
+// NewClientState creates a new ClientState instance.
+func NewClientState(id string, consensusState ConsensusState) ClientState {
+	return ClientState{
+		ID:             id,
+		Frozen:         false,
+		ConsensusState: consensusState,
+	}
+}
+
 // GetID returns the solo machine client state identifier.
 func (cs ClientState) GetID() string {
 	return cs.ID
@@ -84,7 +93,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc *codec.Codec,
 	root commitmentexported.Root,
-	height uint64,
+	_ uint64,
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
@@ -117,7 +126,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, "failed to verify proof against current public key, sequence, and consensus state")
 	}
 
@@ -131,7 +140,7 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.Marshaler,
-	height uint64,
+	_ uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	connectionID string,
@@ -168,7 +177,7 @@ func (cs ClientState) VerifyConnectionState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedConnectionStateVerification,
 			"failed to verify proof against current public key, sequence, and connection state",
@@ -185,7 +194,7 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.Marshaler,
-	height uint64,
+	_ uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	portID,
@@ -223,7 +232,7 @@ func (cs ClientState) VerifyChannelState(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		bz...,
 	)
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedChannelStateVerification,
 			"failed to verify proof against current public key, sequence, and channel state",
@@ -239,7 +248,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
-	height uint64,
+	_ uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	portID,
@@ -268,7 +277,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		commitmentBytes...,
 	)
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketCommitmentVerification,
 			"failed to verify proof against current public key, sequence, and packet commitment",
@@ -285,7 +294,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
-	height uint64,
+	_ uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	portID,
@@ -314,7 +323,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		combineSequenceAndPath(cs.ConsensusState.Sequence, path),
 		acknowledgement...,
 	)
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketAckVerification,
 			"failed to verify proof against current public key, sequence, and acknowledgement",
@@ -332,7 +341,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
-	height uint64,
+	_ uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	portID,
@@ -358,7 +367,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	// value = sequence + path
 	value := combineSequenceAndPath(cs.ConsensusState.Sequence, path)
 
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedPacketAckAbsenceVerification,
 			"failed to verify proof against current public key, sequence, and an absent acknowledgement",
@@ -375,7 +384,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
-	height uint64,
+	_ uint64,
 	prefix commitmentexported.Prefix,
 	proof commitmentexported.Proof,
 	portID,
@@ -404,7 +413,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		sdk.Uint64ToBigEndian(nextSequenceRecv)...,
 	)
 
-	if cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
+	if !cs.ConsensusState.PubKey.VerifyBytes(value, signatureProof.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrFailedNextSeqRecvVerification,
 			"failed to verify proof against current public key, sequence, and the next sequence number to be received",

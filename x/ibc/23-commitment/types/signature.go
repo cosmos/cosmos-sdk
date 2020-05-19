@@ -5,6 +5,34 @@ import (
 )
 
 var _ exported.Proof = SignatureProof{}
+var _ exported.Prefix = (*SignaturePrefix)(nil)
+
+// TODO: change to proto
+type SignaturePrefix struct {
+	KeyPrefix []byte
+}
+
+// NewSignaturePrefix constructs a new SignaturePrefix instance.
+func NewSignaturePrefix(keyPrefix []byte) SignaturePrefix {
+	return SignaturePrefix{
+		KeyPrefix: keyPrefix,
+	}
+}
+
+// GetCommitmentType implements Prefix interface.
+func (sp SignaturePrefix) GetCommitmentType() exported.Type {
+	return exported.Signature
+}
+
+// Bytes returns the key prefix bytes.
+func (sp SignaturePrefix) Bytes() []byte {
+	return sp.KeyPrefix
+}
+
+// IsEmpty returns true if the prefix is empty.
+func (sp SignaturePrefix) IsEmpty() bool {
+	return len(sp.Bytes()) == 0
+}
 
 // SignatureProof is a signature used as proof for verification.
 type SignatureProof struct {

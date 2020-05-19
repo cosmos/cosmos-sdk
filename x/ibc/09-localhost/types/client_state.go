@@ -19,6 +19,8 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+
+	ics23 "github.com/confio/ics23/go"
 )
 
 var _ clientexported.ClientState = ClientState{}
@@ -59,6 +61,11 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
 	return uint64(cs.Height)
+}
+
+// GetProofSpecs implements ClientState interface
+func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
+	return nil
 }
 
 // IsFrozen returns false.

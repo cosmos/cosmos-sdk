@@ -11,7 +11,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*AccountI)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/AccountI", nil)
+	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
 }
@@ -20,7 +20,7 @@ func RegisterCodec(cdc *codec.Codec) {
 // and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.auth.v1.auth",
+		"cosmos_sdk.auth.v1.AccountI",
 		(*AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},

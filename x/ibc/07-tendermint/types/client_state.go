@@ -24,34 +24,10 @@ import (
 
 var _ clientexported.ClientState = ClientState{}
 
-// ClientState from Tendermint tracks the current validator set, latest height,
-// and a possible frozen height.
-type ClientState struct {
-	// Client ID
-	ID string `json:"id" yaml:"id"`
-
-	TrustLevel tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
-
-	// Duration of the period since the LastestTimestamp during which the
-	// submitted headers are valid for upgrade
-	TrustingPeriod time.Duration `json:"trusting_period" yaml:"trusting_period"`
-
-	// Duration of the staking unbonding period
-	UnbondingPeriod time.Duration `json:"unbonding_period" yaml:"unbonding_period"`
-
-	// MaxClockDrift defines how much new (untrusted) header's Time can drift into
-	// the future.
-	MaxClockDrift time.Duration
-
-	// Block height when the client was frozen due to a misbehaviour
-	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
-
-	// Last Header that was stored by client
-	LastHeader Header `json:"last_header" yaml:"last_header"`
-}
-
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
+	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
+
 	return Initialize(
 		msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
@@ -62,7 +38,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustLevel tmmath.Fraction,
+	id string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header,
 ) (ClientState, error) {
@@ -81,9 +57,11 @@ func NewClientState(
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header,
 ) ClientState {
+	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
+
 	return ClientState{
 		ID:              id,
-		TrustLevel:      trustLevel,
+		TrustLevel:      fraction,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,

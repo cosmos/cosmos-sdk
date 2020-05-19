@@ -1,0 +1,11 @@
+syntax = "proto3";
+package tendermint.proto.crypto.merkle;
+
+option go_package = "github.com/tendermint/tendermint/proto/crypto/merkle";
+
+message SimpleProof {
+  int64          total     = 1;
+  int64          index     = 2;
+  bytes          leaf_hash = 3;
+  repeated bytes aunts     = 4;
+}

@@ -5,6 +5,9 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+  push:
+    branches:
+      - master
 jobs:
   golangci:
     name: golangci-lint

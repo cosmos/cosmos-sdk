@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/pkg/errors"

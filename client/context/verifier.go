@@ -22,7 +22,7 @@ const (
 // or if the verifier could not be created. A CLIContext must at the very least
 // have the chain ID and home directory set. If the CLIContext has TrustNode
 // enabled, no verifier will be created.
-func CreateVerifier(ctx *CLIContext, cacheSize int) (tmlite.Verifier, error) {
+func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
 	if ctx.TrustNode {
 		return nil, nil
 	}

@@ -6,14 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// AccountRetriever defines the interfaces required by transactions to
-// ensure an account exists and to be able to query for account fields necessary
-// for signing.
-type AccountRetriever interface {
-	EnsureExists(addr types.AccAddress) error
-	GetAccountNumberSequence(addr types.AccAddress) (uint64, uint64, error)
-}
-
 type (
 	// TxGenerator defines an interface a client can utilize to generate an
 	// application-defined concrete transaction type. The type returned must

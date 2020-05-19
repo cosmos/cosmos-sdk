@@ -36,7 +36,7 @@ build-sim: go.sum
  build-sim
 
 mocks: $(MOCKS_DIR)
-	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+	mockgen -source=client/context/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	mockgen -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
 	mockgen -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
 	mockgen -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go

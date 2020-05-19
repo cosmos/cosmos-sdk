@@ -13,7 +13,6 @@ import (
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,9 +59,8 @@ type CLIContext struct {
 // a CLIContext in tests or any non CLI-based environment, the verifier will not be created
 // and will be set as nil because FlagTrustNode must be set.
 func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
-	ctx := CLIContext{}
-	ctx.InitWithInputAndFrom(input, from)
-	return ctx
+	ctx := &CLIContext{}
+	return ctx.InitWithInputAndFrom(input, from)
 }
 
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
@@ -85,8 +83,9 @@ func NewCLIContextWithInput(input io.Reader) CLIContext {
 	return NewCLIContextWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
-// InitWithInputAndFrom re-initializes an existing CLI with a new io.Reader and from parameter
-func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) {
+// InitWithInputAndFrom returns a new CLIContext re-initialized from an existing
+// CLIContext with a new io.Reader and from parameter
+func (ctx CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLIContext {
 	input = bufio.NewReader(input)
 
 	var nodeURI string
@@ -149,7 +148,7 @@ func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) {
 	ctx.GenerateOnly = genOnly
 
 	if offline {
-		return
+		return ctx
 	}
 
 	// create a verifier for the specific chain ID and RPC client
@@ -160,16 +159,19 @@ func (ctx *CLIContext) InitWithInputAndFrom(input io.Reader, from string) {
 	}
 
 	ctx.Verifier = verifier
+	return ctx
 }
 
-// InitWithInputAndFrom re-initializes an existing CLI with a new io.Reader
-func (ctx *CLIContext) InitWithInput(input io.Reader) {
-	ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+// InitWithInput returns a new CLIContext re-initialized from an existing
+// CLIContext with a new io.Reader and from parameter
+func (ctx CLIContext) InitWithInput(input io.Reader) CLIContext {
+	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
 }
 
-// InitWithInputAndFrom re-initializes an existing CLI with a new from parameter
-func (ctx *CLIContext) InitWithFrom(from string) {
-	ctx.InitWithInputAndFrom(os.Stdin, from)
+// InitWithInput returns a new CLIContext re-initialized from an existing
+// CLIContext with a new from parameter
+func (ctx CLIContext) InitWithFrom(from string) CLIContext {
+	return ctx.InitWithInputAndFrom(os.Stdin, from)
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.

@@ -281,13 +281,13 @@ func CalculateGas(
 func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 	from := ctx.GetFromAddress()
 
-	if err := txf.accountRetriever.EnsureExists(from); err != nil {
+	if err := txf.accountRetriever.EnsureExists(ctx, from); err != nil {
 		return txf, err
 	}
 
 	initNum, initSeq := txf.accountNumber, txf.sequence
 	if initNum == 0 || initSeq == 0 {
-		num, seq, err := txf.accountRetriever.GetAccountNumberSequence(from)
+		num, seq, err := txf.accountRetriever.GetAccountNumberSequence(ctx, from)
 		if err != nil {
 			return txf, err
 		}

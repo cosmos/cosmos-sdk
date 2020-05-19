@@ -121,7 +121,10 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cliCtx := context.CLIContext{}
-	cliCtx = cliCtx.WithMarshaler(appCodec).WithTxGenerator(types.StdTxGenerator{cdc})
+	cliCtx = cliCtx.
+		WithMarshaler(appCodec).
+		WithTxGenerator(types.StdTxGenerator{cdc}).
+		WithAccountRetriever(types.NewAccountRetriever(appCodec))
 
 	txCmd.AddCommand(
 		bankcmd.NewSendTxCmd(cliCtx),

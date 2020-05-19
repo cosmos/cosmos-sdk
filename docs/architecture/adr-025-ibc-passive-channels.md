@@ -1,4 +1,4 @@
-# ADR 023: IBC Passive Channels
+# ADR 025: IBC Passive Channels
 
 ## Changelog
 

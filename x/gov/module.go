@@ -98,7 +98,7 @@ func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegi
 func (a AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(a.cdc))
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(ctx))
 	}
 
 	return cli.NewTxCmd(ctx, proposalCLIHandlers)

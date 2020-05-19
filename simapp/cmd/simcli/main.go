@@ -5,8 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -140,7 +138,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' tx commands
-	simapp.ModuleBasics.AddTxCommands(txCmd, cdc)
+	simapp.ModuleBasics.AddNewTxCommands(txCmd, cliCtx)
 
 	return txCmd
 }

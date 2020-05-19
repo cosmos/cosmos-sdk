@@ -112,6 +112,18 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, cdc *codec.Codec)
 	}
 }
 
+// AddTxCommands adds all tx commands to the rootTxCmd
+func (bm BasicManager) AddNewTxCommands(rootTxCmd *cobra.Command, ctx context.CLIContext) {
+	for _, b := range bm {
+		cm, ok := b.(ClientModule)
+		if ok {
+			if cmd := cm.NewTxCmd(ctx); cmd != nil {
+				rootTxCmd.AddCommand(cmd)
+			}
+		}
+	}
+}
+
 // AddQueryCommands adds all query commands to the rootQueryCmd
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command, cdc *codec.Codec) {
 	for _, b := range bm {

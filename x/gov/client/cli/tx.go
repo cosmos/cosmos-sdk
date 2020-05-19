@@ -126,7 +126,10 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := types.NewMsgSubmitProposal(content, amount, cliCtx.FromAddress)
+			msg, err := types.NewMsgSubmitProposal(content, amount, cliCtx.FromAddress)
+			if err != nil {
+				return err
+			}
 
 			if err = msg.ValidateBasic(); err != nil {
 				return err

@@ -1,14 +1,25 @@
 name: Lint
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - master
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
       - uses: golangci/golangci-lint-action@master
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.26
           args: --timeout 10m
           github-token: ${{ secrets.github_token }}
+        if: "env.GIT_DIFF != ''"

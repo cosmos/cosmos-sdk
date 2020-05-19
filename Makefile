@@ -124,7 +124,7 @@ test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
 test-integration: build-sim
-	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags=-tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
 
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 

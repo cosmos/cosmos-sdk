@@ -1,10 +1,6 @@
 name: Sims
 on:
   pull_request:
-    paths:
-      - "**.go"
-      - "go.mod"
-      - "go.sum"
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest

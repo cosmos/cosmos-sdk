@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

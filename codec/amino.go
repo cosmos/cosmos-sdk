@@ -105,11 +105,11 @@ func (cdc *Codec) MarshalBinaryBare(o interface{}) ([]byte, error) {
 }
 
 func (cdc *Codec) MustMarshalBinaryBare(o interface{}) []byte {
-	err := cdc.marshalAnys(o)
+	bz, err := cdc.MarshalBinaryBare(o)
 	if err != nil {
 		panic(err)
 	}
-	return cdc.Amino.MustMarshalBinaryBare(o)
+	return bz
 }
 
 func (cdc *Codec) MarshalBinaryLengthPrefixed(o interface{}) ([]byte, error) {
@@ -121,11 +121,11 @@ func (cdc *Codec) MarshalBinaryLengthPrefixed(o interface{}) ([]byte, error) {
 }
 
 func (cdc *Codec) MustMarshalBinaryLengthPrefixed(o interface{}) []byte {
-	err := cdc.marshalAnys(o)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(o)
 	if err != nil {
 		panic(err)
 	}
-	return cdc.Amino.MustMarshalBinaryLengthPrefixed(o)
+	return bz
 }
 
 func (cdc *Codec) UnmarshalBinaryBare(bz []byte, ptr interface{}) error {
@@ -137,8 +137,7 @@ func (cdc *Codec) UnmarshalBinaryBare(bz []byte, ptr interface{}) error {
 }
 
 func (cdc *Codec) MustUnmarshalBinaryBare(bz []byte, ptr interface{}) {
-	cdc.Amino.MustUnmarshalBinaryBare(bz, ptr)
-	err := cdc.unmarshalAnys(ptr)
+	err := cdc.UnmarshalBinaryBare(bz, ptr)
 	if err != nil {
 		panic(err)
 	}
@@ -153,8 +152,7 @@ func (cdc *Codec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr interface{}) erro
 }
 
 func (cdc *Codec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr interface{}) {
-	cdc.Amino.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
-	err := cdc.unmarshalAnys(ptr)
+	err := cdc.UnmarshalBinaryLengthPrefixed(bz, ptr)
 	if err != nil {
 		panic(err)
 	}
@@ -169,11 +167,11 @@ func (cdc *Codec) MarshalJSON(o interface{}) ([]byte, error) {
 }
 
 func (cdc *Codec) MustMarshalJSON(o interface{}) []byte {
-	err := cdc.jsonMarshalAnys(o)
+	bz, err := cdc.MarshalJSON(o)
 	if err != nil {
 		panic(err)
 	}
-	return cdc.Amino.MustMarshalJSON(o)
+	return bz
 }
 
 func (cdc *Codec) UnmarshalJSON(bz []byte, ptr interface{}) error {
@@ -185,8 +183,7 @@ func (cdc *Codec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 }
 
 func (cdc *Codec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
-	cdc.Amino.MustUnmarshalJSON(bz, ptr)
-	err := cdc.jsonUnmarshalAnys(ptr)
+	err := cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		panic(err)
 	}

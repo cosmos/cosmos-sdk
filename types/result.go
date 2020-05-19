@@ -269,10 +269,11 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 var _, _ types.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+//
+// types.UnpackInterfaces needs to be called for each nested Tx because
+// there are generally interfaces to unpack in Tx's
 func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, tx := range s.Txs {
-		// types.UnpackInterfaces needs to be called for each nested tx to unpack
-		// interfaces in each Tx
 		err := types.UnpackInterfaces(tx, unpacker)
 		if err != nil {
 			return err

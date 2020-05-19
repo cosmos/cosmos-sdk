@@ -25,7 +25,7 @@ func init() {
 	Cdc.Seal()
 }
 
-// Codec defines a wrapper for an Amino codec that properly handles protobuf
+// deprecated: Codec defines a wrapper for an Amino codec that properly handles protobuf
 // types with Any's
 type Codec struct {
 	Amino *amino.Codec

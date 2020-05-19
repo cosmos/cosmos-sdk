@@ -113,6 +113,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 
 func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
 	if any.TypeUrl == "" {
+		// if TypeUrl is empty return nil because without it we can't actually unpack anything
 		return nil
 	}
 

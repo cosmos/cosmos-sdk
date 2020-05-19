@@ -19,10 +19,10 @@ import (
 var Cdc *Codec
 
 func init() {
-	cdc := New()
-	RegisterCrypto(cdc)
-	RegisterEvidences(cdc)
-	Cdc = cdc.Seal()
+	Cdc := New()
+	RegisterCrypto(Cdc)
+	RegisterEvidences(Cdc)
+	Cdc.Seal()
 }
 
 // Codec defines a wrapper for an Amino codec that properly handles protobuf
@@ -33,9 +33,8 @@ type Codec struct {
 
 var _ JSONMarshaler = &Codec{}
 
-func (cdc *Codec) Seal() *Codec {
+func (cdc *Codec) Seal() {
 	cdc.Amino.Seal()
-	return cdc
 }
 
 func New() *Codec {

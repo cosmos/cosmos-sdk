@@ -61,10 +61,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 	}
 
 	var proposal types.Proposal
-	err := keeper.UnmarshalProposal(bz, &proposal)
-	if err != nil {
-		panic(err)
-	}
+	keeper.MustUnmarshalProposal(bz, &proposal)
 
 	return proposal, true
 }
@@ -73,7 +70,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz := keeper.MarshalProposal(proposal)
+	bz := keeper.MustMarshalProposal(proposal)
 
 	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }
@@ -194,12 +191,12 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
 }
 
-func (keeper Keeper) MarshalProposal(proposal types.Proposal) []byte {
+func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
 	bz, err := keeper.cdc.MarshalBinaryBare(&proposal)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return bz
+	return bz, nil
 }
 
 func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
@@ -210,11 +207,12 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) erro
 	return nil
 }
 
-func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) {
-	err := keeper.MarshalProposal(proposal)
+func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) []byte {
+	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
 	}
+	return bz
 }
 
 func (keeper Keeper) MustUnmarshalProposal(bz []byte, proposal *types.Proposal) {

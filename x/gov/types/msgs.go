@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,9 +17,11 @@ const (
 	TypeMsgSubmitProposal = "submit_proposal"
 )
 
-var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
-var _ MsgSubmitProposalI = &MsgSubmitProposal{}
-var _ types.UnpackInterfacesMessage = MsgSubmitProposal{}
+var (
+	_, _, _ sdk.Msg                       = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
+	_       MsgSubmitProposalI            = &MsgSubmitProposal{}
+	_       types.UnpackInterfacesMessage = MsgSubmitProposal{}
+)
 
 // MsgSubmitProposalI defines the specific interface a concrete message must
 // implement in order to process governance proposals. The concrete MsgSubmitProposal

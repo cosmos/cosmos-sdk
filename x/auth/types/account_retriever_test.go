@@ -28,7 +28,7 @@ func TestAccountRetriever(t *testing.T) {
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq(route),
 		gomock.Eq(bs)).Return(nil, int64(0), errFoo).Times(1)
-	_, err = accRetr.GetAccount(nil, addr)
+	_, err = accRetr.GetAccount(mockNodeQuerier, addr)
 	require.Error(t, err)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq(route),

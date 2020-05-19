@@ -6,6 +6,7 @@
 - 2020 March 12: API Updates
 - 2020 April 13: Added details on interface `oneof` handling
 - 2020 April 30: Switch to `Any`
+- 2020 May 14: Describe public key encoding
 
 ## Status
 
@@ -258,6 +259,32 @@ fields with bit 11 set
 
 This will likely need to be a custom protobuf parser pass that takes message bytes
 and `FileDescriptor`s and returns a boolean result.
+
+### Public Key Encoding
+
+Public keys in the Cosmos SDK implement Tendermint's `crypto.PubKey` interface,
+so a natural solution might be to use `Any` as we are doing for other interfaces.
+There are, however, a limited number of public keys in existence and new ones
+aren't created overnight. The proposed solution is to use a `oneof` that:
+
+* attempts to catalog all known key types even if a given app can't use them all
+* has an `Any` member that can be used when a key type isn't present in the `oneof`
+
+Ex:
+```proto
+message PublicKey {
+    oneof sum {
+        bytes secp256k1 = 1;
+        bytes ed25519 = 2;
+        ...
+        google.protobuf.Any any_pubkey = 15; 
+    }
+}
+```
+
+Apps should only attempt to handle a registered set of public keys that they
+have tested. The provided signature verification ante handler decorators will
+enforce this.
 
 ### CLI & REST
 

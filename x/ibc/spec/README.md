@@ -44,7 +44,7 @@ in the SDK's `x/ibc` module:
 * [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/07-tendermint`](https://github.com/cosmos/x/ibc/07-tendermint)
 * [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  To be implemented in [`x/ibc/09-loopback`](https://github.com/cosmos/x/ibc/09-loopback)
 * [ICS 018- Relayer Algorithms](https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms): Implemented in it's own [relayer repository](https://github.com/cosmos/relayer)
-* [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer): Implemented in [`x/ibc/20-transfer`](https://github.com/cosmos/x/ibc/20-transfer)
+* [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer): Implemented in [`x/transfer`](https://github.com/cosmos/x/transfer)
 * [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments): Implemented in [`x/ibc/23-commitment`](https://github.com/cosmos/x/ibc/23-commitment)
 * [ICS 024 - Host Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements): Implemented in [`x/ibc/24-host`](https://github.com/cosmos/x/ibc/24-host)
 * [ICS 025 - Handler Interface](https://github.com/cosmos/ics/tree/master/spec/ics-025-handler-interface): Handler interfaces are implemented at the top level in `x/ibc/handler.go`,

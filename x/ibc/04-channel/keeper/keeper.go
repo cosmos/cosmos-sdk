@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -76,7 +75,7 @@ func (k Keeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (
 		return 0, false
 	}
 
-	return binary.BigEndian.Uint64(bz), true
+	return sdk.BigEndianToUint64(bz), true
 }
 
 // SetNextSequenceSend sets a channel's next send sequence to the store
@@ -94,7 +93,7 @@ func (k Keeper) GetNextSequenceRecv(ctx sdk.Context, portID, channelID string) (
 		return 0, false
 	}
 
-	return binary.BigEndian.Uint64(bz), true
+	return sdk.BigEndianToUint64(bz), true
 }
 
 // SetNextSequenceRecv sets a channel's next receive sequence to the store
@@ -102,6 +101,24 @@ func (k Keeper) SetNextSequenceRecv(ctx sdk.Context, portID, channelID string, s
 	store := ctx.KVStore(k.storeKey)
 	bz := sdk.Uint64ToBigEndian(sequence)
 	store.Set(host.KeyNextSequenceRecv(portID, channelID), bz)
+}
+
+// GetNextSequenceAck gets a channel's next ack sequence from the store
+func (k Keeper) GetNextSequenceAck(ctx sdk.Context, portID, channelID string) (uint64, bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(host.KeyNextSequenceAck(portID, channelID))
+	if bz == nil {
+		return 0, false
+	}
+
+	return sdk.BigEndianToUint64(bz), true
+}
+
+// SetNextSequenceAck sets a channel's next ack sequence to the store
+func (k Keeper) SetNextSequenceAck(ctx sdk.Context, portID, channelID string, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set(host.KeyNextSequenceAck(portID, channelID), bz)
 }
 
 // GetPacketCommitment gets the packet commitment hash from the store
@@ -138,23 +155,17 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 	return bz, true
 }
 
-// IteratePacketSequence provides an iterator over all send and receive sequences. For each
-// sequence, cb will be called. If the cb returns true, the iterator will close
-// and stop.
-func (k Keeper) IteratePacketSequence(ctx sdk.Context, send bool, cb func(portID, channelID string, sequence uint64) bool) {
-	store := ctx.KVStore(k.storeKey)
-	var iterator db.Iterator
-	if send {
-		iterator = sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqSendPrefix))
-	} else {
-		iterator = sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqRecvPrefix))
-	}
-
+// IteratePacketSequence provides an iterator over all send, receive or ack sequences.
+// For each sequence, cb will be called. If the cb returns true, the iterator
+// will close and stop.
+func (k Keeper) IteratePacketSequence(ctx sdk.Context, iterator db.Iterator, cb func(portID, channelID string, sequence uint64) bool) {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		keySplit := strings.Split(string(iterator.Key()), "/")
-		portID := keySplit[2]
-		channelID := keySplit[4]
+		portID, channelID, err := host.ParseChannelPath(string(iterator.Key()))
+		if err != nil {
+			// return if the key is not a channel key
+			return
+		}
 
 		sequence := sdk.BigEndianToUint64(iterator.Value())
 
@@ -166,7 +177,9 @@ func (k Keeper) IteratePacketSequence(ctx sdk.Context, send bool, cb func(portID
 
 // GetAllPacketSendSeqs returns all stored next send sequences.
 func (k Keeper) GetAllPacketSendSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
-	k.IteratePacketSequence(ctx, true, func(portID, channelID string, nextSendSeq uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqSendPrefix))
+	k.IteratePacketSequence(ctx, iterator, func(portID, channelID string, nextSendSeq uint64) bool {
 		ps := types.NewPacketSequence(portID, channelID, nextSendSeq)
 		seqs = append(seqs, ps)
 		return false
@@ -176,8 +189,22 @@ func (k Keeper) GetAllPacketSendSeqs(ctx sdk.Context) (seqs []types.PacketSequen
 
 // GetAllPacketRecvSeqs returns all stored next recv sequences.
 func (k Keeper) GetAllPacketRecvSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
-	k.IteratePacketSequence(ctx, false, func(portID, channelID string, nextRecvSeq uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqRecvPrefix))
+	k.IteratePacketSequence(ctx, iterator, func(portID, channelID string, nextRecvSeq uint64) bool {
 		ps := types.NewPacketSequence(portID, channelID, nextRecvSeq)
+		seqs = append(seqs, ps)
+		return false
+	})
+	return seqs
+}
+
+// GetAllPacketAckSeqs returns all stored next acknowledgements sequences.
+func (k Keeper) GetAllPacketAckSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqAckPrefix))
+	k.IteratePacketSequence(ctx, iterator, func(portID, channelID string, nextAckSeq uint64) bool {
+		ps := types.NewPacketSequence(portID, channelID, nextAckSeq)
 		seqs = append(seqs, ps)
 		return false
 	})

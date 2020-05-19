@@ -72,7 +72,7 @@ func (cs ClientState) Validate() error {
 	if cs.Height <= 0 {
 		return fmt.Errorf("height must be positive: %d", cs.Height)
 	}
-	return host.DefaultClientIdentifierValidator(cs.ID)
+	return host.ClientIdentifierValidator(cs.ID)
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus

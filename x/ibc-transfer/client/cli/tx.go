@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
 // IBC transfer flags

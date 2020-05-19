@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/utils"
 )
 
 // GetCmdQueryNextSequence defines the command to query a next receive sequence

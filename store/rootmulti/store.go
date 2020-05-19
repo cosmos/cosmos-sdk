@@ -659,7 +659,6 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
-		fmt.Println("COMMITTING STORE:", key.String())
 		commitID := store.Commit()
 
 		if store.GetStoreType() == types.StoreTypeTransient {

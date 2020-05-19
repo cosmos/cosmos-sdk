@@ -6,12 +6,11 @@ import (
 	"io"
 	"os"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/cli"
-
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -61,7 +60,7 @@ type CLIContext struct {
 // a CLIContext in tests or any non CLI-based environment, the verifier will not be created
 // and will be set as nil because FlagTrustNode must be set.
 func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
-	ctx := &CLIContext{}
+	ctx := CLIContext{}
 	return ctx.InitWithInputAndFrom(input, from)
 }
 

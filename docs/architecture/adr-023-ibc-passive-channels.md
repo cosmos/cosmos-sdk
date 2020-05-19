@@ -33,35 +33,17 @@ In order to accomplish this, we propose adding the following events to expose ch
 
 These metadata events capture all the "header" information needed to route IBC channel handshake transactions without requiring the client to keep track of any state except for its connection ID.
 
-### Inversion of Control
+### Accepting Channel Opens
 
-The other concern we are trying to address is IBC use-cases where an application module wants to fully control the opening and closing of channels, both initiating these requests and deciding how to proceed with them.
+The other concern we are trying to address is IBC use-cases where an application module wants to fully control the opening of channels, by being able to inspect connection init metadata and decide how to complete the handshake.
 
-Initiation is straightforward: just emit the above events to allow a relayer to notice them.  Handling of requests needs a different architecture, as the current IBC implementation presumes that the relayer is in control of setting up and tearing down each connection and can unilaterally impose its will on the chain's IBC stack.  The IBC Channel messages are handled directly by the IBC implementation and not reflected to the application until after they have been processed.
-
-We propose that as an alternative to this behaviour, an IBC application module could opt-in to marking a routed IBC port as "controlled".  This flag would prevent the IBC handler from directly calling the various IBC keepers (except for behaviour already defined by the `send_packet` and `recv_packet` events).  Instead "channel handshake" messages provided by the relayer would inform the application of the other side's intentions, allowing the application to decide how and when to call the IBC keepers to continue the handshake.
-
-The `.OnChanHandshake` callback would receive a wrapped `channel.MsgChannelHandshake{}` message:
-
-```go
-typedef MsgChannelHandshake struct {
-  // Initiator is the IBC channel message that the relayer noticed.
-  // This can be any of the MsgChan* messages, populated by the data from
-  // the channel_meta events.
-  Initiator   sdk.Msg
-  // Proof from the sender's ibctypes.KeyChannel(SrcPort, SrcChannel)
-  Proof       commitmentexported.Proof,
-  ProofHeight uint64
-  // The relayer's signature.
-  Signer      sdk.AccAddress
-}
-```
+The `handler.OnChanOpenTry` handler would call the `cbs.OnChanOpenAccept` callback with the same arguments as `OnChanOpenTry`.  If this callback is not specified, the default behaviour would be the current one: to call the corresponding `keeper.ChanOpenTry` with the supplied values.  If the `.OnChanOpenAccept` is specified, then it would have the ability to call the `keeper.ChanOpenTry` how and when it would like (if at all).
 
 ## Decision
 
 - Expose events to allow "passive" connection relayers.
 - Enable application-initiated channels via such passive relayers.
-- Allow ports to opt-in to explicit "channel handshake" messages so they can control their fate.
+- Allow ports to control which channel open attempts they honour.
 
 ## Status
 

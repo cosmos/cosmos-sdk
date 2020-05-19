@@ -19,7 +19,7 @@ import (
 var Cdc *Codec
 
 func init() {
-	Cdc := New()
+	Cdc = New()
 	RegisterCrypto(Cdc)
 	RegisterEvidences(Cdc)
 	Cdc.Seal()

@@ -16,10 +16,19 @@ type aminoCompat struct {
 	err    error
 }
 
+var Debug = false
+
 func aminoCompatError(errType string, x interface{}) error {
-	debug.PrintStack()
+	if Debug {
+		debug.PrintStack()
+	}
 	return fmt.Errorf(
-		"amino %s Any marshaling error for %+v, this is likely because amino is being used directly (instead of codec.Codec which is preferred) or UnpackInterfacesMessage is not defined for some type which contains a protobuf Any either directly or via one of its members",
+		"amino %s Any marshaling error for %+v, this is likely because "+
+			"amino is being used directly (instead of codec.Codec which is preferred) "+
+			"or UnpackInterfacesMessage is not defined for some type which contains "+
+			"a protobuf Any either directly or via one of its members. To see a "+
+			"stacktrace of where the error is coming from, set the var Debug = true "+
+			"in codec/types/amino_compat.go",
 		errType, x,
 	)
 }

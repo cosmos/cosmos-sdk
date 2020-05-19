@@ -139,8 +139,13 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return errors.New("max clock drift cannot be zero")
 	}
-	if cs.ProofSpecs == nil {
-		return errors.New("proof spec cannot be nil")
+	if len(cs.ProofSpecs) == 0 {
+		return errors.New("proof specs cannot be empty")
+	}
+	for i, ps := range cs.ProofSpecs {
+		if ps == nil {
+			return fmt.Errorf("proof spec %d cannot be nil", i)
+		}
 	}
 	return cs.LastHeader.ValidateBasic(cs.GetChainID())
 }

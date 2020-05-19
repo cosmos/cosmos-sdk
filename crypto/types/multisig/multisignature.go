@@ -8,6 +8,13 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
+// Multisignature is used to represent the signature object used in the multisigs.
+// Sigs is a list of signatures, sorted by corresponding index.
+type Multisignature struct {
+	BitArray *types.CompactBitArray
+	Sigs     [][]byte
+}
+
 // NewMultisig returns a new Multisignature of size n.
 func NewMultisig(n int) *Multisignature {
 	// Default the signature list to have a capacity of two, since we can
@@ -62,4 +69,9 @@ func (mSig *Multisignature) AddSignatureFromPubKey(sig []byte, pubkey crypto.Pub
 
 	mSig.AddSignature(sig, index)
 	return nil
+}
+
+// Marshal the multisignature with amino
+func (mSig *Multisignature) Marshal() []byte {
+	return cdc.MustMarshalBinaryBare(mSig)
 }

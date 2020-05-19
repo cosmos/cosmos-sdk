@@ -37,8 +37,7 @@ func (bA *CompactBitArray) Size() int {
 	} else if bA.ExtraBitsStored == uint32(0) {
 		return len(bA.Elems) * 8
 	}
-	// num_bits = 8*num_full_bytes + overflow_in_last_byte
-	// num_full_bytes = (len(bA.Elems)-1)
+
 	return (len(bA.Elems)-1)*8 + int(bA.ExtraBitsStored)
 }
 
@@ -51,6 +50,7 @@ func (bA *CompactBitArray) GetIndex(i int) bool {
 	if i >= bA.Size() {
 		return false
 	}
+
 	return bA.Elems[i>>3]&(uint8(1)<<uint8(7-(i%8))) > 0
 }
 
@@ -60,14 +60,17 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	if bA == nil {
 		return false
 	}
+
 	if i >= bA.Size() {
 		return false
 	}
+
 	if v {
 		bA.Elems[i>>3] |= (uint8(1) << uint8(7-(i%8)))
 	} else {
 		bA.Elems[i>>3] &= ^(uint8(1) << uint8(7-(i%8)))
 	}
+
 	return true
 }
 
@@ -81,6 +84,7 @@ func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 			numTrueValues++
 		}
 	}
+
 	return numTrueValues
 }
 
@@ -89,8 +93,10 @@ func (bA *CompactBitArray) Copy() *CompactBitArray {
 	if bA == nil {
 		return nil
 	}
+
 	c := make([]byte, len(bA.Elems))
 	copy(c, bA.Elems)
+
 	return &CompactBitArray{
 		ExtraBitsStored: bA.ExtraBitsStored,
 		Elems:           c,
@@ -103,9 +109,7 @@ func (bA *CompactBitArray) Copy() *CompactBitArray {
 // For a simple sequence of 'x' and '_' characters with no spaces or newlines,
 // see the MarshalJSON() method.
 // Example: "BA{_x_}" or "nil-BitArray" for nil.
-func (bA *CompactBitArray) String() string {
-	return bA.StringIndented("")
-}
+func (bA *CompactBitArray) String() string { return bA.StringIndented("") }
 
 // StringIndented returns the same thing as String(), but applies the indent
 // at every 10th bit, and twice at every 50th bit.
@@ -122,20 +126,25 @@ func (bA *CompactBitArray) StringIndented(indent string) string {
 		} else {
 			bits += "_"
 		}
+
 		if i%100 == 99 {
 			lines = append(lines, bits)
 			bits = ""
 		}
+
 		if i%10 == 9 {
 			bits += indent
 		}
+
 		if i%50 == 49 {
 			bits += indent
 		}
 	}
+
 	if len(bits) > 0 {
 		lines = append(lines, bits)
 	}
+
 	return fmt.Sprintf("BA{%v:%v}", size, strings.Join(lines, indent))
 }
 
@@ -155,7 +164,9 @@ func (bA *CompactBitArray) MarshalJSON() ([]byte, error) {
 			bits += `_`
 		}
 	}
+
 	bits += `"`
+
 	return []byte(bits), nil
 }
 
@@ -170,14 +181,15 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 		// into a pointer with pre-allocated BitArray.
 		bA.ExtraBitsStored = 0
 		bA.Elems = nil
+
 		return nil
 	}
 
-	// Validate 'b'.
 	match := bitArrayJSONRegexp.FindStringSubmatch(b)
 	if match == nil {
 		return fmt.Errorf("bitArray in JSON should be a string of format %q but got %s", bitArrayJSONRegexp.String(), b)
 	}
+
 	bits := match[1]
 
 	// Construct new CompactBitArray and copy over.
@@ -189,6 +201,7 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 		}
 	}
 	*bA = *bA2
+
 	return nil
 }
 
@@ -199,12 +212,14 @@ func (bA *CompactBitArray) CompactMarshal() []byte {
 	if size <= 0 {
 		return []byte("null")
 	}
+
 	bz := make([]byte, 0, size/8)
 	// length prefix number of bits, not number of bytes. This difference
 	// takes 3-4 bits in encoding, as opposed to instead encoding the number of
 	// bytes (saving 3-4 bits) and including the offset as a full byte.
 	bz = appendUvarint(bz, uint64(size))
 	bz = append(bz, bA.Elems...)
+
 	return bz
 }
 
@@ -216,18 +231,22 @@ func CompactUnmarshal(bz []byte) (*CompactBitArray, error) {
 	} else if bytes.Equal(bz, []byte("null")) {
 		return NewCompactBitArray(0), nil
 	}
+
 	size, n := binary.Uvarint(bz)
 	bz = bz[n:]
+
 	if len(bz) != int(size+7)/8 {
 		return nil, errors.New("compact bit array: invalid compact unmarshal size")
 	}
 
 	bA := &CompactBitArray{uint32(size % 8), bz}
+
 	return bA, nil
 }
 
 func appendUvarint(b []byte, x uint64) []byte {
 	var a [binary.MaxVarintLen64]byte
 	n := binary.PutUvarint(a[:], x)
+
 	return append(b, a[:n]...)
 }

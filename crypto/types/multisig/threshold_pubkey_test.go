@@ -44,8 +44,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 				t,
 				multisignature.AddSignatureFromPubKey(tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
-			bz, err := multisignature.Marshal()
-			require.NoError(t, err)
+			bz := multisignature.Marshal()
 			require.False(
 				t,
 				multisigKey.VerifyBytes(tc.msg, bz),
@@ -62,8 +61,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 				"adding a signature for the same pubkey twice increased signature count by 2, tc %d", tcIndex,
 			)
 		}
-		bz, err := multisignature.Marshal()
-		require.NoError(t, err)
+		bz := multisignature.Marshal()
 		require.False(
 			t,
 			multisigKey.VerifyBytes(tc.msg, bz),
@@ -77,8 +75,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 				tc.pubkeys,
 			),
 		)
-		bz, err = multisignature.Marshal()
-		require.NoError(t, err)
+		bz = multisignature.Marshal()
 		require.True(
 			t,
 			multisigKey.VerifyBytes(tc.msg, bz),
@@ -92,8 +89,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 				t,
 				multisignature.AddSignatureFromPubKey(tc.signatures[signingIndex], tc.pubkeys[signingIndex], tc.pubkeys),
 			)
-			bz, err := multisignature.Marshal()
-			require.NoError(t, err)
+			bz := multisignature.Marshal()
 			require.Equal(
 				t,
 				tc.passAfterKSignatures[i-tc.k-1],
@@ -120,8 +116,8 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 	pubkeys, sigs := generatePubKeysAndSignatures(5, msg)
 	multisigKey := NewPubKeyMultisigThreshold(2, pubkeys)
 	multisignature := NewMultisig(5)
-	bz, err := multisignature.Marshal()
-	require.NoError(t, err)
+	bz := multisignature.Marshal()
+
 	require.False(t, multisigKey.VerifyBytes(msg, bz))
 	multisignature.AddSignatureFromPubKey(sigs[0], pubkeys[0], pubkeys)
 	// Add second signature manually

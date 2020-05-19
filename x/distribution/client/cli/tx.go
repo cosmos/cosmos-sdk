@@ -126,7 +126,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		},
 	}
 	cmd.Flags().Bool(flagCommission, false, "also withdraw validator's commission")
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewWithdrawAllRewardsCmd(ctx context.CLIContext) *cobra.Command {
@@ -163,7 +163,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			return newSplitAndApply(tx.GenerateOrBroadcastTx, cliCtx, msgs, chunkSize)
 		},
 	}
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewSetWithdrawAddrCmd(ctx context.CLIContext) *cobra.Command {
@@ -197,7 +197,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewFundCommunityPoolCmd(ctx context.CLIContext) *cobra.Command {
@@ -242,7 +242,7 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 // ---------------------------------------------------------------------------

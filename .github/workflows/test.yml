@@ -1,6 +1,10 @@
 name: Code Coverage
 on:
   pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
   push:
     branches:
       - master

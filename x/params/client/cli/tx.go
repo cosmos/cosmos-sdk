@@ -21,7 +21,7 @@ import (
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
 // a parameter change proposal governance transaction.
-func NewSubmitParamChangeProposalTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewSubmitParamChangeProposalTxCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -61,9 +61,7 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			proposal, err := paramscutils.ParseParamChangeProposalJSON(m, args[0])
 			if err != nil {
@@ -85,7 +83,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 

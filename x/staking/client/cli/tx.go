@@ -37,7 +37,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -47,27 +47,23 @@ func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetr
 	}
 
 	stakingTxCmd.AddCommand(flags.PostCommands(
-		NewCreateValidatorCmd(m, txg, ar),
-		NewEditValidatorCmd(m, txg, ar),
-		NewDelegateCmd(m, txg, ar),
-		NewRedelegateCmd(m, txg, ar),
-		NewUnbondCmd(m, txg, ar),
+		NewCreateValidatorCmd(ctx),
+		NewEditValidatorCmd(ctx),
+		NewDelegateCmd(ctx),
+		NewRedelegateCmd(ctx),
+		NewUnbondCmd(ctx),
 	)...)
 
 	return stakingTxCmd
 }
 
-func NewCreateValidatorCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewCreateValidatorCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
+			txf := tx.NewFactoryFromCLI(ctx.Input).WithTxGenerator(ctx.TxGenerator).WithAccountRetriever(ctx.AccountRetriever)
 
 			txf, msg, err := NewBuildCreateValidatorMsg(cliCtx, txf)
 			if err != nil {
@@ -93,17 +89,12 @@ func NewCreateValidatorCmd(m codec.Marshaler, txg context.TxGenerator, ar contex
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewEditValidatorCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewEditValidatorCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.NewDescription(
@@ -144,14 +135,14 @@ func NewEditValidatorCmd(m codec.Marshaler, txg context.TxGenerator, ar context.
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewDelegateCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewDelegateCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -166,12 +157,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -189,7 +175,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)

@@ -37,7 +37,7 @@ const (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
-func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	distTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Distribution transactions subcommands",
@@ -47,26 +47,25 @@ func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetr
 	}
 
 	distTxCmd.AddCommand(flags.PostCommands(
-		NewWithdrawRewardsCmd(m, txg, ar),
-		NewWithdrawAllRewardsCmd(m, txg, ar),
-		NewSetWithdrawAddrCmd(m, txg, ar),
-		NewFundCommunityPoolCmd(m, txg, ar),
+		NewWithdrawRewardsCmd(ctx),
+		NewWithdrawAllRewardsCmd(ctx),
+		NewSetWithdrawAddrCmd(ctx),
+		NewFundCommunityPoolCmd(ctx),
 	)...)
 
 	return distTxCmd
 }
 
-type newGenerateOrBroadcastFunc func(ctx context.CLIContext, txf tx.Factory, msgs ...sdk.Msg) error
+type newGenerateOrBroadcastFunc func(ctx context.CLIContext, msgs ...sdk.Msg) error
 
 func newSplitAndApply(
 	newGenerateOrBroadcast newGenerateOrBroadcastFunc,
 	cliCtx context.CLIContext,
-	txBldr tx.Factory,
 	msgs []sdk.Msg,
 	chunkSize int,
 ) error {
 	if chunkSize == 0 {
-		return newGenerateOrBroadcast(cliCtx, txBldr, msgs...)
+		return newGenerateOrBroadcast(cliCtx, msgs...)
 	}
 
 	// split messages into slices of length chunkSize
@@ -79,7 +78,7 @@ func newSplitAndApply(
 		}
 
 		msgChunk := msgs[i:sliceEnd]
-		if err := newGenerateOrBroadcast(cliCtx, txBldr, msgChunk...); err != nil {
+		if err := newGenerateOrBroadcast(cliCtx, msgChunk...); err != nil {
 			return err
 		}
 	}
@@ -87,7 +86,7 @@ func newSplitAndApply(
 	return nil
 }
 
-func NewWithdrawRewardsCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewWithdrawRewardsCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
@@ -104,11 +103,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -127,14 +122,14 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				}
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msgs...)
+			return tx.GenerateOrBroadcastTx(cliCtx, msgs...)
 		},
 	}
 	cmd.Flags().Bool(flagCommission, false, "also withdraw validator's commission")
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewWithdrawAllRewardsCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewWithdrawAllRewardsCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
@@ -149,11 +144,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 		),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			delAddr := cliCtx.GetFromAddress()
 
@@ -169,13 +160,13 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			chunkSize := viper.GetInt(flagMaxMessagesPerTx)
-			return newSplitAndApply(tx.GenerateOrBroadcastTxWithFactory, cliCtx, txf, msgs, chunkSize)
+			return newSplitAndApply(tx.GenerateOrBroadcastTx, cliCtx, msgs, chunkSize)
 		},
 	}
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewSetWithdrawAddrCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewSetWithdrawAddrCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
@@ -190,11 +181,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			delAddr := cliCtx.GetFromAddress()
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
@@ -207,13 +194,13 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]
 }
 
-func NewFundCommunityPoolCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewFundCommunityPoolCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -239,11 +226,7 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			depositorAddr := cliCtx.GetFromAddress()
 			amount, err := sdk.ParseCoins(args[0])
@@ -256,7 +239,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]

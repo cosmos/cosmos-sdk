@@ -17,7 +17,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/crisis transaction commands.
-func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Crisis transactions subcommands",
@@ -26,22 +26,20 @@ func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetr
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(NewMsgVerifyInvariantTxCmd(m, txg, ar))
+	txCmd.AddCommand(NewMsgVerifyInvariantTxCmd(ctx))
 
 	return txCmd
 }
 
 // NewMsgVerifyInvariantTxCmd returns a CLI command handler for creating a
 // MsgVerifyInvariant transaction.
-func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewMsgVerifyInvariantTxCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "invariant-broken [module-name] [invariant-route]",
 		Short: "Submit proof that an invariant broken to halt the chain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			senderAddr := cliCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]
@@ -51,7 +49,7 @@ func NewMsgVerifyInvariantTxCmd(m codec.Marshaler, txg context.TxGenerator, ar c
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 

@@ -17,7 +17,7 @@ import (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/slashing transaction commands.
-func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	slashingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Slashing transaction subcommands",
@@ -26,11 +26,11 @@ func NewTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetr
 		RunE:                       client.ValidateCmd,
 	}
 
-	slashingTxCmd.AddCommand(NewUnjailTxCmd(m, txg, ar))
+	slashingTxCmd.AddCommand(NewUnjailTxCmd(ctx))
 	return slashingTxCmd
 }
 
-func NewUnjailTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.AccountRetriever) *cobra.Command {
+func NewUnjailTxCmd(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
@@ -40,12 +40,7 @@ func NewUnjailTxCmd(m codec.Marshaler, txg context.TxGenerator, ar context.Accou
 $ <appcli> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txf := tx.NewFactoryFromCLI(inBuf).
-				WithTxGenerator(txg).
-				WithAccountRetriever(ar)
-
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
 			valAddr := cliCtx.GetFromAddress()
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))
@@ -53,7 +48,7 @@ $ <appcli> tx slashing unjail --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 	return flags.PostCommands(cmd)[0]

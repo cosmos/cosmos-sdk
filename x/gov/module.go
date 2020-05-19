@@ -28,6 +28,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.ClientModule        = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
@@ -80,20 +81,25 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-
-	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
-	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(cdc))
-	}
-
-	return cli.GetTxCmd(StoreKey, cdc, proposalCLIHandlers)
-}
+func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command { return nil }
 
 // GetQueryCmd returns the root query command for the gov module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
+
+func (a AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
+	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
+	for _, proposalHandler := range a.proposalHandlers {
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(a.cdc))
+	}
+
+	return cli.NewTxCmd(ctx, proposalCLIHandlers)
+}
+
+func (a AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
+
+func (a AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {}
 
 //____________________________________________________________________________
 

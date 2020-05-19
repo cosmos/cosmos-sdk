@@ -27,6 +27,7 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.InterfaceModule     = AppModuleBasic{}
+	_ module.ClientModule        = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -172,8 +173,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
 }
-
-var _ module.ClientModule = AppModuleBasic{}
 
 func (am AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
 	return cli.NewTxCmd(ctx)

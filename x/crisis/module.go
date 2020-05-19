@@ -21,6 +21,7 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.ClientModule   = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the crisis module.
@@ -62,6 +63,14 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
+
+func (b AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.NewTxCmd(ctx)
+}
+
+func (b AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
+
+func (b AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {}
 
 //____________________________________________________________________________
 

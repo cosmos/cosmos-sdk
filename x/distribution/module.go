@@ -25,6 +25,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.ClientModule        = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the distribution module.
@@ -72,6 +73,14 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
+
+func (b AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.NewTxCmd(ctx)
+}
+
+func (b AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
+
+func (b AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {}
 
 //____________________________________________________________________________
 

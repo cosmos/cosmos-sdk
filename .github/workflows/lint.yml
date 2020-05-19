@@ -1,5 +1,10 @@
 name: Lint
-on: [pull_request]
+on:
+  pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
 jobs:
   golangci:
     name: golangci-lint

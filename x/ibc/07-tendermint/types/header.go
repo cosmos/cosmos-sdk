@@ -12,13 +12,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-var _ clientexported.Header = Header{}
-
-// Header defines the Tendermint consensus Header
-type Header struct {
-	tmtypes.SignedHeader `json:"signed_header" yaml:"signed_header"` // contains the commitment root
-	ValidatorSet         *tmtypes.ValidatorSet                       `json:"validator_set" yaml:"validator_set"`
-}
+var _ clientexported.Header = (*Header)(nil)
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
 func (h Header) ClientType() clientexported.ClientType {

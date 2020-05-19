@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
@@ -27,17 +28,6 @@ var (
 	_ clientexported.MsgUpdateClient     = MsgUpdateClient{}
 	_ evidenceexported.MsgSubmitEvidence = MsgSubmitClientMisbehaviour{}
 )
-
-// MsgCreateClient defines a message to create an IBC client
-type MsgCreateClient struct {
-	ClientID        string          `json:"client_id" yaml:"client_id"`
-	Header          Header          `json:"header" yaml:"header"`
-	TrustLevel      tmmath.Fraction `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod  time.Duration   `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration   `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration   `json:"max_clock_drift" yaml:"max_clock_drift"`
-	Signer          sdk.AccAddress  `json:"address" yaml:"address"`
-}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
@@ -122,13 +112,6 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	}
 }
 
-// MsgUpdateClient defines a message to update an IBC client
-type MsgUpdateClient struct {
-	ClientID string         `json:"client_id" yaml:"client_id"`
-	Header   Header         `json:"header" yaml:"header"`
-	Signer   sdk.AccAddress `json:"address" yaml:"address"`
-}
-
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
 	return MsgUpdateClient{
@@ -176,17 +159,18 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 	return msg.Header
 }
 
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
-// Evidence for client misbehaviour.
-type MsgSubmitClientMisbehaviour struct {
-	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
-	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
-}
-
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
-	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(evidence evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
+	ev, ok := evidence.(*Evidence)
+	if !ok {
+		panic(fmt.Sprintf("invalid evidence type %T", evidence))
+	}
+
+	return MsgSubmitClientMisbehaviour{
+		Evidence:  ev,
+		Submitter: s,
+	}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -200,14 +184,11 @@ func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 	if msg.Evidence == nil {
 		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
 	}
-	if err := msg.Evidence.ValidateBasic(); err != nil {
-		return err
-	}
 	if msg.Submitter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
 	}
 
-	return nil
+	return msg.Evidence.ValidateBasic()
 }
 
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting

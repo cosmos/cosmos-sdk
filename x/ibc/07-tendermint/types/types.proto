@@ -179,6 +179,6 @@ message Header {
 }
 
 message Fraction {
-  uint64 numerator   = 1;
-  uint64 denominator = 2;
+  int64 numerator   = 1;
+  int64 denominator = 2;
 }

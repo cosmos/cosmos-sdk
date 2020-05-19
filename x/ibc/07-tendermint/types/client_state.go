@@ -22,12 +22,10 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
-	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
-
 	return Initialize(
 		msg.GetClientID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
@@ -38,7 +36,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustLevel Fraction,
+	id string, trustLevel tmmath.Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header,
 ) (ClientState, error) {
@@ -47,13 +45,15 @@ func Initialize(
 		return ClientState{}, errors.New("trusting period should be < unbonding period")
 	}
 
-	clientState := NewClientState(id, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header)
+	fraction := Fraction{Numerator: trustLevel.Numerator, Denominator: trustLevel.Denominator}
+
+	clientState := NewClientState(id, fraction, trustingPeriod, ubdPeriod, maxClockDrift, header)
 	return clientState, nil
 }
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustLevel tmmath.Fraction,
+	id string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	header Header,
 ) ClientState {
@@ -127,7 +127,7 @@ func (cs ClientState) Validate() error {
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	_ sdk.KVStore,
-	cdc *codec.Codec,
+	cdc codec.Marshaler,
 	provingRoot commitmentexported.Root,
 	height uint64,
 	counterpartyClientIdentifier string,
@@ -146,7 +146,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	tmConsState, ok := consensusState.(ConsensusState)
+	if !ok {
+		return fmt.Errorf("invalid consensus state type %T", consensusState)
+	}
+
+	bz, err := cdc.MarshalBinaryBare(&tmConsState)
 	if err != nil {
 		return err
 	}

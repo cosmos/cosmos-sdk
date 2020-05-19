@@ -11,13 +11,7 @@ import (
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
-// ConsensusState defines a Tendermint consensus state
-type ConsensusState struct {
-	Timestamp    time.Time               `json:"timestamp" yaml:"timestamp"`
-	Root         commitmentexported.Root `json:"root" yaml:"root"`
-	Height       uint64                  `json:"height" yaml:"height"`
-	ValidatorSet *tmtypes.ValidatorSet   `json:"validator_set" yaml:"validator_set"`
-}
+var _ clientexported.ConsensusState = (*ConsensusState)(nil)
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(

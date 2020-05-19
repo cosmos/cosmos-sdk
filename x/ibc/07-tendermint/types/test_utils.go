@@ -4,17 +4,18 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmproto "github.com/tendermint/tendermint/proto/types"
+	"github.com/tendermint/tendermint/proto/version"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/version"
 )
 
-const maxInt = int(^uint(0) >> 1)
+const maxInt = uint32(^uint(0) >> 1)
 
-// Copied unimported test functions from tmtypes to use them here
-func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
+// MakeBlockID copied unimported test functions from tmtypes to use them here
+func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
-		PartsHeader: tmtypes.PartSetHeader{
+		PartsHeader: tmproto.PartSetHeader{
 			Total: partSetSize,
 			Hash:  partSetHash,
 		},
@@ -24,7 +25,7 @@ func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.Block
 // CreateTestHeader creates a mock header for testing only.
 func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
 	vsetHash := valSet.Hash()
-	tmHeader := tmtypes.Header{
+	tmHeader := &tmproto.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
 		Height:             height,
@@ -40,21 +41,26 @@ func CreateTestHeader(chainID string, height int64, timestamp time.Time, valSet 
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    valSet.Proposer.Address,
 	}
-	hhash := tmHeader.Hash()
-	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmtypes.PrecommitType, valSet)
+
+	blockID := MakeBlockID(tmHeader.Hash(), 3, tmhash.Sum([]byte("part_set")))
+	voteSet := tmproto.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
 
-	signedHeader := tmtypes.SignedHeader{
-		Header: &tmHeader,
-		Commit: commit,
+	signedHeader := tmproto.SignedHeader{
+		Header: tmHeader.ToProto(),
+		Commit: commit.ToProto(),
+	}
+
+	protoValSet, err := valSet.ToProto()
+	if err != nil {
+		panic(err)
 	}
 
 	return Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: valSet,
+		ValidatorSet: protoValSet,
 	}
 }

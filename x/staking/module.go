@@ -70,8 +70,8 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 }
 
 // GetTxCmd returns the root tx command for the staking module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(StoreKey, cdc)
+func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.NewTxCmd(ctx)
 }
 
 // GetQueryCmd returns no root query command for the staking module.

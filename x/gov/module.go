@@ -30,7 +30,6 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.InterfaceModule     = AppModuleBasic{}
-	_ module.ClientModule        = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the gov module.
@@ -83,7 +82,14 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 }
 
 // GetTxCmd returns the root tx command for the gov module.
-func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command { return nil }
+func (a AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
+	for _, proposalHandler := range a.proposalHandlers {
+		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(ctx))
+	}
+
+	return cli.NewTxCmd(ctx, proposalCLIHandlers)
+}
 
 // GetQueryCmd returns the root query command for the gov module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
@@ -93,15 +99,6 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // RegisterInterfaceTypes implements InterfaceModule.RegisterInterfaceTypes
 func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
-}
-
-func (a AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
-	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
-	for _, proposalHandler := range a.proposalHandlers {
-		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(ctx))
-	}
-
-	return cli.NewTxCmd(ctx, proposalCLIHandlers)
 }
 
 func (a AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }

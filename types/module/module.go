@@ -52,7 +52,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(context.CLIContext, *mux.Router)
-	GetTxCmd(*codec.Codec) *cobra.Command
+	GetTxCmd(context.CLIContext) *cobra.Command
 	GetQueryCmd(*codec.Codec) *cobra.Command
 }
 
@@ -104,22 +104,10 @@ func (bm BasicManager) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Route
 }
 
 // AddTxCommands adds all tx commands to the rootTxCmd
-func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, cdc *codec.Codec) {
+func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command, ctx context.CLIContext) {
 	for _, b := range bm {
-		if cmd := b.GetTxCmd(cdc); cmd != nil {
+		if cmd := b.GetTxCmd(ctx); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
-		}
-	}
-}
-
-// AddTxCommands adds all tx commands to the rootTxCmd
-func (bm BasicManager) AddNewTxCommands(rootTxCmd *cobra.Command, ctx context.CLIContext) {
-	for _, b := range bm {
-		cm, ok := b.(ClientModule)
-		if ok {
-			if cmd := cm.NewTxCmd(ctx); cmd != nil {
-				rootTxCmd.AddCommand(cmd)
-			}
 		}
 	}
 }

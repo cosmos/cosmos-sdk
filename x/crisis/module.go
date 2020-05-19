@@ -21,7 +21,6 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.ClientModule   = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the crisis module.
@@ -57,16 +56,12 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(cdc)
+func (b AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.NewTxCmd(ctx)
 }
 
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
-
-func (b AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
-	return cli.NewTxCmd(ctx)
-}
 
 func (b AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
 

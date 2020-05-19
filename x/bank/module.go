@@ -27,7 +27,6 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.InterfaceModule     = AppModuleBasic{}
-	_ module.ClientModule        = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -63,8 +62,8 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 }
 
 // GetTxCmd returns the root tx command for the bank module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(cdc)
+func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.NewTxCmd(ctx)
 }
 
 // GetQueryCmd returns no root query command for the bank module.

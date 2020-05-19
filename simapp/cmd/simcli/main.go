@@ -122,7 +122,8 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	cliCtx = cliCtx.
 		WithMarshaler(appCodec).
 		WithTxGenerator(types.StdTxGenerator{cdc}).
-		WithAccountRetriever(types.NewAccountRetriever(appCodec))
+		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
+		WithCodec(cdc)
 
 	txCmd.AddCommand(
 		bankcmd.NewSendTxCmd(cliCtx),
@@ -138,7 +139,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	)
 
 	// add modules' tx commands
-	simapp.ModuleBasics.AddNewTxCommands(txCmd, cliCtx)
+	simapp.ModuleBasics.AddTxCommands(txCmd, cliCtx)
 
 	return txCmd
 }

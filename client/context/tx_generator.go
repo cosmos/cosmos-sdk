@@ -9,12 +9,12 @@ import (
 type (
 	// TxGenerator defines an interface a client can utilize to generate an
 	// application-defined concrete transaction type. The type returned must
-	// implement ClientTx.
+	// implement TxBuilder.
 	TxGenerator interface {
-		NewTx() ClientTx
+		NewTx() TxBuilder
 		NewFee() ClientFee
 		NewSignature() ClientSignature
-		MarshalTx(tx ClientTx) ([]byte, error)
+		MarshalTx(tx types.Tx) ([]byte, error)
 	}
 
 	ClientFee interface {
@@ -29,12 +29,12 @@ type (
 		SetSignature([]byte)
 	}
 
-	// ClientTx defines an interface which an application-defined concrete transaction
+	// TxBuilder defines an interface which an application-defined concrete transaction
 	// type must implement. Namely, it must be able to set messages, generate
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
-	ClientTx interface {
-		types.Tx
+	TxBuilder interface {
+		GetTx() types.Tx
 
 		SetMsgs(...types.Msg) error
 		GetSignatures() []types.Signature

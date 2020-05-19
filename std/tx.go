@@ -13,7 +13,7 @@ import (
 
 var (
 	_ sdk.Tx                  = (*Transaction)(nil)
-	_ context.ClientTx        = (*Transaction)(nil)
+	_ context.TxBuilder       = (*Transaction)(nil)
 	_ context.TxGenerator     = TxGenerator{}
 	_ context.ClientFee       = &StdFee{}
 	_ context.ClientSignature = &StdSignature{}
@@ -23,7 +23,7 @@ var (
 // transactions.
 type TxGenerator struct{}
 
-func (g TxGenerator) MarshalTx(tx context.ClientTx) ([]byte, error) {
+func (g TxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
 	stdTx := tx.(*Transaction)
 	return stdTx.Marshal()
 }
@@ -37,7 +37,7 @@ func (g TxGenerator) NewSignature() context.ClientSignature {
 }
 
 // NewTx returns a reference to an empty Transaction type.
-func (TxGenerator) NewTx() context.ClientTx {
+func (TxGenerator) NewTx() context.TxBuilder {
 	return &Transaction{}
 }
 
@@ -171,6 +171,10 @@ func (tx Transaction) GetMemo() string {
 // SetMemo sets the transaction's memo. It will overwrite any existing memo set.
 func (tx *Transaction) SetMemo(memo string) {
 	tx.Memo = memo
+}
+
+func (tx *Transaction) GetTx() sdk.Tx {
+	return tx
 }
 
 // CanonicalSignBytes returns the canonical JSON bytes to sign over for the

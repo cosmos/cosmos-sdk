@@ -60,7 +60,7 @@ func GenerateTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return ctx.Println(tx)
+	return ctx.Println(tx.GetTx())
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
@@ -185,7 +185,7 @@ func WriteGeneratedTxResponse(
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The
 // transaction is initially created via the provided factory's generator. Once
 // created, the fee, memo, and messages are set.
-func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (context.ClientTx, error) {
+func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (context.TxBuilder, error) {
 	if txf.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
@@ -248,7 +248,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	return txf.txGenerator.MarshalTx(tx)
+	return txf.txGenerator.MarshalTx(tx.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
@@ -312,7 +312,7 @@ func PrepareFactory(ctx context.CLIContext, txf Factory) (Factory, error) {
 //
 // Note, It is assumed the Factory has the necessary fields set that are required
 // by the CanonicalSignBytes call.
-func Sign(txf Factory, name, passphrase string, tx context.ClientTx) ([]byte, error) {
+func Sign(txf Factory, name, passphrase string, tx context.TxBuilder) ([]byte, error) {
 	if txf.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -338,7 +338,7 @@ func Sign(txf Factory, name, passphrase string, tx context.ClientTx) ([]byte, er
 		return nil, err
 	}
 
-	return txf.txGenerator.MarshalTx(tx)
+	return txf.txGenerator.MarshalTx(tx.GetTx())
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

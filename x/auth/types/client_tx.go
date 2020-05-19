@@ -12,6 +12,12 @@ type StdClientTx struct {
 	StdTx
 }
 
+var _ context.TxBuilder = &StdClientTx{}
+
+func (s *StdClientTx) GetTx() sdk.Tx {
+	return s.StdTx
+}
+
 func (s *StdClientTx) SetMsgs(msgs ...sdk.Msg) error {
 	s.Msgs = msgs
 	return nil
@@ -26,10 +32,15 @@ func (s StdClientTx) GetSignatures() []sdk.Signature {
 }
 
 func (s *StdClientTx) SetSignatures(signatures ...context.ClientSignature) error {
-	sigs := make([]StdSignature, len(s.Signatures))
+	sigs := make([]StdSignature, len(signatures))
 	for i, sig := range signatures {
+		pubKey := sig.GetPubKey()
+		var pubKeyBz []byte
+		if pubKey != nil {
+			pubKeyBz = pubKey.Bytes()
+		}
 		sigs[i] = StdSignature{
-			PubKey:    sig.GetPubKey().Bytes(),
+			PubKey:    pubKeyBz,
 			Signature: sig.GetSignature(),
 		}
 	}
@@ -47,20 +58,18 @@ func (s *StdClientTx) SetFee(fee context.ClientFee) error {
 }
 
 func (s *StdClientTx) SetMemo(memo string) {
-	s.SetMemo(memo)
+	s.Memo = memo
 }
 
 func (s StdClientTx) CanonicalSignBytes(cid string, num, seq uint64) ([]byte, error) {
 	return StdSignBytes(cid, num, seq, s.Fee, s.Msgs, s.Memo), nil
 }
 
-var _ context.ClientTx = &StdClientTx{}
-
 type StdTxGenerator struct {
 	Cdc *codec.Codec
 }
 
-func (s StdTxGenerator) NewTx() context.ClientTx {
+func (s StdTxGenerator) NewTx() context.TxBuilder {
 	return &StdClientTx{}
 }
 
@@ -72,7 +81,7 @@ func (s StdTxGenerator) NewSignature() context.ClientSignature {
 	return &StdSignature{}
 }
 
-func (s StdTxGenerator) MarshalTx(tx context.ClientTx) ([]byte, error) {
+func (s StdTxGenerator) MarshalTx(tx sdk.Tx) ([]byte, error) {
 	return DefaultTxEncoder(s.Cdc)(tx)
 }
 

@@ -89,7 +89,7 @@ Note, that aliases are not meant to necessarily refer to pegged or relayed asset
 but rather act as aliases on the origin chain (e.g. `ETH` vs `ether`). However, they may extended to
 also suite the needs of relayed and pegged assets on other chains via IBC. Under such a situation,
 we need to rather address this concern via a more generic extensibility approach rather than trying to
-retrofit IBC-related fields.
+retrofit IBC-related fields. Regardless, aliases should be changed via an on-chain governance mechanism.
 
 Finally, we need to ensure metadata exists in the `GenesisState` of the `x/bank` module which is also
 indexed by the base `denom`.

@@ -48,6 +48,7 @@ message Metadata {
   string base = 2;
   repeated DenomUnit denom_units = 3;
   repeated string aliases = 4;
+  repeated cosmos_sdk.v1.Coin total_supply = 5;
 }
 ```
 
@@ -70,7 +71,8 @@ As an example, the ATOM's metadata can be defined as follows:
   "aliases": [
     "UATOM",
     "microatom"
-  ]
+  ],
+  "total_supply": "543578243452349991"
 }
 ```
 
@@ -79,6 +81,21 @@ As an example, the ATOM's metadata can be defined as follows:
 A client should be able to query for metadata by denom both via the CLI and REST interfaces. In
 addition, we will add handlers to these interfaces to convert from any unit to another given unit,
 as the base framework for this already exists in the Cosmos SDK.
+
+To reflect changes to the total supply of an asset, we can leverage the `x/mint` module to fetch and
+update total supply on each `BeginBlock`.
+
+Finally, we need to ensure metadata exists in the `GenesisState` of the `x/bank` module which is also
+indexed by the base `denom`.
+
+```go
+type GenesisState struct {
+  SendEnabled   bool        `json:"send_enabled" yaml:"send_enabled"`
+  Balances      []Balance   `json:"balances" yaml:"balances"`
+  Supply        sdk.Coins   `json:"supply" yaml:"supply"`
+  DenomMetadata []Metadata  `json:"denom_metadata" yaml:"denom_metadata"`
+}
+```
 
 ## Future Work
 

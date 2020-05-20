@@ -8,8 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
@@ -52,7 +53,7 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
-		txf := tx.Factory{}.WithChainID("test-chain").WithTxGenerator(std.TxGenerator{})
+		txf := tx.Factory{}.WithChainID("test-chain").WithTxGenerator(nil)
 
 		t.Run(stc.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
@@ -72,7 +73,7 @@ func TestCalculateGas(t *testing.T) {
 
 func TestBuildSimTx(t *testing.T) {
 	txf := tx.Factory{}.
-		WithTxGenerator(std.TxGenerator{}).
+		WithTxGenerator(nil).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
@@ -84,14 +85,14 @@ func TestBuildSimTx(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, bz)
 
-	tx := &std.Transaction{}
+	tx := &sdktx.Tx{}
 	require.NoError(t, tx.Unmarshal(bz))
-	require.Equal(t, []sdk.Signature{sdk.Signature(std.StdSignature{})}, tx.GetSignatures())
+	require.Equal(t, []sdk.Signature{sdk.Signature(auth.StdSignature{})}, tx.GetSignatures())
 }
 
 func TestBuildUnsignedTx(t *testing.T) {
 	txf := tx.Factory{}.
-		WithTxGenerator(std.TxGenerator{}).
+		WithTxGenerator(nil).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").

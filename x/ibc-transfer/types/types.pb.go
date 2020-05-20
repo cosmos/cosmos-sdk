@@ -38,9 +38,11 @@ type MsgTransfer struct {
 	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
 	// the recipient address on the destination chain
 	Receiver string `protobuf:"bytes,5,opt,name=receiver,proto3" json:"receiver,omitempty"`
-	// block height after which the packet times out
+	// Timeout height relative to the current block height.
+	// The timeout is disabled when set to 0.
 	TimeoutHeight uint64 `protobuf:"varint,6,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty" yaml:"timeout_height"`
-	// block timestamp (in nanoseconds) after which the packet times out
+	// Timeout timestamp (in nanoseconds) relative to the current block timestamp.
+	// The timeout is disabled when set to 0.
 	TimeoutTimestamp uint64 `protobuf:"varint,7,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
 }
 

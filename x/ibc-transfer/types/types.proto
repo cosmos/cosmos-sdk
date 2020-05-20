@@ -28,9 +28,11 @@ message MsgTransfer {
   ];
   // the recipient address on the destination chain
   string receiver = 5;
-  // block height after which the packet times out
+  // Timeout height relative to the current block height.
+  // The timeout is disabled when set to 0.
   uint64 timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
-  // block timestamp (in nanoseconds) after which the packet times out
+  // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
+  // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 

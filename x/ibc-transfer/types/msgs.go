@@ -13,19 +13,18 @@ const (
 
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
-	sourcePort, sourceChannel string, destHeight uint64,
+	sourcePort, sourceChannel string,
 	amount sdk.Coins, sender sdk.AccAddress, receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
 ) MsgTransfer {
 	return MsgTransfer{
-		SourcePort:        sourcePort,
-		SourceChannel:     sourceChannel,
-		DestinationHeight: destHeight,
-		Amount:            amount,
-		Sender:            sender,
-		Receiver:          receiver,
-		TimeoutHeight:     timeoutHeight,
-		TimeoutTimestamp:  timeoutTimestamp,
+		SourcePort:       sourcePort,
+		SourceChannel:    sourceChannel,
+		Amount:           amount,
+		Sender:           sender,
+		Receiver:         receiver,
+		TimeoutHeight:    timeoutHeight,
+		TimeoutTimestamp: timeoutTimestamp,
 	}
 }
 
@@ -39,7 +38,8 @@ func (MsgTransfer) Type() string {
 	return TypeMsgTransfer
 }
 
-// ValidateBasic implements sdk.Msg
+// ValidateBasic performs a basic check of the MsgTransfer fields.
+// NOTE: timeout height and timestamp values can be 0 to disable the timeout.
 func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
@@ -58,12 +58,6 @@ func (msg MsgTransfer) ValidateBasic() error {
 	}
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
-	}
-	if msg.TimeoutHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacketTimeout, "timeout height cannot be 0")
-	}
-	if msg.TimeoutTimestamp == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacketTimeout, "timeout time cannot be 0")
 	}
 	return nil
 }

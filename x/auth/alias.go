@@ -78,6 +78,7 @@ var (
 )
 
 type (
+	AccountI                         = types.AccountI
 	SignatureVerificationGasConsumer = ante.SignatureVerificationGasConsumer
 	AccountKeeper                    = keeper.AccountKeeper
 	BaseAccount                      = types.BaseAccount
@@ -93,6 +94,7 @@ type (
 	StdSignature                     = types.StdSignature //nolint:staticcheck
 	TxBuilder                        = types.TxBuilder
 	GenesisAccountIterator           = types.GenesisAccountIterator
-	Codec                            = types.Codec
 	ModuleAccount                    = types.ModuleAccount
+	GenesisAccounts                  = types.GenesisAccounts
+	GenesisAccount                   = types.GenesisAccount
 )

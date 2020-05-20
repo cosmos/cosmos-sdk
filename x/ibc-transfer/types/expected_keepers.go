@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -13,7 +13,7 @@ import (
 // AccountKeeper defines the contract required for account APIs.
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, name string) authexported.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
 }
 
 // BankKeeper defines the expected bank keeper

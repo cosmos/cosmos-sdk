@@ -338,7 +338,6 @@ import "github.com/cosmos/cosmos-sdk/client/context"
 
 func NewCmdDoSomething(ctx context.CLIContext) *cobra.Command {
 	return &cobra.Command{
-        ...
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
             ...

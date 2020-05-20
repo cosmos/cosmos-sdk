@@ -9,7 +9,7 @@ import (
 
 func RegisterHandlers(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator, r *mux.Router) {
 	registerQueryRoutes(cliCtx, r)
-	registerTxHandlers(cliCtx, m, txg, r)
+	registerTxHandlers(cliCtx, m, r)
 }
 
 // RegisterRoutes registers staking-related REST handlers to a router

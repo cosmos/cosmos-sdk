@@ -37,7 +37,7 @@ func RegisterHandlers(
 	newMsgFn func() types.MsgSubmitProposalI,
 	phs []ProposalRESTHandler) {
 	registerQueryRoutes(cliCtx, r)
-	registerTxHandlers(cliCtx, txg, r, newMsgFn, phs)
+	registerTxHandlers(cliCtx, r, newMsgFn, phs)
 }
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

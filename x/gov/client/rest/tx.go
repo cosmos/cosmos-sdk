@@ -15,18 +15,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, txg context.TxGenerator, r *mux.Router, newMsgFn func() types.MsgSubmitProposalI, phs []ProposalRESTHandler) {
+func registerTxHandlers(cliCtx context.CLIContext, r *mux.Router, newMsgFn func() types.MsgSubmitProposalI, phs []ProposalRESTHandler) {
 	propSubRtr := r.PathPrefix("/gov/proposals").Subrouter()
 	for _, ph := range phs {
 		propSubRtr.HandleFunc(fmt.Sprintf("/%s", ph.SubRoute), ph.Handler).Methods("POST")
 	}
 
-	r.HandleFunc("/gov/proposals", newPostProposalHandlerFn(cliCtx, txg, newMsgFn)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), newDepositHandlerFn(cliCtx, txg)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), newVoteHandlerFn(cliCtx, txg)).Methods("POST")
+	r.HandleFunc("/gov/proposals", newPostProposalHandlerFn(cliCtx, newMsgFn)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), newDepositHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), newVoteHandlerFn(cliCtx)).Methods("POST")
 }
 
-func newPostProposalHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator, newMsgFn func() types.MsgSubmitProposalI) http.HandlerFunc {
+func newPostProposalHandlerFn(cliCtx context.CLIContext, newMsgFn func() types.MsgSubmitProposalI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PostProposalReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -56,7 +56,7 @@ func newPostProposalHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator
 	}
 }
 
-func newDepositHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) http.HandlerFunc {
+func newDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
@@ -91,7 +91,7 @@ func newDepositHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) htt
 	}
 }
 
-func newVoteHandlerFn(cliCtx context.CLIContext, txg context.TxGenerator) http.HandlerFunc {
+func newVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]

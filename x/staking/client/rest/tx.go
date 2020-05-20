@@ -15,18 +15,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator, r *mux.Router) {
+func registerTxHandlers(cliCtx context.CLIContext, m codec.JSONMarshaler, r *mux.Router) {
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/delegations",
-		newPostDelegationsHandlerFn(cliCtx, m, txg),
+		newPostDelegationsHandlerFn(cliCtx, m),
 	).Methods("POST")
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/unbonding_delegations",
-		newPostUnbondingDelegationsHandlerFn(cliCtx, m, txg),
+		newPostUnbondingDelegationsHandlerFn(cliCtx, m),
 	).Methods("POST")
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/redelegations",
-		newPostRedelegationsHandlerFn(cliCtx, m, txg),
+		newPostRedelegationsHandlerFn(cliCtx, m),
 	).Methods("POST")
 }
 
@@ -57,7 +57,7 @@ type (
 	}
 )
 
-func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator) http.HandlerFunc {
+func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithJSONMarshaler(m)
 
@@ -90,7 +90,7 @@ func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshale
 	}
 }
 
-func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator) http.HandlerFunc {
+func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithJSONMarshaler(m)
 
@@ -123,7 +123,7 @@ func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarsha
 	}
 }
 
-func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator) http.HandlerFunc {
+func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx = cliCtx.WithJSONMarshaler(m)
 

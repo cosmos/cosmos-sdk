@@ -17,7 +17,7 @@ import (
 
 func RegisterHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator, r *mux.Router) {
 	registerQueryRoutes(cliCtx, r)
-	registerTxHandlers(cliCtx, m, txg, r)
+	registerTxHandlers(cliCtx, m, r)
 }
 
 // RegisterRoutes register distribution REST routes.

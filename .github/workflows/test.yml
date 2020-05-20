@@ -22,7 +22,9 @@ jobs:
         id: getfile
         run: |
           echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | xargs)"
-
+      - name: echo output
+        run: |
+          echo ${{ steps.getfile.outputs.files }}
       - uses: technote-space/get-diff-action@v1
         id: git_diff
         with:

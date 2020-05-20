@@ -28,7 +28,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:     "transfer [src-port] [src-channel] [receiver] [amount]",
 		Short:   "Transfer a fungible token through IBC",
 		Example: fmt.Sprintf("%s tx transfer transfer [src-port] [src-channel] [receiver] [amount]", version.ClientName),
-		Args:    cobra.ExactArgs(6),
+		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
@@ -64,7 +64,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultPacketTimeoutHeight, "timeout height for fungible token transfer packet")
-	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultPacketTimeoutTimestamp, "timeout timestamp (in nanoseconds) for fungible token transfer packet")
+	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultPacketTimeoutHeight, "Timeout height relative to the current block height. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultPacketTimeoutTimestamp, "Timeout timestamp (in nanoseconds) relative to the current block timestamp. The timeout is disabled when set to 0.")
 	return cmd
 }

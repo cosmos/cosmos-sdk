@@ -37,7 +37,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 		Short:   "create new tendermint client",
 		Long:    "create new tendermint client. Trust level can be a fraction (eg: '1/3') or 'default'",
 		Example: fmt.Sprintf("%s tx ibc client create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
-		Args:    cobra.ExactArgs(6),
+		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))

@@ -17,12 +17,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
+const (
+	flagTimeoutHeight    = "timeout-height"
+	flagTimeoutTimestamp = "timeout-timestamp"
+)
+
 // GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:     "transfer [src-port] [src-channel] [receiver] [amount] [timeout-height] [timeout-timestamp]",
+	cmd := &cobra.Command{
+		Use:     "transfer [src-port] [src-channel] [receiver] [amount]",
 		Short:   "Transfer a fungible token through IBC",
-		Example: fmt.Sprintf("%s tx transfer transfer [src-port] [src-channel] [receiver] [amount] [timeout-height] [timeout-timestamp]", version.ClientName),
+		Example: fmt.Sprintf("%s tx transfer transfer [src-port] [src-channel] [receiver] [amount]", version.ClientName),
 		Args:    cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -59,4 +64,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultPacketTimeoutHeight, "timeout height for fungible token transfer packet")
+	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultPacketTimeoutTimestamp, "timeout timestamp (in nanoseconds) for fungible token transfer packet")
+	return cmd
 }

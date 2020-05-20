@@ -67,7 +67,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			if lvl == "default" {
 				trustLevel = lite.DefaultTrustLevel
 			} else {
-				trustLevel, err = parseFraction(args[2])
+				trustLevel, err = parseFraction(lvl)
 				if err != nil {
 					return err
 				}
@@ -106,7 +106,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 // GetCmdUpdateClient defines the command to update a client as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
 func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "update [client-id] [path/to/header.json]",
 		Short: "update existing client with a header",
 		Long: strings.TrimSpace(fmt.Sprintf(`update existing client with a header:
@@ -143,15 +143,13 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
-	return cmd
 }
 
 // GetCmdSubmitMisbehaviour defines the command to submit a misbehaviour to invalidate
 // previous state roots and prevent future updates as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "misbehaviour [path/to/evidence.json]",
 		Short: "submit a client misbehaviour",
 		Long: strings.TrimSpace(fmt.Sprintf(`submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates:
@@ -186,8 +184,6 @@ $ %s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../n
 			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
-	return cmd
 }
 
 func parseFraction(fraction string) (tmmath.Fraction, error) {

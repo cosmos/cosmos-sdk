@@ -7,6 +7,16 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const (
+	// DefaultPacketTimeoutHeight is the default packet timeout height relative
+	// to the current block height. The timeout is disabled when set to 0.
+	DefaultPacketTimeoutHeight = 1000 // NOTE: in blocks
+
+	// DefaultPacketTimeoutTimestamp is the default packet timeout timestamp relative
+	// to the current block timestamp. The timeout is disabled when set to 0.
+	DefaultPacketTimeoutTimestamp = 0 // NOTE: in nanoseconds
+)
+
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
 	amount sdk.Coins, sender, receiver string) FungibleTokenPacketData {

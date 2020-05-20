@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 

@@ -328,7 +328,7 @@ and `AccountRetriever`, and we update `AppModuleBasic.GetTxCmd` to take
 a `CLIContext` which should have all of these fields pre-populated.
 
 Each client method should then use one of the `Init` methods to re-initialize
-the pre-populated `CLIContext`. `tx.GenerateOrBroadcastTx` can then be used to
+the pre-populated `CLIContext`. `tx.GenerateOrBroadcastTx` can be used to
 generate or broadcast a transaction. For example:
 
 ```go

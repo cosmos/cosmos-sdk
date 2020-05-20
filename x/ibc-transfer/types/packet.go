@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -18,16 +20,16 @@ func NewFungibleTokenPacketData(
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if !ftpd.Amount.IsAllPositive() {
-		returnsdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
 	}
 	if !ftpd.Amount.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
 	}
-	if ftpd.Sender == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+	if strings.TrimSpace(ftpd.Sender) == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
 	}
-	if ftpd.Receiver == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing receiver address")
+	if strings.TrimSpace(ftpd.Receiver) == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "receiver address cannot be blank")
 	}
 	return nil
 }

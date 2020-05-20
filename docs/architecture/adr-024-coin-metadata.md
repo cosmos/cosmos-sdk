@@ -19,7 +19,7 @@ application.
 
 With regards to a balance `amount`, the Cosmos SDK assumes a static and fixed unit of denomination,
 regardless of the denomination itself. In other words, clients and apps built atop a Cosmos-SDK-based
-chain may chose to define and use arbitrary units of denomination to provide a richer UX, however, by
+chain may choose to define and use arbitrary units of denomination to provide a richer UX, however, by
 the time a tx or operation reaches the Cosmos SDK state machine, the `amount` is treated as a single
 unit. For example, for the Cosmos Hub (Gaia), clients assume 1 ATOM = 10^6 uatom, and so all txs and
 operations in the Cosmos SDK work off of units of 10^6.

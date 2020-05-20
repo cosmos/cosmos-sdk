@@ -82,6 +82,9 @@ var _ exported.Path = MerklePath{}
 
 // MerklePath is the path used to verify commitment proofs, which can be an arbitrary
 // structured object (defined by a commitment type).
+//
+// Each proof in a chained merkle proof will have its own merkle.KeyPath passed in
+// The path ordering goes from the outermost tree to the inner most tree
 type MerklePath struct {
 	KeyPaths []merkle.KeyPath `json:"key_paths" yaml:"key_paths"` // byte slice prefixed before the key
 }
@@ -172,7 +175,6 @@ var _ exported.Proof = MerkleProof{}
 // succinct.
 type MerkleProof struct {
 	Proofs []*ics23.CommitmentProof `json:"proofs" yaml:"proofs"`
-	Specs  []*ics23.ProofSpec       `json:"specs" yaml:"specs"`
 }
 
 // GetCommitmentType implements ProofI
@@ -181,8 +183,8 @@ func (MerkleProof) GetCommitmentType() exported.Type {
 }
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
-func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path, value []byte) error {
-	if proof.ValidateBasic() != nil || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
+func (proof MerkleProof) VerifyMembership(specs []*ics23.ProofSpec, root exported.Root, path exported.Path, value []byte) error {
+	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
 		return sdkerrors.Wrap(ErrInvalidProof, "empty params or proof")
 	}
 
@@ -191,8 +193,9 @@ func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path
 		return sdkerrors.Wrap(ErrInvalidProof, "path is not a merkle path for a merkle proof")
 	}
 
-	if len(proof.Proofs) == len(mpath.KeyPaths) {
-		return sdkerrors.Wrapf(ErrInvalidProof, "invalid chained proof. proof chain length %d not the same as path length %d", len(proof.Proofs), len(mpath.KeyPaths))
+	if len(proof.Proofs) != len(mpath.KeyPaths) || len(proof.Proofs) != len(specs) {
+		return sdkerrors.Wrapf(ErrInvalidProof, "invalid chained proof. chained proof length %d, spec length %d, path length %d must all be equal",
+			len(proof.Proofs), len(specs), len(mpath.KeyPaths))
 	}
 
 	for i, p := range proof.Proofs {
@@ -210,14 +213,14 @@ func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path
 			return sdkerrors.Wrap(ErrInvalidProof, err.Error())
 		}
 		if i != len(proof.Proofs)-1 {
-			if !ics23.VerifyMembership(proof.Specs[i], subroot, p, subpath, value) {
+			if !ics23.VerifyMembership(specs[i], subroot, p, subpath, value) {
 				return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
 			}
 		} else {
 			// For the final verification, we prove inclusion against the root that was passed into function
 			// rather than calculating subroot in order to verify that the given value was committed to by
 			// the given root
-			if !ics23.VerifyMembership(proof.Specs[i], root.GetHash(), p, subpath, value) {
+			if !ics23.VerifyMembership(specs[i], root.GetHash(), p, subpath, value) {
 				return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
 			}
 		}
@@ -230,8 +233,8 @@ func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
 // VerifyNonMembership verifies a chained proof where the absence of a given path is proven
 // at the lowest subtree and then each subtree's inclusion is proved up to the final root.
-func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.Path) error {
-	if proof.ValidateBasic() != nil || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
+func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root exported.Root, path exported.Path) error {
+	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidProof, "empty params or proof")
 	}
 
@@ -240,8 +243,9 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 		return sdkerrors.Wrap(ErrInvalidProof, "path is not a merkle path for a merkle proof")
 	}
 
-	if len(proof.Proofs) == len(mpath.KeyPaths) {
-		return sdkerrors.Wrapf(ErrInvalidProof, "invalid chained proof. proof chain length %d not the same as path length %d", len(proof.Proofs), len(mpath.KeyPaths))
+	if len(proof.Proofs) != len(mpath.KeyPaths) || len(proof.Proofs) != len(specs) {
+		return sdkerrors.Wrapf(ErrInvalidProof, "invalid chained proof. chained proof length %d, spec length %d, path length %d must all be equal",
+			len(proof.Proofs), len(specs), len(mpath.KeyPaths))
 	}
 
 	var value, subroot []byte
@@ -262,7 +266,7 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 				return sdkerrors.Wrap(ErrInvalidProof, err.Error())
 			}
 
-			if !ics23.VerifyNonMembership(proof.Specs[i], subroot, p, subpath) {
+			if !ics23.VerifyNonMembership(specs[i], subroot, p, subpath) {
 				return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
 			}
 		} else {
@@ -279,12 +283,12 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 					return sdkerrors.Wrap(ErrInvalidProof, err.Error())
 				}
 
-				if !ics23.VerifyMembership(proof.Specs[i], subroot, p, subpath, value) {
+				if !ics23.VerifyMembership(specs[i], subroot, p, subpath, value) {
 					return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
 				}
 			} else {
 				// The final proof in the chain will prove inclusion against the given root.
-				if !ics23.VerifyMembership(proof.Specs[i], root.GetHash(), p, subpath, value) {
+				if !ics23.VerifyMembership(specs[i], root.GetHash(), p, subpath, value) {
 					return sdkerrors.Wrapf(ErrInvalidProof, "invalid proof for path: %s", path.String())
 				}
 			}
@@ -299,12 +303,11 @@ func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.P
 
 // IsEmpty returns true if MerkleProof is empty
 func (proof MerkleProof) IsEmpty() bool {
-	if len(proof.Proofs) == 0 || len(proof.Specs) == 0 {
+	if len(proof.Proofs) == 0 {
 		return true
 	}
-	for i, p := range proof.Proofs {
-
-		if p == nil || proof.Specs[i] == nil {
+	for _, p := range proof.Proofs {
+		if p == nil {
 			return true
 		}
 	}
@@ -314,7 +317,7 @@ func (proof MerkleProof) IsEmpty() bool {
 
 // ValidateBasic checks if the proof is empty or malformed.
 func (proof MerkleProof) ValidateBasic() error {
-	if proof.IsEmpty() || len(proof.Proofs) != len(proof.Specs) {
+	if proof.IsEmpty() {
 		return ErrInvalidProof
 	}
 	return nil

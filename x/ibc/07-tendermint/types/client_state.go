@@ -41,7 +41,7 @@ type ClientState struct {
 	MaxClockDrift time.Duration
 
 	// ProofSpecs determines the proof format this client will verify against
-	ProofSpecs []*ics23.ProofSpecs
+	ProofSpecs []*ics23.ProofSpec
 
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
@@ -60,7 +60,7 @@ func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
 // Initialize creates a client state and validates its contents, checking that
 // the provided consensus state is from the same client type.
 func Initialize(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header, specs []*ics23.ProofSpecs,
+	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header, specs []*ics23.ProofSpec,
 ) (ClientState, error) {
 
 	if trustingPeriod >= ubdPeriod {
@@ -73,7 +73,7 @@ func Initialize(
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
-	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header, specs []*ics23.ProofSpecs,
+	id string, trustingPeriod, ubdPeriod, maxClockDrift time.Duration, header Header, specs []*ics23.ProofSpec,
 ) ClientState {
 
 	return ClientState{
@@ -179,7 +179,7 @@ func (cs ClientState) VerifyClientConsensusState(
 
 	// TODO: Inject proof specs of clientstate into proof or modify verify membership function to take proof specs
 
-	if err := proof.VerifyMembership(provingRoot, path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -211,7 +211,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -244,7 +244,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -272,7 +272,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, commitmentBytes); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -300,7 +300,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, channeltypes.CommitAcknowledgement(acknowledgement)); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -328,7 +328,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	if err := proof.VerifyNonMembership(consensusState.GetRoot(), path); err != nil {
+	if err := proof.VerifyNonMembership(cs.ProofSpecs, consensusState.GetRoot(), path); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -357,7 +357,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
-	if err := proof.VerifyMembership(consensusState.GetRoot(), path, bz); err != nil {
+	if err := proof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, bz); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 

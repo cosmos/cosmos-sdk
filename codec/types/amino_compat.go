@@ -3,6 +3,9 @@ package types
 import (
 	"fmt"
 	"reflect"
+	"runtime/debug"
+
+	"github.com/gogo/protobuf/proto"
 
 	amino "github.com/tendermint/go-amino"
 )
@@ -13,10 +16,27 @@ type aminoCompat struct {
 	err    error
 }
 
+var Debug = false
+
+func aminoCompatError(errType string, x interface{}) error {
+	if Debug {
+		debug.PrintStack()
+	}
+	return fmt.Errorf(
+		"amino %s Any marshaling error for %+v, this is likely because "+
+			"amino is being used directly (instead of codec.Codec which is preferred) "+
+			"or UnpackInterfacesMessage is not defined for some type which contains "+
+			"a protobuf Any either directly or via one of its members. To see a "+
+			"stacktrace of where the error is coming from, set the var Debug = true "+
+			"in codec/types/amino_compat.go",
+		errType, x,
+	)
+}
+
 func (any Any) MarshalAmino() ([]byte, error) {
 	ac := any.aminoCompat
 	if ac == nil {
-		return nil, fmt.Errorf("can't amino unmarshal")
+		return nil, aminoCompatError("binary unmarshal", any)
 	}
 	return ac.bz, ac.err
 }
@@ -32,7 +52,7 @@ func (any *Any) UnmarshalAmino(bz []byte) error {
 func (any Any) MarshalJSON() ([]byte, error) {
 	ac := any.aminoCompat
 	if ac == nil {
-		return nil, fmt.Errorf("can't JSON marshal")
+		return nil, aminoCompatError("JSON marshal", any)
 	}
 	return ac.jsonBz, ac.err
 }
@@ -56,7 +76,7 @@ var _ AnyUnpacker = AminoUnpacker{}
 func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	ac := any.aminoCompat
 	if ac == nil {
-		return fmt.Errorf("can't amino unmarshal %T", iface)
+		return aminoCompatError("binary unmarshal", reflect.TypeOf(iface))
 	}
 	err := a.Cdc.UnmarshalBinaryBare(ac.bz, iface)
 	if err != nil {
@@ -67,7 +87,19 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
-	any.cachedValue = val
+	if m, ok := val.(proto.Message); ok {
+		err := any.Pack(m)
+		if err != nil {
+			return err
+		}
+	} else {
+		any.cachedValue = val
+	}
+
+	// this is necessary for tests that use reflect.DeepEqual and compare
+	// proto vs amino marshaled values
+	any.aminoCompat = nil
+
 	return nil
 }
 
@@ -103,7 +135,7 @@ var _ AnyUnpacker = AminoJSONUnpacker{}
 func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	ac := any.aminoCompat
 	if ac == nil {
-		return fmt.Errorf("can't amino unmarshal %T", iface)
+		return aminoCompatError("JSON unmarshal", reflect.TypeOf(iface))
 	}
 	err := a.Cdc.UnmarshalJSON(ac.jsonBz, iface)
 	if err != nil {
@@ -114,7 +146,19 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if err != nil {
 		return err
 	}
-	any.cachedValue = val
+	if m, ok := val.(proto.Message); ok {
+		err := any.Pack(m)
+		if err != nil {
+			return err
+		}
+	} else {
+		any.cachedValue = val
+	}
+
+	// this is necessary for tests that use reflect.DeepEqual and compare
+	// proto vs amino marshaled values
+	any.aminoCompat = nil
+
 	return nil
 }
 

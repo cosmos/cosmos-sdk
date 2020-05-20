@@ -12,7 +12,7 @@ var CryptoCdc *codec.Codec
 
 func init() {
 	CryptoCdc = codec.New()
-	cryptoAmino.RegisterAmino(CryptoCdc)
+	cryptoAmino.RegisterAmino(CryptoCdc.Amino)
 	RegisterCodec(CryptoCdc)
 	CryptoCdc.Seal()
 }

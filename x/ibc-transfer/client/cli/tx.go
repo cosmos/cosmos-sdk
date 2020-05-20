@@ -3,9 +3,9 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -44,15 +44,8 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			timeoutHeight, err := strconv.ParseUint(args[4], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid timeout height: %w", err)
-			}
-
-			timeoutTimestamp, err := strconv.ParseUint(args[5], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid timeout timestamp: %w", err)
-			}
+			timeoutHeight := viper.GetUint64(flagTimeoutHeight)
+			timeoutTimestamp := viper.GetUint64(flagTimeoutHeight)
 
 			msg := types.NewMsgTransfer(
 				srcPort, srcChannel, coins, sender, receiver, timeoutHeight, timeoutTimestamp,

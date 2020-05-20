@@ -481,7 +481,10 @@ Where proposal.json contains:
 			if err != nil {
 				return err
 			}
-			msg := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

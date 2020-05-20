@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	std "github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -126,7 +125,7 @@ func SimulateSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		msg, err := std.NewMsgSubmitProposal(content, deposit, simAccount.Address)
+		msg, err := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName), nil, err
 		}

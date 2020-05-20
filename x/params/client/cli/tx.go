@@ -59,7 +59,7 @@ Where proposal.json contains:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 
-			proposal, err := paramscutils.ParseParamChangeProposalJSON(ctx.Marshaler, args[0])
+			proposal, err := paramscutils.ParseParamChangeProposalJSON(ctx.JSONMarshaler, args[0])
 			if err != nil {
 				return err
 			}

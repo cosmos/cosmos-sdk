@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-func RegisterHandlers(ctx context.CLIContext, m codec.Marshaler, txg context.TxGenerator, r *mux.Router) {
+func RegisterHandlers(ctx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator, r *mux.Router) {
 	registerQueryRoutes(ctx, r)
 	registerTxHandlers(ctx, m, txg, r)
 }

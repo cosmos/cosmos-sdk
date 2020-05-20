@@ -32,7 +32,7 @@ func NewSendRequestHandlerFn(ctx context.CLIContext) http.HandlerFunc {
 		}
 
 		var req SendReq
-		if !rest.ReadRESTReq(w, r, ctx.Marshaler, &req) {
+		if !rest.ReadRESTReq(w, r, ctx.JSONMarshaler, &req) {
 			return
 		}
 

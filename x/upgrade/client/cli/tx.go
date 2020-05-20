@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -80,20 +78,14 @@ func NewCmdSubmitUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(
-	m codec.Marshaler,
-	txg context.TxGenerator,
-	ar context.AccountRetriever,
-	newMsgFn func() gov.MsgSubmitProposalI) *cobra.Command {
+func NewCmdSubmitCancelUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 			from := cliCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -118,19 +110,16 @@ func NewCmdSubmitCancelUpgradeProposal(
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg := newMsgFn()
-			err = msg.SetContent(content)
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
-			msg.SetInitialDeposit(deposit)
-			msg.SetProposer(from)
 
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxWithFactory(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 

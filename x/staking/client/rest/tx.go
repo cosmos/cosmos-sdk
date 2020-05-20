@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator, r *mux.Router) {
+func registerTxHandlers(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator, r *mux.Router) {
 	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/delegations",
 		newPostDelegationsHandlerFn(cliCtx, m, txg),
@@ -57,9 +57,9 @@ type (
 	}
 )
 
-func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
+func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
+		cliCtx = cliCtx.WithJSONMarshaler(m)
 
 		var req DelegateRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -90,9 +90,9 @@ func newPostDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, t
 	}
 }
 
-func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
+func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
+		cliCtx = cliCtx.WithJSONMarshaler(m)
 
 		var req RedelegateRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
@@ -123,9 +123,9 @@ func newPostRedelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler,
 	}
 }
 
-func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler, txg context.TxGenerator) http.HandlerFunc {
+func newPostUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithMarshaler(m)
+		cliCtx = cliCtx.WithJSONMarshaler(m)
 
 		var req UndelegateRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {

@@ -27,7 +27,7 @@ type CLIContext struct {
 	FromAddress      sdk.AccAddress
 	Client           rpcclient.Client
 	ChainID          string
-	Marshaler        codec.JSONMarshaler
+	JSONMarshaler    codec.JSONMarshaler
 	Input            io.Reader
 	Keyring          keyring.Keyring
 	Output           io.Writer
@@ -187,9 +187,9 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 	return ctx
 }
 
-// WithMarshaler returns a copy of the CLIContext with an updated JSONMarshaler.
-func (ctx CLIContext) WithMarshaler(m codec.JSONMarshaler) CLIContext {
-	ctx.Marshaler = m
+// WithJSONMarshaler returns a copy of the CLIContext with an updated JSONMarshaler.
+func (ctx CLIContext) WithJSONMarshaler(m codec.JSONMarshaler) CLIContext {
+	ctx.JSONMarshaler = m
 	return ctx
 }
 
@@ -307,7 +307,7 @@ func (ctx CLIContext) WithAccountRetriever(retriever AccountRetriever) CLIContex
 
 // Println outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
-// will be JSON encoded using ctx.Marshaler. An error is returned upon failure.
+// will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
 func (ctx CLIContext) Println(toPrint interface{}) error {
 	var (
 		out []byte
@@ -319,11 +319,11 @@ func (ctx CLIContext) Println(toPrint interface{}) error {
 		out, err = yaml.Marshal(&toPrint)
 
 	case "json":
-		out, err = ctx.Marshaler.MarshalJSON(toPrint)
+		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
 
 		// To JSON indent, we re-encode the already encoded JSON given there is no
 		// error. The re-encoded JSON uses the standard library as the initial encoded
-		// JSON should have the correct output produced by ctx.Marshaler.
+		// JSON should have the correct output produced by ctx.JSONMarshaler.
 		if ctx.Indent && err == nil {
 			out, err = codec.MarshalIndentFromJSON(out)
 		}

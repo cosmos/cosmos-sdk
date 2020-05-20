@@ -35,7 +35,7 @@ func NewQuerySubspaceParamsCmd(m codec.Marshaler) *cobra.Command {
 		Short: "Query for raw parameters by subspace and key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithMarshaler(m)
+			cliCtx := context.NewCLIContext().WithJSONMarshaler(m)
 
 			params := types.NewQuerySubspaceParams(args[0], args[1])
 			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)

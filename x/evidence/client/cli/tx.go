@@ -14,7 +14,7 @@ import (
 // modules, under a sub-command. This allows external modules to implement custom
 // Evidence types and Handlers while having the ability to create and sign txs
 // containing them all from a single root command.
-func GetTxCmd(storeKey string, ctx context.CLIContext, childCmds []*cobra.Command) *cobra.Command {
+func GetTxCmd(ctx context.CLIContext, childCmds []*cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Evidence transaction subcommands",

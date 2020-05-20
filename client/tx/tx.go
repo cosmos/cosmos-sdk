@@ -92,7 +92,7 @@ func BroadcastTx(ctx context.CLIContext, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !ctx.SkipConfirm {
-		out, err := ctx.Marshaler.MarshalJSON(tx)
+		out, err := ctx.JSONMarshaler.MarshalJSON(tx)
 		if err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.Marshaler, txf.Gas())
+			rest.WriteSimulationResponse(w, ctx.JSONMarshaler, txf.Gas())
 			return
 		}
 	}
@@ -172,7 +172,7 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	output, err := ctx.Marshaler.MarshalJSON(tx)
+	output, err := ctx.JSONMarshaler.MarshalJSON(tx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}

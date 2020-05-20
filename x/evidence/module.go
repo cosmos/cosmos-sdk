@@ -89,7 +89,7 @@ func (a AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
 		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(ctx)
 	}
 
-	return cli.GetTxCmd(StoreKey, ctx, evidenceCLIHandlers)
+	return cli.GetTxCmd(ctx, evidenceCLIHandlers)
 }
 
 // GetTxCmd returns the evidence module's root query command.

@@ -80,14 +80,6 @@ func (b AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegist
 	types.RegisterInterfaces(registry)
 }
 
-func (b AppModuleBasic) NewTxCmd(ctx context.CLIContext) *cobra.Command {
-	return cli.NewTxCmd(ctx)
-}
-
-func (b AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
-
-func (b AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {}
-
 //____________________________________________________________________________
 
 // AppModule implements an application module for the distribution module.

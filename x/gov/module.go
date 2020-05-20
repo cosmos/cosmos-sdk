@@ -101,10 +101,6 @@ func (a AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegi
 	types.RegisterInterfaces(registry)
 }
 
-func (a AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
-
-func (a AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {}
-
 //____________________________________________________________________________
 
 // AppModule implements an application module for the gov module.

@@ -63,10 +63,6 @@ func (b AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-func (b AppModuleBasic) NewQueryCmd(ctx context.CLIContext) *cobra.Command { return nil }
-
-func (b AppModuleBasic) NewRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {}
-
 //____________________________________________________________________________
 
 // AppModule implements an application module for the crisis module.

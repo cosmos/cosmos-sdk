@@ -86,7 +86,7 @@ func NewCreateValidatorCmd(ctx context.CLIContext) *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagPubKey)
 	_ = cmd.MarkFlagRequired(FlagMoniker)
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewEditValidatorCmd(ctx context.CLIContext) *cobra.Command {
@@ -139,7 +139,7 @@ func NewEditValidatorCmd(ctx context.CLIContext) *cobra.Command {
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewDelegateCmd(ctx context.CLIContext) *cobra.Command {
@@ -182,7 +182,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 	cmd.Flags().AddFlagSet(fsCommissionUpdate)
 	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewRedelegateCmd(ctx context.CLIContext) *cobra.Command {
@@ -227,7 +227,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewUnbondCmd(ctx context.CLIContext) *cobra.Command {
@@ -267,7 +267,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 		},
 	}
 
-	return flags.PostCommands(cmd)[0]
+	return cmd
 }
 
 func NewBuildCreateValidatorMsg(cliCtx context.CLIContext, txf tx.Factory) (tx.Factory, sdk.Msg, error) {

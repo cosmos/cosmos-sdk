@@ -121,7 +121,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 	cliCtx := context.CLIContext{}
 	cliCtx = cliCtx.
 		WithJSONMarshaler(appCodec).
-		WithTxGenerator(types.StdTxGenerator{cdc}).
+		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
 		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
 		WithCodec(cdc)
 

@@ -4,12 +4,11 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-func RegisterHandlers(ctx context.CLIContext, m codec.JSONMarshaler, txg context.TxGenerator, r *mux.Router) {
+func RegisterHandlers(ctx context.CLIContext, r *mux.Router) {
 	registerQueryRoutes(ctx, r)
-	registerTxHandlers(ctx, m, txg, r)
+	registerTxHandlers(ctx, r)
 }
 
 // RegisterRoutes registers staking-related REST handlers to a router

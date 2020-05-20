@@ -299,3 +299,34 @@ Where proposal.json contains:
 
 	return cmd
 }
+
+type generateOrBroadcastFunc func(context.CLIContext, []sdk.Msg) error
+
+func splitAndApply(
+	generateOrBroadcast generateOrBroadcastFunc,
+	cliCtx context.CLIContext,
+	msgs []sdk.Msg,
+	chunkSize int,
+) error {
+
+	if chunkSize == 0 {
+		return generateOrBroadcast(cliCtx, msgs)
+	}
+
+	// split messages into slices of length chunkSize
+	totalMessages := len(msgs)
+	for i := 0; i < len(msgs); i += chunkSize {
+
+		sliceEnd := i + chunkSize
+		if sliceEnd > totalMessages {
+			sliceEnd = totalMessages
+		}
+
+		msgChunk := msgs[i:sliceEnd]
+		if err := generateOrBroadcast(cliCtx, msgChunk); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

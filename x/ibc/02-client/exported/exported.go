@@ -159,16 +159,16 @@ type ClientType byte
 
 // available client types
 const (
-	Tendermint ClientType = iota + 1 // 1
-	Localhost
-	SoloMachine
+	SoloMachine ClientType = 6
+	Tendermint  ClientType = 7
+	Localhost   ClientType = 9
 )
 
 // string representation of the client types
 const (
+	ClientTypeSoloMachine string = "solomachine"
 	ClientTypeTendermint  string = "tendermint"
 	ClientTypeLocalHost   string = "localhost"
-	ClientTypeSoloMachine string = "solomachine"
 )
 
 func (ct ClientType) String() string {

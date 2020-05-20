@@ -68,8 +68,8 @@ As an example, the ATOM's metadata can be defined as follows:
     }
   ],
   "aliases": [
-    "btcuatom",
-    "kavauatom"
+    "UATOM",
+    "microatom"
   ]
 }
 ```

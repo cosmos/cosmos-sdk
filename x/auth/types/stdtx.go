@@ -246,7 +246,7 @@ func (tx StdTx) GetPubKeys() []crypto.PubKey {
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) ([]byte, error) {
+func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
@@ -256,7 +256,7 @@ func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) ([]byte, err
 
 	return StdSignBytes(
 		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
-	), nil
+	)
 }
 
 // GetGas returns the Gas in StdFee

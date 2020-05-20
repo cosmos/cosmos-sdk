@@ -3,6 +3,9 @@ package raw
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -14,79 +17,80 @@ import (
 )
 
 type DecodedTx struct {
-	*sdk.Tx
+	*types.Tx
 	Raw           *TxRaw
 	Msgs          []sdk.Msg
 	PubKeys       []crypto.PubKey
 	Signers       []sdk.AccAddress
-	SignerInfoMap map[string]*sdk.SignerInfo
+	SignerInfoMap map[string]*types.SignerInfo
 }
 
 var _ sdk.Tx = DecodedTx{}
-var _ ante.SigVerifiableTx = DecodedTx{}
 var _ ante.FeeTx = DecodedTx{}
 var _ ante.TxWithMemo = DecodedTx{}
 
-var DefaultTxDecoder sdk.TxDecoder = func(txBytes []byte) (sdk.Tx, error) {
-	var raw TxRaw
-	err := raw.Unmarshal(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	var tx sdk.Tx
-	err = tx.Unmarshal(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	anyMsgs := tx.Body.Messages
-	msgs := make([]sdk.Msg, len(anyMsgs))
-	for i, any := range anyMsgs {
-		msg, ok := any.GetCachedValue().(sdk.Msg)
-		if !ok {
-			return nil, fmt.Errorf("can't decode sdk.Msg from %+v", any)
+func DefaultTxDecoder(cdc codec.Marshaler) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		var raw TxRaw
+		err := cdc.UnmarshalBinaryBare(txBytes, &raw)
+		if err != nil {
+			return nil, err
 		}
-		msgs[i] = msg
-	}
 
-	var signers []sdk.AccAddress
-	seen := map[string]bool{}
+		var tx types.Tx
+		err = cdc.UnmarshalBinaryBare(txBytes, &tx)
+		if err != nil {
+			return nil, err
+		}
 
-	for _, msg := range msgs {
-		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
+		anyMsgs := tx.Body.Messages
+		msgs := make([]sdk.Msg, len(anyMsgs))
+		for i, any := range anyMsgs {
+			msg, ok := any.GetCachedValue().(sdk.Msg)
+			if !ok {
+				return nil, fmt.Errorf("can't decode sdk.Msg from %+v", any)
+			}
+			msgs[i] = msg
+		}
+
+		var signers []sdk.AccAddress
+		seen := map[string]bool{}
+
+		for _, msg := range msgs {
+			for _, addr := range msg.GetSigners() {
+				if !seen[addr.String()] {
+					signers = append(signers, addr)
+					seen[addr.String()] = true
+				}
 			}
 		}
-	}
 
-	nSigners := len(signers)
-	signerInfos := tx.AuthInfo.SignerInfos
-	signerInfoMap := map[string]*sdk.SignerInfo{}
-	pubKeys := make([]crypto.PubKey, len(signerInfos))
-	for i, si := range signerInfos {
-		any := si.PublicKey
-		pubKey, ok := any.GetCachedValue().(crypto.PubKey)
-		if !ok {
-			return nil, fmt.Errorf("can't decode PublicKey from %+v", any)
+		nSigners := len(signers)
+		signerInfos := tx.AuthInfo.SignerInfos
+		signerInfoMap := map[string]*types.SignerInfo{}
+		pubKeys := make([]crypto.PubKey, len(signerInfos))
+		for i, si := range signerInfos {
+			any := si.PublicKey
+			pubKey, ok := any.GetCachedValue().(crypto.PubKey)
+			if !ok {
+				return nil, fmt.Errorf("can't decode PublicKey from %+v", any)
+			}
+			pubKeys[i] = pubKey
+
+			if i < nSigners {
+				signerInfoMap[signers[i].String()] = si
+			}
 		}
-		pubKeys[i] = pubKey
 
-		if i < nSigners {
-			signerInfoMap[signers[i].String()] = si
-		}
+		return DecodedTx{
+			Tx:            &tx,
+			Raw:           &raw,
+			Msgs:          msgs,
+			PubKeys:       pubKeys,
+			Signers:       signers,
+			SignerInfoMap: signerInfoMap,
+		}, nil
 	}
-
-	return DecodedTx{
-		Tx:            &tx,
-		Raw:           &raw,
-		Msgs:          msgs,
-		PubKeys:       pubKeys,
-		Signers:       signers,
-		SignerInfoMap: signerInfoMap,
-	}, nil
 }
 
 func (d DecodedTx) GetMsgs() []sdk.Msg {
@@ -144,20 +148,20 @@ func (d DecodedTx) GetSignBytes(ctx sdk.Context, acc authexported.Account) ([]by
 	}
 
 	switch modeInfo := signerInfo.ModeInfo.Sum.(type) {
-	case *sdk.ModeInfo_Single_:
+	case *types.ModeInfo_Single_:
 		switch modeInfo.Single.Mode {
-		case sdk.SignMode_SIGN_MODE_UNSPECIFIED:
+		case types.SignMode_SIGN_MODE_UNSPECIFIED:
 			return nil, fmt.Errorf("unspecified sign mode")
-		case sdk.SignMode_SIGN_MODE_DIRECT:
+		case types.SignMode_SIGN_MODE_DIRECT:
 			return DirectSignBytes(d.Raw.BodyBytes, d.Raw.AuthInfoBytes, chainID, accNum, acc.GetSequence())
-		case sdk.SignMode_SIGN_MODE_TEXTUAL:
+		case types.SignMode_SIGN_MODE_TEXTUAL:
 			return nil, fmt.Errorf("SIGN_MODE_TEXTUAL is not supported yet")
-		case sdk.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+		case types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			return auth.StdSignBytes(
 				chainID, accNum, acc.GetSequence(), auth.StdFee{Amount: d.GetFee(), Gas: d.GetGas()}, d.Msgs, d.Body.Memo,
 			), nil
 		}
-	case *sdk.ModeInfo_Multi_:
+	case *types.ModeInfo_Multi_:
 		return nil, fmt.Errorf("multisig mode info is not supported by GetSignBytes")
 	default:
 		return nil, fmt.Errorf("unexpected ModeInfo")

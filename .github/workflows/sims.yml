@@ -1,5 +1,6 @@
 name: Sims
-on: [pull_request]
+on:
+  pull_request:
 jobs:
   cleanup-runs:
     runs-on: ubuntu-latest

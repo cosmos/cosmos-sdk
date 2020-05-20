@@ -8,7 +8,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	keep "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -57,7 +56,7 @@ func TestQueryAccount(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var account exported.Account
+	var account types.AccountI
 	err2 := cdc.UnmarshalJSON(res, &account)
 	require.Nil(t, err2)
 }

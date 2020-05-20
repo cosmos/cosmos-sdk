@@ -35,12 +35,24 @@ The `x/bank` module will updated to store and index metadata by `denom`, specifi
 smallest unit -- the unit the Cosmos SDK state-machine works with. The metadata should ideally be
 extensible and serve the needs of many external consumers and even other modules (e.g. `x/ibc` or `x/nft`).
 At a minimum, the metadata type should include all units and a potential list of denomination aliases.
+
+To provide a means of extensibility, metadata may include a non-zero length list of `extensions`,
+which are simply key/value pairs. In addition, metadata may also include a non-zero length list of
+`aliases` with regard to the origin chain (e.g. `["ETH", "ether"]`). Both `extensions` and `aliases`
+may be changed via governance.
+
 As a result, we can define the type as follows:
 
 ```protobuf
 message DenomUnit {
   string denom    = 1;
   uint32 exponent = 2;  
+  repeated string aliases = 3;
+}
+
+message Extension {
+  key string = 1;
+  value string = 2;
 }
 
 message Metadata {
@@ -48,7 +60,7 @@ message Metadata {
   string base = 2;
   repeated DenomUnit denom_units = 3;
   repeated string aliases = 4;
-  repeated cosmos_sdk.v1.Coin total_supply = 5;
+  repeated Extension extensions = 5;
 }
 ```
 
@@ -62,6 +74,9 @@ As an example, the ATOM's metadata can be defined as follows:
     {
       "denom": "matom",
       "exponent": 3,
+      "aliases": [
+        "milliatom"
+      ]
     },
     {
       "denom": "atom",
@@ -69,10 +84,22 @@ As an example, the ATOM's metadata can be defined as follows:
     }
   ],
   "aliases": [
-    "UATOM",
     "microatom"
   ],
-  "total_supply": "543578243452349991"
+  "extensions": [
+    {
+      "key": "total_supply",
+      "value": "543578243452349991"
+    },
+    {
+      "key": "max_supply",
+      "value": "999999999999999999"
+    },
+    {
+      "key": "source_chain",
+      "value": "gaia"
+    }
+  ]
 }
 ```
 
@@ -81,15 +108,6 @@ As an example, the ATOM's metadata can be defined as follows:
 A client should be able to query for metadata by denom both via the CLI and REST interfaces. In
 addition, we will add handlers to these interfaces to convert from any unit to another given unit,
 as the base framework for this already exists in the Cosmos SDK.
-
-To reflect changes to the total supply of an asset, we can leverage the `x/mint` module to fetch and
-update total supply on each `BeginBlock`.
-
-Note, that aliases are not meant to necessarily refer to pegged or relayed assets on other chains,
-but rather act as aliases on the origin chain (e.g. `ETH` vs `ether`). However, they may extended to
-also suite the needs of relayed and pegged assets on other chains via IBC. Under such a situation,
-we need to rather address this concern via a more generic extensibility approach rather than trying to
-retrofit IBC-related fields. Regardless, aliases should be changed via an on-chain governance mechanism.
 
 Finally, we need to ensure metadata exists in the `GenesisState` of the `x/bank` module which is also
 indexed by the base `denom`.

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
 func TestValidateGenesis(t *testing.T) {
@@ -29,7 +29,7 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			"invalid client",
 			types.GenesisState{
-				PortID: "INVALIDPORT",
+				PortID: "(INVALIDPORT)",
 			},
 			false,
 		},

@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {

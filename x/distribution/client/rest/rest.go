@@ -50,7 +50,10 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		content := types.NewCommunityPoolSpendProposal(req.Title, req.Description, req.Recipient, req.Amount)
 
-		msg := gov.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		msg, err := gov.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

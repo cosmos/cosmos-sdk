@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -71,5 +72,18 @@ func ValidateGenesis(data GenesisState) error {
 			data.DepositParams.MinDeposit.String())
 	}
 
+	return nil
+}
+
+var _ types.UnpackInterfacesMessage = GenesisState{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, p := range data.Proposals {
+		err := p.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

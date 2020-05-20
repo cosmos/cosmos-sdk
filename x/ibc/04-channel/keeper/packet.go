@@ -99,7 +99,10 @@ func (k Keeper) SendPacket(
 
 	nextSequenceSend, found := k.GetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.ErrSequenceSendNotFound
+		return sdkerrors.Wrapf(
+			types.ErrSequenceSendNotFound,
+			"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
+		)
 	}
 
 	if packet.GetSequence() != nextSequenceSend {
@@ -247,7 +250,10 @@ func (k Keeper) PacketExecuted(
 	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
-			return types.ErrSequenceReceiveNotFound
+			return sdkerrors.Wrapf(
+				types.ErrSequenceReceiveNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
 		}
 
 		if packet.GetSequence() != nextSequenceRecv {
@@ -350,6 +356,25 @@ func (k Keeper) AcknowledgePacket(
 		packet.GetSequence(), acknowledgement,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
+	}
+
+	if channel.Ordering == types.ORDERED {
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return nil, sdkerrors.Wrapf(
+				types.ErrSequenceAckNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
+		}
+
+		if packet.GetSequence() != nextSequenceAck {
+			return nil, sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidSequence,
+				"packet sequence ≠ next ack sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceAck,
+			)
+		}
+
+		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck+1)
 	}
 
 	// log that a packet has been acknowledged

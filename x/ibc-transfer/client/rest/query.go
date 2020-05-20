@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/utils"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {

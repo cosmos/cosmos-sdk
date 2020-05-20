@@ -10,9 +10,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -46,7 +46,7 @@ func NewKeeper(
 ) Keeper {
 
 	// ensure ibc transfer module account is set
-	if addr := authKeeper.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
+	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the IBC transfer module account has not been set")
 	}
 
@@ -68,7 +68,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
 func (k Keeper) GetTransferAccount(ctx sdk.Context) authexported.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
+	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // PacketExecuted defines a wrapper function for the channel Keeper's function

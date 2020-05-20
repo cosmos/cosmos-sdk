@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -326,7 +328,10 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg := types.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
+			msg, err := types.NewMsgSubmitProposal(content, amount, cliCtx.GetFromAddress())
+			if err != nil {
+				return errors.Wrap(err, "can't create new MsgSubmitProposal")
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

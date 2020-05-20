@@ -55,22 +55,22 @@ As an example, the ATOM's metadata can be defined as follows:
 
 ```json
 {
-	"description": "The native staking token of the Cosmos Hub.",
-	"base": "uatom",
-	"denom_units": [
-		{
-			"denom": "matom",
-			"exponent": 3,
-		},
-		{
-			"denom": "atom",
-			"exponent": 6,
-		}
-	],
-	"aliases": [
-		"btcuatom",
-		"kavauatom"
-	]
+  "description": "The native staking token of the Cosmos Hub.",
+  "base": "uatom",
+  "denom_units": [
+    {
+      "denom": "matom",
+      "exponent": 3,
+    },
+    {
+      "denom": "atom",
+      "exponent": 6,
+    }
+  ],
+  "aliases": [
+    "btcuatom",
+    "kavauatom"
+  ]
 }
 ```
 

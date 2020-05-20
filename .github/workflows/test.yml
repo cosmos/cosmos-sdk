@@ -18,6 +18,11 @@ jobs:
     steps:
       - uses: actions/setup-go@v2-beta
       - uses: actions/checkout@v2
+      - name: get changed files
+        id: getfile
+        run: |
+          echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | xargs)"
+
       - uses: technote-space/get-diff-action@v1
         id: git_diff
         with:

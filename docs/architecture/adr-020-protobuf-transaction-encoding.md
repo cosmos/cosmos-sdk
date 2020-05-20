@@ -340,7 +340,7 @@ func NewCmdDoSomething(ctx context.CLIContext) *cobra.Command {
 	return &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := ctx.InitWithInput(cmd.InOrStdin())
-            // command logic...
+            msg := NewSomeMsg{...}
             tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}

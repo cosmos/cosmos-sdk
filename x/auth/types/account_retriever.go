@@ -3,26 +3,25 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
-	codec Codec
+	codec   codec.Marshaler
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(codec Codec) AccountRetriever {
+func NewAccountRetriever(codec codec.Marshaler) AccountRetriever {
 	return AccountRetriever{codec: codec}
 }
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ar AccountRetriever) GetAccount(querier context.NodeQuerier, addr sdk.AccAddress) (exported.Account, error) {
+func (ar AccountRetriever) GetAccount(querier context.NodeQuerier, addr sdk.AccAddress) (AccountI, error) {
 	account, _, err := ar.GetAccountWithHeight(querier, addr)
 	return account, err
 }
@@ -30,7 +29,7 @@ func (ar AccountRetriever) GetAccount(querier context.NodeQuerier, addr sdk.AccA
 // GetAccountWithHeight queries for an account given an address. Returns the
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
-func (ar AccountRetriever) GetAccountWithHeight(querier context.NodeQuerier, addr sdk.AccAddress) (exported.Account, int64, error) {
+func (ar AccountRetriever) GetAccountWithHeight(querier context.NodeQuerier, addr sdk.AccAddress) (AccountI, int64, error) {
 	bs, err := ar.codec.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err
@@ -41,7 +40,7 @@ func (ar AccountRetriever) GetAccountWithHeight(querier context.NodeQuerier, add
 		return nil, height, err
 	}
 
-	var account exported.Account
+	var account AccountI
 	if err := ar.codec.UnmarshalJSON(bz, &account); err != nil {
 		return nil, height, err
 	}

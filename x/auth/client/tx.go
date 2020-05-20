@@ -29,7 +29,7 @@ import (
 //
 // TODO:/XXX: Using a package-level global isn't ideal and we should consider
 // refactoring the module manager to allow passing in the correct module codec.
-var Codec authtypes.Codec
+var Codec codec.Marshaler
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {

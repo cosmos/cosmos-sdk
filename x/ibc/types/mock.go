@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 
+	ics23 "github.com/confio/ics23/go"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
@@ -29,7 +30,7 @@ func (ValidProof) GetCommitmentType() commitmentexported.Type {
 }
 
 func (proof ValidProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte,
+	specs []*ics23.ProofSpec, root commitmentexported.Root, path commitmentexported.Path, value []byte,
 ) error {
 	if bytes.Equal(root.GetHash(), proof.root.GetHash()) &&
 		path.String() == proof.path.String() &&
@@ -40,7 +41,7 @@ func (proof ValidProof) VerifyMembership(
 	return errors.New("invalid proof")
 }
 
-func (ValidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
+func (ValidProof) VerifyNonMembership(specs []*ics23.ProofSpec, root commitmentexported.Root, path commitmentexported.Path) error {
 	return nil
 }
 
@@ -57,11 +58,11 @@ func (InvalidProof) GetCommitmentType() commitmentexported.Type {
 }
 
 func (InvalidProof) VerifyMembership(
-	root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
+	specs []*ics23.ProofSpec, root commitmentexported.Root, path commitmentexported.Path, value []byte) error {
 	return errors.New("proof failed")
 }
 
-func (InvalidProof) VerifyNonMembership(root commitmentexported.Root, path commitmentexported.Path) error {
+func (InvalidProof) VerifyNonMembership(specs []*ics23.ProofSpec, root commitmentexported.Root, path commitmentexported.Path) error {
 	return errors.New("proof failed")
 }
 

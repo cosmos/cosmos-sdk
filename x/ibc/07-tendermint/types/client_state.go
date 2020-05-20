@@ -163,7 +163,8 @@ func (cs ClientState) VerifyClientConsensusState(
 	consensusState clientexported.ConsensusState,
 ) error {
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + ibctypes.ConsensusStatePath(consensusHeight)
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	mpath := commitmenttypes.NewMerklePath([]string{clientPrefixedPath})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}
@@ -197,7 +198,8 @@ func (cs ClientState) VerifyConnectionState(
 	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
+	mpath := commitmenttypes.NewMerklePath([]string{ibctypes.ConnectionPath(connectionID)})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}
@@ -230,7 +232,8 @@ func (cs ClientState) VerifyChannelState(
 	channel channelexported.ChannelI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
+	mpath := commitmenttypes.NewMerklePath([]string{ibctypes.ChannelPath(portID, channelID)})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}
@@ -263,7 +266,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
+	mpath := commitmenttypes.NewMerklePath([]string{ibctypes.PacketCommitmentPath(portID, channelID, sequence)})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}
@@ -291,7 +295,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	mpath := commitmenttypes.NewMerklePath([]string{ibctypes.PacketAcknowledgementPath(portID, channelID, sequence)})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}
@@ -319,7 +324,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	sequence uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
+	mpath := commitmenttypes.NewMerklePath([]string{ibctypes.PacketAcknowledgementPath(portID, channelID, sequence)})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}
@@ -346,7 +352,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
+	mpath := commitmenttypes.NewMerklePath([]string{ibctypes.NextSequenceRecvPath(portID, channelID)})
+	path, err := commitmenttypes.ApplyPrefix(prefix, mpath)
 	if err != nil {
 		return err
 	}

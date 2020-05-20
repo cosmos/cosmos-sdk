@@ -73,17 +73,17 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			trustingPeriod, err := time.ParseDuration(args[3])
+			trustingPeriod, err := time.ParseDuration(args[2])
 			if err != nil {
 				return err
 			}
 
-			ubdPeriod, err := time.ParseDuration(args[4])
+			ubdPeriod, err := time.ParseDuration(args[3])
 			if err != nil {
 				return err
 			}
 
-			maxClockDrift, err := time.ParseDuration(args[5])
+			maxClockDrift, err := time.ParseDuration(args[4])
 			if err != nil {
 				return err
 			}

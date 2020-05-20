@@ -51,7 +51,7 @@ func TestMigrate(t *testing.T) {
   },
   "accounts": [
     {
-      "type": "cosmos-sdk/Account",
+      "type": "cosmos-sdk/BaseAccount",
       "value": {
         "address": "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u",
         "public_key": "",

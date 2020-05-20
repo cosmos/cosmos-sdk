@@ -31,9 +31,9 @@ type (
 		GetSigners() []AccAddress
 	}
 
-	// FeeI defines an interface for an application application-defined concrete
+	// Fee defines an interface for an application application-defined concrete
 	// transaction type to be able to set and return the transaction fee.
-	FeeI interface {
+	Fee interface {
 		GetGas() uint64
 		GetAmount() Coins
 	}

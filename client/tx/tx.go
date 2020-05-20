@@ -32,7 +32,7 @@ type (
 	}
 
 	ClientFee interface {
-		sdk.FeeI
+		sdk.Fee
 		SetGas(uint64)
 		SetAmount(sdk.Coins)
 	}
@@ -54,7 +54,7 @@ type (
 		SetMsgs(...sdk.Msg) error
 		GetSignatures() []sdk.Signature
 		SetSignatures(...ClientSignature) error
-		GetFee() sdk.FeeI
+		GetFee() sdk.Fee
 		SetFee(ClientFee) error
 		GetMemo() string
 		SetMemo(string)

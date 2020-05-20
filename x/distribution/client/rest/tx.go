@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -31,7 +30,7 @@ type (
 	}
 )
 
-func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, r *mux.Router) {
+func registerTxHandlers(cliCtx context.CLIContext, r *mux.Router) {
 	// Withdraw all delegator rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
@@ -53,13 +52,13 @@ func registerTxHandlers(cliCtx context.CLIContext, m codec.Marshaler, r *mux.Rou
 	// Withdraw validator rewards and commission
 	r.HandleFunc(
 		"/distribution/validators/{validatorAddr}/rewards",
-		newWithdrawValidatorRewardsHandlerFn(cliCtx, m),
+		newWithdrawValidatorRewardsHandlerFn(cliCtx),
 	).Methods("POST")
 
 	// Fund the community pool
 	r.HandleFunc(
 		"/distribution/community_pool",
-		newFundCommunityPoolHandlerFn(cliCtx, m),
+		newFundCommunityPoolHandlerFn(cliCtx),
 	).Methods("POST")
 }
 
@@ -149,9 +148,8 @@ func newSetDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Hand
 	}
 }
 
-func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Marshaler) http.HandlerFunc {
+func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithJSONMarshaler(m)
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -178,9 +176,8 @@ func newWithdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext, m codec.Mar
 	}
 }
 
-func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext, m codec.Marshaler) http.HandlerFunc {
+func newFundCommunityPoolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx = cliCtx.WithJSONMarshaler(m)
 		var req fundCommunityPoolReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return

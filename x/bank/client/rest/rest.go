@@ -11,6 +11,8 @@ import (
 func RegisterHandlers(ctx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/bank/accounts/{address}/transfers", NewSendRequestHandlerFn(ctx)).Methods("POST")
 	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/bank/total", totalSupplyHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/bank/total/{denom}", supplyOfHandlerFn(ctx)).Methods("GET")
 }
 
 // ---------------------------------------------------------------------------

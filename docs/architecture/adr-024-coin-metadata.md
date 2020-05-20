@@ -31,7 +31,7 @@ UX and remove the requirement for making any assumptions on the unit of denomina
 
 ## Decision
 
-The `x/bank` module will updated to store and index metadata by `denom`, specifically the "base" or
+The `x/bank` module will be updated to store and index metadata by `denom`, specifically the "base" or
 smallest unit -- the unit the Cosmos SDK state-machine works with. The metadata should ideally be
 extensible and serve the needs of many external consumers and even other modules (e.g. `x/ibc` or `x/nft`).
 At a minimum, the metadata type should include all units and a potential list of denomination aliases.

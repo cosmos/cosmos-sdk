@@ -48,10 +48,10 @@ func (msg MsgTransfer) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
 	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.ErrInsufficientFunds
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
 	}
 	if !msg.Amount.IsValid() {
-		return sdkerrors.ErrInvalidCoins
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")

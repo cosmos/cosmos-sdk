@@ -18,10 +18,10 @@ func NewFungibleTokenPacketData(
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if !ftpd.Amount.IsAllPositive() {
-		return sdkerrors.ErrInsufficientFunds
+		returnsdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
 	}
 	if !ftpd.Amount.IsValid() {
-		return sdkerrors.ErrInvalidCoins
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
 	}
 	if ftpd.Sender == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")

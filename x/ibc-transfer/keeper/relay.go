@@ -24,7 +24,6 @@ func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
 	sourceChannel string,
-	destHeight uint64,
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver string,
@@ -50,7 +49,7 @@ func (k Keeper) SendTransfer(
 
 	return k.createOutgoingPacket(
 		ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel,
-		destHeight, amount, sender, receiver, timeoutHeight, timeoutTimestamp,
+		amount, sender, receiver, timeoutHeight, timeoutTimestamp,
 	)
 }
 
@@ -60,7 +59,6 @@ func (k Keeper) createOutgoingPacket(
 	seq uint64,
 	sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
-	destHeight uint64,
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver string,
@@ -143,7 +141,7 @@ func (k Keeper) createOutgoingPacket(
 		sourceChannel,
 		destinationPort,
 		destinationChannel,
-		destHeight+timeoutHeight,
+		timeoutHeight,
 		timeoutTimestamp,
 	)
 

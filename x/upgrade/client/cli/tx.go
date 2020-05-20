@@ -224,7 +224,10 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -277,7 +280,10 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg := gov.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

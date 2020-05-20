@@ -13,7 +13,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Message types for the IBC client
@@ -59,7 +58,7 @@ func NewMsgCreateClient(
 
 // Route implements sdk.Msg
 func (msg MsgCreateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -88,7 +87,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -141,7 +140,7 @@ func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpda
 
 // Route implements sdk.Msg
 func (msg MsgUpdateClient) Route() string {
-	return ibctypes.RouterKey
+	return host.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -154,7 +153,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
-	return host.DefaultClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientID)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -191,7 +190,7 @@ func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddres
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
-func (msg MsgSubmitClientMisbehaviour) Route() string { return ibctypes.RouterKey }
+func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
 func (msg MsgSubmitClientMisbehaviour) Type() string { return TypeMsgSubmitClientMisbehaviour }

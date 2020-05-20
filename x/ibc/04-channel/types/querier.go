@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // query routes supported by the IBC channel Querier
@@ -33,7 +33,7 @@ func NewChannelResponse(
 
 		Channel:     NewIdentifiedChannel(portID, channelID, channel),
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ChannelPath(portID, channelID), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -86,7 +86,7 @@ func NewPacketResponse(
 	return PacketResponse{
 		Packet:      packet,
 		Proof:       commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.PacketCommitmentPath(portID, channelID, sequence), "/")),
+		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(host.PacketCommitmentPath(portID, channelID, sequence), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -108,7 +108,7 @@ func NewRecvResponse(
 	return RecvResponse{
 		NextSequenceRecv: sequenceRecv,
 		Proof:            commitmenttypes.MerkleProof{Proof: proof},
-		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(ibctypes.NextSequenceRecvPath(portID, channelID), "/")),
+		ProofPath:        commitmenttypes.NewMerklePath(strings.Split(host.NextSequenceRecvPath(portID, channelID), "/")),
 		ProofHeight:      uint64(height),
 	}
 }

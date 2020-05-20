@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,4 +20,16 @@ type StdSignMsg struct {
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
 	return StdSignBytes(msg.ChainID, msg.AccountNumber, msg.Sequence, msg.Fee, msg.Msgs, msg.Memo)
+}
+
+var _ types.UnpackInterfacesMessage = StdSignMsg{}
+
+func (msg StdSignMsg) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, m := range msg.Msgs {
+		err := types.UnpackInterfaces(m, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

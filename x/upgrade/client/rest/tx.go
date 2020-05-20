@@ -169,7 +169,10 @@ func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 		plan := types.Plan{Name: req.UpgradeName, Time: t, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
 		content := types.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
-		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		msg, err := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}
@@ -197,7 +200,10 @@ func cancelPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		content := types.NewCancelSoftwareUpgradeProposal(req.Title, req.Description)
-		msg := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		msg, err := gov.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

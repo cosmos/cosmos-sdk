@@ -56,7 +56,7 @@ func TestQueryAccount(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	var acc types.AccountI
-	err2 := cdc.UnmarshalJSON(res, &acc)
+	var account types.AccountI
+	err2 := cdc.UnmarshalJSON(res, &account)
 	require.Nil(t, err2)
 }

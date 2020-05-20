@@ -13,5 +13,4 @@ extend google.protobuf.MessageOptions {
 
 extend google.protobuf.FieldOptions {
     string accepts_interface = 93001;
-
 }

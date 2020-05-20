@@ -89,7 +89,7 @@ func queryCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(
@@ -114,7 +114,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(

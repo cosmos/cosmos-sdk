@@ -19,7 +19,7 @@ import (
 // encoding/decoding library.
 type AccountKeeper struct {
 	key           sdk.StoreKey
-	Cdc           codec.Marshaler
+	cdc           codec.Marshaler
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
@@ -47,7 +47,7 @@ func NewAccountKeeper(
 	return AccountKeeper{
 		key:           key,
 		proto:         proto,
-		Cdc:           cdc,
+		cdc:           cdc,
 		paramSubspace: paramstore,
 		permAddrs:     permAddrs,
 	}
@@ -91,7 +91,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	} else {
 		val := gogotypes.UInt64Value{}
 
-		err := ak.Cdc.UnmarshalBinaryBare(bz, &val)
+		err := ak.cdc.UnmarshalBinaryBare(bz, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -99,7 +99,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 		accNumber = val.GetValue()
 	}
 
-	bz = ak.Cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: accNumber + 1})
+	bz = ak.cdc.MustMarshalBinaryBare(&gogotypes.UInt64Value{Value: accNumber + 1})
 	store.Set(types.GlobalAccountNumberKey, bz)
 
 	return accNumber
@@ -188,7 +188,7 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) {
-	return codec.MarshalAny(ak.Cdc, accountI)
+	return codec.MarshalAny(ak.cdc, accountI)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
@@ -196,7 +196,7 @@ func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) 
 // failure.
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	var acc types.AccountI
-	if err := codec.UnmarshalAny(ak.Cdc, &acc, bz); err != nil {
+	if err := codec.UnmarshalAny(ak.cdc, &acc, bz); err != nil {
 		return nil, err
 	}
 
@@ -206,16 +206,16 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 // UnmarshalAccountJSON returns an AccountI from JSON encoded bytes
 func (ak AccountKeeper) UnmarshalAccountJSON(bz []byte) (types.AccountI, error) {
 	var any codectypes.Any
-	if err := ak.Cdc.UnmarshalJSON(bz, &any); err != nil {
+	if err := ak.cdc.UnmarshalJSON(bz, &any); err != nil {
 		return nil, err
 	}
 
 	var acc types.AccountI
-	if err := ak.Cdc.UnpackAny(&any, &acc); err != nil {
+	if err := ak.cdc.UnpackAny(&any, &acc); err != nil {
 		return nil, err
 	}
 
 	return acc, nil
 }
 
-func (ak AccountKeeper) GetCodec() codec.Marshaler { return ak.Cdc }
+func (ak AccountKeeper) GetCodec() codec.Marshaler { return ak.cdc }

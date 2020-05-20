@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -25,6 +27,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the distribution module.
@@ -71,6 +74,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetQueryCmd returns the root query command for the distribution module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
+}
+
+// RegisterInterfaceTypes implements InterfaceModule
+func (b AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 //____________________________________________________________________________

@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/cosmos/cosmos-sdk/std"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -18,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -33,7 +34,7 @@ const (
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(
-	ctx *server.Context, depCdc *amino.Codec, cdc *std.Codec, defaultNodeHome, defaultClientHome string,
+	ctx *server.Context, depCdc *codec.Codec, cdc *std.Codec, defaultNodeHome, defaultClientHome string,
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
@@ -84,7 +85,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			}
 
 			// create concrete account type based on input parameters
-			var genAccount authexported.GenesisAccount
+			var genAccount types.GenesisAccount
 
 			balances := bank.Balance{Address: addr, Coins: coins.Sort()}
 			baseAccount := auth.NewBaseAccount(addr, nil, 0, 0)

@@ -11,10 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
+	types "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // module codec
@@ -25,8 +27,9 @@ func init() {
 }
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.InterfaceModule = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
@@ -69,6 +72,10 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 	txCmd.AddCommand(flags.PostCommands()...)
 	return txCmd
+}
+
+func (b AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // AppModule implements the sdk.AppModule interface

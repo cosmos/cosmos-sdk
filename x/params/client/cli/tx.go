@@ -80,7 +80,10 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -160,7 +163,10 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

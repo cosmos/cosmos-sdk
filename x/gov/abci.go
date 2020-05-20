@@ -54,7 +54,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 			// The proposal handler may execute state mutating logic depending
 			// on the proposal content. If the handler fails, no state mutation
 			// is written and the error message is logged.
-			err := handler(cacheCtx, proposal.Content)
+			err := handler(cacheCtx, proposal.GetContent())
 			if err == nil {
 				proposal.Status = StatusPassed
 				tagValue = types.AttributeValueProposalPassed

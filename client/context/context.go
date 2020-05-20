@@ -163,16 +163,20 @@ func (ctx CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLICont
 	return ctx
 }
 
+// InitWithFrom returns a new CLIContext re-initialized from an existing
+// CLIContext with a new from parameter
+func (ctx CLIContext) InitWithFrom(from string) CLIContext {
+	return ctx.InitWithInputAndFrom(os.Stdin, from)
+}
+
+// Init returns a new CLIContext re-initialized from an existing
+// CLIContext with parameters from the command line using Viper.
+func (ctx CLIContext) Init() CLIContext { return ctx.InitWithFrom(viper.GetString(flags.FlagFrom)) }
+
 // InitWithInput returns a new CLIContext re-initialized from an existing
 // CLIContext with a new io.Reader and from parameter
 func (ctx CLIContext) InitWithInput(input io.Reader) CLIContext {
 	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
-}
-
-// InitWithInput returns a new CLIContext re-initialized from an existing
-// CLIContext with a new from parameter
-func (ctx CLIContext) InitWithFrom(from string) CLIContext {
-	return ctx.InitWithInputAndFrom(os.Stdin, from)
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.

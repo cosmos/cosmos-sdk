@@ -13,10 +13,6 @@ import (
 // This is used to ensure that the encoded data takes up a minimal amount of
 // space after amino encoding.
 // This is not thread safe, and is not intended for concurrent usage.
-// type CompactBitArray struct {
-// 	ExtraBitsStored byte   `json:"extra_bits"` // The number of extra bits in elems.
-// 	Elems           []byte `json:"bits"`
-// }
 
 // NewCompactBitArray returns a new compact bit array.
 // It returns nil if the number of bits is zero.

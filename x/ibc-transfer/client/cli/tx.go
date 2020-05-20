@@ -27,7 +27,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "transfer [src-port] [src-channel] [receiver] [amount]",
 		Short:   "Transfer a fungible token through IBC",
-		Example: fmt.Sprintf("%s tx transfer transfer [src-port] [src-channel] [receiver] [amount]", version.ClientName),
+		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.ClientName),
 		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())

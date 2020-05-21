@@ -17,15 +17,15 @@ func CheckValidityAndUpdateState(
 	// cast the client state to solo machine
 	smClientState, ok := clientState.(ClientState)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidClientType, "light client is not from solo machine",
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidClientType, "client state type %T is not solomachine", clientState,
 		)
 	}
 
 	smHeader, ok := header.(Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
-			clienttypes.ErrInvalidHeader, "header is not from solo machine",
+			clienttypes.ErrInvalidHeader, "header type %T is not solomachine", header,
 		)
 	}
 

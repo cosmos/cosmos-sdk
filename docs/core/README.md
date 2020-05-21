@@ -6,7 +6,7 @@ parent:
 
 # Core Concepts
 
-This repository contains reference documentation on the core conepts of the Cosmos SDK. 
+This repository contains reference documentation on the core concepts of the Cosmos SDK.
 
 1. [`Baseapp`](./baseapp.md)
 2. [Transaction](./transactions.md)

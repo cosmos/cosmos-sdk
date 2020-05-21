@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	ibcsmtypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -43,7 +43,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := ibcsmtypes.NewMsgCreateClient(
+		msg := solomachinetypes.NewMsgCreateClient(
 			req.ClientID,
 			req.ConsensusState,
 		)
@@ -85,7 +85,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := ibcsmtypes.NewMsgUpdateClient(
+		msg := solomachinetypes.NewMsgUpdateClient(
 			clientID,
 			req.Header,
 		)
@@ -128,7 +128,7 @@ func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := ibcsmtypes.NewMsgSubmitClientMisbehaviour(req.Evidence, fromAddr)
+		msg := solomachinetypes.NewMsgSubmitClientMisbehaviour(req.Evidence, fromAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

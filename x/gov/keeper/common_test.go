@@ -16,7 +16,7 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
 
-	appCodec, _ := simapp.MakeCodecs()
+	appCodec, _, _ := simapp.MakeCodecs()
 	app.StakingKeeper = staking.NewKeeper(
 		appCodec,
 		app.GetKey(staking.StoreKey),

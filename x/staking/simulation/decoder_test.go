@@ -32,7 +32,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 }
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	cdc, _, _ := simapp.MakeCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	bondTime := time.Now().UTC()

@@ -11,7 +11,7 @@ import (
 
 // PubKey implements a K of N threshold multisig.
 type PubKey struct {
-	K       uint            `json:"threshold"`
+	K       uint32            `json:"threshold"`
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 
@@ -19,7 +19,7 @@ var _ crypto.PubKey = PubKey{}
 
 // NewPubKeyMultisigThreshold returns a new PubKeyMultisigThreshold.
 // Panics if len(pubkeys) < k or 0 >= k.
-func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) crypto.PubKey {
+func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) crypto.PubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}

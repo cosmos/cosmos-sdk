@@ -23,7 +23,7 @@ var (
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	cdc, _, _ := simapp.MakeCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}

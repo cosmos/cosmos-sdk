@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -143,9 +141,9 @@ func NewSimApp(
 ) *SimApp {
 
 	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
-	appCodec, cdc := MakeCodecs()
+	appCodec, _, cdc := MakeCodecs()
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appName, logger, db, SimappTxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
 
@@ -335,9 +333,7 @@ func NewSimApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
-		ante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
-		),
+		NewAnteHandler(app.AccountKeeper, app.BankKeeper, *app.IBCKeeper),
 	)
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -359,18 +355,6 @@ func NewSimApp(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
 	return app
-}
-
-// MakeCodecs constructs the *std.Codec and *codec.Codec instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
-func MakeCodecs() (*std.Codec, *codec.Codec) {
-	cdc := std.MakeCodec(ModuleBasics)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	std.RegisterInterfaces(interfaceRegistry)
-	ModuleBasics.RegisterInterfaceModules(interfaceRegistry)
-	appCodec := std.NewAppCodec(cdc, interfaceRegistry)
-	return appCodec, cdc
 }
 
 // Name returns the name of the App

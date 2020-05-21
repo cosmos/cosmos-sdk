@@ -29,7 +29,7 @@ const flagInvCheckPeriod = "inv-check-period"
 var invCheckPeriod uint
 
 func main() {
-	appCodec, cdc := simapp.MakeCodecs()
+	appCodec, _, cdc := simapp.MakeCodecs()
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)

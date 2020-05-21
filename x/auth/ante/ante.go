@@ -47,7 +47,7 @@ func NewProtoAnteHandler(
 		NewValidateSigCountDecorator(ak),
 		NewDeductFeeDecorator(ak, bankKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		NewSigVerificationDecorator(ak),
+		NewProtoSigVerificationDecorator(ak),
 		NewIncrementSequenceDecorator(ak),
 		ibcante.NewProofVerificationDecorator(ibcKeeper.ClientKeeper, ibcKeeper.ChannelKeeper), // innermost AnteDecorator
 	)

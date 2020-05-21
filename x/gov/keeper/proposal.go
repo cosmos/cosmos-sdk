@@ -32,7 +32,10 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	if err != nil {
+		return types.Proposal{}, err
+	}
 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
@@ -57,10 +60,8 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 		return types.Proposal{}, false
 	}
 
-	proposal, err := keeper.cdc.UnmarshalProposal(bz)
-	if err != nil {
-		panic(err)
-	}
+	var proposal types.Proposal
+	keeper.MustUnmarshalProposal(bz, &proposal)
 
 	return proposal, true
 }
@@ -69,10 +70,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz, err := keeper.cdc.MarshalProposal(proposal)
-	if err != nil {
-		panic(err)
-	}
+	bz := keeper.MustMarshalProposal(proposal)
 
 	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }
@@ -97,7 +95,8 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		proposal, err := keeper.cdc.UnmarshalProposal(iterator.Value())
+		var proposal types.Proposal
+		err := keeper.UnmarshalProposal(iterator.Value(), &proposal)
 		if err != nil {
 			panic(err)
 		}
@@ -126,7 +125,7 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 //
 // NOTE: If no filters are provided, all proposals will be returned in paginated
 // form.
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) []types.Proposal {
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
 	proposals := keeper.GetProposals(ctx)
 	filteredProposals := make([]types.Proposal, 0, len(proposals))
 
@@ -190,4 +189,35 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
 	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
+}
+
+func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
+	bz, err := keeper.cdc.MarshalBinaryBare(&proposal)
+	if err != nil {
+		return nil, err
+	}
+	return bz, nil
+}
+
+func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
+	err := keeper.cdc.UnmarshalBinaryBare(bz, proposal)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) []byte {
+	bz, err := keeper.MarshalProposal(proposal)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (keeper Keeper) MustUnmarshalProposal(bz []byte, proposal *types.Proposal) {
+	err := keeper.UnmarshalProposal(bz, proposal)
+	if err != nil {
+		panic(err)
+	}
 }

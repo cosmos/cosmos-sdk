@@ -24,4 +24,5 @@ var (
 	ErrFailedPacketAckAbsenceVerification     = sdkerrors.Register(SubModuleName, 17, "packet acknowledgement absence verification failed")
 	ErrFailedNextSeqRecvVerification          = sdkerrors.Register(SubModuleName, 18, "next sequence receive verification failed")
 	ErrSelfConsensusStateNotFound             = sdkerrors.Register(SubModuleName, 19, "self consensus state not found")
+	ErrTrustPeriodExpired                     = sdkerrors.Register(SubModuleName, 20, "latest trusted state has passed trusting period")
 )

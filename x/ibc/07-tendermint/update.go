@@ -1,7 +1,6 @@
 package tendermint
 
 import (
-	"errors"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -56,7 +55,10 @@ func checkValidity(
 ) error {
 	// assert trusting period has not yet passed
 	if currentTimestamp.Sub(clientState.GetLatestTimestamp()) >= clientState.TrustingPeriod {
-		return errors.New("trusting period since last client timestamp already passed")
+		return sdkerrors.Wrap(
+			clienttypes.ErrTrustPeriodExpired,
+			"latest trusted state has passed trusting period",
+		)
 	}
 
 	// assert header timestamp is not past the trusting period

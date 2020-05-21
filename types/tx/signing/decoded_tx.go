@@ -3,7 +3,7 @@ package signing
 import (
 	"fmt"
 
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
+	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"github.com/pkg/errors"
 
@@ -30,7 +30,7 @@ var _ ante.FeeTx = DecodedTx{}
 var _ ante.TxWithMemo = DecodedTx{}
 var _ ante.HasPubKeysTx = DecodedTx{}
 
-func DefaultTxDecoder(cdc codec.Marshaler, keyCodec codec2.PublicKeyCodec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc codec.Marshaler, keyCodec types2.PublicKeyCodec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw TxRaw
 		err := cdc.UnmarshalBinaryBare(txBytes, &raw)

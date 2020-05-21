@@ -72,17 +72,6 @@ func (pk PubKey) VerifyBytes(msg []byte, marshalledSig []byte) bool {
 	return true
 }
 
-type DecodedMultisignature struct {
-	ModeInfo   *txtypes.ModeInfo_Multi
-	Signatures [][]byte
-}
-
-type GetSignBytesFunc func(single *txtypes.ModeInfo_Single) ([]byte, error)
-
-type MultisigPubKey interface {
-	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool
-}
-
 func DecodeMultisignatures(bz []byte) ([][]byte, error) {
 	multisig := types.MultiSignature{}
 	err := multisig.Unmarshal(bz)
@@ -95,7 +84,7 @@ func DecodeMultisignatures(bz []byte) ([][]byte, error) {
 	return multisig.Sigs, nil
 }
 
-func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool {
+func (pk PubKey) VerifyMultisignature(getSignBytes types.GetSignBytesFunc, sig types.DecodedMultisignature) bool {
 	bitarray := sig.ModeInfo.Bitarray
 	sigs := sig.Signatures
 	size := bitarray.Size()
@@ -126,7 +115,7 @@ func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig Decoded
 					return false
 				}
 			case *txtypes.ModeInfo_Multi_:
-				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
+				nestedMultisigPk, ok := pk.PubKeys[i].(types.MultisigPubKey)
 				if !ok {
 					return false
 				}
@@ -134,7 +123,7 @@ func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig Decoded
 				if err != nil {
 					return false
 				}
-				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, DecodedMultisignature{
+				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, types.DecodedMultisignature{
 					ModeInfo:   mi.Multi,
 					Signatures: nestedSigs,
 				}) {

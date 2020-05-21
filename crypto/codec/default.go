@@ -12,14 +12,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
-type PublicKeyCodec interface {
-	Decode(key *types.PublicKey) (crypto.PubKey, error)
-	Encode(key crypto.PubKey) (*types.PublicKey, error)
-}
-
 type DefaultPublicKeyCodec struct{}
 
-var _ PublicKeyCodec = DefaultPublicKeyCodec{}
+var _ types.PublicKeyCodec = DefaultPublicKeyCodec{}
 
 func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
 	switch key := key.Sum.(type) {

@@ -52,7 +52,8 @@ func checkValidity(clientState ClientState, header Header) error {
 		sdk.Uint64ToBigEndian(header.Sequence),
 		header.NewPubKey.Bytes()...,
 	)
-	if clientState.ConsensusState.PubKey.VerifyBytes(value, header.Signature) {
+
+	if !clientState.ConsensusState.PubKey.VerifyBytes(value, header.Signature) {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidHeader,
 			"header signature verification failed",

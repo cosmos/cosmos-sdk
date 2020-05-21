@@ -13,10 +13,38 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		header  solomachinetypes.Header
 		expPass bool
 	}{
-		{"valid header", header, true},
-		{"sequence is zero", solomachinetypes.Header{0, header.Signature, header.NewPubKey}, false},
-		{"signature is empty", solomachinetypes.Header{header.Sequence, []byte{}, header.NewPubKey}, false},
-		{"public key is nil", solomachinetypes.Header{header.Sequence, header.Signature, nil}, false},
+		{
+			"valid header",
+			header,
+			true,
+		},
+		{
+			"sequence is zero",
+			solomachinetypes.Header{
+				Sequence:  0,
+				Signature: header.Signature,
+				NewPubKey: header.NewPubKey,
+			},
+			false,
+		},
+		{
+			"signature is empty",
+			solomachinetypes.Header{
+				Sequence:  header.Sequence,
+				Signature: []byte{},
+				NewPubKey: header.NewPubKey,
+			},
+			false,
+		},
+		{
+			"public key is nil",
+			solomachinetypes.Header{
+				Sequence:  header.Sequence,
+				Signature: header.Signature,
+				NewPubKey: nil,
+			},
+			false,
+		},
 	}
 
 	suite.Require().Equal(clientexported.SoloMachine, header.ClientType())
@@ -27,6 +55,5 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		} else {
 			suite.Require().Error(tc.header.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
 		}
-
 	}
 }

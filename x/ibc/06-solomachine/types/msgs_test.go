@@ -51,22 +51,3 @@ func (suite *SoloMachineTestSuite) TestMsgUpdateClientValidateBasic() {
 	}
 
 }
-
-// TODO
-func (suite *SoloMachineTestSuite) TestMsgSubmitClientMisbehaviourValidateBasic() {
-	cases := []struct {
-		name    string
-		msg     solomachinetypes.MsgSubmitClientMisbehaviour
-		expPass bool
-	}{}
-
-	for i, tc := range cases {
-		err := tc.msg.ValidateBasic()
-		if tc.expPass {
-			suite.Require().NoError(err, "Msg %d failed: %v", i, tc.name)
-		} else {
-			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.name)
-		}
-	}
-
-}

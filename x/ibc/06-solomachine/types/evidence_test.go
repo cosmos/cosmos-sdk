@@ -89,6 +89,8 @@ func (suite *SoloMachineTestSuite) TestEvidenceValidateBasic() {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
+
 		ev := suite.Evidence()
 		tc.malleateEvidence(&ev)
 

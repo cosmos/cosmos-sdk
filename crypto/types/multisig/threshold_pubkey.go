@@ -1,7 +1,12 @@
 package multisig
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // PubKey implements a K of N threshold multisig.
@@ -59,6 +64,83 @@ func (pk PubKey) VerifyBytes(msg []byte, marshalledSig []byte) bool {
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
 			if !pk.PubKeys[i].VerifyBytes(msg, sig.Sigs[sigIndex]) {
+				return false
+			}
+			sigIndex++
+		}
+	}
+	return true
+}
+
+type DecodedMultisignature struct {
+	ModeInfo   *txtypes.ModeInfo_Multi
+	Signatures [][]byte
+}
+
+type GetSignBytesFunc func(single *txtypes.ModeInfo_Single) ([]byte, error)
+
+type MultisigPubKey interface {
+	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool
+}
+
+func DecodeMultisignatures(bz []byte) ([][]byte, error) {
+	multisig := types.MultiSignature{}
+	err := multisig.Unmarshal(bz)
+	if err != nil {
+		return nil, err
+	}
+	if len(multisig.XXX_unrecognized) > 0 {
+		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
+	}
+	return multisig.Sigs, nil
+}
+
+func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool {
+	bitarray := sig.ModeInfo.Bitarray
+	sigs := sig.Signatures
+	size := bitarray.Size()
+	// ensure bit array is the correct size
+	if len(pk.PubKeys) != size {
+		return false
+	}
+	// ensure size of signature list
+	if len(sigs) < int(pk.K) || len(sigs) > size {
+		return false
+	}
+	// ensure at least k signatures are set
+	if bitarray.NumTrueBitsBefore(size) < int(pk.K) {
+		return false
+	}
+	// index in the list of signatures which we are concerned with.
+	sigIndex := 0
+	for i := 0; i < size; i++ {
+		if bitarray.GetIndex(i) {
+			mi := sig.ModeInfo.ModeInfos[sigIndex]
+			switch mi := mi.Sum.(type) {
+			case *txtypes.ModeInfo_Single_:
+				msg, err := getSignBytes(mi.Single)
+				if err != nil {
+					return false
+				}
+				if !pk.PubKeys[i].VerifyBytes(msg, sigs[sigIndex]) {
+					return false
+				}
+			case *txtypes.ModeInfo_Multi_:
+				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
+				if !ok {
+					return false
+				}
+				nestedSigs, err := DecodeMultisignatures(sigs[sigIndex])
+				if err != nil {
+					return false
+				}
+				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, DecodedMultisignature{
+					ModeInfo:   mi.Multi,
+					Signatures: nestedSigs,
+				}) {
+					return false
+				}
+			default:
 				return false
 			}
 			sigIndex++

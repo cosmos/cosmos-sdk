@@ -29,9 +29,7 @@ var _ ante.FeeTx = DecodedTx{}
 var _ ante.TxWithMemo = DecodedTx{}
 var _ ante.HasPubKeysTx = DecodedTx{}
 
-type PublicKeyDecoder func(key *cryptotypes.PublicKey) (crypto.PubKey, error)
-
-func DefaultTxDecoder(cdc codec.Marshaler, pubKeyDecoder PublicKeyDecoder) sdk.TxDecoder {
+func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw TxRaw
 		err := cdc.UnmarshalBinaryBare(txBytes, &raw)
@@ -70,7 +68,7 @@ func DefaultTxDecoder(cdc codec.Marshaler, pubKeyDecoder PublicKeyDecoder) sdk.T
 		signerInfos := tx.AuthInfo.SignerInfos
 		pubKeys := make([]crypto.PubKey, len(signerInfos))
 		for i, si := range signerInfos {
-			pubKey, err := pubKeyDecoder(si.PublicKey)
+			pubKey, err := keyCodec.Decode(si.PublicKey)
 			if err != nil {
 				return nil, errors.Wrap(err, "can't decode public key")
 			}

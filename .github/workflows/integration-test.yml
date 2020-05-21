@@ -46,7 +46,7 @@ jobs:
             .sum
       - name: build-sim
         run: |
-          make build-sim-aino
+          make build-sim-amino
         if: "env.GIT_DIFF != ''"
       - name: cli-test
         run: |

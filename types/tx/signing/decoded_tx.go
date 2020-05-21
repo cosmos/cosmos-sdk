@@ -2,7 +2,8 @@ package signing
 
 import (
 	"fmt"
-	codec2 "github.com/cosmos/cosmos-sdk/crypto/types/codec"
+
+	codec2 "github.com/cosmos/cosmos-sdk/crypto/codec"
 
 	"github.com/pkg/errors"
 

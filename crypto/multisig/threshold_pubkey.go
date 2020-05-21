@@ -11,7 +11,7 @@ import (
 
 // PubKey implements a K of N threshold multisig.
 type PubKey struct {
-	K       uint32            `json:"threshold"`
+	K       uint32          `json:"threshold"`
 	PubKeys []crypto.PubKey `json:"pubkeys"`
 }
 

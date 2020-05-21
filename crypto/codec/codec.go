@@ -2,8 +2,9 @@ package codec
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 
 	"github.com/tendermint/tendermint/crypto"
 	ed255192 "github.com/tendermint/tendermint/crypto/ed25519"

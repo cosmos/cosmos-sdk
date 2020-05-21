@@ -89,9 +89,11 @@ func NewCLIContextWithInput(input io.Reader) CLIContext {
 func (ctx CLIContext) InitWithInputAndFrom(input io.Reader, from string) CLIContext {
 	input = bufio.NewReader(input)
 
-	var nodeURI string
-	var rpc rpcclient.Client
-	var err error
+	var (
+		nodeURI string
+		rpc     rpcclient.Client
+		err     error
+	)
 
 	offline := viper.GetBool(flags.FlagOffline)
 	if !offline {

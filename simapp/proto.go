@@ -1,4 +1,4 @@
-// +build !amino_test
+// +build !test_amino
 
 package simapp
 

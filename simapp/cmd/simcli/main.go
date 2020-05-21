@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
@@ -21,7 +20,6 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
@@ -118,12 +116,7 @@ func txCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cliCtx := context.CLIContext{}
-	cliCtx = cliCtx.
-		WithJSONMarshaler(appCodec).
-		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
-		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
-		WithCodec(cdc)
+	cliCtx := MakeTxCLIContext()
 
 	txCmd.AddCommand(
 		bankcmd.NewSendTxCmd(cliCtx),

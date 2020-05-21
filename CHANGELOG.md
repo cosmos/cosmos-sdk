@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.38.4] - TBD
+
+### Bug Fixes
+
+* (x/auth) [\#5950](https://github.com/cosmos/cosmos-sdk/pull/5950) Fix `IncrementSequenceDecorator` to use is `IsReCheckTx` instead of `IsCheckTx` to allow account sequence incrementing.
+
 ## [v0.38.3] - 2020-04-09
 
 * (tendermint) Bump Tendermint version to [v0.33.3](https://github.com/tendermint/tendermint/releases/tag/v0.33.3).

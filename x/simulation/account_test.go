@@ -65,6 +65,7 @@ func TestRandomFees(t *testing.T) {
 		{"0 coins", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), sdk.NewInt64Coin("bbb", 5)), false, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := simulation.RandomFees(r, sdk.Context{}, tt.spendableCoins)
 			if (err != nil) != tt.wantErr {

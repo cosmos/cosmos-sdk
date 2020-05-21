@@ -50,7 +50,7 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 // GetProposalContents returns each module's proposal content generator function
 // with their default operation weight and key.
 func (sm *SimulationManager) GetProposalContents(simState SimulationState) []simulation.WeightedProposalContent {
-	var wContents []simulation.WeightedProposalContent
+	var wContents []simulation.WeightedProposalContent //nolint:prealloc
 	for _, module := range sm.Modules {
 		wContents = append(wContents, module.ProposalContents(simState)...)
 	}
@@ -87,7 +87,7 @@ func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []si
 
 // WeightedOperations returns all the modules' weighted operations of an application
 func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simulation.WeightedOperation {
-	var wOps []simulation.WeightedOperation
+	var wOps []simulation.WeightedOperation //nolint:prealloc
 	for _, module := range sm.Modules {
 		wOps = append(wOps, module.WeightedOperations(simState)...)
 	}

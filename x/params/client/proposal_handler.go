@@ -6,5 +6,5 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/client/rest"
 )
 
-// param change proposal handler
+// ProposalHandler handles param change proposals
 var ProposalHandler = govclient.NewProposalHandler(cli.GetCmdSubmitProposal, rest.ProposalRESTHandler)

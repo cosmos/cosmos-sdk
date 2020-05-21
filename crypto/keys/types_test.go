@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,7 +16,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
 	copy(tmpKey[:], bz)
 
-	lInfo := newLedgerInfo("some_name", tmpKey, *hd.NewFundraiserParams(5, types.CoinType, 1), Secp256k1)
+	lInfo := newLedgerInfo("some_name", tmpKey, *hd.NewFundraiserParams(5, sdk.CoinType, 1), Secp256k1)
 	assert.Equal(t, TypeLedger, lInfo.GetType())
 
 	path, err := lInfo.GetPath()
@@ -25,7 +24,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	assert.Equal(t, "44'/118'/5'/0/1", path.String())
 	assert.Equal(t,
 		"cosmospub1addwnpepqddddqg2glc8x4fl7vxjlnr7p5a3czm5kcdp4239sg6yqdc4rc2r5wmxv8p",
-		types.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, lInfo.GetPubKey()))
+		sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, lInfo.GetPubKey()))
 
 	// Serialize and restore
 	serialized := marshalInfo(lInfo)

@@ -2,7 +2,6 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	err "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -67,7 +66,7 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 
 	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
-		return ctx, err.Wrapf(err.ErrMemoTooLarge,
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
 			"maximum number of characters is %d but received %d characters",
 			params.MaxMemoCharacters, memoLength,
 		)

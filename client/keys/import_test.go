@@ -42,7 +42,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 =f3l4
 -----END TENDERMINT PRIVATE KEY-----
 `
-	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
+	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0600))
 
 	// Now enter password
 	if runningUnattended {

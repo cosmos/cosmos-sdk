@@ -85,7 +85,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(
-	r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+	r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper, // nolint:interfacer
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
@@ -219,7 +219,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
 func sendMsgMultiSend(
-	r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+	r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper, // nolint:interfacer
 	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
 ) error {
 
@@ -269,7 +269,7 @@ func sendMsgMultiSend(
 // randomSendFields returns the sender and recipient simulation accounts as well
 // as the transferred amount.
 func randomSendFields(
-	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper,
+	r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper, // nolint:interfacer
 ) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
 
 	simAccount, _ := simulation.RandomAcc(r, accs)

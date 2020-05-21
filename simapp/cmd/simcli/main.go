@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	appCodec, _, cdc = simapp.MakeCodecs()
+	appCodec, interfaceRegistry, cdc = simapp.MakeCodecs()
 )
 
 func init() {

@@ -7,7 +7,7 @@ import "github.com/cosmos/cosmos-sdk/types"
 // for signing.
 type AccountRetriever interface {
 	EnsureExists(nodeQuerier NodeQuerier, addr types.AccAddress) error
-	GetAccountNumberSequence(nodeQuerier NodeQuerier, addr types.AccAddress) (uint64, uint64, error)
+	GetAccountNumberSequence(nodeQuerier NodeQuerier, addr types.AccAddress) (accNum uint64, accSeq uint64, err error)
 }
 
 // NodeQuerier is an interface that is satisfied by types that provide the QueryWithData method

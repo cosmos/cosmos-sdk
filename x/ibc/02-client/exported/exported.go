@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -188,7 +189,7 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 
 	clientType := ClientTypeFromString(s)
 	if clientType == 0 {
-		return fmt.Errorf("invalid client type '%s'", s)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid client type '%s'", s)
 	}
 
 	*ct = clientType

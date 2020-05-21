@@ -102,6 +102,8 @@ ALL legacy code should use `*codec.Codec` instead of `*amino.Codec` directly
 * (x/gov) [\#6147](https://github.com/cosmos/cosmos-sdk/pull/6147) The `Content` field on `Proposal` and `MsgSubmitProposal`
 is now `Any` in concordance with [ADR 019](docs/architecture/adr-019-protobuf-state-encoding.md) and `GetContent` should now
 be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposal` constructor now may return an `error`
+* (modules) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) `AppModuleBasic.GetTxCmd` now takes a single `CLIContext` parameter.
+* (x/auth) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) All `AccountRetriever` methods now take `NodeQuerier` as a parameter instead of as a struct member.
 
 ### Features
 

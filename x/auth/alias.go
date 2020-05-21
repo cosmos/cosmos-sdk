@@ -82,7 +82,6 @@ type (
 	SignatureVerificationGasConsumer = ante.SignatureVerificationGasConsumer
 	AccountKeeper                    = keeper.AccountKeeper
 	BaseAccount                      = types.BaseAccount
-	NodeQuerier                      = types.NodeQuerier
 	AccountRetriever                 = types.AccountRetriever
 	GenesisState                     = types.GenesisState
 	Params                           = types.Params

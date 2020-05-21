@@ -56,8 +56,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(cdc)
+func (b AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.NewTxCmd(ctx)
 }
 
 // GetQueryCmd returns no root query command for the crisis module.

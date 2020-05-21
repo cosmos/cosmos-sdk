@@ -4,7 +4,6 @@ v    Before smashing the submit button please review the checkboxes.
 v    If a checkbox is n/a - please still include it but + a little note why
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
-closes: #XXXX
 
 ## Description
 
@@ -12,6 +11,7 @@ closes: #XXXX
 are the most critical to review.
 -->
 
+closes: #XXXX
 
 ---
 

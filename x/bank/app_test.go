@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -93,7 +93,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 		Address: addr1,
 	}
 
-	genAccs := []authexported.GenesisAccount{acc}
+	genAccs := []authtypes.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -161,7 +161,7 @@ func TestSendToModuleAcc(t *testing.T) {
 				Address: test.msg.FromAddress,
 			}
 
-			genAccs := []authexported.GenesisAccount{acc}
+			genAccs := []authtypes.GenesisAccount{acc}
 			app := simapp.SetupWithGenesisAccounts(genAccs)
 			ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -202,7 +202,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		Address: addr1,
 	}
 
-	genAccs := []authexported.GenesisAccount{acc}
+	genAccs := []authtypes.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -269,7 +269,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 		Address: addr2,
 	}
 
-	genAccs := []authexported.GenesisAccount{acc1, acc2}
+	genAccs := []authtypes.GenesisAccount{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -319,7 +319,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 		Address: addr4,
 	}
 
-	genAccs := []authexported.GenesisAccount{acc1, acc2, acc4}
+	genAccs := []authtypes.GenesisAccount{acc1, acc2, acc4}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 
@@ -368,7 +368,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	err := acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
-	genAccs := []authexported.GenesisAccount{acc1, acc2}
+	genAccs := []authtypes.GenesisAccount{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 

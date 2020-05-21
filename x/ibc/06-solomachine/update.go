@@ -24,7 +24,7 @@ func CheckValidityAndUpdateState(
 
 	smHeader, ok := header.(Header)
 	if !ok {
-		return nil, nil, sdkerrors.Wrap(
+		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader, "header type %T is not solomachine", header,
 		)
 	}

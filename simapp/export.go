@@ -27,8 +27,8 @@ func (app *SimApp) ExportAppStateAndValidators(
 		app.prepForZeroHeightGenesis(ctx, jailWhiteList)
 	}
 
-	genState := app.mm.ExportGenesis(ctx, app.cdc)
-	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
+	genState := app.mm.ExportGenesis(ctx, app.amino)
+	appState, err = codec.MarshalJSONIndent(app.amino, genState)
 	if err != nil {
 		return nil, nil, nil, err
 	}

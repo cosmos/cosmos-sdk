@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ codectypes.UnpackInterfacesMessage = &Tx{}
@@ -20,23 +19,8 @@ func (m *SignDoc) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
-		var msg Msg
+		var msg sdk.Msg
 		err := unpacker.UnpackAny(any, &msg)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubkey crypto.PubKey
-	return unpacker.UnpackAny(m.PublicKey, &pubkey)
-}
-
-func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, si := range m.SignerInfos {
-		err := si.UnpackInterfaces(unpacker)
 		if err != nil {
 			return err
 		}

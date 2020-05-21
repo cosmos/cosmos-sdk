@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	types2 "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -12,7 +13,7 @@ import (
 )
 
 var (
-	_ TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
+	_ types2.TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
@@ -38,12 +39,6 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	return next(ctx, tx, simulate)
 }
 
-// Tx must have GetMemo() method to use ValidateMemoDecorator
-type TxWithMemo interface {
-	sdk.Tx
-	GetMemo() string
-}
-
 // ValidateMemoDecorator will validate memo given the parameters passed in
 // If memo is too large decorator returns with error, otherwise call next AnteHandler
 // CONTRACT: Tx must implement TxWithMemo interface
@@ -58,7 +53,7 @@ func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
 }
 
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	memoTx, ok := tx.(TxWithMemo)
+	memoTx, ok := tx.(types2.TxWithMemo)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -96,7 +91,7 @@ func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator
 }
 
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(types2.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}

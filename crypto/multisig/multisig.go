@@ -1,4 +1,4 @@
-package types
+package multisig
 
 import types "github.com/cosmos/cosmos-sdk/types/tx"
 

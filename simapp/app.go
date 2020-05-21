@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -94,8 +93,8 @@ var _ App = (*SimApp)(nil)
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
-	cdc      *codec.Codec
-	appCodec *std.Codec
+	amino     *codec.Codec
+	marshaler codec.Marshaler
 
 	invCheckPeriod uint
 
@@ -140,7 +139,7 @@ func NewSimApp(
 	homePath string, invCheckPeriod uint, baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 
-	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
+	// TODO: Remove amino in favor of marshaler once all modules are migrated.
 	appCodec, _, cdc := MakeCodecs()
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, SimappTxDecoder(), baseAppOptions...)
@@ -158,8 +157,8 @@ func NewSimApp(
 
 	app := &SimApp{
 		BaseApp:        bApp,
-		cdc:            cdc,
-		appCodec:       appCodec,
+		amino:          cdc,
+		marshaler:      appCodec,
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
@@ -233,7 +232,7 @@ func NewSimApp(
 	// TODO: remove amino codec dependency once Tendermint version is upgraded with
 	// protobuf changes
 	app.IBCKeeper = ibc.NewKeeper(
-		app.cdc, appCodec, keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
+		app.amino, appCodec, keys[ibc.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	// Create Transfer Keepers
@@ -373,8 +372,8 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
-	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
-	return app.mm.InitGenesis(ctx, app.cdc, genesisState)
+	app.amino.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
+	return app.mm.InitGenesis(ctx, app.amino, genesisState)
 }
 
 // LoadHeight loads a particular height
@@ -407,15 +406,15 @@ func (app *SimApp) BlacklistedAccAddrs() map[string]bool {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SimApp) Codec() *codec.Codec {
-	return app.cdc
+	return app.amino
 }
 
 // AppCodec returns SimApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SimApp) AppCodec() *std.Codec {
-	return app.appCodec
+func (app *SimApp) AppCodec() codec.Marshaler {
+	return app.marshaler
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

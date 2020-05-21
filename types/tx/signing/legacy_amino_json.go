@@ -2,7 +2,7 @@ package signing
 
 import (
 	types "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type LegacyAminoJSONHandler struct{}

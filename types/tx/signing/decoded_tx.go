@@ -3,17 +3,16 @@ package signing
 import (
 	"fmt"
 
-	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	antetypes "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -26,11 +25,11 @@ type DecodedTx struct {
 }
 
 var _ sdk.Tx = DecodedTx{}
-var _ ante.FeeTx = DecodedTx{}
-var _ ante.TxWithMemo = DecodedTx{}
-var _ ante.HasPubKeysTx = DecodedTx{}
+var _ antetypes.FeeTx = DecodedTx{}
+var _ antetypes.TxWithMemo = DecodedTx{}
+var _ antetypes.HasPubKeysTx = DecodedTx{}
 
-func DefaultTxDecoder(cdc codec.Marshaler, keyCodec types2.PublicKeyCodec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc codec.Marshaler, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw TxRaw
 		err := cdc.UnmarshalBinaryBare(txBytes, &raw)

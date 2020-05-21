@@ -3,15 +3,13 @@ package ante
 import (
 	"fmt"
 
-	types2 "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/multisig"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type ProtoSigVerificationDecorator struct {
@@ -79,7 +77,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
 			}
 		case *types.ModeInfo_Multi_:
-			multisigPubKey, ok := pubKey.(types2.MultisigPubKey)
+			multisigPubKey, ok := pubKey.(multisig.MultisigPubKey)
 			if !ok {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "key is not a multisig pubkey, but ModeInfo.Multi is used")
 			}
@@ -90,7 +88,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 					return ctx, sdkerrors.Wrap(err, "cannot decode MultiSignature")
 				}
 
-				decodedMultisig := types2.DecodedMultisignature{
+				decodedMultisig := multisig.DecodedMultisignature{
 					ModeInfo:   mi.Multi,
 					Signatures: multiSigs,
 				}

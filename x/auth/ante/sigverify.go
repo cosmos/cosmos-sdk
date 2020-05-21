@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 
+	types2 "github.com/cosmos/cosmos-sdk/x/auth/ante/types"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -20,7 +22,7 @@ var (
 	simSecp256k1Pubkey secp256k1.PubKeySecp256k1
 	simSecp256k1Sig    [64]byte
 
-	_ SigVerifiableTx = (*types.StdTx)(nil) // assert StdTx implements SigVerifiableTx
+	_ types2.SigVerifiableTx = (*types.StdTx)(nil) // assert StdTx implements SigVerifiableTx
 )
 
 func init() {
@@ -33,20 +35,6 @@ func init() {
 // consume gas when verifying signatures and also to accept or reject different types of pubkeys
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error
-
-// SigVerifiableTx defines a Tx interface for all signature verification decorators
-type SigVerifiableTx interface {
-	sdk.Tx
-	HasPubKeysTx
-	GetSignatures() [][]byte
-	GetSignBytes(ctx sdk.Context, acc types.AccountI) []byte
-}
-
-type HasPubKeysTx interface {
-	sdk.Tx
-	GetSigners() []sdk.AccAddress
-	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-}
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
 // PubKeys must be set in context for all signers before any other sigverify decorators run
@@ -62,7 +50,7 @@ func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
 }
 
 func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(HasPubKeysTx)
+	sigTx, ok := tx.(types2.HasPubKeysTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
@@ -119,7 +107,7 @@ func NewSigGasConsumeDecorator(ak AccountKeeper, sigGasConsumer SignatureVerific
 }
 
 func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(types2.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -176,7 +164,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
 	}
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(types2.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -244,7 +232,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		return next(ctx, tx, simulate)
 	}
 
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(types2.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -277,7 +265,7 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 }
 
 func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(types2.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}

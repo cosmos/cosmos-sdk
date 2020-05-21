@@ -23,7 +23,7 @@ func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) crypto.PubKey
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
-	if len(pubkeys) < k {
+	if len(pubkeys) < int(k) {
 		panic("threshold k of n multisignature: len(pubkeys) < k")
 	}
 	for _, pubkey := range pubkeys {
@@ -31,7 +31,7 @@ func NewPubKeyMultisigThreshold(k uint32, pubkeys []crypto.PubKey) crypto.PubKey
 			panic("nil pubkey")
 		}
 	}
-	return PubKey{uint(k), pubkeys}
+	return PubKey{k, pubkeys}
 }
 
 // VerifyBytes expects sig to be an amino encoded version of a MultiSignature.
@@ -84,7 +84,7 @@ func DecodeMultisignatures(bz []byte) ([][]byte, error) {
 	return multisig.Sigs, nil
 }
 
-func (pk PubKey) VerifyMultisignature(getSignBytes types.GetSignBytesFunc, sig types.DecodedMultisignature) bool {
+func (pk PubKey) VerifyMultisignature(getSignBytes GetSignBytesFunc, sig DecodedMultisignature) bool {
 	bitarray := sig.ModeInfo.Bitarray
 	sigs := sig.Signatures
 	size := bitarray.Size()
@@ -115,7 +115,7 @@ func (pk PubKey) VerifyMultisignature(getSignBytes types.GetSignBytesFunc, sig t
 					return false
 				}
 			case *txtypes.ModeInfo_Multi_:
-				nestedMultisigPk, ok := pk.PubKeys[i].(types.MultisigPubKey)
+				nestedMultisigPk, ok := pk.PubKeys[i].(MultisigPubKey)
 				if !ok {
 					return false
 				}
@@ -123,7 +123,7 @@ func (pk PubKey) VerifyMultisignature(getSignBytes types.GetSignBytesFunc, sig t
 				if err != nil {
 					return false
 				}
-				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, types.DecodedMultisignature{
+				if !nestedMultisigPk.VerifyMultisignature(getSignBytes, DecodedMultisignature{
 					ModeInfo:   mi.Multi,
 					Signatures: nestedSigs,
 				}) {

@@ -37,10 +37,15 @@ type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pub
 // SigVerifiableTx defines a Tx interface for all signature verification decorators
 type SigVerifiableTx interface {
 	sdk.Tx
+	HasPubKeysTx
 	GetSignatures() [][]byte
+	GetSignBytes(ctx sdk.Context, acc types.AccountI) []byte
+}
+
+type HasPubKeysTx interface {
+	sdk.Tx
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
-	GetSignBytes(ctx sdk.Context, acc types.AccountI) []byte
 }
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
@@ -57,7 +62,7 @@ func NewSetPubKeyDecorator(ak AccountKeeper) SetPubKeyDecorator {
 }
 
 func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(HasPubKeysTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}

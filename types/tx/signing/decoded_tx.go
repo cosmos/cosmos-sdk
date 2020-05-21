@@ -1,35 +1,37 @@
-package raw
+package signing
 
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	types "github.com/cosmos/cosmos-sdk/types/tx"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/pkg/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	types "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type DecodedTx struct {
 	*types.Tx
-	Raw           *TxRaw
-	Msgs          []sdk.Msg
-	PubKeys       []crypto.PubKey
-	Signers       []sdk.AccAddress
-	SignerInfoMap map[string]*types.SignerInfo
+	Raw     *TxRaw
+	Msgs    []sdk.Msg
+	PubKeys []crypto.PubKey
+	Signers []sdk.AccAddress
 }
 
 var _ sdk.Tx = DecodedTx{}
 var _ ante.FeeTx = DecodedTx{}
 var _ ante.TxWithMemo = DecodedTx{}
+var _ ante.HasPubKeysTx = DecodedTx{}
 
-func DefaultTxDecoder(cdc codec.Marshaler) sdk.TxDecoder {
+type PublicKeyDecoder func(key *cryptotypes.PublicKey) (crypto.PubKey, error)
+
+func DefaultTxDecoder(cdc codec.Marshaler, pubKeyDecoder PublicKeyDecoder) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw TxRaw
 		err := cdc.UnmarshalBinaryBare(txBytes, &raw)
@@ -65,30 +67,22 @@ func DefaultTxDecoder(cdc codec.Marshaler) sdk.TxDecoder {
 			}
 		}
 
-		nSigners := len(signers)
 		signerInfos := tx.AuthInfo.SignerInfos
-		signerInfoMap := map[string]*types.SignerInfo{}
 		pubKeys := make([]crypto.PubKey, len(signerInfos))
 		for i, si := range signerInfos {
-			any := si.PublicKey
-			pubKey, ok := any.GetCachedValue().(crypto.PubKey)
-			if !ok {
-				return nil, fmt.Errorf("can't decode PublicKey from %+v", any)
+			pubKey, err := pubKeyDecoder(si.PublicKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "can't decode public key")
 			}
 			pubKeys[i] = pubKey
-
-			if i < nSigners {
-				signerInfoMap[signers[i].String()] = si
-			}
 		}
 
 		return DecodedTx{
-			Tx:            &tx,
-			Raw:           &raw,
-			Msgs:          msgs,
-			PubKeys:       pubKeys,
-			Signers:       signers,
-			SignerInfoMap: signerInfoMap,
+			Tx:      &tx,
+			Raw:     &raw,
+			Msgs:    msgs,
+			PubKeys: pubKeys,
+			Signers: signers,
 		}, nil
 	}
 }
@@ -131,53 +125,6 @@ func (d DecodedTx) GetSigners() []sdk.AccAddress {
 
 func (d DecodedTx) GetPubKeys() []crypto.PubKey {
 	return d.PubKeys
-}
-
-func (d DecodedTx) GetSignBytes(ctx sdk.Context, acc authexported.Account) ([]byte, error) {
-	address := acc.GetAddress()
-	signerInfo, ok := d.SignerInfoMap[address.String()]
-	if !ok {
-		return nil, fmt.Errorf("missing SignerInfo for address %s", address.String())
-	}
-
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
-	var accNum uint64
-	if !genesis {
-		accNum = acc.GetAccountNumber()
-	}
-
-	switch modeInfo := signerInfo.ModeInfo.Sum.(type) {
-	case *types.ModeInfo_Single_:
-		switch modeInfo.Single.Mode {
-		case types.SignMode_SIGN_MODE_UNSPECIFIED:
-			return nil, fmt.Errorf("unspecified sign mode")
-		case types.SignMode_SIGN_MODE_DIRECT:
-			return DirectSignBytes(d.Raw.BodyBytes, d.Raw.AuthInfoBytes, chainID, accNum, acc.GetSequence())
-		case types.SignMode_SIGN_MODE_TEXTUAL:
-			return nil, fmt.Errorf("SIGN_MODE_TEXTUAL is not supported yet")
-		case types.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-			return auth.StdSignBytes(
-				chainID, accNum, acc.GetSequence(), auth.StdFee{Amount: d.GetFee(), Gas: d.GetGas()}, d.Msgs, d.Body.Memo,
-			), nil
-		}
-	case *types.ModeInfo_Multi_:
-		return nil, fmt.Errorf("multisig mode info is not supported by GetSignBytes")
-	default:
-		return nil, fmt.Errorf("unexpected ModeInfo")
-	}
-	return nil, fmt.Errorf("unexpected")
-}
-
-func DirectSignBytes(bodyBz, authInfoBz []byte, chainID string, accnum, sequence uint64) ([]byte, error) {
-	signDoc := SignDocRaw{
-		BodyBytes:       bodyBz,
-		AuthInfoBytes:   authInfoBz,
-		ChainId:         chainID,
-		AccountNumber:   accnum,
-		AccountSequence: sequence,
-	}
-	return signDoc.Marshal()
 }
 
 func (d DecodedTx) GetGas() uint64 {

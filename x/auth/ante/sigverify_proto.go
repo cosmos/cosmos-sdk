@@ -6,17 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/raw"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
-
-type SignModeVerifier interface {
-	GetSignBytes(tx raw.DecodedTx) ([]byte, error)
-}
 
 type ProtoSigVerificationDecorator struct {
 	ak                AccountKeeper
-	signModeVerifiers map[types.SignMode]SignModeVerifier
+	signModeVerifiers map[types.SignMode]signing.SignModeHandler
 }
 
 func NewProtoSigVerificationDecorator(ak AccountKeeper) ProtoSigVerificationDecorator {
@@ -30,7 +26,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
 	}
-	sigTx, ok := tx.(raw.DecodedTx)
+	sigTx, ok := tx.(signing.DecodedTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -42,32 +38,7 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signerAddrs := sigTx.GetSigners()
-	signerAccs := make([]exported.Account, len(signerAddrs))
-
-	for _, si := range sigTx.AuthInfo.SignerInfos {
-		switch mi := si.ModeInfo.Sum.(type) {
-		case *types.ModeInfo_Single_:
-			verifier, found := svd.signModeVerifiers[mi.Single.Mode]
-			if !found {
-				return ctx, fmt.Errorf("can't verify sign mode %s", mi.Single.Mode.String())
-			}
-			bz, err := verifier.GetSignBytes(sigTx)
-			if err != nil {
-				return ctx, err
-			}
-			// retrieve pubkey
-			pubKey := signerAccs[i].GetPubKey()
-			if !simulate && pubKey == nil {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
-			}
-
-			// verify signature
-			if !simulate && !pubKey.VerifyBytes(signBytes, sig) {
-				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
-			}
-		case *types.ModeInfo_Multi_:
-		}
-	}
+	signerAccs := make([]auth.AccountI, len(signerAddrs))
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
@@ -75,13 +46,45 @@ func (svd ProtoSigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 	}
 
 	for i, sig := range sigs {
-		signerAccs[i], err = GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		var signBytes []byte
+
+		signerAcc, err := GetSignerAcc(ctx, svd.ak, signerAddrs[i])
 		if err != nil {
 			return ctx, err
 		}
 
-		// retrieve signBytes of tx
-		signBytes := sigTx.GetSignBytes(ctx, signerAccs[i])
+		signerAccs[i] = signerAcc
+
+		signerInfo := sigTx.AuthInfo.SignerInfos[i]
+
+		switch mi := signerInfo.ModeInfo.Sum.(type) {
+		case *types.ModeInfo_Single_:
+			single := mi.Single
+			verifier, found := svd.signModeVerifiers[single.Mode]
+			if !found {
+				return ctx, fmt.Errorf("can't verify sign mode %s", single.Mode.String())
+			}
+			genesis := ctx.BlockHeight() == 0
+			var accNum uint64
+			if !genesis {
+				accNum = signerAcc.GetAccountNumber()
+			}
+			data := signing.SigningData{
+				ModeInfo:        single,
+				PublicKey:       signerAcc.GetPubKey(),
+				ChainID:         ctx.ChainID(),
+				AccountNumber:   accNum,
+				AccountSequence: signerAcc.GetSequence(),
+			}
+			signBytes, err = verifier.GetSignBytes(data, sigTx)
+			if err != nil {
+				return ctx, err
+			}
+		case *types.ModeInfo_Multi_:
+			panic("TODO: can't handle multisignatures yet")
+		default:
+			panic("unexpected ModeInfo type")
+		}
 
 		// retrieve pubkey
 		pubKey := signerAccs[i].GetPubKey()

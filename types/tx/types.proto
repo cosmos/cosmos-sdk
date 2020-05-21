@@ -81,7 +81,7 @@ message AuthInfo {
 message SignerInfo {
   // public_key is the public key of the signer. It is optional for accounts
   // that already exist in state
-  google.protobuf.Any public_key = 1;
+  cosmos_sdk.crypto.v1.PublicKey public_key = 1;
 
   // mode_info describes the signing mode of the signer and is a nested
   // structure to support nested multisig pubkey's

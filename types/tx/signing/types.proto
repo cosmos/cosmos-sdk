@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package cosmos_sdk.tx.raw.v1;
+package cosmos_sdk.tx.signing.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/types/tx/raw";
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
 // TxRaw is using for transaction decoding and verification
 message TxRaw {

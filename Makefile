@@ -31,6 +31,11 @@ build-sim: go.sum
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simd
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/cmd/simcli
 
+build-sim-amino: go.sum
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -tags test_amino -o $(BUILDDIR) ./simapp/cmd/simd
+	go build -mod=readonly $(BUILD_FLAGS) -tags test_amino -o $(BUILDDIR) ./simapp/cmd/simcli
+
 .PHONY: \
  build \
  build-sim
@@ -125,6 +130,9 @@ test-race:
 
 test-integration: build-sim
 	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags='ledger test_ledger_mock cli_test' -run ^TestCLI `go list ./.../cli/...`
+
+test-integration-amino: build-sim-amino
+	BUILDDIR=$(BUILDDIR) go test -mod=readonly -p 4 -tags='ledger test_ledger_mock cli_test test_amino' -run ^TestCLI `go list ./.../cli/...`
 
 .PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 

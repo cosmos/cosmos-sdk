@@ -14,7 +14,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		expPass bool
 	}{
 		{"valid header", header, true},
-		{"sequence is zero", solomachinetypes.Header{zero, header.Signature, header.NewPubKey}, false},
+		{"sequence is zero", solomachinetypes.Header{0, header.Signature, header.NewPubKey}, false},
 		{"signature is empty", solomachinetypes.Header{header.Sequence, []byte{}, header.NewPubKey}, false},
 		{"public key is nil", solomachinetypes.Header{header.Sequence, header.Signature, nil}, false},
 	}

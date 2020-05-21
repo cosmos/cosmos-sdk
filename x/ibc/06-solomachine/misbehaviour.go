@@ -10,29 +10,31 @@ import (
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not the currently registered
-// public key signed over two different messages with the same sequence.
+// public key signed over two different messages with the same sequence. If this is true
+// the client state is updated to a frozen status.
 func CheckMisbehaviourAndUpdateState(
 	clientState clientexported.ClientState,
 	_ clientexported.ConsensusState,
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
+
 	// cast the interface to specific types before checking for misbehaviour
 	smClientState, ok := clientState.(ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not solo machine")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "client state type %T is not solo machine", clientState)
 	}
 
 	if smClientState.IsFrozen() {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "client is already frozen")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrClientFrozen, "client is already frozen")
 	}
 
 	evidence, ok := misbehaviour.(Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not solo machine")
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "evidence type %T is not solo machine", misbehaviour)
 	}
 
 	if err := checkMisbehaviour(smClientState, evidence); err != nil {
-		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
+		return nil, err
 	}
 
 	smClientState.Frozen = true

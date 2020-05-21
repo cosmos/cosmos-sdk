@@ -59,7 +59,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			func() {
 				clientState = suite.ClientState()
 
-				// store in tmp var before assigning to interface type
+				// store in temp before assigning to interface type
 				ev := suite.Evidence()
 
 				msg := []byte("DATA ONE")
@@ -78,7 +78,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			func() {
 				clientState = suite.ClientState()
 
-				// store in tmp var before assigning to interface type
+				// store in temp before assigning to interface type
 				ev := suite.Evidence()
 
 				msg := []byte("DATA TWO")
@@ -97,7 +97,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			func() {
 				clientState = suite.ClientState()
 
-				// store in tmp var before assigning to interface type
+				// store in temp before assigning to interface type
 				ev := suite.Evidence()
 
 				// Signature One

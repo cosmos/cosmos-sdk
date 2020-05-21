@@ -28,7 +28,6 @@ type SoloMachineTestSuite struct {
 	privKey  crypto.PrivKey
 	sequence uint64
 	clientID string
-	now      time.Time
 }
 
 func (suite *SoloMachineTestSuite) SetupTest() {
@@ -37,13 +36,11 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 
 	suite.aminoCdc = app.Codec()
 	suite.cdc = app.AppCodec()
-
-	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.privKey = ed25519.GenPrivKey()
 
 	suite.sequence = 1
 	suite.clientID = "solomachineclient"
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: suite.now})
+	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: time.Now()})
 	suite.store = app.IBCKeeper.ClientKeeper.ClientStore(suite.ctx, clientexported.ClientTypeSoloMachine)
 
 	bz := suite.aminoCdc.MustMarshalBinaryBare(suite.ClientState())

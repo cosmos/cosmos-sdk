@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -164,7 +162,7 @@ func (cs ClientState) VerifyConnectionState(
 
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
-		return fmt.Errorf("invalid connection type %T", connectionEnd)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid connection type %T", connectionEnd)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&connection)
@@ -219,7 +217,7 @@ func (cs ClientState) VerifyChannelState(
 
 	channelEnd, ok := channel.(channeltypes.Channel)
 	if !ok {
-		return fmt.Errorf("invalid channel type %T", channel)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid channel type %T", channel)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&channelEnd)
@@ -404,7 +402,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	// cast the proof to a signature proof
 	signatureProof, ok := proof.(commitmenttypes.SignatureProof)
 	if !ok {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof")
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "proof type %T is not type SignatureProof", proof)
 	}
 
 	// value = sequence + path + nextSequenceRecv

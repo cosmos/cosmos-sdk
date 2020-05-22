@@ -1,7 +1,6 @@
 package tendermint
 
 import (
-	"errors"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"

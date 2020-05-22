@@ -1,8 +1,6 @@
 package tendermint
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
 	lite "github.com/tendermint/tendermint/lite2"
@@ -92,14 +90,14 @@ func checkMisbehaviour(
 		evidence.ChainID, evidence.Header1.Commit.BlockID, evidence.Header1.Height,
 		evidence.Header1.Commit, lite.DefaultTrustLevel,
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %w", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := consensusState.ValidatorSet.VerifyCommitTrusting(
 		evidence.ChainID, evidence.Header2.Commit.BlockID, evidence.Header2.Height,
 		evidence.Header2.Commit, lite.DefaultTrustLevel,
 	); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %w", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
 	}
 
 	return nil

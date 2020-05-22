@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -106,7 +105,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 	}
 
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(fromName, keys.DefaultKeyPass, msgs)
+	txBytes, err := txBldr.BuildAndSign(fromName, msgs)
 	if err != nil {
 		return err
 	}
@@ -204,7 +203,7 @@ func SignStdTx(
 		}
 	}
 
-	return txBldr.SignStdTx(name, keys.DefaultKeyPass, stdTx, appendSig)
+	return txBldr.SignStdTx(name, stdTx, appendSig)
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
@@ -227,7 +226,7 @@ func SignStdTxWithSignerAddress(
 		}
 	}
 
-	return txBldr.SignStdTx(name, keys.DefaultKeyPass, stdTx, false)
+	return txBldr.SignStdTx(name, stdTx, false)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.

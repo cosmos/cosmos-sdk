@@ -14,6 +14,7 @@ import (
 )
 
 func SimappTxDecoder() types.TxDecoder {
+	_, _, cdc := MakeCodecs()
 	return auth.DefaultTxDecoder(cdc)
 }
 

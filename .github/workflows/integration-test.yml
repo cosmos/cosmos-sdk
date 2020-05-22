@@ -1,4 +1,4 @@
-name: Integration Tests (CLI)
+name: CLI Tests
 on:
   pull_request:
   push:

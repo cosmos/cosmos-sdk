@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -132,6 +133,32 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 	if err := pc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
+}
+
+func (pc *ProtoCodec) MarshalAny(ptr interface{}) ([]byte, error) {
+	msg, ok := ptr.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't proto marshal %T", ptr)
+	}
+
+	any := &types.Any{}
+	err := any.Pack(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return pc.MarshalBinaryBare(any)
+}
+
+func (pc *ProtoCodec) UnmarshalAny(bz []byte, iface interface{}) error {
+	any := &types.Any{}
+
+	err := pc.UnmarshalBinaryBare(bz, any)
+	if err != nil {
+		return err
+	}
+
+	return pc.UnpackAny(any, iface)
 }
 
 func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {

@@ -173,7 +173,7 @@ func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
-	return codec.MarshalAny(k.cdc, evidenceI)
+	return k.cdc.MarshalAny(evidenceI)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
@@ -181,7 +181,7 @@ func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
 // failure.
 func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
 	var evi exported.Evidence
-	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
+	if err := k.cdc.UnmarshalAny(bz, &evi); err != nil {
 		return nil, err
 	}
 

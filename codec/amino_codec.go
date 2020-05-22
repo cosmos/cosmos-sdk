@@ -43,3 +43,11 @@ func (ac *AminoCodec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshale
 func (ac *AminoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
 	ac.Codec.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
 }
+
+func (ac *AminoCodec) MarshalAny(iface interface{}) ([]byte, error) {
+	return ac.Codec.MarshalBinaryBare(iface)
+}
+
+func (ac *AminoCodec) UnmarshalAny(bz []byte, iface interface{}) error {
+	return ac.Codec.UnmarshalBinaryBare(bz, iface)
+}

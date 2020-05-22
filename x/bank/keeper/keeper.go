@@ -351,7 +351,7 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
-	return codec.MarshalAny(k.cdc, supplyI)
+	return k.cdc.MarshalAny(supplyI)
 }
 
 // UnmarshalSupply returns a Supply interface from raw encoded supply
@@ -359,7 +359,7 @@ func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
 // failure.
 func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
 	var evi exported.SupplyI
-	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
+	if err := k.cdc.UnmarshalAny(bz, &evi); err != nil {
 		return nil, err
 	}
 

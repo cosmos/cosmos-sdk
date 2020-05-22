@@ -1,6 +1,8 @@
 package codec
 
-import "github.com/cosmos/cosmos-sdk/codec/types"
+import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
+)
 
 // HybridCodec defines a codec that utilizes Protobuf for binary encoding
 // and Amino for JSON encoding.
@@ -62,6 +64,14 @@ func (hc *HybridCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 
 func (hc *HybridCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
 	hc.amino.MustUnmarshalJSON(bz, ptr)
+}
+
+func (hc *HybridCodec) MarshalAny(iface interface{}) ([]byte, error) {
+	return hc.proto.MarshalAny(iface)
+}
+
+func (hc *HybridCodec) UnmarshalAny(bz []byte, iface interface{}) error {
+	return hc.proto.UnmarshalAny(bz, iface)
 }
 
 func (hc *HybridCodec) UnpackAny(any *types.Any, iface interface{}) error {

@@ -32,6 +32,14 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
+		// MarshalAny marshals the provided interface value as an Any for protobuf
+		// or as a concrete type with Amino
+		MarshalAny(iface interface{}) ([]byte, error)
+
+		// UnmarshalAny marshals the provided interface value as an Any for protobuf
+		// or as a concrete type with Amino
+		UnmarshalAny(bz []byte, iface interface{}) error
+
 		JSONMarshaler
 		types.AnyUnpacker
 	}

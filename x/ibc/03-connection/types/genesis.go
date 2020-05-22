@@ -58,7 +58,7 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("invalid client connection path %d: %w", i, err)
 		}
 		for _, path := range conPaths.Paths {
-			if err := host.DefaultPathValidator(path); err != nil {
+			if err := host.PathValidator(path); err != nil {
 				return fmt.Errorf("invalid client connection path %d: %w", i, err)
 			}
 		}

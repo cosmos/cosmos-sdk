@@ -98,10 +98,10 @@ func (c Counterparty) GetPrefix() commitmentexported.Prefix {
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(c.ConnectionID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(c.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
-	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
 	if c.Prefix.IsEmpty() {

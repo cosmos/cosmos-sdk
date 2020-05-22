@@ -24,7 +24,7 @@ import (
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create [client-id] [path/to/consensus_state.json]",
-		Short:   "create new solomachine client",
+		Short:   "create new solo machine client",
 		Long:    "create a new solomachine client with the specified identifier and consensus state",
 		Example: fmt.Sprintf("%s tx ibc client create [client-id] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
 		Args:    cobra.ExactArgs(2),

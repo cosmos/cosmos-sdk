@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/kv"
 )
 
@@ -30,13 +29,9 @@ func newMerkleMap() *merkleMap {
 func (sm *merkleMap) set(key string, value []byte) {
 	sm.sorted = false
 
-	// The value is hashed, so you can check for equality with a cached value (say)
-	// and make a determination to fetch or not.
-	vhash := tmhash.Sum(value)
-
 	sm.kvs = append(sm.kvs, kv.Pair{
 		Key:   []byte(key),
-		Value: vhash,
+		Value: value,
 	})
 }
 

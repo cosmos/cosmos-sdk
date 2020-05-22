@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
 
@@ -456,11 +457,11 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		}
 	}
 
+	// Get proofs for all store keys from commitInfo
+	popMap := commitInfo.StoreProofs()
+
 	// Restore origin path and append proof op.
-	res.Proof.Ops = append(res.Proof.Ops, NewMultiStoreProofOp(
-		[]byte(storeName),
-		NewMultiStoreProof(commitInfo.StoreInfos),
-	).ProofOp())
+	res.Proof.Ops = append(res.Proof.Ops, popMap[storeName].ProofOp())
 
 	// TODO: handle in another TM v0.26 update PR
 	// res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
@@ -572,6 +573,17 @@ func (ci commitInfo) Hash() []byte {
 	return SimpleHashFromMap(m)
 }
 
+// StoreProofs returns the simpleproofs for each store key
+func (ci commitInfo) StoreProofs() map[string]merkle.SimpleValueOp {
+	// TODO: cache to ci.hash []byte
+	m := make(map[string][]byte, len(ci.StoreInfos))
+	for _, storeInfo := range ci.StoreInfos {
+		m[storeInfo.Name] = storeInfo.Hash()
+	}
+
+	return SimpleProofOpsFromMap(m)
+}
+
 func (ci commitInfo) CommitID() types.CommitID {
 	return types.CommitID{
 		Version: ci.Version,
@@ -609,7 +621,8 @@ func (si storeInfo) Hash() []byte {
 		panic(err)
 	}
 
-	return hasher.Sum(nil)
+	hash := hasher.Sum(nil)
+	return hash
 }
 
 //----------------------------------------
@@ -713,4 +726,14 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 	}
 
 	return mm.hash()
+}
+
+func SimpleProofOpsFromMap(m map[string][]byte) map[string]merkle.SimpleValueOp {
+	_, proofs, _ := merkle.SimpleProofsFromMap(m)
+	popMap := make(map[string]merkle.SimpleValueOp, len(proofs))
+
+	for k, p := range proofs {
+		popMap[k] = merkle.NewSimpleValueOp([]byte(k), p)
+	}
+	return popMap
 }

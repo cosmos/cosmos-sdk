@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
+	ics23 "github.com/confio/ics23/go"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -26,11 +26,11 @@ type ConnectionResponse struct {
 
 // NewConnectionResponse creates a new ConnectionResponse instance
 func NewConnectionResponse(
-	connectionID string, connection ConnectionEnd, proof *merkle.Proof, height int64,
+	connectionID string, connection ConnectionEnd, proof []*ics23.CommitmentProof, height int64,
 ) ConnectionResponse {
 	return ConnectionResponse{
 		Connection:  connection,
-		Proof:       commitmenttypes.MerkleProof{Proof: proof},
+		Proof:       commitmenttypes.MerkleProof{Proofs: proof},
 		ProofPath:   commitmenttypes.NewMerklePath(strings.Split(ibctypes.ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
 	}
@@ -63,11 +63,11 @@ type ClientConnectionsResponse struct {
 
 // NewClientConnectionsResponse creates a new ConnectionPaths instance
 func NewClientConnectionsResponse(
-	clientID string, connectionPaths []string, proof *merkle.Proof, height int64,
+	clientID string, connectionPaths []string, proof []*ics23.CommitmentProof, height int64,
 ) ClientConnectionsResponse {
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           commitmenttypes.MerkleProof{Proof: proof},
+		Proof:           commitmenttypes.MerkleProof{Proofs: proof},
 		ProofPath:       commitmenttypes.NewMerklePath(strings.Split(ibctypes.ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}

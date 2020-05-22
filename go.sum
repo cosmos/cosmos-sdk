@@ -2,6 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/99designs/keyring v1.1.5 h1:wLv7QyzYpFIyMSwOADq1CLTF9KbjbBfcnfmOGJ64aO4=
 github.com/99designs/keyring v1.1.5/go.mod h1:7hsVvt2qXgtadGevGJ4ujg+u8m6SpJ5TpHqTozIPqf0=
+github.com/AdityaSripal/tendermint v1.2.3 h1:jJUqiQBD2G7WKES7bA2y3bRof1W4kZHs4oAucNg+b2s=
+github.com/AdityaSripal/tendermint v1.2.3/go.mod h1:6NW9DVkvsvqmCY6wbRsOo66qGDhMXglRL70aXajvBEA=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200102211924-4bcbc698314f h1:4O1om+UVU+Hfcihr1timk8YNXHxzZWgCo7ofnrZRApw=

@@ -54,7 +54,7 @@ func (SignatureProof) VerifyNonMembership(exported.Root, exported.Path) error {
 	return nil
 }
 
-// IsEmpty returns trie if the signature is emtpy.
+// IsEmpty returns true if the signature is empty.
 func (proof SignatureProof) IsEmpty() bool {
 	return len(proof.Signature) == 0
 }

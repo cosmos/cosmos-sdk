@@ -55,7 +55,7 @@ func TestCLISend(t *testing.T) {
 	)
 	require.Empty(t, stderr)
 	require.True(t, success)
-	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	msg := cli.UnmarshalStdTx(f.T, f.Amino, stdout)
 	t.Log(msg)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Len(t, msg.Msgs, 1)

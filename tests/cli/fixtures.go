@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/stretchr/testify/require"
@@ -15,24 +17,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-var (
-	cdc, _, _ = simapp.MakeCodecs()
-)
-
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
-	BuildDir     string
-	RootDir      string
-	SimdBinary   string
-	SimcliBinary string
-	ChainID      string
-	RPCAddr      string
-	Port         string
-	SimdHome     string
-	SimcliHome   string
-	P2PAddr      string
-	Cdc          codec.JSONMarshaler
-	T            *testing.T
+	BuildDir          string
+	RootDir           string
+	SimdBinary        string
+	SimcliBinary      string
+	ChainID           string
+	RPCAddr           string
+	Port              string
+	SimdHome          string
+	SimcliHome        string
+	P2PAddr           string
+	JSONMarshaler     codec.JSONMarshaler
+	Amino             *codec.Codec
+	InterfaceRegistry types.InterfaceRegistry
+	T                 *testing.T
 }
 
 // NewFixtures creates a new instance of Fixtures with many vars set
@@ -51,18 +51,22 @@ func NewFixtures(t *testing.T) *Fixtures {
 		t.Skip("builddir is empty, skipping")
 	}
 
+	cdc, interfaceRegistry, amino := simapp.MakeCodecs()
+
 	return &Fixtures{
-		T:            t,
-		BuildDir:     buildDir,
-		RootDir:      tmpDir,
-		SimdBinary:   filepath.Join(buildDir, "simd"),
-		SimcliBinary: filepath.Join(buildDir, "simcli"),
-		SimdHome:     filepath.Join(tmpDir, ".simd"),
-		SimcliHome:   filepath.Join(tmpDir, ".simcli"),
-		RPCAddr:      servAddr,
-		P2PAddr:      p2pAddr,
-		Cdc:          cdc,
-		Port:         port,
+		T:                 t,
+		BuildDir:          buildDir,
+		RootDir:           tmpDir,
+		SimdBinary:        filepath.Join(buildDir, "simd"),
+		SimcliBinary:      filepath.Join(buildDir, "simcli"),
+		SimdHome:          filepath.Join(tmpDir, ".simd"),
+		SimcliHome:        filepath.Join(tmpDir, ".simcli"),
+		RPCAddr:           servAddr,
+		P2PAddr:           p2pAddr,
+		JSONMarshaler:     cdc,
+		InterfaceRegistry: interfaceRegistry,
+		Amino:             amino,
+		Port:              port,
 	}
 }
 
@@ -77,6 +81,6 @@ func (f Fixtures) GenesisState() simapp.GenesisState {
 	require.NoError(f.T, err)
 
 	var appState simapp.GenesisState
-	require.NoError(f.T, f.Cdc.UnmarshalJSON(genDoc.AppState, &appState))
+	require.NoError(f.T, f.JSONMarshaler.UnmarshalJSON(genDoc.AppState, &appState))
 	return appState
 }

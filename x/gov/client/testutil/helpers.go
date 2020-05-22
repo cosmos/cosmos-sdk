@@ -22,7 +22,7 @@ func QueryGovParamDeposit(f *cli.Fixtures) gov.DepositParams {
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var depositParam gov.DepositParams
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &depositParam)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &depositParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return depositParam
 }
@@ -33,7 +33,7 @@ func QueryGovParamVoting(f *cli.Fixtures) gov.VotingParams {
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var votingParam gov.VotingParams
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &votingParam)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &votingParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return votingParam
 }
@@ -44,7 +44,7 @@ func QueryGovParamTallying(f *cli.Fixtures) gov.TallyParams {
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var tallyingParam gov.TallyParams
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &tallyingParam)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &tallyingParam)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return tallyingParam
 }
@@ -55,7 +55,7 @@ func QueryGovProposal(f *cli.Fixtures, proposalID int, flags ...string) gov.Prop
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	var proposal gov.Proposal
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &proposal)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &proposal)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return proposal
 }
@@ -70,7 +70,7 @@ func QueryGovProposals(f *cli.Fixtures, flags ...string) gov.Proposals {
 	require.Empty(f.T, stderr)
 	var out gov.Proposals
 
-	err := f.Cdc.UnmarshalJSON([]byte(stdout), &out)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(stdout), &out)
 	require.NoError(f.T, err)
 	return out
 }
@@ -81,7 +81,7 @@ func QueryGovVote(f *cli.Fixtures, proposalID int, voter sdk.AccAddress, flags .
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	var vote gov.Vote
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &vote)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return vote
 }
@@ -92,7 +92,7 @@ func QueryGovVotes(f *cli.Fixtures, proposalID int, flags ...string) []gov.Vote 
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	var votes []gov.Vote
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &votes)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &votes)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return votes
 }
@@ -103,7 +103,7 @@ func QueryGovDeposit(f *cli.Fixtures, proposalID int, depositor sdk.AccAddress, 
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	var deposit gov.Deposit
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &deposit)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &deposit)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return deposit
 }
@@ -114,7 +114,7 @@ func QueryGovDeposits(f *cli.Fixtures, propsalID int, flags ...string) []gov.Dep
 	out, _ := tests.ExecuteT(f.T, cli.AddFlags(cmd, flags), "")
 	var deposits []gov.Deposit
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &deposits)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &deposits)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return deposits
 }

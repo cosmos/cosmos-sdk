@@ -39,7 +39,7 @@ func TestCLICreateValidator(t *testing.T) {
 	require.True(f.T, success)
 	require.Empty(f.T, stderr)
 
-	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
+	msg := cli.UnmarshalStdTx(f.T, f.Amino, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))

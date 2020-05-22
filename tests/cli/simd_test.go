@@ -97,8 +97,8 @@ func TestCLISimdAddGenesisAccount(t *testing.T) {
 
 	genesisState := f.GenesisState()
 
-	accounts := auth.GetGenesisStateFromAppState(f.Cdc, genesisState).Accounts
-	balances := bank.GetGenesisStateFromAppState(f.Cdc, genesisState).Balances
+	accounts := auth.GetGenesisStateFromAppState(f.JSONMarshaler, genesisState).Accounts
+	balances := bank.GetGenesisStateFromAppState(f.JSONMarshaler, genesisState).Balances
 	balancesSet := make(map[string]sdk.Coins)
 
 	for _, b := range balances {

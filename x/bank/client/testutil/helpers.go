@@ -32,7 +32,7 @@ func QueryAccount(f *cli.Fixtures, address sdk.AccAddress, flags ...string) auth
 	value := initRes["value"]
 
 	var acc auth.BaseAccount
-	err = f.Cdc.UnmarshalJSON(value, &acc)
+	err = f.JSONMarshaler.UnmarshalJSON(value, &acc)
 	require.NoError(f.T, err, "value %v, err %v", string(value), err)
 
 	return acc
@@ -46,7 +46,7 @@ func QueryBalances(f *cli.Fixtures, address sdk.AccAddress, flags ...string) sdk
 
 	var balances sdk.Coins
 
-	require.NoError(f.T, f.Cdc.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
+	require.NoError(f.T, f.JSONMarshaler.UnmarshalJSON([]byte(out), &balances), "out %v\n", out)
 
 	return balances
 }
@@ -57,7 +57,7 @@ func QueryTotalSupply(f *cli.Fixtures, flags ...string) (totalSupply sdk.Coins) 
 	res, errStr := tests.ExecuteT(f.T, cmd, "")
 	require.Empty(f.T, errStr)
 
-	err := f.Cdc.UnmarshalJSON([]byte(res), &totalSupply)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(res), &totalSupply)
 	require.NoError(f.T, err)
 	return totalSupply
 }
@@ -69,7 +69,7 @@ func QueryTotalSupplyOf(f *cli.Fixtures, denom string, flags ...string) sdk.Int 
 	require.Empty(f.T, errStr)
 
 	var supplyOf sdk.Int
-	err := f.Cdc.UnmarshalJSON([]byte(res), &supplyOf)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(res), &supplyOf)
 	require.NoError(f.T, err)
 	return supplyOf
 }

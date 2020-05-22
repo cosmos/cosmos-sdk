@@ -45,7 +45,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.True(t, success)
 
-	stdTx := cli.UnmarshalStdTx(t, f.Cdc, stdout)
+	stdTx := cli.UnmarshalStdTx(t, f.Amino, stdout)
 
 	require.Equal(t, len(stdTx.Msgs), 1)
 	require.Equal(t, 1, len(stdTx.GetSignatures()))
@@ -61,7 +61,7 @@ func TestCLIValidateSignatures(t *testing.T) {
 
 	// modify the transaction
 	stdTx.Memo = "MODIFIED-ORIGINAL-TX-BAD"
-	bz := cli.MarshalStdTx(t, f.Cdc, stdTx)
+	bz := cli.MarshalStdTx(t, f.Amino, stdTx)
 	modSignedTxFile, cleanup := tests.WriteToNewTempFile(t, string(bz))
 	t.Cleanup(cleanup)
 
@@ -89,7 +89,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, stderr := bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg := cli.UnmarshalStdTx(t, f.Amino, stdout)
 	require.Equal(t, msg.Fee.Gas, uint64(flags.DefaultGasLimit))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
@@ -99,7 +99,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 	require.Empty(t, stderr)
 
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
 	require.Equal(t, msg.Fee.Gas, uint64(100))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
@@ -108,7 +108,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, stderr = bankcli.TxSend(f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
 	require.True(t, msg.Fee.Gas > 0)
 	require.Equal(t, len(msg.Msgs), 1)
 
@@ -135,7 +135,7 @@ func TestCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Sign transaction
 	success, stdout, _ = testutil.TxSign(f, cli.KeyFoo, unsignedTxFile.Name())
 	require.True(t, success)
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
+	msg = cli.UnmarshalStdTx(t, f.Amino, stdout)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 1, len(msg.GetSignatures()))
 	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
@@ -258,7 +258,7 @@ func TestCLIEncode(t *testing.T) {
 
 	// Check that the transaction decodes as epxceted
 	var decodedTx auth.StdTx
-	require.Nil(t, f.Cdc.UnmarshalBinaryBare(decodedBytes, &decodedTx))
+	require.Nil(t, f.JSONMarshaler.UnmarshalBinaryBare(decodedBytes, &decodedTx))
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 

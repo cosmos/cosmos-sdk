@@ -22,18 +22,18 @@ func TestCLIWithdrawRewards(t *testing.T) {
 	genesisState := f.GenesisState()
 	inflationMin := sdk.MustNewDecFromStr("1.0")
 	var mintData mint.GenesisState
-	f.Cdc.UnmarshalJSON(genesisState[mint.ModuleName], &mintData)
+	f.JSONMarshaler.UnmarshalJSON(genesisState[mint.ModuleName], &mintData)
 	mintData.Minter.Inflation = inflationMin
 	mintData.Params.InflationMin = inflationMin
 	mintData.Params.InflationMax = sdk.MustNewDecFromStr("1.0")
-	mintDataBz, err := f.Cdc.MarshalJSON(mintData)
+	mintDataBz, err := f.JSONMarshaler.MarshalJSON(mintData)
 	require.NoError(t, err)
 	genesisState[mint.ModuleName] = mintDataBz
 
 	genFile := filepath.Join(f.SimdHome, "config", "genesis.json")
 	genDoc, err := tmtypes.GenesisDocFromFile(genFile)
 	require.NoError(t, err)
-	genDoc.AppState, err = f.Cdc.MarshalJSON(genesisState)
+	genDoc.AppState, err = f.JSONMarshaler.MarshalJSON(genesisState)
 	require.NoError(t, genDoc.SaveAs(genFile))
 
 	// start simd server

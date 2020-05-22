@@ -37,7 +37,7 @@ func QueryStakingValidator(f *cli.Fixtures, valAddr sdk.ValAddress, flags ...str
 
 	var validator staking.Validator
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &validator)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 
 	return validator
@@ -50,7 +50,7 @@ func QueryStakingUnbondingDelegationsFrom(f *cli.Fixtures, valAddr sdk.ValAddres
 
 	var ubds []staking.UnbondingDelegation
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &ubds)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &ubds)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 
 	return ubds
@@ -63,7 +63,7 @@ func QueryStakingDelegationsTo(f *cli.Fixtures, valAddr sdk.ValAddress, flags ..
 
 	var delegations []staking.Delegation
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &delegations)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &delegations)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 
 	return delegations
@@ -76,7 +76,7 @@ func QueryStakingPool(f *cli.Fixtures, flags ...string) staking.Pool {
 
 	var pool staking.Pool
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &pool)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &pool)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 
 	return pool
@@ -89,7 +89,7 @@ func QueryStakingParameters(f *cli.Fixtures, flags ...string) staking.Params {
 
 	var params staking.Params
 
-	err := f.Cdc.UnmarshalJSON([]byte(out), &params)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(out), &params)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 
 	return params

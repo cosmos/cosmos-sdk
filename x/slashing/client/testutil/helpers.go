@@ -17,7 +17,7 @@ func QuerySigningInfo(f *cli.Fixtures, val string) slashing.ValidatorSigningInfo
 	require.Empty(f.T, errStr)
 
 	var sinfo slashing.ValidatorSigningInfo
-	err := f.Cdc.UnmarshalJSON([]byte(res), &sinfo)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(res), &sinfo)
 	require.NoError(f.T, err)
 	return sinfo
 }
@@ -29,7 +29,7 @@ func QuerySlashingParams(f *cli.Fixtures) slashing.Params {
 	require.Empty(f.T, errStr)
 
 	var params slashing.Params
-	err := f.Cdc.UnmarshalJSON([]byte(res), &params)
+	err := f.JSONMarshaler.UnmarshalJSON([]byte(res), &params)
 	require.NoError(f.T, err)
 	return params
 }

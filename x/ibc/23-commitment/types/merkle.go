@@ -1,10 +1,10 @@
 package types
 
 import (
-	"errors"
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
@@ -115,7 +115,7 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 	}
 
 	if prefix == nil || prefix.IsEmpty() {
-		return MerklePath{}, errors.New("prefix can't be empty")
+		return MerklePath{}, sdkerrors.Wrap(ErrInvalidPrefix, "prefix can't be empty")
 	}
 	return NewMerklePath([]string{string(prefix.Bytes()), path}), nil
 }
@@ -130,7 +130,7 @@ func (MerkleProof) GetCommitmentType() exported.Type {
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
 func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path, value []byte) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() || len(value) == 0 {
-		return errors.New("empty params or proof")
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()
@@ -140,7 +140,7 @@ func (proof MerkleProof) VerifyMembership(root exported.Root, path exported.Path
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
 func (proof MerkleProof) VerifyNonMembership(root exported.Root, path exported.Path) error {
 	if proof.IsEmpty() || root == nil || root.IsEmpty() || path == nil || path.IsEmpty() {
-		return errors.New("empty params or proof")
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
 	}
 
 	runtime := rootmulti.DefaultProofRuntime()

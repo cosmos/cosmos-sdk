@@ -105,7 +105,7 @@ func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 		Use:     "misbehaviour [path/to/evidence.json]",
 		Short:   "submit a client misbehaviour",
 		Long:    "submit a client misbehaviour to prevent future updates",
-		Example: fmt.Sprintf("%s tx ibc client misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
+		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID", types.SubModuleName, version.ClientName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())

@@ -104,6 +104,13 @@ is now `Any` in concordance with [ADR 019](docs/architecture/adr-019-protobuf-st
 be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposal` constructor now may return an `error`
 * (modules) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) `AppModuleBasic.GetTxCmd` now takes a single `CLIContext` parameter.
 * (x/auth) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) All `AccountRetriever` methods now take `NodeQuerier` as a parameter instead of as a struct member.
+* (x/auth) [\#6270](https://github.com/cosmos/cosmos-sdk/pull/6270) The passphrase argument has been removed from the signature of the following functions and methods:
+  - BuildAndSign
+  - MakeSignature
+  - SignStdTx
+  - TxBuilder.BuildAndSign
+  - TxBuilder.Sign
+  - TxBuilder.SignStdTx
 
 ### Features
 

@@ -1,4 +1,4 @@
-name: Code Coverage
+name: Unit Tests/Coverage
 on:
   pull_request:
   push:
@@ -13,7 +13,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
-  test-coverage-upload:
+  protobuf:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v2-beta
@@ -48,4 +48,25 @@ jobs:
         with:
           file: ./coverage.txt # optional
           fail_ci_if_error: true
+        if: "env.GIT_DIFF != ''"
+
+  amino:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v2-beta
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - name: build
+        run: |
+          make build
+        if: "env.GIT_DIFF != ''"
+      - name: unit tests
+        run: |
+          go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock test_amino'
         if: "env.GIT_DIFF != ''"

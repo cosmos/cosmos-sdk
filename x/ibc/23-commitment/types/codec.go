@@ -26,13 +26,13 @@ func RegisterCodec(cdc *codec.Codec) {
 // interfaces and creates a registry of their concrete implementations.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.commitment.v1.Prefix",
+		"cosmos_sdk.x.ibc.commitment.v1.Prefix",
 		(*exported.Prefix)(nil),
 		&MerklePrefix{},
 		&SignaturePrefix{},
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.commitment.v1.Proof",
+		"cosmos_sdk.x.ibc.commitment.v1.Proof",
 		(*exported.Proof)(nil),
 		&MerkleProof{},
 		&SignatureProof{},

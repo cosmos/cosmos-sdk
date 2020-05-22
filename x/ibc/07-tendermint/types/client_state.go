@@ -237,7 +237,6 @@ func (cs ClientState) VerifyChannelState(
 	if err != nil {
 		return err
 	}
-
 	if err := validateVerificationArgs(cs, height, proof, consensusState); err != nil {
 		return err
 	}
@@ -399,8 +398,18 @@ func validateVerificationArgs(
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
+	_, ok := proof.(commitmenttypes.MerkleProof)
+	if !ok {
+		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "invalid proof type %T, expected MerkleProof", proof)
+	}
+
 	if consensusState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+	}
+
+	_, ok := consensusState.(ConsensusState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
 	}
 
 	return nil

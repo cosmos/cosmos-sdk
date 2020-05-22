@@ -18,7 +18,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, []byte{1, 2, 3, 4})
 	cases := []struct {
 		msg            []byte
-		k              int
+		k              uint32
 		pubkeys        []crypto.PubKey
 		signingIndices []int
 		// signatures should be the same size as signingIndices.
@@ -38,7 +38,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 		multisigKey := NewPubKeyMultisigThreshold(tc.k, tc.pubkeys)
 		multisignature := NewMultisig(len(tc.pubkeys))
 
-		for i := 0; i < tc.k-1; i++ {
+		for i := uint32(0); i < tc.k-1; i++ {
 			signingIndex := tc.signingIndices[i]
 			require.NoError(
 				t,
@@ -56,7 +56,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			)
 			require.Equal(
 				t,
-				i+1,
+				int(i+1),
 				len(multisignature.Sigs),
 				"adding a signature for the same pubkey twice increased signature count by 2, tc %d", tcIndex,
 			)
@@ -82,7 +82,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			"multisig failed after k good signatures, tc %d", tcIndex,
 		)
 
-		for i := tc.k + 1; i < len(tc.signingIndices); i++ {
+		for i := int(tc.k) + 1; i < len(tc.signingIndices); i++ {
 			signingIndex := tc.signingIndices[i]
 
 			require.NoError(
@@ -92,7 +92,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 			bz := multisignature.Marshal()
 			require.Equal(
 				t,
-				tc.passAfterKSignatures[i-tc.k-1],
+				tc.passAfterKSignatures[i-int(tc.k)-1],
 				multisigKey.VerifyBytes(tc.msg, bz),
 				"multisig didn't verify as expected after k sigs, tc %d, i %d", tcIndex, i,
 			)

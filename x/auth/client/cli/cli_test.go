@@ -258,7 +258,7 @@ func TestCLIEncode(t *testing.T) {
 
 	// Check that the transaction decodes as epxceted
 	var decodedTx auth.StdTx
-	require.Nil(t, f.JSONMarshaler.UnmarshalBinaryBare(decodedBytes, &decodedTx))
+	require.Nil(t, f.Amino.UnmarshalBinaryBare(decodedBytes, &decodedTx))
 	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 

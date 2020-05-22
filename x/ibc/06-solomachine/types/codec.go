@@ -28,7 +28,7 @@ func SetSubModuleCodec(cdc *codec.Codec) {
 }
 
 // RegisterInterfaces registers the solo machine concrete evidence and client-related
-// implementations and interfaces
+// implementations and interfaces.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*evidenceexported.Evidence)(nil),

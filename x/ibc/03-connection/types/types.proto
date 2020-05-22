@@ -4,7 +4,7 @@ package cosmos_sdk.x.ibc.connection.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "third_party/proto/gogoproto/gogo.proto";
-import "x/ibc/23-commitment/types/types.proto";
+import "google/protobuf/any.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
@@ -23,11 +23,11 @@ message MsgConnectionOpenTry {
   Counterparty    counterparty          = 3 [(gogoproto.nullable) = false];
   repeated string counterparty_versions = 4 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED -> INIT`
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_init = 5
+  google.protobuf.Any proof_init = 5
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 6;
   // proof of client consensus state
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_consensus = 7
+  google.protobuf.Any proof_consensus = 7
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_height = 8 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes  signer           = 9 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -39,11 +39,11 @@ message MsgConnectionOpenAck {
   string connection_id = 1 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   string version       = 2;
   // proof of the initialization the connection on Chain B: `UNITIALIZED -> TRYOPEN`
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_try = 3
+  google.protobuf.Any proof_try = 3
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_try\""];
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of client consensus state
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_consensus = 5
+  google.protobuf.Any proof_consensus = 5
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_height = 6 [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes  signer           = 7 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -54,7 +54,7 @@ message MsgConnectionOpenAck {
 message MsgConnectionOpenConfirm {
   string connection_id = 1 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
-  cosmos_sdk.x.ibc.commitment.v1.MerkleProof proof_ack = 2
+  google.protobuf.Any proof_ack = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"proof_ack\""];
   uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   bytes  signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -105,8 +105,8 @@ message Counterparty {
   string client_id = 1 [(gogoproto.customname) = "ClientID", (gogoproto.moretags) = "yaml:\"client_id\""];
   // identifies the connection end on the counterparty chain associated with a given connection.
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID", (gogoproto.moretags) = "yaml:\"connection_id\""];
-  // commitment merkle prefix of the counterparty chain
-  cosmos_sdk.x.ibc.commitment.v1.MerklePrefix prefix = 3 [(gogoproto.nullable) = false];
+  // commitment prefix of the counterparty chain
+  google.protobuf.Any prefix = 3 [(gogoproto.nullable) = false];
 }
 
 // ClientPaths define all the connection paths for a client state.

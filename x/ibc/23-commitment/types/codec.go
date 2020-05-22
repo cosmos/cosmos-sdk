@@ -38,12 +38,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&SignatureProof{},
 	)
 	registry.RegisterImplementations(
-		(*authtypes.Prefix)(nil),
+		(*exported.Prefix)(nil),
 		&MerklePrefix{},
 		&SignaturePrefix{},
 	)
 	registry.RegisterImplementations(
-		(*authtypes.Proof)(nil),
+		(*exported.Proof)(nil),
 		&MerkleProof{},
 		&SignatureProof{},
 	)

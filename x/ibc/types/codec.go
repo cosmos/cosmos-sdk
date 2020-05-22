@@ -30,5 +30,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	channel.RegisterInterfaces(registry)
 	solomachinetypes.RegisterInterfaces(registry)
 	ibctmtypes.RegisterInterfaces(registry)
+	localhosttypes.RegisterInterfaces(registry)
 	commitmenttypes.RegisterInterfaces(registry)
 }

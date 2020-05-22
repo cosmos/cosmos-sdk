@@ -11,7 +11,7 @@ func MakeTxCLIContext() context.CLIContext {
 	cliCtx := context.CLIContext{}
 	return cliCtx.
 		WithJSONMarshaler(appCodec).
-		WithTxGenerator(types.StdTxGenerator{Cdc: cdc}).
+		WithTxGenerator(MakeTxGenerator()).
 		WithAccountRetriever(types.NewAccountRetriever(appCodec)).
 		WithCodec(cdc)
 }

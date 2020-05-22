@@ -15,21 +15,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
-func SimappTxDecoder() types.TxDecoder {
-	cdc, _, _ := MakeCodecs()
-	return signing.DefaultTxDecoder(cdc, cryptocodec.DefaultPublicKeyCodec{})
-}
-
-// MakeCodecs constructs the *std.Codec and *codec.Codec instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
-func MakeCodecs() (codec.Marshaler, codectypes.InterfaceRegistry, *codec.Codec) {
+func MakeEncodingConfig() EncodingConfig {
 	cdc := std.MakeCodec(ModuleBasics)
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaceModules(interfaceRegistry)
-	appCodec := codec.NewHybridCodec(cdc, interfaceRegistry)
-	return appCodec, nil, cdc
+	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
+	pubKeyCodec := cryptocodec.DefaultPublicKeyCodec{}
+
+	return EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Marshaler:         marshaler,
+		TxDecoder:         signing.DefaultTxDecoder(marshaler, pubKeyCodec),
+		TxGenerator:       signing.NewTxGenerator(marshaler, pubKeyCodec),
+		Amino:             cdc,
+	}
+}
+
+func MakeCodecs() (codec.Marshaler, codectypes.InterfaceRegistry, *codec.Codec) {
+	cfg := MakeEncodingConfig()
+	return cfg.Marshaler, cfg.InterfaceRegistry, cfg.Amino
 }
 
 func NewAnteHandler(ak auth.AccountKeeper, bk bank.Keeper, ibcK ibc.Keeper) types.AnteHandler {

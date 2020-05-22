@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -239,11 +241,11 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
+	t *testing.T, txGen context.TxGenerator, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-
 	tx := helpers.GenTx(
+		txGen,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 		helpers.DefaultGenTxGas,
@@ -253,7 +255,7 @@ func SignCheckDeliver(
 		priv...,
 	)
 
-	txBytes, err := cdc.MarshalBinaryBare(tx)
+	txBytes, err := txGen.MarshalTx(tx)
 	require.Nil(t, err)
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore
@@ -288,18 +290,10 @@ func SignCheckDeliver(
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
-	txs := make([]auth.StdTx, numToGenerate)
+func GenSequenceOfTxs(txGen context.TxGenerator, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []sdk.Tx {
+	txs := make([]sdk.Tx, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
-		txs[i] = helpers.GenTx(
-			msgs,
-			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			helpers.DefaultGenTxGas,
-			"",
-			accNums,
-			initSeqNums,
-			priv...,
-		)
+		txs[i] = helpers.GenTx(txGen, msgs, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}, helpers.DefaultGenTxGas, "", accNums, initSeqNums, priv...)
 		incrementAllSequenceNumbers(initSeqNums)
 	}
 

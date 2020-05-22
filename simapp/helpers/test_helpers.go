@@ -4,11 +4,12 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -18,13 +19,12 @@ const (
 )
 
 // GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
-	fee := auth.StdFee{
-		Amount: feeAmt,
-		Gas:    gas,
-	}
+func GenTx(gen context.TxGenerator, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) sdk.Tx {
+	fee := gen.NewFee()
+	fee.SetAmount(feeAmt)
+	fee.SetGas(gas)
 
-	sigs := make([]auth.StdSignature, len(priv))
+	sigs := make([]context.ClientSignature, len(priv))
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -33,16 +33,33 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
-		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
+		clientSig := gen.NewSignature()
+		clientSig.SetPubKey(p.PubKey())
+
+		sigs[i] = clientSig
+	}
+
+	tx := gen.NewTx()
+	tx.SetMsgs(msgs...)
+	tx.SetFee(fee)
+	tx.SetSignatures(sigs...)
+	tx.SetMemo(memo)
+
+	for i, p := range priv {
+		// use a empty chainID for ease of testing
+		signBytes, err := tx.CanonicalSignBytes(chainID, accnums[i], seq[i])
+		if err != nil {
+			panic(err)
+		}
+		sig, err := p.Sign(signBytes)
 		if err != nil {
 			panic(err)
 		}
 
-		sigs[i] = auth.StdSignature{
-			PubKey:    p.PubKey().Bytes(),
-			Signature: sig,
-		}
+		sigs[i].SetSignature(sig)
 	}
 
-	return auth.NewStdTx(msgs, fee, sigs, memo)
+	tx.SetSignatures(sigs...)
+
+	return tx.GetTx()
 }

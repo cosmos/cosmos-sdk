@@ -7,6 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -16,6 +17,11 @@ import (
 func SimappTxDecoder() types.TxDecoder {
 	_, _, cdc := MakeCodecs()
 	return auth.DefaultTxDecoder(cdc)
+}
+
+func MakeTxGenerator() signing.TxGenerator {
+	_, _, cdc := MakeCodecs()
+	return types.StdTxGenerator{Cdc: cdc}
 }
 
 // MakeCodecs constructs the *std.Codec and *codec.Codec instances used by

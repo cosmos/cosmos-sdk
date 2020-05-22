@@ -24,11 +24,11 @@ import (
 )
 
 var (
-	appCodec, interfaceRegistry, cdc = simapp.MakeCodecs()
+	encodingConfig = simapp.MakeEncodingConfig()
 )
 
 func init() {
-	authclient.Codec = appCodec
+	authclient.Codec = encodingConfig.Marshaler
 }
 
 func main() {
@@ -61,10 +61,10 @@ func main() {
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		client.ConfigCmd(simapp.DefaultCLIHome),
-		queryCmd(cdc),
-		txCmd(cdc),
+		queryCmd(encodingConfig.Amino),
+		txCmd(encodingConfig.Amino),
 		flags.LineBreak,
-		lcd.ServeCommand(cdc, registerRoutes),
+		lcd.ServeCommand(encodingConfig.Amino, registerRoutes),
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,

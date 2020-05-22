@@ -244,7 +244,7 @@ func (cs ClientState) VerifyChannelState(
 
 	channelEnd, ok := channel.(channeltypes.Channel)
 	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidType, "invalid channel type %T", channel)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid channel type %T", channel)
 	}
 
 	bz, err := cdc.MarshalBinaryBare(&channelEnd)

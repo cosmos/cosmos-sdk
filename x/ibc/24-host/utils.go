@@ -1,7 +1,7 @@
 package host
 
 import (
-	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 )
 

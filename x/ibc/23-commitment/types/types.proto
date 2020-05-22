@@ -41,6 +41,17 @@ message MerkleProof {
   tendermint.crypto.merkle.Proof proof = 1;
 }
 
+// SignaturePrefix a solo machine signature path prefixed to the key.
+// The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
+message SignaturePrefix {
+  bytes key_prefix = 1 [(gogoproto.moretags) = "yaml:\"key_prefix\""];
+}
+
+// SignatureProof is a signature used as proof for verification.
+message SignatureProof {
+  bytes signature = 1;
+}
+
 // KeyPath defines a slice of keys
 message KeyPath {
   option (gogoproto.goproto_stringer) = false;

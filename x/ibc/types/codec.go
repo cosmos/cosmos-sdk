@@ -28,4 +28,5 @@ func RegisterCodec(cdc *codec.Codec) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	connection.RegisterInterfaces(registry)
 	channel.RegisterInterfaces(registry)
+	commitmenttypes.RegisterInterfaces(registry)
 }

@@ -4,13 +4,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
-var _ exported.Proof = SignatureProof{}
-var _ exported.Prefix = (*SignaturePrefix)(nil)
-
-// TODO: change to proto
-type SignaturePrefix struct {
-	KeyPrefix []byte
-}
+var (
+	_ exported.Proof  = (*SignatureProof)(nil)
+	_ exported.Prefix = (*SignaturePrefix)(nil)
+)
 
 // NewSignaturePrefix constructs a new SignaturePrefix instance.
 func NewSignaturePrefix(keyPrefix []byte) SignaturePrefix {
@@ -32,11 +29,6 @@ func (sp SignaturePrefix) Bytes() []byte {
 // IsEmpty returns true if the prefix is empty.
 func (sp SignaturePrefix) IsEmpty() bool {
 	return len(sp.Bytes()) == 0
-}
-
-// SignatureProof is a signature used as proof for verification.
-type SignatureProof struct {
-	Signature []byte
 }
 
 // GetCommitmentType implements ProofI.

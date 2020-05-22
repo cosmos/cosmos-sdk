@@ -18,6 +18,35 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MerklePrefix{}, "ibc/commitment/MerklePrefix", nil)
 	cdc.RegisterConcrete(MerklePath{}, "ibc/commitment/MerklePath", nil)
 	cdc.RegisterConcrete(MerkleProof{}, "ibc/commitment/MerkleProof", nil)
+	cdc.RegisterConcrete(SignaturePrefix{}, "ibc/commitment/SignaturePrefix", nil)
+	cdc.RegisterConcrete(SignatureProof{}, "ibc/commitment/SignatureProof", nil)
+}
+
+// RegisterInterfaces associates a proto name with the Prefix and Proof
+// interfaces and creates a registry of their concrete implementations.
+func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.commitment.v1.Prefix",
+		(*exported.Prefix)(nil),
+		&MerklePrefix{},
+		&SignaturePrefix{},
+	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.commitment.v1.Proof",
+		(*exported.Proof)(nil),
+		&MerkleProof{},
+		&SignatureProof{},
+	)
+	registry.RegisterImplementations(
+		(*authtypes.Prefix)(nil),
+		&MerklePrefix{},
+		&SignaturePrefix{},
+	)
+	registry.RegisterImplementations(
+		(*authtypes.Proof)(nil),
+		&MerkleProof{},
+		&SignatureProof{},
+	)
 }
 
 var (

@@ -10,14 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/clients/solomachine", createClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/%s", types.SubModuleName), createClientHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/%s/{%s}/update", types.SubModuleName, RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/%s/{%s}/misbehaviour", types.SubModuleName, RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }
 
 // createClientHandlerFn implements a create client handler
@@ -29,7 +29,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Param body body rest.CreateClientReq true "Create client request body"
 // @Success 200 {object} PostCreateClient "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients/solomachine [post]
+// @Router /ibc/clients/solo-machine [post]
 func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq
@@ -43,7 +43,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := solomachinetypes.NewMsgCreateClient(
+		msg := types.NewMsgCreateClient(
 			req.ClientID,
 			req.ConsensusState,
 		)
@@ -68,7 +68,7 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} PostUpdateClient "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients/{client-id}/update [post]
+// @Router /ibc/clients/solo-machine/{client-id}/update [post]
 func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -85,7 +85,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := solomachinetypes.NewMsgUpdateClient(
+		msg := types.NewMsgUpdateClient(
 			clientID,
 			req.Header,
 		)
@@ -108,7 +108,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Success 200 {object} PostSubmitMisbehaviour "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients/{client-id}/misbehaviour [post]
+// @Router /ibc/clients/solo-machine/{client-id}/misbehaviour [post]
 func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req SubmitMisbehaviourReq
@@ -128,7 +128,7 @@ func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := solomachinetypes.NewMsgSubmitClientMisbehaviour(req.Evidence, fromAddr)
+		msg := types.NewMsgSubmitClientMisbehaviour(req.Evidence, fromAddr)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

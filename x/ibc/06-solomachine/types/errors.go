@@ -9,7 +9,8 @@ const (
 )
 
 var (
-	ErrInvalidHeader           = sdkerrors.Register(SubModuleName, 2, "invalid header")
-	ErrInvalidSequence         = sdkerrors.Register(SubModuleName, 3, "invalid sequence")
-	ErrInvalidSignatureAndData = sdkerrors.Register(SubModuleName, 4, "invalid signature and data")
+	ErrInvalidHeader               = sdkerrors.Register(SubModuleName, 2, "invalid header")
+	ErrInvalidSequence             = sdkerrors.Register(SubModuleName, 3, "invalid sequence")
+	ErrInvalidSignatureAndData     = sdkerrors.Register(SubModuleName, 4, "invalid signature and data")
+	ErrSignatureVerificationFailed = sdkerrors.Register(SubModuleName, 5, "signature verification failed")
 )

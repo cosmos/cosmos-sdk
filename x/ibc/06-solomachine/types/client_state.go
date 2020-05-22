@@ -31,16 +31,7 @@ type ClientState struct {
 
 // InitializeFromMsg creates a solo machine client from a MsgCreateClient
 func InitializeFromMsg(msg MsgCreateClient) (ClientState, error) {
-	return Initialize(msg.GetClientID(), msg.ConsensusState)
-}
-
-// Initialize creates an unfrozen client with the initial consensus state
-func Initialize(id string, consensusState ConsensusState) (ClientState, error) {
-	return ClientState{
-		ID:             id,
-		Frozen:         false,
-		ConsensusState: consensusState,
-	}, nil
+	return NewClientState(msg.GetClientID(), msg.ConsensusState), nil
 }
 
 // NewClientState creates a new ClientState instance.

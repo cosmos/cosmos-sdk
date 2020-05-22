@@ -54,15 +54,15 @@ func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
 	data := append(sdk.Uint64ToBigEndian(evidence.Sequence), evidence.SignatureOne.Data...)
 
 	// check first signature
-	if !pubKey.VerifyBytes(data, evidence.SignatureOne.Signature) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signature one failed to be verified by currently registered public key")
+	if err := CheckSignature(pubKey, data, evidence.SignatureOne.Signature); err != nil {
+		return sdkerrors.Wrap(err, "evidence signature one failed to be verified")
 	}
 
 	data = append(sdk.Uint64ToBigEndian(evidence.Sequence), evidence.SignatureTwo.Data...)
 
 	// check second signature
-	if !pubKey.VerifyBytes(data, evidence.SignatureTwo.Signature) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signature two failed to be verified by currently registered public key")
+	if err := CheckSignature(pubKey, data, evidence.SignatureTwo.Signature); err != nil {
+		return sdkerrors.Wrap(err, "evidence signature two failed to be verified")
 	}
 
 	return nil

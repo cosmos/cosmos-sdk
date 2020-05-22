@@ -48,16 +48,13 @@ func checkValidity(clientState ClientState, header Header) error {
 	}
 
 	// assert currently registered public key signed over the new public key with correct sequence
-	value := append(
+	data := append(
 		sdk.Uint64ToBigEndian(header.Sequence),
 		header.NewPubKey.Bytes()...,
 	)
 
-	if !clientState.ConsensusState.PubKey.VerifyBytes(value, header.Signature) {
-		return sdkerrors.Wrap(
-			clienttypes.ErrInvalidHeader,
-			"header signature verification failed",
-		)
+	if err := CheckSignature(clientState.ConsensusState.PubKey, data, header.Signature); err != nil {
+		return sdkerrors.Wrap(err, "header signature verification failed")
 	}
 
 	return nil

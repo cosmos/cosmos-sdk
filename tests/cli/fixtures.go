@@ -6,18 +6,17 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 var (
-	cdc = std.MakeCodec(simapp.ModuleBasics)
+	cdc, _, _ = simapp.MakeCodecs()
 )
 
 // Fixtures is used to setup the testing environment
@@ -32,7 +31,7 @@ type Fixtures struct {
 	SimdHome     string
 	SimcliHome   string
 	P2PAddr      string
-	Cdc          *codec.Codec
+	Cdc          codec.JSONMarshaler
 	T            *testing.T
 }
 

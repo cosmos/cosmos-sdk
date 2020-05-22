@@ -23,7 +23,7 @@ var IsValidID = regexp.MustCompile(`^[a-zA-Z0-9\.\_\+\-\#\[\]\<\>]+$`).MatchStri
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
 
-func defaultIdentifierValidator(id string, min, max int) error { //nolint:unparam
+func DefaultIdentifierValidator(id string, min, max int) error { //nolint:unparam
 	if strings.TrimSpace(id) == "" {
 		return sdkerrors.Wrap(ErrInvalidID, "identifier cannot be blank")
 	}
@@ -46,32 +46,32 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 	return nil
 }
 
-// DefaultClientIdentifierValidator is the default validator function for Client identifiers
+// ClientIdentifierValidator is the default validator function for Client identifiers
 // A valid Identifier must be between 9-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultClientIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 9, 20)
+func ClientIdentifierValidator(id string) error {
+	return DefaultIdentifierValidator(id, 9, 20)
 }
 
-// DefaultConnectionIdentifierValidator is the default validator function for Connection identifiers
+// ConnectionIdentifierValidator is the default validator function for Connection identifiers
 // A valid Identifier must be between 10-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultConnectionIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, 20)
+func ConnectionIdentifierValidator(id string) error {
+	return DefaultIdentifierValidator(id, 10, 20)
 }
 
-// DefaultChannelIdentifierValidator is the default validator function for Channel identifiers
+// ChannelIdentifierValidator is the default validator function for Channel identifiers
 // A valid Identifier must be between 10-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultChannelIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, 20)
+func ChannelIdentifierValidator(id string) error {
+	return DefaultIdentifierValidator(id, 10, 20)
 }
 
-// DefaultPortIdentifierValidator is the default validator function for Port identifiers
+// PortIdentifierValidator is the default validator function for Port identifiers
 // A valid Identifier must be between 2-20 characters and only contain lowercase
 // alphabetic characters,
-func DefaultPortIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 2, 20)
+func PortIdentifierValidator(id string) error {
+	return DefaultIdentifierValidator(id, 2, 20)
 }
 
 // NewPathValidator takes in a Identifier Validator function and returns
@@ -94,7 +94,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 				return err
 			}
 			// Each path element must either be a valid identifier or constant number
-			if err := defaultIdentifierValidator(p, 1, 20); err != nil {
+			if err := DefaultIdentifierValidator(p, 1, 20); err != nil {
 				return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 			}
 		}
@@ -103,7 +103,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	}
 }
 
-// PathValidator takes in path string and validates with default identifier rules.
+// PathValidator takes in path string and validates with  identifier rules.
 // This is optimized by simply checking that all path elements are alphanumeric.
 func PathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
@@ -118,7 +118,7 @@ func PathValidator(path string) error {
 		}
 
 		// Each path element must be a valid identifier or constant number
-		if err := defaultIdentifierValidator(p, 1, 20); err != nil {
+		if err := DefaultIdentifierValidator(p, 1, 20); err != nil {
 			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
 		}
 	}

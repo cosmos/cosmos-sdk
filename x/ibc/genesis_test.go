@@ -10,7 +10,6 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	lite "github.com/tendermint/tendermint/lite2"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
@@ -82,8 +81,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			genState: ibc.GenesisState{
 				ClientGenesis: client.NewGenesisState(
 					[]exported.ClientState{
-						ibctmtypes.NewClientState(clientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
-						localhosttypes.NewClientState("(chaindID)", 0),
+						ibctmtypes.NewClientState(clientID, trustingPeriod, ubdPeriod, maxClockDrift, suite.header),
+						localhosttypes.NewClientState(suite.store, "(chaindID)", 0),
 					},
 					nil,
 					false,
@@ -98,7 +97,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
-						connection.NewConnectionEnd(connection.INIT, connectionID, "(CLIENTIDONE)", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connection.NewConnectionEnd(ibctypes.INIT, connectionID, "(CLIENTIDONE)", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
 					},
 					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{ibctypes.ConnectionPath(connectionID)}),

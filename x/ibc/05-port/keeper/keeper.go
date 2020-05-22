@@ -40,7 +40,7 @@ func (k Keeper) isBound(ctx sdk.Context, portID string) bool {
 // The capability must then be passed to a module which will need to pass
 // it as an extra parameter when calling functions on the IBC module.
 func (k *Keeper) BindPort(ctx sdk.Context, portID string) *capability.Capability {
-	if err := host.DefaultPortIdentifierValidator(portID); err != nil {
+	if err := host.PortIdentifierValidator(portID); err != nil {
 		panic(err.Error())
 	}
 
@@ -62,7 +62,7 @@ func (k *Keeper) BindPort(ctx sdk.Context, portID string) *capability.Capability
 // generated and bound to the port (provided as a parameter) which the capability
 // is being authenticated against.
 func (k Keeper) Authenticate(ctx sdk.Context, key *capability.Capability, portID string) bool {
-	if err := host.DefaultPortIdentifierValidator(portID); err != nil {
+	if err := host.PortIdentifierValidator(portID); err != nil {
 		panic(err.Error())
 	}
 

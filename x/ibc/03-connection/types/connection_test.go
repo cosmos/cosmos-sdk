@@ -29,12 +29,12 @@ func TestConnectionValidateBasic(t *testing.T) {
 		},
 		{
 			"invalid connection id",
-			ConnectionEnd{"(connectionIDONE)", clientID, []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{"(connectionIDONE)", clientID, []string{"1.0.0"}, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid client id",
-			ConnectionEnd{connectionID, "(clientID1)", []string{"1.0.0"}, INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			ConnectionEnd{connectionID, "(clientID1)", []string{"1.0.0"}, ibctypes.INIT, Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{

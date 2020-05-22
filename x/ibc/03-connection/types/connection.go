@@ -53,10 +53,10 @@ func (c ConnectionEnd) GetVersions() []string {
 // NOTE: the protocol supports that the connection and client IDs match the
 // counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(c.ID); err != nil {
+	if err := host.ConnectionIdentifierValidator(c.ID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid connection ID: %s", c.ID)
 	}
-	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrapf(err, "invalid client ID: %s", c.ClientID)
 	}
 	if len(c.Versions) == 0 {
@@ -98,10 +98,10 @@ func (c Counterparty) GetPrefix() commitmentexported.Prefix {
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() error {
-	if err := host.DefaultConnectionIdentifierValidator(c.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(c.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
-	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
 	if c.Prefix.IsEmpty() {

@@ -67,7 +67,7 @@ func (ch Channel) ValidateBasic() error {
 			sdkerrors.Wrap(ErrTooManyConnectionHops, "IBC v1.0 only supports one connection hop").Error(),
 		)
 	}
-	if err := host.DefaultConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
+	if err := host.ConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
 		return sdkerrors.Wrap(
 			ErrInvalidChannel,
 			sdkerrors.Wrap(err, "invalid connection hop ID").Error(),
@@ -102,13 +102,13 @@ func (c Counterparty) GetChannelID() string {
 
 // ValidateBasic performs a basic validation check of the identifiers
 func (c Counterparty) ValidateBasic() error {
-	if err := host.DefaultPortIdentifierValidator(c.PortID); err != nil {
+	if err := host.PortIdentifierValidator(c.PortID); err != nil {
 		return sdkerrors.Wrap(
 			ErrInvalidCounterparty,
 			sdkerrors.Wrap(err, "invalid counterparty connection ID").Error(),
 		)
 	}
-	if err := host.DefaultChannelIdentifierValidator(c.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(c.ChannelID); err != nil {
 		return sdkerrors.Wrap(
 			ErrInvalidCounterparty,
 			sdkerrors.Wrap(err, "invalid counterparty client ID").Error(),
@@ -144,10 +144,10 @@ func NewIdentifiedChannel(portID, channelID string, ch Channel) IdentifiedChanne
 
 // ValidateBasic performs a basic validation of the identifiers and channel fields.
 func (ic IdentifiedChannel) ValidateBasic() error {
-	if err := host.DefaultChannelIdentifierValidator(ic.ID); err != nil {
+	if err := host.ChannelIdentifierValidator(ic.ID); err != nil {
 		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
 	}
-	if err := host.DefaultPortIdentifierValidator(ic.PortID); err != nil {
+	if err := host.PortIdentifierValidator(ic.PortID); err != nil {
 		return sdkerrors.Wrap(ErrInvalidChannel, err.Error())
 	}
 	channel := NewChannel(ic.State, ic.Ordering, ic.Counterparty, ic.ConnectionHops, ic.Version)

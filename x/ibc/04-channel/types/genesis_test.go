@@ -69,7 +69,7 @@ func TestValidateGenesis(t *testing.T) {
 				Channels: []IdentifiedChannel{
 					NewIdentifiedChannel(
 						testPort1, "(testChannel1)", NewChannel(
-							INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+							ibctypes.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
 						),
 					),
 				},

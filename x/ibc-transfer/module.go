@@ -70,8 +70,8 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 }
 
 // GetTxCmd implements AppModuleBasic interface
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(cdc)
+func (AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
+	return cli.GetTxCmd(ctx.Codec)
 }
 
 // GetQueryCmd implements AppModuleBasic interface

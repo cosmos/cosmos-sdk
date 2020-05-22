@@ -255,7 +255,7 @@ func populateAccountFromState(
 	txBldr authtypes.TxBuilder, cliCtx context.CLIContext, addr sdk.AccAddress,
 ) (authtypes.TxBuilder, error) {
 
-	num, seq, err := authtypes.NewAccountRetriever(Codec, cliCtx).GetAccountNumberSequence(addr)
+	num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(cliCtx, addr)
 	if err != nil {
 		return txBldr, err
 	}
@@ -302,8 +302,8 @@ func parseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (authtypes.TxBuilder, error) {
 	from := cliCtx.GetFromAddress()
 
-	accGetter := authtypes.NewAccountRetriever(Codec, cliCtx)
-	if err := accGetter.EnsureExists(from); err != nil {
+	accGetter := authtypes.NewAccountRetriever(Codec)
+	if err := accGetter.EnsureExists(cliCtx, from); err != nil {
 		return txBldr, err
 	}
 
@@ -311,7 +311,7 @@ func PrepareTxBuilder(txBldr authtypes.TxBuilder, cliCtx context.CLIContext) (au
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txbldrAccNum == 0 || txbldrAccSeq == 0 {
-		num, seq, err := authtypes.NewAccountRetriever(Codec, cliCtx).GetAccountNumberSequence(from)
+		num, seq, err := authtypes.NewAccountRetriever(Codec).GetAccountNumberSequence(cliCtx, from)
 		if err != nil {
 			return txBldr, err
 		}

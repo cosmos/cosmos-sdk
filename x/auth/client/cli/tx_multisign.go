@@ -85,7 +85,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if !cliCtx.Offline {
-			accnum, seq, err := types.NewAccountRetriever(client.Codec, cliCtx).GetAccountNumberSequence(multisigInfo.GetAddress())
+			accnum, seq, err := types.NewAccountRetriever(client.Codec).GetAccountNumberSequence(cliCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}

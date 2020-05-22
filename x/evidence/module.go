@@ -82,14 +82,14 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 }
 
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd(ctx context.CLIContext) *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(cdc)
+		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(ctx)
 	}
 
-	return cli.GetTxCmd(StoreKey, cdc, evidenceCLIHandlers)
+	return cli.GetTxCmd(ctx, evidenceCLIHandlers)
 }
 
 // GetTxCmd returns the evidence module's root query command.

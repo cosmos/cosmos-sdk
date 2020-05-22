@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Multisignature is used to represent the signature object used in the multisigs.

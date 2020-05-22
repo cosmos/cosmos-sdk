@@ -1,22 +1,18 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -30,10 +26,7 @@ const (
 )
 
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func NewCmdSubmitUpgradeProposal(
-	m codec.Marshaler, txg tx.Generator, ar tx.AccountRetriever,
-	newMsgFn func() gov.MsgSubmitProposalI,
-) *cobra.Command {
+func NewCmdSubmitUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
@@ -49,9 +42,7 @@ func NewCmdSubmitUpgradeProposal(
 				return err
 			}
 
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 			from := cliCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -63,19 +54,16 @@ func NewCmdSubmitUpgradeProposal(
 				return err
 			}
 
-			msg := newMsgFn()
-			err = msg.SetContent(content)
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
-			msg.SetInitialDeposit(deposit)
-			msg.SetProposer(from)
 
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 
@@ -90,20 +78,14 @@ func NewCmdSubmitUpgradeProposal(
 }
 
 // NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func NewCmdSubmitCancelUpgradeProposal(
-	m codec.Marshaler,
-	txg tx.Generator,
-	ar tx.AccountRetriever,
-	newMsgFn func() gov.MsgSubmitProposalI) *cobra.Command {
+func NewCmdSubmitCancelUpgradeProposal(ctx context.CLIContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithMarshaler(m)
-			txf := tx.NewFactoryFromCLI(inBuf).WithTxGenerator(txg).WithAccountRetriever(ar)
+			cliCtx := ctx.InitWithInput(cmd.InOrStdin())
 			from := cliCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -128,19 +110,16 @@ func NewCmdSubmitCancelUpgradeProposal(
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg := newMsgFn()
-			err = msg.SetContent(content)
+			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
-			msg.SetInitialDeposit(deposit)
-			msg.SetProposer(from)
 
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(cliCtx, txf, msg)
+			return tx.GenerateOrBroadcastTx(cliCtx, msg)
 		},
 	}
 
@@ -192,109 +171,4 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 	plan := types.Plan{Name: name, Time: upgradeTime, Height: height, Info: info}
 	content := types.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
-}
-
-// GetCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
-func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Submit a software upgrade proposal",
-		Long: "Submit a software upgrade along with an initial deposit.\n" +
-			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
-			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			name := args[0]
-			content, err := parseArgsToContent(cmd, name)
-			if err != nil {
-				return err
-			}
-
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-			from := cliCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
-			if err != nil {
-				return err
-			}
-			deposit, err := sdk.ParseCoins(depositStr)
-			if err != nil {
-				return err
-			}
-
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
-
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen (not to be used together with --upgrade-time)")
-	cmd.Flags().String(FlagUpgradeTime, "", fmt.Sprintf("The time at which the upgrade must happen (ex. %s) (not to be used together with --upgrade-height)", TimeFormat))
-	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
-
-	return cmd
-}
-
-// GetCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cancel-software-upgrade [flags]",
-		Args:  cobra.ExactArgs(0),
-		Short: "Submit a software upgrade proposal",
-		Long:  "Cancel a software upgrade along with an initial deposit.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-			from := cliCtx.GetFromAddress()
-
-			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
-			if err != nil {
-				return err
-			}
-
-			deposit, err := sdk.ParseCoins(depositStr)
-			if err != nil {
-				return err
-			}
-
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
-			if err != nil {
-				return err
-			}
-
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
-			if err != nil {
-				return err
-			}
-
-			content := types.NewCancelSoftwareUpgradeProposal(title, description)
-
-			msg, err := gov.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
-
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
-	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-
-	return cmd
 }

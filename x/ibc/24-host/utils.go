@@ -1,8 +1,9 @@
 package host
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // RemovePath is an util function to remove a path from a set.

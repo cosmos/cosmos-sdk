@@ -2,6 +2,8 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // SubModuleCdc defines the IBC tendermint client codec.
@@ -23,4 +25,13 @@ func RegisterCodec(cdc *codec.Codec) {
 // SetSubModuleCodec sets the ibc tendermint client codec
 func SetSubModuleCodec(cdc *codec.Codec) {
 	SubModuleCdc = cdc
+}
+
+// RegisterInterfaces registers the tendermint concrete evidence and client-related
+// implementations and interfaces.
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*evidenceexported.Evidence)(nil),
+		&Evidence{},
+	)
 }

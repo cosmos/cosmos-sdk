@@ -20,11 +20,11 @@ func RemovePath(paths []string, path string) ([]string, bool) {
 func ParseChannelPath(path string) (string, string, error) {
 	split := strings.Split(path, "/")
 	if len(split) < 5 {
-		return "", "", fmt.Errorf("cannot parse channel path %s", path)
+		return "", "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse channel path %s", path)
 	}
 
 	if split[1] != "ports" || split[3] != "channels" {
-		return "", "", fmt.Errorf("cannot parse channel path %s", path)
+		return "", "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse channel path %s", path)
 	}
 
 	return split[2], split[4], nil

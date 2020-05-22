@@ -67,7 +67,7 @@ func checkValidity(clientState ClientState, header Header) error {
 func update(clientState ClientState, header Header) (ClientState, ConsensusState) {
 	consensusState := ConsensusState{
 		// increment sequence number
-		Sequence: header.Sequence + 1,
+		Sequence: clientState.ConsensusState.Sequence + 1,
 		PubKey:   header.NewPubKey,
 	}
 

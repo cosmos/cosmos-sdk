@@ -65,7 +65,7 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 		Use:     "update [client-id] [path/to/header.json]",
 		Short:   "update existing client with a header",
 		Long:    "update existing client with a header",
-		Example: fmt.Sprintf("%s tx ibc client update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName),
+		Example: fmt.Sprintf("%s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", types.SubModuleName, version.ClientName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())

@@ -26,7 +26,7 @@ func MakeCodecs() (codec.Marshaler, codectypes.InterfaceRegistry, *codec.Codec) 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaceModules(interfaceRegistry)
-	appCodec := codec.HybridCodec(cdc, interfaceRegistry)
+	appCodec := codec.NewHybridCodec(cdc, interfaceRegistry)
 	return appCodec, nil, cdc
 }
 

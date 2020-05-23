@@ -16,6 +16,7 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
@@ -415,7 +416,11 @@ func (chain *TestChain) createConnection(
 	connID, counterpartyConnID, clientID, counterpartyClientID string,
 	state connectiontypes.State,
 ) connectiontypes.ConnectionEnd {
-	counterparty := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, commitmenttypes.NewMerklePrefix(chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes()))
+	prefix := chain.App.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix(commitmentexported.Merkle)
+	counterparty, err := connectiontypes.NewCounterparty(counterpartyClientID, counterpartyConnID, prefix)
+	if err != nil {
+		panic(err)
+	}
 	connection := connectiontypes.ConnectionEnd{
 		State:        state,
 		ClientID:     clientID,

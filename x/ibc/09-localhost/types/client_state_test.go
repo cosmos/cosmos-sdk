@@ -86,7 +86,8 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+	counterparty, err := connection.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
+	suite.Require().NoError(err)
 	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	testCases := []struct {

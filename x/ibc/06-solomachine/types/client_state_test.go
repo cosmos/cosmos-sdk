@@ -3,7 +3,7 @@ package types_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -75,7 +75,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string
@@ -139,7 +139,8 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, prefix)
+	counterparty, err := connection.NewCounterparty("clientB", testConnectionID, prefix)
+	suite.Require().NoError(err)
 	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
 
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
@@ -152,7 +153,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string
@@ -230,7 +231,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string
@@ -304,7 +305,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string
@@ -378,7 +379,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string
@@ -450,7 +451,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string
@@ -524,7 +525,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 
 	sig, err := suite.privKey.Sign(value)
 	suite.Require().NoError(err)
-	proof := commitmenttypes.SignatureProof{sig}
+	proof := commitmenttypes.SignatureProof{Signature: sig}
 
 	testCases := []struct {
 		name        string

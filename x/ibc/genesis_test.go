@@ -15,6 +15,9 @@ import (
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
+	counterparty, err := connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix")))
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		name     string
 		genState ibc.GenesisState
@@ -47,7 +50,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
-						connection.NewConnectionEnd(connection.INIT, connectionID, clientID, connection.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connection.NewConnectionEnd(connection.INIT, connectionID, clientID, counterparty, []string{"1.0.0"}),
 					},
 					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
@@ -102,7 +105,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: client.DefaultGenesisState(),
 				ConnectionGenesis: connection.NewGenesisState(
 					[]connection.End{
-						connection.NewConnectionEnd(connection.INIT, connectionID, "(CLIENTIDONE)", connection.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"}),
+						connection.NewConnectionEnd(connection.INIT, connectionID, "(CLIENTIDONE)", counterparty, []string{"1.0.0"}),
 					},
 					[]connection.Paths{
 						connection.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),

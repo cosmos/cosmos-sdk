@@ -33,13 +33,36 @@ func (sp SignaturePrefix) IsEmpty() bool {
 	return len(sp.Bytes()) == 0
 }
 
-// ToAny converts signature prefix to protobuf Any.
-func (sp SignaturePrefix) ToAny() (*cdctypes.Any, error) {
+// PackAny converts signature prefix to protobuf Any.
+func (sp SignaturePrefix) PackAny() (*cdctypes.Any, error) {
 	any, err := cdctypes.NewAnyWithValue(&sp)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "prefix %T: %s", sp, err.Error())
 	}
 	return any, nil
+}
+
+// UnpackAny unpacks a protobuf Any and sets the value to the current prefix.
+func (sp SignaturePrefix) UnpackAny(any *cdctypes.Any) (exported.Prefix, error) {
+	cachedValue := any.GetCachedValue()
+
+	if cachedValue == nil {
+		registry := cdctypes.NewInterfaceRegistry()
+		RegisterInterfaces(registry)
+
+		if err := registry.UnpackAny(any, &sp); err != nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, err.Error())
+		}
+
+		return sp, nil
+	}
+
+	prefix, ok := cachedValue.(*SignaturePrefix)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "signature prefix is not cached: %T", cachedValue)
+	}
+
+	return prefix, nil
 }
 
 // GetCommitmentType implements ProofI.
@@ -62,8 +85,8 @@ func (proof SignatureProof) IsEmpty() bool {
 	return len(proof.Signature) == 0
 }
 
-// ToAny converts signature proof to protobuf Any.
-func (proof SignatureProof) ToAny() (*cdctypes.Any, error) {
+// PackAny converts signature proof to protobuf Any.
+func (proof SignatureProof) PackAny() (*cdctypes.Any, error) {
 	any, err := cdctypes.NewAnyWithValue(&proof)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "proof %T: %s", proof, err.Error())

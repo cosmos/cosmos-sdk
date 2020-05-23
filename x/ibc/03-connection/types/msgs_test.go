@@ -56,28 +56,33 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenInit{
-		NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "test/conn1", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", emptyPrefix, signer),
-		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, nil),
-		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, signer),
-	}
+	msg0, err := NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, signer)
+	suite.Require().NoError(err)
+	msg1, err := NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, signer)
+	suite.Require().NoError(err)
+	msg2, err := NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, signer)
+	suite.Require().NoError(err)
+	msg3, err := NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "test/conn1", prefix, signer)
+	suite.Require().NoError(err)
+	msg4, err := NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", emptyPrefix, signer)
+	suite.Require().NoError(err)
+	msg5, err := NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, nil)
+	suite.Require().NoError(err)
+	msg6, err := NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, signer)
+	suite.Require().NoError(err)
 
 	var testCases = []struct {
 		msg     MsgConnectionOpenInit
 		expPass bool
 		errMsg  string
 	}{
-		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[1], false, "invalid client ID"},
-		{testMsgs[2], false, "invalid counterparty client ID"},
-		{testMsgs[3], false, "invalid counterparty connection ID"},
-		{testMsgs[4], false, "empty counterparty prefix"},
-		{testMsgs[5], false, "empty singer"},
-		{testMsgs[6], true, "success"},
+		{msg0, false, "invalid connection ID"},
+		{msg1, false, "invalid client ID"},
+		{msg2, false, "invalid counterparty client ID"},
+		{msg3, false, "invalid counterparty connection ID"},
+		{msg4, false, "empty counterparty prefix"},
+		{msg5, false, "empty singer"},
+		{msg6, true, "success"},
 	}
 
 	for i, tc := range testCases {
@@ -94,38 +99,48 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenTry{
-		NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", emptyPrefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{}, suite.proof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, emptyProof, suite.proof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, emptyProof, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 0, 10, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 0, signer),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, nil),
-		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer),
-	}
+	msg0, err := NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg1, err := NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg2, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg3, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg4, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", emptyPrefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg5, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg6, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, emptyProof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg7, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, emptyProof, 10, 10, signer)
+	suite.Require().NoError(err)
+	msg8, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 0, 10, signer)
+	suite.Require().NoError(err)
+	msg9, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 0, signer)
+	suite.Require().NoError(err)
+	msg10, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, nil)
+	suite.Require().NoError(err)
+	msg11, err := NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, suite.proof, suite.proof, 10, 10, signer)
+	suite.Require().NoError(err)
 
 	var testCases = []struct {
 		msg     MsgConnectionOpenTry
 		expPass bool
 		errMsg  string
 	}{
-		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[1], false, "invalid client ID"},
-		{testMsgs[2], false, "invalid counterparty connection ID"},
-		{testMsgs[3], false, "invalid counterparty client ID"},
-		{testMsgs[4], false, "empty counterparty prefix"},
-		{testMsgs[5], false, "empty counterpartyVersions"},
-		{testMsgs[6], false, "empty proofInit"},
-		{testMsgs[7], false, "empty proofConsensus"},
-		{testMsgs[8], false, "invalid proofHeight"},
-		{testMsgs[9], false, "invalid consensusHeight"},
-		{testMsgs[10], false, "empty singer"},
-		{testMsgs[11], true, "success"},
+		{msg0, false, "invalid connection ID"},
+		{msg1, false, "invalid client ID"},
+		{msg2, false, "invalid counterparty connection ID"},
+		{msg3, false, "invalid counterparty client ID"},
+		{msg4, false, "empty counterparty prefix"},
+		{msg5, false, "empty counterpartyVersions"},
+		{msg6, false, "empty proofInit"},
+		{msg7, false, "empty proofConsensus"},
+		{msg8, false, "invalid proofHeight"},
+		{msg9, false, "invalid consensusHeight"},
+		{msg10, false, "empty singer"},
+		{msg11, true, "success"},
 	}
 
 	for i, tc := range testCases {
@@ -141,29 +156,36 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenAck{
-		NewMsgConnectionOpenAck("test/conn1", suite.proof, suite.proof, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", emptyProof, suite.proof, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, emptyProof, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 0, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 0, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "", signer),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "1.0.0", nil),
-		NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "1.0.0", signer),
-	}
+	msg0, err := NewMsgConnectionOpenAck("test/conn1", suite.proof, suite.proof, 10, 10, "1.0.0", signer)
+	suite.Require().NoError(err)
+	msg1, err := NewMsgConnectionOpenAck("ibcconntest", emptyProof, suite.proof, 10, 10, "1.0.0", signer)
+	suite.Require().NoError(err)
+	msg2, err := NewMsgConnectionOpenAck("ibcconntest", suite.proof, emptyProof, 10, 10, "1.0.0", signer)
+	suite.Require().NoError(err)
+	msg3, err := NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 0, 10, "1.0.0", signer)
+	suite.Require().NoError(err)
+	msg4, err := NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 0, "1.0.0", signer)
+	suite.Require().NoError(err)
+	msg5, err := NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "", signer)
+	suite.Require().NoError(err)
+	msg6, err := NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "1.0.0", nil)
+	suite.Require().NoError(err)
+	msg7, err := NewMsgConnectionOpenAck("ibcconntest", suite.proof, suite.proof, 10, 10, "1.0.0", signer)
+	suite.Require().NoError(err)
+
 	var testCases = []struct {
 		msg     MsgConnectionOpenAck
 		expPass bool
 		errMsg  string
 	}{
-		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[1], false, "empty proofTry"},
-		{testMsgs[2], false, "empty proofConsensus"},
-		{testMsgs[3], false, "invalid proofHeight"},
-		{testMsgs[4], false, "invalid consensusHeight"},
-		{testMsgs[5], false, "invalid version"},
-		{testMsgs[6], false, "empty signer"},
-		{testMsgs[7], true, "success"},
+		{msg0, false, "invalid connection ID"},
+		{msg1, false, "empty proofTry"},
+		{msg2, false, "empty proofConsensus"},
+		{msg3, false, "invalid proofHeight"},
+		{msg4, false, "invalid consensusHeight"},
+		{msg5, false, "invalid version"},
+		{msg6, false, "empty signer"},
+		{msg7, true, "success"},
 	}
 
 	for i, tc := range testCases {
@@ -179,24 +201,27 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
-	testMsgs := []MsgConnectionOpenConfirm{
-		NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", emptyProof, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, signer),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, nil),
-		NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, signer),
-	}
+	msg0, err := NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, signer)
+	suite.Require().NoError(err)
+	msg1, err := NewMsgConnectionOpenConfirm("ibcconntest", emptyProof, 10, signer)
+	suite.Require().NoError(err)
+	msg2, err := NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, signer)
+	suite.Require().NoError(err)
+	msg3, err := NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, nil)
+	suite.Require().NoError(err)
+	msg4, err := NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, signer)
+	suite.Require().NoError(err)
 
 	var testCases = []struct {
 		msg     MsgConnectionOpenConfirm
 		expPass bool
 		errMsg  string
 	}{
-		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[1], false, "empty proofTry"},
-		{testMsgs[2], false, "invalid proofHeight"},
-		{testMsgs[3], false, "empty signer"},
-		{testMsgs[4], true, "success"},
+		{msg0, false, "invalid connection ID"},
+		{msg1, false, "empty proofTry"},
+		{msg2, false, "invalid proofHeight"},
+		{msg3, false, "empty signer"},
+		{msg4, true, "success"},
 	}
 
 	for i, tc := range testCases {

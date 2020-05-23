@@ -27,7 +27,7 @@ type Prefix interface {
 	GetCommitmentType() Type
 	Bytes() []byte
 	IsEmpty() bool
-	ToAny() (*cdctypes.Any, error)
+	PackAny() (*cdctypes.Any, error)
 }
 
 // Path implements spec:CommitmentPath.
@@ -47,7 +47,7 @@ type Proof interface {
 	VerifyMembership(Root, Path, []byte) error
 	VerifyNonMembership(Root, Path) error
 	IsEmpty() bool
-	ToAny() (*cdctypes.Any, error)
+	PackAny() (*cdctypes.Any, error)
 
 	ValidateBasic() error
 }

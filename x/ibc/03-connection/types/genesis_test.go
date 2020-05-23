@@ -10,7 +10,7 @@ import (
 )
 
 func TestValidateGenesis(t *testing.T) {
-	prefixAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).ToAny()
+	prefixAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).PackAny()
 	require.NoError(t, err)
 
 	testCases := []struct {

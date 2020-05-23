@@ -79,12 +79,12 @@ func NewMsgConnectionOpenTry(
 		return MsgConnectionOpenTry{}, err
 	}
 
-	proofInitAny, err := proofInit.ToAny()
+	proofInitAny, err := proofInit.PackAny()
 	if err != nil {
 		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "proof init")
 	}
 
-	proofConsensusAny, err := proofConsensus.ToAny()
+	proofConsensusAny, err := proofConsensus.PackAny()
 	if err != nil {
 		return MsgConnectionOpenTry{}, sdkerrors.Wrap(err, "proof consensus")
 	}
@@ -175,12 +175,12 @@ func NewMsgConnectionOpenAck(
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) (MsgConnectionOpenAck, error) {
-	proofTryAny, err := proofTry.ToAny()
+	proofTryAny, err := proofTry.PackAny()
 	if err != nil {
 		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "proof try")
 	}
 
-	proofConsensusAny, err := proofConsensus.ToAny()
+	proofConsensusAny, err := proofConsensus.PackAny()
 	if err != nil {
 		return MsgConnectionOpenAck{}, sdkerrors.Wrap(err, "proof consensus")
 	}
@@ -260,7 +260,7 @@ func NewMsgConnectionOpenConfirm(
 	connectionID string, proofAck commitmentexported.Proof, proofHeight uint64,
 	signer sdk.AccAddress,
 ) (MsgConnectionOpenConfirm, error) {
-	proofAckAny, err := proofAck.ToAny()
+	proofAckAny, err := proofAck.PackAny()
 	if err != nil {
 		return MsgConnectionOpenConfirm{}, sdkerrors.Wrap(err, "proof ack")
 	}

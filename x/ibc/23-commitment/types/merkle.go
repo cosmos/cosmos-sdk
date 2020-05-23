@@ -66,8 +66,8 @@ func (mp MerklePrefix) IsEmpty() bool {
 	return len(mp.Bytes()) == 0
 }
 
-// ToAny converts merkle prefix to protobuf Any.
-func (mp MerklePrefix) ToAny() (*cdctypes.Any, error) {
+// PackAny converts merkle prefix to protobuf Any.
+func (mp MerklePrefix) PackAny() (*cdctypes.Any, error) {
 	any, err := cdctypes.NewAnyWithValue(&mp)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "prefix %T: %s", mp, err.Error())
@@ -162,8 +162,8 @@ func (proof MerkleProof) IsEmpty() bool {
 	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
 }
 
-// ToAny converts merkle proof to protobuf Any.
-func (proof MerkleProof) ToAny() (*cdctypes.Any, error) {
+// PackAny converts merkle proof to protobuf Any.
+func (proof MerkleProof) PackAny() (*cdctypes.Any, error) {
 	any, err := cdctypes.NewAnyWithValue(&proof)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "proof %T: %s", proof, err.Error())

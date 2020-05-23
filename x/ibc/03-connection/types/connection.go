@@ -3,7 +3,6 @@ package types
 import (
 	"strings"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -74,7 +73,7 @@ var _ exported.CounterpartyI = (*Counterparty)(nil)
 
 // NewCounterparty creates a new Counterparty instance.
 func NewCounterparty(clientID, connectionID string, prefix commitmentexported.Prefix) (Counterparty, error) {
-	any, err := prefix.ToAny()
+	any, err := prefix.PackAny()
 	if err != nil {
 		return Counterparty{}, err
 	}
@@ -98,26 +97,7 @@ func (c Counterparty) GetConnectionID() string {
 
 // GetPrefix implements the CounterpartyI interface
 func (c Counterparty) GetPrefix() (commitmentexported.Prefix, error) {
-	var prefix commitmentexported.Prefix
-	cachedValue := c.Prefix.GetCachedValue()
-
-	if cachedValue == nil {
-		registry := cdctypes.NewInterfaceRegistry()
-		commitmenttypes.RegisterInterfaces(registry)
-
-		if err := registry.UnpackAny(&c.Prefix, &prefix); err != nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, err.Error())
-		}
-
-		return prefix, nil
-	}
-
-	prefix, ok := cachedValue.(commitmentexported.Prefix)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "prefix is not cached: %T", cachedValue)
-	}
-
-	return prefix, nil
+	return commitmenttypes.UnpackAnyPrefix(&c.Prefix)
 }
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
@@ -132,7 +112,7 @@ func (c Counterparty) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if prefix.IsEmpty() {
+	if prefix == nil || prefix.IsEmpty() {
 		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty prefix cannot be empty")
 	}
 	return nil

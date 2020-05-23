@@ -17,7 +17,7 @@ var (
 )
 
 func TestConnectionValidateBasic(t *testing.T) {
-	prefixMerkleAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).ToAny()
+	prefixMerkleAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).PackAny()
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -70,10 +70,10 @@ func TestConnectionValidateBasic(t *testing.T) {
 }
 
 func TestCounterpartyValidateBasic(t *testing.T) {
-	prefixMerkleAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).ToAny()
+	prefixMerkleAny, err := commitmenttypes.NewMerklePrefix([]byte("prefix")).PackAny()
 	require.NoError(t, err)
 
-	prefixSigAny, err := commitmenttypes.NewSignaturePrefix([]byte("prefix")).ToAny()
+	prefixSigAny, err := commitmenttypes.NewSignaturePrefix([]byte("prefix")).PackAny()
 	require.NoError(t, err)
 
 	testCases := []struct {

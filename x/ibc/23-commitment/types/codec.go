@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
@@ -64,4 +65,28 @@ var (
 func init() {
 	RegisterCodec(amino)
 	amino.Seal()
+}
+
+// UnpackAnyPrefix unpacks a protobuf Any and sets the value to the current merkle prefix.
+func UnpackAnyPrefix(any *cdctypes.Any) (exported.Prefix, error) {
+	var prefix exported.Prefix
+	cachedValue := any.GetCachedValue()
+
+	if cachedValue == nil {
+		registry := cdctypes.NewInterfaceRegistry()
+		RegisterInterfaces(registry)
+
+		if err := registry.UnpackAny(any, &prefix); err != nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, err.Error())
+		}
+
+		return prefix, nil
+	}
+
+	prefix, ok := cachedValue.(exported.Prefix)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrProtobufAny, "prefix is not cached: %T", cachedValue)
+	}
+
+	return prefix, nil
 }

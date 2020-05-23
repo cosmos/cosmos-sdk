@@ -2,8 +2,9 @@ package connection
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
@@ -34,8 +35,15 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k Keeper, msg MsgConnectionOpe
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpenTry) (*sdk.Result, error) {
-	proofInit := msg.ProofInit.GetCachedValue().(commitmentexported.Proof)
-	proofConsensus := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
+	proofInit, err := commitmenttypes.UnpackAnyProof(&msg.ProofInit)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof init")
+	}
+
+	proofConsensus, err := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof consensus")
+	}
 
 	if err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
@@ -65,8 +73,15 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpenAck) (*sdk.Result, error) {
-	proofTry := msg.ProofTry.GetCachedValue().(commitmentexported.Proof)
-	proofConsensus := msg.ProofConsensus.GetCachedValue().(commitmentexported.Proof)
+	proofTry, err := commitmenttypes.UnpackAnyProof(&msg.ProofTry)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof try")
+	}
+
+	proofConsensus, err := commitmenttypes.UnpackAnyProof(&msg.ProofConsensus)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof consensus")
+	}
 
 	if err := k.ConnOpenAck(
 		ctx, msg.ConnectionID, msg.Version, proofTry, proofConsensus,
@@ -93,7 +108,10 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k Keeper, msg MsgConnectionOpen
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
 func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k Keeper, msg MsgConnectionOpenConfirm) (*sdk.Result, error) {
-	proofAck := msg.ProofAck.GetCachedValue().(commitmentexported.Proof)
+	proofAck, err := commitmenttypes.UnpackAnyProof(&msg.ProofAck)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "invalid proof ack")
+	}
 
 	if err := k.ConnOpenConfirm(
 		ctx, msg.ConnectionID, proofAck, msg.ProofHeight,
